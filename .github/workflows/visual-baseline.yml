@@ -1,0 +1,64 @@
+# .github/workflows/visual-baseline.yml
+# Regenerates the LINUX pixel-baseline set inside the same pinned Playwright
+# container the release gate uses.
+#
+# Owner decision 2026-07-31 (recorded in CLAUDE.md §15.7): no Docker on the
+# development machine. Local `npm run visual` compares the native darwin set
+# (the pre-commit cross-component regression net); CI compares the linux set.
+# Playwright's platform-suffixed snapshots (…-darwin.png / …-linux.png) let
+# both sets coexist in the repo.
+#
+# Trigger manually (Actions tab) on the branch whose baselines should refresh —
+# at latest before each develop -> main promotion, whenever intentional visual
+# changes have accumulated.
+#
+# NOTE: keep the container tag in lockstep with the playwright version in
+# package.json (same rule as release.yml).
+
+name: Visual baselines (linux set)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: visual-baseline-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update-linux-baselines:
+    name: Regenerate + commit linux snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mark workspace safe for git inside the container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Regenerate linux baselines
+        run: npm run visual:update
+
+      - name: Commit refreshed linux snapshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- '*-linux.png'
+          if git diff --cached --quiet; then
+            echo "No baseline changes."
+            exit 0
+          fi
+          git commit -m "chore(visual): refresh linux baseline set [skip ci]"
+          git push
+        # If branch protection ever blocks this direct push, dispatch the
+        # workflow on a chore branch and merge it via PR instead.

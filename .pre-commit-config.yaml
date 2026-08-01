@@ -1,0 +1,41 @@
+# .pre-commit-config.yaml — hook manager (owner decision 2026-08-01, CLAUDE.md §15.8;
+# replaces Husky + lint-staged from brief §3).
+# Philosophy unchanged (GITHUB_SETUP §5): commit = fast & staged-only · push = thorough ·
+# CI = referee. The pixel suite is deliberately NOT a git hook — it runs in the /new-atom
+# commit ritual and on demand.
+# Activation (Phase 0, after `npm ci`):
+#   pre-commit install --hook-type pre-commit --hook-type pre-push
+# Revs are pinned exactly and bumped deliberately (never blind autoupdate) — §3 policy.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+        exclude: ^\.github/   # Actions YAML uses expressions plain check-yaml dislikes
+
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint --fix (staged)
+        entry: npx eslint --fix
+        language: system
+        files: \.(ts|tsx)$
+      - id: prettier
+        name: prettier --write (staged)
+        entry: npx prettier --write
+        language: system
+        files: \.(ts|tsx|json|md|css|mdx|ya?ml)$
+      - id: typecheck
+        name: tsc --noEmit
+        entry: npx tsc --noEmit
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: vitest
+        name: vitest run
+        entry: npx vitest run
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

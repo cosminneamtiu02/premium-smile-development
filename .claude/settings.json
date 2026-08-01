@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run test)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build)",
+      "Bash(npm run build-storybook)",
+      "Bash(npm run visual)",
+      "Bash(npm run visual:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx prettier --check .)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)"
+    ],
+    "deny": [
+      "Edit(//Users/cosminneamtiu/Work/premium-smile-webpage/**)",
+      "Write(//Users/cosminneamtiu/Work/premium-smile-webpage/**)",
+      "Edit(//Users/cosminneamtiu/Work/premium-smile-webpage-backup/**)",
+      "Write(//Users/cosminneamtiu/Work/premium-smile-webpage-backup/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/cosminneamtiu/Work/premium-smile-webpage"
+    ]
+  }
+}

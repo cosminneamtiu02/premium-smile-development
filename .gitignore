@@ -1,0 +1,16 @@
+# dependencies / build output
+node_modules/
+out/
+.next/
+storybook-static/
+
+# test artifacts (native visual runs)
+playwright-report/
+test-results/
+
+# personal Claude config (project settings.json and skills ARE committed)
+.claude/*.local.md
+.claude/settings.local.json
+
+# os noise
+.DS_Store

@@ -1,0 +1,107 @@
+# .github/workflows/ci.yml
+# Fast lane: every PR into develop, and pushes to develop.
+# Pixel/visual tests deliberately NOT here — they run locally (native) in the
+# dev loop before commits and are re-verified by release.yml before main.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint · Types · Tests · Builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Playwright ⇄ container-tag lockstep check
+        run: |
+          [ -f package.json ] || { echo "no package.json yet (pre-Phase 0) — skipping"; exit 0; }
+          PW=$(node -p "const d=require('./package.json').devDependencies||{};String(d['@playwright/test']||d.playwright||'').replace(/[~^]/,'')")
+          [ -n "$PW" ] || { echo "playwright not a dependency yet — skipping"; exit 0; }
+          for f in .github/workflows/release.yml .github/workflows/visual-baseline.yml; do
+            grep -q "playwright:v${PW}-" "$f" || { echo "::error::${f}: container tag out of lockstep with playwright ${PW} in package.json — bump the tag in the same PR (GITHUB_SETUP §7)"; exit 1; }
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc   # Node 24 LTS per brief §3
+          cache: npm
+
+      - name: Install (lockfile is truth)
+        run: npm ci
+
+      - name: Lint (ESLint incl. jsx-a11y) + format check
+        run: |
+          npm run lint
+          npx prettier --check .
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Browser for component tests
+        run: npx playwright install chromium --with-deps
+
+      - name: Unit / interaction / story a11y tests (Vitest)
+        run: npm run test -- --run
+
+      - name: Storybook builds
+        run: npm run build-storybook
+
+      - name: Site builds (static export)
+        run: npm run build
+
+      - name: Internal link & hreflang check on the export
+        # linkinator resolves from the ~pinned devDependency (added at Phase 0)
+        run: npx linkinator out --recurse --skip "^https?://" --verbosity error
+
+      - name: Upload Storybook (debug artifact, 3 days)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+          retention-days: 3
+
+  deploy-staging:
+    name: Deploy staging (placeholder until host confirmed)
+    if: github.event_name == 'push'
+    needs: quality
+    runs-on: ubuntu-latest
+    environment: development
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Build with staging flag (forces noindex + robots disallow)
+        run: STAGING=1 npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-staging
+          path: out
+          retention-days: 7
+      # ─────────────────────────────────────────────────────────────
+      # DEPLOY PLACEHOLDER — staging host step goes here once hosting
+      # is confirmed (production is NOT GitHub Pages per owner decision;
+      # recommended: Cloudflare Pages). Token lives in the 'development'
+      # GitHub Environment.
+      # ─────────────────────────────────────────────────────────────

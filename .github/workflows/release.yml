@@ -1,0 +1,96 @@
+# .github/workflows/release.yml
+# Slow lane, two triggers:
+#   1) PR develop -> main  = the release gate: everything CI does PLUS the full
+#      visual suite, inside the pinned Playwright image, comparing the LINUX
+#      baseline set (maintained by visual-baseline.yml), so unverified visual
+#      changes can never reach production unnoticed.
+#   2) push to main        = production build; deploy step is a placeholder
+#      until the hosting provider is chosen (brief §15.2).
+#
+# NOTE: the container tag below must stay in lockstep with the playwright
+# version in package.json. Dependabot bumps the npm side; bump this tag in the
+# same PR.
+
+name: Release
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-gate:
+    name: Full gate incl. visual regression
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint + format + types
+        run: |
+          npm run lint
+          npx prettier --check .
+          npx tsc --noEmit
+
+      - name: Unit / interaction / story a11y tests
+        run: npm run test -- --run
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Visual regression (linux baseline set)
+        run: npm run visual
+
+      - name: Stale-baseline hint
+        if: failure()
+        run: echo "::notice::If the visual diffs are INTENTIONAL, the linux baseline set is stale — run the 'Visual baselines (linux set)' workflow on develop and update this PR (GITHUB_SETUP §7)."
+
+      - name: Build site + link check
+        run: |
+          npm run build
+          npx linkinator out --recurse --skip "^https?://" --verbosity error
+
+      - name: Upload visual diff report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-report
+          path: playwright-report
+          retention-days: 7
+
+  build-production:
+    name: Production build (deploy pending host choice)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production   # activates the required-reviewer approval gate
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Upload production export
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-production
+          path: out
+          retention-days: 14
+      # ─────────────────────────────────────────────────────────────
+      # DEPLOY PLACEHOLDER — replace with the host's action once the
+      # hosting decision (brief §15.2) is made, e.g. Netlify / Cloudflare
+      # Pages deploy step consuming ./out
+      # ─────────────────────────────────────────────────────────────

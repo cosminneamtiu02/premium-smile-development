@@ -158,7 +158,10 @@ npm run visual:update -- --workers=2
 
 - **linux set — CI's.** Generated **only** by the `visual-baseline.yml`
   workflow (Actions tab → "Visual baselines (linux set)" → run on the branch),
-  inside the same pinned container the release gate uses. Refresh it whenever
+  inside the same pinned container the release gate uses. The refresh **lands
+  as a PR** (amended 2026-08-02: develop's required status check rejects
+  direct bot pushes — the workflow pushes a `chore/linux-baselines-*` branch
+  and opens the PR; you review the PNG diffs and merge). Refresh whenever
   intentional visual changes accumulate — at latest before each
   `develop → main` promotion, or the release gate will fail on stale
   baselines.

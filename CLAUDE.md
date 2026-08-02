@@ -311,7 +311,16 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    approval** before going live). CI is GitHub Actions (two-branch model, PR template =
    playbook DoD, Dependabot patch-only per §3). Host still open with one exclusion:
    **production will not be GitHub Pages** (owner, 2026-07-31); recommended candidate
-   Cloudflare Pages, pending confirmation — until then both deploy steps are placeholders.
+   Cloudflare Pages, pending confirmation.
+   **AMENDED 2026-08-02 (owner): interim GitHub Pages + public repo.** The repo was made
+   public (owner choice; the remembered Pro plan proved lapsed), which unlocked and
+   activated: the `production` environment **required reviewer** (the go-live click),
+   secret scanning + push protection, and GitHub Pages. **Interim production host =
+   GitHub Pages** (project site, `PAGES_BASE_PATH=/premium-smile-development`;
+   **NOINDEX=1 until the clinic's real domain is attached** — a github.io copy must
+   never compete with launch SEO, same hard rule as staging). The 07-31 exclusion now
+   applies to LAUNCH only: Cloudflare Pages remains the recommended final host; the
+   staging deploy step remains a placeholder. Also enabled: `delete_branch_on_merge`.
 3. Localized URL slugs (decide before launch).
 4. EUR price display on non-`ro` locales.
 5. ~~Image optimizer final pick~~ — **DECIDED 2026-08-01 (owner, Phase 0 kickoff):**

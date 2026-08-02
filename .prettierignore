@@ -1,0 +1,18 @@
+# build output
+.next/
+out/
+storybook-static/
+playwright-report/
+test-results/
+node_modules/
+
+# generated
+package-lock.json
+next-env.d.ts
+
+# governance prose stays hand-formatted (tables, amendment notes)
+*.md
+
+# binary-ish assets
+public/
+src/fonts/

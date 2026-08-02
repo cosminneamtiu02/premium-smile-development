@@ -1,0 +1,37 @@
+{
+  "common": {
+    "siteName": "Premium Smile",
+    "nav": {
+      "home": "Home",
+      "services": "Services",
+      "team": "Team",
+      "blog": "Blog"
+    },
+    "actions": {
+      "call": "Call now",
+      "contact": "Contact"
+    },
+    "footer": {
+      "rights": "All rights reserved"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Your smile, our priority",
+      "subtitle": "Modern dental care, gentle and professional"
+    }
+  },
+  "services": {
+    "title": "Our services"
+  },
+  "team": {
+    "title": "Our team"
+  },
+  "blog": {
+    "title": "Articles & news"
+  },
+  "contact": {
+    "title": "Get in touch",
+    "close": "Close"
+  }
+}

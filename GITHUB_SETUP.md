@@ -58,19 +58,32 @@ are already bound to them:
 Google finding the staging copy would compete with and dilute the production
 site's SEO — the one asset this whole project optimizes.
 
-**Hosting status:** production will **not** be GitHub Pages (owner decision
-2026-07-31). Recommended candidate for both environments: **Cloudflare Pages**
-(free static tier, fast EU edge, headers/redirects control, tokens work cleanly
-with the two GitHub Environments); Netlify is the equivalent alternative. On
-confirmation: create the host project(s), put tokens in the two environments,
-replace the two DEPLOY PLACEHOLDER blocks in `ci.yml` / `release.yml`.
+**Hosting status (amended 2026-08-02):** **interim production = GitHub Pages**
+(owner reversal; the 2026-07-31 exclusion now applies to launch only). The repo
+is public; the Pages site (source: GitHub Actions) deploys from `release.yml`
+on pushes to `main`, behind the `production` environment's required-reviewer
+click. Interim constraints: project-site base path
+(`PAGES_BASE_PATH=/premium-smile-development`) and **noindex until the clinic's
+real domain is attached** — a public github.io copy must never compete with
+launch SEO. For LAUNCH the recommendation is unchanged: **Cloudflare Pages**
+(free static tier, fast EU edge, headers/redirects control); Netlify is the
+equivalent alternative. On confirmation: create the host project(s), put tokens
+in the two environments, replace the Pages deploy in `release.yml` and the
+staging DEPLOY PLACEHOLDER in `ci.yml`.
 
-## 4. Dependabot (decided: patch-only PRs, no automerge)
+## 4. Dependabot (decided: npm patch-only · actions latest — no automerge)
 
-The config targets `develop`, arrives Monday mornings, **groups all patch
-updates into one PR**, and is structurally incapable of proposing a major *or a
-minor* (both ignored at the source — policy tightened 2026-07-31; `package.json`
-uses tilde `~` ranges to match). You review the grouped PR, CI runs, you merge.
+The config targets `develop` and arrives Monday mornings, always as grouped
+PRs, never automerged. Two regimes on purpose (carve-out decided 2026-08-01,
+brief §15.9):
+
+- **npm** — **groups all patch updates into one PR** and is structurally
+  incapable of proposing a major *or a minor* (both ignored at the source —
+  policy tightened 2026-07-31; `package.json` uses tilde `~` ranges to match).
+  This is the regime that protects the built site's bytes.
+- **github-actions** — **one grouped PR, majors allowed**: workflow actions
+  can't change the built site, and holding them back only accrues
+  runner-deprecation risk. You review the grouped PR, CI runs, you merge.
 One consequence to know: a security fix that ships only in a minor gets no PR —
 the repo's Security tab still alerts you, and that one bump becomes a deliberate
 manual decision. Auto-merge remains deliberately not installed.
@@ -151,7 +164,10 @@ npm run visual:update -- --workers=2
 
 - **linux set — CI's.** Generated **only** by the `visual-baseline.yml`
   workflow (Actions tab → "Visual baselines (linux set)" → run on the branch),
-  inside the same pinned container the release gate uses. Refresh it whenever
+  inside the same pinned container the release gate uses. The refresh **lands
+  as a PR** (amended 2026-08-02: develop's required status check rejects
+  direct bot pushes — the workflow pushes a `chore/linux-baselines-*` branch
+  and opens the PR; you review the PNG diffs and merge). Refresh whenever
   intentional visual changes accumulate — at latest before each
   `develop → main` promotion, or the release gate will fail on stale
   baselines.

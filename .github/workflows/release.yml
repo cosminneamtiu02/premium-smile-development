@@ -32,7 +32,7 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install
         run: npm ci
@@ -63,34 +63,59 @@ jobs:
 
       - name: Upload visual diff report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-visual-report
           path: playwright-report
           retention-days: 7
 
   build-production:
-    name: Production build (deploy pending host choice)
+    name: Production build (interim GitHub Pages)
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: production   # activates the required-reviewer approval gate
     timeout-minutes: 15
+    env:
+      # Interim Pages hosting (§15.2 amended 2026-08-02): the project site
+      # lives under /<repo>/, and the github.io copy stays noindex until the
+      # clinic's real domain is attached. Both vars vanish at the launch-host
+      # switch (Cloudflare Pages remains the launch recommendation).
+      PAGES_BASE_PATH: /premium-smile-development
+      NOINDEX: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Upload production export
-        uses: actions/upload-artifact@v4
+      - name: Upload production export (rollback record)
+        uses: actions/upload-artifact@v7
         with:
           name: site-production
           path: out
           retention-days: 14
-      # ─────────────────────────────────────────────────────────────
-      # DEPLOY PLACEHOLDER — replace with the host's action once the
-      # hosting decision (brief §15.2) is made, e.g. Netlify / Cloudflare
-      # Pages deploy step consuming ./out
-      # ─────────────────────────────────────────────────────────────
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: out
+
+  deploy-production:
+    name: Deploy to GitHub Pages (approval-gated)
+    if: github.event_name == 'push'
+    needs: build-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    # The production environment's required reviewer IS the go-live click
+    # (GITHUB_SETUP §3) — the gate sits here, on the actual deployment, not on
+    # the compile.
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -58,12 +58,18 @@ are already bound to them:
 Google finding the staging copy would compete with and dilute the production
 site's SEO — the one asset this whole project optimizes.
 
-**Hosting status:** production will **not** be GitHub Pages (owner decision
-2026-07-31). Recommended candidate for both environments: **Cloudflare Pages**
-(free static tier, fast EU edge, headers/redirects control, tokens work cleanly
-with the two GitHub Environments); Netlify is the equivalent alternative. On
-confirmation: create the host project(s), put tokens in the two environments,
-replace the two DEPLOY PLACEHOLDER blocks in `ci.yml` / `release.yml`.
+**Hosting status (amended 2026-08-02):** **interim production = GitHub Pages**
+(owner reversal; the 2026-07-31 exclusion now applies to launch only). The repo
+is public; the Pages site (source: GitHub Actions) deploys from `release.yml`
+on pushes to `main`, behind the `production` environment's required-reviewer
+click. Interim constraints: project-site base path
+(`PAGES_BASE_PATH=/premium-smile-development`) and **noindex until the clinic's
+real domain is attached** — a public github.io copy must never compete with
+launch SEO. For LAUNCH the recommendation is unchanged: **Cloudflare Pages**
+(free static tier, fast EU edge, headers/redirects control); Netlify is the
+equivalent alternative. On confirmation: create the host project(s), put tokens
+in the two environments, replace the Pages deploy in `release.yml` and the
+staging DEPLOY PLACEHOLDER in `ci.yml`.
 
 ## 4. Dependabot (decided: npm patch-only · actions latest — no automerge)
 

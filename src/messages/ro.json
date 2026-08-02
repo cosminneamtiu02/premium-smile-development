@@ -1,0 +1,37 @@
+{
+  "common": {
+    "siteName": "Premium Smile",
+    "nav": {
+      "home": "Acasă",
+      "services": "Servicii",
+      "team": "Echipa",
+      "blog": "Blog"
+    },
+    "actions": {
+      "call": "Sună acum",
+      "contact": "Contact"
+    },
+    "footer": {
+      "rights": "Toate drepturile rezervate"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Zâmbetul tău, prioritatea noastră",
+      "subtitle": "Îngrijire stomatologică modernă, cu blândețe și profesionalism"
+    }
+  },
+  "services": {
+    "title": "Serviciile noastre"
+  },
+  "team": {
+    "title": "Echipa noastră"
+  },
+  "blog": {
+    "title": "Articole și noutăți"
+  },
+  "contact": {
+    "title": "Contactează-ne",
+    "close": "Închide"
+  }
+}

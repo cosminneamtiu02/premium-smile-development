@@ -65,12 +65,19 @@ with the two GitHub Environments); Netlify is the equivalent alternative. On
 confirmation: create the host project(s), put tokens in the two environments,
 replace the two DEPLOY PLACEHOLDER blocks in `ci.yml` / `release.yml`.
 
-## 4. Dependabot (decided: patch-only PRs, no automerge)
+## 4. Dependabot (decided: npm patch-only · actions latest — no automerge)
 
-The config targets `develop`, arrives Monday mornings, **groups all patch
-updates into one PR**, and is structurally incapable of proposing a major *or a
-minor* (both ignored at the source — policy tightened 2026-07-31; `package.json`
-uses tilde `~` ranges to match). You review the grouped PR, CI runs, you merge.
+The config targets `develop` and arrives Monday mornings, always as grouped
+PRs, never automerged. Two regimes on purpose (carve-out decided 2026-08-01,
+brief §15.9):
+
+- **npm** — **groups all patch updates into one PR** and is structurally
+  incapable of proposing a major *or a minor* (both ignored at the source —
+  policy tightened 2026-07-31; `package.json` uses tilde `~` ranges to match).
+  This is the regime that protects the built site's bytes.
+- **github-actions** — **one grouped PR, majors allowed**: workflow actions
+  can't change the built site, and holding them back only accrues
+  runner-deprecation risk. You review the grouped PR, CI runs, you merge.
 One consequence to know: a security fix that ships only in a minor gets no PR —
 the repo's Security tab still alerts you, and that one bump becomes a deliberate
 manual decision. Auto-merge remains deliberately not installed.

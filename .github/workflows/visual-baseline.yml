@@ -35,7 +35,7 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Mark workspace safe for git inside the container
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"

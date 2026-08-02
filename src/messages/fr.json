@@ -1,0 +1,37 @@
+{
+  "common": {
+    "siteName": "Premium Smile",
+    "nav": {
+      "home": "Accueil",
+      "services": "Soins",
+      "team": "Équipe",
+      "blog": "Blog"
+    },
+    "actions": {
+      "call": "Appeler maintenant",
+      "contact": "Contact"
+    },
+    "footer": {
+      "rights": "Tous droits réservés"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Votre sourire, notre priorité",
+      "subtitle": "Des soins dentaires modernes, en douceur et avec professionnalisme"
+    }
+  },
+  "services": {
+    "title": "Nos soins"
+  },
+  "team": {
+    "title": "Notre équipe"
+  },
+  "blog": {
+    "title": "Articles et actualités"
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "close": "Fermer"
+  }
+}

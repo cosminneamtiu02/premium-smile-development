@@ -13,7 +13,7 @@ repos:
     hooks:
       - id: check-merge-conflict
       - id: check-yaml
-        exclude: ^\.github/   # Actions YAML uses expressions plain check-yaml dislikes
+        exclude: ^\.github/ # Actions YAML uses expressions plain check-yaml dislikes
 
   - repo: local
     hooks:

@@ -14,3 +14,10 @@ test-results/
 
 # os noise
 .DS_Store
+
+# typescript incremental cache
+tsconfig.tsbuildinfo
+
+# next-image-export-optimizer build artifacts (regenerated at build)
+public/images/nextImageExportOptimizer/
+public/images/next-image-export-optimizer-hashes.json

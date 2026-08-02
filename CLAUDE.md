@@ -277,8 +277,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   container**; push to `main` builds production (deploy step pending host). Day-to-day pixel
   testing runs **locally, native** (`npm run visual` / `visual:update` — the darwin set), at
   minimum in the commit ritual *(amended 2026-07-31)*. Hooks (pre-commit framework, §15.8): commit =
-  eslint + prettier on staged files, push = typecheck + tests. Dependabot: weekly grouped **patch-only** PRs into `develop`,
-  majors and minors ignored, **no automerge**.
+  eslint + prettier on staged files, push = typecheck + tests. Dependabot: weekly grouped PRs into `develop`,
+  **no automerge** — npm: **patch-only**, majors and minors ignored; GitHub Actions: latest allowed
+  incl. majors, one grouped PR (carve-out, §15.9).
 
 ## 14. Content model
 
@@ -313,7 +314,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    Cloudflare Pages, pending confirmation — until then both deploy steps are placeholders.
 3. Localized URL slugs (decide before launch).
 4. EUR price display on non-`ro` locales.
-5. Image optimizer final pick (blocks the first photo, nothing else).
+5. ~~Image optimizer final pick~~ — **DECIDED 2026-08-01 (owner, Phase 0 kickoff):**
+   **next-image-export-optimizer** (~1.20.1, with sharp ~0.35.3) as named in §3, behind the
+   single `ui/Image` wrapper. Unblocks the first photo.
 6. **Logo file, favicon, and OG share image** — the logo exists (set in Publio lettering)
    but is not in the repo; owner must supply it. Vectorize it to SVG (Publio never ships as
    a webfont) — this also settles the purple confirmation in item 1. Blocks §10.3 OG tags
@@ -335,6 +338,27 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    `pre-commit install --hook-type pre-commit --hook-type pre-push`. CI is unchanged and
    remains the referee. Branch model reaffirmed: parallel feature branches → PRs into
    `develop`; the owner alone times the `develop → main` promotion.
+9. **GitHub-Actions version carve-out — DECIDED 2026-08-01 (owner, Phase 0 kickoff):** the
+   §3 majors-and-minors lock protects the **built site's output** and therefore applies to
+   the npm stack only. CI actions (`uses:` pins in `.github/workflows/`) cannot alter build
+   output; they track **latest majors**, arriving as **one grouped weekly Dependabot PR**
+   (still no automerge — owner reviews). Rationale: pinning them buys no determinism while
+   accumulating runner-deprecation risk (GitHub already force-runs old actions on newer
+   Node). First application: v4→v7 checkout/setup-node/upload-artifact, v4→v6 cache,
+   folded into the Phase 0 branch; the four single-action Dependabot PRs (#1–#4) are closed
+   as superseded once that lands.
+10. **TypeScript pinned to 6.x (~6.0.3) — the §3-sanctioned fallback, exercised 2026-08-02
+    (Phase 0):** two chain tools lag TS 7 — Next 16.2's build worker (workaround flag exists)
+    and `typescript-eslint` via `eslint-config-next` (hard error, no workaround). Per the §3
+    TypeScript row this fallback was pre-sanctioned; recorded here as required. Revisit when
+    typescript-eslint ships TS 7 support (then restore ~7.0.2 in one deliberate bump).
+11. **ESLint pinned to 9.x (~9.39.5) — DECIDED 2026-08-02 (owner, Phase 0):** the React lint
+    ecosystem does not support ESLint 10 — `eslint-plugin-react` (newest 7.37.5, peer ≤^9.7)
+    crashes on removed ESLint-10 APIs, and `eslint-config-next` ships it. Unlike TS there was
+    no pre-sanctioned fallback, so this major crossing was owner-approved explicitly. Bonus:
+    `eslint-plugin-jsx-a11y`'s peer range (≤9) is satisfied naturally again, so the
+    package.json `overrides` workaround was removed. Revisit when eslint-plugin-react +
+    eslint-config-next support ESLint 10; restore ~10.8.0 in one deliberate bump.
 
 ## 16. Build-time vs runtime contract
 

@@ -24,8 +24,6 @@
       "Edit(//Users/cosminneamtiu/Work/premium-smile-webpage-backup/**)",
       "Write(//Users/cosminneamtiu/Work/premium-smile-webpage-backup/**)"
     ],
-    "additionalDirectories": [
-      "/Users/cosminneamtiu/Work/premium-smile-webpage"
-    ]
+    "additionalDirectories": ["/Users/cosminneamtiu/Work/premium-smile-webpage"]
   }
 }

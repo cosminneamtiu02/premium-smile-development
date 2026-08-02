@@ -9,12 +9,12 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     target-branch: develop
     schedule:
       interval: weekly
       day: monday
-      time: "07:00"
+      time: '07:00'
       timezone: Europe/Bucharest
     open-pull-requests-limit: 5
     labels: [dependencies]
@@ -23,16 +23,24 @@ updates:
         applies-to: version-updates
         update-types: [patch]
     ignore:
-      - dependency-name: "*"
+      - dependency-name: '*'
         update-types:
-          - "version-update:semver-major"
-          - "version-update:semver-minor"
+          - 'version-update:semver-major'
+          - 'version-update:semver-minor'
 
+  # CI actions carve-out (owner decision 2026-08-01, brief §15.9): unlike npm,
+  # actions CANNOT alter the built site — pinning them buys no determinism, and
+  # stale majors accumulate runner-deprecation risk. Majors allowed, one grouped
+  # weekly PR, still no automerge.
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: '/'
     target-branch: develop
     schedule:
       interval: weekly
       day: monday
       timezone: Europe/Bucharest
     labels: [dependencies]
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ['*']

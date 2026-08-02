@@ -1,0 +1,37 @@
+{
+  "common": {
+    "siteName": "Premium Smile",
+    "nav": {
+      "home": "Startseite",
+      "services": "Leistungen",
+      "team": "Team",
+      "blog": "Blog"
+    },
+    "actions": {
+      "call": "Jetzt anrufen",
+      "contact": "Kontakt"
+    },
+    "footer": {
+      "rights": "Alle Rechte vorbehalten"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Ihr Lächeln, unsere Priorität",
+      "subtitle": "Moderne Zahnmedizin – einfühlsam und professionell"
+    }
+  },
+  "services": {
+    "title": "Unsere Leistungen"
+  },
+  "team": {
+    "title": "Unser Team"
+  },
+  "blog": {
+    "title": "Artikel & Neuigkeiten"
+  },
+  "contact": {
+    "title": "Kontaktieren Sie uns",
+    "close": "Schließen"
+  }
+}

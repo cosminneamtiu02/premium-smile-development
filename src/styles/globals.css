@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Design tokens — two layers (brief §3 standing notes; §15.1 locked 2026-07-30)
+
+   Layer 1 · PRIMITIVES (@theme): theme-independent values. Fonts only for now —
+   Tailwind's default spacing / breakpoint / radius scales stay untouched.
+
+   Layer 2 · SEMANTIC ROLES, theme-scoped: raw values live on `:root` /
+   `[data-theme='light']` (v1 ships exactly one theme: light), and
+   `@theme inline` maps them to utility names. A future theme remaps the same
+   variable names additively — no renames, no component edits.
+
+   `ui/` components consume ONLY semantic utilities (bg-page, text-ink, …),
+   never primitives.
+
+   LOCKED (§15.1): cta #008854 · anchor #00A968 · star #B29126 ·
+   accent-decorative #7A6D9C (large display text ≥3:1 + graphics ONLY — the
+   a11y addon polices misuse) · scrim floor 0.55 · body base 1.125rem ·
+   component default radius 6px (= rounded-md; scale untouched) · font tokens
+   named display/body/mono, never --font-sans.
+   Everything else is PROVISIONAL warm-grayscale until the token-audit values
+   land (open: purple hue confirm against the real logo, §15.1 + §15.6).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --font-display:
+    var(--font-source-serif), ui-serif, Georgia, 'Times New Roman', serif;
+  --font-body:
+    var(--font-source-serif), ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono:
+    var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Semantic color roles — exactly 17 (`success` dropped, §15.1) + the one
+   additional accent-decorative role. */
+:root,
+[data-theme='light'] {
+  /* surfaces */
+  --page: #faf9f7;
+  --surface: #ffffff;
+  --raised: #ffffff;
+  --inverse-surface: #24211e;
+  /* text */
+  --ink: #2b2724;
+  --ink-strong: #1a1714;
+  --ink-muted: #5b554f;
+  --ink-inverse: #ffffff;
+  /* lines */
+  --line: #d8d4cf;
+  --line-subtle: #e9e6e2;
+  /* actions — LOCKED green family */
+  --cta: #008854;
+  --cta-hover: #006b42;
+  --anchor: #00a968;
+  /* focus */
+  --focus: #1a1714;
+  /* specials */
+  --star: #b29126; /* LOCKED */
+  --scrim: rgb(0 0 0 / 0.55); /* LOCKED floor — never below 0.55 */
+  --error: #b3261e;
+  /* additional role outside the 17 (§15.1 amendment) */
+  --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-ink: var(--ink);
+  --color-ink-strong: var(--ink-strong);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-line: var(--line);
+  --color-line-subtle: var(--line-subtle);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-anchor: var(--anchor);
+  --color-focus: var(--focus);
+  --color-star: var(--star);
+  --color-scrim: var(--scrim);
+  --color-error: var(--error);
+  --color-accent-decorative: var(--accent-decorative);
+}
+
+@layer base {
+  body {
+    /* §15.1: body base 1.125rem. html stays 16px so rem/user zoom behave (§7). */
+    font-size: 1.125rem;
+    line-height: 1.6;
+    background-color: var(--page);
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+
+  /* Long prose aligns logically (§15.1) — `start`, never `left`. */
+  p,
+  li,
+  blockquote {
+    text-align: start;
+  }
+
+  /* Safety net only — components own their focus-visible styles (§9). */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}

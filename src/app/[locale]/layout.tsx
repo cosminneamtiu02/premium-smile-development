@@ -22,8 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'common' });
   return {
     title: t('siteName'),
-    // Staging must never be indexable (GITHUB_SETUP §3) — STAGING=1 build flag.
-    ...(process.env.STAGING === '1'
+    // Never indexable: staging always (GITHUB_SETUP §3, STAGING=1) and the
+    // interim Pages production until the real domain lands (§15.2, NOINDEX=1).
+    ...(process.env.STAGING === '1' || process.env.NOINDEX === '1'
       ? { robots: { index: false, follow: false } }
       : {}),
   };

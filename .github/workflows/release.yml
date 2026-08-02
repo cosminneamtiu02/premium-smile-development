@@ -32,6 +32,15 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
+      # PRs into main are promotions from develop, full stop (GITHUB_SETUP §2,
+      # amended 2026-08-02). Any other source branch fails the required check
+      # immediately — which makes its merge button unusable.
+      - name: Guard — promotions come only from develop
+        if: github.head_ref != 'develop'
+        run: |
+          echo "::error::PRs into main must originate from develop — this one is from '${{ github.head_ref }}'."
+          exit 1
+
       - uses: actions/checkout@v7
 
       - name: Install

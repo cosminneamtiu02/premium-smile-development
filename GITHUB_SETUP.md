@@ -26,6 +26,10 @@ Also add at repo root: `.nvmrc` containing `24` (the workflows read it).
   `fix/…`, `migrate/…`) branch off it and merge back via PR.
 - **Flow:** feature → PR → `develop` (fast CI lane) → promotion PR
   `develop → main` (release gate incl. the full visual suite) → merge → deploy.
+  *(Amended 2026-08-02:)* the release gate **fails instantly for any PR into
+  `main` whose source branch is not `develop`** (guard step in release.yml) —
+  promotions have exactly one origin. Merge methods are ruleset-enforced:
+  squash-only into `develop`, merge-commit-only into `main`.
 
 **One-time settings (GitHub → Settings):**
 1. Create `develop` from `main`; set `develop` as the default branch.

@@ -55,6 +55,14 @@ for (const story of entries) {
     await page.waitForSelector('#storybook-root');
     // Self-hosted fonts must be painted before pixels are compared.
     await page.evaluate(() => document.fonts.ready);
+    // 'pin-hover' stories snapshot their hover END state: a real mouse hover
+    // (synthetic events can't activate CSS :hover) + animations disabled.
+    if (story.tags?.includes('pin-hover')) {
+      await page
+        .locator('#storybook-root button, #storybook-root a')
+        .first()
+        .hover();
+    }
     await expect(page).toHaveScreenshot(`${story.id}.png`, { fullPage: true });
   });
 }

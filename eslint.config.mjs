@@ -17,6 +17,12 @@ export default defineConfig([
     name: 'jsx-a11y/full-recommended-rules',
     rules: jsxA11y.flatConfigs.recommended.rules,
   },
+  // Map design-system wrappers to the native element they render so jsx-a11y
+  // rules also inspect their call sites (G2 review, Button migration).
+  {
+    name: 'jsx-a11y/component-mapping',
+    settings: { 'jsx-a11y': { components: { Button: 'button' } } },
+  },
   globalIgnores([
     '.next/**',
     'out/**',

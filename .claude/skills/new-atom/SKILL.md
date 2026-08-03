@@ -25,6 +25,30 @@ merge into develop in parallel; main waits until the owner feels develop is read
 
 Stop-and-ask only for: ambiguous mapping, merge/drop verdicts, brief-§15 parked decisions.
 
+### Model routing (owner decision 2026-08-03)
+
+Planning and judgment run in the **main loop** (session model — Fable by owner
+preference): S0–S3, every canvas interaction, G2 finding-verification, V, S7,
+S8. The mechanical build **S4–S6 is dispatched in ONE Agent call** to the
+`atom-builder` subagent (`.claude/agents/atom-builder.md`, pinned
+`model: opus`), passing: the approved prop contract, the animation/interaction
+spec incl. amendments, the expected-diff manifest, fixture strings, and the
+atom path. On return the main loop **re-runs G1 itself** (trust but verify)
+and continues G2 → V → S7. **G2 reviewers run as the project-shadow agents**
+in `.claude/agents/` (`react-reviewer`, `typescript-reviewer`,
+`a11y-architect` — verbatim ecc copies pinned `model: fable` + `effort: max`;
+project scope beats plugin scope, so dispatch the UNSCOPED names). Code
+review and finding-verification stay on the judgment model at max effort;
+only the S4–S6 build runs on Opus. The main loop's own effort floor is
+persisted as `effortLevel: xhigh` in `.claude/settings.json` (`max` is
+session-only — the owner may top up with `/effort max`). If the Agent tool
+or an agent type is unavailable, do that stage inline and note it in the
+pack.
+
+Plans live in `.claude/plans/` which is **gitignored** — the plan file exists
+to feed the canvas and the dispatch prompt, never a commit; inventory rows
+cite the canvas date, not a plan path.
+
 ### S0 · BRANCH
 `git switch -c migrate/<atom>` (or `fix/…`, `rework/…`) off up-to-date `develop`.
 Parallel branches for different atoms are normal and expected.
@@ -53,18 +77,18 @@ non-text (§6.3); semantic tokens only; `rem`; no outer margins; container queri
 `'use client'` only if inherently stateful (justified in PR). Consult `ecc:react-patterns`
 + `ecc:coding-standards`; Context7 for exact-minor APIs; verify with the TypeScript LSP.
 
-### S4 · EXECUTABLE SPEC — failing tests + skeleton story
+### S4 · EXECUTABLE SPEC — failing tests + skeleton story *(inside `atom-builder`)*
 Via `ecc:react-test`: Vitest + RTL role queries, **Romanian fixtures with diacritics**;
 tests exist and fail. **Create the skeleton story now** — argTypes mirroring the S3
 contract. The story is the spec made visible, not documentation written afterwards.
 
-### S5 · BUILD — with the live story open
+### S5 · BUILD — with the live story open *(inside `atom-builder`)*
 Implement against the running Storybook, inspecting the story **across widths
 continuously** (Storybook viewport toolbar / chrome-devtools `resize_page`). Nothing about
 the atom's look should be a surprise later. Tailwind utilities; focus-visible;
 motion-reduce; props spread; `ref` as prop; `className` merged.
 
-### S6 · FINALIZE STORIES
+### S6 · FINALIZE STORIES *(inside `atom-builder`)*
 One story per state, controls wired, Romanian demo args ("Programează-te", "Ședință de
 consultație"), DE-longest-word + pseudo-locale **stress variants**, opt-in 320 tag when
 layout-relevant.
@@ -73,9 +97,11 @@ layout-relevant.
 `npx tsc --noEmit` · `npm run lint` · `npx prettier --check .` · `npm run test -- --run` ·
 `npm run build-storybook` · axe = 0 violations. Red → `/debug-deep`. Never tweak-and-retry.
 
-### G2 · AGENT GATE
-`ecc:react-reviewer` + `ecc:typescript-reviewer` (parallel); `ecc:a11y-architect` for
-interactive atoms. Verify findings before applying; CRITICAL/HIGH → S5.
+### G2 · AGENT GATE *(reviewers = Fable @ max effort)*
+`react-reviewer` + `typescript-reviewer` (parallel); `a11y-architect` for
+interactive atoms — the UNSCOPED names resolve to the project shadows in
+`.claude/agents/`, pinned `model: fable` + `effort: max` (owner decision
+2026-08-03). Verify findings before applying; CRITICAL/HIGH → S5.
 **Iteration economy:** on pack-annotation loops, G2 re-runs **only if the diff since the
 last G2 touches types/logic** — pure class-string/token tweaks skip straight to V.
 

@@ -11,6 +11,9 @@ test-results/
 # personal Claude config (project settings.json and skills ARE committed)
 .claude/*.local.md
 .claude/settings.local.json
+# working plans for the plan-canvas — session artifacts, never shipped
+# (owner decision 2026-08-03; the one committed button plan stays as history)
+.claude/plans/
 
 # os noise
 .DS_Store

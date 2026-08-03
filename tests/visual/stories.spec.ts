@@ -10,6 +10,12 @@ import { expect, test } from '@playwright/test';
 //   Pages/*    → 320 390 768 1280 1536 1920
 //   (anything else, e.g. Fixtures/*) → 1280
 
+const kebab = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 const MATRIX: ReadonlyArray<[RegExp, number[]]> = [
   [/^UI\//, [1280]],
   [/^Sections\//, [390, 1536]],
@@ -63,6 +69,12 @@ for (const story of entries) {
         .first()
         .hover();
     }
-    await expect(page).toHaveScreenshot(`${story.id}.png`, { fullPage: true });
+    // Baselines are organised by tier/component folders derived from the
+    // story title (owner decision 2026-08-03): UI/Button › German Longest
+    // → __screenshots__/ui/button/german-longest-<project>-<platform>.png
+    await expect(page).toHaveScreenshot(
+      [...story.title.split('/').map(kebab), `${kebab(story.name)}.png`],
+      { fullPage: true },
+    );
   });
 }

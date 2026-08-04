@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
@@ -19,6 +20,12 @@ export default defineConfig({
         },
       },
       {
+        // Plain Vite does not read tsconfig "paths" — mirror the repo's `@/*`
+        // alias here so components tests resolve like tsc/eslint/Storybook do
+        // (first needed by ui/Icon importing @/assets/glyphs, fb-84).
+        resolve: {
+          alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+        },
         test: {
           name: 'components',
           include: ['src/**/*.test.{ts,tsx}'],

@@ -12,3 +12,4 @@
 | Hero/TopBar "parent resizes button internals" pattern (`lg:[&>*]:h-16` …) | drop (pattern, not component) | `size` prop (§6.8) | canvas annotation fb-23, 2026-08-02 |
 | `ui/rich-text` (bold-marker renderer) | drop | next-intl `t.rich()` at section level | canvas annotation fb-22, 2026-08-02 |
 | `ui/icon-button`, `floating-book-cta` | out of scope (this run) | future `IconButton` atom (§6.3 typed aria-label lives there) + section composite | — |
+| `app/body-overlay-scrollbar.tsx` + `overlayscrollbars`/`overlayscrollbars-react` deps + `.os-theme-smile-overlay` theme (page overlay scrollbar) | drop | nothing — native OS scrollbars in v1. Not a component: effect-only (`return null`), fails the §6.1 atom test, app-shell infrastructure — never Storybook material. If brand color is ever wanted later: CSS `scrollbar-color` tint in `globals.css`, zero JS (board Option B) | canvas chat fb-40, 2026-08-04 (`.claude/plans/scrollbar-verdict.plan.md`) |

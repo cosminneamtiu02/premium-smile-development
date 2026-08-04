@@ -12,11 +12,17 @@ description: Build or rework one ui/ atom for Premium Smile — branch-first, lo
   hookify rule points here), or **"change/extend/rework the … atom"** → run in `rework` mode.
 - Phase 2 of `MIGRATION_PLAYBOOK.md` order: `Image` → `Heading`/`Text` → `Button` → `Icon`
   → `Card` → `Badge`/`Tag`.
+- `/new-atom from <dossier path>` — **dossier mode**: the atom was planned by
+  `/section-breakdown`; the dossier pre-fills the S1–S3 evidence. Claim its epic issue
+  first (first claim wins — stop if already claimed), open a worktree lane per
+  `../new-section/references/lane-and-epic-glue.md` when running in parallel, and if the
+  dossier status is `approved` the contract board is settled → straight to the S4 dispatch.
 
-Read `CLAUDE.md` first (§6, §8, §9, §13, §15.7–8). Old project is **read-only**:
+Read `CLAUDE.md` first (§6, §8, §9, §13, §15.7–8, §15.12). Old project is **read-only**:
 `/Users/cosminneamtiu/Work/premium-smile-webpage`.
 
-**Modes:** `migrate` (old component → new atom) · `rework` (existing NEW atom changes).
+**Modes:** `migrate` (old component → new atom) · `rework` (existing NEW atom changes) ·
+`dossier` (from a `/section-breakdown` workspace).
 **Owner's roles:** describe at the start · point-and-approve the pack · say "commit it" ·
 merge the PR. Promotion `develop → main` is **entirely owner-timed** — many atom branches
 merge into develop in parallel; main waits until the owner feels develop is ready.

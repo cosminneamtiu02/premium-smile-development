@@ -14,6 +14,9 @@ test-results/
 # working plans for the plan-canvas — session artifacts, never shipped
 # (owner decision 2026-08-03; the one committed button plan stays as history)
 .claude/plans/
+# section-breakdown workspaces — datetime-rooted dossier trees (§15.12), session artifacts;
+# the durable record is MIGRATION_INVENTORY.md + epic issues, never the workspace
+.claude/section-runs/
 
 # os noise
 .DS_Store

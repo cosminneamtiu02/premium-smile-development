@@ -2,7 +2,7 @@ import { createRef, type Ref } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Button } from './Button';
+import { Button, type ButtonVariant } from './Button';
 
 // Role-based queries on purpose (§3, §9): passing tests double as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7).
@@ -237,11 +237,163 @@ describe('Button — asChild guards & merge rules', () => {
   });
 });
 
-describe('Button — frame-safe hover invariant (§9 a11y audit)', () => {
-  it('never animates text color; only the ::before sweep transitions', () => {
-    render(<Button variant="outline">Ședință</Button>);
+describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
+  // These run in real Chromium (@vitest/browser-playwright, the "components"
+  // project), but the setup imports no stylesheet, so computed styles would
+  // read back as browser defaults — the utility tokens ARE the contract here.
+  // Plan button-hover-fade.plan.md replaced the v1 center-out sweep with a
+  // single crossfade: the owner read sweep + color change as "2 animations at
+  // once". The bans below ARE the deliverable, and every one of them was
+  // proven bypassable in review before it was tightened — a fully working
+  // sweep re-added on ::after, a rogue transform, an asymmetric
+  // hover:duration. They are therefore pattern-based, never a blocklist of
+  // exact spellings.
+  // Where an exact spelling IS the requirement, tokens are matched whole,
+  // never as substrings: every rest-state token is contained in its own
+  // variant-prefixed form — 'bg-cta' sits inside 'hover:bg-cta',
+  // 'duration-0' inside 'active:duration-0'.
+  const tokensOf = (variant: ButtonVariant = 'solid') => {
+    const { unmount } = render(<Button variant={variant}>Ședință</Button>);
     const cls = screen.getByRole('button').className;
-    expect(cls).not.toMatch(/transition-colors|transition-\[color\]/);
-    expect(cls).toContain('before:transition-transform');
+    unmount();
+    return { cls, tokens: cls.split(/\s+/).filter(Boolean) };
+  };
+
+  it('runs one calm shared fade clock, symmetric in and out', () => {
+    const { tokens } = tokensOf();
+    expect(tokens).toContain('[--fade:400ms]');
+    expect(tokens).toContain('duration-(--fade)');
+    expect(tokens).toContain('ease-in-out');
+    expect(tokens).toContain('transition-[background-color,color]');
+  });
+
+  it('admits no second clock or easing — in and out stay mirrored', () => {
+    const { tokens } = tokensOf();
+    // A single hover:duration-1000 or hover:ease-linear would desynchronise
+    // the two directions, which is precisely what "calm" rules out.
+    expect(
+      tokens.filter(
+        (t) =>
+          /(^|:)duration-/.test(t) &&
+          t !== 'duration-(--fade)' &&
+          t !== 'active:duration-0',
+      ),
+    ).toEqual([]);
+    expect(
+      tokens.filter((t) => /(^|:)ease-/.test(t) && t !== 'ease-in-out'),
+    ).toEqual([]);
+  });
+
+  it('the sweep is gone — one animation only', () => {
+    const { cls, tokens } = tokensOf();
+    // Pseudo-elements are banned by PATTERN: a working sweep was re-added on
+    // ::after, and again as [&::before]:…, straight past a before:-only ban.
+    expect(cls).not.toMatch(/(^|:)(before|after):/);
+    expect(cls).not.toMatch(/::(before|after)/);
+    expect(tokens.filter((t) => /(^|:)(before|after):/.test(t))).toEqual([]);
+    // …and nothing may move, spin, pulse or scale: color is the ONE animation.
+    expect(cls).not.toMatch(/transition-transform|transition-all/);
+    expect(
+      tokens.filter((t) =>
+        /(^|:)(animate|scale|translate|rotate|skew)-/.test(t),
+      ),
+    ).toEqual([]);
+    expect(tokens).not.toContain('overflow-hidden');
+    expect(tokens).not.toContain('isolate');
+    expect(tokens.filter((t) => t.startsWith('will-change'))).toEqual([]);
+    expect(tokens.filter((t) => t.includes('--sweep'))).toEqual([]);
+    // No hand-written hover-capability gate — Tailwind already wraps every
+    // hover: utility in @media (hover:hover) on its own.
+    expect(tokens.filter((t) => t.startsWith('motion-safe:'))).toEqual([]);
+  });
+
+  it('press feedback snaps, release fades', () => {
+    expect(tokensOf().tokens).toContain('active:duration-0');
+  });
+
+  it('reduced motion gets snaps, not fades', () => {
+    expect(tokensOf().tokens).toContain('motion-reduce:transition-none');
+  });
+
+  it('keeps a visible focus ring, never animated away (SC 2.4.7 / 1.4.11)', () => {
+    const { cls, tokens } = tokensOf();
+    // outline-hidden/-none would sail past axe AND jsx-a11y in silence: this
+    // is the only guard the ring has anywhere in the repo.
+    expect(tokens).toContain('focus-visible:outline-2');
+    expect(tokens).toContain('focus-visible:outline-focus');
+    expect(tokens).toContain('outline-offset-2');
+    expect(cls).not.toMatch(/outline-none|outline-hidden/);
+  });
+
+  // Record<ButtonVariant, …> on purpose: a fourth variant cannot ship with
+  // zero coverage — the file stops typechecking until it is classified here.
+  const requiredTokens: Record<ButtonVariant, string[]> = {
+    solid: [
+      'bg-cta',
+      'text-ink-inverse',
+      'hover:bg-cta-hover',
+      'active:bg-cta-hover',
+    ],
+    outline: [
+      'border-cta',
+      'bg-surface',
+      'text-cta',
+      'hover:bg-cta',
+      'hover:text-ink-inverse',
+      'active:bg-cta-hover',
+      'active:text-ink-inverse',
+    ],
+    ghost: [
+      'bg-transparent',
+      'text-ink',
+      'hover:bg-line-subtle',
+      'active:bg-line-subtle',
+    ],
+  };
+
+  it.each(Object.keys(requiredTokens) as ButtonVariant[])(
+    'variant %s carries its exact AA-checked color pair',
+    (variant) => {
+      const { tokens } = tokensOf(variant);
+      // Positive coverage: without it, dropping text-ink-inverse from solid
+      // leaves the label inheriting --ink on #008854 (3.28:1, SC 1.4.3 fail)
+      // with the whole suite still green.
+      for (const required of requiredTokens[variant]) {
+        expect(tokens).toContain(required);
+      }
+    },
+  );
+
+  // Which variants hold their label color constant. outline is the one
+  // deliberate crossfade (owner decision — see the invariant in Button.tsx).
+  const constantTextVariants: Record<ButtonVariant, boolean> = {
+    solid: true,
+    outline: false,
+    ghost: true,
+  };
+
+  it.each(
+    (Object.keys(constantTextVariants) as ButtonVariant[]).filter(
+      (variant) => constantTextVariants[variant],
+    ),
+  )('variant %s never changes text color', (variant) => {
+    const { tokens } = tokensOf(variant);
+    // Only the ground fades, so every frame of the lerp keeps the label over
+    // an AA-passing pair. Arbitrary properties bypass the text- prefix, hence
+    // the third ban.
+    expect(tokens.filter((t) => t.startsWith('hover:text-'))).toEqual([]);
+    expect(tokens.filter((t) => t.startsWith('active:text-'))).toEqual([]);
+    expect(tokens.filter((t) => /(^|:)\[color:/.test(t))).toEqual([]);
+  });
+
+  it('outline crossfades both colors with no rogue lerp utilities', () => {
+    const { cls } = tokensOf('outline');
+    // Its positive tokens live in the requiredTokens table above. The broad
+    // utilities stay banned even though text DOES fade here: they also cover
+    // outline-color, dragging the focus ring onto the clock. None of them
+    // collides with the legitimate transition-[background-color,color].
+    expect(cls).not.toMatch(
+      /transition-colors|transition-\[color\]|transition-all/,
+    );
   });
 });

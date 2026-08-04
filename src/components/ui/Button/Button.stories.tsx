@@ -40,7 +40,7 @@ type Story = StoryObj<typeof meta>;
 /** Solid CTA — the „Programează o consultație" hero/topbar action. */
 export const Default: Story = {};
 
-/** Outlined tone — fills with the center-out sweep on hover. */
+/** Outlined tone — ground and label crossfade (swap colors) on hover. */
 export const Outline: Story = {
   args: { variant: 'outline', children: 'Vezi serviciile' },
 };
@@ -79,7 +79,7 @@ export const PartlyBold: Story = {
 
 /**
  * Content is a slot: graphic beside text (ANPC/SAL shape). The placeholder
- * mark draws with currentColor, so it follows the hover text-flip exactly
+ * mark draws with currentColor, so it follows the hover text crossfade exactly
  * like the label does — no coordination code anywhere.
  */
 export const WithImage: Story = {

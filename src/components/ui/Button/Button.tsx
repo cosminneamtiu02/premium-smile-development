@@ -1,5 +1,5 @@
-import { cloneElement, isValidElement } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
 // ui/Button — the one button of the design system (migrated per the approved
 // 2026-08-02 canvas plan; replaces the Phase 0 probe wholesale).
@@ -53,6 +53,8 @@ export type ButtonProps = ButtonOwnProps &
 // The list is exactly background-color,color and NOT `transition-colors` —
 // that shorthand covers outline-color and would drag the focus ring onto the
 // same clock.
+// KEEP IN SYNC with RoundButton's --fade: the two atoms deliberately carry
+// byte-identical clocks (fb-44) so the whole system fades at one speed.
 const base =
   'inline-flex items-center justify-center gap-2 ' +
   'rounded-md font-medium outline-offset-2 ' +
@@ -84,23 +86,6 @@ const sizeClasses: Record<ButtonSize, string> = {
 const cx = (...parts: Array<string | undefined | false>) =>
   parts.filter(Boolean).join(' ');
 
-// <button>-only props that must never land on a slotted child: anchors have
-// no disabled state and no form association. ('type' can never actually reach
-// the merge loop — it is destructured away with a default — but is listed so
-// the invariant reads complete in one place.)
-const BUTTON_ONLY_PROPS = new Set([
-  'type',
-  'disabled',
-  'form',
-  'formAction',
-  'formEncType',
-  'formMethod',
-  'formNoValidate',
-  'formTarget',
-  'name',
-  'value',
-]);
-
 export function Button({
   variant = 'solid',
   size = 'md',
@@ -118,39 +103,12 @@ export function Button({
   );
 
   if (asChild) {
-    // This guard must run FIRST so misuse (text, arrays, nothing) surfaces
-    // this actionable message — React's own Children.only would preempt it
-    // with a generic one, which is why it is not used here.
-    if (
-      !isValidElement<{ className?: string; [key: string]: unknown }>(children)
-    ) {
-      throw new Error(
-        'Button with asChild expects exactly one element child (e.g. an <a> or <Link>).',
-      );
-    }
-    // The child element becomes the button: every prop the child declares is
-    // kept (child wins conflicts — React 19 exposes `ref` inside props, so
-    // this check covers ref too; never add 'ref' to BUTTON_ONLY_PROPS), then
-    // Button's remaining props are added and the class strings merged —
-    // parent positioning classes stay routed through Button (§6.8).
-    const merged: Record<string, unknown> = {};
-    const ignored: string[] = [];
-    for (const [key, value] of Object.entries(
-      rest as Record<string, unknown>,
-    )) {
-      if (BUTTON_ONLY_PROPS.has(key)) {
-        ignored.push(key);
-        continue;
-      }
-      if (!(key in children.props)) merged[key] = value;
-    }
-    if (ignored.length > 0 && process.env.NODE_ENV !== 'production') {
-      console.error(
-        `Button: ${ignored.join(', ')} has no effect with asChild — put behaviour props on the child element itself.`,
-      );
-    }
-    merged.className = cx(ownClasses, children.props.className);
-    return cloneElement(children, merged);
+    // The child element becomes the button. The engine lives in ui/slot.ts
+    // (owner decision fb-64) — single-child guard first, child-wins merge,
+    // className merged last, dev-only warning for <button>-only props. Same
+    // semantics as before the extraction, byte for byte; editing slot.ts
+    // edits this atom too (see that file's standing rule).
+    return slotClone('Button', children, ownClasses, rest, BUTTON_ONLY_PROPS);
   }
 
   return (

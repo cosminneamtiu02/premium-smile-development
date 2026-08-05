@@ -368,6 +368,19 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `eslint-plugin-jsx-a11y`'s peer range (≤9) is satisfied naturally again, so the
     package.json `overrides` workaround was removed. Revisit when eslint-plugin-react +
     eslint-config-next support ESLint 10; restore ~10.8.0 in one deliberate bump.
+12. **Section-migration harness — DECIDED 2026-08-05 (owner, via new-section-flow canvas,
+    fb-65–fb-82):** four-skill ECC-native harness: **`/section-breakdown`** (organizer —
+    recursive walk with a live ledger, each node logged before descending; gitignored
+    workspace `.claude/section-runs/<datetime>_<slug>/` with one implementation dossier per
+    component under `atoms/` + `sections/`) · **`/classify-component`** (atom-vs-section
+    import-graph rubric, inventory precedence) · **`/new-section`** (per-section build twin
+    of `/new-atom`) · `section-builder` agent (Opus). Constraints: workflow deliverables
+    reference **ECC machinery only** — no superpowers (fb-70); build lanes are git worktrees
+    capped at **2 concurrent** (fb-67), Storybook ports 6007/6008; coordination state =
+    **ECC epic GitHub issues** + `coordination:*` labels (fb-69); the **double gate stays** —
+    pack approval never commits; each lane waits for its per-lane "commit it" (fb-66, §15.7
+    unchanged). The breakdown never builds; every build is owner-triggered (fb-68). Ops
+    reference: `.claude/skills/new-section/references/lane-and-epic-glue.md`.
 
 ## 16. Build-time vs runtime contract
 
@@ -417,7 +430,9 @@ resizing, server rendering, analytics.
    dependency that stores data on the visitor's device.
 5. When a situation isn't covered here, or a parked decision blocks you: **stop and ask** —
    don't decide silently. Record new decisions by appending to §15 or amending the relevant §.
-6. *(Added 2026-07-31)* The project skills **`/new-atom`** (component migration flow) and
+6. *(Added 2026-07-31, amended 2026-08-05)* The project skills **`/new-atom`** +
+   **`/new-section`** (component/section migration flows), **`/section-breakdown`**
+   (decomposition → dossier workspaces), **`/classify-component`** (tier rubric), and
    **`/debug-deep`** (ECC-native root-cause debugging loop) in `.claude/skills/` define the
-   standing workflows — follow them. Commits happen **only on the owner's explicit
+   standing workflows — follow them (§15.12). Commits happen **only on the owner's explicit
    instruction** (§15.7); flows end at "ready + evidence" and wait.

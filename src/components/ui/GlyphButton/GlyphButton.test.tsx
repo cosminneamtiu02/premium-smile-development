@@ -3,17 +3,18 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  RoundButton,
-  type RoundButtonSize,
-  type RoundButtonVariant,
-} from './RoundButton';
+  GlyphButton,
+  type GlyphButtonShape,
+  type GlyphButtonSize,
+  type GlyphButtonVariant,
+} from './GlyphButton';
 
 // Role-based queries on purpose (§3, §9): passing tests double as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7).
 //
-// This file deliberately does NOT import ui/Icon. RoundButton.tsx doesn't
+// This file deliberately does NOT import ui/Icon. GlyphButton.tsx doesn't
 // either — its slot takes ANY inline SVG, so the unit proof uses a raw one:
-// a glyph-registry edit can then never mask (or fake) a RoundButton
+// a glyph-registry edit can then never mask (or fake) a GlyphButton
 // regression. The real <Icon> composition is covered by the stories, where
 // the visual net and per-story axe see it (plan §6).
 const GLYPH = (
@@ -29,24 +30,79 @@ const classesOf = (ui: ReactElement): string => {
   return cls;
 };
 
-describe('RoundButton — element & semantics', () => {
+// All three axis tables sit at module scope, each a Record<Union, …> so a
+// future member cannot ship with zero token coverage — the file stops
+// typechecking until it is classified here. The shape suite reuses sizeTokens
+// to prove the axes orthogonal, and the motion sweep derives its matrix from
+// the shape × variant tables, inheriting their exhaustiveness.
+const sizeTokens: Record<GlyphButtonSize, string[]> = {
+  md: ['size-11', '[&_svg]:size-5'], // 2.75rem / 44px — §9 touch target
+  lg: ['size-14', '[&_svg]:size-7'], // 3.5rem / 56px — primary CTA scale
+};
+
+const shapeTokens: Record<GlyphButtonShape, string[]> = {
+  round: ['rounded-full'], // the call CTA and the footer socials
+  square: ['rounded-md'], // the Header burger — 6px, the §15.1 default radius
+};
+
+const requiredTokens: Record<GlyphButtonVariant, string[]> = {
+  solid: [
+    'bg-cta',
+    'text-ink-inverse',
+    'hover:bg-cta-hover',
+    'active:bg-cta-hover',
+  ],
+  outline: [
+    'border-cta',
+    'bg-surface',
+    'text-cta',
+    'hover:bg-cta',
+    'hover:text-ink-inverse',
+    'active:bg-cta-hover',
+    'active:text-ink-inverse',
+  ],
+  // The quiet tone, byte-identical to Button's ghost bundle so the two atoms
+  // speak one ghost language: transparent at rest, dim tray on hover — and
+  // the tray is line-subtle, NOT raised (#ffffff would be invisible on the
+  // white surface). ink over #e9e6e2 = 11.9:1, measured in Button.tsx.
+  ghost: [
+    'bg-transparent',
+    'text-ink',
+    'hover:bg-line-subtle',
+    'active:bg-line-subtle',
+  ],
+};
+
+// The full variant × shape matrix, DERIVED — never hand-listed: a hand list
+// silently missed outline·square and would let a future bundle ship unswept
+// (G2 finding, 2026-08-06). Because both source tables are Record<Union, …>,
+// a 4th variant or 3rd shape joins the sweep the moment the file typechecks.
+const motionCases = (
+  Object.keys(requiredTokens) as GlyphButtonVariant[]
+).flatMap((variant) =>
+  (Object.keys(shapeTokens) as GlyphButtonShape[]).map(
+    (shape): [GlyphButtonVariant, GlyphButtonShape] => [variant, shape],
+  ),
+);
+
+describe('GlyphButton — element & semantics', () => {
   it('renders a real <button> exposing the aria-label as its accessible name', () => {
-    render(<RoundButton aria-label="Sună clinica">{GLYPH}</RoundButton>);
+    render(<GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>);
     expect(
       screen.getByRole('button', { name: 'Sună clinica' }),
     ).toBeInTheDocument();
   });
 
   it('defaults to type="button" so it never submits forms by accident', () => {
-    render(<RoundButton aria-label="Sună clinica">{GLYPH}</RoundButton>);
+    render(<GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>);
     expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
   });
 
   it('honors an explicit type override', () => {
     render(
-      <RoundButton aria-label="Trimite formularul" type="submit">
+      <GlyphButton aria-label="Trimite formularul" type="submit">
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
   });
@@ -54,9 +110,9 @@ describe('RoundButton — element & semantics', () => {
   it('fires onClick', async () => {
     const onClick = vi.fn();
     render(
-      <RoundButton aria-label="Sună clinica" onClick={onClick}>
+      <GlyphButton aria-label="Sună clinica" onClick={onClick}>
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Sună clinica' }));
     expect(onClick).toHaveBeenCalledOnce();
@@ -65,9 +121,9 @@ describe('RoundButton — element & semantics', () => {
   it('does not fire onClick when disabled', async () => {
     const onClick = vi.fn();
     render(
-      <RoundButton aria-label="Sună clinica" disabled onClick={onClick}>
+      <GlyphButton aria-label="Sună clinica" disabled onClick={onClick}>
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Sună clinica' }));
     expect(onClick).not.toHaveBeenCalled();
@@ -75,9 +131,9 @@ describe('RoundButton — element & semantics', () => {
   });
 });
 
-describe('RoundButton — the icon slot (§6.2) and its geometry', () => {
+describe('GlyphButton — the icon slot (§6.2) and its geometry', () => {
   it('renders the svg child inside the control and sizes it from the root', () => {
-    render(<RoundButton aria-label="Sună clinica">{GLYPH}</RoundButton>);
+    render(<GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>);
     const button = screen.getByRole('button', { name: 'Sună clinica' });
     // The glyph is the content, not a prop — any inline <svg> is legal.
     expect(button.querySelector('svg')).toBeInstanceOf(SVGSVGElement);
@@ -87,21 +143,13 @@ describe('RoundButton — the icon slot (§6.2) and its geometry', () => {
     expect(button.className).toContain('[&_svg]:size-5');
   });
 
-  // Record<RoundButtonSize, …> for the same reason as the variant table
-  // further down: a future size cannot ship with zero token coverage — this
-  // file stops typechecking until it is classified here.
-  const sizeTokens: Record<RoundButtonSize, string[]> = {
-    md: ['size-11', '[&_svg]:size-5'], // 2.75rem / 44px — §9 touch target
-    lg: ['size-14', '[&_svg]:size-7'], // 3.5rem / 56px — primary CTA scale
-  };
-
-  it.each(Object.keys(sizeTokens) as RoundButtonSize[])(
+  it.each(Object.keys(sizeTokens) as GlyphButtonSize[])(
     'size %s scales circle and glyph together, in rem (§7)',
     (size) => {
       const cls = classesOf(
-        <RoundButton aria-label="Sună clinica" size={size}>
+        <GlyphButton aria-label="Sună clinica" size={size}>
           {GLYPH}
-        </RoundButton>,
+        </GlyphButton>,
       );
       for (const token of sizeTokens[size]) {
         expect(cls).toContain(token);
@@ -111,23 +159,133 @@ describe('RoundButton — the icon slot (§6.2) and its geometry', () => {
 
   it('is a perfect circle that never shrinks in a flex row', () => {
     const cls = classesOf(
-      <RoundButton aria-label="Sună clinica">{GLYPH}</RoundButton>,
+      <GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>,
     );
     expect(cls).toContain('rounded-full');
     expect(cls).toContain('shrink-0');
   });
 });
 
-describe('RoundButton — variants & sizes are real styling switches', () => {
-  it('defaults to solid · md', () => {
+describe('GlyphButton — shape is geometry, nothing else', () => {
+  it('defaults to round, so every existing circle is untouched by the rework', () => {
     const fallback = classesOf(
-      <RoundButton aria-label="Sună clinica">{GLYPH}</RoundButton>,
+      <GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>,
     );
     expect(fallback).toEqual(
       classesOf(
-        <RoundButton aria-label="Sună clinica" variant="solid" size="md">
+        <GlyphButton aria-label="Sună clinica" shape="round">
           {GLYPH}
-        </RoundButton>,
+        </GlyphButton>,
+      ),
+    );
+  });
+
+  it.each(Object.keys(shapeTokens) as GlyphButtonShape[])(
+    'shape %s carries exactly its own radius token',
+    (shape) => {
+      const cls = classesOf(
+        <GlyphButton aria-label="Deschide meniul" shape={shape}>
+          {GLYPH}
+        </GlyphButton>,
+      );
+      for (const token of shapeTokens[shape]) {
+        expect(cls).toContain(token);
+      }
+    },
+  );
+
+  it('square is a rounded rectangle and never a circle', () => {
+    const cls = classesOf(
+      <GlyphButton aria-label="Deschide meniul" shape="square">
+        {GLYPH}
+      </GlyphButton>,
+    );
+    expect(cls).toContain('rounded-md');
+    expect(cls).not.toContain('rounded-full');
+  });
+
+  it('shape "round" styles differ from "square"', () => {
+    expect(
+      classesOf(
+        <GlyphButton aria-label="Deschide meniul" shape="round">
+          {GLYPH}
+        </GlyphButton>,
+      ),
+    ).not.toEqual(
+      classesOf(
+        <GlyphButton aria-label="Deschide meniul" shape="square">
+          {GLYPH}
+        </GlyphButton>,
+      ),
+    );
+  });
+
+  it.each(Object.keys(sizeTokens) as GlyphButtonSize[])(
+    'square keeps the %s box and its glyph sizing — shape ⟂ size',
+    (size) => {
+      const cls = classesOf(
+        <GlyphButton aria-label="Deschide meniul" shape="square" size={size}>
+          {GLYPH}
+        </GlyphButton>,
+      );
+      for (const token of sizeTokens[size]) {
+        expect(cls).toContain(token);
+      }
+    },
+  );
+});
+
+describe('GlyphButton — morph-ready root (no state, no new code path)', () => {
+  // The burger's open/closed animation is the Header's job (D12): this atom
+  // only GUARANTEES the hooks — `group` on the root plus honest prop spread —
+  // so the parent's own child SVG can drive itself with group-aria-expanded:*.
+  it('always marks its root `group`, the hook a parent SVG keys off', () => {
+    const cls = classesOf(
+      <GlyphButton aria-label="Deschide meniul">{GLYPH}</GlyphButton>,
+    );
+    expect(cls.split(/\s+/)).toContain('group');
+  });
+
+  it('spreads aria-expanded/aria-controls onto the root — the parent owns the state', () => {
+    render(
+      <GlyphButton
+        aria-label="Deschide meniul"
+        aria-expanded={false}
+        aria-controls="meniu-principal"
+      >
+        {GLYPH}
+      </GlyphButton>,
+    );
+    const button = screen.getByRole('button', { name: 'Deschide meniul' });
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).toHaveAttribute('aria-controls', 'meniu-principal');
+  });
+
+  it('lands both `group` and aria-expanded on the child in asChild mode', () => {
+    // Mechanics proof ONLY — an anchor that toggles a panel would announce
+    // "link" and promise navigation it doesn't do; the REAL burger is the
+    // plain-<button> branch above. Never copy this fixture as the pattern.
+    render(
+      <GlyphButton asChild aria-label="Deschide meniul" aria-expanded>
+        <a href="#meniu-principal">{GLYPH}</a>
+      </GlyphButton>,
+    );
+    const link = screen.getByRole('link', { name: 'Deschide meniul' });
+    expect(link.className.split(/\s+/)).toContain('group');
+    expect(link).toHaveAttribute('aria-expanded', 'true');
+  });
+});
+
+describe('GlyphButton — variants & sizes are real styling switches', () => {
+  it('defaults to solid · md', () => {
+    const fallback = classesOf(
+      <GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>,
+    );
+    expect(fallback).toEqual(
+      classesOf(
+        <GlyphButton aria-label="Sună clinica" variant="solid" size="md">
+          {GLYPH}
+        </GlyphButton>,
       ),
     );
   });
@@ -135,15 +293,15 @@ describe('RoundButton — variants & sizes are real styling switches', () => {
   it('variant "solid" styles differ from "outline"', () => {
     expect(
       classesOf(
-        <RoundButton aria-label="Sună clinica" variant="solid">
+        <GlyphButton aria-label="Sună clinica" variant="solid">
           {GLYPH}
-        </RoundButton>,
+        </GlyphButton>,
       ),
     ).not.toEqual(
       classesOf(
-        <RoundButton aria-label="Sună clinica" variant="outline">
+        <GlyphButton aria-label="Sună clinica" variant="outline">
           {GLYPH}
-        </RoundButton>,
+        </GlyphButton>,
       ),
     );
   });
@@ -151,26 +309,26 @@ describe('RoundButton — variants & sizes are real styling switches', () => {
   it('size "md" styles differ from "lg"', () => {
     expect(
       classesOf(
-        <RoundButton aria-label="Sună clinica" size="md">
+        <GlyphButton aria-label="Sună clinica" size="md">
           {GLYPH}
-        </RoundButton>,
+        </GlyphButton>,
       ),
     ).not.toEqual(
       classesOf(
-        <RoundButton aria-label="Sună clinica" size="lg">
+        <GlyphButton aria-label="Sună clinica" size="lg">
           {GLYPH}
-        </RoundButton>,
+        </GlyphButton>,
       ),
     );
   });
 });
 
-describe('RoundButton — §6.8 native-element fidelity', () => {
+describe('GlyphButton — §6.8 native-element fidelity', () => {
   it('merges the parent className instead of replacing its own', () => {
     render(
-      <RoundButton aria-label="Sună clinica" className="fixed end-5 bottom-5">
+      <GlyphButton aria-label="Sună clinica" className="fixed end-5 bottom-5">
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     const button = screen.getByRole('button');
     // The one thing §6.4/§6.8 let a parent do: position it (the floating CTA).
@@ -186,22 +344,22 @@ describe('RoundButton — §6.8 native-element fidelity', () => {
   it('accepts ref as a regular prop (React 19) reaching the DOM node', () => {
     const ref = createRef<HTMLButtonElement>();
     render(
-      <RoundButton aria-label="Sună clinica" ref={ref}>
+      <GlyphButton aria-label="Sună clinica" ref={ref}>
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     expect(ref.current).toBeInstanceOf(HTMLButtonElement);
   });
 
   it('spreads remaining native props onto the root element', () => {
     render(
-      <RoundButton
+      <GlyphButton
         aria-label="Sună clinica"
         data-analytics="call"
         aria-describedby="hint"
       >
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('data-analytics', 'call');
@@ -209,8 +367,8 @@ describe('RoundButton — §6.8 native-element fidelity', () => {
   });
 });
 
-describe('RoundButton — asChild (same slot contract as Button)', () => {
-  // RoundButtonProps types ref for the <button> branch; in asChild mode it
+describe('GlyphButton — asChild (same slot contract as Button)', () => {
+  // GlyphButtonProps types ref for the <button> branch; in asChild mode it
   // reaches the child element instead — the cast below is the test
   // acknowledging that.
   const asButtonRef = (ref: Ref<HTMLAnchorElement>) =>
@@ -218,11 +376,11 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
 
   it('renders ONLY the child element — the <a> IS the circle', () => {
     render(
-      <RoundButton asChild aria-label="Sună clinica" size="lg">
+      <GlyphButton asChild aria-label="Sună clinica" size="lg">
         <a href="tel:+40700000000">{GLYPH}</a>
-      </RoundButton>,
+      </GlyphButton>,
     );
-    // The accessible name travels from RoundButton onto the anchor…
+    // The accessible name travels from GlyphButton onto the anchor…
     const link = screen.getByRole('link', { name: 'Sună clinica' });
     expect(link).toHaveAttribute('href', 'tel:+40700000000');
     expect(link.querySelector('svg')).toBeInstanceOf(SVGSVGElement);
@@ -232,7 +390,7 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
 
   it("pours the circle's classes onto the child, keeping the child's own", () => {
     render(
-      <RoundButton
+      <GlyphButton
         asChild
         variant="outline"
         aria-label="Deschide profilul Instagram"
@@ -246,14 +404,14 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
         >
           {GLYPH}
         </a>
-      </RoundButton>,
+      </GlyphButton>,
     );
     const link = screen.getByRole('link', {
       name: 'Deschide profilul Instagram',
     });
     // the child keeps its own class…
     expect(link.className).toContain('col-span-2');
-    // …receives the parent-positioning class routed through RoundButton…
+    // …receives the parent-positioning class routed through GlyphButton…
     expect(link.className).toContain('justify-self-start');
     // …wears the circle's clothes, variant included…
     expect(link.className).toContain('rounded-full');
@@ -266,11 +424,11 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
 
   it('the child wins ordinary prop conflicts', () => {
     render(
-      <RoundButton asChild aria-label="Sună clinica">
+      <GlyphButton asChild aria-label="Sună clinica">
         <a href="tel:+40700000000" aria-label="Sună recepția">
           {GLYPH}
         </a>
-      </RoundButton>,
+      </GlyphButton>,
     );
     expect(
       screen.getByRole('link', { name: 'Sună recepția' }),
@@ -286,11 +444,11 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
     // the slot must too, or the §6.3 type guarantee dies silently at exactly
     // the call sites that look most innocent (G2 a11y finding, 2026-08-05).
     render(
-      <RoundButton asChild aria-label="Sună clinica">
+      <GlyphButton asChild aria-label="Sună clinica">
         <a href="tel:+40700000000" aria-label={undefined}>
           {GLYPH}
         </a>
-      </RoundButton>,
+      </GlyphButton>,
     );
     expect(
       screen.getByRole('link', { name: 'Sună clinica' }),
@@ -300,30 +458,30 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
   it('forwards ref to the child element (React 19 ref-in-props)', () => {
     const ref = createRef<HTMLAnchorElement>();
     render(
-      <RoundButton asChild aria-label="Sună clinica" ref={asButtonRef(ref)}>
+      <GlyphButton asChild aria-label="Sună clinica" ref={asButtonRef(ref)}>
         <a href="tel:+40700000000">{GLYPH}</a>
-      </RoundButton>,
+      </GlyphButton>,
     );
     expect(ref.current).toBeInstanceOf(HTMLAnchorElement);
   });
 
-  it('throws its own actionable, RoundButton-named message for non-element children', () => {
+  it('throws its own actionable, GlyphButton-named message for non-element children', () => {
     const silence = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() =>
       render(
-        <RoundButton asChild aria-label="Sună clinica">
+        <GlyphButton asChild aria-label="Sună clinica">
           doar text
-        </RoundButton>,
+        </GlyphButton>,
       ),
     ).toThrow(
-      'RoundButton with asChild expects exactly one element child (e.g. an <a> or <Link>).',
+      'GlyphButton with asChild expects exactly one element child (e.g. an <a> or <Link>).',
     );
     expect(() =>
       render(
-        <RoundButton asChild aria-label="Sună clinica">
+        <GlyphButton asChild aria-label="Sună clinica">
           <a href="tel:+40700000000">{GLYPH}</a>
           <a href="tel:+40700000001">{GLYPH}</a>
-        </RoundButton>,
+        </GlyphButton>,
       ),
     ).toThrow(/exactly one element child/);
     silence.mockRestore();
@@ -332,9 +490,9 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
   it('never leaks <button>-only props onto the child and warns in dev', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     render(
-      <RoundButton asChild aria-label="Sună clinica" disabled formAction="/x">
+      <GlyphButton asChild aria-label="Sună clinica" disabled formAction="/x">
         <a href="tel:+40700000000">{GLYPH}</a>
-      </RoundButton>,
+      </GlyphButton>,
     );
     const link = screen.getByRole('link', { name: 'Sună clinica' });
     // An anchor has no disabled state and no form association.
@@ -342,23 +500,29 @@ describe('RoundButton — asChild (same slot contract as Button)', () => {
     expect(link).not.toHaveAttribute('formaction');
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'RoundButton: disabled, formAction has no effect with asChild',
+        'GlyphButton: disabled, formAction has no effect with asChild',
       ),
     );
     errorSpy.mockRestore();
   });
 });
 
-describe('RoundButton — one calm color fade (fb-44: Button’s clock)', () => {
+describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => {
   // These run in real Chromium (@vitest/browser-playwright, the "components"
   // project), but the setup imports no stylesheet, so computed styles would
   // read back as browser defaults — the utility tokens ARE the contract here,
   // exactly as in Button.test.tsx.
-  const tokensOf = (variant: RoundButtonVariant = 'solid') => {
+  // Both axes are parameters now: the motion bans below sweep the WHOLE
+  // family — the quiet tone and the square face included — instead of auditing
+  // the founding circle only.
+  const tokensOf = (
+    variant: GlyphButtonVariant = 'solid',
+    shape: GlyphButtonShape = 'round',
+  ) => {
     const cls = classesOf(
-      <RoundButton aria-label="Sună clinica" variant={variant}>
+      <GlyphButton aria-label="Sună clinica" variant={variant} shape={shape}>
         {GLYPH}
-      </RoundButton>,
+      </GlyphButton>,
     );
     return { cls, tokens: cls.split(/\s+/).filter(Boolean) };
   };
@@ -386,19 +550,24 @@ describe('RoundButton — one calm color fade (fb-44: Button’s clock)', () => 
     ).toEqual([]);
   });
 
-  it('nothing moves and nothing jumps (D2: no scale-105, no shadow pop)', () => {
-    const { cls, tokens } = tokensOf();
-    // The old icon-button grew on hover and swapped shadows — the owner cut
-    // BOTH (fb-49/fb-50). Banned by pattern, never as a list of spellings.
-    expect(
-      tokens.filter((t) =>
-        /(^|:)(animate|scale|translate|rotate|skew)-/.test(t),
-      ),
-    ).toEqual([]);
-    expect(tokens.filter((t) => /(^|:)shadow(-|$)/.test(t))).toEqual([]);
-    expect(cls).not.toMatch(/transition-transform|transition-all/);
-    expect(cls).not.toMatch(/(^|:)(before|after):|::(before|after)/);
-  });
+  it.each(motionCases)(
+    'nothing moves and nothing jumps — %s · %s (D2: no scale-105, no shadow pop)',
+    (variant, shape) => {
+      const { cls, tokens } = tokensOf(variant, shape);
+      // The old icon-button grew on hover and swapped shadows — the owner cut
+      // BOTH (fb-49/fb-50). Banned by pattern, never as a list of spellings.
+      // The burger's morph is no exception: transforms belong to the Header's
+      // own SVG child, never to a bundle in here.
+      expect(
+        tokens.filter((t) =>
+          /(^|:)(animate|scale|translate|rotate|skew)-/.test(t),
+        ),
+      ).toEqual([]);
+      expect(tokens.filter((t) => /(^|:)shadow(-|$)/.test(t))).toEqual([]);
+      expect(cls).not.toMatch(/transition-transform|transition-all/);
+      expect(cls).not.toMatch(/(^|:)(before|after):|::(before|after)/);
+    },
+  );
 
   it('fades exactly two properties — never the focus ring', () => {
     const { cls } = tokensOf('outline');
@@ -425,27 +594,7 @@ describe('RoundButton — one calm color fade (fb-44: Button’s clock)', () => 
     expect(cls).not.toMatch(/outline-none|outline-hidden/);
   });
 
-  // Record<RoundButtonVariant, …> on purpose: a third variant cannot ship with
-  // zero coverage — the file stops typechecking until it is classified here.
-  const requiredTokens: Record<RoundButtonVariant, string[]> = {
-    solid: [
-      'bg-cta',
-      'text-ink-inverse',
-      'hover:bg-cta-hover',
-      'active:bg-cta-hover',
-    ],
-    outline: [
-      'border-cta',
-      'bg-surface',
-      'text-cta',
-      'hover:bg-cta',
-      'hover:text-ink-inverse',
-      'active:bg-cta-hover',
-      'active:text-ink-inverse',
-    ],
-  };
-
-  it.each(Object.keys(requiredTokens) as RoundButtonVariant[])(
+  it.each(Object.keys(requiredTokens) as GlyphButtonVariant[])(
     'variant %s carries its exact AA-checked color pair',
     (variant) => {
       const { tokens } = tokensOf(variant);
@@ -458,6 +607,14 @@ describe('RoundButton — one calm color fade (fb-44: Button’s clock)', () => 
     },
   );
 
+  it('ghost really rests transparent — bg-transparent is its only plain bg', () => {
+    // A ground painted at rest would make ghost a second solid: the tray must
+    // exist ONLY under hover/active, so the parent's surface shows through and
+    // ghost stays usable on any light ground (Button.tsx's standing caveat).
+    const { tokens } = tokensOf('ghost');
+    expect(tokens.filter((t) => /^bg-/.test(t))).toEqual(['bg-transparent']);
+  });
+
   it('disabled is a state of the box, not of the colors', () => {
     const { tokens } = tokensOf();
     expect(tokens).toContain('disabled:pointer-events-none');
@@ -465,14 +622,14 @@ describe('RoundButton — one calm color fade (fb-44: Button’s clock)', () => 
   });
 });
 
-describe('RoundButton — type-level contract', () => {
+describe('GlyphButton — type-level contract', () => {
   it('requires aria-label: an unnamed icon-only control cannot compile (§6.3)', () => {
     // Never rendered: this exists so `tsc --noEmit` fails if the contract
     // loosens. @ts-expect-error is itself an error when the line compiles,
     // so both directions are covered.
     const nameless = (
       // @ts-expect-error — 'aria-label' is required: children are never text
-      <RoundButton>{GLYPH}</RoundButton>
+      <GlyphButton>{GLYPH}</GlyphButton>
     );
     expect(nameless).toBeTruthy();
   });

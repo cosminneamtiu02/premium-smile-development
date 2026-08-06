@@ -1,42 +1,52 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { Icon } from '../Icon/Icon';
 import {
-  RoundButton,
-  type RoundButtonSize,
-  type RoundButtonVariant,
-} from './RoundButton';
+  GlyphButton,
+  type GlyphButtonShape,
+  type GlyphButtonSize,
+  type GlyphButtonVariant,
+} from './GlyphButton';
 
 // One story per meaningful state (§13). Demo values are Romanian with
 // diacritics (§15.7); there are no DE/pseudo-locale or 320px stress variants
 // on purpose (plan D6 — the control carries no visible text and its box is a
-// fixed ≤56px circle, so neither text expansion nor reflow can move it).
+// fixed ≤56px square, so neither text expansion nor reflow can move it).
 // The children here are real <Icon> glyphs — exactly what the footer socials
 // and the floating call CTA will pass (plan D8, amended round 5). Stories may
-// compose atoms; RoundButton.tsx itself never imports Icon, and its unit tests
-// use a raw <svg> to keep that independence honest.
+// compose atoms; GlyphButton.tsx itself never imports Icon, and its unit tests
+// use a raw <svg> to keep that independence honest. The one exception is the
+// burger below: a deliberately BESPOKE inline svg, kept out of the glyph
+// registry because the Header will replace it with the animated morph version.
 // Hrefs are placeholders: the real phone number and profile URLs arrive from
 // lib/clinic.ts, the single source of NAP (§10.1), when sections get built.
 
 const meta = {
-  title: 'UI/RoundButton',
-  component: RoundButton,
+  title: 'UI/GlyphButton',
+  component: GlyphButton,
   args: {
     children: <Icon name="phone" />,
     'aria-label': 'Sună clinica',
     variant: 'solid',
+    shape: 'round',
     size: 'md',
   },
   argTypes: {
     variant: {
       control: 'radio',
-      options: ['solid', 'outline'] satisfies RoundButtonVariant[],
+      options: ['solid', 'outline', 'ghost'] satisfies GlyphButtonVariant[],
       description:
-        'Named color pair — solid = filled call CTA / outline = socials, fills on hover',
+        'Named color pair — solid = filled call CTA / outline = socials, fills on hover / ghost = quiet, dim tray on hover',
+    },
+    shape: {
+      control: 'radio',
+      options: ['round', 'square'] satisfies GlyphButtonShape[],
+      description:
+        'Geometry only — round = the circle (phone, socials) / square = 6px radius (the Header burger)',
     },
     size: {
       control: 'radio',
-      options: ['md', 'lg'] satisfies RoundButtonSize[],
-      description: 'Circle scale — md 2.75rem/44px · lg 3.5rem/56px',
+      options: ['md', 'lg'] satisfies GlyphButtonSize[],
+      description: 'Box scale — md 2.75rem/44px · lg 3.5rem/56px',
     },
     'aria-label': {
       control: 'text',
@@ -55,7 +65,7 @@ const meta = {
     },
     disabled: { control: 'boolean' },
   },
-} satisfies Meta<typeof RoundButton>;
+} satisfies Meta<typeof GlyphButton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -72,12 +82,56 @@ export const Outline: Story = {
   },
 };
 
-/** Both circle scales side by side (gap owned by the parent, §6.4). */
+/**
+ * Ghost — the quiet tone: nothing at all at rest, a dim tray fading in on
+ * hover (`bg-line-subtle`, byte-parity with Button's ghost so the two atoms
+ * speak one ghost language). Transparent at rest means the PARENT owns the
+ * rest contrast: light grounds only.
+ */
+export const Ghost: Story = {
+  args: { variant: 'ghost' },
+};
+
+/**
+ * SquareGhost — THE Header burger cell of the D2 grid: same ghost bundle, same
+ * 44px box as its round siblings, only the radius differs (6px, §15.1).
+ * The glyph is a BESPOKE inline svg on purpose and stays out of the Icon
+ * registry: the real one ships with the Header section (D12) as an
+ * aria-expanded-driven animated morph. This atom only enables that — it
+ * guarantees `group` on its root and holds no state of its own.
+ * Two rules travel with this cell into the Header dossier (G2 a11y,
+ * 2026-08-06): keep ONE state-invariant label + aria-expanded (no
+ * Deschide/Închide label swapping, no aria-haspopup — the nav panel is a
+ * disclosure, not a menu widget), and the morph SVG brings its OWN
+ * motion-reduce guard — the atom's transition-none never reaches the
+ * parent's transforms.
+ */
+export const SquareGhost: Story = {
+  args: {
+    variant: 'ghost',
+    shape: 'square',
+    'aria-label': 'Deschide meniul',
+    children: (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        strokeWidth={2}
+        strokeLinecap="round"
+      >
+        <path d="M4 6h16" stroke="currentColor" fill="none" />
+        <path d="M4 12h16" stroke="currentColor" fill="none" />
+        <path d="M4 18h16" stroke="currentColor" fill="none" />
+      </svg>
+    ),
+  },
+};
+
+/** Both box scales side by side (gap owned by the parent, §6.4). */
 export const Sizes: Story = {
   render: (args) => (
     <div className="flex flex-wrap items-center gap-4">
-      <RoundButton {...args} size="md" />
-      <RoundButton {...args} size="lg" />
+      <GlyphButton {...args} size="md" />
+      <GlyphButton {...args} size="lg" />
     </div>
   ),
 };
@@ -86,11 +140,11 @@ export const Sizes: Story = {
 export const AsChildTel: Story = {
   args: { size: 'lg' },
   render: (args) => (
-    <RoundButton {...args} asChild>
+    <GlyphButton {...args} asChild>
       <a href="tel:+40700000000">
         <Icon name="phone" />
       </a>
-    </RoundButton>
+    </GlyphButton>
   ),
 };
 
@@ -99,7 +153,7 @@ export const AsChildExternal: Story = {
   args: { variant: 'outline' },
   render: (args) => (
     <div className="flex flex-wrap items-center gap-4">
-      <RoundButton {...args} asChild aria-label="Deschide profilul Instagram">
+      <GlyphButton {...args} asChild aria-label="Deschide profilul Instagram">
         <a
           href="https://example.com/instagram"
           target="_blank"
@@ -107,8 +161,8 @@ export const AsChildExternal: Story = {
         >
           <Icon name="instagram" />
         </a>
-      </RoundButton>
-      <RoundButton {...args} asChild aria-label="Deschide profilul TikTok">
+      </GlyphButton>
+      <GlyphButton {...args} asChild aria-label="Deschide profilul TikTok">
         <a
           href="https://example.com/tiktok"
           target="_blank"
@@ -116,7 +170,7 @@ export const AsChildExternal: Story = {
         >
           <Icon name="tiktok" />
         </a>
-      </RoundButton>
+      </GlyphButton>
     </div>
   ),
 };
@@ -126,16 +180,16 @@ export const Disabled: Story = {
   args: { disabled: true },
   render: (args) => (
     <div className="flex flex-wrap items-center gap-4">
-      <RoundButton {...args} variant="solid" aria-label="Sună clinica">
+      <GlyphButton {...args} variant="solid" aria-label="Sună clinica">
         <Icon name="phone" />
-      </RoundButton>
-      <RoundButton
+      </GlyphButton>
+      <GlyphButton
         {...args}
         variant="outline"
         aria-label="Deschide profilul Instagram"
       >
         <Icon name="instagram" />
-      </RoundButton>
+      </GlyphButton>
     </div>
   ),
 };
@@ -147,12 +201,12 @@ export const Disabled: Story = {
 export const IconSizePrecedence: Story = {
   render: (args) => (
     <div className="flex flex-col items-start gap-2">
-      <RoundButton {...args} size="md">
+      <GlyphButton {...args} size="md">
         <Icon name="phone" size="lg" />
-      </RoundButton>
+      </GlyphButton>
       {/* Developer note, not site copy — untranslated on purpose. */}
       <p className="text-sm text-ink-muted">
-        &lt;Icon size=&quot;lg&quot;&gt; inside an md RoundButton → 20px, not
+        &lt;Icon size=&quot;lg&quot;&gt; inside an md GlyphButton → 20px, not
         32px: the circle&apos;s [&amp;_svg]:size-5 scores (0,1,1) and outranks
         Icon&apos;s own (0,1,0).
       </p>

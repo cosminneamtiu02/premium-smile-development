@@ -53,7 +53,7 @@ export type ButtonProps = ButtonOwnProps &
 // The list is exactly background-color,color and NOT `transition-colors` —
 // that shorthand covers outline-color and would drag the focus ring onto the
 // same clock.
-// KEEP IN SYNC with RoundButton's --fade: the two atoms deliberately carry
+// KEEP IN SYNC with GlyphButton's --fade: the two atoms deliberately carry
 // byte-identical clocks (fb-44) so the whole system fades at one speed.
 const base =
   'inline-flex items-center justify-center gap-2 ' +

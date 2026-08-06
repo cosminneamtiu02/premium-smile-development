@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 // ui/slot.ts — the shared asChild engine (owner decision fb-64, 2026-08-05,
 // plan .claude/plans/icon-button.plan.md §7 D7). Extracted verbatim from
-// Button, which now delegates to it; RoundButton was its second caller.
+// Button, which now delegates to it; GlyphButton was its second caller.
 //
 // NOT a component and NOT public API: this is ui-layer plumbing that sits
 // flat beside the atom folders and may be imported by `ui/` atoms ONLY —

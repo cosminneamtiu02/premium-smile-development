@@ -13,7 +13,7 @@ const SAMPLES: ReadonlyArray<[string, string]> = [
   ['Punctuation & currency', '€ 1.250,00 · « » “ ” ‘ ’ – — … ‰ ™'],
 ];
 
-function GlyphSheet() {
+function TypeSpecimen() {
   return (
     <div className="flex flex-col gap-6 p-6">
       {SAMPLES.map(([label, sample]) => (
@@ -32,9 +32,9 @@ function GlyphSheet() {
 }
 
 const meta = {
-  title: 'Fixtures/Glyphs',
-  component: GlyphSheet,
-} satisfies Meta<typeof GlyphSheet>;
+  title: 'Fixtures/Typography',
+  component: TypeSpecimen,
+} satisfies Meta<typeof TypeSpecimen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

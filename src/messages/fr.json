@@ -5,11 +5,18 @@
       "home": "Accueil",
       "services": "Soins",
       "team": "Équipe",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Navigation principale"
     },
     "actions": {
       "call": "Appeler maintenant",
       "contact": "Contact"
+    },
+    "menu": {
+      "label": "Menu"
+    },
+    "brand": {
+      "ariaLabel": "{name}, accueil"
     },
     "footer": {
       "rights": "Tous droits réservés"

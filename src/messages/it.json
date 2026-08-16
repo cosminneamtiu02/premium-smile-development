@@ -5,11 +5,18 @@
       "home": "Home",
       "services": "Servizi",
       "team": "Team",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Navigazione principale"
     },
     "actions": {
       "call": "Chiama ora",
       "contact": "Contatti"
+    },
+    "menu": {
+      "label": "Menu"
+    },
+    "brand": {
+      "ariaLabel": "{name}, home"
     },
     "footer": {
       "rights": "Tutti i diritti riservati"

@@ -85,6 +85,18 @@
 }
 
 @layer base {
+  /* The classic-scrollbar gutter is RESERVED even while a scroll lock
+     (overflow: hidden) hides the bar — board §5·A2's site-wide line, shipped
+     early for the Header (owner, 2026-08-16). Without it, NavMenu's page
+     freeze removes the scrollbar, the viewport widens by its width, and every
+     viewport-relative box — the Header pill's 10vw margins first of all —
+     visibly resizes the moment the menu opens. Overlay scrollbars (macOS
+     default) reserve no gutter and are unaffected. ContactModal's lock will
+     lean on this same line (NavMenu.tsx tells the story). */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     /* §15.1: body base 1.125rem. html stays 16px so rem/user zoom behave (§7). */
     font-size: 1.125rem;

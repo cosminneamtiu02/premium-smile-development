@@ -26,5 +26,17 @@
       "Write(//Users/cosminneamtiu/Work/premium-smile-webpage-backup/**)"
     ],
     "additionalDirectories": ["/Users/cosminneamtiu/Work/premium-smile-webpage"]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/explain-cs-grad.mjs\""
+          }
+        ]
+      }
+    ]
   }
 }

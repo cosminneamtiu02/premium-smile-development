@@ -30,3 +30,7 @@ public/images/next-image-export-optimizer-hashes.json
 
 # local env files — host tokens etc. must never enter the repo (SETUP_VERIFICATION Findings #4)
 .env*
+
+# local runner artifacts
+.vitest-attachments/
+.claude/checkpoints.log

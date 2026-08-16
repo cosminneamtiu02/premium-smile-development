@@ -1,3 +1,5 @@
+import { Burger } from './Burger';
+import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
 import { Tiktok } from './Tiktok';
@@ -10,6 +12,8 @@ import { Tiktok } from './Tiktok';
 // in the same commit (./README.md checklist, step 5).
 // Alphabetical by name; the name is the exported component's own name.
 export const ALL_GLYPHS = [
+  ['Burger', Burger],
+  ['Close', Close],
   ['Instagram', Instagram],
   ['Phone', Phone],
   ['Tiktok', Tiktok],

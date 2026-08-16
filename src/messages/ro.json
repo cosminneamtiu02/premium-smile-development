@@ -5,11 +5,18 @@
       "home": "Acasă",
       "services": "Servicii",
       "team": "Echipa",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Navigare principală"
     },
     "actions": {
       "call": "Sună acum",
       "contact": "Contact"
+    },
+    "menu": {
+      "label": "Meniu"
+    },
+    "brand": {
+      "ariaLabel": "{name}, acasă"
     },
     "footer": {
       "rights": "Toate drepturile rezervate"

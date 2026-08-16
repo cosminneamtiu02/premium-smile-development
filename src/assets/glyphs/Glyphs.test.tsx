@@ -2,6 +2,8 @@ import { createRef, type ReactElement } from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ALL_GLYPHS } from './all-glyphs';
+import { Burger } from './Burger';
+import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
 import { Tiktok } from './Tiktok';
@@ -17,7 +19,11 @@ import { Tiktok } from './Tiktok';
 // ALL_GLYPHS — a new glyph file that skips the lists fails HERE instead of
 // drifting out of coverage silently (board §5·2-2, accepted with mitigation).
 
-const STROKE_GLYPHS = [['Phone', Phone]] as const;
+const STROKE_GLYPHS = [
+  ['Burger', Burger],
+  ['Close', Close],
+  ['Phone', Phone],
+] as const;
 const FILL_GLYPHS = [
   ['Instagram', Instagram],
   ['Tiktok', Tiktok],

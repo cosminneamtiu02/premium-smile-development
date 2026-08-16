@@ -28,6 +28,14 @@ which is exactly why every file must keep the frame rules itself. What one file
    icon package — paths are vectorized into the repo).
 7. **No behavior in this folder.** Animated artwork is a *control* owned by its
    feature (the Header burger morph precedent) — assets stay inert pictures.
+   The morph itself is a kept MODEL (owner, 2026-08-17): when a future feature
+   needs a state-driven morph, copy the technique from
+   `components/sections/Header/BurgerToggle.tsx` — per-bar transition
+   properties, `[transform-box:fill-box]` origin fix, bars reading the
+   controlling button's `aria-expanded` through GlyphButton's `group` marker —
+   instead of re-deriving it. Static ☰/✕ *drawings* are different animals: a
+   plain close or menu glyph is drawn fresh as a normal file here (an ✕ is two
+   strokes, not three morphed bars).
 
 ## Sizing rule
 

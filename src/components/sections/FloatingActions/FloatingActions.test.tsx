@@ -112,8 +112,8 @@ describe('FloatingActions — the call CTA', () => {
   });
 
   it('keeps the phone glyph UNLABELLED so the anchor announces once', () => {
-    // See the `children` prop doc in ui/GlyphButton — a labelled Icon inside an
-    // asChild anchor double-announces in the a11y tree.
+    // See the `children` prop doc in ui/GlyphButton — a labelled glyph inside
+    // an asChild anchor double-announces in the a11y tree.
     const { call } = mount();
     const svg = call.querySelector('svg');
     expect(svg).toBeInstanceOf(SVGSVGElement);

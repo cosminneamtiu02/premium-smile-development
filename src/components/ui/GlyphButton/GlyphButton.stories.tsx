@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Icon } from '../Icon/Icon';
+import { Instagram } from '@/assets/glyphs/Instagram';
+import { Phone } from '@/assets/glyphs/Phone';
+import { Tiktok } from '@/assets/glyphs/Tiktok';
 import {
   GlyphButton,
   type GlyphButtonShape,
@@ -11,12 +13,12 @@ import {
 // diacritics (§15.7); there are no DE/pseudo-locale or 320px stress variants
 // on purpose (plan D6 — the control carries no visible text and its box is a
 // fixed ≤56px square, so neither text expansion nor reflow can move it).
-// The children here are real <Icon> glyphs — exactly what the footer socials
-// and the floating call CTA will pass (plan D8, amended round 5). Stories may
-// compose atoms; GlyphButton.tsx itself never imports Icon, and its unit tests
-// use a raw <svg> to keep that independence honest. The one exception is the
-// burger below: a deliberately BESPOKE inline svg, kept out of the glyph
-// registry because the Header will replace it with the animated morph version.
+// The children here are real glyph components — exactly what the footer
+// socials and the floating call CTA will pass (plan D8, amended round 5).
+// Stories may compose atoms; GlyphButton.tsx itself never imports a glyph, and
+// its unit tests use a raw <svg> to keep that independence honest. The one
+// exception is the burger below: a deliberately BESPOKE inline svg — the
+// Header replaces it with the animated morph control (BurgerToggle).
 // Hrefs are placeholders: the real phone number and profile URLs arrive from
 // lib/clinic.ts, the single source of NAP (§10.1), when sections get built.
 
@@ -24,7 +26,7 @@ const meta = {
   title: 'UI/GlyphButton',
   component: GlyphButton,
   args: {
-    children: <Icon name="phone" />,
+    children: <Phone />,
     'aria-label': 'Sună clinica',
     variant: 'solid',
     shape: 'round',
@@ -56,7 +58,7 @@ const meta = {
     children: {
       control: false,
       description:
-        'The icon slot — always an inline SVG, normally <Icon name="…" />',
+        'The icon slot — always an inline SVG, normally a glyph component (<Phone />)',
     },
     asChild: {
       control: false,
@@ -77,7 +79,7 @@ export const Default: Story = {};
 export const Outline: Story = {
   args: {
     variant: 'outline',
-    children: <Icon name="instagram" />,
+    children: <Instagram />,
     'aria-label': 'Deschide profilul Instagram',
   },
 };
@@ -95,8 +97,8 @@ export const Ghost: Story = {
 /**
  * SquareGhost — THE Header burger cell of the D2 grid: same ghost bundle, same
  * 44px box as its round siblings, only the radius differs (6px, §15.1).
- * The glyph is a BESPOKE inline svg on purpose and stays out of the Icon
- * registry: the real one ships with the Header section (D12) as an
+ * The glyph is a BESPOKE inline svg on purpose — not a glyphs/ file: the
+ * real one ships with the Header section (D12) as an
  * aria-expanded-driven animated morph. This atom only enables that — it
  * guarantees `group` on its root and holds no state of its own.
  * Two rules travel with this cell into the Header dossier (G2 a11y,
@@ -142,7 +144,7 @@ export const AsChildTel: Story = {
   render: (args) => (
     <GlyphButton {...args} asChild>
       <a href="tel:+40700000000">
-        <Icon name="phone" />
+        <Phone />
       </a>
     </GlyphButton>
   ),
@@ -159,7 +161,7 @@ export const AsChildExternal: Story = {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Icon name="instagram" />
+          <Instagram />
         </a>
       </GlyphButton>
       <GlyphButton {...args} asChild aria-label="Deschide profilul TikTok">
@@ -168,7 +170,7 @@ export const AsChildExternal: Story = {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Icon name="tiktok" />
+          <Tiktok />
         </a>
       </GlyphButton>
     </div>
@@ -181,14 +183,14 @@ export const Disabled: Story = {
   render: (args) => (
     <div className="flex flex-wrap items-center gap-4">
       <GlyphButton {...args} variant="solid" aria-label="Sună clinica">
-        <Icon name="phone" />
+        <Phone />
       </GlyphButton>
       <GlyphButton
         {...args}
         variant="outline"
         aria-label="Deschide profilul Instagram"
       >
-        <Icon name="instagram" />
+        <Instagram />
       </GlyphButton>
     </div>
   ),
@@ -202,13 +204,13 @@ export const IconSizePrecedence: Story = {
   render: (args) => (
     <div className="flex flex-col items-start gap-2">
       <GlyphButton {...args} size="md">
-        <Icon name="phone" size="lg" />
+        <Phone size="lg" />
       </GlyphButton>
       {/* Developer note, not site copy — untranslated on purpose. */}
       <p className="text-sm text-ink-muted">
-        &lt;Icon size=&quot;lg&quot;&gt; inside an md GlyphButton → 20px, not
+        &lt;Phone size=&quot;lg&quot;&gt; inside an md GlyphButton → 20px, not
         32px: the circle&apos;s [&amp;_svg]:size-5 scores (0,1,1) and outranks
-        Icon&apos;s own (0,1,0).
+        the glyph&apos;s own (0,1,0).
       </p>
     </div>
   ),

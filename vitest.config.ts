@@ -22,7 +22,7 @@ export default defineConfig({
       {
         // Plain Vite does not read tsconfig "paths" — mirror the repo's `@/*`
         // alias here so components tests resolve like tsc/eslint/Storybook do
-        // (first needed by ui/Icon importing @/assets/glyphs, fb-84).
+        // (every @/assets/glyphs and @/components import in tests needs it).
         resolve: {
           alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
         },

@@ -61,12 +61,12 @@ type GlyphButtonOwnProps = {
    */
   asChild?: boolean;
   /**
-   * The icon — always an inline SVG (owner decision fb-41). Normally
-   * <Icon name="…" />, which bakes in aria-hidden + currentColor; a raw <svg>
-   * stays legal. This atom never imports Icon: the slot takes any svg, which
-   * is also why the type is ReactNode — in asChild mode the child is the
-   * <a>/<button> wrapper and the svg sits one level deeper.
-   * Pass the icon UNLABELED (Icon's default): a labelled Icon inside an
+   * The icon — always an inline SVG (owner decision fb-41). Normally a glyph
+   * component (<Phone />), which bakes in aria-hidden + currentColor; a raw
+   * <svg> stays legal. This atom never imports a glyph: the slot takes any
+   * svg, which is also why the type is ReactNode — in asChild mode the child
+   * is the <a>/<button> wrapper and the svg sits one level deeper.
+   * Pass the icon UNLABELED (the glyphs' default): a labelled glyph inside an
    * asChild anchor double-announces in the a11y tree. Never put visible text
    * here — aria-label overrides content, so what users see and what they can
    * say would diverge (SC 2.5.3 Label in Name).
@@ -148,10 +148,10 @@ const shapeClasses: Record<GlyphButtonShape, string> = {
 // The box is the same in both shapes — size is orthogonal to shape, so a
 // square burger cell hits the same 44px target as the round call CTA.
 // [&_svg]:size-* is how the CONTROL owns its icon's geometry: that descendant
-// selector scores specificity (0,1,1) against Icon's own preset class (0,1,0),
-// so it wins in every browser and call sites may pass <Icon name="…"/> with or
-// without a size prop. Icon emits no width/height attributes, so nothing else
-// is in the fight (proven in situ by the IconSizePrecedence story).
+// selector scores specificity (0,1,1) against a glyph's own preset class
+// (0,1,0), so it wins in every browser and call sites may pass <Phone /> with
+// or without a size prop. Glyphs emit no width/height attributes, so nothing
+// else is in the fight (proven in situ by the IconSizePrecedence story).
 const sizeClasses: Record<GlyphButtonSize, string> = {
   md: 'size-11 [&_svg]:size-5',
   lg: 'size-14 [&_svg]:size-7',

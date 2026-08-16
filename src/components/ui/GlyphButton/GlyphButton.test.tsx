@@ -12,10 +12,10 @@ import {
 // Role-based queries on purpose (§3, §9): passing tests double as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7).
 //
-// This file deliberately does NOT import ui/Icon. GlyphButton.tsx doesn't
-// either — its slot takes ANY inline SVG, so the unit proof uses a raw one:
-// a glyph-registry edit can then never mask (or fake) a GlyphButton
-// regression. The real <Icon> composition is covered by the stories, where
+// This file deliberately does NOT import any glyph component. GlyphButton.tsx
+// doesn't either — its slot takes ANY inline SVG, so the unit proof uses a raw
+// one: a glyph-file edit can then never mask (or fake) a GlyphButton
+// regression. The real glyph composition is covered by the stories, where
 // the visual net and per-story axe see it (plan §6).
 const GLYPH = (
   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -138,8 +138,8 @@ describe('GlyphButton — the icon slot (§6.2) and its geometry', () => {
     // The glyph is the content, not a prop — any inline <svg> is legal.
     expect(button.querySelector('svg')).toBeInstanceOf(SVGSVGElement);
     // …and the CIRCLE owns its geometry: the descendant utility scores
-    // specificity (0,1,1) against Icon's own preset class (0,1,0), so call
-    // sites may drop <Icon name="…"/> in with or without a size prop.
+    // specificity (0,1,1) against a glyph's own preset class (0,1,0), so call
+    // sites may drop <Phone /> in with or without a size prop.
     expect(button.className).toContain('[&_svg]:size-5');
   });
 

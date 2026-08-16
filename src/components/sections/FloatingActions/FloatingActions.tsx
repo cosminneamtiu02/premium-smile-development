@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
-import { Icon } from '@/components/ui/Icon/Icon';
+import { Phone } from '@/assets/glyphs/Phone';
 import { clinic } from '@/lib/clinic';
 
 // sections/FloatingActions — the two thumb-reach controls that ride along on
@@ -139,7 +139,7 @@ export function FloatingActions(): ReactElement {
           the circle's clothes and the accessible name. size="lg" = 3.5rem, the
           §9 primary-CTA target. The number comes from lib/clinic.ts, the single
           source of NAP (§10.1), where it is still a TODO(owner) placeholder.
-          <Icon> stays UNLABELLED: a labelled icon inside an asChild anchor
+          <Phone /> stays UNLABELLED: a labelled glyph inside an asChild anchor
           double-announces (see the `children` prop doc in ui/GlyphButton). */}
       <GlyphButton
         asChild
@@ -150,7 +150,7 @@ export function FloatingActions(): ReactElement {
         className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40"
       >
         <a href={`tel:${clinic.phone}`}>
-          <Icon name="phone" />
+          <Phone />
         </a>
       </GlyphButton>
 

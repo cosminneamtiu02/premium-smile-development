@@ -34,6 +34,11 @@ const meta = {
       description:
         'Ink axis (fb-182): default → text-ink · muted → text-ink-muted · strong → text-ink-strong',
     },
+    bold: {
+      control: 'boolean',
+      description:
+        'Weight axis (owner 2026-08-19) — font-bold (700), additive to and independent of the fb-182 ink axis. CSS only: the element still comes from `as`, never a <strong>',
+    },
     children: {
       control: 'text',
       description:
@@ -67,6 +72,30 @@ export const Tones: Story = {
         © 2026 Premium Smile. Toate drepturile rezervate.
       </Text>
       <Text tone="strong">Sâmbătă: 09:00 – 14:00</Text>
+    </div>
+  ),
+};
+
+/**
+ * The Tones stack again, this time bolded — read it side by side with the
+ * story above: the weight axis is ADDITIVE (owner 2026-08-19), it never
+ * narrows the ink axis, so `tone` still says color and nothing else (fb-182).
+ * Fourth line is the DE-longest fixture at 700: bold glyphs are wider, which
+ * makes bold German — not regular German — the true wrap worst case, hence
+ * the 'stress-320' tag on this story and not only on GermanLongest.
+ */
+export const Bold: Story = {
+  tags: ['stress-320'],
+  render: () => (
+    <div className="flex flex-col gap-2">
+      <Text bold>Luni – Vineri: 09:00 – 19:00</Text>
+      <Text bold tone="muted">
+        © 2026 Premium Smile. Toate drepturile rezervate.
+      </Text>
+      <Text bold tone="strong">
+        Sâmbătă: 09:00 – 14:00
+      </Text>
+      <Text bold>Terminvereinbarung: Montag – Freitag, 09:00 – 19:00 Uhr</Text>
     </div>
   ),
 };

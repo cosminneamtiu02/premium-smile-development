@@ -15,6 +15,9 @@ import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
 // §6.3 does NOT apply: Text is non-interactive and its children are text by
 // contract, so there is no aria-label prop to demand (D6). Native aria-*
 // attributes still spread through for genuine edge cases.
+// Weight axis added 2026-08-19 (owner, addendum v3): `bold` → font-bold,
+// orthogonal to the untouched fb-182 tone triple, CSS only (D-C: never a
+// <strong> — the `as` prop alone decides the element).
 
 export type TextElement = 'p' | 'span' | 'dt' | 'dd';
 export type TextTone = 'default' | 'muted' | 'strong';
@@ -28,6 +31,8 @@ type TextOwnProps<E extends TextElement> = {
    * @default 'default'
    */
   tone?: TextTone;
+  /** Weight axis (owner 2026-08-19): true → font-bold (700). @default false */
+  bold?: boolean;
   /** Finished text only (§8.1) — sections pass translated strings/data; never a key, never t(). */
   children: ReactNode;
 };
@@ -73,11 +78,15 @@ const cx = (...parts: Array<string | undefined | false>) =>
 // (HTMLSpanElement declares no own members in lib.dom), callback refs pass
 // via @types/react's bivariance hack, while a truly foreign ref (an SVG
 // element) still errors.
-type TextRenderProps = Omit<TextProps<TextElement>, 'as' | 'tone' | 'children'>;
+type TextRenderProps = Omit<
+  TextProps<TextElement>,
+  'as' | 'tone' | 'bold' | 'children'
+>;
 
 export function Text<E extends TextElement = 'p'>({
   as,
   tone = 'default',
+  bold = false,
   className,
   children,
   ...rest
@@ -94,7 +103,12 @@ export function Text<E extends TextElement = 'p'>({
     // ever wants more generous leading, the lever is --text-base--line-height
     // in globals.css — one line, every consumer at once, a declared global
     // change — never a margin or a leading class smuggled in here (§6.4).
-    className: cx('text-base', toneClasses[tone], className),
+    className: cx(
+      'text-base',
+      toneClasses[tone],
+      bold && 'font-bold',
+      className,
+    ),
   };
 
   return createElement(as ?? 'p', attrs, children);

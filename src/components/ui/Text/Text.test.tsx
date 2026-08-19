@@ -100,6 +100,79 @@ describe('Text — tone is the whole style axis', () => {
   );
 });
 
+describe('Text — weight axis (owner 2026-08-19)', () => {
+  // Additive to the ink axis above, never a narrowing of it (fb-182 tone
+  // triple untouched): `bold` only ever ADDS font-bold to whatever tone
+  // emitted. Record<TextTone, …> again on purpose — a fourth tone cannot ship
+  // without a bold classification here.
+  const expectedBold: Record<TextTone, string> = {
+    default: 'text-base text-ink font-bold',
+    muted: 'text-base text-ink-muted font-bold',
+    strong: 'text-base text-ink-strong font-bold',
+  };
+
+  it('stays at the default weight until asked (bold is opt-in)', () => {
+    render(<Text>{RO}</Text>);
+    expect(tokensOf(screen.getByRole('paragraph'))).not.toContain('font-bold');
+  });
+
+  it.each(Object.keys(expectedBold) as TextTone[])(
+    'bold + tone "%s" emits the tone class AND font-bold, nothing else',
+    (tone) => {
+      render(
+        <Text tone={tone} bold>
+          {RO}
+        </Text>,
+      );
+      expect(screen.getByRole('paragraph').className).toBe(expectedBold[tone]);
+    },
+  );
+
+  it('bold={false} is the same render as omitting it', () => {
+    render(<Text bold={false}>{RO}</Text>);
+    expect(screen.getByRole('paragraph').className).toBe('text-base text-ink');
+  });
+
+  it('keeps the caller className LAST with bold set (§6.8 merge order)', () => {
+    render(
+      <Text bold className="col-span-2">
+        {RO}
+      </Text>,
+    );
+    expect(screen.getByRole('paragraph').className).toBe(
+      'text-base text-ink font-bold col-span-2',
+    );
+  });
+
+  it('composes with as="dt": the element stays a <dt>, no <strong> (D-C)', () => {
+    // The `as` axis alone decides the element — weight is CSS-only, so a bold
+    // term in the Footer hours list is still a real <dt> for the dl semantics,
+    // with no emphasis element smuggled inside it.
+    render(
+      <dl>
+        <Text as="dt" bold>
+          Luni – Vineri
+        </Text>
+      </dl>,
+    );
+    const term = screen.getByText('Luni – Vineri');
+    expect(term.tagName).toBe('DT');
+    expect(tokensOf(term)).toContain('font-bold');
+    expect(term.querySelector('strong, b')).toBeNull();
+  });
+
+  it('never leaks `bold` onto the DOM element (D-E render-bag invariant)', () => {
+    // React 19 forwards unknown props to the DOM verbatim, so a `bold` that
+    // slipped into the attrs bag would surface as bold="true" right here.
+    render(
+      <Text as="span" tone="muted" bold>
+        {RO}
+      </Text>,
+    );
+    expect(screen.getByText(RO)).not.toHaveAttribute('bold');
+  });
+});
+
 describe('Text — §6.8 native-element fidelity', () => {
   it('merges the parent className LAST, keeping its own classes first', () => {
     render(<Text className="col-span-2">{RO}</Text>);

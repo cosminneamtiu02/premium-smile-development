@@ -19,7 +19,15 @@
       "ariaLabel": "{name}, accueil"
     },
     "footer": {
-      "rights": "Tous droits réservés"
+      "tagline": "Dentisterie moderne. Des soins honnêtes.",
+      "contactLabel": "Contactez-nous ici",
+      "hoursTitle": "Horaires d'ouverture",
+      "closed": "Fermé",
+      "salLabel": "Règlement alternatif des litiges",
+      "backToTop": "Retour en haut",
+      "copyright": "© {year} {name}. Tous droits réservés.",
+      "socialInstagram": "{name} sur Instagram",
+      "socialTiktok": "{name} sur TikTok"
     }
   },
   "home": {

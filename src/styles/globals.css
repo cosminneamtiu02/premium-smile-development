@@ -97,6 +97,22 @@
     scrollbar-gutter: stable;
   }
 
+  /* In-page jumps GLIDE instead of teleporting — the Footer's "back to top"
+     link (href="#top") is the first consumer, and any future skip-link or
+     anchor gets it for free. A §6.7-legal line: scroll behaviour is document
+     state, so it belongs to the reset tier and NOT to a section (§6.1 — a
+     section may never style the shell), exactly like the scrollbar-gutter rule
+     above.
+     Wrapped in prefers-reduced-motion: no-preference because smooth scrolling
+     is vestibular motion (§9): with the query, a user who asked for less
+     motion gets the instant jump, and the link still works identically —
+     nothing is conveyed by the animation. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
   body {
     /* §15.1: body base 1.125rem. html stays 16px so rem/user zoom behave (§7). */
     font-size: 1.125rem;

@@ -19,7 +19,15 @@
       "ariaLabel": "{name}, home"
     },
     "footer": {
-      "rights": "Tutti i diritti riservati"
+      "tagline": "Odontoiatria moderna. Cure oneste.",
+      "contactLabel": "Contattaci qui",
+      "hoursTitle": "Orari di apertura",
+      "closed": "Chiuso",
+      "salLabel": "Risoluzione alternativa delle controversie",
+      "backToTop": "Torna su",
+      "copyright": "© {year} {name}. Tutti i diritti riservati.",
+      "socialInstagram": "{name} su Instagram",
+      "socialTiktok": "{name} su TikTok"
     }
   },
   "home": {

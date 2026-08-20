@@ -19,7 +19,15 @@
       "ariaLabel": "{name}, home"
     },
     "footer": {
-      "rights": "All rights reserved"
+      "tagline": "Modern dentistry. Honest care.",
+      "contactLabel": "Contact us here",
+      "hoursTitle": "Working hours",
+      "closed": "Closed",
+      "salLabel": "Alternative dispute resolution",
+      "backToTop": "Back to top",
+      "copyright": "© {year} {name}. All rights reserved.",
+      "socialInstagram": "{name} on Instagram",
+      "socialTiktok": "{name} on TikTok"
     }
   },
   "home": {

@@ -19,7 +19,15 @@
       "ariaLabel": "{name}, Startseite"
     },
     "footer": {
-      "rights": "Alle Rechte vorbehalten"
+      "tagline": "Moderne Zahnmedizin. Ehrliche Betreuung.",
+      "contactLabel": "Kontaktieren Sie uns hier",
+      "hoursTitle": "Öffnungszeiten",
+      "closed": "Geschlossen",
+      "salLabel": "Alternative Streitbeilegung",
+      "backToTop": "Nach oben",
+      "copyright": "© {year} {name}. Alle Rechte vorbehalten.",
+      "socialInstagram": "{name} auf Instagram",
+      "socialTiktok": "{name} auf TikTok"
     }
   },
   "home": {

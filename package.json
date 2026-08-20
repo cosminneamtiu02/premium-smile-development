@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
+    "build-storybook": "next-image-export-optimizer && storybook build",
     "visual": "playwright test tests/visual",
     "visual:update": "playwright test tests/visual --update-snapshots"
   },

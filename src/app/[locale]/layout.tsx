@@ -39,7 +39,16 @@ export default async function LocaleLayout({ children, params }: Props) {
   const t = await getTranslations({ locale, namespace: 'common' });
 
   return (
-    <html lang={locale} className={`${serif.variable} ${mono.variable}`}>
+    <html
+      lang={locale}
+      // Paired with globals.css's motion-gated `scroll-behavior: smooth`: Next
+      // 16 suppresses that glide during route transitions ONLY when the
+      // attribute announces it (dist disable-smooth-scroll.js reads
+      // dataset.scrollBehavior). Without it, every internal navigation
+      // animates a full-page scroll to top (G2 react-reviewer HIGH).
+      data-scroll-behavior="smooth"
+      className={`${serif.variable} ${mono.variable}`}
+    >
       <body className="bg-page font-body text-ink">
         <NextIntlClientProvider>
           <header>
@@ -59,7 +68,13 @@ export default async function LocaleLayout({ children, params }: Props) {
               </p>
             </address>
             <p>
-              © {new Date().getFullYear()} {clinic.name}. {t('footer.rights')}.
+              {/* One ICU string, not glued fragments (§8.2); year as string so the
+                  formatter can't digit-group it ("2.026"). footer.rights died with
+                  the real Footer's copyright key (Q10, N2 board fb-179). */}
+              {t('footer.copyright', {
+                year: String(new Date().getFullYear()),
+                name: clinic.name,
+              })}
             </p>
           </footer>
         </NextIntlClientProvider>

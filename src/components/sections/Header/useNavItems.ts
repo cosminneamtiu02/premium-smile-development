@@ -1,12 +1,13 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import type { Locale } from '@/i18n/locales';
 import { usePathname } from '@/i18n/navigation';
+import { primaryRoutes } from '@/lib/routes';
 import type { NavRoute } from './NavItem';
 
-// sections/Header — the ONE source of the site's primary route list, in its
-// own module (org-review board F1, .claude/plans/
+// sections/Header — the hook that turns the site's route list into the bar's
+// entries: each one translated, and each one told whether it is the page you
+// are on (org-review board F1, .claude/plans/
 // header-code-organization-review.plan.md, owner approval fb-169 2026-08-17).
 // It was born inside HeaderNav.tsx; extracted because the data has TWO equal
 // consumers — the bar row (HeaderNav) and the panel list (NavMenu) render the
@@ -14,6 +15,15 @@ import type { NavRoute } from './NavItem';
 // import a component file for a non-component export. Same play as ui/slot.ts
 // (fb-64): shared non-component machinery sits in a flat sibling module named
 // for exactly what it exports.
+//
+// ── THE ROUTE LIST ITSELF NOW LIVES IN lib/routes.ts (Footer run, 2026-08-17).
+// The Footer renders the same four links, and it is a DIFFERENT section: had
+// the list stayed here, sections/Footer would have to import
+// sections/Header/useNavItems — a sideways dependency §4 does not allow
+// (app → sections → ui). So the pure data climbed to lib/, beside clinic.ts,
+// and this hook kept the two things that need the browser. Observable
+// behaviour is unchanged, deliberately: same order, same ro-only blog, same
+// aria-current.
 //
 // ── Why this module is client code ('use client'). Both consumers must know
 // WHICH PAGE YOU ARE ON to mark it, and under static export (§16) the answer
@@ -25,13 +35,6 @@ import type { NavRoute } from './NavItem';
 //
 // §8.1 holds: t() is called HERE, in the section tier, and the atoms below
 // NavItem receive finished strings. They never see a key.
-
-/**
- * The blog exists in Romanian only (§5) — the nav item is hidden on every
- * other locale, so `/de/blog` is never offered and never linked. Named
- * against the Locale union so a locale rename cannot leave a dead string here.
- */
-const BLOG_LOCALE: Locale = 'ro';
 
 /**
  * Section-scoped, NOT prefix matching for '/': every path starts with a
@@ -61,17 +64,9 @@ export function useNavItems(): NavRoute[] {
   const locale = useLocale();
   const pathname = usePathname() || '/';
 
-  const routes = [
-    { href: '/', label: t('nav.home') },
-    { href: '/services', label: t('nav.services') },
-    { href: '/team', label: t('nav.team') },
-    ...(locale === BLOG_LOCALE
-      ? [{ href: '/blog', label: t('nav.blog') }]
-      : []),
-  ];
-
-  return routes.map((route) => ({
-    ...route,
+  return primaryRoutes(locale).map((route) => ({
+    href: route.href,
+    label: t(route.key),
     active: isActive(pathname, route.href),
   }));
 }

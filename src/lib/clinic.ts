@@ -3,9 +3,24 @@
 // construction. ALL values below are placeholders until the owner supplies the
 // real ones — every "TODO(owner)" must be resolved before launch (Phase 5).
 
+/**
+ * schema.org's weekday names — a CLOSED set of seven, so it is typed as the
+ * union: a typo ("Mondey") fails compilation here instead of surfacing as a
+ * build-render throw. lib/hours keeps its runtime throw as belt-and-braces
+ * for data that dodges the compiler (G2 typescript-reviewer MEDIUM).
+ */
+export type SchemaDay =
+  | 'Monday'
+  | 'Tuesday'
+  | 'Wednesday'
+  | 'Thursday'
+  | 'Friday'
+  | 'Saturday'
+  | 'Sunday';
+
 export interface OpeningHours {
-  /** schema.org day names, e.g. ['Monday', 'Tuesday'] */
-  days: readonly string[];
+  /** schema.org day names — the closed SchemaDay union; typos fail to compile */
+  days: readonly SchemaDay[];
   /** 24h "HH:MM" */
   opens: string;
   /** 24h "HH:MM" */
@@ -37,9 +52,29 @@ export interface ClinicInfo {
   url: string;
   /** JSON-LD priceRange, e.g. '$$' */
   priceRange: string;
-  /** Social/profile URLs for JSON-LD sameAs */
+  /**
+   * The clinic's own official profiles, keyed by network. OPTIONAL by design:
+   * a network the clinic does not use is simply absent, and the Footer renders
+   * no control for it — never a dead link to an empty profile.
+   */
+  social: {
+    instagram?: string;
+    tiktok?: string;
+  };
+  /** Social/profile URLs for JSON-LD sameAs — DERIVED from `social` below */
   sameAs: readonly string[];
 }
+
+// Declared before `clinic` so `sameAs` can be DERIVED from it: the Footer's
+// buttons and the JSON-LD's sameAs are then the same URLs by construction and
+// cannot drift apart (§10.1's consistency rule, applied one level deeper).
+// Annotated (not `satisfies`) on purpose: the documented removal path — delete
+// a network's line — must keep compiling, and the sameAs filter below then
+// does real narrowing instead of being type-vacuous (G2 typescript-reviewer).
+const social: ClinicInfo['social'] = {
+  instagram: 'https://instagram.com/premiumsmile', // TODO(owner): real profile URL
+  tiktok: 'https://tiktok.com/@premiumsmile', // TODO(owner): real profile URL
+};
 
 export const clinic: ClinicInfo = {
   name: 'Premium Smile', // TODO(owner): confirm public clinic name
@@ -57,14 +92,28 @@ export const clinic: ClinicInfo = {
     latitude: 44.4268, // TODO(owner): exact pin
     longitude: 26.1025,
   },
+  // TODO(owner): confirm the real schedule. The shape is the old site's —
+  // weekdays plus a short Saturday, Sunday closed — and lib/hours.ts spreads
+  // it into one row PER DAY (owner 2026-08-18): five identical weekday rows,
+  // a short Sâmbătă, and Duminică closed in its calendar place.
   hours: [
     {
       days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
       opens: '09:00',
-      closes: '18:00',
-    }, // TODO(owner)
+      closes: '19:00',
+    },
+    {
+      days: ['Saturday'],
+      opens: '09:00',
+      closes: '14:00',
+    },
   ],
   url: 'https://example.com', // TODO(owner): production domain (blocks §10 metadata)
   priceRange: '$$',
-  sameAs: [], // TODO(owner): Facebook/Instagram/GBP profile URLs
+  social,
+  // Never hand-written: the same URLs the Footer links, filtered so an absent
+  // network leaves no empty string in the JSON-LD (§10.2).
+  sameAs: [social.instagram, social.tiktok].filter((url): url is string =>
+    Boolean(url),
+  ),
 };

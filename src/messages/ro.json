@@ -19,7 +19,15 @@
       "ariaLabel": "{name}, acasă"
     },
     "footer": {
-      "rights": "Toate drepturile rezervate"
+      "tagline": "Stomatologie modernă. Îngrijire onestă.",
+      "contactLabel": "Contactează-ne aici",
+      "hoursTitle": "Program de lucru",
+      "closed": "Închis",
+      "salLabel": "Soluționarea alternativă a litigiilor",
+      "backToTop": "Înapoi sus",
+      "copyright": "© {year} {name}. Toate drepturile rezervate.",
+      "socialInstagram": "{name} pe Instagram",
+      "socialTiktok": "{name} pe TikTok"
     }
   },
   "home": {

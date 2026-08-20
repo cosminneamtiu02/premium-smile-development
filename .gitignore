@@ -25,7 +25,7 @@ test-results/
 tsconfig.tsbuildinfo
 
 # next-image-export-optimizer build artifacts (regenerated at build)
-public/images/nextImageExportOptimizer/
+public/images/**/nextImageExportOptimizer/
 public/images/next-image-export-optimizer-hashes.json
 
 # local env files — host tokens etc. must never enter the repo (SETUP_VERIFICATION Findings #4)

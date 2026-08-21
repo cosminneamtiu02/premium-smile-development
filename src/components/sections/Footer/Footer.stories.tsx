@@ -90,6 +90,42 @@ const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
 };
 
 /**
+ * ROW 1's `h-full` CHAIN, asserted here because this is the only place with a
+ * real stylesheet AND a real Footer (G2 react-reviewer, F15).
+ *
+ * sections/Wordmark sizes its artwork as a percentage of the anchor's height,
+ * and the anchor is `h-full` — so the whole lockup rests on a chain of three
+ * boxes this file owns: the centring row, the `h-16` box inside it, and the
+ * `self-stretch`-equivalent flex item. Break any link (drop the `h-16`,
+ * centre instead of stretch) and the percentage resolves against `auto`: the
+ * artwork keeps only its intrinsic size (D12: no bar). Nothing throws, and
+ * the Wordmark's own stories cannot catch it — they reproduce the HEADER's
+ * pill.
+ *
+ * `wide` selects the expected artwork step: the tighten step is a container
+ * query on the gutter box, so it is live at the phone width and off at the
+ * laptop one (the numbers live in Wordmark.tsx).
+ */
+const expectLockupChain = async (
+  band: HTMLElement,
+  wide: boolean,
+): Promise<void> => {
+  const anchor = band.querySelector('a:not([href])') as HTMLElement;
+  const img = anchor.querySelector('img') as HTMLElement;
+
+  // 4rem, the height both consumers agreed on (fb-205) — measured, not read
+  // back off a class.
+  await expect(anchor.getBoundingClientRect().height).toBe(64);
+  await expect(
+    Math.round(
+      (img.getBoundingClientRect().height /
+        anchor.getBoundingClientRect().height) *
+        100,
+    ),
+  ).toBe(wide ? 90 : 40);
+};
+
+/**
  * The everyday picture, Romanian, on the laptop width the §13 matrix samples.
  *
  * This is the story that shows the FOUR-COLUMN row: contact with the phone
@@ -116,6 +152,9 @@ export const Default: Story = {
       canvas.getByRole('link', { name: ro.common.nav.blog }),
     ).toBeInTheDocument();
     await expectNoSidewaysScroll(band);
+    // Row 1's lockup, at the width where the tighten step is OFF (the gutter
+    // box here is ~1214px, far past the 20rem container step).
+    await expectLockupChain(band, true);
   },
 };
 
@@ -149,6 +188,12 @@ export const Smartphone: Story = {
       canvas.getByRole('link', { name: ro.common.footer.backToTop }),
     ).toHaveAttribute('href', '#top');
     await expectNoSidewaysScroll(band);
+    // The TIGHTENED half of the lockup chain (G2 react r2, M1): at the phone
+    // width the gutter box is under the @max-xs step, so the artwork must be
+    // at 40%. This is the ONE assertion that notices the Footer losing its
+    // `@container` (Footer.tsx:135) — the query then never matches, the
+    // lockup renders full-size at every width, and nothing else throws.
+    await expectLockupChain(band, false);
   },
 };
 

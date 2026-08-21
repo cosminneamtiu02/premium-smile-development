@@ -317,7 +317,7 @@ describe('Header — every close path returns focus to the burger', () => {
     expect(document.activeElement).toBe(burger());
   });
 
-  it('falls back to the brand link when closing HIDES the ✕ (board §4c, row 4 → 3)', async () => {
+  it('falls back to the first bar LINK when closing HIDES the ✕ (board §4c, row 4 → 3)', async () => {
     // The transition nobody can trigger deliberately: the menu was opened
     // below the breakpoint, the container then grew past it (a rotated tablet,
     // a resized window), and closing re-applies `@3xl:hidden` to the burger.
@@ -328,18 +328,24 @@ describe('Header — every close path returns focus to the burger', () => {
     // applied directly here — the branch under test is "the burger is
     // display:none by the time the focus return runs", whatever CSS put it
     // there.
+    // WHICH link, since the fb-200 swap: NavMenu's fallback is
+    // `header a[href]`, the first LINKED thing in the bar. That used to be the
+    // brand anchor; sections/Wordmark took its place and is a placeholder
+    // <a> with no href (D9), so the first focusable in the bar is now the nav
+    // row's Home link — which is where the fallback lands, and the next Tab
+    // still continues into the row that just became visible.
     const user = userEvent.setup();
-    const { burger, panel, messages } = mount();
+    const { burger, panel, barNav, messages } = mount();
     await user.click(burger());
     burger().style.display = 'none';
 
     await user.keyboard('{Escape}');
 
     expect(panel()).toBeNull();
-    const brand = screen.getByRole('link', {
-      name: messages.brand.ariaLabel.replace('{name}', clinic.name),
+    const firstBarLink = within(barNav()).getByRole('link', {
+      name: messages.nav.home,
     });
-    expect(document.activeElement).toBe(brand);
+    expect(document.activeElement).toBe(firstBarLink);
     expect(document.activeElement).not.toBe(document.body);
   });
 
@@ -559,20 +565,45 @@ describe('Header — the nav row, the panel list, and the current page', () => {
 });
 
 describe('Header — the brand and the two Contact links', () => {
-  it('names the brand link from the ICU message + the single NAP source', () => {
-    // §10.1: the clinic name lives in lib/clinic.ts and reaches the label
-    // through the {name} placeholder — never spelt out in five message files
-    // (and never glued together in code, §8.2).
-    const { messages } = mount();
-    const expected = messages.brand.ariaLabel.replace('{name}', clinic.name);
-    const brand = screen.getByRole('link', { name: expected });
+  it('hands its brand corner to sections/Wordmark, in a self-stretch box', () => {
+    // The fb-200 swap: the corner used to be a locale-prefixed <Link> named
+    // from `brand.ariaLabel`; it is now the shared lockup — artwork, hairline
+    // bar, the name at Heading's title step — and this file owns only the BOX
+    // around it (§6.4/§6.8). `self-stretch` is load-bearing: the row is
+    // `items-center`, and the lockup's bar and artwork are sized as
+    // percentages of the row height, which a centred child does not have.
+    const { container } = mount();
+    const row = container.querySelector('header > div') as HTMLElement;
+    const box = row.firstElementChild as HTMLElement;
+    const lockup = box.firstElementChild as HTMLElement;
 
-    expect(brand).toHaveAttribute('href', '/ro');
-    // SC 2.5.3 Label in Name: the accessible name contains the visible text.
-    expect(brand).toHaveTextContent(clinic.name);
+    expect(classesOf(box)).toEqual(expect.arrayContaining(['self-stretch']));
+    expect(lockup.tagName).toBe('A');
+    expect(lockup).toHaveTextContent(clinic.name);
     // The brand is NOT a heading (C2): one <h1> per page belongs to the page.
-    expect(brand.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
-    expect(expected).not.toMatch(/\{name\}|brand\.ariaLabel/);
+    expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
+  });
+
+  it('no longer NAVIGATES from the brand — D9 placeholder, key held in reserve', () => {
+    // fb-200 taken literally: "make it clickable, but don't implement
+    // go-to-a-page yet". The corner is an <a> WITHOUT href, so it has no link
+    // role, no tab stop and no accessible name (a label on an unfocusable
+    // generic is prohibited ARIA). `common.brand.ariaLabel` stays in all five
+    // message files, uncalled, for the wiring diff Wordmark.tsx declares — an
+    // unused key is legal, the parity gate compares key SETS.
+    const { container, messages } = mount();
+    const lockup = container.querySelector('header a') as HTMLElement;
+    const named = messages.brand.ariaLabel.replace('{name}', clinic.name);
+
+    expect(lockup).not.toHaveAttribute('href');
+    expect(lockup).not.toHaveAttribute('aria-label');
+    expect(screen.queryByRole('link', { name: named })).toBeNull();
+    // …and no OTHER link in the bar points at home either: the single home
+    // destination is gone until the wiring lands, rather than moved.
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).not.toHaveAccessibleName(named);
+    }
+    expect(messages.brand.ariaLabel).not.toMatch(/brand\.ariaLabel/);
   });
 
   it('dials the single-source number from the bar AND from the panel (B7)', async () => {

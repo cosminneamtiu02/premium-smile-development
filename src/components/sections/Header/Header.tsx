@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslations } from 'next-intl';
+import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
 import { Button } from '@/components/ui/Button/Button';
-import { Link } from '@/i18n/navigation';
 import { clinic } from '@/lib/clinic';
 import { HeaderNav } from './HeaderNav';
 import { NavMenu } from './NavMenu';
@@ -15,9 +15,10 @@ import { NavMenu } from './NavMenu';
 //
 // This lane does NOT mount the section into the shell — that is Phase 4,
 // deliberately. Not in this lane either: the LanguageSwitcher (deferred,
-// fb-129), the real Publio logo (§15.6 — the brand corner is text until the
-// owner supplies it) and the ContactModal (next run; until then Contact is a
-// plain phone link, D4).
+// fb-129), the real Publio logo (§15.6 — the brand corner is sections/Wordmark
+// since the fb-200 swap, carrying interim demo artwork beside the name until
+// the owner supplies the vectorized mark) and the ContactModal (next run;
+// until then Contact is a plain phone link, D4).
 //
 // ── NO 'use client' here, and it still calls t() — the FloatingActions
 // precedent (§16 + board §1.1). next-intl's useTranslations is ISOMORPHIC: it
@@ -129,26 +130,30 @@ export function Header(): ReactElement {
           (§6.4 — the atoms carry no outer margins of their own). All sizing
           in rem so browser zoom and user font settings behave (§7). */}
       <div className="flex h-16 items-center gap-4 px-4">
-        {/* The brand. NOT a heading (C2): the one <h1> on a page belongs to
-            that page's content, and a bar repeated on every route must not
-            claim it. The accessible name is the ICU message with {name} filled
-            from lib/clinic.ts — the single source of NAP (§10.1) — so a
-            rename is one edit, not six, and §8.2's ban on gluing sentences
-            from fragments is respected.
-            Why pay for the label while the brand is plain text (board §4a):
-            §15.6 turns this corner into the vectorized Publio logo, i.e. an
-            image-only link, which unlabelled is a §9 violation and a hard axe
-            failure. Adding the key now makes that swap a one-line change. SC
-            2.5.3 Label in Name holds either way — the accessible name contains
-            the visible text. The focus ring comes from the globals.css
-            :focus-visible safety net (§9). */}
-        <Link
-          href="/"
-          aria-label={t('brand.ariaLabel', { name: clinic.name })}
-          className="font-display text-xl text-ink-strong"
-        >
-          {clinic.name}
-        </Link>
+        {/* The brand corner — now ONE component shared with the Footer
+            (sections/Wordmark, built to the owner-approved contract
+            .claude/plans/brand-lockup-contract.plan.md v2, fb-200…fb-208).
+            Both consumers used to spell the mark out themselves, so the §15.6
+            logo swap was two edits that could disagree; it is one now.
+            THE WRAPPER IS THIS SECTION OWNING THE BOX (§6.4/§6.8), not
+            decoration: the row is `items-center`, which centres its children
+            rather than stretching them, while the lockup's hairline bar and its
+            artwork are sized in PERCENTAGES of the row height — `self-stretch`
+            is what hands them the full 4rem to be a percentage of. Everything
+            else in this file is untouched (fb-207): the pill chrome, the
+            `group/bar` name, the single-menu rule, the h-16 row.
+            WHAT THE SWAP REMOVES, deliberately rather than by accident: the
+            home LINK and its `brand.ariaLabel`. D9 (fb-200 — "make it
+            clickable, but don't implement go-to-a-page yet") makes the
+            wordmark a placeholder <a> with NO href, so nothing navigates and
+            there is nothing to name — a label on an unfocusable generic is
+            prohibited ARIA, i.e. an axe failure. The key stays in all five
+            message files, reserved and uncalled, for the two-line wiring diff
+            Wordmark.tsx declares in full. C2 is unaffected either way: the
+            brand is not a heading, because the one <h1> belongs to the page. */}
+        <div className="flex self-stretch">
+          <Wordmark />
+        </div>
 
         <HeaderNav />
 

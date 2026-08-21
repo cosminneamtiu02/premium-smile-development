@@ -173,27 +173,60 @@ describe('Footer — every control is a LINK (zero-island contract)', () => {
 });
 
 describe('Footer — row 1, the brand', () => {
-  it('prints the single-source clinic name as plain text, not a link', () => {
-    // §10.1: the name lives in lib/clinic.ts. The Header already owns the home
-    // link; repeating it here would add a duplicate link with the same name.
-    // The name appears TWICE by design — the band's brand line and the site-map
-    // column's title — so the brand is identified positionally: the first child
-    // of the gutter box. Neither occurrence may be a link.
+  it('opens the band with sections/Wordmark, centred in an h-16 box', () => {
+    // Since the fb-200 swap this row is the SAME lockup the Header's corner
+    // renders — artwork, hairline bar, the name at Heading's title step — so
+    // the §15.6 logo arrives in one file instead of two. The name is still
+    // data from lib/clinic.ts (§10.1), and the brand is still identified
+    // positionally: the first child of the gutter box. The two wrappers are
+    // this section owning placement and SIZE (§6.4/§6.8) — `pb-8` is the old
+    // row's rhythm, `h-16` the 4rem ruler the lockup's percentages resolve
+    // against, matching the header instance exactly (fb-205).
     const { footer } = mount();
     const gutter = footer().firstElementChild as HTMLElement;
-    const brand = gutter.firstElementChild as HTMLElement;
+    const brandRow = gutter.firstElementChild as HTMLElement;
+    const box = brandRow.firstElementChild as HTMLElement;
+    const lockup = box.firstElementChild as HTMLElement;
 
-    expect(brand.tagName).toBe('P');
-    expect(brand).toHaveTextContent(clinic.name);
+    expect(classesOf(brandRow)).toEqual(
+      expect.arrayContaining(['flex', 'justify-center', 'pb-8']),
+    );
+    expect(classesOf(box)).toEqual(expect.arrayContaining(['flex', 'h-16']));
+    expect(lockup.tagName).toBe('A');
+    expect(lockup).toHaveTextContent(clinic.name);
+    expect(classesOf(within(lockup).getByText(clinic.name))).toContain(
+      'font-display',
+    );
+    // NOT a heading either: the one <h1> belongs to the page, and a repeated
+    // shell element must not claim an outline slot (the Header's C2 rule).
+    expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
+  });
+
+  it('adds NO second destination to the tab order — fb-179 stays honoured', () => {
+    // The rule this row was built on ("the Header owns the home link; a second
+    // link with the same name is a duplicate destination") is not broken by
+    // the swap, it is MOOT: D9's lockup is a placeholder <a> with no href, so
+    // it takes no link role, no tab stop and no accessible name. The question
+    // re-poses itself the day the wiring diff lands, and Wordmark.tsx is where
+    // that is written down.
+    const { footer } = mount();
+    const gutter = footer().firstElementChild as HTMLElement;
+    const lockup = gutter.querySelector('a') as HTMLElement;
+
+    expect(lockup).not.toHaveAttribute('href');
+    expect(lockup).not.toHaveAttribute('aria-label');
+    // The site-map column's title carries the same name and is likewise no
+    // link — the two occurrences of the clinic name are both inert.
     for (const occurrence of within(footer()).getAllByText(clinic.name, {
       selector: 'p',
     })) {
       expect(occurrence.closest('a')).toBeNull();
     }
-    // NOT a heading either: the one <h1> belongs to the page, and a repeated
-    // shell element must not claim an outline slot (the Header's C2 rule).
-    expect(brand.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
-    expect(classesOf(brand)).toContain('font-display');
+    // …and every element the accessibility tree DOES call a link is one of the
+    // band's real destinations, none of them named for the brand alone.
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).not.toHaveAccessibleName(clinic.name);
+    }
   });
 });
 

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
@@ -132,18 +133,31 @@ export function Footer(): ReactElement {
           width in Storybook (§6.5). Vertical padding on Tailwind's untouched
           scale; all sizing in rem so browser zoom behaves (§7). */}
       <div className="@container mx-[clamp(1rem,10vw,12.5rem)] py-10">
-        {/* ── ROW 1 · THE BRAND. Plain text, deliberately: the Header already
-            owns the home link, and a second link with the same accessible name
-            adds a duplicate destination to the tab order for no gain. Not a
-            heading either (see the file header) — ui/Heading answers "how big
-            is this title", never "which element is it", and its DEFAULT host
-            is exactly the <p> that rule needs. The name is data from
-            lib/clinic.ts (§10.1) — never a message key, so a rename is one
-            edit. Heading's font-display is the Publio-adjacent Source Serif 4
-            (§15.1); the vectorized logo swaps in here when §15.6 delivers it.
-            pb-8 + text-center ride in through className — the parent owning
-            placement atop the atom's classes (§6.8). */}
-        <Heading className="pb-8 text-center">{clinic.name}</Heading>
+        {/* ── ROW 1 · THE BRAND, since the fb-200 swap the SAME component the
+            Header's corner renders (sections/Wordmark, contract v2
+            fb-200…fb-208): artwork · hairline bar · the name at Heading's
+            title step. The name is still data from lib/clinic.ts (§10.1) —
+            never a message key — and the vectorized logo still lands by
+            swapping one `src`, but now in ONE file instead of two that can
+            disagree.
+            THE fb-179 RULE THIS ROW WAS BUILT ON IS NOT BROKEN, it is MOOT:
+            "no second link to home in the footer" assumed a link, and D9's
+            wordmark is a placeholder <a> with no href — it navigates nowhere,
+            takes no tab stop and carries no accessible name, so there is no
+            duplicate destination to add. The question re-poses itself the day
+            the wiring diff in Wordmark.tsx lands, and that is where it is
+            written down. Still not a heading either (see the file header).
+            THE TWO WRAPPERS ARE THIS SECTION OWNING PLACEMENT AND SIZE
+            (§6.4/§6.8): the outer one keeps the old row's centring and its
+            `pb-8` rhythm, the inner `h-16` box is the 4rem ruler the lockup's
+            `h-full` bar and its percentage-sized artwork resolve against —
+            EXACTLY the header instance's height, on the owner's ask that both
+            read at the same size (fb-205). */}
+        <div className="flex justify-center pb-8">
+          <div className="flex h-16">
+            <Wordmark />
+          </div>
+        </div>
 
         {/* ── ROW 2 · THE INFO GRID, on named container steps.
             1 column → @3xl (48rem) 2 columns → @5xl (64rem) the four-column

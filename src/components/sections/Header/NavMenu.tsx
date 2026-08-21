@@ -50,12 +50,14 @@ import { useNavItems } from './useNavItems';
 // includes the bar and therefore the ✕ — and the ✕ must stay reachable. It is
 // honestly a DISCLOSURE: a button that opens and closes a thing, wearing
 // aria-expanded + aria-controls. With everything below the bar inert, the
-// browser's OWN Tab order is brand → ✕ → Contact → the links, page content is
-// unreachable, and there is NO JavaScript focus trap anywhere in this file.
+// browser's OWN Tab order is ✕ → Contact → the links — the brand corner is
+// sections/Wordmark's hrefless placeholder anchor since D9 (visible, never
+// focusable) — page content is unreachable, and there is NO JavaScript focus
+// trap anywhere in this file.
 // Since fb-164/165/166 that order is exact at EVERY width: the single-menu
 // rule takes the bar's row and its Contact to display:none while the panel is
 // open, and display:none is unfocusable — so the wide screen now walks the
-// same four-step cycle the phone always did, and the Contact in it is the
+// same three-step cycle the phone always did, and the Contact in it is the
 // panel's own (the classes live in Header.tsx and HeaderNav.tsx).
 
 /**
@@ -243,10 +245,11 @@ export function NavMenu(): ReactElement {
   // is silently teleported to the top of the document (G2 review, 2026-08-13).
   // Reading offsetParent after the commit is what tells the two cases apart:
   // it is null exactly when the element (or an ancestor) is display:none.
-  // The fallback is the FIRST focusable in the bar — the brand link — chosen
-  // because it is the only control that exists at every width and in every
-  // state, and because it is where the bar's own Tab order starts, so the next
-  // Tab continues into the row that just became visible.
+  // The fallback is the FIRST `a[href]` in the bar. That used to be the brand
+  // link; since the brand became Wordmark's hrefless placeholder anchor (D9)
+  // it is the nav row's first link — safe by construction, because this path
+  // only runs when the burger vanished, i.e. above the @3xl step, exactly
+  // where the row is visible. Header.test.tsx asserts the target.
   useEffect(() => {
     if (open || !returningFocus.current) return;
     returningFocus.current = false;
@@ -282,8 +285,8 @@ export function NavMenu(): ReactElement {
   }, [pathname]);
 
   // Esc closes (§9). Bound to the document, not the panel, because focus may
-  // legitimately sit on the ✕ or the brand link — both outside the panel and
-  // both live.
+  // legitimately sit on the ✕ — outside the panel and live (the brand corner
+  // stopped being focusable with Wordmark's D9 placeholder anchor).
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {

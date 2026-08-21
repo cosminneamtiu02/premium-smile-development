@@ -51,8 +51,11 @@ export function HeaderNav(): ReactElement {
     // boundary. It outranks `@3xl:flex` by specificity (an id inside `:has()`
     // → (1,1,0) vs (0,1,0)), not by source order.
     // A11y consequence, deliberate: display:none is unfocusable, so while the
-    // panel is open the Tab cycle tightens to brand → ✕ → panel — the same
-    // shape the phone always had, and the panel carries the same links. The
+    // panel is open the Tab cycle tightens to ✕ → panel — the brand corner is
+    // sections/Wordmark's hrefless placeholder anchor since D9, visible but
+    // never focusable, so it is not a stop in that cycle (NavMenu.tsx carries
+    // the same correction) — the same shape the phone always had, and the
+    // panel carries the same links. The
     // elements stay in the DOM, though, which is why the tests still scope
     // their queries with within() (board §5·B7).
     <nav

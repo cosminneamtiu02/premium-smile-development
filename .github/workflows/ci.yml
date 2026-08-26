@@ -68,7 +68,8 @@ jobs:
 
       - name: Internal link & hreflang check on the export
         # linkinator resolves from the ~pinned devDependency (added at Phase 0)
-        run: npx linkinator out --recurse --skip "^https?://" --verbosity error
+        # linkinator serves out/ over http://localhost, so a bare "^https?://" skipped EVERY link and the crawl scanned nothing (found 2026-08-24)
+        run: npx linkinator out --recurse --skip "^https?://(?!localhost|127\.0\.0\.1)" --verbosity error
 
       - name: Upload Storybook (debug artifact, 3 days)
         if: failure()

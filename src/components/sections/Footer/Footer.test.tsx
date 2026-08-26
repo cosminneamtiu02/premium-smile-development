@@ -1,7 +1,7 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Locale } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic';
 import { formatHoursRows } from '@/lib/hours';
@@ -24,38 +24,12 @@ import { Footer, socialEntries } from './Footer';
 // utility TOKENS are the contract here, the convention every component test in
 // this repo already follows (GlyphButton, FloatingActions, Header).
 //
-// ── HARNESS NOTE — '@/i18n/navigation' is the mock boundary, for the reason
-// Header.test.tsx documents at length: Vitest pre-bundles bare deps, so
-// replacing next/navigation breaks ESM linking before any factory runs, while
-// mocking OUR first-party module controls exactly the export this section
-// consumes (Link) one call frame closer to the component. The stub reproduces
-// the real module's observable contract — an <a> whose href carries the locale
-// prefix (localePrefix: 'always', §5). The REAL next-intl chain is exercised
-// one tier up, in Footer.stories.tsx.
-// The Footer needs NO usePathname: it marks no active route (a footer link
-// list is a site map, not a "you are here" indicator), which is why this mock
-// is half the size of the Header's.
-vi.mock('@/i18n/navigation', async () => {
-  const { createElement } = await import('react');
-  const { useLocale } = await import('next-intl');
-  return {
-    Link: ({
-      href,
-      children,
-      ...rest
-    }: {
-      href: string;
-      children?: ReactNode;
-    }): ReactElement => {
-      const locale = useLocale();
-      return createElement(
-        'a',
-        { href: href === '/' ? `/${locale}` : `/${locale}${href}`, ...rest },
-        children,
-      );
-    },
-  };
-});
+// NOTHING IS MOCKED HERE, and since §15.13 nothing needs to be: the site-map
+// hrefs come from the pure src/i18n/href.ts, which runs for real in this
+// runner, and the Footer touches no router at all (it marks no active route —
+// a footer link list is a site map, not a "you are here" indicator). The stub
+// this file used to carry was a hand-written <Link>, and a less faithful one
+// than the real thing: it dropped the trailing slash every export URL has.
 
 const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 
@@ -284,11 +258,16 @@ describe('Footer — row 2, the nav column', () => {
   it('links the four primary routes in Romanian, locale-prefixed', () => {
     const { messages } = mount('ro');
 
+    // The exact strings the export serves: /{locale} because localePrefix is
+    // 'always' (§5), and the trailing slash because `trailingSlash: true`
+    // writes out/ro/services/index.html — so a visitor pays no redirect hop.
+    // Both come from src/i18n/href.ts, the only place that spells them
+    // (§15.13); the base path is '' in this runner (vitest.config.ts).
     for (const [label, href] of [
-      [messages.nav.home, '/ro'],
-      [messages.nav.services, '/ro/services'],
-      [messages.nav.team, '/ro/team'],
-      [messages.nav.blog, '/ro/blog'],
+      [messages.nav.home, '/ro/'],
+      [messages.nav.services, '/ro/services/'],
+      [messages.nav.team, '/ro/team/'],
+      [messages.nav.blog, '/ro/blog/'],
     ] as const) {
       expect(screen.getByRole('link', { name: label })).toHaveAttribute(
         'href',
@@ -304,7 +283,7 @@ describe('Footer — row 2, the nav column', () => {
     // The other three still ship, in German.
     expect(
       screen.getByRole('link', { name: messages.nav.services }),
-    ).toHaveAttribute('href', '/de/services');
+    ).toHaveAttribute('href', '/de/services/');
   });
 
   it('marks NO footer link as the current page', () => {

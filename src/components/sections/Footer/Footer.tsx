@@ -8,7 +8,7 @@ import { TextButton } from '@/components/ui/TextButton/TextButton';
 import { Instagram } from '@/assets/glyphs/Instagram';
 import { Phone } from '@/assets/glyphs/Phone';
 import { Tiktok } from '@/assets/glyphs/Tiktok';
-import { Link } from '@/i18n/navigation';
+import { localeHref } from '@/i18n/href';
 import type { ClinicInfo } from '@/lib/clinic';
 import { clinic } from '@/lib/clinic';
 import { formatHoursRows } from '@/lib/hours';
@@ -22,11 +22,16 @@ import { primaryRoutes } from '@/lib/routes';
 // used to hold as local constants, which is what keeps that swap invisible
 // in the visual baselines.
 //
-// ── ZERO CLIENT ISLANDS. Nothing in here reacts to anything that happens after
-// the page is painted, so the whole section ships as inert HTML with no
-// JavaScript attached (§16) — the FloatingActions precedent, now at four times
-// the size. Two consequences are load-bearing rather than incidental:
+// ── ZERO CLIENT ISLANDS — and since §15.13 the claim holds BY CONSTRUCTION.
+// Nothing in here reacts to anything that happens after the page is painted, so
+// the whole section ships as inert HTML with no JavaScript attached (§16) — the
+// FloatingActions precedent, now at four times the size. Three consequences are
+// load-bearing rather than incidental:
 //   · "back to top" is a plain fragment link, not a scroll handler;
+//   · the site-map rows are plain <a>s whose hrefs come from i18n/href.ts.
+//     next/link is a CLIENT component (it exists to attach a click handler), so
+//     until §15.13 those four links were four small hydration boundaries sitting
+//     inside a section that claimed to have none;
 //   · the SAL badge is a plain <img>, because the one image wrapper this repo
 //     has is a client component (see the badge block below).
 // It still calls t() with NO 'use client': next-intl's useTranslations and
@@ -244,14 +249,17 @@ export function Footer(): ReactElement {
                 items" and offer item-by-item navigation. */}
             <ul className="flex flex-col items-start gap-1">
               {primaryRoutes(locale).map((route) => (
-                <li key={route.href}>
+                <li key={route.path}>
                   {/* One <a> per entry, through TextButton's asChild slot, so
-                      the atom leaves no tag of its own. NO `active` here — see
-                      the file header on why the footer marks nothing. -ml-2
+                      the atom leaves no tag of its own. A PLAIN anchor (§15.13):
+                      the href arrives finished from i18n/href.ts — locale
+                      prefix, trailing slash, interim base path — because
+                      nothing downstream adds them any more. NO `active` here —
+                      see the file header on why the footer marks nothing. -ml-2
                       aligns the labels with the column title (same optical
                       correction as the phone link). */}
                   <TextButton asChild className="-ml-2">
-                    <Link href={route.href}>{t(route.key)}</Link>
+                    <a href={localeHref(locale, route.path)}>{t(route.key)}</a>
                   </TextButton>
                 </li>
               ))}

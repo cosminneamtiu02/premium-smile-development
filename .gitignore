@@ -34,3 +34,7 @@ public/images/next-image-export-optimizer-hashes.json
 # local runner artifacts
 .vitest-attachments/
 .claude/checkpoints.log
+# vitest browser-mode failure screenshots — written beside the failing suite on
+# every red run (22 were committed by accident in #34); Playwright's VISUAL
+# BASELINES live under tests/visual/__screenshots__/ and stay tracked
+src/**/__screenshots__/

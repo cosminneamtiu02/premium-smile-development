@@ -52,12 +52,12 @@ type GlyphButtonOwnProps = {
   size?: GlyphButtonSize;
   /**
    * Same slot contract as Button: render no <button> of GlyphButton's own —
-   * the single child element you nest (an <a href="tel:…">, a next-intl
-   * <Link>) BECOMES the control and the icon sits inside it. Behaviour props
-   * (href, target, onClick…) belong on that child; <button>-only props have
-   * no effect — `type` is silently swallowed by its destructured default (it
-   * never reaches the slot's check), the rest (disabled, form*, name, value)
-   * get a dev-only console.error.
+   * the single child element you nest (an <a href="tel:…">, an <a href> built
+   * by localeHref()) BECOMES the control and the icon sits inside it.
+   * Behaviour props (href, target, onClick…) belong on that child;
+   * <button>-only props have no effect — `type` is silently swallowed by its
+   * destructured default (it never reaches the slot's check), the rest
+   * (disabled, form*, name, value) get a dev-only console.error.
    */
   asChild?: boolean;
   /**

@@ -7,11 +7,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/Button/Button';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
-import { usePathname } from '@/i18n/navigation';
 import { clinic } from '@/lib/clinic';
 import { BurgerToggle } from './BurgerToggle';
 import { NavItem } from './NavItem';
@@ -105,16 +104,20 @@ function bodyLevelAncestor(node: Element | null): Element | null {
 
 /**
  * Body-level boxes the freeze must NOT touch: live regions, and Next's route
- * announcer — a <next-route-announcer> custom element the App Router appends
- * to <body>, whose aria-live node lives in its shadow root (so an attribute
- * check alone would miss it, and `inert` propagates into shadow DOM).
+ * announcer — a <next-route-announcer> custom element the App Router appends to
+ * <body> of every page, whose aria-live node lives in its shadow root (so an
+ * attribute check alone would miss it, and `inert` propagates into shadow DOM).
  *
- * Why it matters here specifically: activating a link INSIDE the panel starts
- * a navigation and closes the menu, and the announcer is what tells a screen
- * reader which page arrived. Freezing it would swallow that announcement in
- * exactly the flow this menu exists for (G2 review, 2026-08-13). A live region
- * is announced, never focused, so leaving it out of the freeze costs nothing:
- * it is not a Tab stop and not a tap target.
+ * The rule outlived the case that prompted it (G2 review, 2026-08-13), and is
+ * kept on the general one. It was written when a panel link swapped the page
+ * client-side and that announcer named the arriving page; since §15.13 a click
+ * loads a whole new document, which announces its own <title>, so the element
+ * narrates nothing of ours — Next still appends it regardless. Freezing a live
+ * region is simply the wrong default: it turns a message into silence, and the
+ * first region that does matter here (the language-suggestion banner, a future
+ * form status) would inherit that bug without a symptom. Costs nothing either
+ * way — a live region is announced, never focused: not a Tab stop, not a tap
+ * target.
  */
 function isLiveRegion(element: Element): boolean {
   return (
@@ -209,7 +212,6 @@ const panelClasses =
 export function NavMenu(): ReactElement {
   const t = useTranslations('common');
   const items = useNavItems();
-  const pathname = usePathname();
 
   // The one variable the whole file turns on. `{open && …}` renders NOTHING
   // when false, so while the menu is closed neither the panel nor the sheet
@@ -217,11 +219,11 @@ export function NavMenu(): ReactElement {
   // can flicker during hydration (§16).
   const [open, setOpen] = useState(false);
   const burgerRef = useRef<HTMLButtonElement>(null);
-  const previousPathname = useRef(pathname);
 
   // Set by close(), consumed by the focus-return effect below: it records
-  // "this close came from the USER" so a close caused by navigation (B1) never
-  // moves focus.
+  // "this close came from the USER". That is also what tells a real close apart
+  // from the FIRST render, where the same effect runs with the menu already
+  // closed and must not pull focus onto the burger.
   const returningFocus = useRef(false);
 
   /**
@@ -264,26 +266,6 @@ export function NavMenu(): ReactElement {
     burger.closest('header')?.querySelector<HTMLElement>('a[href]')?.focus();
   }, [open]);
 
-  // B1 · close on route change. The Header lives in the shell, so a
-  // client-side navigation does NOT unmount it — without this the panel would
-  // sit open on top of the newly arrived page. The previous-value ref means
-  // this fires on CHANGES only, never on mount.
-  // Focus is deliberately NOT moved here: the user navigated, so the new page
-  // owns focus, and yanking it back to the burger would fight whatever the
-  // router does with it. UNVERIFIED ASSUMPTION, stated as one: App Router is
-  // documented to manage focus on navigation, but that has not been checked
-  // under THIS static-export setup (§16 — no server, prefixed routes, client
-  // navigation only). Phase 4 keyboard-walkthrough item (§9): activate a panel
-  // link on the real router, then press Tab and see where focus actually is.
-  // If it turns out to be nowhere, this is where the fix goes.
-  // The focus-return contract covers the three close paths a user performs on
-  // the menu itself.
-  useEffect(() => {
-    if (previousPathname.current === pathname) return;
-    previousPathname.current = pathname;
-    setOpen(false);
-  }, [pathname]);
-
   // Esc closes (§9). Bound to the document, not the panel, because focus may
   // legitimately sit on the ✕ — outside the panel and live (the brand corner
   // stopped being focusable with Wordmark's D9 placeholder anchor).
@@ -295,6 +277,78 @@ export function NavMenu(): ReactElement {
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open, close]);
+
+  // ── BACK, WITH THE MENU STILL OPEN — the bfcache (G2 review D1).
+  // The back/forward cache: browsers keep the document you LEAVE frozen in
+  // memory — DOM, React state, scroll position — and restore it whole on Back,
+  // instantly, without re-running anything. That is a gift on a static site and
+  // the reason §7 counts it as an upside of full-document navigation; it is
+  // also the one case where the shell's state DOES persist across a
+  // "navigation". Tap a panel link, land on the new document, press Back: the
+  // frozen document comes back with the panel open over a page that is still
+  // `inert` and still scroll-locked, because no code ran to close it. Under
+  // soft navigation the deleted B1 (close-on-route-change) covered this by
+  // accident; a restore is not a route change, so nothing covers it now. This
+  // effect IS B1's full-document replacement — the same guarantee ("a
+  // navigation leaves no open menu behind"), rebuilt out of the two page
+  // lifecycle events §15.13 left us instead of a router callback.
+  //
+  // ── DEPARTURE — `pagehide`, and why the close must be flushed.
+  // Closing on the way IN (below) is a repair: the browser paints the frozen
+  // snapshot first, and only then does our listener ask React to re-render, so
+  // one frame (~16ms) of restored page can still show the open panel. The cure
+  // is to leave with the menu already closed, so the snapshot itself is clean.
+  // `pagehide` is the one event that fires on EVERY departure — a navigation
+  // away, or entry into the bfcache — and ONLY on departures, which is what
+  // makes it the right place to change what the snapshot will contain.
+  // `visibilitychange` also fires on tab and app switches, where closing the
+  // menu would be visitor-noticeable, and `unload` must not be used at all —
+  // merely listening for it disqualifies the page from the bfcache. Hence the
+  // pre-close, and hence flushSync: React normally SCHEDULES a commit for its
+  // next turn, and that turn may never come on a page that is about to be
+  // frozen. flushSync is React's documented tool for exactly this — "apply
+  // this update now, do not schedule it" — so the DOM is mutated synchronously
+  // inside the handler, before the event returns. Its cost (a forced
+  // synchronous render) is the reason it is a last resort in normal code and
+  // a non-issue here: it runs once, at page exit, on a document nobody will
+  // interact with again.
+  // Deliberately UNCONDITIONAL — no `event.persisted` check, unlike below.
+  // Closing a menu on a page the visitor is leaving is harmless whether or not
+  // the browser then caches it (the document is either frozen or gone), and the
+  // flag at that moment is an INTENTION, not a fact: `persisted: true` says the
+  // browser INTENDS to cache the page, and other factors may still prevent it —
+  // in every engine, not one vendor's quirk. Branching on it could only ever
+  // skip a close we wanted.
+  //
+  // ── RESTORE — `pageshow`, kept as the fallback.
+  // `pageshow` fires on EVERY show of the document, first paint included;
+  // `persisted` is true only for a bfcache restore, which is the only case
+  // worth acting on there. It is a no-op whenever the pre-close ran — this
+  // effect is gated on `open`, so a restored-already-closed document has no
+  // listener attached at all — and it still covers any browser that freezes
+  // without delivering `pagehide` first. Cheap belt to the braces.
+  //
+  // Both handlers call close(), not setOpen(false): the visitor's finger was
+  // last on the ✕, so focus belongs on the burger, and close() is the one path
+  // that arms the focus-return effect above. Listening only while open keeps
+  // both listeners' lifetime the same as every other effect in this file — and
+  // the document is frozen mid-open, so they are attached exactly when the
+  // departure and the restore need them.
+  useEffect(() => {
+    if (!open) return;
+    const onPageHide = () => {
+      flushSync(() => close());
+    };
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) close();
+    };
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('pageshow', onPageShow);
     };
   }, [open, close]);
 

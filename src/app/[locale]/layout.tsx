@@ -39,16 +39,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   const t = await getTranslations({ locale, namespace: 'common' });
 
   return (
-    <html
-      lang={locale}
-      // Paired with globals.css's motion-gated `scroll-behavior: smooth`: Next
-      // 16 suppresses that glide during route transitions ONLY when the
-      // attribute announces it (dist disable-smooth-scroll.js reads
-      // dataset.scrollBehavior). Without it, every internal navigation
-      // animates a full-page scroll to top (G2 react-reviewer HIGH).
-      data-scroll-behavior="smooth"
-      className={`${serif.variable} ${mono.variable}`}
-    >
+    <html lang={locale} className={`${serif.variable} ${mono.variable}`}>
       <body className="bg-page font-body text-ink">
         <NextIntlClientProvider>
           <header>

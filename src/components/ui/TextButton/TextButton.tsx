@@ -6,11 +6,11 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // .claude/section-runs/2026-08-05_22-04_top-bar/atoms/TextButton.md, contract
 // fb-125). It absorbs the *pattern* of the old `ui/link` nav variant and the
 // old top bar's inline nav anchors; neither shipped as a component here.
-// Today's caller is the Header nav (desktop row + drawer list) via asChild
-// with a <Link> child; the atom stays a plain quiet button for any later use
-// (fb-111). It is NOT part of an emphasis family (fb-126 guardrail): Button
-// keeps its name, and a future bordered look would be a new variant on THIS
-// atom, never a rename anywhere.
+// Today's caller is the Header nav (desktop row + panel list) via asChild
+// with a plain <a href> child (§15.13); the atom stays a plain quiet button
+// for any later use (fb-111). It is NOT part of an emphasis family (fb-126
+// guardrail): Button keeps its name, and a future bordered look would be a
+// new variant on THIS atom, never a rename anywhere.
 // The atom NEVER owns navigation. The absorbed old anchors hijacked clicks
 // (preventDefault + a JS router) and hardcoded target/rel on every link —
 // both are required rewrites: real hrefs live on the child element, and
@@ -29,12 +29,12 @@ type TextButtonOwnProps = {
   active?: boolean;
   /**
    * Render no <button> of TextButton's own — the single child element you
-   * nest (an <a>, a next-intl <Link>) BECOMES the control and wears these
-   * classes on top of its own. Behaviour props (href, target, onClick…)
-   * belong on that child; <button>-only props have no effect — disabled,
-   * form*, name and value draw a dev-only console.error, while `type` is
-   * absorbed by its default before the merge and dropped silently (slot.ts
-   * documents the invariant).
+   * nest (an <a href> built by localeHref(), an <a href="#top">) BECOMES the
+   * control and wears these classes on top of its own. Behaviour props
+   * (href, target, onClick…) belong on that child; <button>-only props have
+   * no effect — disabled, form*, name and value draw a dev-only
+   * console.error, while `type` is absorbed by its default before the merge
+   * and dropped silently (slot.ts documents the invariant).
    */
   asChild?: boolean;
   /** The label — already-translated text (§8.1); markup is allowed. */
@@ -139,8 +139,8 @@ export function TextButton({
     // The child element becomes the control. The engine lives in ui/slot.ts
     // (owner decision fb-64) — single-child guard first, child-wins merge,
     // className merged last, dev-only warning for <button>-only props. The
-    // computed aria-current rides along in the merge, so a <Link> child gets
-    // marked unless it declares its own defined value.
+    // computed aria-current rides along in the merge, so an <a href> child
+    // gets marked unless it declares its own defined value.
     return slotClone(
       'TextButton',
       children,

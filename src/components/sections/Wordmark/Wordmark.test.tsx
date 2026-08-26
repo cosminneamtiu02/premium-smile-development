@@ -21,9 +21,10 @@ import source from './Wordmark.tsx?raw';
 // is itself an assertion. next-intl's hooks throw without one, so a green
 // render proves what §5 of the contract states: this section calls no t() and
 // uses ZERO message keys (D9 removed the label along with the navigation).
-// The Header's and the Footer's suites mock '@/i18n/navigation' for their
-// links; this file mocks nothing, because the placeholder anchor imports no
-// router.
+// The Header's suite mocks '@/i18n/navigation' for its ONE remaining export,
+// usePathname (§15.13: the links themselves are plain anchors and need no
+// stub); this file mocks nothing at all, because the placeholder anchor imports
+// no router.
 
 const classesOf = (el: Element): string[] =>
   (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);

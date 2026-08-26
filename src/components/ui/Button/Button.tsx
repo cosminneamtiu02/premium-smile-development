@@ -16,11 +16,12 @@ type ButtonOwnProps = {
   size?: ButtonSize;
   /**
    * Render no <button> of Button's own — the single child element you nest
-   * (an <a>, a next-intl <Link>) BECOMES the button: it receives Button's
-   * classes on top of its own. The child must itself be one real interactive
-   * element (never a Fragment), and behaviour props (href, target, onClick…)
-   * belong on that child. <button>-only props (type, disabled, form*, name,
-   * value) have no effect in asChild mode — a dev-only console.error says so.
+   * (an <a href> built by localeHref(), an <a href="tel:…">) BECOMES the
+   * button: it receives Button's classes on top of its own. The child must
+   * itself be one real interactive element (never a Fragment), and behaviour
+   * props (href, target, onClick…) belong on that child. <button>-only props
+   * (type, disabled, form*, name, value) have no effect in asChild mode — a
+   * dev-only console.error says so.
    */
   asChild?: boolean;
   children: ReactNode;

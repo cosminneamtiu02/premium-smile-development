@@ -28,8 +28,8 @@ describe('TextButton — element & semantics', () => {
 
   it('fires onClick — the atom itself owns no navigation', async () => {
     // The absorbed old pattern hijacked clicks (preventDefault + a JS router).
-    // Here a click is just a click: real navigation arrives as a child <Link>
-    // through asChild, never as behaviour baked into the atom.
+    // Here a click is just a click: real navigation arrives as a child
+    // <a href> through asChild, never as behaviour baked into the atom.
     const onClick = vi.fn();
     render(<TextButton onClick={onClick}>Echipa</TextButton>);
     await userEvent.click(screen.getByRole('button', { name: 'Echipa' }));

@@ -28,12 +28,14 @@ import { clinic } from '@/lib/clinic';
 //     and it would be pointless anyway: the visible clinic name IS the name;
 //   · no cursor-pointer. Painting the affordance of a link that goes nowhere
 //     is worse than not having the link;
-//   · the Header's home link is GONE for now. Today's brand <Link> navigates
-//     to '/', the swapped-in Wordmark does not. That is fb-200 taken
+//   · the Header's home link is GONE for now. The brand corner of the time
+//     navigated to '/', the swapped-in Wordmark does not. That is fb-200 taken
 //     literally — recorded here so it reads as the decision it is, not as a
 //     regression someone should quietly patch.
-// THE WIRING IS A DECLARED TWO-LINE DIFF, held for its own lane: `href="/"`
-// with `Link` from '@/i18n/navigation' (locale-prefixed, §5) plus
+// THE WIRING IS A DECLARED TWO-LINE DIFF, held for its own lane:
+// `href={localeHref(locale, '/')}` from '@/i18n/href' (§15.13 — every internal
+// link is a plain anchor, and that builder is where the locale prefix, the
+// trailing slash and the interim base path are spelled) plus
 // `aria-label={t('brand.ariaLabel', { name: clinic.name })}` — that key already
 // sits in all five messages/*.json, reserved and currently uncalled (an unused
 // key is legal: the parity gate compares key SETS, not usage). Landing it flips

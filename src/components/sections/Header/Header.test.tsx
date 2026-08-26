@@ -1,5 +1,5 @@
-import type { ReactElement, ReactNode } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,40 +34,20 @@ import { Header } from './Header';
 // next/navigation with vi.mock breaks ESM linking before any factory runs
 // ("does not provide an export named 'c'"). The sanctioned cure is
 // optimizeDeps.exclude in vitest.config.ts — outside this lane's write
-// surface. Mocking OUR first-party module instead controls exactly the same
-// two exports the section consumes, one call frame closer to the components.
-// The stub reproduces the real module's observable contract:
-//   · usePathname() → the LOCALE-STRIPPED pathname (next-intl unprefixes
-//     '/ro/services' → '/services' in useBasePathname before we ever see it),
-//   · Link → an <a> whose href carries the locale prefix (localePrefix:
-//     'always', §5), which is what next-intl's BaseLink renders.
-// The REAL chain (next-intl over next/navigation) is exercised one tier up, in
+// surface. Mocking OUR first-party module instead controls exactly what the
+// section consumes, one call frame closer to the components — and since §15.13
+// that is ONE export: usePathname, which hands back the LOCALE-STRIPPED
+// pathname ('/ro/services/' → '/services/'; since D9 our own stripLocale does
+// that unprefixing, over next/navigation, with no next-intl navigation and
+// therefore no next/link anywhere in the graph). The hrefs are NOT mocked any
+// more: they come from the pure src/i18n/href.ts, which runs for real here, so
+// the strings asserted below are the ones a visitor gets.
+// The REAL chain (next/navigation → stripLocale) is exercised one tier up, in
 // Header.stories.tsx, where the Storybook Next framework feeds the true
-// usePathname via parameters.nextjs.navigation — so both halves are covered.
+// pathname via parameters.nextjs.navigation — so both halves are covered.
 const nav = vi.hoisted(() => ({ pathname: '/services' }));
 
-vi.mock('@/i18n/navigation', async () => {
-  const { createElement } = await import('react');
-  const { useLocale } = await import('next-intl');
-  return {
-    usePathname: () => nav.pathname,
-    Link: ({
-      href,
-      children,
-      ...rest
-    }: {
-      href: string;
-      children?: ReactNode;
-    }): ReactElement => {
-      const locale = useLocale();
-      return createElement(
-        'a',
-        { href: href === '/' ? `/${locale}` : `/${locale}${href}`, ...rest },
-        children,
-      );
-    },
-  };
-});
+vi.mock('@/i18n/navigation', () => ({ usePathname: () => nav.pathname }));
 
 const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 
@@ -235,13 +215,17 @@ describe('Header — the freeze is `inert`, and nothing else (board §5·A1)', (
     expect(first).toHaveTextContent(ro.common.actions.contact);
   });
 
-  it('never freezes a live region — the route announcement must survive', async () => {
-    // Activating a link inside the panel navigates AND closes the menu, and
-    // the router's live region is what tells a screen reader which page
-    // arrived. `inert` reaches into shadow DOM, so freezing Next's
-    // <next-route-announcer> would swallow exactly that announcement (G2
-    // review, 2026-08-13). A live region is announced, never focused, so
-    // leaving it live costs the freeze nothing.
+  it("never freezes a live region — Next's announcer and any aria-live box stay live", async () => {
+    // The freeze must never silence a live region. Next appends its
+    // <next-route-announcer> to the <body> of every page and `inert` reaches
+    // into shadow DOM, so a walk over body's children freezes it unless told
+    // otherwise. Since §15.13 that element no longer narrates OUR navigations
+    // — a click loads a new document, which announces its own title — so this
+    // guards the general rule rather than the panel-link flow it was written
+    // for (G2 review, 2026-08-13): the first region that does matter here (the
+    // language-suggestion banner, a future form status) would otherwise
+    // inherit the bug with no symptom. A live region is announced, never
+    // focused, so leaving it live costs the freeze nothing.
     const user = userEvent.setup();
     const announcer = document.createElement('next-route-announcer');
     const politeRegion = document.createElement('div');
@@ -285,6 +269,90 @@ describe('Header — the freeze is `inert`, and nothing else (board §5·A1)', (
     unmount();
     expect(page).not.toHaveAttribute('inert');
     expect(document.documentElement.style.overflow).toBe('');
+  });
+
+  it('closes on a bfcache restore — Back must not hand the menu back open', async () => {
+    // The back/forward cache: browsers keep the document you LEAVE frozen in
+    // memory — DOM, React state, scroll position — and restore it whole when
+    // you press Back, without re-running a single line. Since §15.13 a nav tap
+    // loads a NEW document, so the frozen one is exactly the one whose panel
+    // was open: without this, Back hands the visitor an open menu over a page
+    // that is still `inert` and still scroll-locked, with focus nowhere. It is
+    // the one case the deleted B1 (close-on-route-change) used to cover by
+    // accident, and the case §7's "shell state cannot persist" row got wrong.
+    // `persisted: true` is the browser's own flag for "this is a restore":
+    // pageshow also fires on every ordinary load, with it false.
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    const overflowBefore = document.documentElement.style.overflow;
+    await user.click(burger());
+    expect(panel()).not.toBeNull();
+    expect(page).toHaveAttribute('inert');
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      );
+    });
+
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    // Everything the open state had taken from the page is handed back…
+    expect(page).not.toHaveAttribute('inert');
+    expect(document.documentElement.style.overflow).toBe(overflowBefore);
+    // …and focus lands on the burger, which is why NavMenu calls close() and
+    // not setOpen(false): only close() arms the focus return.
+    expect(document.activeElement).toBe(burger());
+  });
+
+  it('closes on pagehide — the frozen snapshot must never contain an open menu', async () => {
+    // The other half of D1, and the one that removes the flicker: `pageshow`
+    // above REPAIRS a restored document (the browser paints the frozen page
+    // first, so one frame can still show the panel), while `pagehide` prevents
+    // it — it is the one event that fires on EVERY departure and ONLY on
+    // departures, so a close committed inside its handler is what the frozen
+    // snapshot contains.
+    // EVERY assertion therefore sits INSIDE act(), reading the DOM immediately
+    // after dispatch and before act flushes anything of its own — because a
+    // "clean snapshot" is not merely the panel and the sheet gone: it is also
+    // the page un-frozen (no `inert`), the scroll unlocked, and focus already
+    // placed on the burger. Those last three are undone by passive-effect
+    // CLEANUPS, and asserting them HERE is exactly what pins the guarantee the
+    // pre-close depends on — that React runs those cleanups synchronously for a
+    // flushSync commit, and not on a later turn a frozen page may never get.
+    // Asserting them after act() would pass whether or not that holds, so it
+    // would distinguish nothing.
+    // The control that makes these real detectors: a plain scheduled setState
+    // would still be PENDING at this point and the panel would still be in the
+    // document; finding all of it already reverted is the proof that NavMenu
+    // wrapped the close in flushSync — i.e. that the commit is synchronous with
+    // the event, which is the entire point on a page about to be frozen.
+    // `persisted: true` is passed only because a real pagehide carries the flag;
+    // the handler deliberately ignores it (leaving is enough), so this test
+    // would pass with either value.
+    const user = userEvent.setup();
+    const { burger, panel, sheet } = mount();
+    const overflowBefore = document.documentElement.style.overflow;
+    await user.click(burger());
+    expect(panel()).not.toBeNull();
+    expect(page).toHaveAttribute('inert');
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent('pagehide', { persisted: true }),
+      );
+      // The menu itself is gone from the markup the snapshot would capture…
+      expect(panel()).toBeNull();
+      expect(sheet()).toBeNull();
+      expect(burger()).toHaveAttribute('aria-expanded', 'false');
+      // …everything the open state had taken from the page is handed back…
+      expect(page).not.toHaveAttribute('inert');
+      expect(document.documentElement.style.overflow).toBe(overflowBefore);
+      // …and focus lands on the burger: the pre-close goes through close(), so
+      // a browser that declines to cache the page (or a Back that re-runs it)
+      // finds focus exactly where every other close path leaves it.
+      expect(document.activeElement).toBe(burger());
+    });
   });
 });
 
@@ -347,23 +415,6 @@ describe('Header — every close path returns focus to the burger', () => {
     });
     expect(document.activeElement).toBe(firstBarLink);
     expect(document.activeElement).not.toBe(document.body);
-  });
-
-  it('closes on route change — the shell never unmounts the bar (B1)', async () => {
-    const user = userEvent.setup();
-    const { burger, panel, rerender } = mount();
-    await user.click(burger());
-    expect(panel()).not.toBeNull();
-
-    // A client-side navigation: same Header instance, new pathname. Without
-    // this the panel would sit open on top of the newly arrived page.
-    nav.pathname = '/team';
-    rerender(<Mounted locale="ro" />);
-
-    expect(panel()).toBeNull();
-    expect(burger()).toHaveAttribute('aria-expanded', 'false');
-    // The page below must be usable again immediately.
-    expect(page).not.toHaveAttribute('inert');
   });
 });
 
@@ -525,6 +576,54 @@ describe('Header — the nav row, the panel list, and the current page', () => {
     const current = container.querySelectorAll('[aria-current="page"]');
     expect(current).toHaveLength(1);
     expect(current[0]).toHaveTextContent(messages.nav.home);
+  });
+
+  it('renders every nav entry as a plain anchor carrying the FINAL href', async () => {
+    // §15.13: nothing finishes these strings on the way out any more — what
+    // useNavItems hands NavItem is exactly what lands in the DOM, so the locale
+    // prefix and the trailing slash (`trailingSlash: true`, next.config.ts) are
+    // asserted here or nowhere. The base path is empty in this runner
+    // (vitest.config.ts inlines the unset PAGES_BASE_PATH as ''), which is the
+    // root-serving host's shape; the prefixed one is tests/unit/href.test.ts.
+    // Both locales in ONE test because the locale is half of the string under
+    // test — and each pass unmounts first, since RTL leaves every render in the
+    // document and a second bar would double every query below.
+    const user = userEvent.setup();
+
+    for (const locale of ['ro', 'de'] as const) {
+      const { burger, panel, barNav, messages, unmount } = mount(locale);
+      const expected: Array<[string, string]> = [
+        [messages.nav.home, `/${locale}/`],
+        [messages.nav.services, `/${locale}/services/`],
+        [messages.nav.team, `/${locale}/team/`],
+      ];
+      // Romanian alone carries the blog (§5): /de/blog is never generated, so
+      // no href for it may exist either.
+      if (locale === 'ro') expected.push([messages.nav.blog, '/ro/blog/']);
+
+      await user.click(burger());
+      for (const [label, href] of expected) {
+        // Both call sites: the bar row and the panel render the same hook's
+        // rows, and both are what a visitor actually taps (board §5·B7 — no
+        // stylesheet here, so both are queryable and must be scoped).
+        for (const scope of [barNav(), panel() as HTMLElement]) {
+          const link = within(scope).getByRole('link', { name: label });
+          // A plain <a>, not something that renders one: no click handler, no
+          // prefetch observer — the browser does the navigating (§15.13).
+          expect(link.tagName).toBe('A');
+          expect(link).toHaveAttribute('href', href);
+        }
+      }
+
+      if (locale === 'de') {
+        expect(
+          within(panel() as HTMLElement).queryByRole('link', {
+            name: messages.nav.blog,
+          }),
+        ).toBeNull();
+      }
+      unmount();
+    }
   });
 
   it('renders Blog for `ro` in BOTH the bar row and the panel', async () => {

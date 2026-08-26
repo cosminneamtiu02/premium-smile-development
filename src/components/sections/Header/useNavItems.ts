@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { localeHref } from '@/i18n/href';
 import { usePathname } from '@/i18n/navigation';
 import { primaryRoutes } from '@/lib/routes';
 import type { NavRoute } from './NavItem';
@@ -31,7 +32,11 @@ import type { NavRoute } from './NavItem';
 // the router that reports the current path lives in the browser. Both
 // consumers are already client islands; the directive here makes the boundary
 // explicit rather than inherited, so an accidental server-side import fails
-// with the honest error instead of a usePathname crash.
+// with the honest error instead of a usePathname crash. Since §15.13 that hook
+// is the ONLY router touch left in the section: the hrefs are built by the pure
+// i18n/href.ts, so nothing but "which page am I on" needs the browser — and
+// since D9 even that hook is ours, three lines over next/navigation, so no
+// next/link rides into this island's bundle behind next-intl's createNavigation.
 //
 // §8.1 holds: t() is called HERE, in the section tier, and the atoms below
 // NavItem receive finished strings. They never see a key.
@@ -43,30 +48,35 @@ import type { NavRoute } from './NavItem';
  * /blog/<slug> report as Blog — the section, not the article, is what the
  * nav names.
  */
-function isActive(pathname: string, href: string): boolean {
-  if (href === '/') return pathname === '/';
-  return pathname === href || pathname.startsWith(`${href}/`);
+function isActive(pathname: string, path: string): boolean {
+  if (path === '/') return pathname === '/';
+  return pathname === path || pathname.startsWith(`${path}/`);
 }
 
 /**
- * The primary routes in bar order, each already translated and already told
- * whether it is the current page. Used by HeaderNav's bar row AND by
- * NavMenu's panel list.
+ * The primary routes in bar order, each already translated, already told
+ * whether it is the current page, and each carrying the FINAL href a plain
+ * anchor can print (§15.13 — no <Link> is left to finish one). Used by
+ * HeaderNav's bar row AND by NavMenu's panel list.
  *
- * next-intl's usePathname returns the pathname with the locale prefix already
- * stripped ('/ro/services' → '/services'), so the hrefs compared here are the
- * same locale-less strings we hand to <Link>. Outside a Next router (a bare
- * unit test, a detached render) it can hand back nothing — `|| '/'` keeps that
- * case at "we are at the root" instead of crashing on .startsWith.
+ * The two strings in play are deliberately different. What SHIPS is
+ * localeHref's '/ro/services/'; what the ACTIVE rule compares is the
+ * locale-less '/services', because @/i18n/navigation's usePathname hands back
+ * the pathname with the locale prefix already stripped ('/ro/services/' →
+ * '/services/'). lib/routes.ts' rows are the right shape for that comparison
+ * and the wrong one for the anchor — hence `path` in one call and `path` fed
+ * through localeHref in the other. No fallback is needed on the hook any more:
+ * since D9 it is ours and it absorbs the no-router case itself, always
+ * returning a path.
  */
 export function useNavItems(): NavRoute[] {
   const t = useTranslations('common');
   const locale = useLocale();
-  const pathname = usePathname() || '/';
+  const pathname = usePathname();
 
   return primaryRoutes(locale).map((route) => ({
-    href: route.href,
+    href: localeHref(locale, route.path),
     label: t(route.key),
-    active: isActive(pathname, route.href),
+    active: isActive(pathname, route.path),
   }));
 }

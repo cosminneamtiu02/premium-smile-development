@@ -19,15 +19,17 @@ import { Header } from './Header';
 //
 // ── 2. Every story PINS ITS OWN PRETEND ROUTE with
 // `parameters.nextjs.navigation`. @storybook/nextjs-vite feeds that pathname
-// through the real Next app-router contexts, and next-intl's usePathname
-// (which wraps next/navigation) UNPREFIXES it — '/ro/services' arrives in
-// HeaderNav as '/services'. The values below are therefore written the way a
-// browser's address bar writes them, locale prefix and all; the Default
-// story's play function asserts the underline actually lands, so a silent
-// change in that chain fails a test instead of quietly un-marking every page.
-// `appDirectory: true` is what selects those app-router contexts at all —
-// without it the framework mounts the pages-router mock and usePathname is
-// null.
+// through the real Next app-router contexts, where @/i18n/navigation's
+// usePathname reads it and stripLocale UNPREFIXES it — '/ro/services' arrives
+// in HeaderNav as '/services'. That chain is the REAL one (Header.test.tsx
+// mocks the module, so these stories are where it is exercised end to end).
+// The values below are therefore written the way a browser's address bar
+// writes them, locale prefix and all; the Default story's play function asserts
+// the underline actually lands, so a silent change in that chain fails a test
+// instead of quietly un-marking every page. `appDirectory: true` is what
+// selects those app-router contexts at all — without it the framework mounts
+// the pages-router mock and next/navigation's usePathname is null (our hook
+// reads that as the root rather than crashing).
 //
 // The `Sections/*` title prefix routes the visual net to 390 + 1536
 // (tests/visual/stories.spec.ts, §13) — the phone where the burger is the only

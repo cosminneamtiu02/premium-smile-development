@@ -15,9 +15,10 @@ import { Wordmark } from './Wordmark';
 // that is the §8.9 sweep passing, not failing.
 // ── NO FocusVisible. D9's placeholder <a> has no href, so it is not focusable
 // and there is no focus state to photograph (Wordmark.tsx says why at length).
-// ── NO `parameters.nextjs`. The other two section story files pin a pretend
-// route because their links are real next-intl <Link>s; this one imports no
-// router at all, which is exactly what D9 deferred.
+// ── NO `parameters.nextjs`. Only the Header's stories still pin a pretend
+// route, and for the one thing that needs one: usePathname decides which entry
+// gets aria-current. Nobody pins for LINKS any more — they are plain anchors
+// since §15.13 — and this section has neither, which is what D9 deferred.
 //
 // THE THREE MECHANICS THAT WOULD OTHERWISE FAIL SILENTLY, same as the Header's
 // and the Footer's files:

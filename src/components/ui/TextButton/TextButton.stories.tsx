@@ -7,8 +7,8 @@ import { TextButton } from './TextButton';
 // are dedicated stress variants, both carrying the 'stress-320' tag → the
 // visual net also samples them at the 320px accessibility width (§13 UI-tier
 // opt-in).
-// Hrefs are placeholders: the real routes arrive with the locale-aware
-// next-intl <Link> when the Header section is built. Nothing here owns
+// Hrefs are placeholders: the Header nests a plain <a href> whose locale-aware
+// route string comes from localeHref() (§15.13). Nothing here owns
 // navigation — the atom never did (see TextButton.tsx).
 
 const meta = {

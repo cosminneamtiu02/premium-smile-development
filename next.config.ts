@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: ['next-image-export-optimizer'],
   env: {
+    // The visitor's browser has no `process` object, so src/i18n/href.ts can
+    // only read this in a client island if the text is already a literal by
+    // build time — and `env` is Next's inliner for exactly that, the same one
+    // the image optimizer's browser-side reads below rely on. It is the SAME
+    // variable as `basePath` above, on purpose: the link prefix and the asset
+    // prefix cannot disagree if there is only one source (§15.13).
+    PAGES_BASE_PATH: pagesBasePath ?? '',
     nextImageExportOptimizer_imageFolderPath: 'public/images',
     nextImageExportOptimizer_exportFolderPath: 'out',
     nextImageExportOptimizer_quality: '75',

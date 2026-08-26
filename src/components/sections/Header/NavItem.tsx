@@ -1,9 +1,11 @@
 import type { ReactElement } from 'react';
 import { TextButton } from '@/components/ui/TextButton/TextButton';
-import { Link } from '@/i18n/navigation';
 
-// sections/Header — ONE primary-navigation entry: a locale-aware link wearing
-// the quiet TextButton look, marked when it is the page you are on.
+// sections/Header — ONE primary-navigation entry: a plain anchor wearing the
+// quiet TextButton look, marked when it is the page you are on. Plain because
+// every internal link on this site is (§15.13): the href arrives finished from
+// ./useNavItems and the browser does the rest, so this file imports no router
+// and attaches no click handler.
 //
 // ── WHY THIS FILE EXISTS (owner, 2026-08-13).
 // It is a SEAM, not a new capability. The row and the panel render the same
@@ -24,7 +26,10 @@ import { Link } from '@/i18n/navigation';
 // today two client islands, HeaderNav and NavMenu.
 
 export interface NavRoute {
-  /** Locale-less href — <Link> adds the /{locale} prefix (localePrefix: 'always'). */
+  /**
+   * The FINAL href: locale prefix, trailing slash and the interim base path are
+   * already in it, from src/i18n/href.ts (§15.13). This tier only prints it.
+   */
   href: string;
   /** Already-translated label (§8.1) — this tier never sees a message key. */
   label: string;
@@ -55,7 +60,7 @@ export function NavItem({
     // underline + the cta-hover green: the same fact told to screen readers
     // and to eyes.
     <TextButton asChild active={active} className={className}>
-      <Link href={href}>{label}</Link>
+      <a href={href}>{label}</a>
     </TextButton>
   );
 }

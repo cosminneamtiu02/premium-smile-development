@@ -54,6 +54,15 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             instances: [{ browser: 'chromium' }],
+            // FAILURE SCREENSHOTS go to the runner's own artefact folder, never
+            // beside a component. Left unset, @vitest/browser resolves them to
+            // `<test file's directory>/__screenshots__/…` — a fossil of every red
+            // run parked inside src/ (22 were committed by accident in #34; the
+            // .gitignore line is the belt, this is the braces). `.vitest-attachments`
+            // is Vitest's default `attachmentsDir` — the folder its own
+            // `context.annotate` attachments already use — so ALL runner output
+            // lives in one ignored place, organised by test path.
+            screenshotDirectory: '.vitest-attachments',
           },
         },
       },
@@ -67,6 +76,10 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             instances: [{ browser: 'chromium' }],
+            // The Storybook plugin turns failure screenshots OFF for this
+            // project; the directory is set anyway so that if that ever changes
+            // they land with the components project's, never beside a story.
+            screenshotDirectory: '.vitest-attachments',
           },
         },
       },

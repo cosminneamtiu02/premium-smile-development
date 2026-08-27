@@ -70,16 +70,35 @@ const remIn = (token: string): number =>
   Number(/([\d.]+)rem/.exec(token)?.[1] ?? NaN);
 
 /**
- * `size-14` → 3.5rem. Ignores the `[&_svg]:size-7` glyph rule on purpose.
- * Returns NaN — NOT 0 — when there is no scale-size class (e.g. someone
+ * `size-14` → 3.5rem, and — since GlyphButton reads its box from ui/disc.ts
+ * (language-dial lane, 2026-08-27, D16 · F2) — the variable form
+ * `size-[var(--disc-size,3.5rem)]` → 3.5rem, its FALLBACK step (the pill is
+ * still the literal `size-14`). Ignores the `[&_svg]:size-…` glyph rule on
+ * purpose. Returns NaN — NOT 0 — when neither spelling is present (e.g. someone
  * switches to `size-[3.5rem]` or `h-14 w-14`). `Number('')` is 0, and 0 is a
  * plausible-looking box that would let the clearance assertion below pass with
  * nonsense; NaN cannot (G2 typescript review, 2026-08-12).
+ *
+ * The SAME loud failure when the element carries a `--disc-size` OVERRIDE
+ * (`[--disc-size:4rem]`, `xl:[--disc-size:…]`): the fallback in the token is
+ * then not the rendered box at all, and a clearance computed from it would be
+ * confidently wrong at exactly the widths the override exists for. Lane B adds
+ * those steps to both corners and owes this assertion a rewrite (measure the
+ * box, or read the step per breakpoint) — until then the test must say so
+ * rather than quietly approve a spacer that no longer clears anything
+ * (G2 typescript review, 2026-08-27).
  */
 const boxRem = (el: Element): number => {
-  const token = Array.from(el.classList).find((c) => /^size-\d+$/.test(c));
-  return token === undefined
-    ? NaN
+  if (Array.from(el.classList).some((c) => /(^|:)\[--disc-size:/.test(c))) {
+    return NaN;
+  }
+  const token = Array.from(el.classList).find((c) =>
+    /^size-(\d+|\[var\(--disc-size,[\d.]+rem\)\])$/.test(c),
+  );
+  if (token === undefined) return NaN;
+  const variable = /^size-\[var\(--disc-size,([\d.]+)rem\)\]$/.exec(token);
+  return variable
+    ? Number(variable[1])
     : Number(token.replace('size-', '')) * SPACING_STEP_REM;
 };
 

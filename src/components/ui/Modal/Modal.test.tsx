@@ -283,8 +283,10 @@ describe('Modal — the ✕', () => {
 
   it('is a 44px touch target (§9) — GlyphButton ghost/square/md', () => {
     render(<Host />);
+    // The box token is GlyphButton's, in its ui/disc.ts variable form (D16 ·
+    // F2, language-dial lane 2026-08-27): 2.75rem = 44px at the fallback.
     expect(closeButton()).toHaveClass(
-      'size-11',
+      'size-[var(--disc-size,2.75rem)]',
       'rounded-md',
       'bg-transparent',
     );

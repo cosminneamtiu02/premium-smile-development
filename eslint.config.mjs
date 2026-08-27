@@ -23,6 +23,23 @@ export default defineConfig([
     name: 'jsx-a11y/component-mapping',
     settings: { 'jsx-a11y': { components: { Button: 'button' } } },
   },
+  // `role="list"` on a <ul> is redundant in the SPEC and load-bearing in
+  // WebKit: Safari drops list semantics from any list styled `list-style: none`
+  // outside a <nav>, and Tailwind's preflight sets that on every <ul> in the
+  // project — so without the explicit role VoiceOver announces loose links
+  // instead of "list, N items" (ui/SpeedDial's stem, G2 a11y 2026-08-27). The
+  // rule looks exceptions up PER ELEMENT and falls back to its own defaults for
+  // any element absent from this map, so `nav` keeps its default either way —
+  // it is restated here only so the map reads complete in one place.
+  {
+    name: 'jsx-a11y/list-role-for-webkit',
+    rules: {
+      'jsx-a11y/no-redundant-roles': [
+        'error',
+        { nav: ['navigation'], ul: ['list'], ol: ['list'] },
+      ],
+    },
+  },
   // Every internal link is a plain <a href={localeHref(locale, path)}> and every
   // navigation is a full document load (brief §15.13). Layer 1 of that decision
   // is src/i18n/navigation.ts exporting nothing else; this is layer 2, because

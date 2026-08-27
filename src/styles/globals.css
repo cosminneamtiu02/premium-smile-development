@@ -33,9 +33,21 @@
 }
 
 /* Semantic color roles — exactly 17 (`success` dropped, §15.1) + the one
-   additional accent-decorative role. */
+   additional accent-decorative role.
+
+   `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
+   modal's scrim IS the backdrop pseudo-element, `backdrop:bg-scrim` compiles to
+   `background-color: var(--scrim)`, and engines older than 2024 (Chrome 122 /
+   Safari 17.4 / Firefox 120) do not inherit custom properties into `::backdrop`
+   — the variable would resolve to nothing and the dim would silently vanish on
+   exactly the older phones §1 cares about. Declaring the tokens ON the
+   pseudo-element works in every browser that has <dialog> at all (Tailwind's own
+   reset targets ::backdrop the same way), and keeps ONE value in ONE place: a
+   future dark theme adds `, [data-theme='dark'] ::backdrop` to its own block.
+   tests/unit/backdrop-token-layer.test.ts fails if this entry is ever trimmed. */
 :root,
-[data-theme='light'] {
+[data-theme='light'],
+::backdrop {
   /* surfaces */
   --page: #faf9f7;
   --surface: #ffffff;
@@ -120,6 +132,19 @@
     background-color: var(--page);
     color: var(--ink);
     font-family: var(--font-body);
+  }
+
+  /* A closed <dialog> is invisible even where the element is not implemented
+     (Modal board D1b): browsers without <dialog> support — the ~3% frozen on
+     2019–2021 software — treat it as a plain box and would render the CLOSED
+     modal inline, in the page flow. The modal still cannot OPEN there (no
+     showModal()), which is the honest outcome; this line just keeps the page
+     clean. A §6.7-legal reset-tier rule, same tier as the scrollbar-gutter line
+     above, and inert for supporting engines (their UA sheet already says it).
+     `open:flex` on the atom is the other half: a bare `flex` utility would win
+     over this rule and un-hide the closed dialog everywhere. */
+  dialog:not([open]) {
+    display: none;
   }
 
   /* Long prose aligns logically (§15.1) — `start`, never `left`. */

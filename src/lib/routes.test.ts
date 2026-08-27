@@ -24,7 +24,7 @@ const resolve = (key: string): unknown =>
 
 describe('lib/routes — the ONE primary route list', () => {
   it('keeps the bar order: home · services · team · blog', () => {
-    expect(PRIMARY_ROUTES.map((route) => route.href)).toEqual([
+    expect(PRIMARY_ROUTES.map((route) => route.path)).toEqual([
       '/',
       '/services',
       '/team',
@@ -32,10 +32,10 @@ describe('lib/routes — the ONE primary route list', () => {
     ]);
   });
 
-  it('carries locale-less hrefs — <Link> adds the /{locale} prefix (§5)', () => {
+  it('carries locale-less PATHS — localeHref() builds the href from them (§15.13)', () => {
     for (const route of PRIMARY_ROUTES) {
-      expect(route.href.startsWith('/')).toBe(true);
-      expect(route.href).not.toMatch(/^\/(ro|en|de|fr|it)(\/|$)/);
+      expect(route.path.startsWith('/')).toBe(true);
+      expect(route.path).not.toMatch(/^\/(ro|en|de|fr|it)(\/|$)/);
     }
   });
 
@@ -48,14 +48,14 @@ describe('lib/routes — the ONE primary route list', () => {
 
   it('scopes exactly one row to a locale — the blog, to `ro`', () => {
     const scoped = PRIMARY_ROUTES.filter((route) => route.locale !== undefined);
-    expect(scoped.map((route) => route.href)).toEqual(['/blog']);
+    expect(scoped.map((route) => route.path)).toEqual(['/blog']);
     expect(scoped[0]?.locale).toBe('ro');
   });
 });
 
 describe('lib/routes — primaryRoutes(locale) filters the ro-only blog (§5)', () => {
   it('offers all four routes on `ro`', () => {
-    expect(primaryRoutes('ro').map((route) => route.href)).toEqual([
+    expect(primaryRoutes('ro').map((route) => route.path)).toEqual([
       '/',
       '/services',
       '/team',
@@ -66,9 +66,9 @@ describe('lib/routes — primaryRoutes(locale) filters the ro-only blog (§5)', 
   it.each(locales.filter((locale) => locale !== 'ro'))(
     'drops /blog on `%s` — the blog exists in Romanian only',
     (locale: Locale) => {
-      const hrefs = primaryRoutes(locale).map((route) => route.href);
-      expect(hrefs).toEqual(['/', '/services', '/team']);
-      expect(hrefs).not.toContain('/blog');
+      const paths = primaryRoutes(locale).map((route) => route.path);
+      expect(paths).toEqual(['/', '/services', '/team']);
+      expect(paths).not.toContain('/blog');
     },
   );
 

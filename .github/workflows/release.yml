@@ -68,7 +68,8 @@ jobs:
       - name: Build site + link check
         run: |
           npm run build
-          npx linkinator out --recurse --skip "^https?://" --verbosity error
+          # linkinator serves out/ over http://localhost, so a bare "^https?://" skipped EVERY link and the crawl scanned nothing (found 2026-08-24)
+          npx linkinator out --recurse --skip "^https?://(?!localhost|127\.0\.0\.1)" --verbosity error
 
       - name: Upload visual diff report on failure
         if: failure()

@@ -9,8 +9,11 @@ import { Footer } from './Footer';
 // The Footer's four stories — the 2×2 matrix of the two things that can change
 // its shape: the WIDTH (which container step the band sits in) and the LANGUAGE
 // (German runs ~30–35% longer, §8.4). Conventions are the Header's, and the
-// three mechanics that would otherwise fail SILENTLY are spelled out again
-// because they are exactly as invisible here:
+// two mechanics that would otherwise fail SILENTLY are spelled out again
+// because they are exactly as invisible here (a third used to live here: a
+// pinned pretend route, needed while the site-map rows were next-intl <Link>s.
+// They are plain anchors since §15.13, so this section now touches no router
+// at all and pinning one would pin nothing):
 //
 // ── 1. Every story PINS ITS OWN LANGUAGE with per-story `globals`. The locale
 // toolbar is preview-level state in the Storybook manager; the visual runner
@@ -25,12 +28,6 @@ import { Footer } from './Footer';
 // of that band. Playwright ignores the pin — it sets its own page size per
 // project — so the visual net still samples every story at 390 + 1536 (§13,
 // `Sections/*` prefix → tests/visual/stories.spec.ts).
-//
-// ── 3. Every story PINS A PRETEND ROUTE with `parameters.nextjs.navigation`.
-// The Footer marks no active route, so nothing here depends on the pathname —
-// but its links are real next-intl <Link>s, and `appDirectory: true` is what
-// mounts the app-router contexts they resolve against. Without it the framework
-// mounts the pages-router mock instead.
 //
 // The section takes NO props and translates itself, so there are no args and no
 // controls: the locale toolbar is this component's control surface. Flip it to
@@ -140,9 +137,6 @@ const expectLockupChain = async (
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/ro/services' } },
-  },
   play: async ({ canvas }) => {
     const band = canvas.getByRole('contentinfo');
     const phone = canvas.getByRole('link', { name: clinic.phoneDisplay });
@@ -173,9 +167,6 @@ export const Default: Story = {
  */
 export const Smartphone: Story = {
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/ro' } },
-  },
   play: async ({ canvas }) => {
     const band = canvas.getByRole('contentinfo');
 
@@ -212,9 +203,6 @@ export const Smartphone: Story = {
  */
 export const GermanStress: Story = {
   globals: { locale: 'de', viewport: { value: 'laptop' } },
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/de/services' } },
-  },
   play: async ({ canvas }) => {
     const band = canvas.getByRole('contentinfo');
 
@@ -240,9 +228,6 @@ export const GermanStress: Story = {
  */
 export const NonRomanianLocale: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/de' } },
-  },
   play: async ({ canvas }) => {
     await expect(
       canvas.queryByRole('link', { name: de.common.nav.blog }),

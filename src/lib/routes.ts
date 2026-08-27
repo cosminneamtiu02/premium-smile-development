@@ -31,11 +31,17 @@ export type PrimaryRouteKey =
 
 export interface PrimaryRoute {
   /**
-   * Locale-less href — <Link> adds the /{locale} prefix (localePrefix:
-   * 'always', §5). '/' is the locale home: /ro, /de, … (§5: home lives at
-   * /{locale} itself, there is no /{locale}/home).
+   * The locale-less PATH, and deliberately not called an href: nothing prints
+   * this string. Both halves of src/i18n/href.ts consume it — localeHref()
+   * builds the final URL out of it (locale prefix, trailing slash, interim base
+   * path), and the Header's active rule compares it against the same module's
+   * locale-stripped pathname. '/' is the locale home: /ro, /de, … (§5: home
+   * lives at /{locale} itself, there is no /{locale}/home).
+   *
+   * Typed `/${string}` rather than `string` so a row that loses its leading
+   * slash fails to compile instead of shipping '/roservices/'.
    */
-  readonly href: string;
+  readonly path: `/${string}`;
   /** Key under the `common` namespace, resolved by the tier that calls t(). */
   readonly key: PrimaryRouteKey;
   /**
@@ -51,12 +57,12 @@ export interface PrimaryRoute {
  * the Footer's link column all render.
  */
 export const PRIMARY_ROUTES: readonly PrimaryRoute[] = [
-  { href: '/', key: 'nav.home' },
-  { href: '/services', key: 'nav.services' },
-  { href: '/team', key: 'nav.team' },
+  { path: '/', key: 'nav.home' },
+  { path: '/services', key: 'nav.services' },
+  { path: '/team', key: 'nav.team' },
   // The blog exists in Romanian only (§5): /de/blog is never generated, so it
   // must never be offered either — in the bar, the panel or the footer.
-  { href: '/blog', key: 'nav.blog', locale: 'ro' },
+  { path: '/blog', key: 'nav.blog', locale: 'ro' },
 ];
 
 /**

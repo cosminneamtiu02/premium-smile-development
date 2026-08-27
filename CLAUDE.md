@@ -44,7 +44,7 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 | Next.js | 16.x (16.2.12) | App Router with the `[locale]` segment; `output: 'export'` pre-renders every locale × route to static HTML; `generateStaticParams`; Metadata API for per-locale titles, descriptions, hreflang, OG | The locale-shell routing model (§5) and static export are first-class features; the Metadata API implements the SEO contract (§10) without hand-rolled head management |
 | React | 19.x (19.2.8) | Component model for all three tiers | Required by Next 16; used as a plain rendering substrate — no client data fetching exists in this project |
 | TypeScript | 7.x (7.0.2) | Types across app, components, tests; prop APIs as enforced contracts (e.g., `aria-label` required by the types when children aren't text) | Turns the §6 rules from review-time conventions into compile-time errors; TS 7 is the native-compiler generation, keeping full-repo checks fast in CI. If any tool in the chain lags TS 7, pinning to 6.x is the sanctioned fallback — record it in §15 |
-| next-intl | 4.x (4.13.4) | ICU messages in `messages/{locale}.json`; `useTranslations` in sections/pages only; localized metadata; locale-aware navigation/links | ICU MessageFormat handles Romanian one/few/other plurals; built for the App Router; works without middleware under static export |
+| next-intl | 4.x (4.13.4) | ICU messages in `messages/{locale}.json`; `useTranslations` in sections/pages only; localized metadata; `useLocale` as the locale source for both halves of the URL rule. **Navigation is not next-intl's job here (§15.13):** internal links are plain anchors built by `src/i18n/href.ts`, and the active-nav path comes from `src/i18n/navigation.ts`'s own hook over `next/navigation` | ICU MessageFormat handles Romanian one/few/other plurals; built for the App Router; works without middleware under static export |
 | Tailwind CSS + @tailwindcss/postcss | 4.x (4.3.3) | All styling as utilities; design tokens via `@theme`; the semantic **light theme** block via `@theme inline`; container queries (core); logical-property utilities | CSS-first tokens make the two-layer/theme architecture native; container queries implement §6.5; the untouched default scales are the industry standard this whole plan leans on |
 | Storybook | 10.x (10.5.5) | The component workbench: stories + controls for every component; the five named viewports + 320; locale toolbar incl. pseudo-locale; page stories with mock messages | Every checkpoint in this brief — viewport, language, a11y state — becomes a dropdown flip instead of a deploy |
 | @storybook/addon-a11y | 10.x (10.5.5) | axe-core checks rendered per story; violations fail CI | Automates the machine-catchable share of WCAG 2.2 AA (§9) at the component level, continuously |
@@ -122,7 +122,8 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 - **Root `/`:** a tiny client-side script (static export has no middleware) redirects to the
   remembered locale cookie if present, else the closest match of `navigator.language`, else `/ro`.
 - **Language switcher** navigates to the *equivalent path* under the target locale prefix and sets
-  the language cookie. Blog pages switch to the target locale's home (no equivalent exists).
+  the language cookie — a full document load, like every other link (§15.13). Blog pages switch to
+  the target locale's home (no equivalent exists).
 - Localized 404 per locale. Set `trailingSlash: true` for clean static hosting.
 - **Parked decision:** localized slugs (`/de/leistungen`). Default to shared English slugs for now;
   ask before launch — changing URLs later requires redirects.
@@ -381,6 +382,25 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     pack approval never commits; each lane waits for its per-lane "commit it" (fb-66, §15.7
     unchanged). The breakdown never builds; every build is owner-triggered (fb-68). Ops
     reference: `.claude/skills/new-section/references/lane-and-epic-glue.md`.
+13. **Full-document navigation — DECIDED 2026-08-24 (owner, via brainstorm + canvas
+    `full-document-navigation.plan.md`):** every internal link is a plain `<a href>` built by
+    `src/i18n/href.ts` (`localeHref`: locale prefix + trailing slash + the interim base path
+    from `PAGES_BASE_PATH`, inlined into the browser bundle by `next.config` `env` and into
+    the Chromium test project by a `define`). `next/link`, next-intl's `Link` and `useRouter`
+    are not used — `src/i18n/navigation.ts` exports only `usePathname`, and
+    `no-restricted-imports` rejects the rest — including next-intl's own `createNavigation`,
+    which is not used either: destructuring one hook off it still drags `next/link` into the
+    client graph as dead code, so `usePathname` is three hand-written lines over
+    `next/navigation` and `href.ts`'s `stripLocale` (D9). **No prefetching of any kind.**
+    Rationale: the visitor's model (each click = a fresh page), zero navigation JavaScript, no
+    prefetch traffic on every page view, native scroll/bfcache/screen-reader behaviour, and
+    §16's inert-HTML rule taken to its conclusion. Consequences: Header B1
+    (close-on-route-change) and the shell's `data-scroll-behavior` attribute deleted — with
+    one exception found in review: a **bfcache restore** DOES bring shell state back (Back
+    returns the frozen document with the menu open), so `NavMenu` closes on `pageshow` with
+    `persisted === true` (D1); the Phase 3 LanguageSwitcher is
+    a list of plain links whose only script sets the cookie (§8.7); the Wordmark home link
+    and every future in-content link call `localeHref`.
 
 ## 16. Build-time vs runtime contract
 
@@ -403,6 +423,8 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
 **Runtime, in the visitor's browser:**
 - Hydration of the client islands **only**: ContactModal, LanguageSwitcher, mobile nav,
   language-suggestion banner, root `/` redirect script. Everything else stays inert HTML.
+- **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
+  HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `navigator.language` → `/ro`), setting
   the language cookie on explicit click, banner show/dismiss state.
 - Theme application: **in v1, nothing** — light is the `:root` default. If a second theme ever
@@ -412,7 +434,7 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
   queries, `prefers-reduced-motion` (and `prefers-color-scheme` only if a dark theme exists).
 
 **Never at runtime:** data fetching, loading translation files over the network, image
-resizing, server rendering, analytics.
+resizing, server rendering, client-side routing / link prefetching, analytics.
 
 **Consequences:**
 1. Content changes (a price, a bio, a post) require rebuild + redeploy: edit

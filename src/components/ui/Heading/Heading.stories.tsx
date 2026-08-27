@@ -13,8 +13,9 @@ import { Heading, type HeadingSize } from './Heading';
 // There are deliberately NO Focus/Hover stories: the atom is non-interactive
 // and owns no state styling whatsoever — the AsLink child's focus ring comes
 // from the globals' :focus-visible net, which belongs to no atom.
-// The href is a placeholder: the real locale-aware next-intl <Link> lives in
-// the Header. An atom story composes atoms; it never plays a section.
+// The href is a placeholder: the real one is a plain locale anchor built by
+// localeHref() (§15.13), and it lives in the Header. An atom story composes
+// atoms; it never plays a section.
 
 const meta = {
   title: 'UI/Heading',

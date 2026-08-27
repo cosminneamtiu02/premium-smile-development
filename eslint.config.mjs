@@ -23,6 +23,61 @@ export default defineConfig([
     name: 'jsx-a11y/component-mapping',
     settings: { 'jsx-a11y': { components: { Button: 'button' } } },
   },
+  // Every internal link is a plain <a href={localeHref(locale, path)}> and every
+  // navigation is a full document load (brief §15.13). Layer 1 of that decision
+  // is src/i18n/navigation.ts exporting nothing else; this is layer 2, because
+  // a module boundary cannot stop someone importing next/link directly.
+  {
+    name: 'navigation/full-document-only',
+    rules: {
+      // Next's own rule tells the author of a literal internal <a href="/de/">
+      // to reach for next/link — the exact move §15.13 forbids, and this repo
+      // has no pages/ directory for it to be right about in the first place.
+      '@next/next/no-html-link-for-pages': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'next/link',
+              message:
+                'Internal links are plain <a href={localeHref(locale, path)}> — every navigation is a full document load (brief §15.13).',
+            },
+            {
+              // `notFound` stays allowed: it is a build-time signal, not a
+              // navigation.
+              name: 'next/navigation',
+              importNames: [
+                'useRouter',
+                'redirect',
+                'permanentRedirect',
+                'usePathname',
+              ],
+              message:
+                'No client-side navigation (§15.13). For the current path use usePathname from @/i18n/navigation.',
+            },
+            {
+              // Nothing imports this any more (D9 replaced createNavigation
+              // with our own three-line usePathname) — the entry stays as a
+              // tripwire, so reaching back for the family fails at lint.
+              name: 'next-intl/navigation',
+              message:
+                'next-intl navigation is not used at all (§15.13, D9): the current path comes from usePathname in @/i18n/navigation, and links from localeHref in @/i18n/href.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The one module allowed to reach for the primitive it wraps: since D9
+  // src/i18n/navigation.ts calls next/navigation's usePathname itself, three
+  // lines of its own rather than next-intl's createNavigation family (which
+  // dragged next/link into the Header island as dead code).
+  {
+    name: 'navigation/full-document-only/boundary-module',
+    files: ['src/i18n/navigation.ts'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
   globalIgnores([
     '.next/**',
     'out/**',

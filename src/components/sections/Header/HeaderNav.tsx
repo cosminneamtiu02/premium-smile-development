@@ -68,10 +68,10 @@ export function HeaderNav(): ReactElement {
       <ul className="flex items-center gap-2">
         {items.map((item) => (
           <li key={item.href}>
-            {/* One <a> per entry — NavItem renders it through TextButton's
-                asChild slot, so the atom leaves no tag of its own. No
-                className from here: the row's spacing is the <ul>'s gap
-                (§6.4), and this section passes NO colors (Wave-1
+            {/* One <a> per entry — a plain anchor since §15.13, rendered
+                through TextButton's asChild slot so the atom leaves no tag of
+                its own. No className from here: the row's spacing is the
+                <ul>'s gap (§6.4), and this section passes NO colors (Wave-1
                 constraint 6). */}
             <NavItem {...item} />
           </li>

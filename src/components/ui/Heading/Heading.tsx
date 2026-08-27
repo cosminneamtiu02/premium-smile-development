@@ -6,7 +6,7 @@ import { slotClone } from '../slot';
 // .claude/plans/heading-atom-contract-v2.plan.md, owner-approved 2026-08-19).
 // It answers exactly one question — "how big is this title" — never "which
 // element is it": the Footer renders its column titles as <p>, the Header
-// wears the same look inline on its brand <Link>, and sections will pass real
+// wears the same look inline on its brand anchor, and sections will pass real
 // h1–h6. The old repo's ui/heading had the right instinct (level vs
 // visualLevel as independent axes) but hardcoded `Tag = h${level}`, which
 // makes the Footer's <p> titles impossible by construction.
@@ -57,10 +57,10 @@ type HeadingOwnProps = {
   size?: HeadingSize;
   /**
    * Render no element of Heading's own — the single child element you nest
-   * (an <h2>, a next-intl <Link>) BECOMES the heading and wears these classes
-   * on top of its own. This is how a real document outline slot, or the
-   * Header's brand anchor, gets the look: the atom never picks a heading tag
-   * itself, and it can therefore never fake structure.
+   * (an <h2>, an <a href> built by localeHref()) BECOMES the heading and wears
+   * these classes on top of its own. This is how a real document outline slot,
+   * or the Header's brand anchor, gets the look: the atom never picks a
+   * heading tag itself, and it can therefore never fake structure.
    */
   asChild?: boolean;
   /** The finished, already-translated text (§8.1); markup is allowed. */

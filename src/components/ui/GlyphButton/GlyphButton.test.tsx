@@ -35,9 +35,19 @@ const classesOf = (ui: ReactElement): string => {
 // typechecking until it is classified here. The shape suite reuses sizeTokens
 // to prove the axes orthogonal, and the motion sweep derives its matrix from
 // the shape × variant tables, inheriting their exhaustiveness.
+// Since ui/disc.ts (D16 · F2, 2026-08-27) the box is one variable with the step
+// as its FALLBACK, so a host can scale the corner pair from one number; the
+// glyph follows the same variable. Pixel-identical to the size-11/size-5 and
+// size-14/size-7 these replaced: 2.75rem × 5/11 = 1.25rem, 3.5rem ÷ 2 = 1.75rem.
 const sizeTokens: Record<GlyphButtonSize, string[]> = {
-  md: ['size-11', '[&_svg]:size-5'], // 2.75rem / 44px — §9 touch target
-  lg: ['size-14', '[&_svg]:size-7'], // 3.5rem / 56px — primary CTA scale
+  md: [
+    'size-[var(--disc-size,2.75rem)]',
+    '[&_svg]:size-[calc(var(--disc-size,2.75rem)*5/11)]',
+  ], // 2.75rem / 44px — §9 touch target
+  lg: [
+    'size-[var(--disc-size,3.5rem)]',
+    '[&_svg]:size-[calc(var(--disc-size,3.5rem)/2)]',
+  ], // 3.5rem / 56px — primary CTA scale
 };
 
 const shapeTokens: Record<GlyphButtonShape, string[]> = {
@@ -140,7 +150,7 @@ describe('GlyphButton — the icon slot (§6.2) and its geometry', () => {
     // …and the CIRCLE owns its geometry: the descendant utility scores
     // specificity (0,1,1) against a glyph's own preset class (0,1,0), so call
     // sites may drop <Phone /> in with or without a size prop.
-    expect(button.className).toContain('[&_svg]:size-5');
+    expect(button.className).toContain(sizeTokens.md[1]);
   });
 
   it.each(Object.keys(sizeTokens) as GlyphButtonSize[])(

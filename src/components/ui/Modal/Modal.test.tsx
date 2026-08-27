@@ -2,7 +2,15 @@ import { createRef, StrictMode, useRef, useState } from 'react';
 import type { ReactElement, ReactNode, RefObject } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 // The REAL stylesheet, compiled by the same Tailwind pipeline the site uses.
 // Two suites below are meaningless without it: the scrolling region only
 // overflows when `h-[28rem]` is real, and the focus ring's inset offset is a
@@ -153,6 +161,26 @@ const centerOf = (dialog: HTMLDialogElement) => {
     clientY: rect.top + rect.height / 2,
   };
 };
+
+// Test environment, not product styling: unlayered author CSS beats Tailwind's
+// @layer utilities without !important; the fade is a visual concern verified in
+// the compiled CSS and disabled in every snapshot (§13) — a unit test must
+// never depend on where a 200 ms transition currently is.
+// (Concretely: the panel opens from @starting-style opacity 0, and one frame
+// later it is ~0.012 — enough for jest-dom's toBeVisible locally, not on a
+// jittery CI frame. Removing the clock removes the flake at its cause.)
+let stillnessStyle: HTMLStyleElement | null = null;
+
+beforeAll(() => {
+  stillnessStyle = document.createElement('style');
+  stillnessStyle.textContent = 'dialog, dialog::backdrop { transition: none; }';
+  document.head.append(stillnessStyle);
+});
+
+afterAll(() => {
+  stillnessStyle?.remove();
+  stillnessStyle = null;
+});
 
 afterEach(() => {
   // A leaked lock would silently poison every later test in this file.
@@ -726,13 +754,8 @@ describe('Modal — Romanian fixtures reach the screen intact', () => {
     }
   });
 
-  it('finds the heading and the body by their exact strings', async () => {
+  it('finds the heading and the body by their exact strings', () => {
     render(<Host />);
-    // Two frames: the panel opens at opacity 0 (@starting-style, D6's fade-in),
-    // and a visibility assertion taken inside that first frame would be asking
-    // whether the modal is mid-animation, not whether it is on screen.
-    await flush();
-    await flush();
     expect(screen.getByRole('heading', { name: TITLE })).toBeInTheDocument();
     expect(screen.getByText(BODY)).toBeVisible();
   });

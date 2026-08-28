@@ -15,6 +15,9 @@
     "menu": {
       "label": "Menu"
     },
+    "language": {
+      "switch": "{name} · cambia lingua"
+    },
     "brand": {
       "ariaLabel": "{name}, home"
     },

@@ -15,6 +15,9 @@
     "menu": {
       "label": "Menü"
     },
+    "language": {
+      "switch": "{name} · Sprache ändern"
+    },
     "brand": {
       "ariaLabel": "{name}, Startseite"
     },

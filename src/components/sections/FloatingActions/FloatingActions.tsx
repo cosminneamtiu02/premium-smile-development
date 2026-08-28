@@ -1,11 +1,12 @@
 import type { ReactElement } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
+import { LanguageSwitcher } from '@/components/sections/LanguageSwitcher/LanguageSwitcher';
 import { Phone } from '@/assets/glyphs/Phone';
 import { clinic } from '@/lib/clinic';
 
 // sections/FloatingActions — the two thumb-reach controls that ride along on
-// every page: the language pill (bottom-LEFT) and the call CTA (bottom-RIGHT),
+// every page: the language dial (bottom-LEFT) and the call CTA (bottom-RIGHT),
 // plus the clearance spacer that keeps them off the last line of content.
 // Built to the owner-approved plan-canvas contract fb-131…fb-134 (2026-08-12).
 //
@@ -20,10 +21,12 @@ import { clinic } from '@/lib/clinic';
 // read the NextIntlClientProvider context instead. The shell's `getTranslations`
 // (next-intl/server) is async and server-only: it would work in the build and
 // NOWHERE else, leaving this section un-storyable — and §13 requires a story per
-// state. Nothing here is stateful, so no client island is created (§16): the
-// section ships as inert HTML with zero JavaScript attached.
+// state. Nothing IN THIS FILE is stateful, so this section creates no client
+// island of its own; it MOUNTS one — sections/LanguageSwitcher is a client
+// component and carries its own directive, which is the whole shape §16 asks
+// for: inert HTML everywhere, with the smallest possible island inside it.
 // §8.1 holds either way — the ui/ atoms below never see a key, only finished
-// text; translation happens HERE, in the section tier.
+// text; translation happens in the SECTION tier, here and in the switcher.
 //
 // ── 2. A FRAGMENT of exactly three siblings, never a wrapper element.
 // A wrapper carrying the z-40 layer would have to be positioned for z-index to
@@ -51,9 +54,16 @@ import { clinic } from '@/lib/clinic';
 // opaque paint. Not hypothetical: GlyphButton's header names the footer
 // socials as a planned use, i.e. 44px controls that will pass through the
 // bottom-corner bands on every scroll. What Phase 4 owes:
-//   a) `scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom))` on
-//      <html> — the same expression as the spacer (WCAG technique C43). It
-//      cannot be set from here: §6 forbids a section styling the shell.
+//   a) `scroll-padding-bottom` on <html> — the same expression as the spacer
+//      (WCAG technique C43), and since the corner pair gained size steps
+//      (below) that means the SAME THREE STEPS, not one number:
+//        base   calc(5.5rem + env(safe-area-inset-bottom))
+//        xl     calc(6rem   + env(safe-area-inset-bottom))
+//        2xl    calc(6.5rem + env(safe-area-inset-bottom))
+//      The env() term belongs to EVERY step, exactly as it does on the spacer:
+//      drop it from the upper two and a viewport-fit=cover phone under-clears
+//      by the inset it lifted the controls with. It cannot be set from here:
+//      §6 forbids a section styling the shell.
 //   b) A page-composition rule: no standalone focusable narrower than ~72px
 //      flush against the left/right margins in blocks that scroll past the
 //      corners. Footer socials belong centred, or inset >= 88px.
@@ -61,8 +71,8 @@ import { clinic } from '@/lib/clinic';
 //      POSITIONS while watching the bottom corners — not just from the top.
 //
 // §6.8 boundary: placement arrives from HERE as className (the parent owns
-// spacing and positioning), never as a restyle of GlyphButton's internals. The
-// colors are the atom's own — `variant="solid"` IS the look, and no color prop
+// spacing and positioning), never as a restyle of an atom's internals. The
+// colors are the atoms' own — `variant="solid"` IS the look, and no color prop
 // exists to pass (Wave-1 constraint).
 //
 // Both controls sit 1rem above the bottom edge PLUS the device's safe-area
@@ -75,64 +85,86 @@ import { clinic } from '@/lib/clinic';
 // opt-in the UA already keeps the layout viewport inside the safe area. The
 // term is here for the moment Phase 4 ships `viewport: { viewportFit: 'cover' }`
 // (which a full-bleed hero will want); it is forward-compatible, not active.
+//
+// ── THE SWAP (language-dial lane, 2026-08-28 — this section's one real change
+// since 08-12). The bottom-left corner used to be an inert `<p aria-hidden>`
+// shaped like a control: the visual placeholder for the LanguageSwitcher, with
+// a RECORDED RISK the owner accepted twice (fb-129, re-confirmed fb-136 after
+// the G2 a11y review) — it looked pressable and did nothing, so a visitor on a
+// language they cannot read tapped the only language-suggesting thing on screen
+// and got silence. That risk CLOSES here: the corner is now the real
+// <LanguageSwitcher>, a labelled button that unfolds four plain links to the
+// same page in the other four languages (§8.5, §5). The `<p>` is gone; the
+// promise its comment made — "the fix is Phase 3 shipping the switcher, which
+// turns this <p> into a real <button> with a real name" — is what shipped.
+//
+// WHO OWNS WHAT, restated because this corner now has three owners: this
+// section owns PLACEMENT (which corner, which `direction`, which size steps);
+// sections/LanguageSwitcher owns MEANING (the five options, the hrefs, the one
+// cookie); ui/SpeedDial owns PIXELS and open/close. Nothing about languages is
+// decided in this file, and nothing about placement is decided in theirs.
 
-// The language pill — a purely visual PLACEHOLDER for the LanguageSwitcher that
-// lands in Phase 3 (§8.5). Inert BY CONSTRUCTION: a plain <p>, no role, no
-// handler, no href, no tab stop. Three decisions are frozen into it:
-//
-//  · aria-hidden — <html lang> already tells assistive tech the page language,
-//    authoritatively and in the form screen readers act on. A two-letter badge
-//    repeats that as an abbreviation they mispronounce, and it carries nothing
-//    actionable, so hiding it removes NOISE rather than information.
-//  · the code is uppercased in JS (see the render below), never with a CSS
-//    `uppercase` utility: the DOM text must equal the visible text.
-//  · NO chevron (fb-134). A ▸ is the visual grammar for "opens a list" and
-//    would tell sighted users exactly the lie the missing button role refuses
-//    to tell screen-reader users.
-//
-// size-14 (3.5rem) matches the CTA's lg box, so the two corners read as one
-// row; rem sizing keeps the whole pair scaling with browser zoom (§7). The
-// paint is semantic tokens only (§3 standing note) — never a primitive.
-//
-// RECORDED RISK, owner-decided twice (fb-129, re-confirmed fb-136 after the G2
-// a11y review raised it): this disc's silhouette is class-for-class the
-// silhouette of a LIVE control — GlyphButton variant="outline" shape="round"
-// size="lg" shares inline-flex / size-14 / items-center / justify-center /
-// rounded-full / border / bg-surface, and only the COLOUR tokens differ. So it
-// looks pressable while doing nothing, and it sits mirror-opposite a real
-// button of the same family. The review's scenario: a foreign-language visitor
-// on a locale they cannot read taps the only language-suggesting thing on
-// screen and gets silence.
-// The owner's call, and the reasoning behind it: this IS the language button —
-// only the swapping behaviour is deferred (§15.12 / ledger "Future: the full
-// LanguageSwitcher"). The disc is therefore the intended FINAL look, inert for
-// one phase, and the real switcher lands before the clinic's domain is
-// attached (until then everything is NOINDEX=1, §15.2 — no patient reaches it).
-// DO NOT "fix" this by restyling the pill; the fix is Phase 3 shipping the
-// switcher, which turns this <p> into a real <button> with a real name.
-const pillClasses =
-  'fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 z-40 ' +
-  'inline-flex size-14 items-center justify-center ' +
-  'rounded-full border border-line bg-surface ' +
-  'font-mono text-base font-medium tracking-wide text-ink';
+// ── ONE NUMBER, BOTH CORNERS (board D16 · F2, owner-decided fb-295). The size
+// steps live HERE because this repo puts screen decisions in sections, never in
+// atoms (§6.5: an atom never reads the screen — GlyphButton's own comment says
+// "no sm: self-scaling inside an atom"). Both discs read the same variable
+// through ui/disc.ts, so the pair cannot drift: a 72px language bulb beside a
+// 56px call button would stop reading as one row.
+//   < xl  56px — today's approved corner, unchanged on phone and tablet
+//   xl    64px — notebooks (1280–1535)
+//   2xl   72px — laptop · desktop · TV (>= 1536)
+// The base step is spelled out rather than left to the atom's `size` fallback
+// (which is the same 3.5rem) so that BOTH corners carry the identical token
+// list and the test can compare the two strings instead of trusting a default.
+const discSteps =
+  '[--disc-size:3.5rem] xl:[--disc-size:4rem] 2xl:[--disc-size:4.5rem]';
 
-// 5.5rem = the 3.5rem control + its 1rem offset + 1rem of breathing room, plus
-// the same safe-area inset the controls were lifted by. aria-hidden because it
-// is empty geometry: an unlabelled empty box is noise in the a11y tree.
-const spacerClasses = 'h-[calc(5.5rem+env(safe-area-inset-bottom))]';
+// The shared bottom edge — the "one row" contract: two corners are only a pair
+// if they sit on the same line.
+const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
+
+// THE LANGUAGE CORNER. `direction="up"` is passed as a prop, not a class: at
+// 320px a `right` stem would run straight into the call CTA (D6).
+//
+// `--stem-inset` is the atom's second public variable: how much of the viewport
+// its extreme-zoom cap must leave alone, measured from the BULB'S CENTRE (the
+// atom adds the half-bulb itself). Only the host knows the number, so the host
+// does the arithmetic — and it is 6rem + the safe area:
+//   1rem  this corner's own offset from the bottom edge (cornerBottom), plus
+//         env(safe-area-inset-bottom), because the bulb was lifted by it;
+//   5rem  the Header pill's REACH — `sticky top-4` + `h-16` (Header.tsx's mount
+//         contract, which books the very same 5rem for the shell's
+//         `scroll-padding-top`). The bar is blurred glass and always on top, so
+//         an `up` stem tall enough to reach it would put discs behind it.
+// At ordinary zoom the stem is far shorter than the cap and nothing is clipped;
+// past ~300% the cap turns the capsule into its own scroll box instead of
+// letting it climb behind the sticky pill or off the top of the viewport
+// (SC 1.4.10 / 2.4.11).
+const languageCorner =
+  `fixed ${cornerBottom} left-4 z-40 ${discSteps} ` +
+  '[--stem-inset:calc(6rem+env(safe-area-inset-bottom))]';
+
+// THE CALL CORNER — the same bottom edge, the same size steps. GlyphButton's
+// `lg` box reads --disc-size through ui/disc.ts and its glyph follows at half
+// the box, so the phone icon does not stay small inside a bigger disc.
+const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps}`;
+
+// The clearance, one step per size step: the control + its own 1rem offset +
+// 1rem of breathing room, plus the same safe-area inset the controls were
+// lifted by (3.5 + 1 + 1 = 5.5 · 4 + 1 + 1 = 6 · 4.5 + 1 + 1 = 6.5).
+// aria-hidden because it is empty geometry: an unlabelled empty box is noise in
+// the a11y tree.
+const spacerClasses =
+  'h-[calc(5.5rem+env(safe-area-inset-bottom))] ' +
+  'xl:h-[calc(6rem+env(safe-area-inset-bottom))] ' +
+  '2xl:h-[calc(6.5rem+env(safe-area-inset-bottom))]';
 
 export function FloatingActions(): ReactElement {
   const t = useTranslations('common');
-  // NOT a hardcoded "RO" (fb-133): a fixed badge would claim "you are reading
-  // Romanian" on /de, /en, /fr and /it. toUpperCase() runs in JS, so the text
-  // node itself is "DE" — what sits in the DOM is what sits on screen.
-  const locale = useLocale();
 
   return (
     <>
-      <p aria-hidden="true" className={pillClasses}>
-        {locale.toUpperCase()}
-      </p>
+      <LanguageSwitcher direction="up" className={languageCorner} />
 
       {/* The one conversion goal of the entire site (§1): tap-to-call. An
           anchor, not a button — it navigates (tel:), so asChild hands the <a>
@@ -147,7 +179,7 @@ export function FloatingActions(): ReactElement {
         shape="round"
         size="lg"
         aria-label={t('actions.call')}
-        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40"
+        className={callCorner}
       >
         <a href={`tel:${clinic.phone}`}>
           <Phone />

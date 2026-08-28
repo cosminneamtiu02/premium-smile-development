@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { describe, expect, it } from 'vitest';
-import { type Locale, locales } from '@/i18n/locales';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type Locale, locales, nativeNames } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
@@ -23,6 +23,19 @@ import { FloatingActions } from './FloatingActions';
 // Styles are NOT loaded in this project (tests/setup/components.ts imports no
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, same convention as GlyphButton.test.tsx.
+// One visible consequence since the language dial landed: with no CSS the
+// closed stem is neither clipped nor hidden, so all four alternate-language
+// anchors answer role queries. Every link query below is therefore NAMED.
+//
+// ── HARNESS NOTE — why '@/i18n/navigation' is the mock boundary, not
+// 'next/navigation' (Header.test.tsx carries the long form: Vitest pre-bundles
+// bare deps, and replacing next/navigation with vi.mock breaks ESM linking
+// before any factory runs). Mocking OUR module controls exactly what the tree
+// consumes, one call frame closer — and since §15.13 it has ONE export:
+// usePathname, handing back the LOCALE-STRIPPED pathname. This section does not
+// call it; the LanguageSwitcher it now mounts does, and without the mock the
+// hook would ask a router that does not exist in this runner.
+vi.mock('@/i18n/navigation', () => ({ usePathname: () => '/services/' }));
 
 const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 
@@ -36,11 +49,9 @@ const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
   </NextIntlClientProvider>
 );
 
-// The Fragment's three siblings in contract order (fb-132): language pill ·
-// call CTA · clearance spacer. Two of the three are aria-hidden BY DESIGN and
-// therefore unreachable by role — reading them positionally is deliberate, and
-// the inert-contract suite below asserts that unreachability instead of
-// working around it.
+// The Fragment's three siblings in contract order (fb-132): the language dial ·
+// the call CTA · the clearance spacer. The spacer is aria-hidden BY DESIGN and
+// therefore unreachable by role — reading it positionally is deliberate.
 const mount = (locale: Locale = 'ro') => {
   const { container, rerender } = render(<Mounted locale={locale} />);
   // Guard HERE, not only in the shape test: without it, a 4-child Fragment
@@ -48,17 +59,43 @@ const mount = (locale: Locale = 'ro') => {
   // about the wrong node. One assertion turns that into one honest failure
   // repeated identically (G2 typescript review, 2026-08-12).
   expect(container.children).toHaveLength(3);
-  const [pill, call, spacer] = Array.from(container.children);
-  return { container, rerender, pill, call, spacer };
+  const [dial, call, spacer] = childrenOf(container);
+  return { container, rerender, dial, call, spacer };
 };
 
-const SPACING_STEP_REM = 0.25; // Tailwind's default scale, untouched (§3, §7)
+/**
+ * The Fragment's children as HTMLElements. `container.children` is typed
+ * `Element`, which has no `className` narrowing worth trusting and — the reason
+ * this exists — cannot be handed to within(): a role query needs a real HTML
+ * element. The throw is the honest failure for the impossible case rather than
+ * a cast that would hide it.
+ */
+function childrenOf(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.children).map((child) => {
+    if (!(child instanceof HTMLElement)) {
+      throw new Error('FloatingActions rendered a non-HTML element');
+    }
+    return child;
+  });
+}
+
+/**
+ * The bulb's accessible name as the shipped data builds it: that locale's
+ * `common.language.switch` with its one ICU argument filled by the endonym.
+ * COMPUTED, never typed out — a hand-copied "Română · schimbă limba" would keep
+ * passing after someone edited ro.json.
+ */
+const bulbName = (locale: Locale): string =>
+  MESSAGES[locale].common.language.switch.replace(
+    '{name}',
+    nativeNames[locale],
+  );
 
 /** The one class starting with `prefix`, or '' — never a non-null assertion. */
 const tokenStartingWith = (el: Element, prefix: string): string =>
   Array.from(el.classList).find((c) => c.startsWith(prefix)) ?? '';
 
-// INVARIANT for both parsers below: their FAILURE VALUE MUST BE NaN, never a
+// INVARIANT for the parsers below: their FAILURE VALUE MUST BE NaN, never a
 // plausible number, because every caller feeds them to a positive-direction
 // matcher (toBeGreaterThan / toBeGreaterThanOrEqual). NaN makes every such
 // comparison false, so a parse miss FAILS LOUDLY instead of arithmetically
@@ -70,37 +107,46 @@ const remIn = (token: string): number =>
   Number(/([\d.]+)rem/.exec(token)?.[1] ?? NaN);
 
 /**
- * `size-14` → 3.5rem, and — since GlyphButton reads its box from ui/disc.ts
- * (language-dial lane, 2026-08-27, D16 · F2) — the variable form
- * `size-[var(--disc-size,3.5rem)]` → 3.5rem, its FALLBACK step (the pill is
- * still the literal `size-14`). Ignores the `[&_svg]:size-…` glyph rule on
- * purpose. Returns NaN — NOT 0 — when neither spelling is present (e.g. someone
- * switches to `size-[3.5rem]` or `h-14 w-14`). `Number('')` is 0, and 0 is a
- * plausible-looking box that would let the clearance assertion below pass with
- * nonsense; NaN cannot (G2 typescript review, 2026-08-12).
+ * A per-BREAKPOINT rem table read off an element's classes: every token
+ * matching `pattern` becomes one entry keyed by its variant prefix ('' for the
+ * base step, 'xl', '2xl'), valued by the first rem inside it.
  *
- * The SAME loud failure when the element carries a `--disc-size` OVERRIDE
- * (`[--disc-size:4rem]`, `xl:[--disc-size:…]`): the fallback in the token is
- * then not the rendered box at all, and a clearance computed from it would be
- * confidently wrong at exactly the widths the override exists for. Lane B adds
- * those steps to both corners and owes this assertion a rewrite (measure the
- * box, or read the step per breakpoint) — until then the test must say so
- * rather than quietly approve a spacer that no longer clears anything
- * (G2 typescript review, 2026-08-27).
+ * This replaces the old single-number `boxRem`, which the corner pair outgrew
+ * on 2026-08-27 when it gained `--disc-size` steps (D16 · F2): a clearance
+ * computed from one fallback would be confidently wrong at exactly the widths
+ * the steps exist for. `boxRem` said so by returning NaN; this reads all three.
+ * An unparseable token still yields NaN, so the loud-failure invariant holds
+ * per entry.
  */
-const boxRem = (el: Element): number => {
-  if (Array.from(el.classList).some((c) => /(^|:)\[--disc-size:/.test(c))) {
-    return NaN;
+const stepsIn = (el: Element, pattern: RegExp): Record<string, number> => {
+  const steps: Record<string, number> = {};
+  for (const token of Array.from(el.classList)) {
+    const match = pattern.exec(token);
+    if (!match) continue;
+    steps[match[1] ?? ''] = remIn(token);
   }
-  const token = Array.from(el.classList).find((c) =>
-    /^size-(\d+|\[var\(--disc-size,[\d.]+rem\)\])$/.test(c),
-  );
-  if (token === undefined) return NaN;
-  const variable = /^size-\[var\(--disc-size,([\d.]+)rem\)\]$/.exec(token);
-  return variable
-    ? Number(variable[1])
-    : Number(token.replace('size-', '')) * SPACING_STEP_REM;
+  return steps;
 };
+
+/** `[--disc-size:3.5rem]` · `xl:[--disc-size:4rem]` → { '': 3.5, xl: 4 }. */
+const DISC_STEP = /^(?:([a-z0-9]+):)?\[--disc-size:/;
+/** `h-[calc(5.5rem+env(…))]` · `2xl:h-[calc(6.5rem+env(…))]` → { '': 5.5, '2xl': 6.5 }. */
+const SPACER_STEP = /^(?:([a-z0-9]+):)?h-\[/;
+
+/** Every `--disc-size` token, sorted — the string the two corners must SHARE. */
+const discTokens = (el: Element): string[] =>
+  Array.from(el.classList)
+    .filter((c) => DISC_STEP.test(c))
+    .sort();
+
+// `sticky top-4` + `h-16` = the Header pill's reach (Header.tsx's mount
+// contract, which books the same 5rem for the shell's scroll-padding-top).
+// The `up` stem must never be able to climb behind that blurred glass.
+const HEADER_PILL_REACH_REM = 5;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('FloatingActions — a Fragment, never a wrapper (fb-132)', () => {
   it('renders exactly three siblings with no element around them', () => {
@@ -124,8 +170,8 @@ describe('FloatingActions — the call CTA', () => {
     // next-intl does not throw on a miss: it renders the key ("common.actions.
     // call") and logs. Without this assertion a wrong namespace would ship a
     // dotted machine string as the CTA's accessible name.
-    mount();
-    const label = screen.getByRole('link').getAttribute('aria-label');
+    const { call } = mount();
+    const label = call.getAttribute('aria-label');
     expect(label).toBe(ro.common.actions.call);
     expect(label).not.toMatch(/actions\.call|^common\./);
   });
@@ -141,99 +187,136 @@ describe('FloatingActions — the call CTA', () => {
   });
 });
 
-describe('FloatingActions — the inert contract, ASSERTED not assumed', () => {
-  it('exposes no button anywhere in the tree', () => {
+describe('FloatingActions — the language corner is a REAL control now', () => {
+  // This suite replaces the "inert contract" one: until 2026-08-28 the corner
+  // was a `<p aria-hidden>` placeholder that looked pressable and did nothing —
+  // a risk the owner accepted twice (fb-129, fb-136) on the promise that Phase
+  // 3 would turn it into a real button with a real name. These rows are that
+  // promise, kept. What the switcher itself guarantees (hrefs per pathname, the
+  // cookie, the modified-click rule) is pinned in its own suite; here the
+  // question is only whether the CORNER mounts it correctly.
+
+  it('exposes exactly ONE button in the whole tree — the bulb', () => {
+    const { dial } = mount();
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(1);
+    expect(dial).toContainElement(buttons[0]);
+    expect(buttons[0]).toHaveTextContent('RO');
+    expect(buttons[0]).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('names that button from the message file, endonym first (SC 2.5.3)', () => {
+    const { dial } = mount();
+    expect(
+      within(dial).getByRole('button', { name: bulbName('ro') }),
+    ).toBeInTheDocument();
+  });
+
+  it('carries the four alternate-language links in the HTML already (§16.2)', () => {
+    // Always mounted, merely `inert` while closed (board D8 = M), so a crawler
+    // that runs no JavaScript still finds /de/services/ from /ro/services/.
+    const { dial } = mount();
+    const links = Array.from(
+      dial.querySelectorAll<HTMLAnchorElement>('a[hreflang]'),
+    );
+    expect(links.map((link) => link.hreflang)).toEqual(
+      locales.filter((locale) => locale !== 'ro'),
+    );
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/en/services/',
+      '/de/services/',
+      '/fr/services/',
+      '/it/services/',
+    ]);
+  });
+
+  it('leaves no <p> behind — the placeholder is gone, not hidden', () => {
+    const { container } = mount();
+    expect(container.querySelector('p')).toBeNull();
+  });
+
+  it('writes NO cookie just by being on the page (§8.7)', () => {
+    // The site's one piece of storage is written on the explicit click and
+    // nowhere else — which is what lets this site ship without a consent
+    // banner (§12). Mounting the corner on every page must never touch it.
+    const cookieSetter = vi.spyOn(Document.prototype, 'cookie', 'set');
     mount();
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
-  });
-
-  it('exposes exactly ONE link — the phone; the pill is not a control', () => {
-    const { call } = mount();
-    const links = screen.queryAllByRole('link');
-    expect(links).toHaveLength(1);
-    expect(links[0]).toBe(call);
-  });
-
-  it('renders the pill as a plain <p>: no role, no tab stop, nothing nested', () => {
-    // The LanguageSwitcher placeholder (Phase 3, §8.5). aria-hidden because
-    // <html lang> already conveys the page language authoritatively; a
-    // two-letter badge repeats it in a form screen readers mispronounce, and
-    // it carries nothing actionable — hiding it removes noise, not information.
-    const { pill } = mount();
-    expect(pill.tagName).toBe('P');
-    expect(pill).toHaveAttribute('aria-hidden', 'true');
-    expect(pill).not.toHaveAttribute('role');
-    expect(pill).not.toHaveAttribute('tabindex');
-    // NOTE the reach of this one: `[onclick]` matches only an inline DOM
-    // attribute. React attaches onClick synthetically and writes no attribute,
-    // so a stealth handler would slip past THIS clause — jsx-a11y's
-    // no-static-element-interactions rule is what catches that, at lint time.
-    // The assertions that carry the inert contract for assistive tech are the
-    // role / tabindex / nested-control ones (G2 review, 2026-08-12).
-    expect(pill.querySelector('a, button, [role], [onclick]')).toBeNull();
+    expect(cookieSetter).not.toHaveBeenCalled();
   });
 });
 
-describe('FloatingActions — the pill follows the route locale (fb-133)', () => {
+describe('FloatingActions — both corners follow the route locale', () => {
   // The sweep is DERIVED from the locale manifest: a sixth locale joins it the
   // moment src/i18n/locales.ts grows one. This is the test that a hardcoded
   // "RO" fails — such a badge would claim "you are reading Romanian" on /de.
   it.each(locales)(
-    '%s → the uppercased code, and the CTA named from that locale file',
+    '%s → the bulb prints that code and is named in that language; so is the CTA',
     (locale) => {
-      const { pill } = mount(locale);
-      expect(pill.textContent).toBe(locale.toUpperCase());
-      expect(screen.getByRole('link')).toHaveAttribute(
-        'aria-label',
-        MESSAGES[locale].common.actions.call,
-      );
+      const { dial } = mount(locale);
+      const bulb = within(dial).getByRole('button', { name: bulbName(locale) });
+      expect(bulb).toHaveTextContent(locale.toUpperCase());
+      expect(
+        screen.getByRole('link', {
+          name: MESSAGES[locale].common.actions.call,
+        }),
+      ).toBeInTheDocument();
     },
   );
 
-  it('re-renders pill AND CTA name when the locale changes underneath it', () => {
-    const { pill, rerender } = mount('ro');
-    expect(pill.textContent).toBe('RO');
-    expect(screen.getByRole('link')).toHaveAttribute(
-      'aria-label',
-      ro.common.actions.call,
-    );
+  it('re-renders bulb AND CTA name when the locale changes underneath it', () => {
+    const { dial, rerender } = mount('ro');
+    expect(within(dial).getByRole('button')).toHaveTextContent('RO');
+    expect(
+      screen.getByRole('link', { name: ro.common.actions.call }),
+    ).toBeInTheDocument();
 
     rerender(<Mounted locale="de" />);
-    expect(pill.textContent).toBe('DE');
-    expect(screen.getByRole('link')).toHaveAttribute(
-      'aria-label',
-      de.common.actions.call,
-    );
+
+    const bulb = within(dial).getByRole('button');
+    expect(bulb).toHaveTextContent('DE');
+    expect(bulb).toHaveAccessibleName(bulbName('de'));
+    expect(
+      screen.getByRole('link', { name: de.common.actions.call }),
+    ).toBeInTheDocument();
   });
 
-  it('uppercases in JS, not in CSS, and adds no chevron (fb-134)', () => {
-    const { pill } = mount();
-    // `uppercase` would make the DOM text and the visible text diverge.
-    expect(Array.from(pill.classList)).not.toContain('uppercase');
-    // Exactly the code: a ▸ is the visual grammar for "opens a list" and would
-    // tell sighted users the lie the missing button role refuses to tell.
-    expect(pill.textContent).toBe('RO');
+  it('uppercases in JS, not in CSS (fb-133)', () => {
+    // `uppercase` would make the DOM text and the visible text diverge, and a
+    // voice-control user says what they SEE.
+    const { dial } = mount();
+    const bulb = within(dial).getByRole('button');
+    expect(Array.from(bulb.classList)).not.toContain('uppercase');
+    expect(bulb).toHaveTextContent('RO');
+  });
+});
+
+describe('FloatingActions — one number, two corners (D16 · F2)', () => {
+  it('gives BOTH controls the identical --disc-size token list', () => {
+    // The pair is only a pair if it scales together: a 72px language bulb
+    // beside a 56px call button stops reading as one row. Comparing the sorted
+    // class lists is what makes "one number" checkable — both atoms read the
+    // variable through ui/disc.ts, so equal tokens mean equal boxes.
+    const { dial, call } = mount();
+    expect(discTokens(dial)).toEqual(discTokens(call));
+    expect(discTokens(dial)).toHaveLength(3);
   });
 
-  it('paints the pill from SEMANTIC tokens only (§3 standing note)', () => {
-    const { pill } = mount();
-    expect(Array.from(pill.classList)).toEqual(
-      expect.arrayContaining([
-        'bg-surface',
-        'text-ink',
-        'border-line',
-        'rounded-full',
-        'font-mono',
-      ]),
-    );
-    expect(pill.className).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+  it('steps at exactly the base, xl and 2xl screen types', () => {
+    const { dial, call } = mount();
+    for (const el of [dial, call]) {
+      expect(Object.keys(stepsIn(el, DISC_STEP)).sort()).toEqual([
+        '',
+        '2xl',
+        'xl',
+      ]);
+    }
   });
 });
 
 describe('FloatingActions — layering, safe area, and clearance', () => {
   it('pins both controls to the viewport on ONE layer (z-40)', () => {
-    const { pill, call } = mount();
-    for (const el of [pill, call]) {
+    const { dial, call } = mount();
+    for (const el of [dial, call]) {
       expect(Array.from(el.classList)).toContain('fixed');
       expect(Array.from(el.classList)).toContain('z-40');
     }
@@ -250,39 +333,65 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
   it('anchors BOTH controls at the same offset — the "one row" contract', () => {
     // Also the precondition for the clearance test below: the two corners are
     // only "one row" if they share a bottom edge.
-    const { pill, call } = mount();
+    const { dial, call } = mount();
     expect(tokenStartingWith(call, 'bottom-')).toBe(
-      tokenStartingWith(pill, 'bottom-'),
+      tokenStartingWith(dial, 'bottom-'),
     );
   });
 
-  it('sizes the spacer to clear EVERY control plus that control OWN offset', () => {
-    // Derived, not a magic number: shrink the CTA to size="md" or push either
-    // control up to bottom-8 and this arithmetic — not a reviewer — objects.
-    //
-    // Each control's reach is measured from ITS OWN bottom token. Reading the
-    // pill's offset and applying it to both was a real hole: raising only the
-    // CTA to bottom-[calc(3rem+…)] put its top 6.5rem above the edge, past the
-    // 5.5rem spacer, while all 19 tests still passed (G2 react review,
-    // 2026-08-12).
-    const { pill, call, spacer } = mount();
-    const reachRem = (el: Element) =>
-      boxRem(el) + remIn(tokenStartingWith(el, 'bottom-'));
-    const reaches = [reachRem(pill), reachRem(call)];
-    const clearanceRem = remIn(tokenStartingWith(spacer, 'h-'));
+  it('sizes the spacer to clear EVERY control at EVERY size step', () => {
+    // Derived, not three magic numbers: change one `--disc-size` step, or push
+    // either control up to bottom-8, and this arithmetic — not a reviewer —
+    // objects. Each control's reach is measured from ITS OWN bottom token:
+    // reading one corner's offset and applying it to both was a real hole
+    // (G2 react review, 2026-08-12), and reading one SIZE and applying it to
+    // all widths became the same hole when the steps landed (G2, 2026-08-27).
+    const { dial, call, spacer } = mount();
+    const clearance = stepsIn(spacer, SPACER_STEP);
 
-    // NaN from either parser fails here rather than reaching the comparison.
-    for (const r of reaches) expect(r).toBeGreaterThan(0);
-    expect(clearanceRem).toBeGreaterThanOrEqual(Math.max(...reaches));
+    for (const el of [dial, call]) {
+      const steps = stepsIn(el, DISC_STEP);
+      // The spacer must define a step for every width the controls grow at —
+      // one missing breakpoint is a corner that overlaps the last line there.
+      expect(Object.keys(clearance).sort()).toEqual(Object.keys(steps).sort());
+      for (const [prefix, step] of Object.entries(steps)) {
+        const reach = step + remIn(tokenStartingWith(el, 'bottom-'));
+        // NaN from either parser fails here rather than reaching the comparison.
+        expect(reach).toBeGreaterThan(0);
+        expect(clearance[prefix]).toBeGreaterThanOrEqual(reach);
+      }
+    }
+  });
+
+  it('keeps the open stem clear of the Header pill via --stem-inset', () => {
+    // The atom's extreme-zoom cap is measured from the BULB'S CENTRE and reads
+    // this variable (ui/SpeedDial's public CSS variables). Only the host knows
+    // the number, so the host does the arithmetic: its own bottom offset plus
+    // the sticky bar's reach. Get it wrong and a 400%-zoom stem parks discs
+    // behind blurred glass (SC 1.4.10 / 2.4.11).
+    const { dial } = mount();
+    const inset = Array.from(dial.classList).filter((c) =>
+      c.startsWith('[--stem-inset:'),
+    );
+    expect(inset).toHaveLength(1);
+    expect(remIn(inset[0])).toBe(
+      remIn(tokenStartingWith(dial, 'bottom-')) + HEADER_PILL_REACH_REM,
+    );
+    expect(inset[0]).toContain('env(safe-area-inset-bottom)');
   });
 
   it('lifts controls and clearance by the SAME safe-area inset', () => {
     // Notched/gesture-bar phones: env() resolves to 0px everywhere else, so the
     // calc collapses to the plain rem offset — one expression, both worlds.
-    const { pill, call, spacer } = mount();
+    // Every spacer step carries it, not just the base one.
+    const { dial, call, spacer } = mount();
     const INSET = 'env(safe-area-inset-bottom)';
-    expect(tokenStartingWith(pill, 'bottom-')).toContain(INSET);
+    expect(tokenStartingWith(dial, 'bottom-')).toContain(INSET);
     expect(tokenStartingWith(call, 'bottom-')).toContain(INSET);
-    expect(tokenStartingWith(spacer, 'h-')).toContain(INSET);
+    const heights = Array.from(spacer.classList).filter((c) =>
+      SPACER_STEP.test(c),
+    );
+    expect(heights).toHaveLength(3);
+    for (const height of heights) expect(height).toContain(INSET);
   });
 });

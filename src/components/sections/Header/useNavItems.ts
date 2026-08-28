@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { localeHref } from '@/i18n/href';
 import { usePathname } from '@/i18n/navigation';
-import { primaryRoutes } from '@/lib/routes';
+import { matchesRoute, primaryRoutes } from '@/lib/routes';
 import type { NavRoute } from './NavItem';
 
 // sections/Header — the hook that turns the site's route list into the bar's
@@ -26,6 +26,19 @@ import type { NavRoute } from './NavItem';
 // behaviour is unchanged, deliberately: same order, same ro-only blog, same
 // aria-current.
 //
+// ── AND SO DID THE MATCH RULE (language-dial lane, 2026-08-28). This file used
+// to own a private `isActive` — "section-scoped, not prefix matching for '/'" —
+// with the comment that it stayed here because marking the current page needs
+// the router and only the Header does it. sections/LanguageSwitcher became its
+// second consumer: to decide whether the page you are on exists in the language
+// you are picking, `equivalentPath` has to ask the very same question
+// (/blog/<slug> is under /blog, so it is Romanian-only too, §5). Rule of two,
+// same §4 direction as the list — the rule climbed to lib/routes.ts as
+// `matchesRoute` and this hook now calls it. The router did NOT climb with it:
+// comparing two paths was always pure, and asking "where am I?" is still
+// usePathname's job, right here. Zero pixels move; the Header's suites and
+// stories are untouched by design.
+//
 // ── Why this module is client code ('use client'). Both consumers must know
 // WHICH PAGE YOU ARE ON to mark it, and under static export (§16) the answer
 // is not knowable at build time: one HTML file per route is pre-rendered, and
@@ -42,18 +55,6 @@ import type { NavRoute } from './NavItem';
 // NavItem receive finished strings. They never see a key.
 
 /**
- * Section-scoped, NOT prefix matching for '/': every path starts with a
- * slash, so a naive startsWith would light Home up on every page. Everything
- * else matches its own path plus its descendants, which is what makes
- * /blog/<slug> report as Blog — the section, not the article, is what the
- * nav names.
- */
-function isActive(pathname: string, path: string): boolean {
-  if (path === '/') return pathname === '/';
-  return pathname === path || pathname.startsWith(`${path}/`);
-}
-
-/**
  * The primary routes in bar order, each already translated, already told
  * whether it is the current page, and each carrying the FINAL href a plain
  * anchor can print (§15.13 — no <Link> is left to finish one). Used by
@@ -64,10 +65,10 @@ function isActive(pathname: string, path: string): boolean {
  * locale-less '/services', because @/i18n/navigation's usePathname hands back
  * the pathname with the locale prefix already stripped ('/ro/services/' →
  * '/services/'). lib/routes.ts' rows are the right shape for that comparison
- * and the wrong one for the anchor — hence `path` in one call and `path` fed
- * through localeHref in the other. No fallback is needed on the hook any more:
- * since D9 it is ours and it absorbs the no-router case itself, always
- * returning a path.
+ * and the wrong one for the anchor — hence `path` fed to matchesRoute in one
+ * call and through localeHref in the other. No fallback is needed on the hook
+ * any more: since D9 it is ours and it absorbs the no-router case itself,
+ * always returning a path.
  */
 export function useNavItems(): NavRoute[] {
   const t = useTranslations('common');
@@ -77,6 +78,6 @@ export function useNavItems(): NavRoute[] {
   return primaryRoutes(locale).map((route) => ({
     href: localeHref(locale, route.path),
     label: t(route.key),
-    active: isActive(pathname, route.path),
+    active: matchesRoute(pathname, route.path),
   }));
 }

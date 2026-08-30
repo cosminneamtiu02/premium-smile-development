@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { discBase, discBox } from '../disc';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
 // ui/GlyphButton — the icon-only control FAMILY (renamed from ui/RoundButton
@@ -105,14 +106,18 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // `group` is the morph hook and nothing else: a marker class that emits no CSS
 // of its own, so it is free at rest and lets a parent's child SVG react to
 // THIS root's state (`group-aria-expanded:*`) without any code in here.
+// The box, the focus ring and the --fade clock now come from ../disc.ts, the
+// flat module ui/SpeedDial shares them with (D17 Road 3, 2026-08-27) — a
+// ZERO-PIXEL refactor: the token SET below is identical to the one this atom
+// emitted before, only the file the strings are DEFINED in moved. What stays
+// here on purpose: `group`, the disabled state, the radius (shape is this
+// atom's axis alone) and the transition list — exactly two properties, so the
+// outline's border never moves and the focus ring never joins the clock.
 const base =
-  'group inline-flex shrink-0 items-center justify-center ' +
-  'outline-offset-2 ' +
-  'focus-visible:outline-2 focus-visible:outline-focus ' +
-  'disabled:pointer-events-none disabled:opacity-50 ' +
-  '[--fade:400ms] transition-[background-color,color] ' +
-  'duration-(--fade) ease-in-out active:duration-0 ' +
-  'motion-reduce:transition-none';
+  'group ' +
+  discBase +
+  ' disabled:pointer-events-none disabled:opacity-50 ' +
+  'transition-[background-color,color]';
 
 // Named bundles, not four free color props: every rest AND hover pair is
 // measured once, so §9 holds by construction and no call site can invent an
@@ -142,19 +147,27 @@ const shapeClasses: Record<GlyphButtonShape, string> = {
   square: 'rounded-md',
 };
 
-// Fixed square boxes (no `sm:` self-scaling inside an atom — §6.5), rem-based
-// so browser zoom scales the whole control (§7): md 2.75rem/44px is the §9
-// primary touch target, lg 3.5rem/56px matches Button's lg scale.
-// The box is the same in both shapes — size is orthogonal to shape, so a
-// square burger cell hits the same 44px target as the round call CTA.
+// Fixed square boxes — fixed BY RULE (no `sm:` self-scaling inside an atom,
+// §6.5), rem-based so browser zoom scales the whole control (§7): md
+// 2.75rem/44px is the §9 primary touch target, lg 3.5rem/56px matches Button's
+// lg scale. The box is the same in both shapes — size is orthogonal to shape,
+// so a square burger cell hits the same 44px target as the round call CTA.
+// Since ../disc.ts (D16 · F2) each step is the FALLBACK of one variable a HOST
+// may set per screen type through className: `[--disc-size:4rem]` on the corner
+// pair scales the call CTA and the language bulb together, from one number, in
+// the section that owns their placement. Nothing moves at the fallback — 44 and
+// 56, exactly as before.
 // [&_svg]:size-* is how the CONTROL owns its icon's geometry: that descendant
 // selector scores specificity (0,1,1) against a glyph's own preset class
 // (0,1,0), so it wins in every browser and call sites may pass <Phone /> with
 // or without a size prop. Glyphs emit no width/height attributes, so nothing
-// else is in the fight (proven in situ by the IconSizePrecedence story).
+// else is in the fight (proven in situ by the IconSizePrecedence story). The
+// glyph follows the BOX through the same variable — 2.75rem × 5/11 = 1.25rem
+// and 3.5rem ÷ 2 = 1.75rem are the old size-5 / size-7 to the pixel, so a
+// bigger disc gets a bigger icon instead of a small one adrift in it.
 const sizeClasses: Record<GlyphButtonSize, string> = {
-  md: 'size-11 [&_svg]:size-5',
-  lg: 'size-14 [&_svg]:size-7',
+  md: `${discBox.md} [&_svg]:size-[calc(var(--disc-size,2.75rem)*5/11)]`,
+  lg: `${discBox.lg} [&_svg]:size-[calc(var(--disc-size,3.5rem)/2)]`,
 };
 
 const cx = (...parts: Array<string | undefined | false>) =>

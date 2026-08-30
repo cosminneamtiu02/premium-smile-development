@@ -15,6 +15,9 @@
     "menu": {
       "label": "Meniu"
     },
+    "language": {
+      "switch": "{name} · schimbă limba"
+    },
     "brand": {
       "ariaLabel": "{name}, acasă"
     },

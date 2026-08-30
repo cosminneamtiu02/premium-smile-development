@@ -1,0 +1,31 @@
+<style>
+  /*
+    Two rules for the MANAGER's canvas (the Storybook UI around the story).
+    Nothing here reaches a story, a test or a visual baseline — the visual net
+    loads iframe.html directly and never sees the manager.
+
+    1 · The viewport tool writes the chosen phone's height inline on its frame
+    wrapper (e.g. `height: calc(844px)`), but that wrapper is a flex child of
+    the canvas column with the default `flex-shrink: 1` — so any height taller
+    than the canvas is squashed to the canvas height (measured: 844 → 298 on a
+    1280×720 window), while the width, on the cross axis, is honoured. A story
+    with a fixed-position <dialog> then renders against a viewport as short as
+    the manager, not as tall as the phone. Keep the frame at its declared
+    height and let #storybook-preview-wrapper (overflow: auto) scroll instead —
+    a phone on a desk, the way the wider viewports already scroll sideways.
+
+    2 · With NO viewport picked the frame simply fills the canvas, and the
+    canvas is whatever the window leaves under the toolbar — on a small window,
+    with DevTools docked at the bottom, or at browser zoom that is a few
+    hundred pixels. ui/Modal caps its panel at that height minus 2rem, so a
+    dialog that fits every real phone was being cut to a scrolling sliver by
+    the manager's own geometry. A 40rem floor (640px — taller than the 568px
+    stress phone) means the canvas scrolls before any story is squeezed.
+  */
+  #storybook-preview-wrapper div[style*='height: calc('] {
+    flex-shrink: 0;
+  }
+  #storybook-preview-wrapper > div > div {
+    min-height: 40rem;
+  }
+</style>

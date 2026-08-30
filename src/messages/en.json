@@ -46,7 +46,8 @@
     "title": "Articles & news"
   },
   "contact": {
-    "title": "Get in touch",
+    "heading": "Problems?",
+    "lead": "Call us at the number below.",
     "close": "Close"
   }
 }

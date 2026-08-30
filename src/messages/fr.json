@@ -46,7 +46,8 @@
     "title": "Articles et actualités"
   },
   "contact": {
-    "title": "Contactez-nous",
+    "heading": "Un problème ?",
+    "lead": "Appelez-nous au numéro ci-dessous.",
     "close": "Fermer"
   }
 }

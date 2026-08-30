@@ -32,17 +32,50 @@ import { GlyphButton } from '../GlyphButton/GlyphButton';
 // class here would be a stacking claim the code does not make (§7.9).
 // What the platform does NOT give: the page still scrolls behind the scrim
 // (→ lockScroll, D7) and there is no light-dismiss we can rely on yet
-// (`closedby` is too new for this audience's phones → D11's rectangle check).
+// (`closedby` is too new for this audience's phones → D11's own backdrop press,
+// which D19 simplified from a rectangle check to "the event targeted the
+// layer", once the layer became a separate element from the panel).
 //
-// ── THE ROOT IS THE BOX (D2 → A′). The <dialog> element IS the white panel;
-// the gray sheet is its `::backdrop` pseudo-element, painted by the browser.
-// That is why `className` and `ref` land on the panel (§6.8, D9) and why the
-// scrim is `backdrop:bg-scrim` — the SAME `--scrim` token NavMenu's sheet uses
-// (D14), no second alpha. The token layer carries one line for this:
-// `::backdrop` sits in the semantic selector list in globals.css, because
-// engines older than 2024 do not inherit custom properties into ::backdrop and
-// the dim would silently vanish there (tests/unit/backdrop-token-layer.test.ts
-// guards it).
+// ── THE ROOT IS A LAYER HOLDING THE BOX (D2 → A′, amended by D17).
+// ORIGINALLY (D2 → A′, owner 2026-08-26) the <dialog> element WAS the white
+// panel and nothing else: one element, `::backdrop` for the sheet, the caller's
+// className on the panel. That reasoning is still why the scrim is
+// `backdrop:bg-scrim` — the SAME `--scrim` token NavMenu's sheet uses (D14), no
+// second alpha — and why the token layer carries one line for it: `::backdrop`
+// sits in the semantic selector list in globals.css, because engines older than
+// 2024 do not inherit custom properties into ::backdrop and the dim would
+// silently vanish there (tests/unit/backdrop-token-layer.test.ts guards it).
+//
+// WHAT CHANGED AND WHY (D17–D21, owner 2026-08-28). A panel that is TALLER than
+// the screen has to be shown WHOLE — the owner's never-scroll rule for the
+// contact dialog: the visitor must see the entire card and move it, not read it
+// through a 288px window with a scrollbar down its middle. A single-element
+// modal cannot do that. Whatever the <dialog> is, it is the thing the browser
+// centres in the viewport, so if it is also the white box, an oversized box
+// either gets CAPPED (and scrolls inside, which is the picture we are removing)
+// or overflows the viewport with its top edge unreachable.
+//
+// So the element splits in two, and each half gets exactly one job:
+//   · THE LAYER — the <dialog>: transparent, `fixed inset-0`, `p-4`, a flex
+//     COLUMN, and `overflow-y-auto`. It is the full-viewport sheet the scrim is
+//     painted behind, the element that reports backdrop presses (D19), the
+//     element `ref` hands back, and — when the box is taller than the screen —
+//     the only thing that scrolls. The box then moves WHOLE under the scrim.
+//   · THE BOX — its single child <div>: the white panel. Every size step, the
+//     look, the `@container` and the caller's `className` live here (§6.8, D9
+//     unchanged in spirit: className still lands on the thing a parent means by
+//     "the modal"). `m-auto` centres it in the layer — and auto margins are the
+//     load-bearing detail, not decoration: in a flex column they absorb the free
+//     space when there IS some (perfect centring) and collapse to ZERO when
+//     there is none, so an oversized box starts at the layer's top edge and
+//     overflows only downward. `justify-center` or `items-center` would split
+//     the overflow across both ends and put the panel's first line above scroll
+//     position 0, where no scrollbar can reach it — the classic centred-overlay
+//     data loss.
+// The pixels are unchanged for every modal that fits: the layer's `p-4` is the
+// pair of 1rem phone margins the width steps used to carry inside their own
+// `min(100% - 2rem, …)`, so `min(100%, 32rem)` against the layer's content box
+// computes what `min(100% - 2rem, 32rem)` against the viewport computed before.
 //
 // ── §6 contract: content is slots (`header`, `children`), size/tone are typed
 // props, semantic tokens only, no outer margins (the top layer positions it),
@@ -50,9 +83,11 @@ import { GlyphButton } from '../GlyphButton/GlyphButton';
 // §8.1: locale-agnostic — every string arrives finished, including the ✕'s
 // spoken name (`closeLabel`, required, no default, D10 → B). Nothing Romanian
 // lives in this file.
-// §6.5: the panel is an `@container`, so its padding answers to the PANEL's
-// width, never the screen's — a `sm` modal on a desktop stays phone-tight, and
-// there is not one media query in the atom.
+// §6.5: the BOX is the `@container` — deliberately not the layer, which is
+// always the whole viewport and would make every modal on a 1280 screen read as
+// @2xl. On the box the padding still answers to the PANEL's width, never the
+// screen's — a `sm` modal on a desktop stays phone-tight — and there is not one
+// media query in the atom.
 //
 // 'use client' is a necessity, not a preference (D12): showModal(), the focus
 // move and the scroll lock are browser-time work. The element still
@@ -90,7 +125,11 @@ type ModalOwnProps = {
    * dialog that maps to a second `banner` landmark).
    */
   header?: ReactNode;
-  /** The content container — scrolls internally when the panel hits its height cap. */
+  /**
+   * The content container. When `scrollable` (the default) it scrolls
+   * internally once the panel hits its height cap; when `scrollable={false}`
+   * it never scrolls — the box grows with it and the layer takes the overflow.
+   */
   children: ReactNode;
   /**
    * Panel width cap, rem-based; fluid below it (viewport minus 1rem margins).
@@ -99,8 +138,15 @@ type ModalOwnProps = {
    */
   width?: ModalWidth;
   /**
-   * Panel height. auto = fits content (capped by the viewport); sm 20rem ·
-   * md 28rem · lg 36rem fixed, each still capped; full fills the viewport minus margins.
+   * Panel height: `auto` fits the content; the steps are sm 20rem · md 28rem ·
+   * lg 36rem · full = the viewport minus margins.
+   *
+   * What a step MEANS depends on `scrollable`. When `scrollable` (the default)
+   * they are FIXED heights, each still capped by the viewport, and the body
+   * scrolls inside them. When `scrollable={false}` they are MINIMUM heights:
+   * the box is at least that tall and grows past them with its content, since a
+   * fixed height there would clip whatever did not fit with no scroll container
+   * anywhere to reach it.
    * @default 'auto'
    */
   height?: ModalHeight;
@@ -112,6 +158,25 @@ type ModalOwnProps = {
    * @default true
    */
   closeOnBackdropClick?: boolean;
+  /**
+   * (D16, owner 2026-08-28) Which box gives way when the content is taller
+   * than the screen.
+   *
+   * `true` (default) — the box is capped at the viewport minus 2rem and its
+   * BODY scrolls inside it; the top bar and the ✕ never move, and the body
+   * becomes a named `region` with a tab stop for as long as it really
+   * overflows (SC 2.1.1).
+   *
+   * `false` — the box takes its FULL content height: its body never scrolls
+   * and never becomes a region or a tab stop. A box taller than the viewport
+   * makes the dialog's full-viewport LAYER scroll instead, so the panel moves
+   * whole under the scrim — the never-scroll picture, where the visitor sees
+   * one card and slides it rather than reading it through a window. The
+   * `height` steps follow: they become MINIMUMS here, because a fixed height
+   * plus a box that may not scroll is a content trap (see `height`).
+   * @default true
+   */
+  scrollable?: boolean;
   /**
    * REQUIRED — the ✕'s spoken name (§6.3, the same rule as GlyphButton's own
    * aria-label): already-translated text from whoever renders the modal — a
@@ -143,30 +208,60 @@ export type ModalProps = ModalOwnProps &
     | 'closedby'
   >;
 
-// The look: the menu panel's own clothes — `rounded-lg border border-line-subtle
-// bg-surface` (NavMenu.tsx) — so the site has ONE overlay language, plus
-// `shadow-xl`. The shadow is invisible over the scrim and exists for
-// dimBackdrop={false}, where a white panel would otherwise sit on the off-white
-// page with a hairline between them.
+// THE LAYER (D17) — the <dialog> itself: invisible, the size of the viewport,
+// and the only thing that ever scrolls the whole panel.
 //
 // THE RESETS (§7.8): a UA `dialog:modal` ships `max-width/max-height:
-// calc(100% - 6px - 2em)`, `padding: 1em` and a border of its own. Author
-// styles beat the UA origin, so `max-w-none` + our own cap + `p-0` + our border
-// are what put the phone margins at exactly 1rem instead of ~21px.
+// calc(100% - 6px - 2em)`, `padding: 1em`, `margin: auto`, a border AND an
+// opaque `background: canvas` of its own. Author styles beat the UA origin, so
+// `max-w-none max-h-none p-4 m-0 border-0 bg-transparent` are what turn that
+// default box into a sheet — and `w-auto h-auto` are what let `inset-0` size it
+// to the viewport, since the UA sizes a dialog `fit-content` in both axes.
+// `p-4` IS the 1rem phone margin, now paid once by the layer instead of by
+// every width step's `min(100% - 2rem, …)`.
 //
 // `open:flex`, NEVER a bare `flex` (§7.1): `display: flex` unconditionally
 // would win over the UA's (and globals') display:none for a CLOSED dialog and
 // leave the modal's markup sitting in the page.
 //
-// MOTION (D6): 200ms fade-IN only, on the panel and on the sheet, each with its
-// own transition stack — `starting:open:backdrop:opacity-0` is the ordering
-// Tailwind 4.3 compiles into the valid selector (`…:is([open])::backdrop`; the
-// mirror-image `backdrop:starting:open:*` emits `::backdrop:is([open])`, which
-// no engine can match). There is no fade-OUT: that needs the element kept
-// displayed after close(), which delays the platform's focus return.
-// motion-reduce switches both off (§9) — an instant open loses nothing.
-const base =
-  '@container m-auto p-0 ' +
+// `overflow-y-auto` + `overscroll-contain`: the scroll of last resort (D18).
+// A box that fits produces no scrollbar at all; a box that does not scrolls
+// here, whole, and the gesture never chains through to the frozen page behind.
+//
+// MOTION (D6): 200ms fade-IN only, on the layer (the box rides along inside it)
+// and on the sheet, each with its own transition stack —
+// `starting:open:backdrop:opacity-0` is the ordering Tailwind 4.3 compiles into
+// the valid selector (`…:is([open])::backdrop`; the mirror-image
+// `backdrop:starting:open:*` emits `::backdrop:is([open])`, which no engine can
+// match). There is no fade-OUT: that needs the element kept displayed after
+// close(), which delays the platform's focus return. motion-reduce switches
+// both off (§9) — an instant open loses nothing.
+const layerClasses =
+  'fixed inset-0 m-0 w-auto h-auto max-w-none max-h-none border-0 ' +
+  'bg-transparent p-4 ' +
+  'open:flex flex-col overflow-y-auto overscroll-contain outline-none ' +
+  'transition-opacity duration-200 starting:open:opacity-0 ' +
+  'backdrop:transition-opacity backdrop:duration-200 ' +
+  'starting:open:backdrop:opacity-0 ' +
+  'motion-reduce:transition-none backdrop:motion-reduce:transition-none';
+
+// THE BOX (D17) — the white panel, the layer's only child.
+//
+// The look (ex-D4, unchanged by the split): the menu panel's own clothes —
+// `rounded-lg border border-line-subtle bg-surface` (NavMenu.tsx) — so the site
+// has ONE overlay language, plus `shadow-xl`. The shadow is invisible over the
+// scrim and exists for dimBackdrop={false}, where a white panel would otherwise
+// sit on the off-white page with a hairline between them.
+//
+// `shrink-0` is
+// load-bearing: the box is a flex item in a column, so the default
+// `flex-shrink: 1` would SQUASH an oversized box back to the layer's height
+// (its `overflow-hidden` makes its automatic minimum size zero, so it shrinks
+// all the way) and then clip the content that no longer fits — the exact
+// failure the owner reported inside Storybook's canvas. Refusing to shrink is
+// what turns the excess into layer scroll instead of lost content.
+const boxClasses =
+  '@container m-auto shrink-0 ' +
   'rounded-lg border border-line-subtle bg-surface text-ink shadow-xl ' +
   // `break-words` (overflow-wrap: break-word) is INHERITED by everything the
   // consumer nests, and it is load-bearing, not polish: the panel is a
@@ -176,26 +271,27 @@ const base =
   // wrapping (§8.4). Verified in the live Storybook at 320 before and after.
   // break-word, never break-all: ordinary text keeps breaking at spaces.
   'break-words ' +
-  'max-w-none max-h-[calc(100dvh-2rem)] ' +
-  'open:flex flex-col overflow-hidden outline-none ' +
-  'transition-opacity duration-200 starting:open:opacity-0 ' +
-  'backdrop:transition-opacity backdrop:duration-200 ' +
-  'starting:open:backdrop:opacity-0 ' +
-  'motion-reduce:transition-none backdrop:motion-reduce:transition-none';
+  'flex flex-col overflow-hidden';
+
+// The cap, and ONLY in the scrollable mode (D18): the viewport minus the
+// layer's own margins. Without it the box is as tall as its content and the
+// layer takes the overflow.
+const capClass = 'max-h-[calc(100dvh-2rem)]';
 
 // Named steps, not free values (owner): a finite list keeps every modal on the
 // site inside one family, and `className` covers the genuine one-off (§6.8,
-// D9). The 2rem inside each `min()` is the pair of 1rem phone margins, so the
-// panel is fluid BELOW its cap and never wider than the viewport — at 320px the
-// md panel is 288px, at 390 it is 358px, and from 512px up it simply stops.
-// Tailwind restores the spaces CSS math requires: `min(100%-2rem,32rem)`
-// compiles to `min(100% - 2rem, 32rem)` (verified with its own compiler).
+// D9). `100%` is the LAYER's content box — the viewport minus its `p-4` — so
+// the pair of 1rem phone margins that used to sit inside every `min()` is paid
+// once, by the layer, and the computed pixels are unchanged: at 320px the md
+// panel is 288px, at 390 it is 358px, and from 512px up it simply stops.
+// Tailwind restores the spaces CSS math requires: `min(100%,32rem)` compiles to
+// `min(100%, 32rem)` (verified with its own compiler).
 const widthClasses: Record<ModalWidth, string> = {
-  sm: 'w-[min(100%-2rem,24rem)]',
-  md: 'w-[min(100%-2rem,32rem)]',
-  lg: 'w-[min(100%-2rem,42rem)]',
-  xl: 'w-[min(100%-2rem,56rem)]',
-  full: 'w-[calc(100%-2rem)]',
+  sm: 'w-[min(100%,24rem)]',
+  md: 'w-[min(100%,32rem)]',
+  lg: 'w-[min(100%,42rem)]',
+  xl: 'w-[min(100%,56rem)]',
+  full: 'w-full',
 };
 
 // auto = no height class at all: the panel is as tall as its content until the
@@ -207,6 +303,28 @@ const heightClasses: Record<ModalHeight, string> = {
   md: 'h-[28rem]',
   lg: 'h-[36rem]',
   full: 'h-[calc(100dvh-2rem)]',
+};
+
+// THE SAME STEPS, AS MINIMUMS — the non-scrollable mode (G2, D16). A FIXED
+// height there is a content trap: the box is `overflow-hidden`, the body is
+// `overflow-visible` and the layer only scrolls what actually sticks out of the
+// box, so `h-[28rem]` + more than 28rem of content clips the remainder with no
+// scroll container anywhere to reach it (measured: box scrollHeight 1499 vs
+// clientHeight 446, layer 896/896). Worse than invisible — Tab into a clipped
+// link scrolls the overflow-hidden box programmatically and the ✕ leaves the
+// screen with no way back.
+// `min-h-*` keeps everything the steps were FOR — a box that does not jump
+// between openings, a floor under a short panel — while letting content push
+// past the floor, which is exactly D16's promise: the box takes its full
+// content height and the LAYER takes the overflow. A second map rather than
+// rewriting the strings, so both lists stay greppable and neither can drift
+// into the other's mode.
+const minHeightClasses: Record<ModalHeight, string> = {
+  auto: '',
+  sm: 'min-h-[20rem]',
+  md: 'min-h-[28rem]',
+  lg: 'min-h-[36rem]',
+  full: 'min-h-[calc(100dvh-2rem)]',
 };
 
 // P (padding) and G (gap) as CONTAINER steps, measured on the panel (D5):
@@ -236,16 +354,43 @@ const barClasses =
 // Tailwind's scanner reads class names out of comments too.)
 const slotClasses =
   'flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-3 [&>*]:min-w-0';
-// The ring is drawn INSIDE the region (`-outline-offset-2`) on purpose: the
+// The body's padding is the same in both modes — P left/right/bottom, G on top
+// (D5). `rounded-b-lg` matches the panel's own corners, since this container
+// reaches the bottom edge of the box.
+//
+// The focus ring lives here, in BOTH modes (G2). It is obviously needed in the
+// scrollable one, where this container really is a tab stop; the reason it is
+// unconditional is the HANDOVER between the modes. `scrollable` is a prop, so a
+// consumer can flip it while the modal is open — and if it flips to false while
+// the body holds focus, the measuring effect deliberately keeps the tab stop
+// until the next blur (never yank focus out from under someone: removing
+// tabindex from the focused element drops focus to <body>, i.e. outside the
+// modal). For those few moments a focused element would otherwise have only the
+// browser/globals default ring, which the box's `overflow-hidden` clips.
+// Costing: `focus-visible:` is inert on an element that cannot be focused, so
+// carrying it in the static mode buys the handover and changes nothing else.
+// The ring is drawn INSIDE the container (`-outline-offset-2`) on purpose: the
 // panel is `overflow-hidden`, so an outline at the default +2px offset is
 // clipped on three of its four edges and reads as a stray 2px line under the
-// title. `rounded-b-lg` matches the panel's own corners, since this container
-// reaches the bottom edge of the box.
-const contentClasses =
-  'min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-b-lg ' +
-  'px-4 pb-4 pt-3 @md:px-6 @md:pb-6 @md:pt-4 @2xl:px-8 @2xl:pb-8 ' +
+// title.
+const contentBase =
+  'rounded-b-lg px-4 pb-4 pt-3 @md:px-6 @md:pb-6 @md:pt-4 @2xl:px-8 @2xl:pb-8 ' +
   'focus-visible:outline-2 focus-visible:outline-focus ' +
   'focus-visible:-outline-offset-2';
+
+// SCROLLABLE MODE (D21): this container is the scroll port. `min-h-0 flex-1`
+// let it take the leftover height of a capped box and shrink below its content
+// — without them a flex item's automatic minimum size pins it to its content
+// and the box, not the body, overflows.
+const contentScrollingClasses =
+  'min-h-0 flex-1 overflow-y-auto overscroll-contain';
+
+// NON-SCROLLABLE MODE (D21): every class whose only job was to scroll is gone.
+// `overflow-visible` is written out rather than left to the default so the
+// intent is legible at the call site and in the test: this container must never
+// clip, never scroll and never become a region — the box grows instead, and the
+// layer scrolls it.
+const contentStaticClasses = 'overflow-visible';
 
 const cx = (...parts: Array<string | undefined | false>) =>
   parts.filter(Boolean).join(' ');
@@ -259,6 +404,7 @@ export function Modal({
   height = 'auto',
   dimBackdrop = true,
   closeOnBackdropClick = true,
+  scrollable = true,
   closeLabel,
   initialFocusRef,
   className,
@@ -281,8 +427,10 @@ export function Modal({
   // it without the effect having to be re-created for a handler identity.
   const measureRef = useRef<() => void>(() => {});
   // Whether the body ACTUALLY overflows — measured after mount, never guessed
-  // (see the measuring effect below).
-  const [scrollable, setScrollable] = useState(false);
+  // (see the measuring effect below). Named for the measurement, not for the
+  // prop: `scrollable` is what the CONSUMER asked for, this is what the DOM
+  // reports, and only both together earn the region and its tab stop.
+  const [bodyOverflows, setBodyOverflows] = useState(false);
   // The press that a backdrop dismissal must have STARTED with. Kept in a ref,
   // not state: nothing renders from it, and a re-render mid-gesture would be a
   // bug of its own.
@@ -370,6 +518,12 @@ export function Modal({
   // else the dialog — which `tabIndex={-1}` makes focusable and `outline-none`
   // keeps ring-free, so the modal opens calm and the screen reader still
   // announces its name (§7.6).
+  // Unchanged by D17, but worth naming: the element that takes focus is now the
+  // LAYER, which is also the scroll container of last resort. So in the
+  // non-scrollable mode the arrow keys already scroll the right thing the
+  // moment the modal opens, with no tab stop added anywhere (D21) — the
+  // scrollable mode is the one that still needs its body to be reachable,
+  // because there the box is capped and the layer has nothing to scroll.
   useEffect(() => {
     if (!open) return;
     const dialog = dialogRef.current;
@@ -377,7 +531,10 @@ export function Modal({
     (initialFocusRef?.current ?? dialog).focus();
   }, [open, initialFocusRef]);
 
-  // Does the body ACTUALLY overflow? (a11y G2.) axe's
+  // Does the body ACTUALLY overflow? (a11y G2 — scrollable mode ONLY, D21.)
+  // With scrollable={false} there is no scroll port inside the panel at all:
+  // nothing is measured, no observer is attached, and the body can never
+  // acquire a role or a tab stop. axe's
   // `scrollable-region-focusable` demands focusability only of a region that
   // genuinely scrolls, and a Tab stop on one that does not is a stop every
   // keyboard user pays for and no one needs. So it is measured per open, and
@@ -396,19 +553,20 @@ export function Modal({
     if (!element) return;
 
     const measure = () => {
-      const next = open && element.scrollHeight > element.clientHeight;
+      const next =
+        open && scrollable && element.scrollHeight > element.clientHeight;
       // Never pull the tab stop out from under the person standing on it: while
       // the region HOLDS focus, keep it focusable even if the content shrank —
       // removing tabindex from the focused element drops focus to <body>, i.e.
       // outside the modal. The region's onBlur re-measures, so the downgrade
       // happens the moment focus leaves.
       if (!next && document.activeElement === element) return;
-      setScrollable(next);
+      setBodyOverflows(next);
     };
     measureRef.current = measure;
     measure();
 
-    if (!open || typeof ResizeObserver === 'undefined') return;
+    if (!open || !scrollable || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(measure);
     // BOTH boxes: the region for panel-driven changes (rotation, zoom), and the
     // inner wrapper for content-driven ones. At a fixed height step the region
@@ -419,7 +577,7 @@ export function Modal({
     const inner = innerRef.current;
     if (inner) observer.observe(inner);
     return () => observer.disconnect();
-  }, [open]);
+  }, [open, scrollable]);
 
   // A close the BROWSER performed — Escape, or a <form method="dialog"> submit
   // inside the content. TWO guards, each against a different double-fire:
@@ -439,32 +597,58 @@ export function Modal({
     if (open && !event.currentTarget.open) onClose();
   };
 
-  // "Outside" is the panel's RECTANGLE, never `target === dialog` alone (§7.10):
-  // with A′ the dialog IS the box, so a click on its own border or on a bare
-  // strip between the two containers targets the dialog while being firmly
-  // INSIDE the panel. Both conditions must hold — the event has to be aimed at
-  // the dialog itself (a ::backdrop press is dispatched that way; a press on
-  // any child, including a keyboard Enter on the ✕, which browsers report at
-  // 0,0, is not) AND land outside the rectangle.
+  // "Outside" is now simply THE LAYER (D19), and the rectangle arithmetic the
+  // one-element shape needed (D11 → §7.10: compare the click point with the
+  // panel's rect, because a press on the dialog's own border or on a bare strip
+  // between its two containers targeted the dialog while being firmly INSIDE
+  // the panel) is gone with it. With the split the DOM answers the question by
+  // itself: the layer covers the whole viewport, everything the visitor can
+  // press outside the white panel IS the layer, and every press on the panel —
+  // its border, its padding, a gap between the bar and the body, a keyboard
+  // Enter on the ✕ that browsers report at 0,0 — targets the box or something
+  // inside it. A synthetic 0,0 and a panel that overflows its layer are both
+  // handled by that identity check alone.
+  //
+  // ONE PLACE WHERE THE POINT STILL MATTERS (G2, D19): THE LAYER'S OWN
+  // SCROLLBAR. With scrollable={false} the layer really scrolls, and a CLASSIC
+  // scrollbar — Windows everywhere, macOS with "always show scroll bars" — is
+  // part of the element: pressing it dispatches pointerdown/click with
+  // `target === dialog`, exactly like a press on the sheet. Without this guard
+  // the modal would CLOSE while the visitor is merely dragging it into view,
+  // which is the one gesture the never-scroll layout invites. So a backdrop
+  // press must also land inside the layer's CLIENT box — the padding box minus
+  // whatever the scrollbars occupy:
+  //   · `y >= clientHeight` → the horizontal bar's band (block end, any script)
+  //   · LTR: `x >= clientWidth` → the vertical bar's band at the inline end
+  //   · RTL: the vertical bar sits at the inline START, so the band is the
+  //     leading `offsetWidth - clientWidth` strip instead.
+  // The layer carries `border-0` and the caller's className lands on the BOX,
+  // so `offsetWidth - clientWidth` is the scrollbar width with no border term
+  // to subtract. On overlay scrollbars (macOS default, every phone) the two
+  // widths are equal and all three tests are unreachable — the guard costs
+  // nothing and simply never fires.
   // One parameter type is enough: React's PointerEvent extends MouseEvent, so
   // the pointerdown handler passes its event straight in.
   const isBackdropPress = (
     event: ReactMouseEvent<HTMLDialogElement>,
   ): boolean => {
-    const dialog = dialogRef.current;
-    if (!dialog || event.target !== event.currentTarget) return false;
-    const box = dialog.getBoundingClientRect();
-    return (
-      event.clientX < box.left ||
-      event.clientX > box.right ||
-      event.clientY < box.top ||
-      event.clientY > box.bottom
-    );
+    if (event.target !== event.currentTarget) return false;
+    const layer = event.currentTarget;
+    const rect = layer.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if (y >= layer.clientHeight) return false;
+    const rtl = getComputedStyle(layer).direction === 'rtl';
+    return rtl
+      ? x >= layer.offsetWidth - layer.clientWidth
+      : x < layer.clientWidth;
   };
 
   // Both halves of the gesture are checked (§7.5): selecting text inside the
-  // panel and releasing on the sheet is a drag, not a dismissal. The flag is
-  // cleared on every click, so an abandoned press can never arm a later one.
+  // panel and releasing on the layer is a drag, not a dismissal — and the
+  // reverse, a press that starts on the layer and ends inside the panel, is not
+  // a dismissal either. The flag is cleared on every click, so an abandoned
+  // press can never arm a later one.
   // A caller's own handlers run first and are never swallowed — `rest` is
   // spread last for everything else, but these two carry the atom's behaviour.
   const handlePointerDown = (event: ReactPointerEvent<HTMLDialogElement>) => {
@@ -496,68 +680,95 @@ export function Modal({
       aria-labelledby={ariaLabelledby}
       aria-label={ariaLabel}
       className={cx(
-        base,
-        widthClasses[width],
-        heightClasses[height],
+        layerClasses,
         // D14: the locked token, or nothing painted at all. The pseudo-element
         // exists either way — an undimmed modal still reports backdrop presses.
+        // It stays on the <dialog> because ::backdrop belongs to the element
+        // the browser put in the top layer, which is this one.
         dimBackdrop ? 'backdrop:bg-scrim' : 'backdrop:bg-transparent',
-        className,
       )}
       onClose={handleNativeClose}
       onPointerDown={handlePointerDown}
       onClick={handleClick}
       {...rest}
     >
-      <div className={barClasses}>
-        <div className={slotClasses}>{header}</div>
-        <GlyphButton
-          variant="ghost"
-          shape="square"
-          size="md"
-          aria-label={closeLabel}
-          onClick={onClose}
-          className="ms-auto shrink-0"
-        >
-          <Close />
-        </GlyphButton>
-      </div>
-      {/* THE SCROLLING REGION — focusable ONLY while it really scrolls.
-          Why focusable at all: arrow keys scroll the focused element's nearest
-          scrollable ancestor, and focus sits on the dialog, which is
-          `overflow-hidden`. A body with no focusable content inside it would
-          therefore be unreachable by keyboard (SC 2.1.1; axe
-          `scrollable-region-focusable`, which the FixedHeightScrolling story's
-          own a11y run raised).
-          Why only then: axe's rule fires on real overflow, and an unconditional
-          tab stop would tax every keyboard user on every non-scrolling modal
-          for nothing. `scrollable` is measured after mount (effect above), so
-          the pre-rendered HTML stays attribute-free and hydration-safe.
-          Why role + name: a bare focusable div announces nothing. As a `region`
-          mirroring the dialog's OWN accessible name, a screen reader says
-          "<the modal's title>, region" — no new string, no message key, §8.1
-          and D10 intact.
-          Deviation from the board's §3 diagram, reported at hand-off — SC 2.1.1
-          outranks a class list.
-          NO eslint-disable is needed for the tabIndex any more, and adding one
-          back would now FAIL --report-unused-disable-directives: jsx-a11y's
-          no-noninteractive-tabindex ships `allowExpressionValues: true`, so a
-          computed value like this ternary is outside its reach — the rule only
-          polices literal tabindexes on non-interactive elements. */}
+      {/* THE BOX — the layer's ONE child (D17). Sizes, look and the caller's
+          className all land here; the layer above it owns nothing but the
+          viewport, the scrim and the scroll of last resort. */}
       <div
-        ref={contentRef}
-        className={contentClasses}
-        tabIndex={scrollable ? 0 : undefined}
-        role={scrollable ? 'region' : undefined}
-        aria-labelledby={scrollable ? ariaLabelledby : undefined}
-        aria-label={scrollable ? ariaLabel : undefined}
-        onBlur={() => measureRef.current()}
+        className={cx(
+          boxClasses,
+          widthClasses[width],
+          // FIXED when the body scrolls, a MINIMUM when the box grows instead
+          // (G2): the same step name, the only meaning each mode can honour.
+          scrollable ? heightClasses[height] : minHeightClasses[height],
+          // The cap belongs to the scrollable mode alone: without it the box is
+          // as tall as its content and the LAYER takes the overflow (D18).
+          scrollable && capClass,
+          className,
+        )}
       >
-        {/* An unstyled wrapper whose ONLY job is to be measurable: it hugs the
-            content, so the ResizeObserver above sees growth the region's own
-            fixed-height box would hide. It emits no classes and no semantics —
-            nothing about the rendered picture changes. */}
-        <div ref={innerRef}>{children}</div>
+        <div className={barClasses}>
+          <div className={slotClasses}>{header}</div>
+          <GlyphButton
+            variant="ghost"
+            shape="square"
+            size="md"
+            aria-label={closeLabel}
+            onClick={onClose}
+            className="ms-auto shrink-0"
+          >
+            <Close />
+          </GlyphButton>
+        </div>
+        {/* THE BODY — a scrolling region ONLY in the scrollable mode, and even
+            then only while it really scrolls.
+            Why focusable at all: arrow keys scroll the focused element's
+            nearest scrollable ancestor, and focus sits on the layer. In the
+            scrollable mode the layer has nothing to scroll (the box fits inside
+            it by construction) and the box is `overflow-hidden`, so a body with
+            no focusable content inside it would be unreachable by keyboard
+            (SC 2.1.1; axe `scrollable-region-focusable`, which the
+            FixedHeightScrolling story's own a11y run raised).
+            Why only then: axe's rule fires on real overflow, and an
+            unconditional tab stop would tax every keyboard user on every
+            non-scrolling modal for nothing. `bodyOverflows` is measured after
+            mount (effect above), so the pre-rendered HTML stays attribute-free
+            and hydration-safe.
+            Why NEITHER in the non-scrollable mode (D21): there is no scroll
+            port here at all — the scrolling happens one level up, on the layer,
+            which already holds focus and therefore already answers to the arrow
+            keys. Adding a region would name a box nobody can scroll and cost
+            every keyboard user a stop for it.
+            Why role + name: a bare focusable div announces nothing. As a
+            `region` mirroring the dialog's OWN accessible name, a screen reader
+            says "<the modal's title>, region" — no new string, no message key,
+            §8.1 and D10 intact.
+            Deviation from the board's §3 diagram, reported at hand-off — SC
+            2.1.1 outranks a class list.
+            NO eslint-disable is needed for the tabIndex any more, and adding
+            one back would now FAIL --report-unused-disable-directives: jsx-a11y's
+            no-noninteractive-tabindex ships `allowExpressionValues: true`, so a
+            computed value like this ternary is outside its reach — the rule
+            only polices literal tabindexes on non-interactive elements. */}
+        <div
+          ref={contentRef}
+          className={cx(
+            contentBase,
+            scrollable ? contentScrollingClasses : contentStaticClasses,
+          )}
+          tabIndex={bodyOverflows ? 0 : undefined}
+          role={bodyOverflows ? 'region' : undefined}
+          aria-labelledby={bodyOverflows ? ariaLabelledby : undefined}
+          aria-label={bodyOverflows ? ariaLabel : undefined}
+          onBlur={() => measureRef.current()}
+        >
+          {/* An unstyled wrapper whose ONLY job is to be measurable: it hugs
+              the content, so the ResizeObserver above sees growth the region's
+              own fixed-height box would hide. It emits no classes and no
+              semantics — nothing about the rendered picture changes. */}
+          <div ref={innerRef}>{children}</div>
+        </div>
       </div>
     </dialog>
   );

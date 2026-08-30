@@ -1,7 +1,7 @@
 import { createRef, StrictMode, useRef, useState } from 'react';
 import type { ReactElement, ReactNode, RefObject } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import {
   afterAll,
   afterEach,
@@ -74,6 +74,7 @@ type HostProps = {
   height?: ModalHeight;
   dimBackdrop?: boolean;
   closeOnBackdropClick?: boolean;
+  scrollable?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
   decoy?: boolean;
 };
@@ -88,6 +89,7 @@ function Host({
   height,
   dimBackdrop,
   closeOnBackdropClick,
+  scrollable,
   initialFocusRef,
   decoy = false,
 }: HostProps): ReactElement {
@@ -110,6 +112,7 @@ function Host({
         height={height}
         dimBackdrop={dimBackdrop}
         closeOnBackdropClick={closeOnBackdropClick}
+        scrollable={scrollable}
         initialFocusRef={initialFocusRef}
       >
         {children}
@@ -132,10 +135,19 @@ const openDialog = (): HTMLDialogElement =>
 const closeButton = (name: string = CLOSE_LABEL): HTMLElement =>
   screen.getByRole('button', { name });
 
-/** The body container = the bar's next sibling inside the panel. */
-const contentRegion = (): HTMLElement =>
-  (closeButton().parentElement as HTMLElement)
-    .nextElementSibling as HTMLElement;
+/**
+ * THE BOX — the white panel, the layer's ONLY child (D17). Every size step,
+ * the caller's className and the cap live here now; the <dialog> above it is a
+ * transparent full-viewport LAYER.
+ */
+const panelBox = (): HTMLElement =>
+  openDialog().firstElementChild as HTMLElement;
+
+/** The top bar = the box's first child. */
+const topBar = (): HTMLElement => panelBox().children[0] as HTMLElement;
+
+/** The body container = the box's second child. */
+const contentRegion = (): HTMLElement => panelBox().children[1] as HTMLElement;
 
 /** Content that genuinely overflows a fixed-height panel (~3 screens). */
 const LongBody = (): ReactElement => (
@@ -146,12 +158,28 @@ const LongBody = (): ReactElement => (
   </div>
 );
 
-/** A press that starts AND ends on the backdrop = outside the panel's rect. */
-const pressBackdrop = (dialog: HTMLDialogElement) => {
-  const rect = dialog.getBoundingClientRect();
-  const point = { clientX: rect.left - 20, clientY: rect.top - 20 };
+/**
+ * A press that starts AND ends on the LAYER (D19): the event's target IS the
+ * <dialog>. With the layer/box split there is no rectangle arithmetic left —
+ * everything the visitor can press outside the white box is the layer itself,
+ * and everything inside it has a different target. The coordinates are the
+ * layer's own padding strip, so the picture matches the geometry.
+ */
+const pressLayer = (dialog: HTMLDialogElement) => {
+  const point = { clientX: 8, clientY: 8 };
   fireEvent.pointerDown(dialog, point);
   fireEvent.click(dialog, point);
+};
+
+/** The same gesture aimed at the white box — a press INSIDE the panel. */
+const pressBox = (box: HTMLElement) => {
+  const rect = box.getBoundingClientRect();
+  const point = {
+    clientX: rect.left + rect.width / 2,
+    clientY: rect.top + rect.height / 2,
+  };
+  fireEvent.pointerDown(box, point);
+  fireEvent.click(box, point);
 };
 
 const centerOf = (dialog: HTMLDialogElement) => {
@@ -319,11 +347,11 @@ describe('Modal — Escape (never optional)', () => {
   });
 });
 
-describe('Modal — the backdrop press (D11)', () => {
-  it('closes when the press starts and ends outside the panel', async () => {
+describe('Modal — the backdrop press (D11, retargeted by D19)', () => {
+  it('closes when the press starts and ends on the layer', async () => {
     const onClose = vi.fn();
     render(<Host onClose={onClose} />);
-    pressBackdrop(openDialog());
+    pressLayer(openDialog());
     await flush();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -331,18 +359,28 @@ describe('Modal — the backdrop press (D11)', () => {
   it('ignores the same press when closeOnBackdropClick is false', async () => {
     const onClose = vi.fn();
     render(<Host onClose={onClose} closeOnBackdropClick={false} />);
-    pressBackdrop(openDialog());
+    pressLayer(openDialog());
     await flush();
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('ignores a press INSIDE the panel (the dialog IS the box — A′)', async () => {
+  it('ignores a press on the BOX — its subtree is not the layer (D19)', async () => {
     const onClose = vi.fn();
     render(<Host onClose={onClose} />);
-    const dialog = openDialog();
-    const point = centerOf(dialog);
-    fireEvent.pointerDown(dialog, point);
-    fireEvent.click(dialog, point);
+    pressBox(panelBox());
+    await flush();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('ignores a press on the box even at coordinates over the layer', async () => {
+    // The rectangle no longer decides anything: an event aimed at the box is
+    // inside the panel however its clientX/clientY read (a keyboard Enter on a
+    // control inside reports 0,0 — the case that broke the old geometry).
+    const onClose = vi.fn();
+    render(<Host onClose={onClose} />);
+    const box = panelBox();
+    fireEvent.pointerDown(box, { clientX: 0, clientY: 0 });
+    fireEvent.click(box, { clientX: 0, clientY: 0 });
     await flush();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -351,12 +389,8 @@ describe('Modal — the backdrop press (D11)', () => {
     const onClose = vi.fn();
     render(<Host onClose={onClose} />);
     const dialog = openDialog();
-    const rect = dialog.getBoundingClientRect();
-    fireEvent.pointerDown(dialog, centerOf(dialog));
-    fireEvent.click(dialog, {
-      clientX: rect.left - 20,
-      clientY: rect.top - 20,
-    });
+    fireEvent.pointerDown(panelBox(), centerOf(dialog));
+    fireEvent.click(dialog, { clientX: 8, clientY: 8 });
     await flush();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -365,12 +399,8 @@ describe('Modal — the backdrop press (D11)', () => {
     const onClose = vi.fn();
     render(<Host onClose={onClose} />);
     const dialog = openDialog();
-    const rect = dialog.getBoundingClientRect();
-    fireEvent.pointerDown(dialog, {
-      clientX: rect.left - 20,
-      clientY: rect.top - 20,
-    });
-    fireEvent.click(dialog, centerOf(dialog));
+    fireEvent.pointerDown(dialog, { clientX: 8, clientY: 8 });
+    fireEvent.click(panelBox(), centerOf(dialog));
     await flush();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -492,12 +522,16 @@ describe('Modal — the scroll lock (D7)', () => {
 });
 
 describe('Modal — the size steps', () => {
+  // The steps moved from the <dialog> to the BOX (D17) and lost their `-2rem`
+  // with it: 100% is now the LAYER's content box — the viewport minus the
+  // layer's own `p-4` — so `min(100%,32rem)` computes the pixels
+  // `min(100% - 2rem, 32rem)` computed against the viewport before it.
   const widthClasses: Record<ModalWidth, string> = {
-    sm: 'w-[min(100%-2rem,24rem)]',
-    md: 'w-[min(100%-2rem,32rem)]',
-    lg: 'w-[min(100%-2rem,42rem)]',
-    xl: 'w-[min(100%-2rem,56rem)]',
-    full: 'w-[calc(100%-2rem)]',
+    sm: 'w-[min(100%,24rem)]',
+    md: 'w-[min(100%,32rem)]',
+    lg: 'w-[min(100%,42rem)]',
+    xl: 'w-[min(100%,56rem)]',
+    full: 'w-full',
   };
   const heightClasses: Record<ModalHeight, string> = {
     auto: '',
@@ -508,35 +542,66 @@ describe('Modal — the size steps', () => {
   };
 
   it.each(Object.entries(widthClasses) as [ModalWidth, string][])(
-    'width=%s emits %s',
+    'width=%s emits %s on the box',
     (width, expected) => {
       render(<Host width={width} />);
-      expect(openDialog()).toHaveClass(expected);
+      expect(panelBox()).toHaveClass(expected);
+      // …and never on the layer, which is always the whole viewport.
+      expect(openDialog()).toHaveClass('fixed', 'inset-0', 'w-auto', 'h-auto');
     },
   );
 
   it('defaults to the md width step', () => {
     render(<Host />);
-    expect(openDialog()).toHaveClass(widthClasses.md);
+    expect(panelBox()).toHaveClass(widthClasses.md);
   });
 
   it.each(
     (Object.entries(heightClasses) as [ModalHeight, string][]).filter(
       ([step]) => step !== 'auto',
     ),
-  )('height=%s emits %s', (height, expected) => {
+  )('height=%s emits %s on the box (scrollable mode)', (height, expected) => {
     render(<Host height={height} />);
-    expect(openDialog()).toHaveClass(expected);
+    expect(panelBox()).toHaveClass(expected);
+  });
+
+  it.each(
+    (
+      Object.entries({
+        sm: 'min-h-[20rem]',
+        md: 'min-h-[28rem]',
+        lg: 'min-h-[36rem]',
+        full: 'min-h-[calc(100dvh-2rem)]',
+      }) as [ModalHeight, string][]
+    ).filter(([step]) => step !== 'auto'),
+  )('height=%s emits %s when scrollable is false', (height, expected) => {
+    render(<Host height={height} scrollable={false} />);
+    const box = panelBox();
+    expect(box).toHaveClass(expected);
+    // The fixed twin must NOT ride along — that is the content trap (G2, D16).
+    expect(box.className).not.toMatch(/(^|\s)h-\[/);
   });
 
   it('height=auto emits NO height class — the content decides', () => {
     render(<Host height="auto" />);
-    expect(openDialog().className).not.toMatch(/(^|\s)h-\[/);
+    expect(panelBox().className).not.toMatch(/(^|\s)h-\[/);
   });
 
-  it('caps every step at the viewport minus the phone margins', () => {
+  it('caps the box at the viewport minus the phone margins by default', () => {
     render(<Host height="full" />);
-    expect(openDialog()).toHaveClass('max-h-[calc(100dvh-2rem)]', 'max-w-none');
+    expect(panelBox()).toHaveClass('max-h-[calc(100dvh-2rem)]');
+    // The LAYER carries the UA resets instead: a modal <dialog> ships
+    // max-width/max-height calc(100% - 6px - 2em), a border and a white
+    // background of its own, and all four have to go for the layer to be the
+    // transparent full-viewport sheet D17 asks for.
+    expect(openDialog()).toHaveClass(
+      'max-w-none',
+      'max-h-none',
+      'border-0',
+      'bg-transparent',
+      'm-0',
+      'p-4',
+    );
   });
 
   it('keeps the CLOSED dialog hidden: open:flex, never a bare flex', () => {
@@ -546,9 +611,46 @@ describe('Modal — the size steps', () => {
     expect(classes).not.toContain('flex');
   });
 
-  it('claims no z-index: the top layer is the mechanism (D13)', () => {
+  it('claims no z-index on either element: the top layer is the mechanism (D13)', () => {
     render(<Host />);
     expect(openDialog().className).not.toMatch(/(^|\s)z-/);
+    expect(panelBox().className).not.toMatch(/(^|\s)z-/);
+  });
+});
+
+describe('Modal — the container is the BOX, not the layer (§6.5, D17)', () => {
+  afterEach(async () => {
+    await page.viewport(414, 896);
+  });
+
+  it('keeps the padding steps measuring the panel on a wide screen', async () => {
+    // 1280 wide: the LAYER's content box is 1248px — past @2xl (42rem) — while
+    // a `sm` panel is 384px, short of even @md (28rem). The two answers are
+    // 2rem and 1rem, so this viewport is the one place the placement of
+    // `@container` is visible in pixels.
+    await page.viewport(1280, 800);
+    render(<Host width="sm" />);
+    expect(panelBox()).toHaveClass('@container');
+    expect(openDialog().className).not.toMatch(/(^|\s)@container(\s|$)/);
+    // The proof, computed rather than claimed: P stays at its phone step.
+    expect(getComputedStyle(topBar()).paddingTop).toBe('16px');
+    expect(getComputedStyle(contentRegion()).paddingLeft).toBe('16px');
+  });
+
+  it('still steps up when the PANEL itself is wide', async () => {
+    await page.viewport(1280, 800);
+    const { unmount } = render(<Host width="lg" />);
+    // `lg` = 42rem = 672px, but an inline-size container is measured on its
+    // CONTENT box — 670px once the panel's 1px borders are taken off — so it
+    // lands one pixel short of @2xl and keeps @md's 1.5rem. Unchanged by the
+    // split (the old root carried the same border), and recorded here because
+    // the arithmetic is a pixel away from the step name.
+    expect(getComputedStyle(topBar()).paddingTop).toBe('24px');
+    unmount();
+
+    // `xl` = 56rem = 896px → 894px of content box, comfortably past @2xl.
+    render(<Host width="xl" />);
+    expect(getComputedStyle(topBar()).paddingTop).toBe('32px');
   });
 });
 
@@ -566,8 +668,8 @@ describe('Modal — the scrim (D14)', () => {
   });
 });
 
-describe('Modal — the root is the box (§6.8, D9)', () => {
-  it('merges the caller className LAST', () => {
+describe('Modal — the layer, the box, and what lands where (§6.8, D9/D17)', () => {
+  it('merges the caller className LAST onto the BOX', () => {
     render(
       <Modal
         open
@@ -579,11 +681,13 @@ describe('Modal — the root is the box (§6.8, D9)', () => {
         <p>{ADDRESS}</p>
       </Modal>,
     );
-    const classes = openDialog().className.trim().split(/\s+/);
+    const classes = panelBox().className.trim().split(/\s+/);
     expect(classes.at(-1)).toBe('print:hidden');
+    // …and never on the layer, whose job is fixed to the viewport.
+    expect(openDialog()).not.toHaveClass('print:hidden');
   });
 
-  it('hands the ref the <dialog> element itself', () => {
+  it('hands the ref the <dialog> element itself — the layer, not the box', () => {
     const ref = createRef<HTMLDialogElement>();
     render(
       <Modal
@@ -598,6 +702,7 @@ describe('Modal — the root is the box (§6.8, D9)', () => {
     );
     expect(ref.current).toBeInstanceOf(HTMLDialogElement);
     expect(ref.current).toBe(openDialog());
+    expect(ref.current).not.toBe(panelBox());
   });
 
   it('spreads native props (id, data-*, lang) onto that same root', () => {
@@ -634,7 +739,7 @@ describe('Modal — the root is the box (§6.8, D9)', () => {
         <p>{ADDRESS}</p>
       </Modal>,
     );
-    pressBackdrop(openDialog());
+    pressLayer(openDialog());
     await flush();
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -642,6 +747,16 @@ describe('Modal — the root is the box (§6.8, D9)', () => {
 });
 
 describe('Modal — the top bar slot', () => {
+  it('gives the layer exactly ONE child — the box — holding bar then body (D17)', () => {
+    render(<Host />);
+    const layer = openDialog();
+    expect(layer.childElementCount).toBe(1);
+    const box = panelBox();
+    expect(box.childElementCount).toBe(2);
+    expect(topBar()).toContainElement(closeButton());
+    expect(contentRegion()).toContainElement(screen.getByText(BODY));
+  });
+
   it('renders the bar with the ✕ alone when no header is passed', () => {
     render(
       <Modal open onClose={noop} closeLabel={CLOSE_LABEL} aria-label="Contact">
@@ -987,5 +1102,278 @@ describe('Modal — the region keeps measuring', () => {
     await flush();
     expect(content).not.toHaveAttribute('tabindex');
     expect(content).not.toHaveAttribute('role');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// `scrollable` (D16–D21) — WHICH box gives way when the content is taller than
+// the screen. Both modes are measured at 320×568, the §7 accessibility stress
+// phone, because that is the only viewport where the difference exists at all.
+//
+//  · scrollable (default) → the BOX is capped at the viewport minus 2rem and
+//    its body scrolls inside it; the layer never moves.
+//  · scrollable={false}   → the box takes its full content height and the
+//    LAYER scrolls, carrying the whole box under the scrim. Nothing inside the
+//    panel is a scroll container, so nothing becomes a region or a tab stop.
+describe('Modal — scrollable', () => {
+  // vitest's own default iframe size (browser.viewport), restored so nothing
+  // that runs later inherits a phone-sized page.
+  afterEach(async () => {
+    await page.viewport(414, 896);
+  });
+
+  const STRESS = { width: 320, height: 568 } as const;
+  /** The room the layer leaves the box: the viewport minus its `p-4`. */
+  const ROOM = STRESS.height - 32;
+
+  it('false: the box keeps its full height and the LAYER scrolls instead', async () => {
+    await page.viewport(STRESS.width, STRESS.height);
+    render(
+      <Host scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    await flush();
+    const layer = openDialog();
+    const box = panelBox();
+
+    // Nothing inside the panel is clipped or scrollable: the box is exactly as
+    // tall as what it holds.
+    expect(box.scrollHeight).toBeLessThanOrEqual(box.clientHeight);
+    expect(contentRegion().scrollHeight).toBeLessThanOrEqual(
+      contentRegion().clientHeight,
+    );
+    // …and it is taller than the room, so it can only be seen by scrolling.
+    expect(box.getBoundingClientRect().height).toBeGreaterThan(ROOM);
+    expect(layer.scrollHeight).toBeGreaterThan(layer.clientHeight);
+    // The top edge is REACHABLE at rest: auto margins in a flex column
+    // collapse to zero when the free space goes negative, so centring never
+    // eats the beginning of the panel the way `justify-center` would.
+    expect(layer.scrollTop).toBe(0);
+    expect(box.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+  });
+
+  it('false: the body is never a region and never a tab stop', async () => {
+    await page.viewport(STRESS.width, STRESS.height);
+    render(
+      <Host scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    await flush();
+    const content = contentRegion();
+    expect(content).not.toHaveAttribute('role');
+    expect(content).not.toHaveAttribute('tabindex');
+    expect(screen.queryByRole('region')).toBeNull();
+
+    // The only Tab stop in the panel is still the ✕; arrow keys scroll the
+    // layer, which holds focus and IS the scroll container (SC 2.1.1).
+    await userEvent.tab();
+    expect(document.activeElement).toBe(closeButton());
+    await userEvent.tab();
+    expect(document.activeElement).not.toBe(content);
+  });
+
+  it('false: emits no cap on the box and no scrolling body classes', () => {
+    render(
+      <Host scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    expect(panelBox()).not.toHaveClass('max-h-[calc(100dvh-2rem)]');
+    const content = contentRegion();
+    expect(content).toHaveClass('overflow-visible');
+    expect(content).not.toHaveClass('overflow-y-auto');
+    expect(content).not.toHaveClass('min-h-0');
+    expect(content).not.toHaveClass('flex-1');
+  });
+
+  it('true (the default): the box is capped and its BODY scrolls', async () => {
+    await page.viewport(STRESS.width, STRESS.height);
+    render(
+      <Host>
+        <LongBody />
+      </Host>,
+    );
+    await flush();
+    const layer = openDialog();
+    const box = panelBox();
+
+    expect(box).toHaveClass('max-h-[calc(100dvh-2rem)]');
+    expect(box.getBoundingClientRect().height).toBeLessThanOrEqual(ROOM);
+    // The layer has nothing to scroll — the box fits inside it by construction.
+    expect(layer.scrollHeight).toBeLessThanOrEqual(layer.clientHeight);
+
+    const content = contentRegion();
+    expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+    expect(content).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('region', { name: TITLE })).toBe(content);
+  });
+
+  it('locks the page in BOTH modes (D20) and releases it on close', async () => {
+    const root = document.documentElement;
+    for (const scrollable of [true, false]) {
+      const view = render(<Host scrollable={scrollable}>{<LongBody />}</Host>);
+      expect(root.style.overflow).toBe('hidden');
+      await userEvent.click(closeButton());
+      await flush();
+      expect(root.style.overflow).toBe('');
+      view.unmount();
+    }
+  });
+
+  // THE LAYER'S OWN SCROLLBAR (G2, D19). A classic scrollbar — Windows
+  // everywhere, macOS with "always show scroll bars" — is part of the element,
+  // so pressing it arrives with `target === dialog`, indistinguishable from a
+  // press on the sheet by identity alone. Closing the modal there would end the
+  // one gesture this layout invites: dragging an oversized panel into view.
+  // Headless Chromium paints OVERLAY scrollbars (clientWidth === offsetWidth),
+  // so the band cannot be pressed for real here — fireEvent supplies the point
+  // instead, which is exactly what the guard reads.
+  it('false: a press on the layer’s scrollbar band never dismisses it', async () => {
+    await page.viewport(STRESS.width, STRESS.height);
+    const onClose = vi.fn();
+    render(
+      <Host onClose={onClose} scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    await flush();
+    const layer = openDialog();
+    // The premise: this really is a scrolling layer, so a scrollbar is what a
+    // classic-scrollbar platform would be painting down its edge.
+    expect(layer.scrollHeight).toBeGreaterThan(layer.clientHeight);
+
+    const rect = layer.getBoundingClientRect();
+    const onVerticalBar = {
+      clientX: rect.left + layer.clientWidth + 2,
+      clientY: rect.top + 100,
+    };
+    fireEvent.pointerDown(layer, onVerticalBar);
+    fireEvent.click(layer, onVerticalBar);
+    await flush();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(layer.open).toBe(true);
+
+    // The block-end band belongs to a horizontal scrollbar and is read the
+    // same way, in any writing direction.
+    const onHorizontalBar = {
+      clientX: rect.left + 100,
+      clientY: rect.top + layer.clientHeight + 2,
+    };
+    fireEvent.pointerDown(layer, onHorizontalBar);
+    fireEvent.click(layer, onHorizontalBar);
+    await flush();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(layer.open).toBe(true);
+  });
+
+  it('false: a press on the sheet itself still dismisses it', async () => {
+    // The sibling of the case above, four pixels in from the same edge: inside
+    // the client box, so it is the backdrop and nothing else.
+    await page.viewport(STRESS.width, STRESS.height);
+    const onClose = vi.fn();
+    render(
+      <Host onClose={onClose} scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    await flush();
+    const layer = openDialog();
+    const rect = layer.getBoundingClientRect();
+    const onSheet = { clientX: rect.left + 4, clientY: rect.top + 100 };
+    fireEvent.pointerDown(layer, onSheet);
+    fireEvent.click(layer, onSheet);
+    await flush();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  // THE HEIGHT STEPS IN THE NON-SCROLLABLE MODE (G2, D16). A FIXED height here
+  // is a content trap: the box is `overflow-hidden`, the body is
+  // `overflow-visible`, and the layer only scrolls what sticks OUT of the box —
+  // so anything past the fixed height is clipped with no scroll container
+  // anywhere to reach it, and Tab into a clipped link scrolls the hidden box
+  // programmatically until the ✕ leaves the screen. The steps are therefore
+  // minimums in this mode; these two cases pin both halves of that.
+  it('false: a height step is a MINIMUM — tall content is never clipped', async () => {
+    await page.viewport(414, 896);
+    render(
+      <Host scrollable={false} height="md">
+        <LongBody />
+      </Host>,
+    );
+    await flush();
+    const layer = openDialog();
+    const box = panelBox();
+
+    expect(box).toHaveClass('min-h-[28rem]');
+    expect(box).not.toHaveClass('h-[28rem]');
+    // Nothing is clipped: the box is as tall as everything it holds…
+    expect(box.scrollHeight).toBeLessThanOrEqual(box.clientHeight);
+    expect(contentRegion().scrollHeight).toBeLessThanOrEqual(
+      contentRegion().clientHeight,
+    );
+    // …which is well past the 28rem step, and the layer takes the overflow.
+    expect(box.getBoundingClientRect().height).toBeGreaterThan(448);
+    expect(layer.scrollHeight).toBeGreaterThan(layer.clientHeight);
+  });
+
+  it('false: a height step still holds as a FLOOR under short content', async () => {
+    await page.viewport(414, 896);
+    render(
+      <Host scrollable={false} height="md">
+        <p>{ADDRESS}</p>
+      </Host>,
+    );
+    await flush();
+    const box = panelBox();
+    // 28rem = 448px: the step is what keeps a one-line modal from collapsing,
+    // which is the reason the steps exist at all.
+    expect(box.getBoundingClientRect().height).toBeGreaterThanOrEqual(448);
+    // And it is only a floor — nothing scrolls, in the panel or in the layer.
+    expect(box.scrollHeight).toBeLessThanOrEqual(box.clientHeight);
+    expect(openDialog().scrollHeight).toBeLessThanOrEqual(
+      openDialog().clientHeight,
+    );
+  });
+
+  it('false: keeps the focus ring for the true→false handover (G2)', () => {
+    // `scrollable` can flip while the modal is open, and the measuring effect
+    // deliberately keeps the tab stop until the next blur rather than dropping
+    // focus to <body>. For those moments the body is focused and
+    // overflow-visible, so it needs its own ring: the box's overflow-hidden
+    // clips the browser default.
+    render(
+      <Host scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    expect(contentRegion()).toHaveClass(
+      'focus-visible:outline-2',
+      'focus-visible:outline-focus',
+      'focus-visible:-outline-offset-2',
+    );
+  });
+
+  it('closes on Escape and on a layer press in the non-scrollable mode too', async () => {
+    const onClose = vi.fn();
+    const { unmount } = render(
+      <Host onClose={onClose} scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    await userEvent.keyboard('{Escape}');
+    await flush();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    unmount();
+
+    render(
+      <Host onClose={onClose} scrollable={false}>
+        <LongBody />
+      </Host>,
+    );
+    pressLayer(openDialog());
+    await flush();
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

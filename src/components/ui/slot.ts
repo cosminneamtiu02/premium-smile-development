@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import { cx } from './cx';
 
 // ui/slot.ts — the shared asChild engine (owner decision fb-64, 2026-08-05,
 // plan .claude/plans/icon-button.plan.md §7 D7). Extracted verbatim from
@@ -14,9 +15,6 @@ import type { ReactElement, ReactNode } from 'react';
 // The editing run's visual manifest must declare all consumer atoms' stories,
 // which is what makes sharing safe here: the visual net turns a silent
 // cross-atom regression into a loud undeclared diff.
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 // <button>-only props that must never land on a slotted child: anchors have
 // no disabled state and no form association. ('type' can never actually reach

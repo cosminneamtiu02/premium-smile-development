@@ -13,6 +13,7 @@ import {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
+import { cx } from '../cx';
 import { discBase, discBox } from '../disc';
 
 // ui/SpeedDial — a chooser shaped like a mercury thermometer: one filled disc
@@ -191,9 +192,6 @@ type SpeedDialOwnProps<V extends string> = {
 
 export type SpeedDialProps<V extends string = string> = SpeedDialOwnProps<V> &
   Omit<ComponentPropsWithRef<'div'>, keyof SpeedDialOwnProps<V> | 'children'>;
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 // THE ROOT carries no position utility of its own, on purpose. Tailwind emits
 // `.relative` AFTER `.fixed`, so an atom-owned `relative` here would silently

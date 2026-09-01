@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { cx } from '../cx';
 
 // ui/Eyebrow — the mono micro-label that sits above a section title
 // ("NE GĂSEȘTI" over "Vizitează clinica noastră"). Migrated from the old
@@ -85,9 +86,6 @@ export type EyebrowProps = EyebrowOwnProps &
 // whole className byte-for-byte and catch a silent utility creeping in.
 const RECIPE =
   'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase';
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 export function Eyebrow({
   className,

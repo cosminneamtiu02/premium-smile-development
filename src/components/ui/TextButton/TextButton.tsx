@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { cx } from '../cx';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
 // ui/TextButton — the general-purpose QUIET action: chrome-less, text-first,
@@ -107,9 +108,6 @@ const stateClasses = {
   resting: 'text-ink after:scale-x-0',
   active: 'text-cta-hover after:scale-x-100',
 } as const;
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 export function TextButton({
   active = false,

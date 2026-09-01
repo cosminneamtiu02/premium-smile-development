@@ -96,7 +96,10 @@ export function Text<E extends TextElement = 'p'>({
   const attrs: TextRenderProps = {
     ...rest,
     // §6.8 merge order: the atom's own classes first, the caller's className
-    // LAST so a parent utility can win a Tailwind tie.
+    // LAST. A deterministic convention the tests pin — NOT a cascade
+    // mechanism: attribute order never decides CSS specificity, and §6.8
+    // limits caller utilities to positioning/spacing, so a real conflict has
+    // no way to arise.
     // D2 — no leading-* utility, ever: text-base brings its own line-height
     // (1.5rem), which is exactly what the Footer's recipes carry today, so the
     // fb-186 rewiring stays a zero-visual-diff swap. If the older audience

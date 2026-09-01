@@ -122,8 +122,9 @@ describe('Eyebrow — uppercase is CSS, never the string', () => {
 
 describe('Eyebrow — §6.8 native-element fidelity', () => {
   it('merges the parent className LAST, keeping its own classes first', () => {
-    // Order is the contract, not an accident: the caller's utility must be
-    // able to win a Tailwind tie, and the atom's own classes must survive.
+    // Order is the contract, not an accident: the merge order is pinned as a
+    // deterministic convention (not a cascade mechanism — attribute order
+    // never decides CSS), and the atom's own classes must survive.
     render(<Eyebrow className="col-span-2">{RO_ALL}</Eyebrow>);
     expect(screen.getByRole('paragraph').className).toBe(
       `${RECIPE} col-span-2`,

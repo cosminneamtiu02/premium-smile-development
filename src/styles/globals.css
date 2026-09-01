@@ -132,6 +132,13 @@
     background-color: var(--page);
     color: var(--ink);
     font-family: var(--font-body);
+    /* §15.14 (owner, 2026-09-01): long words may break at syllable points —
+       German compounds first of all, §8.4's expansion headroom at its extreme.
+       Inherited everywhere from here; engages only under a declared language
+       (`<html lang>` per locale on the site, §8.10 — the Storybook decorator
+       stamps the same attribute so stories and baselines exercise it too). */
+    -webkit-hyphens: auto;
+    hyphens: auto;
   }
 
   /* A closed <dialog> is invisible even where the element is not implemented

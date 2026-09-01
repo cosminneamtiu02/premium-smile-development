@@ -19,28 +19,55 @@ import { useLanguageOptions } from './useLanguageOptions';
 // equivalent path under the target prefix) and §8.7 (the cookie, on the
 // explicit click).
 //
-// ── ONE ELEMENT, THREE OWNERS. This file renders a single <SpeedDial> and
-// nothing else, which is the whole point of the seam:
+// ── ONE LANDMARK AROUND ONE CONTROL, THREE OWNERS. This file renders a <nav>
+// wrapping a single <SpeedDial> and nothing else, which is the whole point of
+// the seam:
 //   · the ATOM owns pixels and mechanics — the bulb, the stem, open/close, Esc,
 //     the outside press, focus return, the bfcache close (D11). It is dumb by
 //     construction: it has never heard of languages, URLs or cookies (D2);
 //   · this SECTION owns MEANING — which five options exist, where each one
-//     points, what the control is called in the page's language, and the one
-//     side effect a pick has;
+//     points, what the control AND ITS REGION are called in the page's
+//     language, and the one side effect a pick has;
 //   · the HOST (sections/FloatingActions) owns PLACEMENT — the corner, the
 //     direction, the per-screen size steps, all as `className` (§6.4/§6.8).
-// No wrapper element is added here, deliberately: a wrapper would be a box the
-// host's `fixed …` className does not sit on, and the atom's root is already
-// the element that must carry it.
 //
-// ── WHY NO <nav> LANDMARK. A landmark would have to be NAMED (an unnamed
-// second navigation region is worse than none — a screen-reader user hears
-// "navigation" twice and cannot tell the site nav from the language chooser),
-// and that name is a sixth translated string nobody has authored. The control
-// is one labelled button plus a list its aria-controls points at, which is what
-// D10 decided a blind visitor should hear. PARKED as an owner question rather
-// than improvised: if the answer is "yes, a landmark", it arrives with an
-// owner-authored `common.language.region` key in all five files.
+// ── WHY THE <nav> LANDMARK EXISTS (owner-decided 2026-08-28, on the G2 a11y
+// review's recommendation; it was a parked question until then). A LANDMARK is
+// a region a screen-reader user can jump to from a list — the equivalent of a
+// sighted visitor's eye going straight to a corner. Until this change the dial
+// had none, and it is the LAST node of the document (FloatingActions' mount
+// contract puts it after {children} and the footer), so the one control that
+// helps a visitor who cannot read the page sat behind everything, reachable
+// only by walking the whole document. Nothing in WCAG requires the landmark and
+// no gate here could have caught its absence — axe's `region` rule is disabled
+// in component testing — which is exactly why it had to be decided rather than
+// discovered.
+//
+// THE NAME IS ITS OWN KEY, `common.language.region` („Limbă" · "Language" ·
+// „Sprache" · « Langue » · «Lingua»), and deliberately not the bulb's
+// `language.switch`:
+//   · a landmark's name names the REGION, not the control inside it. Reusing
+//     the bulb's string would make a screen reader say "Română, schimbă limba,
+//     navigation" and then, one Tab later, "Română, schimbă limba, button" —
+//     the same sentence twice, which is noise rather than orientation;
+//   · the name must NOT contain the role word: screen readers append
+//     "navigation" themselves, so „Navigare limbă" would come out as "Navigare
+//     limbă, navigation". One noun is the whole name.
+// The site now has three navigation landmarks — the Header's bar, the Footer's
+// site map, and this — each with a distinct name, which is the documented
+// requirement the moment a page has more than one.
+//
+// ── WHY THE <nav>, NOT THE ATOM'S ROOT, CARRIES `className`. The host's string
+// is placement (`fixed … left-4 z-40`) plus two CSS variables, and placement
+// belongs to the OUTERMOST box this section renders. `--disc-size` and
+// `--stem-inset` are CUSTOM PROPERTIES, so they inherit down the tree like a
+// font: the atom reads them off the <nav> exactly as it used to read them off
+// its own root, and not a pixel of the dial moves. The `inline-flex` below is
+// not decoration either — a bare <nav> is a BLOCK box, and an inline-level
+// child (the atom's root is `inline-flex`) sits on a text baseline, which adds
+// descender space underneath; with the box anchored by `bottom` that space
+// would lift the whole corner a few pixels. A flex container wraps its child
+// exactly, so the visual net stays at zero diffs.
 //
 // ── 'use client' (§16). Two things force it, and nothing else: usePathname
 // (the current path is not knowable at build time under `output: 'export'` —
@@ -69,8 +96,9 @@ export interface LanguageSwitcherProps {
    * Placement plus the two public CSS variables the atom exposes — the
    * `--disc-size` steps (D16 · F2: both corners scale from one number) and
    * `--stem-inset` (how much of the viewport the extreme-zoom cap must leave
-   * alone). Merged onto the dial's root, never used to restyle its internals
-   * (§6.8); the section owns no margins of its own (§6.4).
+   * alone). Merged onto this section's OUTERMOST box, the <nav> landmark, from
+   * where both variables inherit into the dial; never used to restyle an
+   * atom's internals (§6.8), and the section owns no margins of its own (§6.4).
    */
   className?: string;
 }
@@ -120,25 +148,31 @@ export function LanguageSwitcher({
   ) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
-    document.cookie = `NEXT_LOCALE=${option.value}; path=/; max-age=31536000; SameSite=Lax`;
+    document.cookie = `NEXT_LOCALE=${option.value}; path=/; max-age=31536000; SameSite=Lax; Secure`;
   };
 
   return (
-    <SpeedDial
-      options={options}
-      value={locale}
-      size="lg"
-      direction={direction}
-      // §8.1: the atom never sees a key. This is the section's ONE translated
-      // string — state-INVARIANT (aria-expanded carries the state) and endonym
-      // first, so the visible "RO" is contained in the spoken name (SC 2.5.3,
-      // D15). tests/unit/locales.test.ts pins the data half of that.
-      aria-label={t('language.switch', { name })}
-      onSelect={handleSelect}
-      // `tone` is left at its default `ink` (D4): the bulb reads as STATE
-      // ("this is what is set"), and green stays reserved for the one action
-      // this site is for — the call CTA in the opposite corner (§1).
-      className={className}
-    />
+    // §8.1: the atoms never see a key. BOTH translated strings are resolved
+    // here, in the section tier — the region's one-noun name and the bulb's.
+    <nav
+      aria-label={t('language.region')}
+      className={['inline-flex', className].filter(Boolean).join(' ')}
+    >
+      <SpeedDial
+        options={options}
+        value={locale}
+        size="lg"
+        direction={direction}
+        // The section's other translated string — state-INVARIANT
+        // (aria-expanded carries the state) and endonym first, so the visible
+        // "RO" is contained in the spoken name (SC 2.5.3, D15).
+        // tests/unit/locales.test.ts pins the data half of that.
+        aria-label={t('language.switch', { name })}
+        onSelect={handleSelect}
+        // `tone` is left at its default `ink` (D4): the bulb reads as STATE
+        // ("this is what is set"), and green stays reserved for the one action
+        // this site is for — the call CTA in the opposite corner (§1).
+      />
+    </nav>
   );
 }

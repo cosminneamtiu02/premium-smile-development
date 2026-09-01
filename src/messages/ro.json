@@ -16,7 +16,8 @@
       "label": "Meniu"
     },
     "language": {
-      "switch": "{name} · schimbă limba"
+      "switch": "{name}, schimbă limba",
+      "region": "Limbă"
     },
     "brand": {
       "ariaLabel": "{name}, acasă"

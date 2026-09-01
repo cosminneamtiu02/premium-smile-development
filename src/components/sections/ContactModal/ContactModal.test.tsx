@@ -315,7 +315,8 @@ describe('ContactModal — the trigger', () => {
     });
 
     expect(trigger).toHaveClass('border-cta', 'min-h-14', 'self-start');
-    // …and the caller's className is merged LAST, so it can win a Tailwind tie.
+    // …and the caller's className is merged LAST (pinned convention;
+    // attribute order never decides the cascade).
     expect(trigger.className.trim().split(/\s+/).at(-1)).toBe('self-start');
   });
 

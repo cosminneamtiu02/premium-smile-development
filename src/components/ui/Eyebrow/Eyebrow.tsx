@@ -97,8 +97,7 @@ export function Eyebrow({
     // LAST. A deterministic convention the tests pin — NOT a cascade
     // mechanism: attribute order never decides CSS specificity, and §6.8
     // limits caller utilities to positioning/spacing, so a real conflict has
-    // no way to arise. (Text/Heading carry an older wording claiming the
-    // order 'wins ties' — a repo-wide comment sweep is parked, G2 2026-09-01.)
+    // no way to arise.
     <p className={cx(RECIPE, className)} {...rest}>
       {children}
     </p>

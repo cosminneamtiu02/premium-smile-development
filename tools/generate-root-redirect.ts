@@ -43,8 +43,15 @@ const hrefs = Object.fromEntries(
   locales.map((l): [string, string] => [l, localeHref(l, '/')]),
 );
 
+// Each link is IN its own language ("Deutsch", « Français »), so it carries
+// its own lang — SC 3.1.2: without it a screen reader pronounces "Deutsch"
+// with the page's Romanian voice — and hreflang, the destination's language
+// (same code both times).
 const links = locales
-  .map((l) => `      <li><a href="${hrefs[l]}">${nativeNames[l]}</a></li>`)
+  .map(
+    (l) =>
+      `      <li><a href="${hrefs[l]}" lang="${l}" hreflang="${l}">${nativeNames[l]}</a></li>`,
+  )
   .join('\n');
 
 const html = `<!doctype html>

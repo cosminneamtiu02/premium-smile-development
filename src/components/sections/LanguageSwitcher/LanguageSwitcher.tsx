@@ -148,7 +148,7 @@ export function LanguageSwitcher({
   ) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
-    document.cookie = `NEXT_LOCALE=${option.value}; path=/; max-age=31536000; SameSite=Lax`;
+    document.cookie = `NEXT_LOCALE=${option.value}; path=/; max-age=31536000; SameSite=Lax; Secure`;
   };
 
   return (

@@ -410,7 +410,14 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     renders inside a NAMED `<nav>` landmark (`common.language.region`, one noun ×5 — the G2
     a11y recommendation adopted; the role word never appears in the name), and the bulb's
     `common.language.switch` separator is a comma, not "·" (screen readers speak the comma
-    as a pause, the middle dot by name).
+    as a pause, the middle dot by name). **Amended 2026-09-01 (owner, hygiene round):**
+    the cookie gains `Secure` (HTTPS-only travel; localhost dev is a secure context, so
+    development behaviour is unchanged); `hyphens: auto` ships site-wide at the body tier
+    (long words — German compounds first — may break at syllable points; engages only
+    under a declared `lang`, which the Storybook decorator now stamps per locale exactly
+    like the shell). Recorded limitation: Safari's ITP caps any JS-written cookie at
+    ~7 days regardless of `max-age`, so the language choice simply re-asks sooner on
+    iPhones — accepted for v1; disclose on the §12 policy page when it ships.
 
 ## 16. Build-time vs runtime contract
 

@@ -1,5 +1,6 @@
 import type { Decorator, Preview } from '@storybook/nextjs-vite';
 import { NextIntlClientProvider } from 'next-intl';
+import { useEffect } from 'react';
 import { locales, nativeNames } from '../src/i18n/locales';
 import de from '../src/messages/de.json';
 import en from '../src/messages/en.json';
@@ -70,6 +71,18 @@ const MESSAGES: Record<string, Messages> = {
   pseudo: pseudoMessages(ro),
 };
 
+/** The real shell stamps `<html lang>` per locale (§8.10); the workbench must
+    match, or language-conditional CSS — hyphenation first of all (§15.14, the
+    dictionary is picked by `lang`) — silently behaves differently in stories
+    and their baselines than on the built site. An effect, not render-time DOM
+    mutation; pseudo rides the `ro` dictionary like its messages do. */
+function DocumentLang({ lang }: { lang: string }) {
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+  return null;
+}
+
 const withIntlAndTheme: Decorator = (Story, context) => {
   const selected = (context.globals.locale as string) ?? 'ro';
   const locale = selected === 'pseudo' ? 'ro' : selected;
@@ -79,6 +92,7 @@ const withIntlAndTheme: Decorator = (Story, context) => {
       messages={MESSAGES[selected]}
       timeZone="Europe/Bucharest"
     >
+      <DocumentLang lang={locale} />
       {/* Font variables come from preview-fonts.css (:root) — same files,
           Storybook-local loading; see that file's header comment. */}
       <div className="bg-page font-body text-ink">

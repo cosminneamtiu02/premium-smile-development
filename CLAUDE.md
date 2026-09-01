@@ -401,6 +401,16 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `persisted === true` (D1); the Phase 3 LanguageSwitcher is
     a list of plain links whose only script sets the cookie (§8.7); the Wordmark home link
     and every future in-content link call `localeHref`.
+14. **LanguageSwitcher UI — DECIDED 2026-08-27 (owner, via the language-dial board
+    `.claude/plans/language-dial.plan.md`, fb-262–297):** ui/SpeedDial atom (the
+    mercury-thermometer chooser) + sections/LanguageSwitcher; D17 GlyphButton verdict =
+    Road 3 (`ui/disc.ts` shared geometry, no split, no letters in GlyphButton — recorded
+    future trigger: a second letters consumer); the fb-129/136 inert-pill risk closed with
+    the FloatingActions swap (PR #49). **Amended 2026-08-28 + 2026-09-01 (owner):** the dial
+    renders inside a NAMED `<nav>` landmark (`common.language.region`, one noun ×5 — the G2
+    a11y recommendation adopted; the role word never appears in the name), and the bulb's
+    `common.language.switch` separator is a comma, not "·" (screen readers speak the comma
+    as a pause, the middle dot by name).
 
 ## 16. Build-time vs runtime contract
 

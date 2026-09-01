@@ -75,7 +75,7 @@ const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 /**
  * The bulb's accessible name as the shipped data builds it: the locale's own
  * `common.language.switch`, its one ICU argument filled with the endonym.
- * COMPUTED, never typed out — a hand-copied "Română · schimbă limba" would keep
+ * COMPUTED, never typed out — a hand-copied "Română, schimbă limba" would keep
  * passing after someone edited ro.json, which is the exact failure the message
  * files exist to prevent.
  */
@@ -125,14 +125,17 @@ const listOf = (locale: Locale = 'ro') => {
   return list;
 };
 
-/** The root the host's className lands on — two <div>s above the bulb (§6.8). */
-const rootOf = (locale: Locale = 'ro') => {
-  const root = bulbOf(locale).parentElement?.parentElement;
-  if (!(root instanceof HTMLDivElement)) {
-    throw new Error('the bulb is not two <div>s deep — the atom’s root moved');
-  }
-  return root;
-};
+/**
+ * The section's OUTERMOST box — the <nav> landmark, which is also where the
+ * host's className lands (§6.8). Resolved BY ROLE, not by walking parents: the
+ * landmark is the thing under test, so finding it the way a screen reader does
+ * makes one query prove both facts, and an atom that grows a wrapper cannot
+ * quietly break the walk.
+ */
+const regionOf = (locale: Locale = 'ro') =>
+  screen.getByRole('navigation', {
+    name: MESSAGES[locale].common.language.region,
+  });
 
 /** Every alternate, in DOM order — anchors, because every option carries an href. */
 const alternates = (container: HTMLElement) =>
@@ -443,15 +446,78 @@ describe('LanguageSwitcher — what the HOST passes through (§6.8)', () => {
     expect(Array.from(listOf().classList)).toContain('bottom-1/2');
   });
 
-  it('merges `className` onto the ROOT and nowhere else', () => {
+  it('merges `className` onto the LANDMARK and nowhere else', () => {
     // Placement and the two CSS variables arrive from the corner as one string
-    // (§6.4: the parent owns spacing, the section owns no margins of its own).
+    // (§6.4: the parent owns spacing, the section owns no margins of its own),
+    // and they land on the outermost box this section renders — the <nav>.
+    // The variables are CUSTOM PROPERTIES, so the atom inherits them from here.
     const { container } = mount('ro', { className: 'fixed left-4 z-40' });
-    expect(Array.from(rootOf().classList)).toEqual(
+    expect(Array.from(regionOf().classList)).toEqual(
       expect.arrayContaining(['fixed', 'left-4', 'z-40']),
     );
     expect(container.querySelectorAll('.z-40')).toHaveLength(1);
   });
+
+  it('keeps the landmark a flex box so the dial is not lifted off its anchor', () => {
+    // Not decoration: a bare <nav> is a BLOCK box, and the atom's root is
+    // inline-flex — an inline-level child sits on a text baseline and adds
+    // descender space beneath it. With the corner anchored by `bottom`, that
+    // space would push the whole dial up a few pixels. A flex container wraps
+    // its child exactly, which is what keeps the visual net at zero diffs.
+    mount();
+    expect(Array.from(regionOf().classList)).toContain('inline-flex');
+  });
+});
+
+describe('LanguageSwitcher — the navigation landmark (owner-decided 2026-08-28)', () => {
+  // WHY A LANDMARK AT ALL: the dial is the last node of the document (the
+  // FloatingActions mount contract), so without a region to jump to, the one
+  // control that helps a visitor who cannot read the page is reachable only by
+  // walking the whole document. No WCAG criterion demands it and axe cannot see
+  // its absence (the `region` rule is off in component testing) — which is why
+  // these rows exist: they are the only gate the decision has.
+
+  it('wraps the dial in ONE navigation region, named from the message file', async () => {
+    mount();
+    const region = screen.getByRole('navigation');
+    expect(region.tagName).toBe('NAV');
+    expect(region).toHaveAccessibleName(ro.common.language.region);
+    expect(region).toContainElement(bulbOf());
+    // The alternates live INSIDE the region from the first paint — that is the
+    // always-mounted stem (D8 = M) and the reason a crawler finds them. They
+    // are NOT in the accessibility tree while closed, though: the atom's
+    // `inert` plus `visibility: hidden` take them out of it on purpose, so a
+    // screen reader hears one button, not five links. Hence two queries — the
+    // DOM one holds closed, the role one only once the stem is open.
+    expect(alternates(region)).toHaveLength(locales.length - 1);
+    await open();
+    expect(within(region).getAllByRole('link')).toHaveLength(
+      locales.length - 1,
+    );
+  });
+
+  it('names the REGION, never the control — two different strings', () => {
+    // Reusing the bulb's name would make a screen reader say "Română, schimbă
+    // limba, navigation" and then "Română, schimbă limba, button": the same
+    // sentence twice, which is noise rather than orientation.
+    mount();
+    expect(ro.common.language.region).not.toBe(bulbName('ro'));
+    expect(regionOf()).not.toHaveAccessibleName(bulbName('ro'));
+  });
+
+  it.each(locales)(
+    '%s: the region is named in that locale, and never contains the role word',
+    (locale) => {
+      // Screen readers append "navigation" themselves, so a name carrying the
+      // role would be announced twice over ("Navigare limbă, navigation").
+      mount(locale);
+      const name = MESSAGES[locale].common.language.region;
+      expect(regionOf(locale)).toBeInTheDocument();
+      expect(name).not.toMatch(/navig|Navig/);
+      // Never a key path: next-intl renders the dotted key on a miss.
+      expect(name).not.toMatch(/language\.region|^common\./);
+    },
+  );
 });
 
 describe('LanguageSwitcher — the next page, rehearsed (D1, model C)', () => {

@@ -9,13 +9,14 @@ import { Text } from '../Text/Text';
 import { TextButton } from '../TextButton/TextButton';
 import { Modal, type ModalProps } from './Modal';
 
-// The thirteen stories ARE the declared visual manifest for this lane (contract
-// board .claude/plans/modal-atom-contract.plan.md §2/§4, owner-approved
-// fb-261), so the export NAMES are load-bearing: renaming one renames its
-// baseline file. Four carry the 'stress-320' tag, which makes the visual net
-// also sample them at the 320px accessibility width (§13 UI-tier opt-in) —
-// the phone rendering is this atom's headline adaptability proof, since a 320px
-// viewport leaves the md panel exactly 288px wide.
+// These stories ARE the declared visual manifest for this lane (contract board
+// .claude/plans/modal-atom-contract.plan.md §2/§4, owner-approved fb-261, plus
+// NonScrollable from the scrollable rework), so the export NAMES are
+// load-bearing: renaming one renames its baseline file. Five carry the
+// 'stress-320' tag, which makes the visual net also sample them at the 320px
+// accessibility width (§13 UI-tier opt-in) — the phone rendering is this atom's
+// headline adaptability proof, since a 320px viewport leaves the md panel
+// exactly 288px wide.
 //
 // EVERY story except OpenAndClose starts OPEN: an open modal is what the a11y
 // addon must audit and what the snapshot must photograph. They open through one
@@ -104,7 +105,7 @@ const meta = {
     children: {
       control: false,
       description:
-        'The content container — scrolls internally when the panel hits its height cap (see FixedHeightScrolling)',
+        'The content container. With `scrollable` (the default) it scrolls internally once the panel hits its height cap (see FixedHeightScrolling); with `scrollable={false}` it never scrolls — the box grows with it and the layer takes the overflow (see NonScrollable)',
     },
     width: {
       control: 'radio',
@@ -116,7 +117,7 @@ const meta = {
       control: 'radio',
       options: ['auto', 'sm', 'md', 'lg', 'full'],
       description:
-        'auto = fits content (capped by the viewport); sm 20rem · md 28rem · lg 36rem fixed, each still capped; full fills the viewport minus margins',
+        'auto = fits content; steps sm 20rem · md 28rem · lg 36rem · full = the viewport minus margins. What a step MEANS follows `scrollable`: FIXED heights when scrollable (each still capped by the viewport, the body scrolling inside), MINIMUM heights when scrollable={false} (the box is at least that tall and grows past it with its content)',
     },
     dimBackdrop: {
       control: 'boolean',
@@ -127,6 +128,11 @@ const meta = {
       control: 'boolean',
       description:
         'A pointer press that starts AND ends on the backdrop closes the modal. Esc closes regardless of this flag — the keyboard exit is never optional',
+    },
+    scrollable: {
+      control: 'boolean',
+      description:
+        'Which box gives way when the content is taller than the screen. true (default) → the box is capped at the viewport minus 2rem and its BODY scrolls, the bar staying put. false → the box takes its full content height, its body never scrolls and never becomes a region or a tab stop; a box taller than the viewport makes the dialog’s full-viewport LAYER scroll instead, so the panel moves whole under the scrim (see NonScrollable)',
     },
     closeLabel: {
       control: 'text',
@@ -141,7 +147,7 @@ const meta = {
     className: {
       control: false,
       description:
-        'Merged LAST onto the root <dialog> = the panel itself (§6.8, D9) — placement and one-off sizing, never restyling the internals',
+        'Merged LAST onto the BOX — the white panel (§6.8, D9/D18) — never onto the layer or the scrim. Placement and one-off sizing, never restyling the internals',
     },
   },
   render: ({ ...args }) => <ModalDemo {...args} />,
@@ -272,6 +278,49 @@ export const FullScreen: Story = {
 };
 
 /**
+ * Seven paragraphs — more than any phone can show at once. The SAME copy feeds
+ * FixedHeightScrolling and NonScrollable below, so the pair reads as the
+ * before/after of the never-scroll rule with the content held constant.
+ *
+ * They are not a one-prop diff: FixedHeightScrolling also pins `height: 'md'`,
+ * which is what forces its body to scroll at ANY viewport, while NonScrollable
+ * leaves the height on `auto` and lets the box grow. That is the honest pairing
+ * — pinning a height on the non-scrollable story would only demonstrate the
+ * minimum-height behaviour, not the layer scroll it exists to show.
+ */
+const PREPARATION_BODY = (
+  <div className="flex flex-col gap-3">
+    <Text>
+      Aduceți documentele medicale anterioare, dacă există: radiografii,
+      scrisori medicale, lista tratamentelor efectuate.
+    </Text>
+    <Text>
+      Anunțați medicul dacă urmați un tratament medicamentos sau dacă aveți
+      alergii cunoscute.
+    </Text>
+    <Text>
+      Consultația inițială include examinarea clinică și discutarea opțiunilor
+      de tratament. Durata estimată este de 30 – 45 de minute.
+    </Text>
+    <Text>
+      Igienizarea profesională se realizează cu ultrasunete și air-flow;
+      frecvența se stabilește împreună cu medicul.
+    </Text>
+    <Text>
+      Pentru copii, prima vizită este una de acomodare: examinare, sfaturi de
+      igienă și, dacă este cazul, programarea unui tratament.
+    </Text>
+    <Text>
+      Programările se pot muta telefonic cu cel puțin 24 de ore înainte.
+    </Text>
+    <Text tone="muted">
+      Strada Exemplu nr. 1, București. Accesul se face din curtea interioară,
+      etajul 1.
+    </Text>
+  </div>
+);
+
+/**
  * The fixed-height case: the CONTENT scrolls inside the panel while the top bar
  * and the ✕ stay exactly where they were — the reason the bar and the body are
  * two containers instead of one scrolling box.
@@ -287,37 +336,42 @@ export const FixedHeightScrolling: Story = {
         <h2 id="modal-story-scroll-title">Pregătirea pentru consultație</h2>
       </Heading>
     ),
-    children: (
-      <div className="flex flex-col gap-3">
-        <Text>
-          Aduceți documentele medicale anterioare, dacă există: radiografii,
-          scrisori medicale, lista tratamentelor efectuate.
-        </Text>
-        <Text>
-          Anunțați medicul dacă urmați un tratament medicamentos sau dacă aveți
-          alergii cunoscute.
-        </Text>
-        <Text>
-          Consultația inițială include examinarea clinică și discutarea
-          opțiunilor de tratament. Durata estimată este de 30 – 45 de minute.
-        </Text>
-        <Text>
-          Igienizarea profesională se realizează cu ultrasunete și air-flow;
-          frecvența se stabilește împreună cu medicul.
-        </Text>
-        <Text>
-          Pentru copii, prima vizită este una de acomodare: examinare, sfaturi
-          de igienă și, dacă este cazul, programarea unui tratament.
-        </Text>
-        <Text>
-          Programările se pot muta telefonic cu cel puțin 24 de ore înainte.
-        </Text>
-        <Text tone="muted">
-          Strada Exemplu nr. 1, București. Accesul se face din curtea
-          interioară, etajul 1.
-        </Text>
-      </div>
+    children: PREPARATION_BODY,
+  },
+};
+
+/**
+ * `scrollable={false}` — the never-scroll picture. The same seven paragraphs as
+ * FixedHeightScrolling, and nothing inside the panel scrolls: the box takes its
+ * full content height, so the body is not a scroll port, not a `region` and not
+ * a tab stop.
+ *
+ * At the 320×568 stress width the box is taller than the screen, and what
+ * scrolls instead is the dialog's full-viewport LAYER — the whole card moves
+ * under the scrim, one piece, exactly as a sheet of paper would. Two things to
+ * look at there: the SCROLLBAR sits at the edge of the viewport, not inside the
+ * panel (it belongs to the layer), and the panel's top edge is reachable at
+ * rest — auto margins centre the box while there is room and collapse to zero
+ * when there is not, so nothing is ever parked above scroll position 0.
+ *
+ * At 1280 the same panel fits with room to spare and looks identical to any
+ * other `md` modal: the prop only shows itself when the content outgrows the
+ * screen.
+ */
+export const NonScrollable: Story = {
+  tags: ['stress-320'],
+  args: {
+    width: 'md',
+    scrollable: false,
+    'aria-labelledby': 'modal-story-non-scrollable-title',
+    header: (
+      <Heading asChild>
+        <h2 id="modal-story-non-scrollable-title">
+          Pregătirea pentru consultație
+        </h2>
+      </Heading>
     ),
+    children: PREPARATION_BODY,
   },
 };
 

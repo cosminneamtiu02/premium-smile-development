@@ -209,8 +209,9 @@ export const IconSizePrecedence: Story = {
       {/* Developer note, not site copy — untranslated on purpose. */}
       <p className="text-sm text-ink-muted">
         &lt;Phone size=&quot;lg&quot;&gt; inside an md GlyphButton → 20px, not
-        32px: the circle&apos;s [&amp;_svg]:size-5 scores (0,1,1) and outranks
-        the glyph&apos;s own (0,1,0).
+        32px: the circle&apos;s
+        [&amp;_svg]:size-[calc(var(--disc-size,2.75rem)*5/11)] scores (0,1,1)
+        and outranks the glyph&apos;s own (0,1,0).
       </p>
     </div>
   ),

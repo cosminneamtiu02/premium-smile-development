@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { cx } from '../cx';
 
 // ui/Text — body copy, one size (contract board text-atom-contract-v2,
 // owner-approved fb-189). Migrated from the old repo's ui/text, narrowed
@@ -50,9 +51,6 @@ const toneClasses: Record<TextTone, string> = {
   muted: 'text-ink-muted',
   strong: 'text-ink-strong',
 };
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 // D5 — Text is the repo's FIRST tag-generic atom, and the generic is the whole
 // difficulty: `Omit<ComponentPropsWithRef<E>, …>` stays deferred while E is

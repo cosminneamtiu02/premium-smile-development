@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { cx } from '../cx';
 import { slotClone } from '../slot';
 
 // ui/Heading — the display-type step, with the ELEMENT left entirely to the
@@ -73,9 +74,6 @@ export type HeadingProps = HeadingOwnProps &
 const sizeClasses: Record<HeadingSize, string> = {
   title: 'font-display text-xl text-ink-strong',
 };
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 export function Heading({
   size = 'title',

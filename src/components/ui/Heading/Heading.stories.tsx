@@ -5,8 +5,9 @@ import { Heading, type HeadingSize } from './Heading';
 // diacritics — real site strings (§15.7); DE-longest and pseudo-locale are
 // dedicated stress variants, both carrying the 'stress-320' tag so the visual
 // net also samples them at the 320px accessibility width (§13 UI-tier opt-in;
-// the tier itself is 1280-only).
-// Three of the five stories exist to show ONE look on three different
+// the tier itself is 1280-only) — SectionStep carries that tag for its own
+// reason: a 30px serif line wrapping inside a 320px column.
+// Three of the six stories exist to show ONE look on three different
 // elements — <p>, <h2>, <a>. That decoupling is the atom's whole point, and
 // "identical pixels, different element" is a claim only rendered stories can
 // make honestly.
@@ -27,9 +28,9 @@ const meta = {
   argTypes: {
     size: {
       control: 'select',
-      options: ['title'] satisfies HeadingSize[],
+      options: ['title', 'section'] satisfies HeadingSize[],
       description:
-        "The growth axis, honestly one member wide today: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong). Further steps ('section', 'page') join additively when real designs measure them — the default stays 'title' so no existing call site ever moves",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01. Further steps ('page') join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     asChild: {
       control: false,
@@ -75,6 +76,35 @@ export const AsLink: Story = {
     <Heading {...args} asChild>
       <a href="#acasa">Premium Smile</a>
     </Heading>
+  ),
+};
+
+/**
+ * The second step (D2, 2026-09-01): `text-3xl` — 30px on the same display face
+ * and the same ink, the size sections/SectionHeading passes. Both wrap extremes
+ * share one frame, because a step shown only on its short line proves nothing
+ * about the long one: the Romanian title the section opens with, and a German
+ * compound that cannot break at a space (§8.4 expansion). A 30px serif compound
+ * inside a 320px column is the genuine wrap case here — hence 'stress-320'.
+ * The Romanian line follows the `size` control (flip it to watch the step next
+ * to itself); the German line is pinned to 'section' so the comparison holds.
+ * Both take the default <p> host — the story samples a SIZE, not an outline,
+ * so there is no heading order for axe to score.
+ * The gap belongs to this wrapper, never to the atom (§6.4).
+ * lang="de" rides the prop spread onto the German <p> (fb-315): CSS
+ * `hyphens: auto` picks its dictionary from the ELEMENT's language, so this
+ * line breaks under German patterns while the frame stays Romanian.
+ */
+export const SectionStep: Story = {
+  tags: ['stress-320'],
+  args: { size: 'section', children: 'Vizitează clinica noastră' },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <Heading {...args} />
+      <Heading size="section" lang="de">
+        Behandlungsschwerpunkte und Anfahrtsbeschreibung
+      </Heading>
+    </div>
   ),
 };
 

@@ -12,12 +12,22 @@ import { slotClone } from '../slot';
 // visualLevel as independent axes) but hardcoded `Tag = h${level}`, which
 // makes the Footer's <p> titles impossible by construction.
 //
-// v1 ships ONE step, `title` — the look with real in-tree consumers today.
-// Bigger steps ('section', 'page') join the union ADDITIVELY when
-// SectionHeading and the page runs bring measured numbers (§6.6: never invent
-// display sizes without a consumer), and the default stays 'title' forever, so
-// union growth can never silently restyle a bare <Heading> (§6.6 again — a
-// changed default is a break at every existing call site at once).
+// The scale grows ADDITIVELY, one step per measured consumer (§6.6: never
+// invent display sizes without one), and the default stays 'title' forever, so
+// growth can never silently restyle a bare <Heading> (§6.6 again — a changed
+// default is a break at every existing call site at once).
+// v1 shipped ONE step, `title`. `section` joined it on 2026-09-01 with
+// sections/SectionHeading as its measured consumer (epic #54, breakdown
+// decision D2 — the issue is the durable anchor; the run workspace is
+// machine-local and gitignored, fb-317): the old
+// site's section title measured `text-3xl font-bold tracking-tight
+// sm:text-4xl`, of which only the 30px step survives here. `sm:text-4xl` went
+// because an atom scaling ITSELF per viewport is the §6.5 smell `title`
+// already refused; `font-bold` + `tracking-tight` went because they dressed the
+// old sans-serif — the Source Serif 4 display axis carries presence at 30px
+// unbolded, which is why `title` ships unbolded too.
+// The rule stays live for the step after this one: 'page' joins the union when
+// the page runs bring ITS measured numbers, and not before.
 //
 // ZERO-DIFF-REWIRE INVARIANT — `title` renders byte-exactly
 // `font-display text-xl text-ink-strong`: the string the Footer holds in its
@@ -47,13 +57,14 @@ import { slotClone } from '../slot';
 // hover/focus/disabled styling for the same reason — an asChild <a>'s focus
 // ring belongs to the globals' :focus-visible net, not to this atom.
 
-export type HeadingSize = 'title';
+export type HeadingSize = 'title' | 'section';
 
 type HeadingOwnProps = {
   /**
-   * Step on the display scale. v1: 'title' — the Footer/Header title
-   * treatment. The axis is named by ROLE, not magnitude, so a step landing
-   * between two existing ones is an addition instead of a rename (§6.6).
+   * Step on the display scale: 'title' — the Footer/Header title treatment —
+   * or 'section' — the section-title look SectionHeading passes (D2). The axis
+   * is named by ROLE, not magnitude, so a step landing between two existing
+   * ones is an addition instead of a rename (§6.6).
    */
   size?: HeadingSize;
   /**
@@ -73,6 +84,7 @@ export type HeadingProps = HeadingOwnProps &
 
 const sizeClasses: Record<HeadingSize, string> = {
   title: 'font-display text-xl text-ink-strong',
+  section: 'font-display text-3xl text-ink-strong',
 };
 
 export function Heading({

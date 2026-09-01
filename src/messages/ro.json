@@ -50,7 +50,8 @@
     "title": "Articole și noutăți"
   },
   "contact": {
-    "title": "Contactează-ne",
+    "heading": "Probleme?",
+    "lead": "Sunați-ne la numărul de mai jos.",
     "close": "Închide"
   }
 }

@@ -50,7 +50,8 @@
     "title": "Artikel & Neuigkeiten"
   },
   "contact": {
-    "title": "Kontaktieren Sie uns",
+    "heading": "Probleme?",
+    "lead": "Rufen Sie uns unter der unten stehenden Nummer an.",
     "close": "Schließen"
   }
 }

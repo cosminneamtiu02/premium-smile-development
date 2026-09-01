@@ -50,7 +50,8 @@
     "title": "Articoli e novità"
   },
   "contact": {
-    "title": "Contattaci",
+    "heading": "Problemi?",
+    "lead": "Chiamaci al numero qui sotto.",
     "close": "Chiudi"
   }
 }

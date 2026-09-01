@@ -12,6 +12,7 @@ import type {
 } from 'react';
 import { Close } from '@/assets/glyphs/Close';
 import { lockScroll } from '@/lib/scroll-lock';
+import { cx } from '../cx';
 import { GlyphButton } from '../GlyphButton/GlyphButton';
 
 // ui/Modal — THE modal dialog of the design system, built per the
@@ -391,9 +392,6 @@ const contentScrollingClasses =
 // clip, never scroll and never become a region — the box grows instead, and the
 // layer scrolls it.
 const contentStaticClasses = 'overflow-visible';
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 export function Modal({
   open,

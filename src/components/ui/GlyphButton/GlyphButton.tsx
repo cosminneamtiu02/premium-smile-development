@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { cx } from '../cx';
 import { discBase, discBox } from '../disc';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
@@ -169,9 +170,6 @@ const sizeClasses: Record<GlyphButtonSize, string> = {
   md: `${discBox.md} [&_svg]:size-[calc(var(--disc-size,2.75rem)*5/11)]`,
   lg: `${discBox.lg} [&_svg]:size-[calc(var(--disc-size,3.5rem)/2)]`,
 };
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 export function GlyphButton({
   variant = 'solid',

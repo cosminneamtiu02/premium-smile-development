@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import { cx } from '../cx';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
 // ui/Button — the one button of the design system (migrated per the approved
@@ -83,9 +84,6 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: 'min-h-14 px-7 text-lg',
   xl: 'min-h-16 px-10 text-xl',
 };
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 export function Button({
   variant = 'solid',

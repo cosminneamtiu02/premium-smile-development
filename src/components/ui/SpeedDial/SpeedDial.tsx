@@ -13,6 +13,7 @@ import {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
+import { cx } from '../cx';
 import { discBase, discBox } from '../disc';
 
 // ui/SpeedDial — a chooser shaped like a mercury thermometer: one filled disc
@@ -174,11 +175,12 @@ type SpeedDialOwnProps<V extends string> = {
    * bulb: tapping that only closes.
    *
    * The click EVENT rides along as a second argument because a modified click
-   * is a different act: ctrl/cmd/shift/middle opens the option in a NEW tab and
-   * leaves this document exactly as it was, so a side effect that assumes "we
-   * are leaving" would be wrong. The section skips its cookie write on
-   * `event.metaKey || event.ctrlKey || event.shiftKey`. Additive: a handler
-   * that ignores the argument is unaffected.
+   * is a different act: ctrl/cmd/shift/middle opens the option in a NEW tab or
+   * window, alt saves it — in every case this document stays exactly as it was,
+   * so a side effect that assumes "we are leaving" would be wrong. The section
+   * skips its cookie write on `event.metaKey || event.ctrlKey ||
+   * event.shiftKey || event.altKey`. Additive: a handler that ignores the
+   * argument is unaffected.
    */
   onSelect?: (
     option: SpeedDialOption<V>,
@@ -190,9 +192,6 @@ type SpeedDialOwnProps<V extends string> = {
 
 export type SpeedDialProps<V extends string = string> = SpeedDialOwnProps<V> &
   Omit<ComponentPropsWithRef<'div'>, keyof SpeedDialOwnProps<V> | 'children'>;
-
-const cx = (...parts: Array<string | undefined | false>) =>
-  parts.filter(Boolean).join(' ');
 
 // THE ROOT carries no position utility of its own, on purpose. Tailwind emits
 // `.relative` AFTER `.fixed`, so an atom-owned `relative` here would silently
@@ -308,7 +307,11 @@ const stemBase =
   'rounded-full border border-line-subtle bg-surface/95 backdrop-blur-md ' +
   'inert:invisible ' +
   'transition-[clip-path,visibility] [transition-duration:300ms,0s] ease-out ' +
-  'inert:[transition-delay:0s,300ms] motion-reduce:transition-none';
+  'inert:[transition-delay:0s,300ms] motion-reduce:transition-none ' +
+  // The capsule's own scrollbar (it becomes a scroll container when the
+  // extreme-zoom cap below bites) is hidden: a classic bar rendered INSIDE the
+  // ~52px tube and squeezed the 44px discs (a11y M2 follow-up, 2026-09-01).
+  '[scrollbar-width:none]';
 
 // Direction = position + flow + the closed stencil + the extreme-zoom cap, in
 // one row per direction so a fifth direction cannot ship half-dressed.
@@ -343,7 +346,11 @@ const stemBase =
 //   swallows page scroll over the open stem — NavMenu's own cap carries none
 //   either. On a column-reverse stem the initial scroll position sits at the
 //   flow's start — the bulb's side — so the nearest discs stay visible when the
-//   cap does bite. A scrollbar inside the capsule is ugly and accepted there.
+//   cap does bite. The capsule draws NO scrollbar of its own
+//   (`[scrollbar-width:none]` in stemBase): on classic-scrollbar platforms the
+//   bar took its ~15px INSIDE the tube and squeezed the discs. Wheel/touch
+//   still scroll it, and tabbing between discs scrolls each into view — at
+//   400% zoom the keyboard path never needed the bar.
 const directionClasses: Record<SpeedDialDirection, string> = {
   up:
     'bottom-1/2 inset-x-px flex-col-reverse pb-[calc(var(--bulb)/2+0.375rem)] ' +

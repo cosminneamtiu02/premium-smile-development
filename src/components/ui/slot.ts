@@ -1,6 +1,6 @@
 import { cloneElement, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { cx } from './cx';
+import { cx } from '@/lib/cx';
 
 // ui/slot.ts — the shared asChild engine (owner decision fb-64, 2026-08-05,
 // plan .claude/plans/icon-button.plan.md §7 D7). Extracted verbatim from

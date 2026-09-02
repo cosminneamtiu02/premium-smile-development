@@ -1,6 +1,7 @@
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
 import { Heading } from '@/components/ui/Heading/Heading';
+import { cx } from '@/lib/cx';
 
 // sections/SectionHeading — the opener every content section starts with: the
 // mono kicker over the display title, 8px apart, aligned start or centre.
@@ -80,11 +81,8 @@ import { Heading } from '@/components/ui/Heading/Heading';
 // The first four join ADDITIVELY when a real design measures them, defaults
 // pinned (§6.6), breaking nobody.
 //
-// ── NO ui/cx HERE, and that is a boundary rather than a preference: cx.ts says
-// in its own header that it is ui-layer plumbing importable by `ui/` modules
-// ONLY — never by sections/, never by app/ (§4). The section tier joins its own
-// classes, the LanguageSwitcher precedent
-// (`['inline-flex', className].filter(Boolean).join(' ')`).
+// ── Classes join through lib/cx — importable from every tier since the
+// cx-to-lib lane (org-review F2, 2026-09-02) retired the ui-only fence.
 // MERGE ORDER: this component's classes first, the caller's className LAST. A
 // deterministic convention the tests pin — NOT a cascade mechanism: attribute
 // order never decides CSS specificity, and §6.8 limits caller utilities to
@@ -195,9 +193,7 @@ export function SectionHeading({
 
   return (
     <div
-      className={['flex flex-col gap-2', ALIGN[align], className]
-        .filter(Boolean)
-        .join(' ')}
+      className={cx('flex flex-col gap-2', ALIGN[align], className)}
       {...rest}
     >
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}

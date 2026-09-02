@@ -33,7 +33,7 @@ import type { Ref, RefCallback, RefObject } from 'react';
  *
  * STANDING RULE — this function IS the ref contract of every atom that imports
  * it, so changing the merge semantics is a deliberate API change for all of
- * them at once, never a drive-by edit (the ui/cx.ts convention).
+ * them at once, never a drive-by edit (the lib/cx.ts convention).
  *
  * @param internal the atom's own ref object, kept in step with the caller's.
  * @param ref      whatever the caller passed as `ref`: a callback ref, a ref

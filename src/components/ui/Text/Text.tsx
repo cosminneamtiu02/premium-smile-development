@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 
 // ui/Text — body copy, one size (contract board text-atom-contract-v2,
 // owner-approved fb-189). Migrated from the old repo's ui/text, narrowed

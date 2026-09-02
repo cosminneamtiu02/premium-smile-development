@@ -10,6 +10,19 @@ export type Locale = (typeof locales)[number];
 
 export const defaultLocale: Locale = 'ro';
 
+// THE no-match fallback — read by exactly ONE consumer, the root "/" redirect
+// (tools/generate-root-redirect.ts), and fired ONLY when the visitor's entire
+// ranked preference list matches none of the five locales above: such a
+// visitor is by construction not Romanian-reading, so they land on English
+// (owner 2026-09-02, language-autoselect board D1; §5 amended same date).
+// Deliberately NOT `defaultLocale`, whose other roles all stay Romanian:
+// the root stub's <html lang>, the stub's <title> message source
+// (src/messages/ro.json), next-intl's routing default (routing.ts, and via
+// it request.ts's invalid-segment fallback), and the future sitemap
+// x-default (§10.4). A typed const is data — the header's "pure data, zero
+// imports" charter holds.
+export const fallbackLocale: Locale = 'en';
+
 // THE one spelling of the language-cookie name (§8.7) — the site's only piece
 // of storage, and therefore the whole reason it ships with no consent banner.
 // It has exactly ONE writer and exactly ONE reader, and they live in different

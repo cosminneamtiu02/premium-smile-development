@@ -160,7 +160,11 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 - `generateStaticParams` emits all locale × route combinations at build time; blog routes are
   generated for `ro` only, and the Blog nav item is hidden on non-`ro` locales.
 - **Root `/`:** a tiny client-side script (static export has no middleware) redirects to the
-  remembered locale cookie if present, else the closest match of `navigator.language`, else `/ro`.
+  remembered locale cookie if present, else the closest match of `navigator.language`, else `/en`
+  *(amended 2026-09-02, owner — language-autoselect board D1: a visitor whose entire preference
+  list matches none of the five locales is by construction not Romanian-reading, so the no-match
+  branch falls back to English; `/ro` remains `defaultLocale` for the stub's `<html lang>`, its
+  title source, and the future sitemap `x-default`, §10.4)*.
 - **Language switcher** navigates to the *equivalent path* under the target locale prefix and sets
   the language cookie — a full document load, like every other link (§15.13). Blog pages switch to
   the target locale's home (no equivalent exists).

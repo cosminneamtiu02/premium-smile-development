@@ -13,6 +13,7 @@ import {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
+import { makeAttachRef } from '../attach-ref';
 import { cx } from '../cx';
 import { discBase, discBox } from '../disc';
 
@@ -460,28 +461,10 @@ export function SpeedDial<V extends string = string>({
   // promise (ref reaches the root), ours is what the outside-pointer listener
   // measures "outside" against. Memoised on the caller's ref so React does not
   // detach and re-attach it on every render.
+  // The merge itself — including React 19's callback-ref cleanup protocol —
+  // lives in `makeAttachRef` (ui/attach-ref.ts), shared with Modal.
   const setRoot = useCallback(
-    (node: HTMLDivElement | null) => {
-      rootRef.current = node;
-      if (typeof ref === 'function') {
-        // React 19 lets a callback ref RETURN a cleanup, and when it does React
-        // calls that cleanup instead of re-invoking the ref with null. Passing
-        // the caller's cleanup up is therefore the only way their ref detaches
-        // the way they wrote it; swallowing it silently downgrades them to the
-        // legacy null-call they did not ask for (Modal.tsx's attachRef, same
-        // shape, same reason).
-        const cleanup = ref(node);
-        if (typeof cleanup === 'function') {
-          return () => {
-            cleanup();
-            rootRef.current = null;
-          };
-        }
-      } else if (ref) {
-        ref.current = node;
-      }
-      return undefined;
-    },
+    (node: HTMLDivElement | null) => makeAttachRef(rootRef, ref)(node),
     [ref],
   );
 

@@ -176,6 +176,17 @@ npm run visual:update -- --workers=2
   `develop → main` promotion, or the release gate will fail on stale
   baselines.
 
+  **Expected asymmetry (recorded 2026-09-02, org-review board):** the darwin
+  set is the day-to-day net and grows with every lane (~165 PNGs at the time
+  of writing); the linux set refreshes in batches and may lag far behind
+  (4 PNGs at the same moment). A sparse linux set is the WORKFLOW, not
+  corruption — the refresh trigger is the promotion above, never parity for
+  its own sake. Also budget the calendar in the promotion ritual: the Footer's
+  copyright year is read at BUILD time, so the first baseline run of a new
+  year changes every Footer shot in BOTH sets with zero code change
+  (Footer.tsx's YEAR docstring carries the full note) — re-record, don't
+  investigate.
+
 Review changed PNGs in the git diff, commit them with the code change, and tick
 the PR-template box. The failure report (`playwright-report/`) shows
 expected/actual/diff side by side. Keep the pinned image tag (in `release.yml`

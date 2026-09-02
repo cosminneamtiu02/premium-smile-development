@@ -51,7 +51,7 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 | Vitest | 4.x (4.1.10) | Unit + interaction tests (modal focus trap, switcher, accordion, mobile nav); story-based tests via Storybook's Vitest integration | One fast runner for logic and interaction; integrates natively with Storybook 10 |
 | @testing-library/react | 16.x (16.3.2) | Role-based queries inside interaction tests | Querying by role/name forces accessible markup as a side effect — tests double as a11y enforcement |
 | Playwright | 1.x (1.62.1) | **The decided visual-regression harness** (Lost Pixel fork closed 2026-07-30): one central spec runs `toHaveScreenshot` against the built Storybook; one Playwright project per named viewport; the tier matrix comes from story-title prefixes (`UI/*` → 1280 only · `Sections/*` → 390+1536 · `Pages/*` → all five + 320); **baselines are platform-suffixed dual sets (amended 2026-07-31): the darwin set generated natively on the dev machine (local pre-commit regression net), the linux set generated only in CI's pinned container via `visual-baseline.yml`** | Built-in pixel diffing, no services, unlimited free runs (§13); same tool serves launch smoke tests later; platform-suffixed snapshots kill cross-OS font-rendering false positives without local Docker |
-| ESLint + eslint-plugin-jsx-a11y | 10.x (10.8.0) + 6.x (6.10.2) | Lint gate in CI incl. write-time accessibility rules (no div-as-button, required alt, ...) | Catches a11y and quality violations at typing time, before Storybook or review sees them |
+| ESLint + eslint-plugin-jsx-a11y | ~~10.x (10.8.0)~~ **9.x (~9.39.5) — §15.11 pin** *(annotated 2026-09-02)* + 6.x (6.10.2) | Lint gate in CI incl. write-time accessibility rules (no div-as-button, required alt, ...) | Catches a11y and quality violations at typing time, before Storybook or review sees them |
 | pre-commit framework + Prettier *(amended 2026-08-01, §15.8 — replaces Husky + lint-staged)* | pinned revs + 3.x (3.9.6) | `.pre-commit-config.yaml`: commit stage = eslint --fix + prettier --write on staged files; push stage = tsc --noEmit + vitest run; Prettier check-all repeated in CI | One hook manager, same tool as the owner's other repos; fast feedback before CI; hooks can be bypassed, CI cannot — both exist on purpose |
 | @next/mdx | 16.x (16.2.12) | Blog posts as MDX in `content/blog/`, Romanian only, compiled at build time | Official, zero-runtime, fully compatible with static export |
 | next-image-export-optimizer + sharp | 1.x (1.20.1) + 0.35.x (0.35.3) | Build-time WebP/AVIF `srcset` generation behind the single `ui/Image` wrapper | Fills the static-export gap (no runtime image optimizer on a static host). Named candidate — confirm at Phase 0 per §15 before the first photo |
@@ -91,7 +91,14 @@ src/
     page.tsx             # root "/" → client-side locale redirect (see §5)
   lib/
     clinic.ts            # SINGLE SOURCE of NAP: name, address, phone, hours, geo, sameAs links
+    routes.ts            # THE route list + matchesRoute/equivalentPath (one list, all consumers)
+    hours.ts             # schedule → printable rows (deterministic reference week)
+    scroll-lock.ts       # THE page scroll freeze (browser-free mechanics)
     seo.ts               # JSON-LD builder, metadata helpers, sitemap/hreflang generation
+  i18n/
+    locales.ts href.ts navigation.ts routing.ts request.ts   # manifest · URL rule · "where am I" · next-intl wiring
+  assets/glyphs/         # whole-svg NOUN components + hand-maintained registry (README = folder law)
+  fonts/                 # self-hosted variable subsets via next/font (shell-only import)
   messages/
     ro.json en.json de.json fr.json it.json   # namespaces: common, home, services, team, blog, contact
   content/blog/          # MDX posts (ro)
@@ -100,7 +107,39 @@ public/                  # pre-optimized images, self-hosted fonts, robots.txt
 ```
 
 **Dependency direction (hard rule):** `app` → `sections` → `ui` → tokens. Never the reverse.
-`ui/` never imports from `sections/` or `app/`. Anything used by 2+ sections gets promoted to `ui/`.
+`ui/` never imports from `sections/` or `app/`.
+
+*(Amended 2026-09-02 — owner approval on the develop-org-review board: the map below records
+what the tree already practices; no code moved.)*
+
+- **The foundation ring** sits beside the spine, importable from any tier: `lib/` (site DATA —
+  clinic, routes, hours — and browser-free MECHANICS — scroll-lock) and `i18n/` (the locale
+  manifest + the URL rule). Constraints that keep the ring honest: `ui/` may import lib
+  MECHANICS (the scroll-lock paper-trail precedent) and `assets/` glyphs, but never lib DATA
+  and never `i18n/` (§8.1 — atoms are locale-agnostic); `fonts/` is the shell's alone;
+  `tools/` may import `src` pure modules, and nothing imports `tools/`.
+- **Section → section:** a section MAY compose another section's public component (Header and
+  Footer render Wordmark; FloatingActions renders LanguageSwitcher — the dossier model). A
+  section NEVER imports another section's internals — hooks, helpers, data modules; shared
+  plumbing climbs to `lib/` or `ui/` instead (the lib/routes.ts precedent).
+- **Promotion, corrected:** "used by 2+ sections → promote to `ui/`" applies to PRIMITIVES
+  only. A composite (anything composing `ui/`) never promotes, however heavy its reuse —
+  reuse only schedules it earlier in the build order (the SectionHeading paradox;
+  /classify-component rules 3–4).
+- **`sections/` holds three sub-kinds** — page BANDS wired to site data (Header, Footer,
+  FloatingActions), props-in SHARED COMPOSITIONS with zero message keys (Wordmark,
+  SectionHeading), and app-wired ISLAND CLUSTERS (ContactModal, LanguageSwitcher). Tier
+  membership is decided by the import graph, never by size or reuse. Page-phase default: a
+  repeated unit shared by 2+ consumers starts props-in; message keys stay with the band that
+  composes it.
+- **Sharing decision table** (the case law, indexed — full arguments live in the named files):
+
+  | Situation | Move | Precedent |
+  |---|---|---|
+  | Identical MECHANICS, second consumer arrives | extract to the nearest tier both may import | `ui/slot.ts` (fb-64) · `ui/disc.ts` (D17) · `lib/routes.ts` |
+  | Values that must AGREE while files stay independent ("feel": clocks, easings) | KEEP-IN-SYNC pair — bidirectional pointers, at least one side test-pinned | `--fade` (fb-44) · `discTransition` |
+  | Byte-identical copies discovered at N ≥ 3 | dedicated promotion lane, never a drive-by | `ui/cx.ts` (fb-307) |
+  | A fact about the site needed across sections | `lib/` from day one | `clinic.ts` · `routes.ts` |
 
 ## 5. Routing specification
 
@@ -162,7 +201,10 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 
 1. **`ui/` components are locale-agnostic.** They receive already-translated strings via
    props/children and never call `t()`. Translation happens in `sections/` and pages.
-   Exception: internal labels (e.g., a modal's close button) are props **with defaults**.
+   Internal labels (e.g., a modal's close button) are consumer-supplied **REQUIRED** props —
+   no string defaults in `ui/`, nothing Romanian in an atom *(amended 2026-09-02 to match the
+   owner's standing fb-259/260 decision, which reversed the earlier "props with defaults"
+   clause; Modal's `closeLabel` and SpeedDial's bulb label are the precedents)*.
 2. **ICU everywhere:** plurals via ICU categories (Romanian has one/few/other), interpolation
    instead of string concatenation, never build sentences from fragments, no text inside images.
 3. **Formatting via `Intl`:** `Intl.NumberFormat` for prices (RON; EUR display on foreign locales
@@ -475,3 +517,7 @@ resizing, server rendering, client-side routing / link prefetching, analytics.
    **`/debug-deep`** (ECC-native root-cause debugging loop) in `.claude/skills/` define the
    standing workflows — follow them (§15.12). Commits happen **only on the owner's explicit
    instruction** (§15.7); flows end at "ready + evidence" and wait.
+7. *(Added 2026-09-02, org-review board)* Cross-file comment references cite **stable
+   anchors** — constant names, comment headings, fb-/D-numbers — never bare line numbers,
+   which drift with every edit to the target file. A lane that resolves a promised follow-up
+   updates the promising comment in the same lane.

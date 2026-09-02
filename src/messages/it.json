@@ -31,7 +31,9 @@
       "backToTop": "Torna su",
       "copyright": "© {year} {name}. Tutti i diritti riservati.",
       "socialInstagram": "{name} su Instagram",
-      "socialTiktok": "{name} su TikTok"
+      "socialTiktok": "{name} su TikTok",
+      "contactWhatsapp": "{name} su WhatsApp",
+      "contactPhone": "Chiama {name}"
     }
   },
   "home": {

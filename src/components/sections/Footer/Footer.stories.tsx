@@ -128,12 +128,14 @@ const expectLockupChain = async (
  * This is the story that shows the FOUR-COLUMN row: contact with the phone
  * link · the site map (four links, Blog included) · the ANPC/SAL badge · the
  * opening hours with Sunday dimmed. Above it the centred brand line, below it
- * the three-part legal strip — copyright left, back-to-top centred, the two
- * social discs right.
+ * the three-part legal strip — copyright left, back-to-top centred, the
+ * four-disc contact row right (Instagram · TikTok · WhatsApp · phone, the
+ * owner's fb-334 order).
  *
- * The play function proves the two facts a picture cannot: that the band is a
- * real contentinfo landmark, and that the tel: href is the E.164 number while
- * the visible text is the human one.
+ * The play function proves the facts a picture cannot: that the band is a real
+ * contentinfo landmark, that the tel: href is the E.164 number while the
+ * visible text is the human one, and where the two contact discs actually go —
+ * a screenshot shows two circles, not their destinations.
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -145,6 +147,21 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('link', { name: ro.common.nav.blog }),
     ).toBeInTheDocument();
+    // The strip's two contact discs act DIRECTLY (board D1/D2): the WhatsApp
+    // one opens the clinic's own chat, the phone one dials — never a modal.
+    await expect(
+      canvas.getByRole('link', {
+        name: ro.common.footer.contactWhatsapp.replaceAll(
+          '{name}',
+          clinic.name,
+        ),
+      }),
+    ).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
+    await expect(
+      canvas.getByRole('link', {
+        name: ro.common.footer.contactPhone.replaceAll('{name}', clinic.name),
+      }),
+    ).toHaveAttribute('href', `tel:${clinic.phone}`);
     await expectNoSidewaysScroll(band);
     // Row 1's lockup, at the width where the tighten step is OFF (the gutter
     // box here is ~1214px, far past the 20rem container step).
@@ -182,7 +199,8 @@ export const Smartphone: Story = {
     // The TIGHTENED half of the lockup chain (G2 react r2, M1): at the phone
     // width the gutter box is under the @max-xs step, so the artwork must be
     // at 40%. This is the ONE assertion that notices the Footer losing its
-    // `@container` (Footer.tsx:135) — the query then never matches, the
+    // `@container` (the gutter-box `@container` comment in Footer.tsx) — the
+    // query then never matches, the
     // lockup renders full-size at every width, and nothing else throws.
     await expectLockupChain(band, false);
   },

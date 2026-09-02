@@ -8,6 +8,7 @@ import { TextButton } from '@/components/ui/TextButton/TextButton';
 import { Instagram } from '@/assets/glyphs/Instagram';
 import { Phone } from '@/assets/glyphs/Phone';
 import { Tiktok } from '@/assets/glyphs/Tiktok';
+import { Whatsapp } from '@/assets/glyphs/Whatsapp';
 import { localeHref } from '@/i18n/href';
 import type { ClinicInfo } from '@/lib/clinic';
 import { clinic } from '@/lib/clinic';
@@ -133,8 +134,8 @@ export function Footer(): ReactElement {
     // NO outer margin: pages own the rhythm between their last section and this
     // one (§6.4).
     <footer className="border-t border-line-subtle bg-surface">
-      {/* THE GUTTER BOX — the same clamp the Header pill wears
-          (Header.tsx:124): floor 1rem so the 320px stress width keeps its
+      {/* THE GUTTER BOX — the same clamp the Header pill wears (the Header
+          pill's gutter-clamp comment): floor 1rem so the 320px stress width keeps its
           content, 10vw in the middle, 12.5rem ceiling so the band never
           stretches to a 1920px screen's edges. TWO consumers now share this
           number by copy; a THIRD one promotes it to a shared definition rather
@@ -403,15 +404,36 @@ export function Footer(): ReactElement {
             <a href="#top">{t('footer.backToTop')}</a>
           </TextButton>
 
-          {/* The socials — one control per profile the clinic actually has,
-              and NOTHING for a network it does not (socialEntries above).
+          {/* THE CONTACT ROW — profiles first, contact controls to their
+              right, the phone outermost: Instagram · TikTok · WhatsApp ·
+              phone, the owner's order (fb-334).
+              TWO RENDER RULES, on purpose. The socials are MAPPED from
+              socialEntries above — one control per profile the clinic actually
+              has, and NOTHING for a network it does not. The two contact discs
+              are written out EXPLICITLY because `phone` and `whatsapp` are
+              REQUIRED fields of ClinicInfo (lib/clinic.ts): there is no absent
+              case to filter, so optionality stays socialEntries' job and never
+              leaks into theirs (board contact-touchpoints §4/§7, owner
+              2026-09-02).
+              THE DISCS ACT DIRECTLY — tap = call, tap = open the clinic's
+              WhatsApp conversation — and never open a modal (board D1/D2). A
+              WhatsApp modal is specifically banned: it would be the third
+              stateful overlay §15.15 is deliberately WAITing for, bought for
+              nothing.
+              tel: therefore carries NO target/rel (a protocol handler hands the
+              number to the dialler, it does not navigate — _blank would orphan
+              a blank tab), while wa.me IS external navigation and travels with
+              target=_blank + rel="noopener noreferrer" like its row-mates.
               GlyphButton outline is the atom's own "socials" bundle; asChild
               makes each <a> the control, so this emits no <button> anywhere in
               the section. The glyphs stay UNLABELLED: a labelled glyph inside
               an asChild anchor double-announces (ui/GlyphButton's children
-              doc), and the anchor is already named from the ICU message with
+              doc), and every anchor is already named from its ICU message with
               {name} filled from the single NAP source. size="md" = 2.75rem,
-              the §9 touch-target floor. */}
+              the §9 touch-target floor.
+              `data-footer-socials` keeps its historical name: it is the hook
+              the SC 2.4.11 placement test (FloatingActions §b) reaches this
+              strip by. */}
           <div
             data-footer-socials
             className="flex items-center gap-2 @3xl:justify-self-end"
@@ -429,6 +451,32 @@ export function Footer(): ReactElement {
                 </a>
               </GlyphButton>
             ))}
+
+            <GlyphButton
+              asChild
+              variant="outline"
+              size="md"
+              aria-label={t('footer.contactWhatsapp', { name: clinic.name })}
+            >
+              <a
+                href={`https://wa.me/${clinic.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Whatsapp />
+              </a>
+            </GlyphButton>
+
+            <GlyphButton
+              asChild
+              variant="outline"
+              size="md"
+              aria-label={t('footer.contactPhone', { name: clinic.name })}
+            >
+              <a href={`tel:${clinic.phone}`}>
+                <Phone />
+              </a>
+            </GlyphButton>
           </div>
         </div>
       </div>

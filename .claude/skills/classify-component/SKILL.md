@@ -74,6 +74,13 @@ model) — composes atoms → section; pure primitive → atom.
   reason to call it a section.
 - **Drop still records smells** — dropped components often prove a pattern the new repo must
   avoid; the note travels to the inventory row.
+- **The Modal carve-out (recorded 2026-09-02, org-review board):** rule 3 read literally
+  would re-tier generic DESIGN-SYSTEM CHROME that composes atoms — `ui/Modal` composes
+  GlyphButton + the Close glyph and stays `ui/` (owner board fb-261, a rule-0 verdict). The
+  operating line: generic chrome may compose atoms and remain `ui/`; a composite becomes a
+  section when it binds SITE data (`lib/clinic`, `lib/routes`, `t()`) or fills a §14 content
+  slot. When the two readings collide, record the verdict (rule 0) rather than stretching
+  rule 3.
 
 ## Verification
 

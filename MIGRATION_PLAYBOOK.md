@@ -155,9 +155,43 @@ the owner's explicit instruction (brief §15.7).**
 
 ## Phase 4 — Routes & pages
 
-**Order:** locale layout shell (real Header/Footer + skip-link) → root `/` redirect script →
-Home → Services → Team → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts`
-(JSON-LD builder, metadata helper, sitemap + robots generation).
+**Order** *(amended 2026-09-02, org-review board — seo.ts split so the per-page checklist's
+items 3–4 have their helpers from page one instead of refactoring four pages at the end)*:
+locale layout shell (real Header/Footer + skip-link — **the mount contract below**) → root
+`/` redirect script → `seo.ts` **part 1**: JSON-LD builder + metadata helper → Home →
+Services → Team → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts` **part 2**:
+sitemap + robots generation (needs every route to exist — stays last).
+
+### Shell mount contract (assembled 2026-09-02, org-review board)
+
+Pointers only — each number keeps its ONE home in the named file's header; the mount lane
+ticks every box and the numbers never fork:
+
+- [ ] `scroll-padding-top: 5rem` on `<html>` — Header.tsx "THE MOUNT CONTRACT" (a). The 5rem
+      reach is currently derived independently in Header.tsx, NavMenu's panel cap and
+      FloatingActions' `--stem-inset` arithmetic — the three move together or the debt reopens.
+- [ ] header · main · footer · FloatingActions as **body-level siblings** — Header.tsx (b);
+      NavMenu's dev tripwire guards this one (and only this one) at runtime.
+- [ ] `scroll-padding-bottom` in **three steps**, each keeping its `env()` term —
+      FloatingActions.tsx mount-contract block (a).
+- [ ] FloatingActions mounts **after** `{children}` + Footer — its clearance spacer must be
+      the last box in normal flow.
+- [ ] Page-composition rule: no standalone focusable narrower than ~72px flush at the
+      left/right margins in blocks that scroll past the corners (FloatingActions b); keyboard
+      walkthrough at several scroll positions (FloatingActions c).
+- [ ] The dormant `viewport-fit` decision (FloatingActions header caveat) — decide with the
+      first full-bleed hero.
+- [ ] ContactModalProvider wraps the whole shell; the dialog renders **last**
+      (ContactModalProvider header). Header/NavMenu → ContactModalTrigger wiring is ONE
+      commit that closes the menu and opens the dialog (inventory row 34) **plus** the
+      focus-return decision + interaction test (org-review board F1 — the opener unmounts
+      when the menu closes, so the platform's focus restore needs a named target).
+- [ ] Wordmark's declared two-line home-link wiring diff (Wordmark.tsx header) — landing it
+      re-poses fb-179 (second home link in the Footer).
+- [ ] **Skip-link** — named in the Order above and carried by NO section header: it is a NEW
+      build item of this shell lane, not a mount of something that exists.
+- [ ] Delete the placeholder header/footer markup in `layout.tsx` (and its duplicate
+      copyright/NAP lines).
 
 ### Per-page checklist
 1. **Route:** page under `app/[locale]/…`; `generateStaticParams` covers all five locales

@@ -12,6 +12,7 @@ import type {
 } from 'react';
 import { Close } from '@/assets/glyphs/Close';
 import { lockScroll } from '@/lib/scroll-lock';
+import { makeAttachRef } from '../attach-ref';
 import { cx } from '../cx';
 import { GlyphButton } from '../GlyphButton/GlyphButton';
 
@@ -437,27 +438,10 @@ export function Modal({
   // §6.8 gives the caller a ref to the root; the atom needs the same node for
   // showModal()/close(). One callback feeds both — memoised on the caller's ref
   // so React does not detach and re-attach it on every render.
+  // The merge itself — including React 19's callback-ref cleanup protocol —
+  // lives in `makeAttachRef` (ui/attach-ref.ts), shared with SpeedDial.
   const attachRef = useCallback(
-    (node: HTMLDialogElement | null) => {
-      dialogRef.current = node;
-      if (typeof ref === 'function') {
-        // React 19 lets a callback ref RETURN a cleanup, and when it does React
-        // calls that cleanup instead of re-invoking the ref with null. Passing
-        // the caller's cleanup up is therefore the only way their ref detaches
-        // the way they wrote it; swallowing it silently downgrades them to the
-        // legacy null-call they did not ask for.
-        const cleanup = ref(node);
-        if (typeof cleanup === 'function') {
-          return () => {
-            cleanup();
-            dialogRef.current = null;
-          };
-        }
-      } else if (ref) {
-        ref.current = node;
-      }
-      return undefined;
-    },
+    (node: HTMLDialogElement | null) => makeAttachRef(dialogRef, ref)(node),
     [ref],
   );
 

@@ -1,4 +1,5 @@
 import type { Decorator, Preview } from '@storybook/nextjs-vite';
+import type { ViewportMap } from 'storybook/viewport';
 import { NextIntlClientProvider } from 'next-intl';
 import { useEffect } from 'react';
 import { locales, nativeNames } from '../src/i18n/locales';
@@ -7,6 +8,7 @@ import en from '../src/messages/en.json';
 import fr from '../src/messages/fr.json';
 import it from '../src/messages/it.json';
 import ro from '../src/messages/ro.json';
+import { VIEWPORTS } from '../tests/viewports';
 import '../src/styles/globals.css';
 import './preview-fonts.css';
 
@@ -131,33 +133,21 @@ const preview: Preview = {
     a11y: { test: 'error' },
 
     viewport: {
-      // The named test viewports (§7) + the 320px accessibility stress width.
-      options: {
-        stress320: {
-          name: 'Stress 320',
-          styles: { width: '320px', height: '568px' },
-        },
-        smartphone: {
-          name: 'Smartphone 390',
-          styles: { width: '390px', height: '844px' },
-        },
-        tablet: {
-          name: 'Tablet 768',
-          styles: { width: '768px', height: '1024px' },
-        },
-        notebook: {
-          name: 'Notebook 1280',
-          styles: { width: '1280px', height: '800px' },
-        },
-        laptop: {
-          name: 'Laptop 1536',
-          styles: { width: '1536px', height: '864px' },
-        },
-        desktop: {
-          name: 'Desktop 1920',
-          styles: { width: '1920px', height: '1080px' },
-        },
-      },
+      // The named test viewports (§7) + the 320px accessibility stress width,
+      // DERIVED from tests/viewports.ts — the one place the six geometries are
+      // spelled, shared with playwright.config.ts's projects (org-review F13a).
+      // The KEYS are a public surface: pinned stories cite them by name in
+      // `globals: { viewport: { value: 'laptop' } }`, and a renamed key fails
+      // silently by falling back to the default viewport, so the derivation
+      // must reproduce them exactly. `satisfies ViewportMap` pins the VALUE
+      // shape (name + px styles) — the keys stay prose-guarded, because
+      // Object.fromEntries widens them to string and no type reaches them.
+      options: Object.fromEntries(
+        VIEWPORTS.map(({ key, name, width, height }) => [
+          key,
+          { name, styles: { width: `${width}px`, height: `${height}px` } },
+        ]),
+      ) satisfies ViewportMap,
     },
   },
 };

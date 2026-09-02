@@ -10,5 +10,3 @@ export const routing = defineRouting({
   defaultLocale,
   localePrefix: 'always',
 });
-
-export type { Locale } from './locales';

@@ -7,6 +7,7 @@ import {
   type SpeedDialDirection,
   type SpeedDialOption,
 } from '@/components/ui/SpeedDial/SpeedDial';
+import { LOCALE_COOKIE } from '@/i18n/locales';
 import { useLanguageOptions } from './useLanguageOptions';
 
 // sections/LanguageSwitcher — the floating language dial: the filled disc shows
@@ -126,8 +127,11 @@ export function LanguageSwitcher({
    * on open or on close. That is what lets this site ship with no cookie-consent
    * banner at all, so the regression test for it is not pedantry.
    *
-   * `NEXT_LOCALE` is the name tools/generate-root-redirect.ts reads on the next
-   * visit to '/' (that script only ever READS it; this is the only writer).
+   * `LOCALE_COOKIE` (from `@/i18n/locales`) is the ONE spelling of the name,
+   * and the coupling is now the shared constant rather than two files agreeing
+   * in prose: tools/generate-root-redirect.ts interpolates the SAME constant
+   * into the inline script it emits, which reads the cookie on the next visit
+   * to '/' (that script only ever READS it; this is the only writer).
    * `path=/` so it counts on every page, `max-age=31536000` = 12 months (§8.7),
    * `SameSite=Lax` so it never rides along on another site's request to us.
    *
@@ -148,7 +152,7 @@ export function LanguageSwitcher({
   ) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
-    document.cookie = `NEXT_LOCALE=${option.value}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+    document.cookie = `${LOCALE_COOKIE}=${option.value}; path=/; max-age=31536000; SameSite=Lax; Secure`;
   };
 
   return (

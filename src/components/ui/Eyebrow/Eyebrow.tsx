@@ -65,8 +65,9 @@ import { cx } from '../cx';
 // arrive as this atom's OWN additive tone prop when that consumer exists,
 // never as a caller className override (§6.8 bans restyling internals).
 //
-// No leading-*, no margin (§6.4 — SectionHeading's Stack owns the gap to the
-// title), no sm:/lg: self-scaling (§6.5 — an atom cannot see its container).
+// No leading-*, no margin (§6.4 — the consuming section's root gap owns the
+// distance to the title: SectionHeading's `flex flex-col gap-2`), no sm:/lg:
+// self-scaling (§6.5 — an atom cannot see its container).
 // Server-safe and zero-JS: no 'use client', no hooks, no state — an <Eyebrow>
 // costs the visitor zero bytes of JavaScript (§16).
 // §6.3's typed-required aria-label does not bind: the atom is non-interactive

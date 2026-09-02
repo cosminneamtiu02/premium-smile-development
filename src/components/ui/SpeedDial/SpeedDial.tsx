@@ -400,13 +400,20 @@ const toneClasses: Record<SpeedDialTone, string> = {
   cta: 'bg-cta text-ink-inverse hover:bg-cta-hover active:bg-cta-hover',
 };
 
-// Dev tripwires fire ONCE PER DISTINCT MESSAGE per session (the ui/slot.ts
-// convention, keyed rather than boolean): a dial that re-renders forty times
-// must not print forty identical lines, and two different problems must not
-// silence each other. Never in production: each tripwire EFFECT returns before
-// any string work on `process.env.NODE_ENV === 'production'` — Next inlines
-// the constant, so the bundler drops the whole block — and this helper's own
-// guard is the belt to that.
+// Dev tripwires fire ONCE PER DISTINCT MESSAGE per session. The once-per-
+// session PRECEDENT is NavMenu's `mountContractWarned` — one module-scope
+// boolean guarding one tripwire — and this file KEYS the guard by MESSAGE
+// instead, an improvement NavMenu's shape never needed: it has a single check,
+// while a dial can fail three. A dial that re-renders forty times must not
+// print forty identical lines, and two different problems must not silence each
+// other — and the second half is precisely what one boolean cannot promise,
+// since whichever check fires first mutes the rest for the session.
+// (Not the ui/slot.ts convention, whatever this comment used to claim: that
+// file's asChild warning has no guard at all and fires on every clone.)
+// Never in production: each tripwire EFFECT returns before any string work on
+// `process.env.NODE_ENV === 'production'` — Next inlines the constant, so the
+// bundler drops the whole block — and this helper's own guard is the belt to
+// that.
 const warnedMessages = new Set<string>();
 
 function warnOnce(message: string): void {
@@ -548,6 +555,10 @@ export function SpeedDial<V extends string = string>({
 
   // Esc closes (§9). Bound to the document, not the root, because focus may
   // legitimately have moved elsewhere while the stem is open.
+  // KEEP-IN-SYNC (fb-44): NavMenu's own "Esc closes (§9)" effect is this
+  // manner's twin — the two files stay independent on purpose, so a change to
+  // the SHAPE here (the document binding, the close-on-Escape semantics)
+  // belongs on both sides in the same edit, never on one.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -586,6 +597,10 @@ export function SpeedDial<V extends string = string>({
   // persisted=true is the belt to those braces, for engines that freeze without
   // delivering pagehide first. Both live only while open, like every other
   // listener here.
+  // KEEP-IN-SYNC (fb-44): NavMenu's "BACK, WITH THE MENU STILL OPEN" block
+  // (D1) is the twin — same pagehide/flushSync + pageshow-persisted pair, and
+  // the reasoning is argued in full there. A change to the shape belongs on
+  // both sides.
   useEffect(() => {
     if (!open) return;
     const onPageHide = () => {

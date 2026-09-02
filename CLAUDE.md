@@ -93,7 +93,7 @@ src/
     clinic.ts            # SINGLE SOURCE of NAP: name, address, phone, hours, geo, sameAs links
     routes.ts            # THE route list + matchesRoute/equivalentPath (one list, all consumers)
     hours.ts             # schedule → printable rows (deterministic reference week)
-    scroll-lock.ts       # THE page scroll freeze (browser-free mechanics)
+    scroll-lock.ts       # THE page scroll freeze (React-free mechanics)
     seo.ts               # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
     locales.ts href.ts navigation.ts routing.ts request.ts   # manifest · URL rule · "where am I" · next-intl wiring
@@ -113,10 +113,11 @@ public/                  # pre-optimized images, self-hosted fonts, robots.txt
 what the tree already practices; no code moved.)*
 
 - **The foundation ring** sits beside the spine, importable from any tier: `lib/` (site DATA —
-  clinic, routes, hours — and browser-free MECHANICS — scroll-lock) and `i18n/` (the locale
-  manifest + the URL rule). Constraints that keep the ring honest: `ui/` may import lib
-  MECHANICS (the scroll-lock paper-trail precedent) and `assets/` glyphs, but never lib DATA
-  and never `i18n/` (§8.1 — atoms are locale-agnostic); `fonts/` is the shell's alone;
+  clinic, routes, hours — and React-free MECHANICS — scroll-lock) and `i18n/` (the locale
+  manifest + the URL rule). *("React-free", not "browser-free" — scroll-lock touches the DOM,
+  not React; cx-to-lib lane, 2026-09-02.)* Constraints that keep the ring honest: `ui/` may
+  import lib MECHANICS (the scroll-lock paper-trail precedent) and `assets/` glyphs, but never
+  lib DATA and never `i18n/` (§8.1 — atoms are locale-agnostic); `fonts/` is the shell's alone;
   `tools/` may import `src` pure modules, and nothing imports `tools/`.
 - **Section → section:** a section MAY compose another section's public component (Header and
   Footer render Wordmark; FloatingActions renders LanguageSwitcher — the dossier model). A
@@ -138,7 +139,7 @@ what the tree already practices; no code moved.)*
   |---|---|---|
   | Identical MECHANICS, second consumer arrives | extract to the nearest tier both may import | `ui/slot.ts` (fb-64) · `ui/disc.ts` (D17) · `lib/routes.ts` |
   | Values that must AGREE while files stay independent ("feel": clocks, easings) | KEEP-IN-SYNC pair — bidirectional pointers, at least one side test-pinned | `--fade` (fb-44) · `discTransition` |
-  | Byte-identical copies discovered at N ≥ 3 | dedicated promotion lane, never a drive-by | `ui/cx.ts` (fb-307) |
+  | Byte-identical copies discovered at N ≥ 3 | dedicated promotion lane, never a drive-by | `lib/cx.ts` (fb-307) |
   | A fact about the site needed across sections | `lib/` from day one | `clinic.ts` · `routes.ts` |
 
 ## 5. Routing specification

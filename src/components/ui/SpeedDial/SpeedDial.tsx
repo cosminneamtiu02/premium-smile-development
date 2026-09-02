@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { flushSync } from 'react-dom';
 import { makeAttachRef } from '../attach-ref';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 import { discBase, discBox } from '../disc';
 
 // ui/SpeedDial — a chooser shaped like a mercury thermometer: one filled disc

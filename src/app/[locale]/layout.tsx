@@ -10,6 +10,12 @@ import '@/styles/globals.css';
 
 // THE SHELL (brief §5): locale dictates the shell, the sub-route the content.
 // Header/Footer below are placeholders — the real sections arrive in Phase 3.
+// PHASE-4 MOUNT CONTRACT (added 2026-09-02, org-review board): the assembled
+// bill this file must discharge — scroll-padding pair, body-level siblings,
+// spacer-last, provider-wraps-all + dialog-last, the one-commit trigger wiring,
+// the NEW skip-link, deleting this placeholder markup — lives as the checklist
+// "Shell mount contract" under MIGRATION_PLAYBOOK.md Phase 4. Tick every box;
+// each number's authoritative home stays in its section's own file header.
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

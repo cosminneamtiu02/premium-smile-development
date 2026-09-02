@@ -48,13 +48,13 @@ import { clinic } from '@/lib/clinic';
 // no hooks, no t(): this renders identically for every visitor, so it compiles
 // into the static HTML of every page (§16) and ships no JavaScript — the
 // Footer's contract, inherited by the component that now opens it. The bare
-// <img> is the SAL-badge precedent (Footer.tsx:261-313, fb-83) and its first
-// reason alone is decisive here: ui/Image wraps ExportedImage, a CLIENT
-// component, so importing it would hydrate the Header AND the Footer on every
-// route of the site. alt="" makes the mark DECORATIVE — the clinic name stands
-// next to it in text, so a described image would announce the brand twice —
-// and the width/height ATTRIBUTES reserve the box before the bytes arrive
-// (§11, zero CLS).
+// <img> is the SAL-badge precedent (Footer's COLUMN 3 · ANPC/SAL BADGE block,
+// fb-83) and its first reason alone is decisive here: ui/Image wraps
+// ExportedImage, a CLIENT component, so importing it would hydrate the Header
+// AND the Footer on every route of the site. alt="" makes the mark DECORATIVE
+// — the clinic name stands next to it in text, so a described image would
+// announce the brand twice — and the width/height ATTRIBUTES reserve the box
+// before the bytes arrive (§11, zero CLS).
 // WHY THE SRC IS A COMMITTED 9.9 KB DERIVATIVE and not the optimizer's own
 // output (F12, ruled 2026-08-20). The optimizer DOES produce WEBP variants of
 // this asset — unlike the SAL badge it lives under `public/images` — but those
@@ -73,11 +73,11 @@ import { clinic } from '@/lib/clinic';
 // NO `loading` attribute, i.e. the HTML default of EAGER, and that is a
 // decision rather than an omission: the SAL badge is `lazy` because it sits at
 // the bottom of every page, while this mark sits in the HEADER, above the fold
-// on every route — the same rule ui/Image states from the other side ("lazy
-// below the fold, preload for the hero", Image.tsx:12). A lazy above-the-fold
-// image is fetched immediately anyway, just after layout has run: all of the
-// cost, none of the saving. The Footer instance loads the same file eagerly for
-// nothing, which is a cache hit rather than a second download.
+// on every route — the same rule ui/Image states from the other side, in its
+// header comment: "lazy below the fold by default — pass `preload` for the
+// hero". A lazy above-the-fold image is fetched immediately anyway, just after
+// layout has run: all of the cost, none of the saving. The Footer instance loads the same
+// file eagerly for nothing, which is a cache hit rather than a second download.
 // INTERIM ARTWORK (D4, fb-204 · D11, owner terminal 2026-08-20: "src image is
 // just parameter"). The artwork is a PROP with the demo cat as its DEFAULT —
 // `WordmarkArtwork` carries src AND intrinsic width/height together, because
@@ -87,13 +87,14 @@ import { clinic } from '@/lib/clinic';
 // per-consumer override, which is the parameter's point. Still debt until that
 // logo lands.
 //
-// KNOWN DEBT · basePath, the same one the SAL badge books (Footer.tsx:291-295)
-// and now the LARGER instance of it (F13). This `src` is ROOT-ABSOLUTE and
-// nothing threads next.config's `basePath` through it, so under the interim
-// GitHub-Pages deploy (`PAGES_BASE_PATH=/premium-smile-development`, §15.2) it
-// resolves at the domain root and 404s. Where the badge is one image at the
-// bottom of the page, this is the BRAND CORNER of the header and the footer on
-// every route — and because it is correctly `alt=""` (decorative), a 404
+// KNOWN DEBT · basePath, the same one the SAL badge books (the KNOWN DEBT
+// paragraph inside Footer's SAL-badge block) and now the LARGER instance of it
+// (F13). This `src` is ROOT-ABSOLUTE and nothing threads next.config's
+// `basePath` through it, so under the interim GitHub-Pages deploy
+// (`PAGES_BASE_PATH=/premium-smile-development`, §15.2) it resolves at the
+// domain root and 404s. Where the badge is one image at the bottom of the page,
+// this is the BRAND CORNER of the header and the footer on every route — and
+// because it is correctly `alt=""` (decorative), a 404
 // degrades to an invisible box rather than to broken-image alt text, i.e. it
 // fails silently. Reported, not patched: threading the prefix is a repo-wide
 // deploy-hardening item (R2 — three bookings now: the SAL badge, this, and
@@ -114,9 +115,10 @@ import { clinic } from '@/lib/clinic';
 // CSS — a live window drag re-solves it without a frame of JavaScript.
 // ONE tighten step, measured against the nearest ancestor CONTAINER and never
 // the viewport (§6.5). Both consumers already are containers — the Header pill
-// (Header.tsx:125) and the Footer gutter box (Footer.tsx:135) — so this
-// component reacts to the box it was handed rather than to the window, and the
-// Storybook decorator reproduces that box on purpose.
+// root (the `group/bar @container` <header>) and the Footer gutter box (the
+// `@container` div under Footer's THE GUTTER BOX comment) — so this component
+// reacts to the box it was handed rather than to the window, and the Storybook
+// decorator reproduces that box on purpose.
 // THE NUMBERS ARE MEASURED, not guessed, and the TIGHTEST CELL IN THE REPO
 // sets them. The Header hands this component the pill row minus its 1rem
 // padding, its 1rem row gap and the 2.75rem burger: 203px at the 390 phone
@@ -150,15 +152,16 @@ import { clinic } from '@/lib/clinic';
 //
 // ── CONSUMER PRECONDITION, stated because it fails QUIETLY. The step above
 // resolves against the NEAREST ANCESTOR with `container-type` — both consumers
-// have one (Header.tsx:125, Footer.tsx:135), which is why neither had to be
-// told anything. Drop this component into a consumer that establishes NO
-// container and the query simply never matches: it renders full-size at every
-// width, including 320, where the lockup then does not fit. Nothing throws and
-// nothing logs. If a third consumer ever needs to be independent of its
-// ancestors, the recorded option is a NAMED container (`@container/pill` on
-// the consumer, `@max-xs/pill:` here) — deliberate, greppable, and still zero
-// JavaScript. Not done today: two consumers, both already containers, and an
-// unused name is a lie about what the code needs.
+// have one (the Header pill root's `@container`, Footer's THE GUTTER BOX
+// `@container` div), which is why neither had to be told anything. Drop this
+// component into a consumer that establishes NO container and the query simply
+// never matches: it renders full-size at every width, including 320, where the
+// lockup then does not fit. Nothing throws and nothing logs. If a third
+// consumer ever needs to be independent of its ancestors, the recorded option
+// is a NAMED container (`@container/pill` on the consumer, `@max-xs/pill:`
+// here) — deliberate, greppable, and still zero JavaScript. Not done today:
+// two consumers, both already containers, and an unused name is a lie about
+// what the code needs.
 
 /**
  * One artwork the lockup can draw: a file plus the intrinsic pixel size that

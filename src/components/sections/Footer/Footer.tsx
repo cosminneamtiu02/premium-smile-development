@@ -63,6 +63,14 @@ import { primaryRoutes } from '@/lib/routes';
  * The build year, evaluated ONCE at module scope. This is a Server Component:
  * in the real build the value is baked into the static HTML (§16), so there is
  * no hydration boundary for it to disagree across, and no clock in the browser.
+ *
+ * KNOWN, ACCEPTED calendar consequence (recorded 2026-09-02, org-review board):
+ * this is the repo's one deliberate exception to the same-inputs-same-bytes
+ * determinism doctrine (lib/hours, the redirect tool). The first build or
+ * baseline run of a NEW YEAR changes every Footer visual baseline in BOTH
+ * platform sets with zero code change — re-record, don't investigate — and a
+ * site last built in December shows the old year until the next rebuild
+ * (§16.1's rebuild-to-update model). Never "fix" this with a runtime clock.
  */
 const YEAR = String(new Date().getFullYear());
 

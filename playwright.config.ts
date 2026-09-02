@@ -1,18 +1,15 @@
 import { defineConfig } from '@playwright/test';
+import { VIEWPORTS } from './tests/viewports';
 
 // Visual-regression harness (brief §3, §13): one project per named viewport
 // width (§7) — the central spec routes stories to widths by title prefix.
 // Snapshots are platform-suffixed (…-darwin.png / …-linux.png): the darwin set
 // is generated natively on the workstation, the linux set ONLY by
 // visual-baseline.yml inside the pinned container (§15.7). The sets never mix.
-const WIDTHS = [
-  { name: 'w320', width: 320, height: 568 },
-  { name: 'w390', width: 390, height: 844 },
-  { name: 'w768', width: 768, height: 1024 },
-  { name: 'w1280', width: 1280, height: 800 },
-  { name: 'w1536', width: 1536, height: 864 },
-  { name: 'w1920', width: 1920, height: 1080 },
-];
+//
+// The six geometries themselves come from tests/viewports.ts, the ONE spelling
+// this file and .storybook/preview.tsx both derive from (org-review F13a) —
+// they used to be hand-maintained in both places.
 
 export default defineConfig({
   testDir: 'tests/visual',
@@ -37,8 +34,15 @@ export default defineConfig({
     deviceScaleFactor: 1,
   },
 
-  projects: WIDTHS.map(({ name, width, height }) => ({
-    name,
+  // `w${width}` reproduces today's project names exactly — w320 … w1920 — and
+  // that is a hard constraint, not a formatting choice: snapshotPathTemplate
+  // above bakes {projectName} into every baseline FILENAME
+  // (…-w1280-darwin.png), so a renamed project orphans every existing baseline
+  // at once (169 at the time of writing) and the suite reports missing
+  // baselines rather than a diff. The derivation may never change the shape of
+  // this string.
+  projects: VIEWPORTS.map(({ width, height }) => ({
+    name: `w${width}`,
     use: { viewport: { width, height } },
   })),
 

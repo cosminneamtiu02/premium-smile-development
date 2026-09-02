@@ -4,7 +4,10 @@
 **Target:** pass^3 = 1.0 (three consecutive full-table runs, zero misses) ·
 **Fixture base:** `/Users/cosminneamtiu/Work/premium-smile-webpage/apps/frontend/src/shared/components/`
 · **Status:** executed 2026-08-05 against the full old-repo catalog (see the harness PR
-evidence table); re-run on every rubric change.
+evidence table); re-run on every rubric change. Re-executed BLIND 2026-09-02 after the
+Modal-carve-out trap landed: 22/25 + 2/2 pressure scenarios — zero misses traced to the
+trap; all three (rows 4/5/10) were this fixture's own drift against newer rule-0
+decisions, refreshed in the same record (org-review board, fb-320 round).
 
 ## Fixture table
 
@@ -13,13 +16,13 @@ evidence table); re-run on every rubric change.
 | 1 | `ui/heading` | atom | leaf (h1–h6 only); 6 consumers |
 | 2 | `ui/container` | atom | leaf polymorphic wrapper; 5 consumers |
 | 3 | `ui/text` | atom | leaf paragraph; 4 consumers |
-| 4 | `ui/button` | reuse | already migrated → `ui/Button` (inventory row, rule 0) |
-| 5 | `ui/stack` | atom | leaf flex primitive; 3 consumers |
+| 4 | `ui/button` | reuse | already migrated → `ui/Button` (inventory row, rule 0); "reuse" is the DISPOSITION — the rewrite already landed, so the answer names what to do, not the tier |
+| 5 | `ui/stack` | drop | rule 0 — owner "drop stack" 2026-09-01 (inventory: pattern, not component — flex/gap utilities direct; supersedes the leaf reading) |
 | 6 | `ui/icon-button` | atom | leaf button/anchor; 2 consumers; inventory names future `IconButton` |
 | 7 | `ui/rich-text` | drop | rule 0 — owner fb-22: `t.rich()` at section level replaces it |
 | 8 | `ui/eyebrow` | atom | leaf kicker; 1 consumer |
 | 9 | `ui/stars` | atom | leaf SVG row; 1 consumer |
-| 10 | `ui/logo-mark` | atom | leaf brand SVG; 1 consumer |
+| 10 | `ui/logo-mark` | drop | rule 0 — inventory drop, recorded 2026-08-05 (not the brand; Publio replaces the corner §15.6; fb-107/130) |
 | 11 | `ui/map-frame` | atom | leaf iframe wrapper; §12 forces static-map rewrite note |
 | 12 | `ui/link` | drop | rule 1 — 0 app consumers |
 | 13 | `ui/input` | drop | rule 1 — 0 app consumers |

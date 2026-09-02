@@ -3,6 +3,7 @@ import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
 import { Tiktok } from './Tiktok';
+import { Whatsapp } from './Whatsapp';
 
 // HAND-MAINTAINED — the ONE list of every glyph component in this folder.
 // The compile-checked registry died with the whole-svg pattern refactor
@@ -17,4 +18,5 @@ export const ALL_GLYPHS = [
   ['Instagram', Instagram],
   ['Phone', Phone],
   ['Tiktok', Tiktok],
+  ['Whatsapp', Whatsapp],
 ] as const;

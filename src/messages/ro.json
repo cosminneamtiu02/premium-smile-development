@@ -31,7 +31,9 @@
       "backToTop": "Înapoi sus",
       "copyright": "© {year} {name}. Toate drepturile rezervate.",
       "socialInstagram": "{name} pe Instagram",
-      "socialTiktok": "{name} pe TikTok"
+      "socialTiktok": "{name} pe TikTok",
+      "contactWhatsapp": "{name} pe WhatsApp",
+      "contactPhone": "Sună {name}"
     }
   },
   "home": {

@@ -510,6 +510,101 @@ describe('Footer — row 3, the legal strip', () => {
     ]);
   });
 
+  it('dials straight from the strip — the phone disc is a bare tel: link', () => {
+    // The contact discs are NOT socialEntries: `phone` and `whatsapp` are
+    // REQUIRED ClinicInfo fields, so there is no absent case to filter (board
+    // contact-touchpoints §4/§7). This one acts DIRECTLY — tap = call, never a
+    // modal (board D1; §15.15's third-overlay trap).
+    const { messages } = mount();
+    const disc = screen.getByRole('link', {
+      name: fill(messages.footer.contactPhone, { name: clinic.name }),
+    });
+
+    expect(disc).toHaveAttribute('href', `tel:${clinic.phone}`);
+    expect(disc).toHaveAttribute('href', 'tel:+40700000000');
+    // NO target/rel: tel: hands the number to a protocol handler (the dialler),
+    // it does not navigate a browsing context — _blank would open and orphan a
+    // blank tab on desktop.
+    expect(disc).not.toHaveAttribute('target');
+    // Icon-only control: the glyph stays out of the a11y tree, the anchor
+    // carries the whole name (§9, GlyphButton's children doc).
+    const svg = disc.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).not.toHaveAttribute('role');
+    expect(disc.textContent).toBe('');
+  });
+
+  it('opens the clinic chat directly — the WhatsApp disc is a wa.me link', () => {
+    // Board D2: the disc opens the WhatsApp conversation itself. A "WhatsApp
+    // modal" is banned — it would be the third stateful overlay §15.15 keeps
+    // WAITing on, bought for nothing.
+    const { messages } = mount();
+    const disc = screen.getByRole('link', {
+      name: fill(messages.footer.contactWhatsapp, { name: clinic.name }),
+    });
+
+    expect(disc).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
+    expect(disc).toHaveAttribute('href', 'https://wa.me/40700000000');
+    // The field's own format contract, mechanized like clinic.phone's '+'
+    // guard in row 2: wa.me wants digits only, no plus (lib/clinic.ts
+    // whatsapp doc) — a pasted E.164 value must fail HERE, not ship.
+    expect(clinic.whatsapp).toMatch(/^\d+$/);
+    // Real external navigation, unlike tel: — so it travels like its row-mates.
+    expect(disc).toHaveAttribute('target', '_blank');
+    expect(disc.getAttribute('rel')).toContain('noopener');
+    expect(disc.getAttribute('rel')).toContain('noreferrer');
+    const svg = disc.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).not.toHaveAttribute('role');
+    expect(disc.textContent).toBe('');
+  });
+
+  it('orders the strip profiles-first, contact-right, phone outermost', () => {
+    // The owner's order (fb-334): Instagram · TikTok · WhatsApp · phone. The
+    // two contact discs are appended AFTER the mapped socials, so the conversion
+    // control sits at the far end of the row.
+    const { footer } = mount();
+    const strip = footer().querySelector('[data-footer-socials]');
+    expect(strip).not.toBeNull();
+    const hrefs = Array.from((strip as HTMLElement).querySelectorAll('a')).map(
+      (a) => a.getAttribute('href'),
+    );
+
+    expect(hrefs).toEqual([
+      clinic.social.instagram,
+      clinic.social.tiktok,
+      `https://wa.me/${clinic.whatsapp}`,
+      `tel:${clinic.phone}`,
+    ]);
+  });
+
+  it('names both contact discs per locale, never a hardcoded word', () => {
+    const { messages } = mount('de');
+
+    for (const message of [
+      messages.footer.contactWhatsapp,
+      messages.footer.contactPhone,
+    ]) {
+      expect(
+        screen.getByRole('link', {
+          name: fill(message, { name: clinic.name }),
+        }),
+      ).toBeInTheDocument();
+    }
+    // …and the Romanian names are gone with them — both of them, so this
+    // comment stays true of what is actually asserted.
+    for (const roMessage of [
+      ro.common.footer.contactWhatsapp,
+      ro.common.footer.contactPhone,
+    ]) {
+      expect(
+        screen.queryByRole('link', {
+          name: fill(roMessage, { name: clinic.name }),
+        }),
+      ).toBeNull();
+    }
+  });
+
   it('keeps the socials off the fixed corner discs (FloatingActions §b)', () => {
     // SC 2.4.11: the call CTA is `fixed` bottom-right at every scroll
     // position, so a 44px social flush against the right margin would sit

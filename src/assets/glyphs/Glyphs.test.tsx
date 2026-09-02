@@ -7,6 +7,7 @@ import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
 import { Tiktok } from './Tiktok';
+import { Whatsapp } from './Whatsapp';
 
 // Role-based queries wherever the element belongs in the a11y tree (§3, §9) —
 // but a DECORATIVE glyph is deliberately absent from that tree, so structural
@@ -27,6 +28,7 @@ const STROKE_GLYPHS = [
 const FILL_GLYPHS = [
   ['Instagram', Instagram],
   ['Tiktok', Tiktok],
+  ['Whatsapp', Whatsapp],
 ] as const;
 
 // SVGElement.className is an SVGAnimatedString, never a string — every class

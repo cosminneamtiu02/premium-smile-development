@@ -8,6 +8,7 @@ import {
   type SpeedDialOption,
 } from '@/components/ui/SpeedDial/SpeedDial';
 import { LOCALE_COOKIE } from '@/i18n/locales';
+import { cx } from '@/lib/cx';
 import { useLanguageOptions } from './useLanguageOptions';
 
 // sections/LanguageSwitcher — the floating language dial: the filled disc shows
@@ -160,7 +161,7 @@ export function LanguageSwitcher({
     // here, in the section tier — the region's one-noun name and the bulb's.
     <nav
       aria-label={t('language.region')}
-      className={['inline-flex', className].filter(Boolean).join(' ')}
+      className={cx('inline-flex', className)}
     >
       <SpeedDial
         options={options}

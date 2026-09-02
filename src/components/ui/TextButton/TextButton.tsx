@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
 // ui/TextButton — the general-purpose QUIET action: chrome-less, text-first,

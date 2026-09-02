@@ -1,6 +1,6 @@
 import ExportedImage from 'next-image-export-optimizer';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 
 // THE single image wrapper (§11) — every image on the site goes through here.
 // Bakes in next-image-export-optimizer (owner decision 2026-08-01, §15.5):

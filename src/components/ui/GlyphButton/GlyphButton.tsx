@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 import { discBase, discBox } from '../disc';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 

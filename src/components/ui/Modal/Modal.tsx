@@ -11,9 +11,9 @@ import type {
   SyntheticEvent,
 } from 'react';
 import { Close } from '@/assets/glyphs/Close';
+import { cx } from '@/lib/cx';
 import { lockScroll } from '@/lib/scroll-lock';
 import { makeAttachRef } from '../attach-ref';
-import { cx } from '../cx';
 import { GlyphButton } from '../GlyphButton/GlyphButton';
 
 // ui/Modal — THE modal dialog of the design system, built per the

@@ -14,7 +14,7 @@ import { Heading, type HeadingSize } from './Heading';
 // I1 · zero-diff-rewire: the title step renders EXACTLY this and nothing else.
 // The four rewire call sites (Footer ×3, Header brand) are accepted on zero
 // visual diff, so any extra utility — leading-*, tracking-*, text-balance, a
-// margin — is a defect, not polish. `cx` is a plain join(' ') (ui/cx.ts), so
+// margin — is a defect, not polish. `cx` is a plain join(' ') (lib/cx.ts), so
 // byte-equality is deterministic: toBe here, never toContain.
 const TITLE_CLASSES = 'font-display text-xl text-ink-strong';
 

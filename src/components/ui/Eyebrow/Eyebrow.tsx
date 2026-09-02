@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 
 // ui/Eyebrow — the mono micro-label that sits above a section title
 // ("NE GĂSEȘTI" over "Vizitează clinica noastră"). Migrated from the old

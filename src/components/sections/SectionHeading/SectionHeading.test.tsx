@@ -287,7 +287,7 @@ describe('SectionHeading — zero islands, two imports', () => {
     expect(CODE).not.toMatch(/\buseTranslations\b/);
   });
 
-  it('imports EXACTLY the two atoms it composes — and never ui/cx', () => {
+  it('imports EXACTLY the two atoms it composes plus lib/cx', () => {
     // The import surface is the guard that sees what a regex cannot: swapping
     // an atom for something with state (ui/Image wraps a client component)
     // would hydrate every page that opens with this block, without tripping a
@@ -302,13 +302,12 @@ describe('SectionHeading — zero islands, two imports', () => {
     expect(specifiers).toEqual([
       '@/components/ui/Eyebrow/Eyebrow',
       '@/components/ui/Heading/Heading',
+      '@/lib/cx',
       'react',
     ]);
-    // ui/cx.ts is ui-layer plumbing importable by `ui/` ONLY (§4 dependency
-    // direction, stated in its own header) — the section tier joins its own
-    // classes. Named explicitly because it is the one import a future edit is
-    // most likely to reach for.
-    expect(CODE).not.toMatch(/from\s*['"][^'"]*\/cx['"]/);
+    // lib/cx joined the list when the cx-to-lib lane (org-review F2,
+    // 2026-09-02) moved the class-join helper to the foundation ring; the old
+    // "never ui/cx" clause died with the fence.
     // Side-effect (`import './x'`) and re-export (`export … from './x'`) forms
     // add a dependency the matcher above would not see.
     expect(CODE).not.toMatch(/^import\s*['"]/m);

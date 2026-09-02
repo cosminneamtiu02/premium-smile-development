@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { cx } from '../cx';
+import { cx } from '@/lib/cx';
 import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 
 // ui/Button — the one button of the design system (migrated per the approved

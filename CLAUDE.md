@@ -94,6 +94,7 @@ src/
     routes.ts            # THE route list + matchesRoute/equivalentPath (one list, all consumers)
     hours.ts             # schedule → printable rows (deterministic reference week)
     scroll-lock.ts       # THE page scroll freeze (React-free mechanics)
+    cx.ts                # THE class-join helper — every tier imports it (fb-307 → PR #64)
     seo.ts               # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
     locales.ts href.ts navigation.ts routing.ts request.ts   # manifest · URL rule · "where am I" · next-intl wiring

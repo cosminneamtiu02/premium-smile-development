@@ -3,6 +3,8 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { userEvent as browserUser } from 'vitest/browser';
+import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import type { Locale } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic';
 import de from '@/messages/de.json';
@@ -26,6 +28,20 @@ import { Header } from './Header';
 // queries below are scoped with within(): `hidden @3xl:flex` hides nothing in
 // this runner, so the bar row AND the open panel are both fully queryable and
 // a bare getByRole('link', { name: 'Blog' }) would find two (board §5·B7).
+// The one thing the missing stylesheet still hides for us is the CLOSED
+// <dialog> the provider renders: the UA sheet's own `dialog:not([open])`
+// display:none keeps its phone link out of every role query until a trigger is
+// pressed, so nothing below had to start excluding it.
+//
+// ── TWO EVENT SOURCES, the split ContactModal.test.tsx documents.
+// `userEvent` from @testing-library/user-event drives everything in this file
+// EXCEPT one keystroke: its events are SYNTHETIC, and <dialog>'s native
+// Escape handling runs on TRUSTED events only. The overlay-handover test at
+// the bottom therefore reaches for `browserUser` from vitest/browser — the
+// real browser's own input — for its Esc, exactly as the ContactModal suite
+// does. Everything else stays on the synthetic driver the rest of the file
+// already uses; there is nothing to gain from converting tests that never
+// touch the platform dialog.
 //
 // ── HARNESS NOTE — why '@/i18n/navigation' is the mock boundary, not
 // 'next/navigation' (the layer the build dispatch named).
@@ -51,13 +67,26 @@ vi.mock('@/i18n/navigation', () => ({ usePathname: () => nav.pathname }));
 
 const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 
-// The provider the section gets in production (app/[locale]/layout.tsx wraps
-// the whole tree) and in Storybook (.storybook/preview.tsx decorator), so the
-// tests mount it the same way. Header itself is NOT a client component;
-// useTranslations/useLocale are isomorphic and read this context.
+// The TWO providers the section gets in production and in Storybook, mounted
+// here in the same order.
+//
+// ① NextIntlClientProvider — app/[locale]/layout.tsx wraps the whole tree, and
+// .storybook/preview.tsx has a decorator for it. Header itself is NOT a client
+// component; useTranslations/useLocale are isomorphic and read this context.
+//
+// ② ContactModalProvider — the wrapper Phase 4 will add to the same shell. It
+// owns the ONE `open` boolean and renders the ONE <ContactModal /> after its
+// children, so both of the Header's Contact triggers summon the same dialog.
+// It is not optional here: a ContactModalTrigger rendered outside a provider
+// THROWS by design (useContactModal names the missing wrapper rather than
+// no-oping), so this is the shell's half of the contract standing in. Its
+// dialog reads the `contact` namespace, which is why the whole message file —
+// not just `common` — is handed to next-intl above.
 const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
   <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
-    <Header />
+    <ContactModalProvider>
+      <Header />
+    </ContactModalProvider>
   </NextIntlClientProvider>
 );
 
@@ -85,6 +114,29 @@ afterEach(() => {
 const mount = (locale: Locale = 'ro') => {
   const utils = render(<Mounted locale={locale} />);
   const messages = MESSAGES[locale].common;
+
+  // The BAR's Contact control. Since the ContactModal wiring both CTAs are
+  // <button>s carrying the same accessible name, so this picks the one that is
+  // NOT in the panel — the board §5·B7 discipline the old link tests used
+  // within() for, expressed against a control the panel and the bar share by
+  // design (one key, two places, §8.1). No stylesheet here, so an open panel is
+  // fully queryable and a bare getByRole would be ambiguous.
+  // The throw earns its keep: getAllByRole already fails descriptively when
+  // NOTHING matches, but the find() miss is a different fact — every match sits
+  // inside the panel — and without a message of its own it would surface as an
+  // undefined slipping into whichever assertion asked for it.
+  const findBarCta = (): HTMLElement => {
+    const cta = screen
+      .getAllByRole('button', { name: messages.actions.contact })
+      .find((button) => button.closest('#header-menu') === null);
+    if (!cta) {
+      throw new Error(
+        'every Contact button sits inside #header-menu — the bar CTA is gone',
+      );
+    }
+    return cta;
+  };
+
   return {
     ...utils,
     messages,
@@ -97,16 +149,29 @@ const mount = (locale: Locale = 'ro') => {
     // by two distinct keys — that is what makes within() scoping possible.
     barNav: () =>
       screen.getByRole('navigation', { name: messages.nav.ariaLabel }),
+    barCta: findBarCta,
     // The bar CTA's BOX, not the control: its visibility lives on a wrapper
     // the section owns, because ui/Button's base already sets `inline-flex`
     // and a second display utility in the atom's class list is decided by
     // sheet order, not by the caller (see Header.tsx).
-    barCtaBox: () =>
-      screen.getByRole('link', { name: messages.actions.contact })
-        .parentElement as HTMLElement,
+    barCtaBox: () => findBarCta().parentElement as HTMLElement,
     sheet: () => document.querySelector('[data-header-sheet]'),
+    // The ONE dialog the provider renders. Closed, it is display:none by the
+    // UA sheet, so this is null until a trigger is pressed.
+    dialog: () => screen.queryByRole('dialog'),
   };
 };
+
+/**
+ * Chromium dispatches <dialog>'s `close` event on the next RENDERING frame
+ * rather than the next macrotask (the finding ui/Modal's own suite records),
+ * so one frame plus one task is what reaches React's commit after it.
+ * Borrowed verbatim from ContactModal.test.tsx, where it is the same wait.
+ */
+const flush = () =>
+  new Promise<void>((resolve) =>
+    requestAnimationFrame(() => setTimeout(resolve, 0)),
+  );
 
 /** Tab order as the browser computes it, scoped to one subtree. */
 const focusablesIn = (root: ParentNode): HTMLElement[] =>
@@ -208,10 +273,16 @@ describe('Header — the freeze is `inert`, and nothing else (board §5·A1)', (
 
     // B3: focus does NOT teleport on open; DOM order makes the next Tab stop
     // the panel's first focusable — the full-width Contact CTA (fb-151).
+    // Since the ContactModal wiring that CTA is a real <button> that summons
+    // the dialog rather than an <a href="tel:"> that dials: an opener acts in
+    // place, so §9 makes it a button, and ContactModalTrigger declares what the
+    // press produces with aria-haspopup="dialog". Its POSITION is unchanged,
+    // which is the half of fb-151/B3 this test exists for.
     const open = panel();
     expect(open).not.toBeNull();
     const first = focusablesIn(open as HTMLElement)[0];
-    expect(first).toHaveAttribute('href', `tel:${clinic.phone}`);
+    expect(first?.tagName).toBe('BUTTON');
+    expect(first).toHaveAttribute('aria-haspopup', 'dialog');
     expect(first).toHaveTextContent(ro.common.actions.contact);
   });
 
@@ -415,6 +486,87 @@ describe('Header — every close path returns focus to the burger', () => {
     });
     expect(document.activeElement).toBe(firstBarLink);
     expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('hands the panel over to the ContactModal in ONE commit, and Esc lands focus back on the burger', async () => {
+    // THE OVERLAY HANDOVER (org-review F1) — the acceptance criterion of the
+    // wiring lane, and the reason `onClick={close}` sits on the panel's trigger
+    // at all. Both setStates fire inside ONE event handler — the trigger calls
+    // the consumer's onClick and then open() — so React's automatic batching
+    // lands NavMenu's close and the provider's open in ONE commit. Their order
+    // INSIDE that handler is NOT what this rests on and is not observable
+    // anyway: ContactModalTrigger.tsx says so itself, because the batch hides
+    // it. What matters is only that both happen in the same handler.
+    // Within that commit React runs ALL PASSIVE-effect destroys and then ALL
+    // passive creates, child-first in tree order — passive specifically, since
+    // layout effects run earlier, during commit, and nothing here should be
+    // read as a claim about those. NavMenu lives inside the provider's
+    // {children} while the single <ContactModal /> renders after them, so the
+    // sequence this test pins is:
+    //   destroy  NavMenu's freeze cleanup — scroll lock released, `inert` off
+    //   create   NavMenu's focus-return effect (armed by close()) — the burger
+    //            takes focus
+    //   create   ui/Modal's engine — reads document.activeElement, finds the
+    //            burger, calls showModal() (the platform records that same
+    //            element as its restore target) and takes its OWN lockScroll()
+    // Which is why the focus return costs useContactModal no API at all:
+    // nothing passes a target, because the platform already holds the right
+    // one. Break either real link — drop the close(), or render the dialog
+    // before the provider's children — and one of the assertions below goes
+    // red.
+    const user = userEvent.setup();
+    const { burger, panel, dialog } = mount();
+    const overflowBefore = document.documentElement.style.overflow;
+    expect(overflowBefore).toBe('');
+
+    await user.click(burger());
+    expect(page).toHaveAttribute('inert');
+
+    // The panel's first focusable IS the Contact trigger (fb-151/B3) — pressed
+    // here the way a thumb reaches it, rather than queried by name, so this
+    // test also fails if the CTA ever stops being first.
+    const panelCta = focusablesIn(panel() as HTMLElement)[0];
+    await user.click(panelCta);
+    await flush();
+
+    // The dialog is up…
+    expect(dialog()).not.toBeNull();
+    // …the panel is gone and the burger says so…
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    // …the MENU's freeze is fully released. A modal's modality is the
+    // platform's own — showModal() blocks the rest of the document from the top
+    // layer — never this attribute, so nothing about an open dialog wants a
+    // leftover `inert` anywhere. These two assertions are how a dropped
+    // `onClick={close}` surfaces: the menu would still be open, the freeze
+    // still up, and in the SHELL that freeze covers the <dialog> too, because
+    // the provider renders it as a body-level sibling of header/main/footer and
+    // the walk skips only the section's own ancestor. (Here it cannot: RTL puts
+    // the bar and the dialog inside one container, which is exactly the box the
+    // walk skips — so the leak shows one step earlier, on the page and footer
+    // below, rather than on the dialog itself.)
+    expect(page).not.toHaveAttribute('inert');
+    expect(pageFooter).not.toHaveAttribute('inert');
+    // …and the page is STILL locked, because the modal took its own lock in the
+    // same commit that released the menu's. A frame of scrollable page between
+    // the two would be a visible lurch; save/restore in lib/scroll-lock is what
+    // makes the handover race-free — the menu put '' back before the modal
+    // saved it, so the modal's eventual unlock restores '' and not 'hidden'.
+    expect(document.documentElement.style.overflow).toBe('hidden');
+
+    // Esc through the REAL browser: <dialog>'s native cancel/close runs on
+    // TRUSTED events only, and @testing-library/user-event dispatches synthetic
+    // ones (ContactModal.test.tsx documents the same split, and is why this one
+    // keystroke changes drivers mid-file).
+    await browserUser.keyboard('{Escape}');
+    await flush();
+
+    expect(dialog()).toBeNull();
+    // THE ACCEPTANCE CRITERION. Focus is visible and sensible: it sits on the
+    // control the visitor's finger left the bar with — not on <body>, and not
+    // on the panel trigger, which unmounted along with the panel that held it.
+    expect(document.activeElement).toBe(burger());
+    expect(document.documentElement.style.overflow).toBe(overflowBefore);
   });
 });
 
@@ -705,23 +857,58 @@ describe('Header — the brand and the two Contact links', () => {
     expect(messages.brand.ariaLabel).not.toMatch(/brand\.ariaLabel/);
   });
 
-  it('dials the single-source number from the bar AND from the panel (B7)', async () => {
+  it('opens the ONE dialog from the bar AND from the panel, and the number lives inside it (B7)', async () => {
+    // The B7 pair survives the ContactModal wiring, with the assertion moved
+    // one step down the chain: both CTAs used to BE the tel: link, and now both
+    // SUMMON the panel that holds it. So this proves (a) two distinct openers,
+    // neither of them a link any more, and (b) that what they open still dials
+    // the single-source number — §10.1's whole point, just read from
+    // lib/clinic.ts inside the dialog instead of from the bar.
     const user = userEvent.setup();
-    const { burger, panel, messages } = mount();
+    const { burger, panel, barCta, dialog, messages } = mount();
 
-    const barCta = screen.getByRole('link', { name: messages.actions.contact });
-    expect(barCta).toHaveAttribute('href', `tel:${clinic.phone}`);
+    const bar = barCta();
+    expect(bar.tagName).toBe('BUTTON');
+    expect(bar).toHaveAttribute('aria-haspopup', 'dialog');
+    // Not a link anywhere: neither CTA navigates any more, so a query for one
+    // must come back empty — that is what fails if an interim tel: anchor is
+    // ever restored beside a trigger.
+    expect(
+      screen.queryByRole('link', { name: messages.actions.contact }),
+    ).toBeNull();
 
     await user.click(burger());
-    // Two Contact links now exist in the DOM; the scoped query is what keeps
+    // Two Contact BUTTONS now exist in the DOM; the scoped query is what keeps
     // this test from passing on the wrong one.
-    const panelCta = within(panel() as HTMLElement).getByRole('link', {
+    const panelCta = within(panel() as HTMLElement).getByRole('button', {
       name: messages.actions.contact,
     });
-    expect(panelCta).not.toBe(barCta);
-    expect(panelCta).toHaveAttribute('href', `tel:${clinic.phone}`);
+    expect(panelCta).not.toBe(bar);
+    expect(panelCta).toHaveAttribute('aria-haspopup', 'dialog');
     // fb-151 + D8: full width, first in the panel, first thing a thumb reaches.
     expect(classesOf(panelCta)).toContain('w-full');
+
+    // …and the number itself, one press away. Queried by ROLE and by its
+    // accessible name (§9): the visible human-formatted number IS the link's
+    // name, so SC 2.5.3 holds, and the href is the E.164 field of the same
+    // single source (§10.1). The menu is closed first so the press under test
+    // is the ordinary one — a bar CTA pressed with no panel over it; the
+    // panel's own trigger has a close() of its own and is exercised whole in
+    // the handover test below.
+    expect(dialog()).toBeNull();
+    await user.click(burger());
+    expect(panel()).toBeNull();
+
+    await user.click(barCta());
+    await flush();
+    // Asserted before it is scoped into, the handover test's own discipline: a
+    // null dialog must fail as "the press opened nothing", not as a confusing
+    // within(null) further down.
+    expect(dialog()).not.toBeNull();
+    const phone = within(dialog() as HTMLElement).getByRole('link', {
+      name: clinic.phoneDisplay,
+    });
+    expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
   });
 
   it('never puts a display utility in the CTA atom own class list', () => {
@@ -733,13 +920,15 @@ describe('Header — the brand and the two Contact links', () => {
     // The cure is structural: the section owns a wrapper box, the atom keeps
     // its own display. This test fails the moment someone moves the
     // breakpoint classes back onto the Button.
-    const { barCtaBox, messages } = mount();
-    const barCta = screen.getByRole('link', { name: messages.actions.contact });
+    // Unchanged by the ContactModal wiring except for the role: the trigger is
+    // still a ui/Button underneath, so `inline-flex` is still the base class
+    // the wrapper exists to stay out of.
+    const { barCta, barCtaBox } = mount();
 
     for (const token of ['hidden', '@3xl:flex', '@3xl:inline-flex']) {
-      expect(classesOf(barCta)).not.toContain(token);
+      expect(classesOf(barCta())).not.toContain(token);
     }
-    expect(classesOf(barCta)).toContain('inline-flex'); // the atom's own
+    expect(classesOf(barCta())).toContain('inline-flex'); // the atom's own
     expect(classesOf(barCtaBox())).toContain('hidden');
   });
 

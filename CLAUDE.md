@@ -461,6 +461,30 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     like the shell). Recorded limitation: Safari's ITP caps any JS-written cookie at
     ~7 days regardless of `max-age`, so the language choice simply re-asks sooner on
     iPhones — accepted for v1; disclose on the §12 policy page when it ships.
+15. **Org-review round — outcome + standing triggers (owner, fb-320, 2026-09-01/02):** the
+    whole-repo organization review (two blind passes; board `develop-org-review`) landed as
+    PRs **#60–#63** (attach-ref promotion · DO-NOW docs · org-hygiene · overlay wiring),
+    with **#64** (cx → `lib/cx.ts`; slot/disc/attach-ref stay `ui/` by the two-question
+    test in lib/cx's header) in flight at record time. Standing items with NAMED triggers,
+    deliberately NOT built now — do not "helpfully" build them early:
+    - **Overlay-manners consolidation (WAIT):** Esc-close, bfcache-close, focus-return and
+      warnOnce exist as two deliberately-divergent, cross-signposted copies (NavMenu ↔
+      SpeedDial). Merge ONLY when a **third stateful overlay** ships — candidates: the §8.6
+      language-suggestion banner (optional) or a ClinicGallery lightbox. **FAQ is out of
+      scope forever (owner, 2026-09-02)** — never a trigger, never built; §14's `FAQ (opt)`
+      entries are void. If no third overlay ever ships, the two copies stay — a final,
+      correct state; nothing is owed.
+    - **Two pre-page boards (SEQUENCING):** BEFORE the first Phase-4 page lane
+      (Hero/ServicesIntro), run (a) the **Container/gutter board** — the
+      `clamp(1rem,10vw,12.5rem)` gutter exists as two recorded copies (Header, Footer)
+      whose own comment promotes it at the third consumer, which the first page IS (parked
+      `ui/Container`, inventory row 27); and (b) the **text-align board** — the globals
+      base rule `p, li, blockquote { text-align: start }` vs centred multi-line text
+      (three recorded collisions; SectionHeading's header defers exactly here). Page lanes
+      consume both decisions; opening one without them forces mid-lane improvisation.
+    - Micro-items on the owner's word: mechanize the React-free `lib/` fence (eslint
+      restriction or source-guard test — G2 LOW, cx lane); add `cx.ts` to §4's lib/ tree
+      listing once #64 merges.
 
 ## 16. Build-time vs runtime contract
 

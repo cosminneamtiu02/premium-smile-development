@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
+import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import ro from '@/messages/ro.json';
@@ -83,6 +84,26 @@ const meta = {
   title: 'Sections/Header',
   component: Header,
   parameters: { layout: 'fullscreen' },
+  // The wrapper Phase 4 will put around the whole document, standing in here.
+  // Both of the Header's Contact CTAs are ContactModalTriggers since the
+  // ContactModal wiring (org-review F1), and a trigger outside a provider
+  // THROWS by design — useContactModal names the missing wrapper rather than
+  // shipping a dead button — so without this decorator every story below would
+  // fail to render. It serves all three in-browser gates at once: the canvas,
+  // per-story axe, and the visual net.
+  // THE DIALOG STAYS CLOSED in every story (`defaultOpen` is left at false, and
+  // no play function presses a Contact CTA), which is what keeps the baselines
+  // at zero pixels of change: the provider renders no box of its own, and the
+  // closed <dialog> is display:none by globals.css' `dialog:not([open])` rule.
+  // The dialog's OWN states are storied where they belong, in
+  // ContactModal.stories.tsx.
+  decorators: [
+    (Story): ReactElement => (
+      <ContactModalProvider>
+        <Story />
+      </ContactModalProvider>
+    ),
+  ],
   render: () => (
     <Ground>
       <Header />

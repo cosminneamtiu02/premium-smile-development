@@ -9,9 +9,9 @@ import {
 } from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/Button/Button';
+import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
-import { clinic } from '@/lib/clinic';
+import { lockScroll } from '@/lib/scroll-lock';
 import { BurgerToggle } from './BurgerToggle';
 import { NavItem } from './NavItem';
 import { useNavItems } from './useNavItems';
@@ -127,7 +127,10 @@ function isLiveRegion(element: Element): boolean {
   );
 }
 
-// Fires once per session, dev builds only (the ui/slot.ts convention).
+// Dev builds only — THAT gate is the ui/slot.ts convention. The once-per-session
+// half is not: slot.ts carries no such guard and warns on every call, so this
+// boolean is where "say it once" starts in this repo (ui/SpeedDial's keyed Set
+// refines it for a helper that warns about many different strings).
 let mountContractWarned = false;
 
 /**
@@ -269,6 +272,16 @@ export function NavMenu(): ReactElement {
   // Esc closes (§9). Bound to the document, not the panel, because focus may
   // legitimately sit on the ✕ — outside the panel and live (the brand corner
   // stopped being focusable with Wordmark's D9 placeholder anchor).
+  //
+  // KEEP-IN-SYNC with ui/SpeedDial's own "Esc closes (§9)" effect
+  // (src/components/ui/SpeedDial/SpeedDial.tsx): same key check, same document
+  // binding, same reason — focus may legitimately sit outside the popup while
+  // it is open. The two are independent BY CONSTRUCTION, not by neglect: §4
+  // forbids the atom from importing a section's internals and neither owns the
+  // other, so this is a fb-44-style KEEP-IN-SYNC pair rather than a promotion
+  // candidate. A change to the dismissal rule is a change to both files.
+  // SpeedDial's reciprocal pointer back here rides the org-hygiene lane, not
+  // this one (§17.3 — one component per commit).
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -336,6 +349,14 @@ export function NavMenu(): ReactElement {
   // both listeners' lifetime the same as every other effect in this file — and
   // the document is frozen mid-open, so they are attached exactly when the
   // departure and the restore need them.
+  //
+  // KEEP-IN-SYNC with ui/SpeedDial's "── BACK, WITH THE DIAL STILL OPEN — the
+  // bfcache (NavMenu's D1, same shape)" block
+  // (src/components/ui/SpeedDial/SpeedDial.tsx): same pair of listeners, the
+  // same flushSync pre-close, the same persisted-only restore, both gated on
+  // `open`. That block already names THIS one as the shape it copied; the
+  // pointer back rides the org-hygiene lane, not this one (§17.3 — one
+  // component per commit).
   useEffect(() => {
     if (!open) return;
     const onPageHide = () => {
@@ -358,26 +379,37 @@ export function NavMenu(): ReactElement {
   // `inert` IS the freeze mechanism and no page-freezing overlay can do its
   // job from inside its own subtree. It is a runtime DOM effect, not a style
   // rule, and every mutation is reverted on close/unmount — recorded here so a
-  // reviewer reads intent, not a slip. When ContactModal needs the same, this
-  // becomes a shared helper (rule of two).
+  // reviewer reads intent, not a slip.
   //
   // Elements that were ALREADY inert before we opened are left untouched and
   // stay inert: we restore the exact prior state, we do not impose ours.
   //
-  // The scroll-lock is the other half of "the page cannot be scrolled"
-  // (fb-154). The sideways lurch it caused on classic scrollbars — scrollbar
-  // gone → viewport wider → every vw-derived box recomputes, so the pill
-  // visibly RESIZED the moment it opened (owner report, 2026-08-16) — is
-  // cured by `scrollbar-gutter: stable` on <html>: a SITE-WIDE line §6
-  // forbids this section from adding, so it lives in globals.css' base layer
-  // (board §5·A2, shipped early for this very lock; ContactModal's lock will
-  // lean on the same line).
+  // ── THE SCROLL-LOCK IS THE OTHER HALF of "the page cannot be scrolled"
+  // (fb-154), and it is no longer written out here. This block used to carry
+  // the promise "when ContactModal needs the same, this becomes a shared helper
+  // (rule of two)"; that helper shipped on 2026-08-26 as lib/scroll-lock.ts
+  // (Modal contract board D7 → A) and names this file as the second consumer
+  // due to adopt it. THIS IS THAT ADOPTION — the promise is kept, so the three
+  // hand-written lines do not come back.
+  // What the shared import buys is not brevity but a GUARANTEE. The menu → modal
+  // handover documented in lockScroll's own JSDoc — the menu locks and saves
+  // '', the modal locks on top and saves 'hidden', each unlock puts back
+  // exactly what it found — used to rest on two files happening to spell
+  // save/restore the same way. One module makes it true by construction. The
+  // panel's Contact trigger walks straight through that handover; the CTA note
+  // below tells that story in full, and Header.test.tsx pins it.
+  //
+  // The sideways lurch this lock caused on classic scrollbars — scrollbar gone
+  // → viewport wider → every vw-derived box recomputes, so the pill visibly
+  // RESIZED the moment it opened (owner report, 2026-08-16) — is cured by
+  // `scrollbar-gutter: stable` on <html>: a SITE-WIDE line §6 forbids this
+  // section from adding, so it lives in globals.css' base layer (board §5·A2,
+  // shipped early for this very lock; ContactModal's lock leans on the same
+  // line).
   useEffect(() => {
     if (!open) return;
 
-    const root = document.documentElement;
-    const previousOverflow = root.style.overflow;
-    root.style.overflow = 'hidden';
+    const unlock = lockScroll();
 
     const section = bodyLevelAncestor(burgerRef.current);
     const frozen = Array.from(document.body.children).filter(
@@ -392,7 +424,7 @@ export function NavMenu(): ReactElement {
     warnIfNothingWasFrozen(frozen);
 
     return () => {
-      root.style.overflow = previousOverflow;
+      unlock();
       for (const element of frozen) element.removeAttribute('inert');
     };
   }, [open]);
@@ -440,12 +472,53 @@ export function NavMenu(): ReactElement {
           {/* Contact FIRST (fb-151, amending D8's original bottom placement):
               it is the site's one conversion goal (§1) and, at the top of the
               panel, also the first thing a thumb reaches AND the panel's first
-              Tab stop after the ✕ (B3). Interim plain phone link — ContactModal
-              swaps it next run (D4). w-full is the section owning its child's
-              box (§6.4/§6.8), never a restyle of the atom's internals. */}
-          <Button asChild variant="solid" className="w-full">
-            <a href={`tel:${clinic.phone}`}>{t('actions.contact')}</a>
-          </Button>
+              Tab stop after the ✕ (B3). w-full is the section owning its
+              child's box (§6.4/§6.8), never a restyle of the atom's internals.
+              The interim plain phone link D4 parked here is gone: this is the
+              ContactModal's own opener now (org-review F1, 2026-09-02), and the
+              number it used to dial lives inside that dialog.
+
+              ── `onClick={close}` IS LOAD-BEARING, not tidiness. The one-commit
+              close-menu rule: this close() and the provider's open() both fire
+              inside ONE event handler, because ContactModalTrigger never
+              swallows the consumer's handler — that is the half of its contract
+              this depends on — so React's automatic batching lands both
+              setStates in ONE commit. NOT the order within that handler: the
+              trigger calls onClick before open(), and its own header records
+              that the order "is not observable from the outside" precisely
+              because the batch hides it. Without the close the menu would
+              simply stay open while the dialog appears — and the freeze above
+              would still be holding `inert` on every body-level sibling, the
+              <body>-level <dialog> included. showModal() would paint it into
+              the top layer and leave it dead to taps, keys and assistive tech:
+              a panel and an unusable modal on screen at once.
+
+              ── WHERE FOCUS ENDS UP, and why useContactModal needed no new API
+              to steer it. Inside that single commit React runs ALL
+              PASSIVE-effect destroys and then ALL passive creates, child-first
+              in tree order — passive specifically, since layout effects run
+              earlier, during commit, so do not extend this ordering claim to
+              them. This section sits inside the provider's {children}, while
+              the one <ContactModal /> renders after them. So, in order: the
+              freeze's
+              cleanup releases the scroll lock and drops the inert attributes;
+              the focus-return effect above, ARMED BY THIS close(), puts focus
+              on the burger; only then does ui/Modal's open/close engine read
+              document.activeElement — finding the burger — call showModal()
+              (which records that same element as the platform's own restore
+              target) and take its own lockScroll(). Esc or the ✕ therefore
+              lands focus back on the burger, visibly, with nothing passed
+              anywhere. The lock handover is race-free by the same ordering: the
+              menu's unlock has already put '' back by the time the modal saves
+              it. Header.test.tsx pins the whole chain in "hands the panel over
+              to the ContactModal in ONE commit". */}
+          <ContactModalTrigger
+            variant="solid"
+            className="w-full"
+            onClick={close}
+          >
+            {t('actions.contact')}
+          </ContactModalTrigger>
 
           <ul className="flex flex-col gap-1">
             {items.map((item) => (

@@ -1,8 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslations } from 'next-intl';
+import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
-import { Button } from '@/components/ui/Button/Button';
-import { clinic } from '@/lib/clinic';
 import { HeaderNav } from './HeaderNav';
 import { NavMenu } from './NavMenu';
 
@@ -13,12 +12,23 @@ import { NavMenu } from './NavMenu';
 // Header.md) are SUPERSEDED — the design is a DROPDOWN under the bar, not a
 // side drawer (D11 as amended, board §8).
 //
-// This lane does NOT mount the section into the shell — that is Phase 4,
-// deliberately. Not in this lane either: the LanguageSwitcher (deferred,
-// fb-129), the real Publio logo (§15.6 — the brand corner is sections/Wordmark
-// since the fb-200 swap, carrying interim demo artwork beside the name until
-// the owner supplies the vectorized mark) and the ContactModal (next run;
-// until then Contact is a plain phone link, D4).
+// This section is still NOT mounted into the shell — that is Phase 4,
+// deliberately. Not here either: the LanguageSwitcher (deferred, fb-129) and
+// the real Publio logo (§15.6 — the brand corner is sections/Wordmark since the
+// fb-200 swap, carrying interim demo artwork beside the name until the owner
+// supplies the vectorized mark).
+//
+// ── THE CONTACT MODAL IS WIRED (org-review F1, 2026-09-02). This IS the "next
+// run" D4 parked, so the interim `tel:` links are gone from both CTAs: the
+// bar's below and the panel's in NavMenu.tsx are sections/ContactModalTrigger
+// now — a section composing another section's PUBLIC component, the §4 dossier
+// model this file already practices with Wordmark. What is NOT here is the
+// <ContactModalProvider>: it owns the one `open` boolean and renders the ONE
+// <dialog> after its children, so it belongs to whoever wraps the document —
+// Phase 4, beside the two scroll-padding debts below. Until that lands, a
+// Header rendered outside a provider THROWS from useContactModal by design (the
+// hook names the missing wrapper rather than shipping a dead button), which is
+// why Header.test.tsx and Header.stories.tsx each supply one.
 //
 // ── NO 'use client' here, and it still calls t() — the FloatingActions
 // precedent (§16 + board §1.1). next-intl's useTranslations is ISOMORPHIC: it
@@ -29,10 +39,13 @@ import { NavMenu } from './NavMenu';
 // story per state. §8.1 holds either way: the ui/ atoms below never see a key,
 // only finished text.
 //
-// ── TWO islands, and everything else is inert HTML (board §1.1):
-//   the bar, the brand, the Contact button   no JS at all
-//   HeaderNav                                must know which page you are on
-//   NavMenu                                  holds the `open` boolean
+// ── THREE islands, and everything else is inert HTML (board §1.1 — the count
+// was TWO until the ContactModal wiring gave the bar's Contact a reason to
+// hydrate; it reads the shared switch through a context and presses it):
+//   the bar and the brand      no JS at all
+//   HeaderNav                  must know which page you are on
+//   NavMenu                    holds the `open` boolean
+//   the bar's Contact trigger  opens the one dialog the provider renders
 //
 // ── THE BREAKPOINT IS A CONTAINER STEP, never a media query (§6.5).
 // `@container` marks the bar as the thing measured, and `@3xl` is Tailwind's
@@ -157,11 +170,23 @@ export function Header(): ReactElement {
 
         <HeaderNav />
 
-        {/* The bar CTA — the site's one conversion goal (§1), tap-to-call.
-            asChild: render no <button>, the nested <a> BECOMES the control and
-            wears the button's clothes, so this emits a single <a href="tel:">.
-            Interim plain phone link, swapped for the ContactModal next run
-            (D4).
+        {/* The bar CTA — the site's one conversion goal (§1). Since the
+            ContactModal wiring it is a real <button> that summons the site's
+            ONE dialog, not an <a href="tel:"> that dials straight out. The
+            number did not disappear, it moved one press away: the dialog asks
+            the question and answers it in three lines — title, lead, and the
+            green `tel:` control carrying clinic.phoneDisplay (ContactModal.tsx,
+            owner trim 2026-08-28). So THIS control performs an action in place
+            instead of navigating, which is what makes a button the honest
+            element (§9), and the anchor that dials is the one inside the panel.
+            The LABEL is untouched: t('actions.contact'), the very key the
+            interim link carried, handed to the trigger as children. No message
+            key was added for this swap, because ContactModalTrigger is
+            deliberately label-agnostic (§8.1 — the word depends on where the
+            opener sits, so the consumer owns it).
+            aria-haspopup="dialog" comes from the trigger itself, and so does
+            the ban on `asChild`: it is a TYPE error there, so nobody can talk
+            this opener into wearing an anchor's clothes again.
 
             WHY THE VISIBILITY LIVES ON A WRAPPER AND NOT ON THE BUTTON.
             Passing `hidden @3xl:inline-flex` as the atom's className does not
@@ -188,9 +213,9 @@ export function Header(): ReactElement {
             (1,1,0) against the utility's (0,1,0) — which is exactly the
             guarantee the plain `hidden` above could not give. */}
         <div className="ml-auto hidden @3xl:flex group-has-[#header-menu]/bar:hidden">
-          <Button asChild variant="solid">
-            <a href={`tel:${clinic.phone}`}>{t('actions.contact')}</a>
-          </Button>
+          <ContactModalTrigger variant="solid">
+            {t('actions.contact')}
+          </ContactModalTrigger>
         </div>
 
         <NavMenu />

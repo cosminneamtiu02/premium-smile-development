@@ -80,9 +80,9 @@ vi.mock('@/i18n/navigation', () => ({ usePathname: () => '/services/' }));
  * moment, which IS the visible feedback. Zero additions to the z-map (§2 of the
  * layers board: 40/45/50 + top layer, closed), zero overlap cases.
  *
- * The padding is deliberately plain `focus:px-4` and NOT the
- * `clamp(1rem,10vw,12.5rem)` gutter Header and Footer each carry: a third copy
- * would trip the §15.15 `ui/Container` promotion ahead of its own board.
+ * The padding is deliberately plain `focus:px-4` and NOT the gutter pair
+ * ui/Container now owns (§15.15 a DECIDED, board fb-343): the skip link is
+ * SHELL chrome, not a band — bands own gutters, the shell stays full-bleed.
  *
  * KEEP-IN-SYNC with app/[locale]/layout.tsx's skip-link (§6.6 — the same
  * string, changed in one edit or not at all). Since G2 F6 that pair is no

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
+import { Container } from '@/components/ui/Container/Container';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
@@ -134,19 +135,29 @@ export function Footer(): ReactElement {
     // NO outer margin: pages own the rhythm between their last section and this
     // one (§6.4).
     <footer className="border-t border-line-subtle bg-surface">
-      {/* THE GUTTER BOX — the same clamp the Header pill wears (the Header
-          pill's gutter-clamp comment): floor 1rem so the 320px stress width keeps its
-          content, 10vw in the middle, 12.5rem ceiling so the band never
-          stretches to a 1920px screen's edges. TWO consumers now share this
-          number by copy; a THIRD one promotes it to a shared definition rather
-          than a third copy (the rule-of-two this repo already applies to
-          ui/slot.ts and lib/routes.ts). Header.tsx is deliberately not edited
-          from this lane, so the cross-reference lives here only.
-          `@container` marks THIS box as the thing the steps below measure —
-          the section is then correct wherever it is placed and testable at any
-          width in Storybook (§6.5). Vertical padding on Tailwind's untouched
-          scale; all sizing in rem so browser zoom behaves (§7). */}
-      <div className="@container mx-[clamp(1rem,10vw,12.5rem)] py-10">
+      {/* THE GUTTER BOX — ui/Container since 2026-09-04, not a local copy of
+          the clamp any more. THE RULE-OF-TWO PROMISE THIS COMMENT CARRIED IS
+          DISCHARGED: it said a THIRD consumer would promote the number to a
+          shared definition, the first Phase-4 page band is that consumer, and
+          the owner-approved board .claude/plans/container-gutter.plan.md
+          (fb-343) promoted it. Container.tsx's file header is now where the
+          geometry lives — what the clamp produces at each width, why the
+          container context ships BUNDLED with the margins, and the standing
+          page-BAND recipe every band after this one follows. Not restated
+          here, so the two can never disagree.
+          WHAT STAYS THIS SECTION'S: `py-10` — the band's own vertical rhythm
+          (§6.4), handed to the atom through className and merged LAST (§6.8),
+          which is what makes the rendered class attribute byte-for-byte the
+          one this file used to spell inline. The rows below still measure THIS
+          box: the atom brings the container mark along with the gutter, so
+          the section stays correct wherever it is placed and testable at any
+          width in Storybook (§6.5). All sizing in rem so browser zoom behaves
+          (§7).
+          The Header shares the NUMBER, not the column: its pill imports
+          `containerClasses` from the same file into its own chrome classes,
+          because there the margins sit on the sticky glass element itself
+          (Header.tsx's THE FLOATING PILL comment). */}
+      <Container className="py-10">
         {/* ── ROW 1 · THE BRAND, since the fb-200 swap the SAME component the
             Header's corner renders (sections/Wordmark, contract v2
             fb-200…fb-208): artwork · hairline bar · the name at Heading's
@@ -500,7 +511,7 @@ export function Footer(): ReactElement {
             </GlyphButton>
           </div>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

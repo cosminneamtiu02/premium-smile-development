@@ -2,6 +2,8 @@ import type { ReactElement } from 'react';
 import { useTranslations } from 'next-intl';
 import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
+import { containerClasses } from '@/components/ui/Container/Container';
+import { cx } from '@/lib/cx';
 import { HeaderNav } from './HeaderNav';
 import { NavMenu } from './NavMenu';
 
@@ -102,7 +104,14 @@ export function Header(): ReactElement {
     // below `sm` behind a logo mark, but this corner is all text until §15.6
     // delivers the logo, and 2×3rem next to "Premium Smile" leaves no slack at
     // the 320px stress width (§7). Above ~480px viewport the 10vw term governs
-    // and the two clamps are identical. rounded-lg = 8px — the old bar's own
+    // and the two clamps are identical. THE NUMBER NOW ARRIVES AS ui/Container's
+    // `containerClasses` constant (board .claude/plans/container-gutter.plan.md,
+    // fb-343, 2026-09-04) instead of a recorded copy — but the margins here
+    // stay CHROME GEOMETRY, not a column: the pill IS the column, and it can
+    // never compose <Container> without restructuring, because sticky, z-50,
+    // the glass and the bar's own container step all ride this one element.
+    // One definition, two consumption modes; the Footer takes the box, the
+    // Header takes the number. rounded-lg = 8px — the old bar's own
     // radius, kept ROUNDER than the §15.1 control default on the owner's
     // explicit ask (2026-08-16): the PILL and its panel wear 8px, controls
     // keep their 6px, and both numbers live on Tailwind's untouched scale;
@@ -138,7 +147,13 @@ export function Header(): ReactElement {
     // block carries the other half of this warning). `group/bar` is the class
     // token "group/bar", which `.group` does not match — that is the whole
     // protection, and Header.test.tsx asserts it.
-    <header className="group/bar sticky top-4 z-50 @container mx-[clamp(1rem,10vw,12.5rem)] mt-4 rounded-lg border border-line-subtle bg-surface/95 backdrop-blur-md backdrop-saturate-150">
+    <header
+      className={cx(
+        'group/bar sticky top-4 z-50',
+        containerClasses,
+        'mt-4 rounded-lg border border-line-subtle bg-surface/95 backdrop-blur-md backdrop-saturate-150',
+      )}
+    >
       {/* ── THE ROW: h-20 (5rem) AT EVERY WIDTH (owner, 2026-09-04: "make top
           bar same size on every screen as it is on a standard pc screen now").
           This supersedes the same-day first answer to "kind of thin and small

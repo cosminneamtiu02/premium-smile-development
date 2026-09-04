@@ -128,10 +128,12 @@ export default async function LocaleLayout({ children, params }: Props) {
                 later-DOM bar) and would add a stacking decision forever; the
                 z-map stays closed at 40/45/50 + the top layer (layers board §2).
                 The focus ring comes from globals' `:focus-visible` safety net.
-                THE PADDING IS PLAIN `focus:px-4`, NOT the
-                `clamp(1rem,10vw,12.5rem)` gutter Header and Footer each carry:
-                a third copy of that clamp would trip the §15.15 `ui/Container`
-                promotion ahead of its own pre-page board.
+                THE PADDING IS PLAIN `focus:px-4`, NOT the gutter pair
+                ui/Container now owns (§15.15 a DECIDED, board fb-343 — the
+                promotion this line used to guard against pre-empting): the
+                skip link is SHELL chrome, not a band, and gutters are a BAND
+                concern (Container.tsx's recipe; app-shell board §2) — a focus
+                flash needs no 128px indent.
                 KEEP-IN-SYNC with shell.test.tsx's SKIP_LINK constant (§6.6).
                 While the menu is open the freeze inerts this link like every
                 other non-header sibling — correct: Esc is the way out of the
@@ -148,10 +150,11 @@ export default async function LocaleLayout({ children, params }: Props) {
             {/* The skip target, and the document's one <main> landmark. No
                 tabindex: a fragment jump moves the sequential-focus starting
                 point natively, and globals' `scroll-padding-top` keeps the
-                landing clear of the glass pill (SC 2.4.11). Full-bleed — the
-                gutter belongs to Header and Footer today, and the third
-                consumer that would promote it is the first PAGE (§15.15's
-                Container/gutter board, layers Q5).
+                landing clear of the glass pill (SC 2.4.11). Full-bleed —
+                bands own their gutters by composing ui/Container inside
+                their own semantic outers (§15.15 a DECIDED, board fb-343;
+                the recipe is Container.tsx header law), so the shell renders
+                no gutter and no wrapper (layers Q5).
                 `flex-1` is the growing half of the sticky footer above: it takes
                 the leftover height on short pages and shrinks to nothing extra
                 on long ones (a flex item's `min-height: auto` keeps tall content

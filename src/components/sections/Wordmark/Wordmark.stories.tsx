@@ -1,7 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
+import { containerClasses } from '@/components/ui/Container/Container';
 import { clinic } from '@/lib/clinic';
+import { cx } from '@/lib/cx';
 import { Wordmark } from './Wordmark';
 
 // The Wordmark's two stories — the component has ONE axis that can change its
@@ -77,8 +79,18 @@ const Cell = ({
   <header
     className={
       pinned
-        ? '@container mx-auto my-8 w-[15.0625rem] rounded-lg border border-line-subtle bg-surface'
-        : '@container mx-[clamp(1rem,10vw,12.5rem)] my-8 rounded-lg border border-line-subtle bg-surface'
+        ? // The PINNED branch keeps its literal on purpose: it REPLACES the
+          // gutter with a measured width and shares only the container mark,
+          // so it is not a copy of the definition (see `pinned` above).
+          '@container mx-auto my-8 w-[15.0625rem] rounded-lg border border-line-subtle bg-surface'
+        : // The fluid branch quotes the SAME constant the Header pill now
+          // wears (ui/Container's `containerClasses`, board fb-343) — this
+          // decorator imitates that consumer's box, so it must not hold its
+          // own spelling of the number. Byte-identical to what it replaced.
+          cx(
+            containerClasses,
+            'my-8 rounded-lg border border-line-subtle bg-surface',
+          )
     }
   >
     {/* h-16 = 4rem — the ruler the percentage-sized artwork resolves against.

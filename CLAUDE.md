@@ -486,10 +486,18 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
       entries are void. If no third overlay ever ships, the two copies stay — a final,
       correct state; nothing is owed.
     - **Two pre-page boards (SEQUENCING):** BEFORE the first Phase-4 page lane
-      (Hero/ServicesIntro), run (a) the **Container/gutter board** — the
-      `clamp(1rem,10vw,12.5rem)` gutter exists as two recorded copies (Header, Footer)
-      whose own comment promotes it at the third consumer, which the first page IS (parked
-      `ui/Container`, inventory row 27); and (b) the **text-align board — DECIDED
+      (Hero/ServicesIntro), run (a) the **Container/gutter board — DECIDED
+      (owner, board `container-gutter.plan.md`, fb-343, 2026-09-04):**
+      `ui/Container` promoted as the ONE gutter definition —
+      `containerClasses = '@container mx-[clamp(1rem,10vw,12.5rem)]'` + a
+      div-only component merging className caller-last; no width presets, no
+      `as`/`asChild` (named re-open triggers in the board/atom header). The
+      page-BAND recipe (full-bleed semantic outer owns paint + rhythm;
+      Container inner owns width + the container-query context; named steps
+      only, German-calibrated) is standing law in Container.tsx's header —
+      every page lane consumes it. Retrofit 4A: Footer composes the component,
+      Header imports the constant into its pill classes — both byte-identical,
+      zero copies remain; and (b) the **text-align board — DECIDED
       2026-09-04 (owner, board `.claude/plans/text-align.plan.md`):** the globals base
       rule stays byte-identical and the per-element override is CANON. Centring prose
       means the utility ON each `p`/`li`/`blockquote` itself (for atoms: through the

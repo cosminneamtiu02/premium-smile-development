@@ -109,6 +109,71 @@
     scrollbar-gutter: stable;
   }
 
+  /* THE TWO-SIDED FOCUS CLEARANCE — SC 2.4.11 Focus Not Obscured (Minimum), AA
+     and new in WCAG 2.2, by the WCAG-documented technique C43. Three surfaces
+     float over the page at every scroll position: the Header's blurred glass
+     pill above, and the two fixed corner discs below. A focusable that Tab or
+     an #anchor jump brings to rest behind any of them is obscured together with
+     its focus ring — and "visible through blurred glass" is not visible.
+     Tab going DOWN is safe on its own (the browser scrolls the target to the
+     BOTTOM of the viewport); Shift+Tab going UP scrolls it to the TOP, i.e.
+     behind the pill, and the skip-link's own #main jump does the same.
+     These are SHELL-tier lines: §6 forbids a section from styling the shell, so
+     the numbers are DERIVED in the sections that own the boxes and SPELLED here
+     — the same division the `scrollbar-gutter` rule above already practices.
+     Their authoritative homes, by stable anchor (§17.7):
+       · 6rem  — Header.tsx "THE MOUNT CONTRACT" (a): `sticky top-4` + `h-20`,
+                 the pill's reach, and a SINGLE value at every width since the
+                 owner's 2026-09-04 "make top bar same size on every screen as
+                 it is on a standard pc screen now". (An earlier spelling the
+                 same day stepped it 5rem → 6rem at xl, mirroring a row that
+                 grew only on desktop; the owner asked for the desktop size
+                 everywhere, so both the step and the container-step arithmetic
+                 it needed are gone.) The same reach is derived independently by
+                 NavMenu's panel cap (6.5rem = reach + the `mt-2` gap) and by
+                 FloatingActions' `--stem-inset` (7rem = reach + the corner's
+                 own 1rem offset). Four spellings that move together (design
+                 board P9a) — change one and the debt reopens.
+       · 5.5 / 6 / 6.5rem — FloatingActions.tsx's mount-contract obligation (a).
+                 These three steps used to be the INVISIBLE half of a pair: that
+                 file also rendered a visible clearance spacer of the same
+                 heights, as the last box in normal flow. THE SPACER WAS REMOVED
+                 BY THE OWNER ON 2026-09-04 ("i do not need that empty space
+                 below the footer as the buttons for language and phone do not
+                 cover info/anything clickable in the footer"), so these rules
+                 now carry the scroll-clearance duty ALONE — do not read them as
+                 a duplicate of something else and delete them. The numbers are
+                 unchanged, and they step because the corner discs grow with the
+                 screen
+                 (--disc-size 3.5 → 4 → 4.5rem at Tailwind's untouched xl/2xl,
+                 §3). The `env(safe-area-inset-bottom)` term belongs to EVERY
+                 step, for the same reason the controls' own offsets carry it:
+                 drop it from the upper two and a viewport-fit=cover phone
+                 under-clears by the inset it lifted the controls with. Until
+                 the shell opts into
+                 `viewport-fit: cover` (dormant, decided with the first
+                 full-bleed hero) the term resolves to 0 and costs nothing.
+     Media queries are legal at THIS tier and only here (§6.5 reserves them for
+     page-level layout; a section would use container queries).
+     src/app/[locale]/shell.test.tsx pins all four numbers against the real
+     compiled sheet, one assertion per step. */
+  html {
+    scroll-padding-top: 6rem;
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 1280px) {
+    html {
+      scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (min-width: 1536px) {
+    html {
+      scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+    }
+  }
+
   /* In-page jumps GLIDE instead of teleporting — the Footer's "back to top"
      link (href="#top") is the first consumer, and any future skip-link or
      anchor gets it for free. A §6.7-legal line: scroll behaviour is document

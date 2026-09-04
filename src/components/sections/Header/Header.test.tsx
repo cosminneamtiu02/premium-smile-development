@@ -595,13 +595,17 @@ describe('Header — the panel hangs off the bar and survives a short screen', (
     // the page behind it stays frozen. dvh, not vh — mobile URL bars change
     // the viewport height as you scroll. Asserted here because the visual
     // harness samples widths only.
+    // 6.5rem = the pill's reach (top-4 + h-20) + the panel's own `mt-2` gap.
+    // It was 5.5rem until the owner's 2026-09-04 uniform bar height took the
+    // burger widths from h-16 to h-20 — NavMenu's cap comment records why that
+    // ask moved this number when the previous, desktop-only one did not.
     const user = userEvent.setup();
     const { burger, panel } = mount();
     await user.click(burger());
 
     expect(classesOf(panel() as Element)).toEqual(
       expect.arrayContaining([
-        'max-h-[calc(100dvh-5.5rem)]',
+        'max-h-[calc(100dvh-6.5rem)]',
         'overflow-y-auto',
       ]),
     );
@@ -991,18 +995,26 @@ describe('Header — the brand and the two Contact links', () => {
       expect.arrayContaining(['hidden', '@3xl:flex']),
     );
     expect(classesOf(barCtaBox())).toEqual(
-      expect.arrayContaining(['ml-auto', 'hidden', '@3xl:flex']),
+      expect.arrayContaining(['hidden', '@3xl:flex']),
     );
-    expect(classesOf(burger())).toEqual(
-      expect.arrayContaining(['ml-auto', '@3xl:ml-0', '@3xl:hidden']),
-    );
+    expect(classesOf(burger())).toContain('@3xl:hidden');
 
-    // …and OPEN, the burger drops @3xl:ml-0: the CTA whose own ml-auto used to
-    // absorb the free space above the step is now hidden, so this margin is
-    // the only thing still pushing the ✕ to the right edge.
+    // NO AUTO MARGINS ANYWHERE ANY MORE (Header's three-cell grid,
+    // 2026-09-04). `ml-auto` and `@3xl:ml-0` used to push the ✕ and the CTA to
+    // the bar's right edge and hand that job between them across the step; the
+    // right-hand grid cell is `justify-self-end`, so the free space now sits
+    // outside both boxes and an auto margin inside a content-sized cell would
+    // move nothing. Asserted as ABSENT rather than simply dropped, so nobody
+    // reintroduces a class that reads like a rule and is not.
+    for (const el of [barCtaBox(), burger()]) {
+      expect(classesOf(el)).not.toContain('ml-auto');
+      expect(classesOf(el)).not.toContain('@3xl:ml-0');
+    }
+
+    // …and OPEN, the burger keeps only the dropped hide-rule (fb-145/149).
     await user.click(burger());
-    expect(classesOf(burger())).toContain('ml-auto');
-    expect(classesOf(burger())).not.toContain('@3xl:ml-0');
+    expect(classesOf(burger())).not.toContain('@3xl:hidden');
+    expect(classesOf(burger())).not.toContain('ml-auto');
   });
 
   it('keeps the ✕ visible at ANY width while the menu is open (fb-145/149)', async () => {

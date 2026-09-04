@@ -1,6 +1,7 @@
 {
   "common": {
     "siteName": "Premium Smile",
+    "skipToContent": "Sari la conținut",
     "nav": {
       "home": "Acasă",
       "services": "Servicii",

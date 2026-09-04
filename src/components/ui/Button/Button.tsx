@@ -57,9 +57,20 @@ export type ButtonProps = ButtonOwnProps &
 // same clock.
 // KEEP IN SYNC with GlyphButton's --fade: the two atoms deliberately carry
 // byte-identical clocks (fb-44) so the whole system fades at one speed.
+// `hyphens-none` — INTERACTIVE LABELS NEVER SYLLABLE-SPLIT (owner, 2026-09-04:
+// "text on menu buttons and on buttons in general is never allowed to be
+// split"). §15.14 ships `hyphens: auto` at the body tier so long German
+// compounds may break mid-word in PROSE; a control's label is not prose — it is
+// the name of the thing you are about to press, and a hyphen through it reads
+// as damage rather than as typesetting. This opts the atom's whole subtree back
+// out. Wrapping BETWEEN words is untouched and still expected: §8.4's
+// min-heights (never fixed heights) exist precisely so a two-line DE/FR label
+// fits. KEEP-IN-SYNC with ui/TextButton, which carries the same class for the
+// same rule; GlyphButton and SpeedDial are deliberately exempt — they render
+// glyphs and 2–3 letter codes, which cannot hyphenate.
 const base =
   'inline-flex items-center justify-center gap-2 ' +
-  'rounded-md font-medium outline-offset-2 ' +
+  'rounded-md font-medium hyphens-none outline-offset-2 ' +
   'focus-visible:outline-2 focus-visible:outline-focus ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +
   '[--fade:400ms] transition-[background-color,color] ' +

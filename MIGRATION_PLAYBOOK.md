@@ -165,32 +165,50 @@ sitemap + robots generation (needs every route to exist — stays last).
 ### Shell mount contract (assembled 2026-09-02, org-review board)
 
 Pointers only — each number keeps its ONE home in the named file's header; the mount lane
-ticks every box and the numbers never fork:
+ticks every box and the numbers never fork. Ticked 2026-09-03 by the app-shell-mount lane
+(boards `.claude/plans/app-shell-layers.plan.md` + `.claude/plans/app-shell-mount.plan.md`);
+`src/app/[locale]/shell.test.tsx` is where the ticked boxes are pinned at runtime. Three
+boxes stay open BY DESIGN, annotated below — they are not lane debt:
 
-- [ ] `scroll-padding-top: 5rem` on `<html>` — Header.tsx "THE MOUNT CONTRACT" (a). The 5rem
+- [x] `scroll-padding-top: 5rem` on `<html>` — Header.tsx "THE MOUNT CONTRACT" (a). The 5rem
       reach is currently derived independently in Header.tsx, NavMenu's panel cap and
       FloatingActions' `--stem-inset` arithmetic — the three move together or the debt reopens.
-- [ ] header · main · footer · FloatingActions as **body-level siblings** — Header.tsx (b);
+- [x] header · main · footer · FloatingActions as **body-level siblings** — Header.tsx (b);
       NavMenu's dev tripwire guards this one (and only this one) at runtime.
-- [ ] `scroll-padding-bottom` in **three steps**, each keeping its `env()` term —
+- [x] `scroll-padding-bottom` in **three steps**, each keeping its `env()` term —
       FloatingActions.tsx mount-contract block (a).
-- [ ] FloatingActions mounts **after** `{children}` + Footer — its clearance spacer must be
+- [x] FloatingActions mounts **after** `{children}` + Footer — its clearance spacer must be
       the last box in normal flow.
+      *(**REVERSED by owner decision 2026-09-04**: spacer removed; the section now renders
+      nothing in normal flow, so the mount order buys DOM/tab order rather than geometry and
+      the FOOTER ends the flow. The footer keeps corner-band focusables centred/inset, which
+      makes box 5's rule load-bearing rather than belt-and-braces; `scroll-padding-bottom`
+      (box 3) is RETAINED and now carries the scroll-clearance duty alone. Same round added
+      the sticky footer — `flex min-h-dvh flex-col` on `<body>`, `flex-1` on `<main>`.)*
 - [ ] Page-composition rule: no standalone focusable narrower than ~72px flush at the
       left/right margins in blocks that scroll past the corners (FloatingActions b); keyboard
       walkthrough at several scroll positions (FloatingActions c).
+      *(standing rule — every page lane; never "done", so the box never ticks. **Promoted to
+      the PRIMARY guarantee on 2026-09-04** when the clearance spacer was removed: it is what
+      makes "the corner discs cover nothing operable" true.)*
 - [ ] The dormant `viewport-fit` decision (FloatingActions header caveat) — decide with the
       first full-bleed hero.
-- [ ] ContactModalProvider wraps the whole shell; the dialog renders **last**
+      *(dormant — decide with the first full-bleed hero; the `env()` terms are already
+      written, so that day changes one export and no expression)*
+- [x] ContactModalProvider wraps the whole shell; the dialog renders **last**
       (ContactModalProvider header). Header/NavMenu → ContactModalTrigger wiring is ONE
       commit that closes the menu and opens the dialog (inventory row 34) **plus** the
       focus-return decision + interaction test (org-review board F1 — the opener unmounts
       when the menu closes, so the platform's focus restore needs a named target).
+      *(the trigger-wiring half shipped earlier, in PR #63; this lane added the provider
+      that makes it live — a Header outside one THROWS by design, which is what the mount
+      discharges)*
 - [ ] Wordmark's declared two-line home-link wiring diff (Wordmark.tsx header) — landing it
       re-poses fb-179 (second home link in the Footer).
-- [ ] **Skip-link** — named in the Order above and carried by NO section header: it is a NEW
+      *(parked — owner supplies the wiring moment)*
+- [x] **Skip-link** — named in the Order above and carried by NO section header: it is a NEW
       build item of this shell lane, not a mount of something that exists.
-- [ ] Delete the placeholder header/footer markup in `layout.tsx` (and its duplicate
+- [x] Delete the placeholder header/footer markup in `layout.tsx` (and its duplicate
       copyright/NAP lines).
 
 ### Per-page checklist

@@ -38,9 +38,11 @@ import { FloatingActions } from './FloatingActions';
 //   '/services' and the four alternate hrefs are built from that. Without
 //   `appDirectory: true` the framework mounts the pages-router mock instead and
 //   the hook reads null (our hook takes that as the root rather than crashing).
-// · In both grounds FloatingActions is the LAST child in normal flow — the
-//   Phase 4 mount contract, and the only arrangement in which its spacer can
-//   clear anything.
+// · In both grounds FloatingActions is the LAST child — the Phase 4 mount
+//   contract. Since the clearance spacer was removed (owner, 2026-09-04) the
+//   section renders nothing in normal flow at all, so that placement is now
+//   about DOM and tab order rather than geometry; the grounds keep it because
+//   it is what the shell does.
 //
 // ── WHAT THE 2026-08-28 SWAP CHANGED IN THESE PICTURES. The bottom-left corner
 // was an inert white pill standing in for the language switcher; it is now the
@@ -90,19 +92,31 @@ export const Default: Story = {
 };
 
 /**
- * Clearance 320 — the reflow stress width (§7, §9), and the story that makes
- * the spacer earn its place.
+ * Clearance 320 — the reflow stress width (§7, §9), and the story that shows
+ * what the two corner bands actually sit on.
  *
- * The ground is BOTTOM-ALIGNED (`justify-end`, no bottom padding) on purpose: a
- * top-aligned short page would leave the last line hundreds of pixels above the
- * controls, and the screenshot would "prove" a clearance that gravity, not the
- * spacer, provided. Pushed to the end, the final line lands exactly one spacer
- * above the document edge — so the visible gap between that rule and the tops
- * of the two discs IS the 1rem of breathing room the spacer's arithmetic
- * promises, at whichever step the width is in: 5.5rem = 3.5rem control + 1rem
- * offset + 1rem · 6rem = 4 + 1 + 1 from xl · 6.5rem = 4.5 + 1 + 1 from 2xl.
- * Delete the spacer and this baseline breaks immediately, at every sampled
- * width; drop one of the three steps and it breaks at that one.
+ * ── WHAT THIS PICTURE MEANS SINCE 2026-09-04. It used to make the clearance
+ * SPACER earn its place: the ground is BOTTOM-ALIGNED (`justify-end`, no bottom
+ * padding) so the last line landed exactly one spacer above the document edge,
+ * and the visible gap between that rule and the tops of the discs was the
+ * spacer's arithmetic, photographed. The owner removed the spacer, on the
+ * ground that the corners cover page ground and nothing operable
+ * (FloatingActions.tsx §3 carries the decision in full).
+ *
+ * So the ground is kept EXACTLY as it was, and the picture now says the other
+ * half of the same sentence: with content pushed hard against the bottom edge,
+ * this is precisely how much of a final line the two discs overlap at the
+ * narrowest supported width. That is the worst case by construction — a
+ * top-aligned page cannot reach the bands at all — and it is the baseline that
+ * would move the moment someone re-introduced clearance, changed a
+ * `--disc-size` step, or shifted a corner's offset.
+ *
+ * What it deliberately does NOT show is a violation: the marked line is page
+ * PROSE, not a control. The rule that keeps real controls out of these bands is
+ * the page-composition rule (FloatingActions' obligation (b), playbook
+ * mount-contract box 5), which the removal promoted from belt-and-braces to the
+ * primary guarantee — and the Footer's legal strip already complies (centred
+ * below @3xl, inset >= 88px above).
  *
  * The last line is a marked one so a diff is readable at a glance, and nothing
  * here may require horizontal scrolling at 320px.

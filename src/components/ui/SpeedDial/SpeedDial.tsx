@@ -549,8 +549,19 @@ export function SpeedDial<V extends string = string>({
   useEffect(() => {
     if (open || !returningFocus.current) return;
     returningFocus.current = false;
+    // `preventScroll` — a focus return restores the KEYBOARD position, never
+    // the viewport's (owner-reported close-jump, 2026-09-04). focus() scrolls
+    // its target into view by default, and the shell's `scroll-padding-bottom`
+    // asks the browser to clear the corner band for a target that IS in that
+    // band and is `fixed` — a clearance it can never reach, so it nudges the
+    // page on every close. The bulb is on screen by construction (it is a fixed
+    // corner control), so nothing is hidden by suppressing that scroll.
+    // KEEP-IN-SYNC (fb-44): NavMenu's focus-return effect took the same option
+    // in the same edit — the twins' shape stays identical.
     const button = bulbRef.current;
-    if (button && button.offsetParent !== null) button.focus();
+    if (button && button.offsetParent !== null) {
+      button.focus({ preventScroll: true });
+    }
   }, [open]);
 
   // Esc closes (§9). Bound to the document, not the root, because focus may

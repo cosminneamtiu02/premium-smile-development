@@ -63,7 +63,7 @@ import { NavMenu } from './NavMenu';
 // (The FloatingActions header carries the same kind of block for its own
 // spacer; this is the sticky bar's half of the same bill.)
 //
-// a) `scroll-padding-top: 5rem` on <html> — SC 2.4.11 Focus Not Obscured
+// a) `scroll-padding-top: 6rem` on <html> — SC 2.4.11 Focus Not Obscured
 //    (Minimum), AA and new in WCAG 2.2. The bar is a blurred glass pill and
 //    always on top: a focusable that comes to rest behind it is obscured
 //    together with its focus ring (2.4.11 asks for VISIBLE, and blurred-
@@ -74,7 +74,10 @@ import { NavMenu } from './NavMenu';
 //    WCAG-documented cure (technique C43): it tells every scroll-into-view to
 //    keep that strip clear. It CANNOT be set from here — §6 forbids a section
 //    from styling the shell — and it must equal the pill's reach, top-4 +
-//    h-16 = 5rem, so the three numbers move together or the debt reopens.
+//    h-20 = 6rem (uniform at every width since the owner's 2026-09-04
+//    "same size on every screen"), so the four numbers move together or the
+//    debt reopens — the fourth being NavMenu's panel cap, which joined the
+//    family the moment the burger widths stopped being h-16.
 //    (FloatingActions books `scroll-padding-bottom` on the same element for
 //    the same clause; Phase 4 sets both.)
 //
@@ -136,13 +139,75 @@ export function Header(): ReactElement {
     // token "group/bar", which `.group` does not match — that is the whole
     // protection, and Header.test.tsx asserts it.
     <header className="group/bar sticky top-4 z-50 @container mx-[clamp(1rem,10vw,12.5rem)] mt-4 rounded-lg border border-line-subtle bg-surface/95 backdrop-blur-md backdrop-saturate-150">
-      {/* h-16 = 4rem, the height NavMenu's panel measures itself against.
+      {/* ── THE ROW: h-20 (5rem) AT EVERY WIDTH (owner, 2026-09-04: "make top
+          bar same size on every screen as it is on a standard pc screen now").
+          This supersedes the same-day first answer to "kind of thin and small
+          and unimportant", which grew the row only at the bar's @5xl step and
+          left phones and tablets on h-16. The owner looked at the result and
+          asked for the desktop size everywhere, so the step is GONE — one
+          height, no container query, and the whole @5xl≡1280px equivalence that
+          the stepped version needed is retired with it. What survives from that
+          round is the grid below, which is a different decision.
+          ── THE COUPLED NUMBERS ARE NOW SINGLE VALUES TOO (design board P9a),
+          moved in this same edit. The pill's REACH is `top-4` + the row height
+          = 1rem + 5rem = 6rem, everywhere:
+            globals.css      `scroll-padding-top: 6rem` — one value, the xl
+                             media step deleted;
+            FloatingActions  `--stem-inset: calc(7rem + env(…))` — one value
+                             (1rem corner offset + 6rem reach), xl step deleted;
+            NavMenu          the panel cap MOVED this round, unlike last:
+                             `100dvh − 6.5rem` (reach 6rem + the `mt-2` gap).
+                             Last round it deliberately stayed at 5.5rem because
+                             the panel only exists below @3xl and those widths
+                             were still h-16 — that reasoning expires the moment
+                             the burger widths get the taller bar too.
+          Four spellings, one number: change this height and all four move.
           No max-w cap in here: the PILL is the column — its own side margins
           already narrow it, and the old bar ran brand-to-CTA across its full
-          width. The section owns all child spacing through gap-4 and px-4
-          (§6.4 — the atoms carry no outer margins of their own). All sizing
-          in rem so browser zoom and user font settings behave (§7). */}
-      <div className="flex h-16 items-center gap-4 px-4">
+          width. All sizing in rem so browser zoom and user font settings
+          behave (§7).
+          ── THE GRID STARTS AT @3xl, AND THE COLUMNS ARE PLACED EXPLICITLY.
+          Both halves were measured, not guessed (2026-09-04): a grid at EVERY
+          width, with auto-placement, broke the phone in two ways at once.
+          `display: none` removes an element from the grid entirely — it is not
+          a zero-width item, it is not an item — so with the nav hidden the
+          right-hand cell auto-placed into column TWO and the burger sat in the
+          middle of the bar; and the brand, handed a 1fr track instead of its
+          natural width, wrapped mid-word into "Pre-mium Smi-le". Hence: below
+          @3xl this row stays the FLEX row it always was (brand left, burger
+          pushed right by the cell's own `ml-auto`), and from @3xl it becomes
+          the grid. `col-start-*` then pins each cell to its own column, which
+          matters in one further state auto-placement also gets wrong — the
+          single-menu rule takes the nav to `display:none` while the panel is
+          open, at EVERY width, so a wide screen with an open menu would put
+          the ✕ in the middle for exactly the same reason.
+          ── THREE CELLS, BECAUSE THE MIDDLE ONE MUST BE SCREEN-CENTRED (owner,
+          2026-09-04: "the middle one/middle two should sit at the center of the
+          screen and the rest left and right always"). `1fr auto 1fr` is the
+          whole mechanism: the two side tracks always take an EQUAL share of the
+          free space, so the auto track lands on the row's centre line — and
+          because the pill's margins are symmetric and this row's `px-4` is
+          symmetric, the row's centre IS the screen's centre. A flex row cannot
+          promise that: `ml-auto` centres nothing, and centring by
+          `justify-between` would park the nav wherever the brand and CTA widths
+          happened to leave it — the nav would drift every time a locale changed
+          the brand or CTA width. `1fr` here is CSS's `minmax(auto,1fr)`, so a
+          side track never shrinks below its own content and a long German CTA
+          pushes rather than clips.
+          Spacing moved INTO the cells with the grid (§6.4 still holds — the
+          section owns it): the side tracks' free space separates the three
+          cells, and the right cell keeps a `gap-4` of its own between the
+          Contact CTA and the burger.
+          RECORDED TRADE-OFF: `1fr` is `minmax(auto,1fr)`, so a side track never
+          shrinks below its own min-content — but for wrappable text min-content
+          is the longest WORD, not the phrase. Where the bar has slack (every
+          width the row is shown at, 1536 included: ~1197px of row against
+          ~200px of brand and ~360px of nav) the two side tracks are equal and
+          the nav sits on the screen's centre line exactly. Where slack ran out
+          the brand would break mid-word before the nav drifted — the worse of
+          the two failures — so the brand cell carries `whitespace-nowrap` and
+          the nav gives up exact centring first instead. */}
+      <div className="flex h-20 items-center px-4 @3xl:grid @3xl:grid-rows-1 @3xl:grid-cols-[1fr_auto_1fr]">
         {/* The brand corner — now ONE component shared with the Footer
             (sections/Wordmark, built to the owner-approved contract
             .claude/plans/brand-lockup-contract.plan.md v2, fb-200…fb-208).
@@ -152,9 +217,11 @@ export function Header(): ReactElement {
             decoration: the row is `items-center`, which centres its children
             rather than stretching them, while the lockup's hairline bar and its
             artwork are sized in PERCENTAGES of the row height — `self-stretch`
-            is what hands them the full 4rem to be a percentage of. Everything
-            else in this file is untouched (fb-207): the pill chrome, the
-            `group/bar` name, the single-menu rule, the h-16 row.
+            is what hands them the full 5rem to be a percentage of. Everything
+            else in this file was untouched by THAT swap (fb-207): the pill
+            chrome, the `group/bar` name, the single-menu rule, the row (h-16
+            then, h-20 since the owner's 2026-09-04 uniform-height ask — the
+            lockup follows it for free, which is the point of `self-stretch`).
             WHAT THE SWAP REMOVES, deliberately rather than by accident: the
             home LINK and its `brand.ariaLabel`. D9 (fb-200 — "make it
             clickable, but don't implement go-to-a-page yet") makes the
@@ -164,10 +231,36 @@ export function Header(): ReactElement {
             message files, reserved and uncalled, for the two-line wiring diff
             Wordmark.tsx declares in full. C2 is unaffected either way: the
             brand is not a heading, because the one <h1> belongs to the page. */}
-        <div className="flex self-stretch">
+        {/* CELL 1 — `justify-self-start` states the intent the old flex order
+            gave implicitly. `self-stretch` still overrides the grid's
+            `items-center` for this one cell, which is what hands the lockup the
+            full row height its percentage-sized artwork needs — and it now
+            follows the h-20 step for free. */}
+        {/* `self-stretch` is what hands the lockup the full row height its
+            percentage-sized artwork needs — and `@3xl:grid-rows-1` on the row
+            is what makes that height DEFINITE once the row is a grid. Measured
+            the hard way (2026-09-04): a grid's implicit row is content-sized,
+            so stretching into it gives a height that percentages cannot resolve
+            against — `h-[90%]` on the Wordmark's artwork fell back to `auto`,
+            the image rendered at its intrinsic 256×171, and the brand burst out
+            of the pill. `grid-rows-1` compiles to a single `minmax(0,1fr)` row,
+            which inside this definite-height box is a definite 5rem — the
+            same thing a flex line gave for free.
+            `whitespace-nowrap` keeps the lockup on one line: the side tracks are
+            `1fr` = `minmax(auto,1fr)`, and for wrappable text that auto floor is
+            the longest WORD, so a squeezed track would break the brand mid-word
+            (measured: "Pre-mium Smi-le" at 390 before the grid was scoped to
+            @3xl). With nowrap the track floors at the whole lockup instead. */}
+        <div className="flex self-stretch whitespace-nowrap @3xl:col-start-1 @3xl:justify-self-start">
           <Wordmark />
         </div>
 
+        {/* CELL 2 — the nav row, centred. `justify-self-center` lives on
+            HeaderNav's own root (it renders the <nav>, so it owns its
+            placement within this grid); below @3xl that element is
+            `display:none`, which removes it as a grid item entirely, and the
+            auto track collapses to zero — leaving brand-left / burger-right,
+            pixel-identical to the flex layout it replaced. */}
         <HeaderNav />
 
         {/* The bar CTA — the site's one conversion goal (§1). Since the
@@ -201,10 +294,14 @@ export function Header(): ReactElement {
             So the SECTION owns the box (§6.4/§6.8 — the parent owns placement)
             and the atom keeps its own display: `hidden @3xl:flex` is the
             breakpoint (below the step the panel's own full-width Contact takes
-            over, fb-151), `ml-auto` pushes it to the right edge, and
-            `@3xl:flex` — not `@3xl:block` — because a flex container gives its
-            single item no baseline line-box, so the button lands on exactly
-            the same pixels it did as a direct flex item.
+            over, fb-151), and `@3xl:flex` — not `@3xl:block` — because a flex
+            container gives its single item no baseline line-box, so the button
+            lands on exactly the same pixels it did as a direct flex item.
+            `ml-auto` USED TO LIVE HERE and was dropped with the grid rework
+            (2026-09-04): the right cell is `justify-self-end`, so the free
+            space is already outside this box and an auto margin inside a
+            content-sized flex cell moves nothing. Keeping it would have been a
+            class that reads like a rule and does nothing.
             The last class is the single-menu rule (fb-165, owner: "hide the
             bar's Contact, leave only the panel's"): while the panel is open
             this box goes away at EVERY width, so the only Contact on screen is
@@ -212,13 +309,24 @@ export function Header(): ReactElement {
             source order — its compiled selector carries an id inside `:has()`,
             (1,1,0) against the utility's (0,1,0) — which is exactly the
             guarantee the plain `hidden` above could not give. */}
-        <div className="ml-auto hidden @3xl:flex group-has-[#header-menu]/bar:hidden">
-          <ContactModalTrigger variant="solid">
-            {t('actions.contact')}
-          </ContactModalTrigger>
-        </div>
+        {/* CELL 3 — everything that belongs at the right edge, in one box, so
+            the grid has exactly three children whatever the width. `gap-4` is
+            the spacing the row used to own directly. Two spellings of "sit at
+            the right edge", one per layout mode: `ml-auto` while the row is
+            still a flex line (below @3xl, where this cell holds only the
+            burger), and `col-start-3 justify-self-end` once it is a grid — the
+            auto margin is explicitly cancelled there, because inside a track it
+            would absorb the free space itself and make `justify-self` a no-op.
+            Together they are what NavMenu's own `ml-auto` used to buy. */}
+        <div className="ml-auto flex items-center gap-4 @3xl:col-start-3 @3xl:ml-0 @3xl:justify-self-end">
+          <div className="hidden @3xl:flex group-has-[#header-menu]/bar:hidden">
+            <ContactModalTrigger variant="solid">
+              {t('actions.contact')}
+            </ContactModalTrigger>
+          </div>
 
-        <NavMenu />
+          <NavMenu />
+        </div>
       </div>
     </header>
   );

@@ -179,8 +179,20 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // 320px-tall screen), so it caps itself and scrolls INTERNALLY — the panel
 // scrolls, the page behind it stays frozen. `dvh`, not `vh`, because mobile
 // URL bars change the viewport height as you scroll; 5.5rem is the panel's
-// own top edge — the pill's reach plus the gap, top-4 + h-16 + mt-2 — i.e.
-// everything below the hanging panel and nothing more.
+// own top edge — the pill's reach plus the gap, top-4 + h-20 + mt-2 = 6.5rem —
+// i.e. everything below the hanging panel and nothing more.
+// THE NUMBER MOVED ON 2026-09-04 (owner: "make top bar same size on every
+// screen as it is on a standard pc screen now"), 5.5rem → 6.5rem. Worth
+// recording why it moved THIS round and pointedly did not the round before,
+// because the two look like the same edit: the first ask grew the row only at
+// the bar's @5xl step, and this panel can only ever EXIST below @3xl — the
+// burger that opens it is `@3xl:hidden`, and a display:none button cannot be
+// pressed — so every width where a panel is reachable still had an h-16 row and
+// the cap was already correct. The uniform height removes that shelter: the
+// burger widths now get the taller bar too, so the panel really does hang 1rem
+// lower and the cap follows or the panel overflows the viewport by exactly that
+// much. It is now a plain member of the P9a family (Header's row · globals'
+// scroll-padding-top · FloatingActions' --stem-inset · this).
 // B6 · a box of unknown height cannot animate `height: auto`, so the entry is
 // transform + opacity on D12's 300ms ease-out family. @starting-style (the
 // `starting:` variant) is what gives a JUST-MOUNTED element a from-state; the
@@ -196,7 +208,7 @@ const panelClasses =
   'absolute inset-x-0 top-full mt-2 flex flex-col gap-2 p-4 ' +
   'rounded-lg border border-line-subtle bg-surface/95 ' +
   'backdrop-blur-md backdrop-saturate-150 ' +
-  'max-h-[calc(100dvh-5.5rem)] overflow-y-auto ' +
+  'max-h-[calc(100dvh-6.5rem)] overflow-y-auto ' +
   'translate-y-0 opacity-100 transition-[translate,opacity] ' +
   'duration-300 ease-out starting:-translate-y-2 starting:opacity-0 ' +
   'motion-reduce:transition-none';
@@ -259,14 +271,29 @@ export function NavMenu(): ReactElement {
     if (open || !returningFocus.current) return;
     returningFocus.current = false;
 
+    // `preventScroll` on BOTH paths (owner-reported bug, 2026-09-04: closing
+    // the menu on a phone jumped the page). A focus return restores the
+    // KEYBOARD position; the VIEWPORT position belongs to the visitor, who has
+    // not asked to go anywhere. By default focus() also scrolls the target into
+    // view, and since the shell gained `scroll-padding-top` the browser tries to
+    // clear that strip for a target that is INSIDE the sticky bar — a clearance
+    // a sticky element can never satisfy, because it moves with the scroll — so
+    // every close nudged the page. The burger is on screen by construction here
+    // (it is in the always-visible bar), which is what makes suppressing the
+    // scroll safe rather than merely quieter.
+    // KEEP-IN-SYNC with ui/SpeedDial's focus-return effect (fb-44): its bulb
+    // takes the same option for the same reason, and the two moved together.
     const burger = burgerRef.current;
     if (!burger) return;
     if (burger.offsetParent !== null) {
-      burger.focus();
+      burger.focus({ preventScroll: true });
       return;
     }
     // Scoped to this section's own root — never a document-wide query.
-    burger.closest('header')?.querySelector<HTMLElement>('a[href]')?.focus();
+    burger
+      .closest('header')
+      ?.querySelector<HTMLElement>('a[href]')
+      ?.focus({ preventScroll: true });
   }, [open]);
 
   // Esc closes (§9). Bound to the document, not the panel, because focus may
@@ -435,18 +462,21 @@ export function NavMenu(): ReactElement {
           aria-expanded, so a screen reader says "Meniu, button, collapsed" →
           "Meniu, button, expanded". Swapping the label to "Închide" would
           double-announce the state (Wave-1 a11y verdict: three keys → two).
-          ml-auto pushes it to the right edge, where the sketch puts it.
-          CLOSED, above the step, `@3xl:ml-0` hands that job back to the CTA's
-          own ml-auto so the row does not re-shuffle — and the burger is
-          `@3xl:hidden` there anyway.
-          OPEN, the alignment is plain `ml-auto` at every width, because the
-          single-menu rule (fb-164/165/166) hides both the row and the bar's
-          CTA: with the element that used to absorb the free space gone, only
-          this margin still pushes the ✕ to the right edge. Keeping
-          `@3xl:ml-0` here would park the ✕ against the brand on a wide screen.
-          The hide-rule is DROPPED while open (fb-145/149): a menu opened
-          before rotating a tablet must stay closable, and one conditional
-          class beats JavaScript watching the window (which D1 deleted). */}
+          THE AUTO MARGINS ARE GONE (2026-09-04, Header's three-cell grid).
+          This button used to carry `ml-auto` (and `@3xl:ml-0` while closed) to
+          push itself to the bar's right edge and then to hand that job back to
+          the CTA's own auto margin above the step — three classes doing one
+          thing that the layout would not do by itself. It does now: the burger
+          sits in Header's right-hand cell, which is `justify-self-end`, so the
+          free space is outside the cell and the ✕ is at the right edge at every
+          width and in both states, including the open one where the
+          single-menu rule (fb-164/165/166) has removed the row and the bar's
+          CTA. An `ml-auto` inside a content-sized flex cell moves nothing, so
+          keeping it would have left a class that reads like a rule and is not.
+          The hide-rule is what remains, and it is DROPPED while open
+          (fb-145/149): a menu opened before rotating a tablet must stay
+          closable, and one conditional class beats JavaScript watching the
+          window (which D1 deleted). */}
       <GlyphButton
         ref={burgerRef}
         variant="ghost"
@@ -455,7 +485,7 @@ export function NavMenu(): ReactElement {
         aria-expanded={open}
         aria-controls={PANEL_ID}
         onClick={() => (open ? close() : setOpen(true))}
-        className={open ? 'ml-auto' : 'ml-auto @3xl:ml-0 @3xl:hidden'}
+        className={open ? undefined : '@3xl:hidden'}
       >
         <BurgerToggle />
       </GlyphButton>

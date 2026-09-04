@@ -1,6 +1,7 @@
 {
   "common": {
     "siteName": "Premium Smile",
+    "skipToContent": "Aller au contenu",
     "nav": {
       "home": "Accueil",
       "services": "Soins",

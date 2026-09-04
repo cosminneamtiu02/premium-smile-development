@@ -6,9 +6,10 @@ import { Phone } from '@/assets/glyphs/Phone';
 import { clinic } from '@/lib/clinic';
 
 // sections/FloatingActions — the two thumb-reach controls that ride along on
-// every page: the language dial (bottom-LEFT) and the call CTA (bottom-RIGHT),
-// plus the clearance spacer that keeps them off the last line of content.
-// Built to the owner-approved plan-canvas contract fb-131…fb-134 (2026-08-12).
+// every page: the language dial (bottom-LEFT) and the call CTA (bottom-RIGHT).
+// Built to the owner-approved plan-canvas contract fb-131…fb-134 (2026-08-12),
+// whose THIRD child — a clearance spacer — was removed on 2026-09-04; see the
+// dedicated block below.
 //
 // This is the FIRST section in the repo, so it sets three precedents that every
 // later section copies. They are written out in full here on purpose.
@@ -28,7 +29,7 @@ import { clinic } from '@/lib/clinic';
 // §8.1 holds either way — the ui/ atoms below never see a key, only finished
 // text; translation happens in the SECTION tier, here and in the switcher.
 //
-// ── 2. A FRAGMENT of exactly three siblings, never a wrapper element.
+// ── 2. A FRAGMENT of exactly two siblings, never a wrapper element.
 // A wrapper carrying the z-40 layer would have to be positioned for z-index to
 // apply at all, and a positioned + z-indexed box opens a STACKING CONTEXT that
 // traps both controls inside it — the layer would then be judged as one unit
@@ -38,37 +39,52 @@ import { clinic } from '@/lib/clinic';
 // wrapper and pointer-events-auto back onto each child. Two independent
 // `fixed z-40` siblings need none of that plumbing.
 //
-// ── 3. The spacer only works if this section mounts AFTER {children} and the
-// footer inside <body> — that is the Phase 4 mount contract. It is the last box
-// in normal flow, so its height is the only thing standing between the two
-// fixed controls and the final line of page content, at 320px too (§7, §9
-// reflow). Mounted anywhere else it would clear a gap in the middle of nothing.
+// ── 3. THE CLEARANCE SPACER IS GONE — owner decision, 2026-09-04, reversing
+// the spacer half of fb-131…fb-134.
+// It was a third Fragment child, `aria-hidden`, of exactly the two controls'
+// reach (5.5 / 6 / 6.5rem + the safe area), whose only job was to sit last in
+// normal flow so the final line of page content could never end up under a
+// disc. The owner removed it from the live export on the ground the arithmetic
+// never modelled: "i do not need that empty space below the footer as the
+// buttons for language and phone do not cover info/anything clickable in the
+// footer". That is a claim about WHAT IS IN THE CORNERS, and it is true by
+// construction here — the Footer's bottom band is its legal strip, which is
+// centred below @3xl and inset >= 88px above (Footer Row 3's own comment cites
+// obligation (b) below as the reason), so the two bands cover page GROUND and
+// nothing operable. The cost of keeping it was a screen-height strip of blank
+// page under every footer on every route.
 //
-// THE MOUNT CONTRACT CARRIES THREE MORE OBLIGATIONS — SC 2.4.11 Focus Not
+// WHAT THAT SHIFTS ONTO THE REMAINING THREE OBLIGATIONS — SC 2.4.11 Focus Not
 // Obscured (Minimum), AA and new in WCAG 2.2 (G2 a11y review, 2026-08-12). The
-// spacer is NECESSARY BUT NOT SUFFICIENT: it guarantees the document END can
-// always be scrolled clear, without which any focusable in the last line would
-// be permanently obscured. It does nothing for a focusable that is ALREADY in
-// view behind one of the discs — the CSSOM considers it visible, so Tab
+// spacer was NECESSARY BUT NOT SUFFICIENT even when it existed: it guaranteed
+// the document END could be scrolled clear, and did nothing for a focusable
+// ALREADY in view behind a disc — the CSSOM considers that one visible, so Tab
 // triggers no scroll and the control plus its focus ring sits 100% behind
-// opaque paint. Not hypothetical: GlyphButton's header names the footer
-// socials as a planned use, i.e. 44px controls that will pass through the
-// bottom-corner bands on every scroll. What Phase 4 owes:
-//   a) `scroll-padding-bottom` on <html> — the same expression as the spacer
-//      (WCAG technique C43), and since the corner pair gained size steps
-//      (below) that means the SAME THREE STEPS, not one number:
+// opaque paint. Removing it does not create that gap; it removes the half that
+// was already the weaker one, and makes (b) and (c) LOAD-BEARING rather than
+// belt-and-braces:
+//   a) `scroll-padding-bottom` on <html> — KEPT, and now the whole of the
+//      scroll-clearance story rather than the invisible half of a pair (WCAG
+//      technique C43). Still the SAME THREE STEPS, because the corner pair
+//      still grows with the screen:
 //        base   calc(5.5rem + env(safe-area-inset-bottom))
 //        xl     calc(6rem   + env(safe-area-inset-bottom))
 //        2xl    calc(6.5rem + env(safe-area-inset-bottom))
-//      The env() term belongs to EVERY step, exactly as it does on the spacer:
-//      drop it from the upper two and a viewport-fit=cover phone under-clears
-//      by the inset it lifted the controls with. It cannot be set from here:
-//      §6 forbids a section styling the shell.
-//   b) A page-composition rule: no standalone focusable narrower than ~72px
-//      flush against the left/right margins in blocks that scroll past the
-//      corners. Footer socials belong centred, or inset >= 88px.
+//      The env() term belongs to EVERY step: drop it from the upper two and a
+//      viewport-fit=cover phone under-clears by the inset it lifted the
+//      controls with. It cannot be set from here — §6 forbids a section styling
+//      the shell — and it lives in globals.css' base layer, which carries the
+//      reversal in its own comment.
+//   b) A page-composition rule, NOW THE PRIMARY GUARANTEE: no standalone
+//      focusable narrower than ~72px flush against the left/right margins in
+//      blocks that scroll past the corners. Footer socials belong centred, or
+//      inset >= 88px. This is precisely the rule the owner's "nothing clickable
+//      is under them" relies on, so it stops being advice and becomes the thing
+//      that makes the removal safe. MIGRATION_PLAYBOOK's mount-contract box 5
+//      is the standing entry; every page lane carries it.
 //   c) The §9 page-tier keyboard walkthrough must tab at several SCROLL
 //      POSITIONS while watching the bottom corners — not just from the top.
+//      Same promotion: with no spacer, this walk is how a violation is found.
 //
 // §6.8 boundary: placement arrives from HERE as className (the parent owns
 // spacing and positioning), never as a restyle of an atom's internals. The
@@ -76,8 +92,8 @@ import { clinic } from '@/lib/clinic';
 // exists to pass (Wave-1 constraint).
 //
 // Both controls sit 1rem above the bottom edge PLUS the device's safe-area
-// inset, and the spacer adds the same inset back, so the clearance grows by
-// exactly as much as the controls were lifted.
+// inset, and every `scroll-padding-bottom` step adds the same inset back, so
+// the scroll clearance grows by exactly as much as the controls were lifted.
 // CAVEAT, so nobody files a false bug: env(safe-area-inset-bottom) resolves to
 // 0px until a page opts in with viewport-fit=cover, and the shell does not set
 // it today (there is no `export const viewport` in app/). So on an iPhone the
@@ -132,32 +148,28 @@ const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
 // does the arithmetic — and it is 6rem + the safe area:
 //   1rem  this corner's own offset from the bottom edge (cornerBottom), plus
 //         env(safe-area-inset-bottom), because the bulb was lifted by it;
-//   5rem  the Header pill's REACH — `sticky top-4` + `h-16` (Header.tsx's mount
-//         contract, which books the very same 5rem for the shell's
+//   6rem  the Header pill's REACH — `sticky top-4` + `h-20` (Header.tsx's mount
+//         contract, which books the very same 6rem for the shell's
 //         `scroll-padding-top`). The bar is blurred glass and always on top, so
 //         an `up` stem tall enough to reach it would put discs behind it.
 // At ordinary zoom the stem is far shorter than the cap and nothing is clipped;
 // past ~300% the cap turns the capsule into its own scroll box instead of
 // letting it climb behind the sticky pill or off the top of the viewport
 // (SC 1.4.10 / 2.4.11).
+// ONE VALUE, EVERY WIDTH: 7rem = this corner's own 1rem offset + the Header
+// pill's 6rem reach (`top-4` + `h-20`), plus the safe-area inset the bulb was
+// lifted by. The bar is the same height on every screen since the owner's
+// 2026-09-04 "make top bar same size on every screen as it is on a standard pc
+// screen now" — an earlier spelling the same day carried a second `xl:` step
+// for a bar that grew only on desktop, and it went out with that step.
 const languageCorner =
   `fixed ${cornerBottom} left-4 z-40 ${discSteps} ` +
-  '[--stem-inset:calc(6rem+env(safe-area-inset-bottom))]';
+  '[--stem-inset:calc(7rem+env(safe-area-inset-bottom))]';
 
 // THE CALL CORNER — the same bottom edge, the same size steps. GlyphButton's
 // `lg` box reads --disc-size through ui/disc.ts and its glyph follows at half
 // the box, so the phone icon does not stay small inside a bigger disc.
 const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps}`;
-
-// The clearance, one step per size step: the control + its own 1rem offset +
-// 1rem of breathing room, plus the same safe-area inset the controls were
-// lifted by (3.5 + 1 + 1 = 5.5 · 4 + 1 + 1 = 6 · 4.5 + 1 + 1 = 6.5).
-// aria-hidden because it is empty geometry: an unlabelled empty box is noise in
-// the a11y tree.
-const spacerClasses =
-  'h-[calc(5.5rem+env(safe-area-inset-bottom))] ' +
-  'xl:h-[calc(6rem+env(safe-area-inset-bottom))] ' +
-  '2xl:h-[calc(6.5rem+env(safe-area-inset-bottom))]';
 
 export function FloatingActions(): ReactElement {
   const t = useTranslations('common');
@@ -185,8 +197,6 @@ export function FloatingActions(): ReactElement {
           <Phone />
         </a>
       </GlyphButton>
-
-      <div aria-hidden="true" className={spacerClasses} />
     </>
   );
 }

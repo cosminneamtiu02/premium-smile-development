@@ -466,6 +466,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     like the shell). Recorded limitation: Safari's ITP caps any JS-written cookie at
     ~7 days regardless of `max-age`, so the language choice simply re-asks sooner on
     iPhones — accepted for v1; disclose on the §12 policy page when it ships.
+    **Amended 2026-09-04 (owner, app-shell polish round): interactive labels opt OUT of
+    the site-wide `hyphens: auto`** — "text on menu buttons and on buttons in general is
+    never allowed to be split … no split in syllables" (owner verbatim). `ui/Button` and
+    `ui/TextButton` carry `hyphens-none` on their roots; wrapping between words is
+    unaffected (§8.4's min-heights). Glyph-only controls (GlyphButton, SpeedDial codes)
+    need no opt-out.
 15. **Org-review round — outcome + standing triggers (owner, fb-320, 2026-09-01/02):** the
     whole-repo organization review (two blind passes; board `develop-org-review`) landed as
     PRs **#60–#63** (attach-ref promotion · DO-NOW docs · org-hygiene · overlay wiring),

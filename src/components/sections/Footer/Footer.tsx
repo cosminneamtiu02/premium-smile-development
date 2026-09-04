@@ -163,12 +163,20 @@ export function Footer(): ReactElement {
             written down. Still not a heading either (see the file header).
             THE TWO WRAPPERS ARE THIS SECTION OWNING PLACEMENT AND SIZE
             (§6.4/§6.8): the outer one keeps the old row's centring and its
-            `pb-8` rhythm, the inner `h-16` box is the 4rem ruler the lockup's
+            `pb-8` rhythm, the inner `h-20` box is the 5rem ruler the lockup's
             `h-full` bar and its percentage-sized artwork resolve against —
             EXACTLY the header instance's height, on the owner's ask that both
-            read at the same size (fb-205). */}
+            read at the same size (fb-205).
+            BUMPED 4rem → 5rem ON 2026-09-04, and fb-205 is the whole reason:
+            the owner asked for the top bar at one size on every screen ("make
+            top bar same size on every screen as it is on a standard pc screen
+            now"), which took Header's row to `h-20`. The header lockup rides
+            that automatically through `self-stretch`, so leaving this ruler at
+            4rem would have quietly broken the very rule this comment cites —
+            two instances of one component reading at two sizes. The number here
+            is not independent; it tracks Header's row. */}
         <div className="flex justify-center pb-8">
-          <div className="flex h-16">
+          <div className="flex h-20">
             <Wordmark />
           </div>
         </div>
@@ -310,7 +318,20 @@ export function Footer(): ReactElement {
               PAGES_BASE_PATH deploy (§15.2) the file resolves at the domain
               root. Reported to the planning loop rather than patched from a
               section. */}
-          <div className="flex flex-col items-start gap-2">
+          {/* CENTERED UNTIL THE GRID IS FULLY COLUMNAR (owner, 2026-09-04:
+              "on phone and tablet dimensions i'd want the anpc button centered,
+              not sticky to the left", then — same day, seeing the tablet — "the
+              anpc button has to do that centered thing on tablet screen too").
+              The boundary is the grid's LAST step, not its first: this column
+              stays centred through the stacked state AND the 2-column
+              intermediate, and only takes start-alignment at @5xl where all
+              four columns sit side by side and alignment with their neighbours
+              is what the eye wants. A 250px badge pinned left under full-width
+              text reads as a stray element at every width below that.
+              (The first spelling of this rule used @3xl and was superseded the
+              same day — the intermediate 2-column state is a tablet, which is
+              exactly what the owner was looking at.) */}
+          <div className="flex flex-col items-center gap-2 @5xl:items-start">
             <a
               href="https://reclamatiisal.anpc.ro"
               target="_blank"

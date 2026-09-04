@@ -174,9 +174,28 @@ export function LanguageSwitcher({
         // tests/unit/locales.test.ts pins the data half of that.
         aria-label={t('language.switch', { name })}
         onSelect={handleSelect}
-        // `tone` is left at its default `ink` (D4): the bulb reads as STATE
-        // ("this is what is set"), and green stays reserved for the one action
-        // this site is for — the call CTA in the opposite corner (§1).
+        // ── D4 REVERSED BY THE OWNER, 2026-09-04. The original decision left
+        // `tone` at the atom's default `ink`: the bulb would read as STATE
+        // ("this is what is set") and green would stay reserved for the one
+        // action this site is for — the call CTA in the opposite corner (§1).
+        // The owner overruled that from the live export, on the ground D4 never
+        // weighed: the two corners are a PAIR (FloatingActions' "one row"
+        // contract gives them one bottom edge and one `--disc-size`), and a
+        // filled-dark bulb beside a filled-green disc read as two unrelated
+        // controls — "at rest phone and language switcher to be same color …
+        // on hover of the language switcher button to have a hover animation
+        // like the phone button has".
+        // `cta` buys BOTH halves at once, by construction rather than by
+        // copying: SpeedDial's `cta` toneClasses ARE GlyphButton solid's
+        // measured pair (bg-cta text-ink-inverse · hover/active bg-cta-hover —
+        // white over #008854 → #006b42, 4.52:1 → 6.60:1, recorded in both
+        // files), and the fade is the shared `discTransition` family the call
+        // disc already plays, so rest colour AND hover manner match without a
+        // single value being re-typed here.
+        // The tone still STOPS AT THE BULB — the stem keeps its ghost manner in
+        // every tone since the owner's 2026-08-27 reversal of D5 — so this
+        // changes one disc, not five.
+        tone="cta"
       />
     </nav>
   );

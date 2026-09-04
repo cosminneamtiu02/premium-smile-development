@@ -224,6 +224,36 @@ describe('LanguageSwitcher — closed: one control, four crawlable alternates', 
     expect(bulbOf()).toHaveAccessibleName(bulbName('ro'));
   });
 
+  it('fills the bulb with the CTA role — rest parity with the call disc (D4 reversed, owner 2026-09-04)', () => {
+    // The owner's ask was a RELATIONSHIP, not a hex code: "at rest phone and
+    // language switcher to be same color". So this asserts the ROLE the bulb is
+    // painted with, resolved by the real sheet this file already loads — not a
+    // literal, which would keep passing if `--cta` were ever re-pointed and the
+    // two corners silently drifted apart again.
+    // The probe is how both sides get parsed by the same engine: `--cta` is
+    // authored as #008854 while a computed background-color reads back as
+    // rgb(0, 136, 84), and comparing the two strings directly would fail on
+    // notation rather than on colour.
+    mount();
+    const probe = document.createElement('div');
+    probe.style.backgroundColor = 'var(--cta)';
+    document.body.append(probe);
+    try {
+      expect(getComputedStyle(bulbOf()).backgroundColor).toBe(
+        getComputedStyle(probe).backgroundColor,
+      );
+    } finally {
+      probe.remove();
+    }
+    // …and the hover manner comes with it, from the SAME bundle GlyphButton's
+    // `solid` call disc wears (SpeedDial's `cta` toneClasses): one named pair,
+    // so the two corners cannot fade differently. The stem is unaffected — tone
+    // stops at the bulb since the owner's 2026-08-27 reversal of D5.
+    expect(Array.from(bulbOf().classList)).toEqual(
+      expect.arrayContaining(['bg-cta', 'hover:bg-cta-hover']),
+    );
+  });
+
   it('ships the four alternates in the HTML while CLOSED — crawlable (§16.2)', () => {
     // D8 = M: the stem is always mounted and only `inert` + one attribute flip
     // on open, so the pre-hydration document already carries every

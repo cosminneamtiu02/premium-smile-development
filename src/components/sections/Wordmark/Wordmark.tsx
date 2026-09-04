@@ -196,8 +196,10 @@ export function Wordmark({
   return (
     // NO outer margin, and no width of its own: the CONSUMER owns the box
     // (§6.4/§6.8) — the Header hands it a `self-stretch` cell in the pill row,
-    // the Footer a centred `h-16` box. `h-full` is how both of those become
-    // the ruler the percentage-sized artwork resolves against.
+    // the Footer a centred `h-20` box. `h-full` is how both of those become
+    // the ruler the percentage-sized artwork resolves against. Both rulers are
+    // 5rem since 2026-09-04 (the owner's uniform bar height); fb-205 is the
+    // standing rule that they must agree, so they move together or not at all.
     // THE ONE SUPPRESSED RULE, and the one place it is honest to suppress it:
     // jsx-a11y/anchor-is-valid says an anchor must be keyboard accessible, and
     // it is exactly right — which is why the wiring diff exists and why this

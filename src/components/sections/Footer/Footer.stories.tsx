@@ -110,9 +110,12 @@ const expectLockupChain = async (
   const anchor = band.querySelector('a:not([href])') as HTMLElement;
   const img = anchor.querySelector('img') as HTMLElement;
 
-  // 4rem, the height both consumers agreed on (fb-205) — measured, not read
-  // back off a class.
-  await expect(anchor.getBoundingClientRect().height).toBe(64);
+  // 5rem, the height both consumers agree on (fb-205) — measured, not read
+  // back off a class. It was 64px until 2026-09-04, when the owner's "same
+  // size on every screen" took Header's row to `h-20` and fb-205 carried the
+  // Footer's ruler with it; this is the assertion that would have caught the
+  // two drifting apart, so it moves in the same edit or not at all.
+  await expect(anchor.getBoundingClientRect().height).toBe(80);
   await expect(
     Math.round(
       (img.getBoundingClientRect().height /

@@ -58,9 +58,23 @@ export function HeaderNav(): ReactElement {
     // panel carries the same links. The
     // elements stay in the DOM, though, which is why the tests still scope
     // their queries with within() (board §5·B7).
+    // `@3xl:col-start-2 @3xl:justify-self-center` is this element's placement in
+    // Header's three-cell grid (owner, 2026-09-04 — the nav row sits on the
+    // screen's centre line). It lives HERE rather than on a wrapper in
+    // Header.tsx because this file renders the grid item: the <nav> IS cell 2,
+    // and a wrapper added only to carry two classes would put a box between the
+    // grid and its own child for nothing. The centring itself is the grid's
+    // `1fr auto 1fr` — Header.tsx argues why that equals the SCREEN's centre;
+    // these classes only say "you are the middle column, sit in the middle of
+    // it", which is what keeps the two halves independent.
+    // Both are @3xl-scoped because the row is a plain flex line below that step
+    // (Header.tsx explains what auto-placement did to the phone), and the
+    // explicit column is what keeps the OTHER cells honest when the single-menu
+    // rule takes this one to display:none — a hidden element is not a grid item
+    // at all, so without `col-start-*` the right cell would slide into column 2.
     <nav
       aria-label={t('nav.ariaLabel')}
-      className="hidden @3xl:flex group-has-[#header-menu]/bar:hidden"
+      className="hidden @3xl:col-start-2 @3xl:flex @3xl:justify-self-center group-has-[#header-menu]/bar:hidden"
     >
       {/* A list, because it IS one: screen readers announce "list, 4 items"
           and offer item-by-item navigation. The section owns the spacing

@@ -86,9 +86,18 @@ export type TextButtonProps = TextButtonOwnProps &
 // to the bottom of the padded box. px-2 lets the full-bleed rule overhang the
 // label by 8px a side — enough to read as deliberate, little enough that it
 // still tracks the word.
+// `hyphens-none` — INTERACTIVE LABELS NEVER SYLLABLE-SPLIT (owner, 2026-09-04:
+// "no split in syllables in top bar menu items"). The site ships
+// `hyphens: auto` at the body tier (§15.14) so German compounds may break
+// mid-word in PROSE; a nav item's label is not prose, and "Leistun-gen" across
+// two lines in the bar reads as a rendering fault. This class opts the whole
+// control back out. Wrapping BETWEEN words is untouched — `min-h-11` plus
+// `py-2` above exist so a wrapped two-line label still has an honest height
+// (§8.4). KEEP-IN-SYNC with ui/Button, which carries the same class for the
+// same owner rule.
 const base =
   'relative inline-flex min-h-11 items-center justify-center ' +
-  'px-2 py-2 text-lg font-medium ' +
+  'px-2 py-2 text-lg font-medium hyphens-none ' +
   'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +
   'transition-[color] duration-200 ease-out hover:text-cta-hover ' +

@@ -49,18 +49,19 @@ const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
   </NextIntlClientProvider>
 );
 
-// The Fragment's three siblings in contract order (fb-132): the language dial ·
-// the call CTA · the clearance spacer. The spacer is aria-hidden BY DESIGN and
-// therefore unreachable by role — reading it positionally is deliberate.
+// The Fragment's two siblings in contract order (fb-132): the language dial ·
+// the call CTA. There WAS a third — an aria-hidden clearance spacer — removed
+// by the owner on 2026-09-04 (FloatingActions.tsx §3 carries the decision and
+// what took over its duty).
 const mount = (locale: Locale = 'ro') => {
   const { container, rerender } = render(<Mounted locale={locale} />);
-  // Guard HERE, not only in the shape test: without it, a 4-child Fragment
-  // binds `spacer` to the wrong element and ~18 tests fail with confident lies
-  // about the wrong node. One assertion turns that into one honest failure
+  // Guard HERE, not only in the shape test: without it, a 3-child Fragment
+  // binds `call` to the wrong element and the tests below fail with confident
+  // lies about the wrong node. One assertion turns that into one honest failure
   // repeated identically (G2 typescript review, 2026-08-12).
-  expect(container.children).toHaveLength(3);
-  const [dial, call, spacer] = childrenOf(container);
-  return { container, rerender, dial, call, spacer };
+  expect(container.children).toHaveLength(2);
+  const [dial, call] = childrenOf(container);
+  return { container, rerender, dial, call };
 };
 
 /**
@@ -130,8 +131,8 @@ const stepsIn = (el: Element, pattern: RegExp): Record<string, number> => {
 
 /** `[--disc-size:3.5rem]` · `xl:[--disc-size:4rem]` → { '': 3.5, xl: 4 }. */
 const DISC_STEP = /^(?:([a-z0-9]+):)?\[--disc-size:/;
-/** `h-[calc(5.5rem+env(…))]` · `2xl:h-[calc(6.5rem+env(…))]` → { '': 5.5, '2xl': 6.5 }. */
-const SPACER_STEP = /^(?:([a-z0-9]+):)?h-\[/;
+/** `[--stem-inset:calc(6rem+…)]` · `xl:[--stem-inset:calc(7rem+…)]` → { '': 6, xl: 7 }. */
+const STEM_INSET_STEP = /^(?:([a-z0-9]+):)?\[--stem-inset:/;
 
 /** Every `--disc-size` token, sorted — the string the two corners must SHARE. */
 const discTokens = (el: Element): string[] =>
@@ -139,22 +140,28 @@ const discTokens = (el: Element): string[] =>
     .filter((c) => DISC_STEP.test(c))
     .sort();
 
-// `sticky top-4` + `h-16` = the Header pill's reach (Header.tsx's mount
+// `sticky top-4` + `h-20` = the Header pill's reach (Header.tsx's mount
 // contract, which books the same 5rem for the shell's scroll-padding-top).
 // The `up` stem must never be able to climb behind that blurred glass.
-const HEADER_PILL_REACH_REM = 5;
+// …`h-20` since the owner's 2026-09-04 "same size on every screen", so 6rem —
+// one value at every width, which is why the dial books one inset and not two.
+const HEADER_PILL_REACH_REM = 6;
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe('FloatingActions — a Fragment, never a wrapper (fb-132)', () => {
-  it('renders exactly three siblings with no element around them', () => {
+  it('renders exactly two siblings with no element around them', () => {
     // A wrapper would need position+z-index to carry the layer, which opens a
     // stacking context around both controls; a full-width fixed wrapper would
-    // additionally swallow pointer events. Three siblings need neither patch.
+    // additionally swallow pointer events. Two siblings need neither patch.
+    // TWO since 2026-09-04 (owner): the clearance spacer that used to be the
+    // third child is gone, so this section now renders NOTHING in normal flow —
+    // both children are `fixed`. Its place after {children} + Footer in the
+    // shell is therefore about DOM/tab order now, not about geometry.
     const { container } = mount();
-    expect(container.children).toHaveLength(3);
+    expect(container.children).toHaveLength(2);
   });
 });
 
@@ -322,12 +329,15 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     }
   });
 
-  it('leaves the spacer in NORMAL FLOW — a fixed spacer would clear nothing', () => {
-    const { spacer } = mount();
-    expect(Array.from(spacer.classList)).not.toContain('fixed');
-    expect(Array.from(spacer.classList)).not.toContain('absolute');
-    expect(spacer).toHaveAttribute('aria-hidden', 'true');
-    expect(spacer.textContent).toBe('');
+  it('renders NOTHING in normal flow — every child is viewport-pinned', () => {
+    // The inverse of the deleted spacer test, and the assertion that makes the
+    // 2026-09-04 removal explicit: this section contributes no page height at
+    // all now, which is exactly why the footer can reach the bottom edge
+    // (app/[locale]/layout.tsx's sticky-footer rule) with nothing under it.
+    const { container } = mount();
+    for (const child of childrenOf(container)) {
+      expect(Array.from(child.classList)).toContain('fixed');
+    }
   });
 
   it('anchors BOTH controls at the same offset — the "one row" contract', () => {
@@ -339,26 +349,42 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     );
   });
 
-  it('sizes the spacer to clear EVERY control at EVERY size step', () => {
-    // Derived, not three magic numbers: change one `--disc-size` step, or push
-    // either control up to bottom-8, and this arithmetic — not a reviewer —
-    // objects. Each control's reach is measured from ITS OWN bottom token:
-    // reading one corner's offset and applying it to both was a real hole
-    // (G2 react review, 2026-08-12), and reading one SIZE and applying it to
-    // all widths became the same hole when the steps landed (G2, 2026-08-27).
-    const { dial, call, spacer } = mount();
-    const clearance = stepsIn(spacer, SPACER_STEP);
+  it('keeps every control INSIDE the scroll clearance globals.css books for it', () => {
+    // THE ARITHMETIC SURVIVES THE SPACER (owner removal, 2026-09-04) — it just
+    // points at the surviving consumer. It used to compare the controls' reach
+    // against the spacer's own `h-` classes, one step per size step; the spacer
+    // is gone, so the numbers it was derived from now live ONLY in globals.css'
+    // base layer as `scroll-padding-bottom`, which this section's header
+    // obligation (a) books and cannot set itself (§6 forbids a section styling
+    // the shell). Without this test, changing one `--disc-size` step or pushing
+    // a control up to bottom-8 would silently outgrow a shell number no file
+    // checks — the exact hole the spacer version existed to close.
+    // KEEP-IN-SYNC: src/styles/globals.css `@layer base` html rules; the
+    // computed values are pinned from the other side in
+    // src/app/[locale]/shell.test.tsx ("mirrors the clearance … in three steps").
+    const CLEARANCE_REM: Record<string, number> = {
+      '': 5.5,
+      xl: 6,
+      '2xl': 6.5,
+    };
+    const { dial, call } = mount();
 
     for (const el of [dial, call]) {
       const steps = stepsIn(el, DISC_STEP);
-      // The spacer must define a step for every width the controls grow at —
-      // one missing breakpoint is a corner that overlaps the last line there.
-      expect(Object.keys(clearance).sort()).toEqual(Object.keys(steps).sort());
+      // globals must define a step for every width the controls grow at — one
+      // missing breakpoint is a corner that under-clears exactly there.
+      expect(Object.keys(CLEARANCE_REM).sort()).toEqual(
+        Object.keys(steps).sort(),
+      );
       for (const [prefix, step] of Object.entries(steps)) {
+        // Each control's reach from ITS OWN bottom token: reading one corner's
+        // offset and applying it to both was a real hole (G2 react review,
+        // 2026-08-12), and reading one SIZE for all widths became the same hole
+        // when the steps landed (G2, 2026-08-27).
         const reach = step + remIn(tokenStartingWith(el, 'bottom-'));
         // NaN from either parser fails here rather than reaching the comparison.
         expect(reach).toBeGreaterThan(0);
-        expect(clearance[prefix]).toBeGreaterThanOrEqual(reach);
+        expect(CLEARANCE_REM[prefix]).toBeGreaterThanOrEqual(reach);
       }
     }
   });
@@ -369,29 +395,37 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     // the number, so the host does the arithmetic: its own bottom offset plus
     // the sticky bar's reach. Get it wrong and a 400%-zoom stem parks discs
     // behind blurred glass (SC 1.4.10 / 2.4.11).
+    // ONE STEP, at every width — the bar is the same height on every screen
+    // since the owner's 2026-09-04 uniform-height ask, so its reach is a single
+    // 6rem and this inset a single 7rem. (Earlier the same day it briefly
+    // carried an `xl:` twin, for a bar that grew only on desktop.) Still read
+    // as a per-breakpoint TABLE rather than as one token, so that a step
+    // reappearing without the matching arithmetic fails here — the lesson the
+    // --disc-size steps taught this file on 2026-08-27.
     const { dial } = mount();
-    const inset = Array.from(dial.classList).filter((c) =>
-      c.startsWith('[--stem-inset:'),
-    );
-    expect(inset).toHaveLength(1);
-    expect(remIn(inset[0])).toBe(
-      remIn(tokenStartingWith(dial, 'bottom-')) + HEADER_PILL_REACH_REM,
-    );
-    expect(inset[0]).toContain('env(safe-area-inset-bottom)');
+    const insets = stepsIn(dial, STEM_INSET_STEP);
+    const offset = remIn(tokenStartingWith(dial, 'bottom-'));
+
+    expect(Object.keys(insets)).toEqual(['']);
+    expect(insets['']).toBe(offset + HEADER_PILL_REACH_REM);
+    // The safe-area term belongs to every step, exactly as on the offsets.
+    for (const token of Array.from(dial.classList).filter((c) =>
+      STEM_INSET_STEP.test(c),
+    )) {
+      expect(token).toContain('env(safe-area-inset-bottom)');
+    }
   });
 
-  it('lifts controls and clearance by the SAME safe-area inset', () => {
+  it('lifts BOTH controls by the SAME safe-area inset', () => {
     // Notched/gesture-bar phones: env() resolves to 0px everywhere else, so the
     // calc collapses to the plain rem offset — one expression, both worlds.
-    // Every spacer step carries it, not just the base one.
-    const { dial, call, spacer } = mount();
+    // The other half of this pair — that every `scroll-padding-bottom` step
+    // carries the same term, not just the base one — used to be asserted here
+    // against the spacer's three heights; since the removal it belongs to the
+    // rules themselves and is pinned in shell.test.tsx's scroll-padding suite.
+    const { dial, call } = mount();
     const INSET = 'env(safe-area-inset-bottom)';
     expect(tokenStartingWith(dial, 'bottom-')).toContain(INSET);
     expect(tokenStartingWith(call, 'bottom-')).toContain(INSET);
-    const heights = Array.from(spacer.classList).filter((c) =>
-      SPACER_STEP.test(c),
-    );
-    expect(heights).toHaveLength(3);
-    for (const height of heights) expect(height).toContain(INSET);
   });
 });

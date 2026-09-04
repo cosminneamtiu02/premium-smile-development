@@ -489,7 +489,16 @@ export function Modal({
         opener instanceof HTMLElement &&
         opener.isConnected
       ) {
-        opener.focus();
+        // `preventScroll` — restoring focus restores the KEYBOARD position; the
+        // VIEWPORT position is the visitor's and they did not ask to move
+        // (owner-reported close-jump, 2026-09-04). Without it the browser
+        // scrolls the opener into view AND tries to honour the shell's
+        // `scroll-padding-top`, which for an opener inside the sticky bar is a
+        // clearance that moves with the page and can never be satisfied — so
+        // the page drifts every time a dialog closes. This path only runs when
+        // the dialog was removed while open, i.e. the opener is still where the
+        // visitor left it.
+        opener.focus({ preventScroll: true });
       }
     };
   }, [open]);

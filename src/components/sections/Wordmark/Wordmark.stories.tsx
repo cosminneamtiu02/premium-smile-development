@@ -37,8 +37,13 @@ import { Wordmark } from './Wordmark';
 // nearest ancestor `@container` (§6.5), so a story that dropped the lockup into
 // a bare div would photograph a state neither consumer can produce. `Cell`
 // below reproduces the tighter of the two consumers — the Header pill: same
-// gutter clamp, same 1px border, same `h-16` row with `px-4` and `gap-4`
-// (Header.tsx:125-132). The Footer's gutter box is the same clamp without the
+// gutter clamp, same 1px border, the same `px-4` and `gap-4`, and an `h-16` row
+// that was that consumer's height until 2026-09-04 (see the Cell comment: the
+// shipped rows are `h-20` now and this harness has not followed). The WIDTH
+// arithmetic the pinned case rests on is unaffected — it is a horizontal
+// budget. Header.tsx's row is the anchor for both numbers (§17.7: named block,
+// never a line range — the old "Header.tsx:125-132" citation had already
+// drifted). The Footer's gutter box is the same clamp without the
 // border or the padding, i.e. ~34px roomier at every width, so a lockup that
 // fits here fits there.
 
@@ -76,9 +81,17 @@ const Cell = ({
         : '@container mx-[clamp(1rem,10vw,12.5rem)] my-8 rounded-lg border border-line-subtle bg-surface'
     }
   >
-    {/* h-16 = 4rem — the row height BOTH consumers give it (fb-205), and the
-        ruler the percentage-sized artwork resolves
-        against. `self-stretch` on the wrapper is what the Header does for the
+    {/* h-16 = 4rem — the ruler the percentage-sized artwork resolves against.
+        STALE AS A CLAIM ABOUT THE SHIPPED ROWS, recorded rather than quietly
+        corrected: this said "the row height BOTH consumers give it (fb-205)"
+        and that stopped being true on 2026-09-04, when the owner's uniform bar
+        height took Header's row — and, per fb-205, the Footer's ruler — to
+        `h-20`/5rem. This harness still samples 4rem, so these baselines
+        photograph the lockup at a size no consumer now uses. Aligning it is a
+        one-word change that re-records the Wordmark frames, which is a
+        deliberate visual decision and not a drive-by: it is booked for the
+        owner rather than taken here (reported with the F18 round).
+        `self-stretch` on the wrapper is what the Header does for the
         same reason: `items-center` centres children instead of stretching
         them, and a centred child has no full height to be a percentage of.
         px-4 + gap-4 are the pill's own numbers, and they are load-bearing in

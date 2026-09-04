@@ -147,15 +147,18 @@ describe('Footer — every control is a LINK (zero-island contract)', () => {
 });
 
 describe('Footer — row 1, the brand', () => {
-  it('opens the band with sections/Wordmark, centred in an h-16 box', () => {
+  it('opens the band with sections/Wordmark, centred in an h-20 box', () => {
     // Since the fb-200 swap this row is the SAME lockup the Header's corner
     // renders — artwork, hairline bar, the name at Heading's title step — so
     // the §15.6 logo arrives in one file instead of two. The name is still
     // data from lib/clinic.ts (§10.1), and the brand is still identified
     // positionally: the first child of the gutter box. The two wrappers are
     // this section owning placement and SIZE (§6.4/§6.8) — `pb-8` is the old
-    // row's rhythm, `h-16` the 4rem ruler the lockup's percentages resolve
-    // against, matching the header instance exactly (fb-205).
+    // row's rhythm, `h-20` the 5rem ruler the lockup's percentages resolve
+    // against, matching the header instance exactly (fb-205). The ruler tracks
+    // Header's row rather than standing on its own: it went 4rem → 5rem on
+    // 2026-09-04 when the owner asked for one bar height on every screen, and
+    // fb-205 is what makes that a required knock-on rather than a nicety.
     const { footer } = mount();
     const gutter = footer().firstElementChild as HTMLElement;
     const brandRow = gutter.firstElementChild as HTMLElement;
@@ -165,7 +168,7 @@ describe('Footer — row 1, the brand', () => {
     expect(classesOf(brandRow)).toEqual(
       expect.arrayContaining(['flex', 'justify-center', 'pb-8']),
     );
-    expect(classesOf(box)).toEqual(expect.arrayContaining(['flex', 'h-16']));
+    expect(classesOf(box)).toEqual(expect.arrayContaining(['flex', 'h-20']));
     expect(lockup.tagName).toBe('A');
     expect(lockup).toHaveTextContent(clinic.name);
     expect(classesOf(within(lockup).getByText(clinic.name))).toContain(

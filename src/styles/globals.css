@@ -219,7 +219,19 @@
     display: none;
   }
 
-  /* Long prose aligns logically (§15.1) — `start`, never `left`. */
+  /* Long prose aligns logically (§15.1) — `start`, never `left`.
+     A FENCE, not a default (text-align's initial value is already `start`):
+     this rule's one observable job is refusing INHERITED centring, so a
+     wrapper's text-center can never blanket-centre prose by accident. Centring
+     prose is a PER-ELEMENT act — the utility goes on the p/li/blockquote
+     itself (atoms merge the caller's className onto their host element, §6.8)
+     and wins by layer order (utilities beats base); breakpoint re-assertions
+     are per-element too and use text-start, never text-left; wrapper-level
+     [&_p]:text-center is barred in every spelling — it would win the cascade,
+     which is exactly why. Real headings are OUTSIDE this selector on purpose:
+     display text may inherit centring, prose may not. Precedents: the
+     ContactModal lead's per-paragraph comment · the Footer copyright's.
+     DECIDED on the text-align board (§15.15 b, owner 2026-09-04). */
   p,
   li,
   blockquote {

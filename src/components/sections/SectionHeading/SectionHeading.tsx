@@ -102,9 +102,12 @@ import { cx } from '@/lib/cx';
 // reaches the <h2> (which no base rule names) but not the eyebrow's <p>. On one
 // line it is invisible — `items-center` centres the BOX and the box hugs its
 // text — and every centred eyebrow in the repo today is one line. A wrapping
-// one would centre its box and start-align its lines. The fix is a decision
-// (narrow the base rule, or give ui/Eyebrow its own alignment axis), so it goes
-// back to the board instead of being improvised here.
+// one would centre its box and start-align its lines. The fix is DECIDED
+// (text-align board, §15.15 b, owner 2026-09-04): the base rule stays; when a
+// centred eyebrow first needs to wrap, THIS component hands its Eyebrow
+// `text-center` through className — the ContactModal/Footer per-element
+// pattern one tier down (ui/Eyebrow merges the caller's className onto its
+// host <p>) — deliberately unbuilt until that evidence exists.
 //
 // ── The root is a plain <div>. <hgroup> technically fits this exact shape (one
 // heading plus <p> taglines) but maps to a generic in every screen reader, so

@@ -489,10 +489,23 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
       (Hero/ServicesIntro), run (a) the **Container/gutter board** — the
       `clamp(1rem,10vw,12.5rem)` gutter exists as two recorded copies (Header, Footer)
       whose own comment promotes it at the third consumer, which the first page IS (parked
-      `ui/Container`, inventory row 27); and (b) the **text-align board** — the globals
-      base rule `p, li, blockquote { text-align: start }` vs centred multi-line text
-      (three recorded collisions; SectionHeading's header defers exactly here). Page lanes
-      consume both decisions; opening one without them forces mid-lane improvisation.
+      `ui/Container`, inventory row 27); and (b) the **text-align board — DECIDED
+      2026-09-04 (owner, board `.claude/plans/text-align.plan.md`):** the globals base
+      rule stays byte-identical and the per-element override is CANON. Centring prose
+      means the utility ON each `p`/`li`/`blockquote` itself (for atoms: through the
+      `className` merge, §6.8 — it lands on the host element); breakpoint re-assertions
+      are per-element too and use `text-start`, never `text-left`/`text-right` (§3
+      logical properties); wrapper-level blanket centring of prose is barred in every
+      spelling, `[&_p]:text-center` included. Wrappers stay free to centre boxes and
+      non-prose text — real headings sit outside the selector by design (display text
+      may inherit centring; prose may not). Precedents: ContactModal's per-paragraph
+      comment · Footer's copyright comment; SectionHeading's wrapping-centred-eyebrow
+      limit resolves inside the pattern (its Eyebrow takes `text-center` via className
+      on evidence). Same doctrine as §15.14's hyphens rider: global default in
+      globals.css, deliberate exceptions ride the element. Reopen (→ scoped-rule board,
+      option B) only if a page lane exceeds ~10 per-element overrides in one band or
+      MDX must centre prose. Page lanes consume both decisions; opening one without
+      them forces mid-lane improvisation.
     - Micro-items on the owner's word: mechanize the React-free `lib/` fence (eslint
       restriction or source-guard test — G2 LOW, cx lane); add `cx.ts` to §4's lib/ tree
       listing once #64 merges.

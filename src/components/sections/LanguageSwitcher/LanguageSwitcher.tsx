@@ -17,9 +17,14 @@ import { useLanguageOptions } from './useLanguageOptions';
 // .claude/plans/language-dial.plan.md (2026-08-27, D1–D17) and its section
 // dossier (.claude/section-runs/2026-08-05_22-04_top-bar/sections/
 // LanguageSwitcher.md); the brief clauses it exists to satisfy are §8.5 (each
-// language named in itself, no flags, fully keyboard-accessible), §5 (the
-// equivalent path under the target prefix) and §8.7 (the cookie, on the
-// explicit click).
+// language named in itself, fully keyboard-accessible — and, as the owner
+// amended it on 2026-09-04 for the speed-dial-flags lane, backed by decorative
+// country-flag art: the flags are aria-hidden backgrounds behind white outlined
+// codes, never the identification itself, which stays the endonym plus the
+// visible code; `en` wears the Union Jack, the owner's pick over any US flag.
+// "No flags-as-languages" keeps its meaning — no flag may ever be the only way
+// a language is identified), §5 (the equivalent path under the target prefix)
+// and §8.7 (the cookie, on the explicit click).
 //
 // ── ONE LANDMARK AROUND ONE CONTROL, THREE OWNERS. This file renders a <nav>
 // wrapping a single <SpeedDial> and nothing else, which is the whole point of
@@ -195,6 +200,17 @@ export function LanguageSwitcher({
         // The tone still STOPS AT THE BULB — the stem keeps its ghost manner in
         // every tone since the owner's 2026-08-27 reversal of D5 — so this
         // changes one disc, not five.
+        //
+        // SUPERSEDED IN PART (owner 2026-09-04 "b flags everywhere", recorded
+        // 2026-09-05, speed-dial-flags lane): the
+        // bulb now wears the current locale's FLAG ("b flags everywhere"), so
+        // the green above is no longer what a visitor sees at rest — the art
+        // layer covers it. The reversal is kept exactly as written, and the
+        // tone with it, because the SECOND half of the ask still runs on it:
+        // the hover/press manner and the fill under the art both come from the
+        // cta pair, so an unflagged fallback and the transition family stay the
+        // matched corner pair the owner asked for. The rest-colour argument
+        // above is history; the bundle is still the right one.
         tone="cta"
       />
     </nav>

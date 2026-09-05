@@ -110,6 +110,27 @@ const DURATIONS: readonly SpeedDialOption[] = [
   { value: '60', code: '60', label: '60 de minute' },
 ];
 
+/**
+ * ART, the dressing the owner asked for on 2026-09-04 (board
+ * .claude/plans/speed-dial-flags.plan.md) — and deliberately NOT the five real
+ * flag components. The atom has never heard of a flag (D2): `art` is a
+ * ReactNode it clips, covers, hides and scrims without ever looking inside, so
+ * its own suite hands it the dumbest node that can still be told one from
+ * another — an <svg> carrying its option's value. That the REAL flags arrive
+ * through the hook is proved one tier up, in
+ * sections/LanguageSwitcher.test.tsx, which is where flags become a fact.
+ */
+const artOf = (value: string) => (
+  <svg data-art={value} viewBox="0 0 3 2" aria-hidden="true">
+    <rect width="3" height="2" fill="#002B7F" />
+  </svg>
+);
+
+const FLAGGED: readonly SpeedDialOption<Lang>[] = LANGUAGES.map((option) => ({
+  ...option,
+  art: artOf(option.value),
+}));
+
 const OUTSIDE = 'Ieșire';
 
 /**
@@ -320,6 +341,45 @@ const discGhostTokens = [
   'text-ink',
   'hover:bg-line-subtle',
   'active:bg-line-subtle',
+];
+
+// ── THE ART TABLES (speed-dial-flags lane). Copied from the treatment the
+// owner tuned live over six rounds on 2026-09-05 and froze in
+// src/assets/flags/Flags.stories.tsx (TreatmentPreview): a whisper of a scrim,
+// weight-640 white codes one size step up, and an 8-way 1px ink HALO — a halo
+// borders the glyph from OUTSIDE, so unlike the centered text-stroke of rounds
+// 3–5 it never eats into the letter body. Pinned as tokens, the discRest way:
+// what the atom EMITS is the contract, and the pixels are the visual net's job.
+const HALO =
+  '[text-shadow:1px_0_var(--color-ink),-1px_0_var(--color-ink),0_1px_var(--color-ink),0_-1px_var(--color-ink),1px_1px_var(--color-ink),1px_-1px_var(--color-ink),-1px_1px_var(--color-ink),-1px_-1px_var(--color-ink)]';
+
+const artLetterTokens = [
+  'text-ink-inverse', // white on every flag, both tones, stem discs included
+  'font-[640]', // the variable wght axis: round 5's 800 ceiling × 0.8
+  'text-[max(1rem,calc(var(--bulb)*9/28))]', // ONE step above the artless 2/7
+  HALO,
+];
+
+const artLayerTokens = [
+  'absolute',
+  'inset-0',
+  'overflow-hidden', // the circle is what crops the flag…
+  'rounded-full', // …and this is the circle
+  '[&_svg]:size-full', // whatever svg the consumer passed covers the box
+  'forced-colors:hidden', // WHC strips the halo but not svg fills — art yields
+];
+
+const artScrimTokens = [
+  'absolute',
+  'inset-0',
+  'bg-ink/5',
+  'transition-[background-color]',
+  'duration-(--fade)', // discBase's own clock, inherited down from the control
+  'ease-in-out',
+  'group-hover:bg-ink/20', // the flagged disc's hover MANNER
+  'group-active:bg-ink/20',
+  'motion-reduce:transition-none',
+  'forced-colors:hidden', // yields with the art layer (G2 a11y, 2026-09-05)
 ];
 
 const DIRECTIONS = Object.keys(directionTokens) as SpeedDialDirection[];
@@ -1030,6 +1090,208 @@ describe('SpeedDial — tone fills the bulb, the stem stays ghost (D4 · D5)', (
       expect(tokens).toContain('text-[max(0.875rem,calc(var(--bulb)*2/7))]');
       expect(tokens).not.toContain('uppercase');
     }
+  });
+});
+
+describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the codes)', () => {
+  /** The two positioned layers of a flagged control, in paint order. */
+  const layersOf = (control: Element) =>
+    Array.from(
+      control.querySelectorAll<HTMLElement>(
+        ':scope > span[aria-hidden="true"]',
+      ),
+    );
+
+  const artIn = (control: Element) =>
+    control.querySelector('svg')?.getAttribute('data-art');
+
+  it('adds NOTHING to an artless dial — the DOM is a code and nothing else', () => {
+    // The zero-diff half of the manifest, made executable: sixteen ui/speeddial
+    // baselines say every existing story renders exactly what it rendered
+    // before this lane, and every existing story is artless.
+    mount();
+    for (const el of [bulbOf(), ...discsOf()]) {
+      expect(el.querySelectorAll('span')).toHaveLength(0);
+      expect(el.querySelectorAll('svg')).toHaveLength(0);
+      expect(el.querySelectorAll('[aria-hidden]')).toHaveLength(0);
+      expect(el.childNodes).toHaveLength(1);
+      expect(el.firstChild?.nodeType).toBe(Node.TEXT_NODE);
+    }
+  });
+
+  it('dresses ONLY the option carrying art — every other class string is byte-identical', () => {
+    // The other half, and the stronger one: a mixed dial proves the artless
+    // path did not merely survive but is the SAME STRING, character for
+    // character. `art` is per-option, so one flag can never re-dress the four
+    // discs around it (nor the bulb above them).
+    const { unmount } = mount();
+    const before = [bulbOf(), ...discsOf()].map((el) => el.className);
+    unmount();
+
+    const oneFlagged: readonly SpeedDialOption<Lang>[] = LANGUAGES.map(
+      (option) =>
+        option.value === 'de' ? { ...option, art: artOf('de') } : option,
+    );
+    mount({ options: oneFlagged });
+    const after = [bulbOf(), ...discsOf()].map((el) => el.className);
+
+    // [bulb RO · EN · DE · FR · IT] — index 2 is the one that changed.
+    expect(after.filter((_, index) => index !== 2)).toEqual(
+      before.filter((_, index) => index !== 2),
+    );
+    expect(after[2]).not.toBe(before[2]);
+  });
+
+  it('gives the bulb the CURRENT option’s art and each disc its own, hidden from the a11y tree', () => {
+    // Model C again (D1): the bulb IS the current option, so it wears that
+    // option's art — the owner's "flags everywhere incl. the bulb".
+    mount({ options: FLAGGED });
+    expect(artIn(bulbOf())).toBe('ro');
+    expect(discsOf().map(artIn)).toEqual(['en', 'de', 'fr', 'it']);
+
+    for (const el of [bulbOf(), ...discsOf()]) {
+      const [layer, scrim] = layersOf(el);
+      // Decoration, top to bottom: the art is aria-hidden because it says
+      // nothing — the disc's spoken name is its endonym and its visible text is
+      // the code. A flag that announced itself would be a second, competing
+      // identification, which is exactly what §8.5 refuses.
+      expect(layer).toHaveAttribute('aria-hidden', 'true');
+      expect(scrim).toHaveAttribute('aria-hidden', 'true');
+      expect(layer.contains(el.querySelector('svg'))).toBe(true);
+      for (const token of artLayerTokens) {
+        expect(tokensOf(layer)).toContain(token);
+      }
+      for (const token of artScrimTokens) {
+        expect(tokensOf(scrim)).toContain(token);
+      }
+      // …and the code paints ABOVE both, because it is positioned too: a
+      // `relative` in-flow span is the last positioned sibling, so DOM order
+      // puts it on top without a single z-index.
+      expect(tokensOf(el.lastElementChild as HTMLElement)).toContain(
+        'relative',
+      );
+    }
+  });
+
+  it('keeps the visible code and the spoken endonym exactly as they were (SC 2.5.3)', async () => {
+    // The dressing changes paint, never text. A voice-control user still reads
+    // "DE" and says "click Deutsch"; the flag contributes no text node at all,
+    // so textContent is still the code alone (fb-133).
+    mount({ options: FLAGGED });
+    expect(bulbOf()).toHaveTextContent('RO');
+    expect(bulbOf()).toHaveAccessibleName(RO_LABEL);
+    await open();
+    const list = within(listOf());
+    for (const option of FLAGGED.filter((o) => o.value !== 'ro')) {
+      const disc = list.getByRole('link', { name: option.label });
+      expect(disc.textContent).toBe(option.code);
+      expect(disc).toHaveAccessibleName(option.label);
+    }
+  });
+
+  it('paints flagged letters white and weight-640, one step up, ringed by the ink halo', () => {
+    mount({ options: FLAGGED });
+    for (const el of [bulbOf(), ...discsOf()]) {
+      const tokens = tokensOf(el);
+      for (const token of artLetterTokens) expect(tokens).toContain(token);
+      // REPLACED, never overridden — the mechanism, asserted as an absence: two
+      // font-weight (or two font-size) utilities on one element hand the look
+      // to the STYLESHEET's emission order, which no class-order edit can fix.
+      expect(tokens).not.toContain('font-medium');
+      expect(tokens).not.toContain(
+        'text-[max(0.875rem,calc(var(--bulb)*2/7))]',
+      );
+      // The marker the scrim's `group-hover:` reads, and the positioning scope
+      // both layers are absolute against.
+      expect(tokens).toContain('group');
+      expect(tokens).toContain('relative');
+    }
+  });
+
+  it('COVERS the ghost tray rather than stripping it — no conditionals in the tables', () => {
+    // A flagged disc's hover manner is the scrim deepening; the tray it used to
+    // show is still in the class list, simply painted over by an opaque flag.
+    // Nothing about the artless bundle is edited away, which is what keeps the
+    // two paths one atom instead of two.
+    mount({ options: FLAGGED });
+    for (const disc of discsOf()) {
+      const tokens = tokensOf(disc);
+      for (const token of ['border', 'border-line', 'bg-transparent']) {
+        expect(tokens).toContain(token);
+      }
+      expect(tokens).toContain('hover:bg-line-subtle');
+      expect(tokens).toContain('active:bg-line-subtle');
+      // The ONE ghost token a flag genuinely replaces: white letters and ink
+      // letters cannot both be declared and left to the cascade.
+      expect(tokens).not.toContain('text-ink');
+    }
+    // The bulb keeps its whole tone bundle for the same reason (D4-reversed cta
+    // fills it) — covered by the flag, never conditioned away.
+    for (const token of toneTokens.ink) {
+      expect(tokensOf(bulbOf())).toContain(token);
+    }
+  });
+
+  it('keeps the focus ring OUTSIDE the clip — a flag never eats it (SC 2.4.7)', () => {
+    // The clipping lives on the art LAYER, not on the control, and an outline
+    // is painted outside the box and is not subject to the element's own
+    // overflow either way. Both facts, pinned: the ring bundle survives on a
+    // flagged control, and the control itself never clips.
+    mount({ options: FLAGGED });
+    for (const el of [bulbOf(), ...discsOf()]) {
+      const tokens = tokensOf(el);
+      expect(tokens).toContain('focus-visible:outline-2');
+      expect(tokens).toContain('focus-visible:outline-focus');
+      expect(tokens).toContain('outline-offset-2');
+      expect(tokens).not.toContain('overflow-hidden');
+    }
+  });
+
+  it('COMPILES to the approved treatment, not merely to the right class names', () => {
+    // The pins above prove the atom EMITS the fragments; this one asks the
+    // engine whether Tailwind turned them into declarations. An arbitrary value
+    // that silently fails to compile leaves no class-name evidence at all — the
+    // letters would just inherit the body's weight, and the first thing to
+    // notice would be a wrong baseline. The real stylesheet is already loaded
+    // at the top of this file, so the answer is one getComputedStyle away.
+    mount({ options: FLAGGED, size: 'lg' });
+    const bulb = bulbOf();
+    const disc = discsOf()[0];
+
+    for (const el of [bulb, disc]) {
+      const style = getComputedStyle(el);
+      expect(style.fontWeight).toBe('640');
+      // 18px on BOTH, and deliberately: the size is derived from `--bulb` (the
+      // 56px lg bulb → max(1rem, 56×9/28) = 18px), which the root sets once for
+      // the whole dial — so a 44px stem disc prints the same 18px as the bulb.
+      // Recorded, not accidental: the flag lane's pack surfaces this in case
+      // the owner ever wants the stem a step smaller than the bulb.
+      expect(style.fontSize).toBe('18px');
+      // Eight shadow copies, one per compass point. Counted by colour stops so
+      // the assertion does not hard-code whatever --color-ink resolves to.
+      expect(style.textShadow.match(/rgb/g)).toHaveLength(8);
+    }
+
+    // White letters, resolved through the token rather than typed as a hex —
+    // the LanguageSwitcher cta-probe idiom: both sides parsed by one engine.
+    const probe = document.createElement('div');
+    probe.style.color = 'var(--color-ink-inverse)';
+    document.body.append(probe);
+    try {
+      expect(getComputedStyle(disc).color).toBe(getComputedStyle(probe).color);
+    } finally {
+      probe.remove();
+    }
+
+    // The scrim really paints, and it fades on the system's own --fade clock
+    // (set by discBase on the CONTROL, inherited down to this child).
+    // Measured on the BULB's scrim on purpose: the stillness style at the top
+    // of this file kills transitions inside the stem — `[aria-controls] ~ ul *`
+    // — and the bulb's own children are outside that selector.
+    const scrim = getComputedStyle(layersOf(bulb)[1]);
+    expect(scrim.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(scrim.transitionDuration).toBe('0.4s');
+    expect(scrim.transitionProperty).toBe('background-color');
   });
 });
 

@@ -43,6 +43,10 @@ export const LOCALE_COOKIE = 'NEXT_LOCALE';
 
 // Each language named in itself — never flags (brief §8.5). Also the data
 // source for the future LanguageSwitcher (Phase 3).
+// Amended 2026-09-04 (owner, speed-dial-flags lane): decorative country-flag
+// art may sit BEHIND the switcher's codes, but the identification is still this
+// table plus the visible code — no flag is ever the only way a language is
+// named, which is all §8.5 ever meant.
 export const nativeNames: Record<Locale, string> = {
   ro: 'Română',
   en: 'English',

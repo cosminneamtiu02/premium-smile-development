@@ -12,6 +12,7 @@ import {
   // cause.
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
+  type ReactNode,
   useCallback,
   useEffect,
   useId,
@@ -61,6 +62,46 @@ import { discBase, discBox } from '../disc';
 // heavy machinery. No portal either: the stem is positioned against the bulb.
 // It has since grown one manner NavMenu deliberately does not share — opening
 // on hover and closing on hover-away (see the two clocks below).
+//
+// ── THE ART SLOT (owner, 2026-09-04; board .claude/plans/speed-dial-flags.plan.md,
+// treatment tuned live over six rounds on 2026-09-05). An option may carry
+// `art`: a decorative ReactNode this atom clips to the circle, covers, hides
+// from the a11y tree and dims under an ink scrim so the code stays readable on
+// top of it. It is D2 all over again — the atom does not know these are
+// COUNTRY FLAGS any more than it knows its options are languages; a section
+// hands it a node and the atom dresses it. Four things worth knowing here:
+//  · ARTLESS DIALS ARE BYTE-IDENTICAL BY CONSTRUCTION. Every art string is a
+//    REPLACEMENT chosen at the render site, never an addition: with no `art`
+//    the same class tables are joined in the same order as before this lane and
+//    the control's whole content is still one text node. That is what lets the
+//    lane's manifest promise sixteen unchanged ui/speeddial baselines, and
+//    SpeedDial.test.tsx's "art backgrounds" suite asserts it both ways round.
+//  · THE INK RIM IS A HALO, NOT A STROKE. Eight 1px `text-shadow` copies border
+//    each glyph from OUTSIDE; a centered `-webkit-text-stroke` eats half its
+//    width into the letter body, which is what made rounds 3–5 read "way too
+//    thick" and then too thin. Plain inherited properties, every shipping
+//    engine, and the owner tunes them by hand — so the fragments are kept
+//    obvious rather than clever.
+//  · AXE CANNOT AUDIT THIS. Automated contrast checks read a background COLOUR;
+//    letters over an image return "incomplete", never a pass or a fail. So the
+//    scrim + halo pair is the measured mechanism (white on the FR/IT white
+//    bands is the worst case), the visual net freezes the result, and the
+//    lane's pack carries the manual note. §9 is met by argument here, not by a
+//    green check — and the argument's normative footing is WCAG 2.2's
+//    "contrast ratio" glossary note: a NARROW border around the letter is
+//    measured as part of the LETTER, which is exactly what the 1px halo is
+//    (the pack carries the field-by-field table; site minimum 5.2:1, DE red).
+//  · FORCED COLORS YIELD. In forced-colors mode (Windows High Contrast)
+//    `text-shadow` computes to `none` while inline-svg fills are deliberately
+//    NOT forced — the flag would survive exactly as both halves of the
+//    measured pair died. So both decorative layers carry
+//    `forced-colors:hidden`: decoration yields, and the codes render in the
+//    forced palette on plain ButtonFace — the exact pre-flag WHC picture
+//    (G2 a11y MEDIUM, folded 2026-09-05).
+//  · IT IS ORTHOGONAL TO HOVER-OPEN. The art layer adds no pointer handler and
+//    no state: its hover manner is one CSS `group-hover:` on a scrim, while the
+//    two clocks below own opening and closing. Neither can be edited into the
+//    other by accident.
 
 // ── PUBLIC CSS VARIABLES — the two knobs a HOST turns through `className`
 // (§6.8: placement and sizing are the parent's; the atom never reads the
@@ -119,6 +160,19 @@ export interface SpeedDialOption<V extends string = string> {
    * Optional: a non-language use of the dial simply omits it.
    */
   lang?: string;
+  /**
+   * Decorative ART behind this disc's letters — the atom clips it to the
+   * circle, covers the box (the svg's own preserveAspectRatio does the
+   * cropping), hides it from the a11y tree, and dims it under an ink scrim so
+   * the code stays legible. The atom never interprets it (D2: it has never
+   * heard of flags, either).
+   *
+   * `undefined` — and ONLY `undefined` — means artless. The type legally
+   * admits null/false/'', and any of those is a PRESENT (empty) artwork that
+   * takes the full art dressing; `hasArt` below is the one predicate every
+   * decision site reads, so content shape and dressing can never split.
+   */
+  art?: ReactNode;
 }
 
 type SpeedDialOwnProps<V extends string> = {
@@ -234,6 +288,87 @@ const letterClasses =
   'font-mono font-medium tracking-wide leading-none ' +
   'text-[max(0.875rem,calc(var(--bulb)*2/7))]';
 
+// ── THE ART BUNDLES. Three strings that only ever ship together, and the first
+// thing to know is what they are NOT: they never JOIN `letterClasses`, they
+// REPLACE it. Two font-weight utilities (or two font-size, or two colour) on
+// one element are decided by the STYLESHEET's emission order, not by the order
+// they were written in the class attribute — so "override the shared letters"
+// would be a look nobody in this file could predict or fix. Every art string is
+// therefore chosen at the render site, which is also what keeps an artless dial
+// byte-identical (see the header).
+//
+// The values are the owner's, walked live on 2026-09-05 and frozen in
+// src/assets/flags/Flags.stories.tsx (the TreatmentPreview story is the
+// approved picture; these are the same fragments): weight 640 on JetBrains
+// Mono's variable wght axis (round 5's 800 ceiling × 0.8 — "20% thinner
+// again"), one size step above the artless 2/7 arithmetic, white letters on
+// every flag and in every tone, and the ink rim drawn as an 8-way 1px halo.
+const artLetterClasses =
+  'font-mono font-[640] tracking-wide leading-none ' +
+  'text-[max(1rem,calc(var(--bulb)*9/28))] text-ink-inverse ' +
+  '[text-shadow:1px_0_var(--color-ink),-1px_0_var(--color-ink),' +
+  '0_1px_var(--color-ink),0_-1px_var(--color-ink),1px_1px_var(--color-ink),' +
+  '1px_-1px_var(--color-ink),-1px_1px_var(--color-ink),' +
+  '-1px_-1px_var(--color-ink)]';
+
+// The art itself: absolutely positioned over the whole control, round, and
+// clipping whatever it was handed. The CIRCLE is what crops the flag, so a
+// consumer's 3:2 rectangle needs no cropping of its own — `[&_svg]:size-full`
+// stretches the node to the box and the svg's own `preserveAspectRatio` slice
+// covers it. `overflow-hidden` lives HERE and never on the control: the focus
+// ring is drawn outside the box and must stay unclipped (SC 2.4.7).
+// `forced-colors:hidden` on BOTH decorative layers — see the header's FORCED
+// COLORS YIELD bullet; the utility compiles to a media-query rule the visual
+// runner never activates, so no baseline can move.
+const artLayerClasses =
+  'absolute inset-0 overflow-hidden rounded-full [&_svg]:size-full ' +
+  'forced-colors:hidden';
+
+// The scrim — a whisper of ink over the art (owner: "they are too dark … still
+// lighter", /35 → /15 → /5), deepening on hover and press. That deepening IS a
+// flagged disc's hover manner: the ghost tray and the tone fill underneath are
+// still in the class list, simply covered by an opaque flag, and nothing here
+// strips them. The clock is `--fade`, which discBase sets on the CONTROL and
+// custom properties inherit down to this child, so a flagged disc fades on
+// exactly the system clock every other disc uses.
+const artScrimClasses =
+  'absolute inset-0 bg-ink/5 transition-[background-color] ' +
+  'duration-(--fade) ease-in-out ' +
+  'group-hover:bg-ink/20 group-active:bg-ink/20 ' +
+  'motion-reduce:transition-none forced-colors:hidden';
+
+/**
+ * What sits INSIDE a disc, bulb and stem alike — one function so the two can
+ * never drift apart.
+ *
+ * With no art it returns the bare code: the same single text node this atom has
+ * always rendered, which is the DOM half of the byte-identical promise. With
+ * art it stacks three spans, and the third is why the code stays on top without
+ * a single z-index: the two decorative layers are `absolute` (positioned,
+ * z-index auto) and the text is `relative` (positioned too) and LAST in DOM
+ * order, so paint order alone puts it above.
+ */
+/**
+ * THE one artless test (G2 ts LOW, 2026-09-05): `undefined` is the sentinel —
+ * see the `art` field's doc. Every decision site (content here, the `group`
+ * marker, both letter/disc class ternaries) reads THIS predicate, so a future
+ * edit cannot split content shape from dressing.
+ */
+const hasArt = (art: ReactNode): boolean => art !== undefined;
+
+function discContent(code: string, art: ReactNode): ReactNode {
+  if (!hasArt(art)) return code;
+  return (
+    <>
+      <span aria-hidden="true" className={artLayerClasses}>
+        {art}
+      </span>
+      <span aria-hidden="true" className={artScrimClasses} />
+      <span className="relative">{code}</span>
+    </>
+  );
+}
+
 // THIS atom's transition list — never `transition-colors` (that shorthand
 // covers outline-color and would drag the focus ring onto the fade clock) and
 // never `transition-all`. Exactly two properties, and deliberately the SAME two
@@ -273,14 +408,37 @@ const discTransition = 'transition-[background-color,color]';
 //
 // Hover therefore reads as "ready" and chosen stays the filled bulb: still two
 // clearly different looks (tray vs fill), just not a progression any more.
-const discRest =
-  'size-(--disc) rounded-full border border-line bg-transparent text-ink ' +
-  'hover:bg-line-subtle active:bg-line-subtle';
+//
+// SPLIT IN THREE, and the split is the only thing the art lane changed here:
+// `text-ink` is the ONE token a flagged disc must not merely cover but replace
+// (white letters and ink letters cannot both be declared and left to the
+// cascade — see the art bundles above), so the ground and the tray are named
+// around it. `discRest` below is the same string it always was, character for
+// character; the pieces exist so the flagged path can rebuild it minus one
+// token instead of fighting it.
+const discRestGround =
+  'size-(--disc) rounded-full border border-line bg-transparent';
+const discRestTray = 'hover:bg-line-subtle active:bg-line-subtle';
+
+const discRest = `${discRestGround} text-ink ${discRestTray}`;
 
 // Nothing in a disc's clothes depends on props any more — the tone stops at the
 // bulb — so the whole string is built once, at module scope, like every other
 // class table in this file.
 const discClasses = cx(discBase, discRest, letterClasses, discTransition);
+
+// …and its flagged twin, chosen per option at the render site. `group` is the
+// marker the scrim's `group-hover:` reads (GlyphButton's precedent: a marker
+// class emits no CSS of its own, so it is free at rest) and `relative` is the
+// scope both layers are absolute against — the bulb already carries one.
+const artDiscClasses = cx(
+  discBase,
+  'group relative',
+  discRestGround,
+  discRestTray,
+  artLetterClasses,
+  discTransition,
+);
 
 // The stem, minus its direction. `absolute` inside the isolated inner box with
 // `-z-10` so the tube's round start end hides BEHIND the bulb (fb-262); the
@@ -1006,14 +1164,23 @@ export function SpeedDial<V extends string = string>({
           }}
           className={cx(
             'peer relative z-10 rounded-full',
+            // The marker, added ONLY when there is art for it to work on: with
+            // no art `cx` drops the `false` and this joins exactly the tokens
+            // it joined before the lane (the byte-identical promise).
+            hasArt(bulb?.art) && 'group',
             discBase,
             discBox[size],
-            letterClasses,
+            hasArt(bulb?.art) ? artLetterClasses : letterClasses,
+            // The tone rides along untouched even under a flag: its fill is
+            // covered, not conditioned away, and both bundles already paint
+            // `text-ink-inverse` — the same declaration twice is not a
+            // conflict, and a tone bundle that ever stopped being
+            // white-on-fill would be the bug, not this repeat.
             toneClasses[tone],
             discTransition,
           )}
         >
-          {bulb ? bulb.code : value}
+          {bulb ? discContent(bulb.code, bulb.art) : value}
         </button>
 
         {/* A plain list — no role="menu", no role="dialog", no aria-current
@@ -1051,9 +1218,9 @@ export function SpeedDial<V extends string = string>({
                   lang={option.lang}
                   aria-label={option.label}
                   onClick={(event) => handleSelect(option, event)}
-                  className={discClasses}
+                  className={hasArt(option.art) ? artDiscClasses : discClasses}
                 >
-                  {option.code}
+                  {discContent(option.code, option.art)}
                 </button>
               ) : (
                 <a
@@ -1062,9 +1229,9 @@ export function SpeedDial<V extends string = string>({
                   hrefLang={option.lang}
                   aria-label={option.label}
                   onClick={(event) => handleSelect(option, event)}
-                  className={discClasses}
+                  className={hasArt(option.art) ? artDiscClasses : discClasses}
                 >
-                  {option.code}
+                  {discContent(option.code, option.art)}
                 </a>
               )}
             </li>

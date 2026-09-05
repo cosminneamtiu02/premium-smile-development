@@ -18,7 +18,8 @@ const meta = {
     variant: {
       control: 'radio',
       options: ['solid', 'outline', 'ghost'] satisfies ButtonVariant[],
-      description: 'Visual tone — solid CTA / outlined, fills on hover / quiet',
+      description:
+        'Visual tone — solid CTA, drains on hover / outlined, fills on hover / quiet',
     },
     size: {
       control: 'radio',
@@ -145,6 +146,10 @@ export const PseudoLocale: Story = {
  * Hover END states, pinned as real pixels: the 'pin-hover' tag makes the
  * visual spec perform a true mouse hover before the (animation-disabled)
  * screenshot — synthetic play() events cannot activate CSS :hover.
+ * Since the 2026-09-06 mirror law, HoverSolid's END face IS the outline
+ * variant's rest face (surface ground, cta label, 1px cta hairline) and
+ * HoverOutline's END face is solid's rest face — if either pinned frame
+ * drifts from its mirror twin, the mirror broke, not just a color.
  */
 export const HoverSolid: Story = {
   tags: ['pin-hover'],

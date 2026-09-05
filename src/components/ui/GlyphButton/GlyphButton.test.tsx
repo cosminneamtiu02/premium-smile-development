@@ -56,11 +56,22 @@ const shapeTokens: Record<GlyphButtonShape, string[]> = {
 };
 
 const requiredTokens: Record<GlyphButtonVariant, string[]> = {
+  // solid MIRRORS outline since the socials'-hover rework (owner 2026-09-06):
+  // hover face = outline's rest face (surface ground, cta glyph, a 1px cta
+  // inset-ring hairline standing in for the border), press face = outline's
+  // press face. Byte-parity with Button's solid — one mirror language, the
+  // same discipline as the ghost pair below; Button.test.tsx carries the
+  // reasoned twin of this table.
   solid: [
     'bg-cta',
     'text-ink-inverse',
-    'hover:bg-cta-hover',
+    'inset-ring',
+    'inset-ring-transparent',
+    'hover:bg-surface',
+    'hover:text-cta',
+    'hover:inset-ring-cta',
     'active:bg-cta-hover',
+    'active:text-ink-inverse',
   ],
   outline: [
     'border-cta',
@@ -82,6 +93,18 @@ const requiredTokens: Record<GlyphButtonVariant, string[]> = {
     'active:bg-line-subtle',
   ],
 };
+
+// With box-shadow on the fade clock, every box-shadow-painting utility is an
+// animation channel. Exactly these three spellings — solid's hairline — are
+// legitimate; the rest of the ring families (outer ring, ring-offset, width
+// escalations like inset-ring-4) are banned alongside the shadows in the
+// motion sweep below (G2 react MEDIUM, 2026-09-06). KEEP-IN-SYNC with
+// Button.test.tsx's twin allowlist.
+const legitimateRingTokens = new Set([
+  'inset-ring',
+  'inset-ring-transparent',
+  'hover:inset-ring-cta',
+]);
 
 // The full variant × shape matrix, DERIVED — never hand-listed: a hand list
 // silently missed outline·square and would let a future bundle ship unswept
@@ -542,7 +565,7 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
     expect(tokens).toContain('[--fade:400ms]');
     expect(tokens).toContain('duration-(--fade)');
     expect(tokens).toContain('ease-in-out');
-    expect(tokens).toContain('transition-[background-color,color]');
+    expect(tokens).toContain('transition-[background-color,color,box-shadow]');
   });
 
   it('admits no second clock or easing — in and out stay mirrored', () => {
@@ -565,7 +588,14 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
     (variant, shape) => {
       const { cls, tokens } = tokensOf(variant, shape);
       // The old icon-button grew on hover and swapped shadows — the owner cut
-      // BOTH (fb-49/fb-50). Banned by pattern, never as a list of spellings.
+      // BOTH (fb-49/fb-50). Banned by pattern, never as a list of spellings —
+      // and since box-shadow joined the fade clock for solid's inset-ring
+      // hairline (owner, 2026-09-06) the bans cover the `inset-` shadow
+      // spelling AND the ring families: solid's three allowlisted inset-ring
+      // spellings are the ONE legitimate box-shadow painter here; every
+      // other ring/shadow token is a pop or halo channel riding the clock
+      // (G2 react MEDIUM, 2026-09-06 — hover:ring-4 would be fb-49/fb-50
+      // respelled). KEEP-IN-SYNC with Button.test.tsx's twin allowlist.
       // The burger's morph is no exception: transforms belong to the Header's
       // own SVG child, never to a bundle in here.
       expect(
@@ -573,21 +603,35 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
           /(^|:)(animate|scale|translate|rotate|skew)-/.test(t),
         ),
       ).toEqual([]);
-      expect(tokens.filter((t) => /(^|:)shadow(-|$)/.test(t))).toEqual([]);
+      expect(tokens.filter((t) => /(^|:)(inset-)?shadow(-|$)/.test(t))).toEqual(
+        [],
+      );
+      expect(
+        tokens.filter(
+          (t) =>
+            /(^|:)(inset-)?ring(-|$)/.test(t) && !legitimateRingTokens.has(t),
+        ),
+      ).toEqual([]);
       expect(cls).not.toMatch(/transition-transform|transition-all/);
       expect(cls).not.toMatch(/(^|:)(before|after):|::(before|after)/);
     },
   );
 
-  it('fades exactly two properties — never the focus ring', () => {
-    const { cls } = tokensOf('outline');
-    // transition-colors would cover outline-color too, dragging the ring onto
-    // the fade clock; the legitimate transition-[background-color,color] does
-    // not collide with any of these patterns.
-    expect(cls).not.toMatch(
-      /transition-colors|transition-\[color\]|transition-all/,
-    );
-  });
+  it.each(['solid', 'outline'] as GlyphButtonVariant[])(
+    'fades exactly three properties — never the focus ring (%s)',
+    (variant) => {
+      const { cls } = tokensOf(variant);
+      // transition-colors would cover outline-color too, dragging the ring
+      // onto the fade clock; the legitimate
+      // transition-[background-color,color,box-shadow] (box-shadow = solid's
+      // inset-ring hairline, 2026-09-06) collides with none of these
+      // patterns. Both crossfading variants are swept — solid joined outline
+      // with the mirror law.
+      expect(cls).not.toMatch(
+        /transition-colors|transition-\[color\]|transition-all/,
+      );
+    },
+  );
 
   it('press feedback snaps, release fades, reduced motion gets snaps (§9)', () => {
     const { tokens } = tokensOf();
@@ -616,6 +660,27 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
       }
     },
   );
+
+  it("solid and outline are hover-mirrors — each hover face is the other's rest face", () => {
+    // THE 2026-09-06 LAW as a DERIVED relation on this atom too (G2 react
+    // LOW, 2026-09-06: a single-atom mirror pin would let a GlyphButton-only
+    // edit break cross-atom parity with a green suite). Variant-distinctive
+    // rest color tokens are computed by set difference — shared base tokens
+    // cancel — and each must reappear hover:-prefixed on the other side.
+    // Button.test.tsx carries the derived twin of this relation.
+    const solid = tokensOf('solid').tokens;
+    const outline = tokensOf('outline').tokens;
+    const restColors = (tokens: string[], other: string[]) =>
+      tokens.filter((t) => /^(bg|text)-/.test(t) && !other.includes(t));
+    const solidRest = restColors(solid, outline);
+    const outlineRest = restColors(outline, solid);
+    // Guard the derivation itself: an over-aggressive filter returning []
+    // would pass the loops below while proving nothing.
+    expect(solidRest).not.toHaveLength(0);
+    expect(outlineRest).not.toHaveLength(0);
+    for (const rest of solidRest) expect(outline).toContain(`hover:${rest}`);
+    for (const rest of outlineRest) expect(solid).toContain(`hover:${rest}`);
+  });
 
   it('ghost really rests transparent — bg-transparent is its only plain bg', () => {
     // A ground painted at rest would make ghost a second solid: the tray must

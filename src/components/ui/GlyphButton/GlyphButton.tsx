@@ -39,8 +39,9 @@ type GlyphButtonOwnProps = {
    */
   'aria-label': string;
   /**
-   * Named color-pair bundle. solid = filled call CTA · outline = socials,
-   * fills on hover · ghost = the quiet tone, transparent at rest.
+   * Named color-pair bundle. solid = filled call CTA, drains on hover ·
+   * outline = socials, fills on hover · ghost = the quiet tone, transparent
+   * at rest.
    * Borders live INSIDE a bundle (only outline has one), never on the shape.
    */
   variant?: GlyphButtonVariant;
@@ -92,18 +93,34 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // The icon needs no hover logic of its own: <Icon> (and any well-formed svg)
 // paints with currentColor, so `color` — which IS in the transition list —
 // carries the glyph through the fade for free.
-// solid and ghost lerp the ground only, between pairs that both pass AA (white
-// over #008854 → #006b42 = 4.52:1 → 6.60:1; ink over transparent → #e9e6e2 =
-// 11.9:1 at the far end). outline crossfades both, so its glyph and ground
-// pass through each other mid-fade — the same knowingly-accepted window as
-// Button's outline (fb-38); border-cta never transitions, holding 4.29:1 so
-// the control stays identifiable throughout.
+// solid and outline are HOVER-MIRRORS (owner, 2026-09-06 — the socials'-hover
+// rework: the corner call + WhatsApp discs adopt the Footer socials'
+// fill/invert): each one's hover face is the other's rest face. outline
+// FILLS green (fb-38, unchanged); solid DRAINS to surface ground + cta glyph
+// + a 1px cta inset-ring hairline sitting exactly where outline's border
+// does; both press to the same deep green (white over #008854 → #006b42 =
+// 4.52:1 → 6.60:1). ghost still lerps the ground only (ink over transparent
+// → #e9e6e2 = 11.9:1 at the far end). Both crossfaders pass glyph and ground
+// through each other mid-fade — the knowingly-accepted fb-38 window,
+// extended to solid with the mirror decision; a cta line holds the edge
+// throughout (outline's border never transitions, holding 4.29:1; solid's
+// hairline fades toward full visibility). The hairline stays an inset-ring
+// rather than a real border for BYTE-PARITY with Button's solid — this fixed
+// border-box square could take a border with zero layout shift, but Button's
+// auto-width box cannot, and one mirror language beats two spellings (the
+// ghost pair's own discipline). Composition note: FloatingActions dresses
+// the corner discs in `shadow-aura` through className (its AURA ON THE
+// CORNER comment); Tailwind's shadow/ring layers compose into ONE box-shadow
+// value, so the static aura rides along unmoved while the hairline lerps
+// under it.
 // active:duration-0 snaps press feedback; motion-reduce:transition-none gives
 // clean snaps (§9). --fade is INTERNAL: className is merged last, so a caller
 // could stretch it with nondeterministic precedence. Change it here instead.
-// The list is exactly background-color,color and NOT `transition-colors` —
-// that shorthand covers outline-color and would drag the focus ring onto the
-// same clock.
+// The list is exactly background-color,color,box-shadow and NOT
+// `transition-colors` — that shorthand covers outline-color and would drag
+// the focus ring onto the same clock. box-shadow exists for solid's hairline
+// alone; border-color stays OUT of the list on purpose, so outline's border
+// is immovable by construction, not merely by value-constancy.
 // `group` is the morph hook and nothing else: a marker class that emits no CSS
 // of its own, so it is free at rest and lets a parent's child SVG react to
 // THIS root's state (`group-aria-expanded:*`) without any code in here.
@@ -112,19 +129,26 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // ZERO-PIXEL refactor: the token SET below is identical to the one this atom
 // emitted before, only the file the strings are DEFINED in moved. What stays
 // here on purpose: `group`, the disabled state, the radius (shape is this
-// atom's axis alone) and the transition list — exactly two properties, so the
-// outline's border never moves and the focus ring never joins the clock.
+// atom's axis alone) and the transition list — exactly three properties,
+// border-color pointedly absent, so the outline's border never moves and the
+// focus ring never joins the clock.
 const base =
   'group ' +
   discBase +
   ' disabled:pointer-events-none disabled:opacity-50 ' +
-  'transition-[background-color,color]';
+  'transition-[background-color,color,box-shadow]';
 
 // Named bundles, not four free color props: every rest AND hover pair is
 // measured once, so §9 holds by construction and no call site can invent an
 // illegal combination (plan §4a). A new look = a new variant, verified once.
 const variantClasses: Record<GlyphButtonVariant, string> = {
-  solid: 'bg-cta text-ink-inverse hover:bg-cta-hover active:bg-cta-hover',
+  // Rest→hover DRAINS to outline's rest face; the press re-fills deep green
+  // (the 2026-09-06 mirror law — see the contract above and Button.tsx).
+  // Byte-identical to Button's solid, like the ghost pair below.
+  solid:
+    'bg-cta text-ink-inverse inset-ring inset-ring-transparent ' +
+    'hover:bg-surface hover:text-cta hover:inset-ring-cta ' +
+    'active:bg-cta-hover active:text-ink-inverse',
   outline:
     'border border-cta bg-surface text-cta ' +
     'hover:bg-cta hover:text-ink-inverse ' +

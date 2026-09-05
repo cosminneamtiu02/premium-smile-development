@@ -72,7 +72,7 @@ const DIAL: readonly { code: string; flag: ReactNode }[] = [
 
 /**
  * One disc of the board's dressing spec, story-local: flag covers the circle,
- * an ink/20 DIM rests over it and LIGHTS UP to the /5 whisper on hover
+ * an ink/30 DIM rests over it and LIGHTS UP to the /5 whisper on hover
  * (owner round 13's inversion: "dark at rest and on hover they light up" —
  * the bulb wears the /5 permanently, so "lit" is one face), and the code
  * sits on top in white weight-640 mono (rounds 3–6 walked "trippe thicker" →
@@ -106,7 +106,7 @@ function PreviewDisc({
       </span>
       <span
         aria-hidden="true"
-        className="absolute inset-0 rounded-full bg-ink/20 transition-[background-color] duration-[400ms] ease-in-out group-hover:bg-ink/5 motion-reduce:transition-none"
+        className="absolute inset-0 rounded-full bg-ink/30 transition-[background-color] duration-[400ms] ease-in-out group-hover:bg-ink/5 motion-reduce:transition-none"
       />
       <span
         className={`relative font-mono font-[640] tracking-wide leading-none ${text} text-ink-inverse [text-shadow:1px_0_var(--color-ink),-1px_0_var(--color-ink),0_1px_var(--color-ink),0_-1px_var(--color-ink),1px_1px_var(--color-ink),1px_-1px_var(--color-ink),-1px_1px_var(--color-ink),-1px_-1px_var(--color-ink)]`}
@@ -154,7 +154,7 @@ export const TreatmentPreview: Story = {
       </div>
       {/* Developer note, not site copy — untranslated on purpose. */}
       <p className="max-w-prose text-sm text-ink-muted">
-        Tunables, verbatim from the board: stem scrim <code>bg-ink/20</code> →{' '}
+        Tunables, verbatim from the board: stem scrim <code>bg-ink/30</code> →{' '}
         <code>group-hover:bg-ink/5</code> (bulb: always <code>/5</code>); body{' '}
         <code>font-[640]</code>; ink rim = 8-way 1px <code>text-shadow</code>{' '}
         halo.

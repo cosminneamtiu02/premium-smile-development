@@ -326,9 +326,10 @@ const artLayerClasses =
 
 // The STEM scrim — INVERTED by owner round 13 (2026-09-05: "i want them to be
 // dark at rest and on hover they light up. the one at root is not to be
-// darkened, it is lit up always"): a choice disc rests DIMMED under ink/20
-// and LIGHTS UP to the ink/5 whisper on hover/press — the same /5 the bulb
-// wears permanently, so "lit" is one face across the dial and hover reads as
+// darkened, it is lit up always"): a choice disc rests DIMMED under ink/30
+// (round 14 deepened round 13's /20 — "even darker tho at rest") and LIGHTS
+// UP to the ink/5 whisper on hover/press — the same /5 the bulb wears
+// permanently, so "lit" is one face across the dial and hover reads as
 // "this one comes alive". The /20↔/5 pair is the delta rounds 10–11 proved
 // perceptible (a 5-point step read as nothing). That lighting IS a flagged
 // disc's hover manner: the ghost tray and the tone fill underneath are still
@@ -345,7 +346,7 @@ const artLayerClasses =
 // preview's wrapper clipped everything round; the atom's control deliberately
 // clips nothing, SC 2.4.7).
 const artScrimClasses =
-  'absolute inset-0 rounded-full bg-ink/20 transition-[background-color] ' +
+  'absolute inset-0 rounded-full bg-ink/30 transition-[background-color] ' +
   'duration-(--fade) ease-in-out ' +
   'group-hover:bg-ink/5 group-active:bg-ink/5 ' +
   'motion-reduce:transition-none forced-colors:hidden';

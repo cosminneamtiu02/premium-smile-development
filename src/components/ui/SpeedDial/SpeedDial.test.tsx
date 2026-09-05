@@ -373,7 +373,7 @@ const artScrimTokens = [
   'absolute',
   'inset-0',
   'rounded-full', // the scrim's OWN clip — square corners outside the circle without it (owner, 2026-09-05)
-  'bg-ink/20', // DIMMED at rest — round 13's inversion: the choices sleep
+  'bg-ink/30', // DIMMED at rest — round 13's inversion, deepened by round 14
   'transition-[background-color]',
   'duration-(--fade)', // discBase's own clock, inherited down from the control
   'ease-in-out',
@@ -1183,7 +1183,7 @@ describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the code
         // deepens and carries no clock. Asserted as absences, the
         // replaced-not-overridden convention.
         expect(tokensOf(scrim)).not.toContain('group-hover:bg-ink/5');
-        expect(tokensOf(scrim)).not.toContain('bg-ink/20');
+        expect(tokensOf(scrim)).not.toContain('bg-ink/30');
         expect(tokensOf(scrim)).not.toContain('transition-[background-color]');
       }
       // …and the code paints ABOVE both, because it is positioned too: a

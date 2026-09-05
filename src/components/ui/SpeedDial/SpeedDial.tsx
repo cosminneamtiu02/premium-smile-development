@@ -103,10 +103,10 @@ import { discBase, discBox } from '../disc';
 //    two clocks below own opening and closing. Neither can be edited into the
 //    other by accident.
 
-// ── PUBLIC CSS VARIABLES — the two knobs a HOST turns through `className`
+// ── PUBLIC CSS VARIABLES — the three knobs a HOST turns through `className`
 // (§6.8: placement and sizing are the parent's; the atom never reads the
 // screen, §6.5). Each has its fallback baked into every token that reads it,
-// so a dial with neither set is exactly the `size` step it declares.
+// so a dial with none set is exactly the `size` step it declares, undecorated.
 //   --disc-size   the bulb's box; default = the `size` step (2.75rem md ·
 //                 3.5rem lg). FloatingActions sets it per screen type on BOTH
 //                 corners (D16 · F2); GlyphButton reads the same variable
@@ -118,6 +118,16 @@ import { discBase, discBox } from '../disc';
 //                 pill's reach). The atom adds half a bulb, because the stem
 //                 is anchored at the bulb's CENTRE. Read by the cap tokens in
 //                 the `direction` rows.
+//   --bulb-shadow the bulb's box-shadow; default an invisible `0 0 #0000`.
+//                 The knob exists because a host's className parks on the
+//                 ROOT — a square wrapper around a round bulb, where a glow
+//                 would draw a rectangle — so a host that wants the bulb lit
+//                 sets the variable and inheritance delivers it to the circle.
+//                 FloatingActions feeds it `var(--shadow-aura)` (owner
+//                 2026-09-05 — the fixed corner wears the Header's aura); the
+//                 atom itself never names a token: WHICH shadow, if any, is
+//                 the section's dressing decision, and
+//                 tests/unit/aura-token.test.ts pins both halves of that line.
 
 export type SpeedDialDirection = 'up' | 'down' | 'left' | 'right';
 export type SpeedDialSize = 'md' | 'lg';
@@ -1213,6 +1223,10 @@ export function SpeedDial<V extends string = string>({
             // artDiscClasses.
             discBase,
             discBox[size],
+            // The third public variable (doc block at the top): invisible
+            // until a host feeds it — FloatingActions' corner sets it to the
+            // site aura. On the ROUND bulb, so the glow follows the circle.
+            'shadow-[var(--bulb-shadow,0_0_#0000)]',
             hasArt(bulb?.art) ? artLetterClasses : letterClasses,
             // The tone rides along untouched even under a flag: its fill is
             // covered, not conditioned away, and both bundles already paint

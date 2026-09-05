@@ -1503,15 +1503,31 @@ describe('SpeedDial — one clock, nothing moves (§9)', () => {
     }
   });
 
-  it('carries no shadow token anywhere — GlyphButton’s own ban, inherited', () => {
-    // With D5 reversed there is no legitimate shadow left in this atom, so the
-    // ban can be flat rather than a list of allowed spellings (the GlyphButton
-    // motion sweep uses exactly this pattern).
+  it('carries no shadow token beyond the static --bulb-shadow hook — GlyphButton’s ban, one allowed spelling', () => {
+    // D5's inset-shadow creep stays reversed, and shadows that CHANGE with
+    // state (the old site's hover shadow-cta → shadow-cta-lg pop GlyphButton
+    // dropped) stay banned outright — a shadow in motion is motion. What the
+    // flat ban's own comment anticipated arrived on 2026-09-05: the owner's
+    // corner aura. It enters as ONE allowed spelling — the bulb's public
+    // `--bulb-shadow` hook (see the PUBLIC CSS VARIABLES block), which is
+    // STATE-INVARIANT by construction: no variant prefix, an invisible
+    // fallback, a value fed by the host and never flipped by this atom. So
+    // nothing here moves; every other Tailwind `shadow-*` spelling stays under
+    // the flat ban, hover pops included (arbitrary `[box-shadow:…]` properties
+    // sit outside this regex — recorded scope, same as the art halo's
+    // `[text-shadow:…]`).
+    const allowed = 'shadow-[var(--bulb-shadow,0_0_#0000)]';
+    let hookSeen = 0;
     for (const el of animatedElements()) {
-      expect(tokensOf(el).filter((t) => /(^|:)shadow(-|$)/.test(t))).toEqual(
-        [],
-      );
+      const shadows = tokensOf(el).filter((t) => /(^|:)shadow(-|$)/.test(t));
+      expect(shadows.filter((t) => t !== allowed)).toEqual([]);
+      hookSeen += shadows.length;
     }
+    expect(hookSeen, 'the hook is worn exactly once').toBe(1);
+    // …and worn by the BULB, not merely by someone in the sweep (G2: a move
+    // onto a stem disc would keep the count at 1 while the round-bulb
+    // placement — half the design's argument — silently regressed).
+    expect(tokensOf(bulbOf())).toContain(allowed);
   });
 
   it('keeps a visible focus ring on every control (SC 2.4.7 / 1.4.11)', () => {

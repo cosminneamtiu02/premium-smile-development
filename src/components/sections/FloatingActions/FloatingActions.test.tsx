@@ -542,4 +542,22 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
       expect(token.split(INSET)).toHaveLength(2);
     }
   });
+
+  it('dresses each corner resident with the aura by the right ROUTE (owner 2026-09-05)', () => {
+    // PLACEMENT pins, not just census (G2: tests/unit/aura-token.test.ts
+    // counts three wears in this FILE but cannot see which const each sits
+    // in — swap one and every source pin stays green while the pixels drift
+    // under the comparator's threshold, which the aura test measured blind).
+    // The two discs wear the utility on their own round roots; the dial's
+    // host <nav> must NOT wear it (a shadow there would draw the rectangular
+    // glow the --bulb-shadow variable route exists to avoid) — it carries the
+    // variable FEED instead, and SpeedDial.test.tsx pins the bulb end.
+    const { dial, write, call } = mount();
+    expect(write).toHaveClass('shadow-aura');
+    expect(call).toHaveClass('shadow-aura');
+    expect(dial).not.toHaveClass('shadow-aura');
+    expect(Array.from(dial.classList)).toContain(
+      '[--bulb-shadow:var(--shadow-aura)]',
+    );
+  });
 });

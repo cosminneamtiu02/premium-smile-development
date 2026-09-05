@@ -28,13 +28,22 @@
  *   giving clean snaps to anyone who asked for less motion (§9).
  *
  * What is deliberately NOT in here: the `transition-[…]` PROPERTY LIST. Each
- * atom names its own — GlyphButton fades exactly background-color and color
- * (its border must not move), and SpeedDial's list is the same pair since the
- * owner reversed D5's border-color + box-shadow creep (2026-08-27). box-shadow
- * therefore sits in NO disc transition list, which is what keeps the corner's
- * static --bulb-shadow aura frozen through every hover (SpeedDial.test.tsx's
- * shadow fence argues the full case). A shared list would still be wrong: it
- * would drag one atom's animation into the other.
+ * atom names its own — GlyphButton fades background-color, color and
+ * box-shadow (exactly three; the third exists for solid's inset-ring
+ * hairline, the 2026-09-06 mirror law, while border-color stays out so
+ * outline's border can never move), and SpeedDial's list is still the bare
+ * color pair since the owner reversed D5's border-color + box-shadow creep
+ * (2026-08-27). The corner auras therefore freeze by TWO different
+ * mechanisms, and the difference matters to any future lane: the bulb's
+ * --bulb-shadow is off-clock BY OMISSION (box-shadow is not in SpeedDial's
+ * list — SpeedDial.test.tsx's shadow fence argues that case), but the call/
+ * WhatsApp discs' `shadow-aura` now rides a transitioning property and holds
+ * still by VALUE-CONSTANCY alone: the aura layer of the composed box-shadow
+ * is byte-identical at both ends, so only the inset-ring slot lerps
+ * (computed-style probe, solid-hover lane 2026-09-06). Give a GlyphButton
+ * consumer a hover-varying shadow and its aura ANIMATES; only on SpeedDial
+ * is it frozen by construction. A shared list would still be wrong: it would
+ * drag one atom's animation into the other.
  */
 export const discBase =
   'inline-flex shrink-0 items-center justify-center ' +

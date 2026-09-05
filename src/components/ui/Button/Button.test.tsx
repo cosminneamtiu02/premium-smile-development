@@ -264,7 +264,7 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
     expect(tokens).toContain('[--fade:400ms]');
     expect(tokens).toContain('duration-(--fade)');
     expect(tokens).toContain('ease-in-out');
-    expect(tokens).toContain('transition-[background-color,color]');
+    expect(tokens).toContain('transition-[background-color,color,box-shadow]');
   });
 
   it('admits no second clock or easing — in and out stay mirrored', () => {
@@ -284,28 +284,69 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
     ).toEqual([]);
   });
 
-  it('the sweep is gone — one animation only', () => {
-    const { cls, tokens } = tokensOf();
-    // Pseudo-elements are banned by PATTERN: a working sweep was re-added on
-    // ::after, and again as [&::before]:…, straight past a before:-only ban.
-    expect(cls).not.toMatch(/(^|:)(before|after):/);
-    expect(cls).not.toMatch(/::(before|after)/);
-    expect(tokens.filter((t) => /(^|:)(before|after):/.test(t))).toEqual([]);
-    // …and nothing may move, spin, pulse or scale: color is the ONE animation.
-    expect(cls).not.toMatch(/transition-transform|transition-all/);
-    expect(
-      tokens.filter((t) =>
-        /(^|:)(animate|scale|translate|rotate|skew)-/.test(t),
-      ),
-    ).toEqual([]);
-    expect(tokens).not.toContain('overflow-hidden');
-    expect(tokens).not.toContain('isolate');
-    expect(tokens.filter((t) => t.startsWith('will-change'))).toEqual([]);
-    expect(tokens.filter((t) => t.includes('--sweep'))).toEqual([]);
-    // No hand-written hover-capability gate — Tailwind already wraps every
-    // hover: utility in @media (hover:hover) on its own.
-    expect(tokens.filter((t) => t.startsWith('motion-safe:'))).toEqual([]);
-  });
+  // Every variant, exhaustively — the satisfies makes a 4th variant a type
+  // error right here, the same auto-sweep guarantee GlyphButton's
+  // module-scope tables give its motionCases matrix (G2 react, 2026-09-06: a
+  // solid-only sweep would have let hover:shadow-md ship on ghost unseen).
+  const sweptVariants = Object.keys({
+    solid: true,
+    outline: true,
+    ghost: true,
+  } satisfies Record<ButtonVariant, true>) as ButtonVariant[];
+
+  // With box-shadow on the fade clock, EVERY box-shadow-painting utility is
+  // an animation channel. Exactly these three spellings — solid's hairline —
+  // are legitimate; the rest of the ring families (outer ring, ring-offset,
+  // width escalations like inset-ring-4) stay banned alongside the shadows:
+  // hover:ring-4 would be the fb-49/fb-50 pop respelled as a growing halo
+  // (G2 react MEDIUM, 2026-09-06). KEEP-IN-SYNC with GlyphButton.test.tsx's
+  // twin allowlist.
+  const legitimateRingTokens = new Set([
+    'inset-ring',
+    'inset-ring-transparent',
+    'hover:inset-ring-cta',
+  ]);
+
+  it.each(sweptVariants)(
+    'the sweep is gone — one animation only (%s)',
+    (variant) => {
+      const { cls, tokens } = tokensOf(variant);
+      // Pseudo-elements are banned by PATTERN: a working sweep was re-added
+      // on ::after, and again as [&::before]:…, past a before:-only ban.
+      expect(cls).not.toMatch(/(^|:)(before|after):/);
+      expect(cls).not.toMatch(/::(before|after)/);
+      expect(tokens.filter((t) => /(^|:)(before|after):/.test(t))).toEqual([]);
+      // …and nothing may move, spin, pulse or scale: color is the ONE
+      // animation.
+      expect(cls).not.toMatch(/transition-transform|transition-all/);
+      expect(
+        tokens.filter((t) =>
+          /(^|:)(animate|scale|translate|rotate|skew)-/.test(t),
+        ),
+      ).toEqual([]);
+      // box-shadow rides the fade clock for solid's inset-ring hairline
+      // (owner, 2026-09-06) — which puts a shadow POP one utility away
+      // again. The shadow-* family is banned wholesale (GlyphButton's fb-50
+      // twin ban), `inset-` spelling included…
+      expect(tokens.filter((t) => /(^|:)(inset-)?shadow(-|$)/.test(t))).toEqual(
+        [],
+      );
+      // …and so is every ring spelling outside the three-token allowlist.
+      expect(
+        tokens.filter(
+          (t) =>
+            /(^|:)(inset-)?ring(-|$)/.test(t) && !legitimateRingTokens.has(t),
+        ),
+      ).toEqual([]);
+      expect(tokens).not.toContain('overflow-hidden');
+      expect(tokens).not.toContain('isolate');
+      expect(tokens.filter((t) => t.startsWith('will-change'))).toEqual([]);
+      expect(tokens.filter((t) => t.includes('--sweep'))).toEqual([]);
+      // No hand-written hover-capability gate — Tailwind already wraps every
+      // hover: utility in @media (hover:hover) on its own.
+      expect(tokens.filter((t) => t.startsWith('motion-safe:'))).toEqual([]);
+    },
+  );
 
   it('press feedback snaps, release fades', () => {
     expect(tokensOf().tokens).toContain('active:duration-0');
@@ -328,11 +369,20 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
   // Record<ButtonVariant, …> on purpose: a fourth variant cannot ship with
   // zero coverage — the file stops typechecking until it is classified here.
   const requiredTokens: Record<ButtonVariant, string[]> = {
+    // solid MIRRORS outline since the socials'-hover rework (owner decision
+    // 2026-09-06): its hover face is outline's rest face — surface ground,
+    // cta label, a 1px cta hairline (inset-ring, the layout-free twin of
+    // outline's border) — and its press face is outline's press face.
     solid: [
       'bg-cta',
       'text-ink-inverse',
-      'hover:bg-cta-hover',
+      'inset-ring',
+      'inset-ring-transparent',
+      'hover:bg-surface',
+      'hover:text-cta',
+      'hover:inset-ring-cta',
       'active:bg-cta-hover',
+      'active:text-ink-inverse',
     ],
     outline: [
       'border-cta',
@@ -364,10 +414,12 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
     },
   );
 
-  // Which variants hold their label color constant. outline is the one
-  // deliberate crossfade (owner decision — see the invariant in Button.tsx).
+  // Which variants hold their label color constant. outline was the one
+  // deliberate crossfade (fb-38); solid joined it with the 2026-09-06
+  // socials'-hover rework (see the mirror law in Button.tsx), leaving ghost
+  // as the only constant-label tone.
   const constantTextVariants: Record<ButtonVariant, boolean> = {
-    solid: true,
+    solid: false,
     outline: false,
     ghost: true,
   };
@@ -386,14 +438,43 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
     expect(tokens.filter((t) => /(^|:)\[color:/.test(t))).toEqual([]);
   });
 
-  it('outline crossfades both colors with no rogue lerp utilities', () => {
-    const { cls } = tokensOf('outline');
-    // Its positive tokens live in the requiredTokens table above. The broad
+  it.each(
+    (Object.keys(constantTextVariants) as ButtonVariant[]).filter(
+      (variant) => !constantTextVariants[variant],
+    ),
+  )('%s crossfades both colors with no rogue lerp utilities', (variant) => {
+    const { cls } = tokensOf(variant);
+    // Positive tokens live in the requiredTokens table above. The broad
     // utilities stay banned even though text DOES fade here: they also cover
     // outline-color, dragging the focus ring onto the clock. None of them
-    // collides with the legitimate transition-[background-color,color].
+    // collides with the legitimate
+    // transition-[background-color,color,box-shadow].
     expect(cls).not.toMatch(
       /transition-colors|transition-\[color\]|transition-all/,
     );
+  });
+
+  it("solid and outline are hover-mirrors — each hover face is the other's rest face", () => {
+    // THE 2026-09-06 LAW as a DERIVED relation, never a third hardcoded list
+    // (G2 react LOW, 2026-09-06): the variant-distinctive rest color tokens
+    // of each side are computed by set difference — shared base/size tokens
+    // (text-lg…) cancel out — and every one of them must reappear
+    // hover:-prefixed on the other side. Colors only — outline draws its line
+    // as a real border while solid draws it as an inset-ring hairline (a
+    // border arriving on hover would grow the auto-width box by 2px, i.e.
+    // movement), so the line's channel is deliberately variant-local and not
+    // part of the mirror. GlyphButton.test.tsx carries the derived twin.
+    const solid = tokensOf('solid').tokens;
+    const outline = tokensOf('outline').tokens;
+    const restColors = (tokens: string[], other: string[]) =>
+      tokens.filter((t) => /^(bg|text)-/.test(t) && !other.includes(t));
+    const solidRest = restColors(solid, outline);
+    const outlineRest = restColors(outline, solid);
+    // Guard the derivation itself: an over-aggressive filter that returned []
+    // would pass the loops below while proving nothing.
+    expect(solidRest).not.toHaveLength(0);
+    expect(outlineRest).not.toHaveLength(0);
+    for (const rest of solidRest) expect(outline).toContain(`hover:${rest}`);
+    for (const rest of outlineRest) expect(solid).toContain(`hover:${rest}`);
   });
 });

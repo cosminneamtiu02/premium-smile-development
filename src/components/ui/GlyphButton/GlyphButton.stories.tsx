@@ -37,7 +37,7 @@ const meta = {
       control: 'radio',
       options: ['solid', 'outline', 'ghost'] satisfies GlyphButtonVariant[],
       description:
-        'Named color pair — solid = filled call CTA / outline = socials, fills on hover / ghost = quiet, dim tray on hover',
+        'Named color pair — solid = filled call CTA, drains on hover / outline = socials, fills on hover / ghost = quiet, dim tray on hover',
     },
     shape: {
       control: 'radio',
@@ -215,4 +215,18 @@ export const IconSizePrecedence: Story = {
       </p>
     </div>
   ),
+};
+
+/**
+ * Hover END state of the solid disc, pinned as real pixels — Button's
+ * 'pin-hover' pattern: the visual spec performs a true mouse hover before the
+ * (animation-disabled) screenshot, because synthetic play() events cannot
+ * activate CSS :hover. Pinned the day the face changed (the 2026-09-06 mirror
+ * law): the END face must read as Outline's rest face — surface disc, cta
+ * glyph, 1px cta hairline. If this frame and Outline's rest ever show the
+ * line in different places, the inset-ring stand-in drifted off the border's
+ * position and the mirror broke.
+ */
+export const HoverSolid: Story = {
+  tags: ['pin-hover'],
 };

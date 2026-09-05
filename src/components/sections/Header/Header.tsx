@@ -118,8 +118,19 @@ export function Header(): ReactElement {
     // the border now runs all the way round; and the glass is STATIC —
     // bg-surface/95 + backdrop-blur, one state, because the JS half of D1
     // stands: no scroll listener, no height animation, no chrome that watches
-    // the window. NO shadow either — depth for this section is an N4-pack
-    // decision that has not been made (NavMenu.tsx carries the same sentence).
+    // the window. THE AURA IS WHAT CHANGED, and only that (board
+    // .claude/plans/header-aura.plan.md, fb-359, owner 2026-09-04 — "the old
+    // top bar has like a shadow around it. like an aura"): the pill wears
+    // `shadow-aura`, the old bar's SCROLLED-state lavender glow, imported as
+    // ONE static value and worn permanently — because this pill is permanently
+    // in the posture that value belonged to, floating over content at every
+    // scroll position, which the old bar only reached once you scrolled. What
+    // did NOT come with it is the two-state swap: the rest/scrolled pair and
+    // the window listener that drove it stay behind, so the JS half of D1
+    // above is untouched and this bar still ships zero JS. The value itself
+    // lives in globals.css' token layer — its rule-site comment carries the
+    // provenance and the tint reasoning — and NavMenu's panel wears the very
+    // same one, which is the old site's own pairing.
     //
     // KNOWN CONSEQUENCE of margins on a @container root: the breakpoint
     // measures the BAR, so the burger → row flip now happens where the BAR
@@ -151,7 +162,7 @@ export function Header(): ReactElement {
       className={cx(
         'group/bar sticky top-4 z-50',
         containerClasses,
-        'mt-4 rounded-lg border border-line-subtle bg-surface/95 backdrop-blur-md backdrop-saturate-150',
+        'mt-4 rounded-lg border border-line-subtle shadow-aura bg-surface/95 backdrop-blur-md backdrop-saturate-150',
       )}
     >
       {/* ── THE ROW: h-20 (5rem) AT EVERY WIDTH (owner, 2026-09-04: "make top

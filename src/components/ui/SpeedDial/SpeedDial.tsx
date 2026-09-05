@@ -342,7 +342,7 @@ const artLayerClasses =
 const artScrimClasses =
   'absolute inset-0 rounded-full bg-ink/5 transition-[background-color] ' +
   'duration-(--fade) ease-in-out ' +
-  'group-hover:bg-ink/20 group-active:bg-ink/20 ' +
+  'group-hover:bg-ink/10 group-active:bg-ink/10 ' +
   'motion-reduce:transition-none forced-colors:hidden';
 
 /**

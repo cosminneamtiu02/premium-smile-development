@@ -377,8 +377,8 @@ const artScrimTokens = [
   'transition-[background-color]',
   'duration-(--fade)', // discBase's own clock, inherited down from the control
   'ease-in-out',
-  'group-hover:bg-ink/20', // the flagged disc's hover MANNER
-  'group-active:bg-ink/20',
+  'group-hover:bg-ink/10', // the flagged disc's hover MANNER — "just a bit darker" (owner, 2026-09-05; /20 before)
+  'group-active:bg-ink/10',
   'motion-reduce:transition-none',
   'forced-colors:hidden', // yields with the art layer (G2 a11y, 2026-09-05)
 ];

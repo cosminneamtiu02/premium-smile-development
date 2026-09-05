@@ -227,7 +227,9 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
    identified.)*
 6. **First visit:** optional dismissible suggestion banner based on `navigator.language`.
    **Never** redirect by IP/geolocation.
-7. **Language cookie:** first-party, set **only on explicit click** (switcher or banner accept),
+7. **Language cookie:** first-party, set **only on explicit click** (switcher or banner accept —
+   or **banner dismiss**, which stores the CURRENT page's locale, because "I'm fine here" is a
+   choice too and §12 allows no second storage; D2, amended 2026-09-04),
    lifetime 6–12 months, disclosed on the policy page. Also stores banner-dismissed state.
 8. **Fonts self-hosted** (never Google Fonts CDN): **Source Serif 4** for display + body,
    **JetBrains Mono** for the uppercase wide-tracked eyebrow pattern — both OFL variable fonts

@@ -7,7 +7,7 @@ import {
   type SpeedDialDirection,
   type SpeedDialOption,
 } from '@/components/ui/SpeedDial/SpeedDial';
-import { LOCALE_COOKIE } from '@/i18n/locales';
+import { setLocaleCookie } from '@/i18n/cookie';
 import { cx } from '@/lib/cx';
 import { useLanguageOptions } from './useLanguageOptions';
 
@@ -130,18 +130,22 @@ export function LanguageSwitcher({
     options.find((option) => option.value === locale)?.label ?? locale;
 
   /**
-   * THE SITE'S ONE PIECE OF STORAGE (§8.7, §12), written HERE and nowhere else,
-   * on the explicit click and at no other moment — never on mount, on render,
-   * on open or on close. That is what lets this site ship with no cookie-consent
-   * banner at all, so the regression test for it is not pedantry.
+   * THE SITE'S ONE PIECE OF STORAGE (§8.7, §12), written on the explicit click
+   * and at no other moment — never on mount, on render, on open or on close.
+   * That is what lets this site ship with no cookie-consent banner at all, so
+   * the regression test for it is not pedantry.
    *
-   * `LOCALE_COOKIE` (from `@/i18n/locales`) is the ONE spelling of the name,
-   * and the coupling is now the shared constant rather than two files agreeing
-   * in prose: tools/generate-root-redirect.ts interpolates the SAME constant
-   * into the inline script it emits, which reads the cookie on the next visit
-   * to '/' (that script only ever READS it; this is the only writer).
-   * `path=/` so it counts on every page, `max-age=31536000` = 12 months (§8.7),
-   * `SameSite=Lax` so it never rides along on another site's request to us.
+   * THE WRITE ITSELF MOVED OUT on 2026-09-04, to `setLocaleCookie` in
+   * src/i18n/cookie.ts — the ONE writer-helper, and the only place the cookie
+   * name and its four attributes are now spelled (§4's second-consumer rule:
+   * sections/LanguageBanner's accept and dismiss write the same cookie, so the
+   * MECHANICS climbed to the nearest tier both may import). That module's
+   * header carries the full §8.7/§12 story it inherited from here, including
+   * why tools/generate-root-redirect.ts — which interpolates the same
+   * LOCALE_COOKIE constant into the script it emits — remains the only READER.
+   * What stayed HERE is POLICY, below: whether a given click is a switch at
+   * all. The suite's byte-exact assertion did not move either; it still pins
+   * the written string from the outside, through this section.
    *
    * A MODIFIED CLICK writes nothing. ctrl/cmd opens the option in a new tab,
    * shift in a new window, alt saves the link — in all four cases THIS document
@@ -160,7 +164,7 @@ export function LanguageSwitcher({
   ) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
-    document.cookie = `${LOCALE_COOKIE}=${option.value}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+    setLocaleCookie(option.value);
   };
 
   return (

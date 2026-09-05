@@ -8,7 +8,11 @@ import { ContactModalProvider } from '@/components/sections/ContactModal/Contact
 import { FloatingActions } from '@/components/sections/FloatingActions/FloatingActions';
 import { Footer } from '@/components/sections/Footer/Footer';
 import { Header } from '@/components/sections/Header/Header';
-import { nativeNames } from '@/i18n/locales';
+import {
+  LanguageBanner,
+  type BannerStrings,
+} from '@/components/sections/LanguageBanner/LanguageBanner';
+import { type Locale, nativeNames } from '@/i18n/locales';
 // The REAL stylesheet, compiled by the same Tailwind pipeline the site uses —
 // the precedent is Modal/SpeedDial/LanguageSwitcher/ContactModal.test.tsx. It is
 // not decoration here: three of this file's four contracts are questions about
@@ -25,6 +29,10 @@ import { nativeNames } from '@/i18n/locales';
 // It brings the boxes but NOT the typeface (next/font does not run in this
 // runner), which costs nothing here: not one assertion below measures text.
 import '@/styles/globals.css';
+import de from '@/messages/de.json';
+import en from '@/messages/en.json';
+import fr from '@/messages/fr.json';
+import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
 // The shell's own source as TEXT, through Vite's `?raw` (typed by the repo's
 // own src/types/raw-import.d.ts, never a program-wide vite/client reference —
@@ -110,6 +118,21 @@ const BODY_LAYOUT = 'flex min-h-dvh flex-col bg-page font-body text-ink';
 const MAIN_GROW = 'flex-1';
 
 /**
+ * The §8.6 banner's strings in all five languages — the prop the real shell
+ * builds at BUILD TIME with `getTranslations({ locale })`, because a client
+ * island only ever receives the page locale's messages and this card exists to
+ * speak a different one (D6; layout.tsx carries the argument). Assembled here
+ * from the same five files, never typed out.
+ */
+const BANNER_MESSAGES: Record<Locale, BannerStrings> = {
+  ro: ro.common.language.banner,
+  en: en.common.language.banner,
+  de: de.common.language.banner,
+  fr: fr.common.language.banner,
+  it: it_.common.language.banner,
+};
+
+/**
  * The shell, exactly as board §4 composes it. Both providers render NO DOM
  * element — a React context provider is invisible to the DOM and
  * NextIntlClientProvider adds no box either — which is precisely why wrapping
@@ -122,6 +145,12 @@ const MAIN_GROW = 'flex-1';
  * 2026-09-04) FloatingActions contributes no flow box at all, so that order now
  * buys DOM and tab order rather than geometry — and the FOOTER is what ends the
  * document's normal flow.
+ *
+ * <LanguageBanner /> joins the roster LAST, after the corner controls
+ * (language-banner board §4, 2026-09-04). It is `fixed` too, so it changes
+ * nothing about flow; what it adds to this file is ONE MORE body-level sibling
+ * — the eighth — and the freeze must reach it like every other. See the stubs
+ * in beforeAll for why it is reliably visible here.
  */
 const Shell = (): ReactElement => (
   <NextIntlClientProvider locale="ro" messages={ro}>
@@ -139,6 +168,7 @@ const Shell = (): ReactElement => (
       </main>
       <Footer />
       <FloatingActions />
+      <LanguageBanner messages={BANNER_MESSAGES} />
     </ContactModalProvider>
   </NextIntlClientProvider>
 );
@@ -210,6 +240,14 @@ const callDisc = () =>
  */
 const whatsappDisc = () =>
   screen.getByRole('link', { name: ro.common.actions.whatsapp });
+/**
+ * The §8.6 suggestion banner — a `complementary` landmark named by its own
+ * sentence, which is the German one here (see the beforeAll stubs). Queried by
+ * ROLE, not by selector: it is a landmark precisely so a screen-reader user can
+ * jump to it, and the board declined `role="status"` on purpose.
+ */
+const banner = () =>
+  screen.getByRole('complementary', { name: de.common.language.banner.text });
 const burger = () => screen.getByRole('button', { name: ro.common.menu.label });
 const skipLink = () =>
   screen.getByRole('link', { name: ro.common.skipToContent });
@@ -285,6 +323,26 @@ beforeAll(async () => {
     'html { scroll-behavior: auto !important; }';
   document.head.append(stillnessStyle);
 
+  // ── THE BANNER'S TWO VISITOR FACTS, PINNED FOR THE WHOLE FILE.
+  // <LanguageBanner /> shows itself only when no language cookie exists AND the
+  // visitor reads one of our locales other than the page's. Left to the real
+  // browser, that is a claim about whichever machine runs the suite — and
+  // cookies are shared across every suite in one browser context, so a
+  // NEXT_LOCALE written by another file would silently delete a sibling from
+  // the order assertion below. Both facts are therefore own properties on
+  // `navigator` / `document`, shadowing the prototype accessors, and removed in
+  // afterAll. German over a Romanian shell is the realistic pair (and the one
+  // the section's own suite uses); the empty jar is "nobody has chosen yet".
+  Object.defineProperty(navigator, 'languages', {
+    configurable: true,
+    value: ['de-AT', 'de', 'en'],
+  });
+  Object.defineProperty(document, 'cookie', {
+    configurable: true,
+    get: () => '',
+    set: () => {},
+  });
+
   // Pin the phone width (§7's Smartphone step) for the whole file: the bar is a
   // @container, so the burger↔row flip is decided by the BAR's width, and a
   // runner-default viewport wide enough to cross the @3xl step would take the
@@ -310,6 +368,9 @@ afterAll(() => {
   stillnessStyle?.remove();
   stillnessStyle = null;
   document.body.className = '';
+  // The banner's stubs, taken back off so the prototype accessors serve again.
+  Reflect.deleteProperty(navigator, 'languages');
+  Reflect.deleteProperty(document, 'cookie');
   // The belt to the silence test's braces: whatever order the cases ran in, and
   // whichever of them opened the menu first, no tripwire was printed anywhere in
   // this file. Asserted before the spy is restored, or there is nothing to read.
@@ -318,14 +379,16 @@ afterAll(() => {
 });
 
 describe('Shell — the body-level sibling contract (E10/E11, P1)', () => {
-  it('renders skip-link · header · main · footer · dial · whatsapp · call · dialog as direct <body> children, in that order', () => {
+  it('renders skip-link · header · main · footer · dial · whatsapp · call · banner · dialog as direct <body> children, in that order', () => {
     mount();
 
-    // EIGHT since fb-353 (2026-09-04): FloatingActions' clearance spacer was
-    // removed by the owner the same day the right corner became a stacked pair,
-    // so the section contributes three `fixed` controls and nothing else — the
-    // WhatsApp disc BEFORE the phone, because DOM order follows the corner read
-    // top-to-bottom (its own header carries both decisions).
+    // NINE (rebase union, 2026-09-05). fb-353 (owner, 2026-09-04) made the
+    // right corner a stacked pair — FloatingActions contributes THREE `fixed`
+    // controls and nothing else, the WhatsApp disc BEFORE the phone because DOM
+    // order follows the corner read top-to-bottom (its own header carries both
+    // decisions) — and the §8.6 suggestion banner mounted the same day as the
+    // shell's LAST own child, after the corner controls (language-banner board
+    // §4), `fixed` like them, so it too changes nothing about normal flow.
     expect(shellChildren()).toEqual([
       skipLink(),
       document.querySelector('header'),
@@ -334,6 +397,7 @@ describe('Shell — the body-level sibling contract (E10/E11, P1)', () => {
       dialNav(),
       whatsappDisc(),
       callDisc(),
+      banner(),
       dialog(),
     ]);
     // Not one wrapper anywhere in between — the freeze walks <body>'s children
@@ -398,6 +462,13 @@ describe('Shell — the freeze reaches the real page (E3/E11)', () => {
     // body-level <dialog> and showModal() would paint a top-layer dialog that is
     // dead to taps, keys and assistive tech. Header.test.tsx pins the handover;
     // this pins the state that makes it necessary.
+    // The §8.6 banner is in this list ON PURPOSE (language-banner board §4).
+    // The freeze exempts live regions BY ATTRIBUTE, and `isLiveRegion`'s own
+    // comment names this banner as the case the carve-out was written for — the
+    // board declined it: the card carries no `aria-live`, so an open menu inerts
+    // it like every sibling and the z-45 sheet dims it. It LOOKS dead and IS
+    // dead, which is the fb-129/136 trap staying shut; a card still pressable
+    // under an open menu would be a second interactive surface (P7's spirit).
     const frozen = [
       skipLink(),
       main(),
@@ -405,6 +476,7 @@ describe('Shell — the freeze reaches the real page (E3/E11)', () => {
       dialNav(),
       whatsappDisc(),
       callDisc(),
+      banner(),
       dialog(),
     ];
     for (const element of frozen) expect(element).not.toHaveAttribute('inert');

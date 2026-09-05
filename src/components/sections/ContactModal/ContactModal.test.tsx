@@ -530,10 +530,11 @@ describe('ContactModal — the dialog’s content', () => {
     (locale) => {
       // The divider (owner, 2026-09-05). Three claims, and the third is the one
       // that needed thought:
-      //  · it is the MESSAGE, not a hardcoded "SAU" — five files, five words;
-      //  · it is PRE-UPPERCASED in those files rather than `uppercase` in CSS,
-      //    so the DOM text and the visible text agree and a voice-control user
-      //    can say what they see (fb-133's rule, borrowed from the bulb);
+      //  · it is the MESSAGE, not a hardcoded "sau" — five files, five words;
+      //  · it is written in those files exactly as displayed (bare lowercase —
+      //    owner, 2026-09-05) with no CSS re-casing, so the DOM text and the
+      //    visible text agree and a voice-control user can say what they see
+      //    (fb-133's rule, borrowed from the bulb);
       //  · it is NOT in the document outline. ui/Heading without `asChild`
       //    renders its default <p>, so the panel keeps h2 → h3 · h3 while the
       //    word is a plain <p> wearing the display tokens at 27px against the
@@ -574,7 +575,9 @@ describe('ContactModal — the dialog’s content', () => {
       ).toBeNull();
       // …and the outline is untouched by it: still exactly three headings.
       expect(within(dialog()).getAllByRole('heading')).toHaveLength(3);
-      expect(messages.or).toBe(messages.or.toLocaleUpperCase(locale));
+      // The fb-133 guard, restated for the 2026-09-05 lowercasing: the file
+      // value IS the visible value because no CSS re-casing may touch it.
+      expect(getComputedStyle(word).textTransform).toBe('none');
     },
   );
 

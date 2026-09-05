@@ -456,10 +456,11 @@ export function ContactModal(): ReactElement {
           </Button>
         </ChannelGroup>
 
-        {/* THE WORD BETWEEN THEM (owner, 2026-09-05). „SAU" / „ODER" is the
+        {/* THE WORD BETWEEN THEM (owner, 2026-09-05). „sau" / „oder" is the
             whole divider — no rule, no line, just the conjunction the two
             groups' titles used to carry ("Sau scrieți-ne" became "Scrieți-ne"
-            when this arrived, in all five files).
+            when this arrived, in all five files; the caps became bare
+            lowercase on the owner's word the same day).
             A PLAIN <p> WEARING THE DISPLAY TOKENS, not ui/Heading — and this is
             a deliberate, recorded choice, made when the owner asked on
             2026-09-05 for the word ~10% smaller (30px → 27px). ui/Heading's
@@ -488,10 +489,10 @@ export function ContactModal(): ReactElement {
             half of why it is a <p>: the panel's structure stays h2 → h3 · h3,
             what a screen-reader user navigates by, while linear reading still
             speaks the conjunction in its place — exactly its job.
-            It is PRE-UPPERCASED IN THE MESSAGE FILES, never `uppercase` in CSS:
-            a voice-control user says what they see, and CSS-only casing makes
-            the DOM text and the visible text disagree (the same rule fb-133
-            fixed on the language bulb).
+            It is WRITTEN IN THE MESSAGE FILES EXACTLY AS DISPLAYED („sau",
+            lowercase), never re-cased in CSS: a voice-control user says what
+            they see, and CSS-only casing makes the DOM text and the visible
+            text disagree (the same rule fb-133 fixed on the language bulb).
             `text-center` because globals gives every <p> `text-align: start` —
             the caption trap, one element further out.
             HIDDEN IN THE SHORT-VIEWPORT STATE (owner decision, 2026-09-05): on

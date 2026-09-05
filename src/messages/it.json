@@ -11,7 +11,8 @@
     },
     "actions": {
       "call": "Chiama ora",
-      "contact": "Contatti"
+      "contact": "Contatti",
+      "whatsapp": "Scriveteci su WhatsApp"
     },
     "menu": {
       "label": "Menu"
@@ -53,8 +54,13 @@
     "title": "Articoli e novità"
   },
   "contact": {
-    "heading": "Problemi?",
-    "lead": "Chiamaci al numero qui sotto.",
+    "heading": "Raggiungibili per telefono o WhatsApp.",
+    "callHeading": "Chiamateci al",
+    "callHours": "Lun–ven {weekOpens}–{weekCloses}, sab {satOpens}–{satCloses}",
+    "or": "OPPURE",
+    "whatsappHeading": "Scriveteci",
+    "whatsapp": "Contattaci su WhatsApp",
+    "whatsappNote": "Quando volete, rispondiamo presto.",
     "close": "Chiudi"
   }
 }

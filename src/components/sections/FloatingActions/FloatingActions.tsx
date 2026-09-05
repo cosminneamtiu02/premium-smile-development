@@ -3,13 +3,26 @@ import { useTranslations } from 'next-intl';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { LanguageSwitcher } from '@/components/sections/LanguageSwitcher/LanguageSwitcher';
 import { Phone } from '@/assets/glyphs/Phone';
+import { Whatsapp } from '@/assets/glyphs/Whatsapp';
 import { clinic } from '@/lib/clinic';
 
-// sections/FloatingActions — the two thumb-reach controls that ride along on
-// every page: the language dial (bottom-LEFT) and the call CTA (bottom-RIGHT).
+// sections/FloatingActions — the thumb-reach controls that ride along on every
+// page: the language dial (bottom-LEFT) and, in the bottom-RIGHT corner, the
+// WhatsApp disc stacked above the call CTA.
 // Built to the owner-approved plan-canvas contract fb-131…fb-134 (2026-08-12),
 // whose THIRD child — a clearance spacer — was removed on 2026-09-04; see the
 // dedicated block below.
+//
+// ── THE RIGHT CORNER IS A STACKED PAIR (owner, fb-353, 2026-09-04). It carried
+// one disc until the two-channel rework: the same day the ContactModal gained
+// its WhatsApp channel, the corner gained a WhatsApp disc directly above the
+// phone. This AMENDS the 2026-09-02 contact-touchpoints decision, whose line
+// was "the footer is the WhatsApp home" — the Footer's contact discs stay
+// exactly as they are, and the corner now offers the same conversation without
+// a scroll to the bottom of the page. What did NOT change is the ban that
+// decision exists for: both discs ACT DIRECTLY (tap = call, tap = open the
+// conversation) and neither opens a modal — a WhatsApp modal would be the third
+// stateful overlay §15.15 is deliberately WAITing for, bought for nothing.
 //
 // This is the FIRST section in the repo, so it sets three precedents that every
 // later section copies. They are written out in full here on purpose.
@@ -29,15 +42,22 @@ import { clinic } from '@/lib/clinic';
 // §8.1 holds either way — the ui/ atoms below never see a key, only finished
 // text; translation happens in the SECTION tier, here and in the switcher.
 //
-// ── 2. A FRAGMENT of exactly two siblings, never a wrapper element.
+// ── 2. A FRAGMENT of independent siblings, never a wrapper element — three of
+// them since fb-353, and the LACK of a wrapper is the rule, not the count.
 // A wrapper carrying the z-40 layer would have to be positioned for z-index to
 // apply at all, and a positioned + z-indexed box opens a STACKING CONTEXT that
-// traps both controls inside it — the layer would then be judged as one unit
+// traps every control inside it — the layer would then be judged as one unit
 // against future overlays (drawer, modal) instead of each control standing on
 // its own. A full-width `fixed` wrapper would additionally swallow every click
 // in the strip it covers, curable only by patching pointer-events-none onto the
-// wrapper and pointer-events-auto back onto each child. Two independent
-// `fixed z-40` siblings need none of that plumbing.
+// wrapper and pointer-events-auto back onto each child. Independent
+// `fixed z-40` siblings need none of that plumbing — including the stacked
+// pair, which is two siblings sitting on two offsets rather than a flex column,
+// for exactly the same reason.
+// DOM ORDER IS THE VISUAL ORDER, deliberately: dial · WhatsApp · phone, i.e.
+// the right corner read top-to-bottom. Tab therefore walks that corner
+// downward, the way it looks, instead of jumping from the phone up to the disc
+// above it (§9's "logical order" applied to a corner rather than to a page).
 //
 // ── 3. THE CLEARANCE SPACER IS GONE — owner decision, 2026-09-04, reversing
 // the spacer half of fb-131…fb-134.
@@ -65,11 +85,15 @@ import { clinic } from '@/lib/clinic';
 // belt-and-braces:
 //   a) `scroll-padding-bottom` on <html> — KEPT, and now the whole of the
 //      scroll-clearance story rather than the invisible half of a pair (WCAG
-//      technique C43). Still the SAME THREE STEPS, because the corner pair
-//      still grows with the screen:
-//        base   calc(5.5rem + env(safe-area-inset-bottom))
-//        xl     calc(6rem   + env(safe-area-inset-bottom))
-//        2xl    calc(6.5rem + env(safe-area-inset-bottom))
+//      technique C43). Still THREE STEPS, because the corners grow with the
+//      screen — and each step GREW by a disc plus the row gap on 2026-09-04,
+//      when the right corner became a stacked pair (fb-353): the deepest thing
+//      the page must be able to scroll clear of is now two discs, not one.
+//        base   calc(9.5rem  + env(safe-area-inset-bottom))
+//        xl     calc(10.5rem + env(safe-area-inset-bottom))
+//        2xl    calc(11.5rem + env(safe-area-inset-bottom))
+//      Each is: 1rem corner offset + disc + 0.5rem stack gap + disc + 1rem
+//      headroom, at that width's --disc-size (3.5 / 4 / 4.5rem).
 //      The env() term belongs to EVERY step: drop it from the upper two and a
 //      viewport-fit=cover phone under-clears by the inset it lifted the
 //      controls with. It cannot be set from here — §6 forbids a section styling
@@ -171,12 +195,57 @@ const languageCorner =
 // the box, so the phone icon does not stay small inside a bigger disc.
 const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps}`;
 
+// THE WHATSAPP DISC — the call corner's exact mirror, one disc higher (fb-353).
+// The offset is written in the disc's OWN variable rather than in a pixel
+// count: `1rem + safe area` is the corner's edge, `var(--disc-size)` is the
+// phone disc it stands on, and `0.5rem` is the gap between them — so at xl and
+// 2xl, where the discs step up to 4rem and 4.5rem, the stack follows for free
+// and the gap stays 0.5rem. A hardcoded `bottom-[5rem]` would overlap the phone
+// at exactly the widths the fb-295 steps exist for.
+// (Tailwind restores the whitespace CSS math requires when it compiles the
+// arbitrary value — the same normalisation ui/Modal's `min(100%,32rem)` steps
+// leave to it.)
+const whatsappCorner =
+  'fixed bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--disc-size)+0.5rem)] ' +
+  `right-4 z-40 ${discSteps}`;
+
 export function FloatingActions(): ReactElement {
   const t = useTranslations('common');
 
   return (
     <>
       <LanguageSwitcher direction="up" className={languageCorner} />
+
+      {/* THE SECOND CHANNEL, within thumb reach (fb-353): the clinic's own
+          WhatsApp conversation — the same wa.me target the Footer's disc and
+          the ContactModal's second control open, built from the digits-only
+          `whatsapp` field of lib/clinic.ts (§10.1), never the E.164 spelling
+          with its plus.
+          It sits ABOVE the phone because the phone is the site's one
+          conversion goal and keeps the thumb's easiest spot.
+          wa.me IS external navigation, so it travels with target="_blank" +
+          rel="noopener noreferrer"; the tel: disc below carries neither,
+          because a protocol handler hands the number to the dialler rather than
+          navigating, and _blank there would orphan a blank tab (the Footer's
+          contact-disc law, PR #68).
+          <Whatsapp /> stays UNLABELLED for the same reason the phone glyph
+          does: a labelled glyph inside an asChild anchor double-announces. */}
+      <GlyphButton
+        asChild
+        variant="solid"
+        shape="round"
+        size="lg"
+        aria-label={t('actions.whatsapp')}
+        className={whatsappCorner}
+      >
+        <a
+          href={`https://wa.me/${clinic.whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Whatsapp />
+        </a>
+      </GlyphButton>
 
       {/* The one conversion goal of the entire site (§1): tap-to-call. An
           anchor, not a button — it navigates (tel:), so asChild hands the <a>

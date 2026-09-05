@@ -33,7 +33,11 @@ import { useContactModal } from './useContactModal';
 
 // sections/ContactModal — the interaction suite for the site's ONE dialog,
 // built to the owner-approved N2 composition contract (board
-// .claude/plans/contact-modal-n2-contract.plan.md, 2026-08-27).
+// .claude/plans/contact-modal-n2-contract.plan.md, 2026-08-27) and REWORKED to
+// the two-channel v4 contract (board
+// .claude/plans/contact-modal-whatsapp-n2-contract.plan.md, fb-351…358): the
+// panel now answers with TWO ways to reach the clinic — the tel: control and
+// the wa.me one — each in its own titled group with a caption under it.
 //
 // Role-based queries throughout (§9, §13): a passing suite doubles as proof of
 // accessible markup — getByRole('dialog', { name }) only finds a dialog the
@@ -45,8 +49,10 @@ import { useContactModal } from './useContactModal';
 // rendering the dotted key path, which is what next-intl does for a miss.
 //
 // Fixtures are Romanian with diacritics (§15.7); German is the stress locale
-// (§8.4) — its lead is the longest string the panel has to hold, which is why
-// it appears in the key-leak case and in the box-height matrix at the bottom.
+// (§8.4) — its WhatsApp label ("Kontaktieren Sie uns über WhatsApp") is the
+// longest string the panel has to hold and its title the longest line in the
+// bar, which is why German appears in the key-leak case, in the equal-width
+// pair and in the box-height matrix at the bottom.
 //
 // TWO event sources, exactly as in the atom's own suite (Modal.test.tsx):
 //  · `userEvent` from vitest/browser drives the REAL browser, so its events
@@ -154,6 +160,24 @@ const topBar = (dialog: HTMLDialogElement): HTMLElement =>
 /** The body container = the box's second child. */
 const contentRegion = (dialog: HTMLDialogElement): HTMLElement =>
   panelBox(dialog).children[1] as HTMLElement;
+
+/**
+ * The section's own rail — the grid holding both channel groups. ui/Modal wraps
+ * consumer content in ONE measuring <div> of its own (the atom's overflow
+ * probe reads it), so the rail is the body's grandchild, not its child; the
+ * hop is spelled here once rather than in every case that measures rhythm.
+ */
+const rail = (dialog: HTMLDialogElement): HTMLElement =>
+  contentRegion(dialog).firstElementChild?.firstElementChild as HTMLElement;
+
+/**
+ * The Or-word between the two channel groups — the rail's MIDDLE child, which
+ * is the only thing about it worth reaching for by position: it is a <p>, like
+ * both captions, so a `p` selector would find three and a text match would
+ * pass on a divider that had drifted to the end of the rail.
+ */
+const divider = (dialog: HTMLDialogElement): HTMLElement =>
+  rail(dialog).children[1] as HTMLElement;
 
 // Test environment, not product styling: unlayered author CSS beats Tailwind's
 // @layer utilities without !important. The panel opens from @starting-style
@@ -442,47 +466,188 @@ describe('ContactModal — the dialog’s content', () => {
     expect(call).toHaveAttribute('href', `tel:${clinic.phone}`);
     expect(call).toHaveTextContent(clinic.phoneDisplay);
     expect(clinic.phone.startsWith('+')).toBe(true);
-    // The ONE control in the panel besides the ✕ — the dialog asks for a call
-    // and nothing else.
-    expect(within(dialog()).getAllByRole('link')).toHaveLength(1);
+    // TWO controls in the panel besides the ✕ since the v4 rework — the call
+    // and the message, and nothing else. Pinned as a COUNT so a third channel
+    // cannot arrive unnoticed (the board's D1: two channels, no more).
+    expect(within(dialog()).getAllByRole('link')).toHaveLength(2);
   });
 
-  it('keeps the phone glyph unlabelled, so the link announces once', () => {
-    const { dialog } = mount({ defaultOpen: true });
-    const svg = within(dialog())
-      .getByRole('link', { name: clinic.phoneDisplay })
-      .querySelector('svg');
+  it('opens the clinic’s own WhatsApp conversation in a new tab', () => {
+    // The second channel (v4 contract). wa.me IS external navigation, so it
+    // travels with target=_blank + rel="noopener noreferrer" — the Footer's
+    // contact-disc law (PR #68), while tel: next to it stays targetless
+    // (a protocol handler hands the number to the dialler; _blank would orphan
+    // a blank tab). The number is the single-source `whatsapp` field, digits
+    // only, never the E.164 spelling with its plus (§10.1).
+    const { dialog, messages } = mount({ defaultOpen: true });
+    const write = within(dialog()).getByRole('link', {
+      name: messages.whatsapp,
+    });
 
-    expect(svg).toBeInstanceOf(SVGSVGElement);
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg).not.toHaveAttribute('role');
+    expect(write).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
+    expect(write).toHaveAttribute('target', '_blank');
+    expect(write).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(
+      within(dialog()).getByRole('link', { name: clinic.phoneDisplay }),
+    ).not.toHaveAttribute('target');
   });
 
-  it('prints the heading and the lead from the message file', () => {
-    // The whole dialog in three keys since the 08-28 trim (owner): heading,
-    // lead, close. The second label and the schedule are gone from the panel
-    // and their keys are gone from all five files.
+  it.each([
+    ['phone', () => clinic.phoneDisplay],
+    ['whatsapp', () => ro.contact.whatsapp],
+  ] as const)(
+    'keeps the %s glyph unlabelled, so its link announces once',
+    (_channel, name) => {
+      const { dialog } = mount({ defaultOpen: true });
+      const svg = within(dialog())
+        .getByRole('link', { name: name() })
+        .querySelector('svg');
+
+      expect(svg).toBeInstanceOf(SVGSVGElement);
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(svg).not.toHaveAttribute('role');
+    },
+  );
+
+  it('prints every one of its eight keys from the message file', () => {
+    // The whole dialog in eight keys: heading, the two group titles, the word
+    // between them, the WhatsApp label, the two captions and close. The `lead`
+    // of the 08-28 trim is gone from the panel and its key from all five files.
     const { dialog, messages } = mount({ defaultOpen: true });
     const text = dialog().textContent ?? '';
 
     expect(text).toContain(messages.heading);
-    expect(text).toContain(messages.lead);
+    expect(text).toContain(messages.callHeading);
+    expect(text).toContain(messages.or);
+    expect(text).toContain(messages.whatsappHeading);
+    expect(text).toContain(messages.whatsapp);
+    expect(text).toContain(messages.whatsappNote);
     expect(text).toContain(clinic.phoneDisplay);
   });
 
-  it('names the dialog with the ONE <h2> in it, via aria-labelledby', () => {
+  it.each(['ro', 'de'] as const)(
+    'prints the %s Or-word between the groups, big but not a heading',
+    (locale) => {
+      // The divider (owner, 2026-09-05). Three claims, and the third is the one
+      // that needed thought:
+      //  · it is the MESSAGE, not a hardcoded "SAU" — five files, five words;
+      //  · it is PRE-UPPERCASED in those files rather than `uppercase` in CSS,
+      //    so the DOM text and the visible text agree and a voice-control user
+      //    can say what they see (fb-133's rule, borrowed from the bulb);
+      //  · it is NOT in the document outline. ui/Heading without `asChild`
+      //    renders its default <p>, so the panel keeps h2 → h3 · h3 while the
+      //    word is a plain <p> wearing the display tokens at 27px against the
+      //    group titles' 20px (the owner's 2026-09-05 "~10% smaller" — see the
+      //    section's header for why the size lives here and not as a third step
+      //    on ui/Heading's axis). A screen-reader user navigating by heading
+      //    hears the two channels, not a stray level between them — and reading
+      //    the panel linearly still speaks the conjunction in its place, which
+      //    is exactly what it is for.
+      const { dialog, messages } = mount({ locale, defaultOpen: true });
+      const word = divider(dialog());
+
+      expect(word.tagName).toBe('P');
+      expect(word).toHaveTextContent(messages.or);
+      // Computed, not a class name: the size is an arbitrary rem value, so a
+      // typo inside the brackets would still "have" the class and render at the
+      // inherited size.
+      expect(getComputedStyle(word).fontSize).toBe('27px');
+      expect(word).toHaveClass('font-display', 'text-ink-strong');
+      // THE TWIN PIN (owner, 2026-09-05): the panel's title wears the SAME 27px
+      // dress as this word — that is what made the size a second consumer, and
+      // it is the fact ui/Heading's promotion lane will consolidate. Asserted
+      // as computed sizes so the two literals cannot drift apart while both
+      // still "have" their own class, and UNQUALIFIED by viewport: option B
+      // keeps the title at 27px in every state, including the two where the
+      // Or-word itself is hidden (this case runs at the runner's default
+      // viewport, and the box-matrix cases below cover the tight ones).
+      const title = within(dialog()).getByRole('heading', { level: 2 });
+      expect(getComputedStyle(title).fontSize).toBe(
+        getComputedStyle(word).fontSize,
+      );
+      expect(getComputedStyle(title).lineHeight).toBe(
+        getComputedStyle(word).lineHeight,
+      );
+      expect(word).not.toHaveAttribute('role');
+      expect(
+        within(dialog()).queryByRole('heading', { name: messages.or }),
+      ).toBeNull();
+      // …and the outline is untouched by it: still exactly three headings.
+      expect(within(dialog()).getAllByRole('heading')).toHaveLength(3);
+      expect(messages.or).toBe(messages.or.toLocaleUpperCase(locale));
+    },
+  );
+
+  it('fills the hours caption from lib/clinic.ts, never from a literal', () => {
+    // §10.1: the times are the same data the Footer prints and the JSON-LD will
+    // publish, interpolated into ONE translated line (the owner's fb-349/350
+    // amendment to §10.5 — a caption, not the Footer's <dl> a second time). The
+    // rows are read BY DAY here exactly as the section reads them, so a
+    // reordered lib/clinic.ts moves both together.
+    const weekday = clinic.hours.find((row) => row.days.includes('Monday'));
+    const saturday = clinic.hours.find((row) => row.days.includes('Saturday'));
+    const { dialog } = mount({ defaultOpen: true });
+    const text = dialog().textContent ?? '';
+
+    expect(weekday).toBeDefined();
+    expect(saturday).toBeDefined();
+    for (const value of [
+      weekday?.opens,
+      weekday?.closes,
+      saturday?.opens,
+      saturday?.closes,
+    ]) {
+      expect(value).toBeTruthy();
+      expect(text).toContain(value);
+    }
+    // …and the ICU placeholders are really gone, not printed as themselves.
+    expect(text).not.toMatch(/\{(week|sat)(Opens|Closes)\}/);
+  });
+
+  it('rests on ONE weekday row in lib/clinic.ts, Monday through Friday', () => {
+    // G2 react MEDIUM fold — the hole this closes: the caption prints a SPAN
+    // („Lun–Vin 09:00–19:00"), so it is only true while one entry really covers
+    // all five weekdays. Split that entry (Mon–Thu one row, Fri another with a
+    // short Friday) and the section's 'Monday' lookup still succeeds, the
+    // caption still prints the span — with Monday's times — and the Footer,
+    // which renders every row, disagrees with it silently (§10.1).
+    // Read STRAIGHT FROM THE DATA, never through the section's own helper: this
+    // has to fail even if that guard were ever softened, which is what makes it
+    // an outside-in pin rather than a second copy of the same code.
+    const byMonday = clinic.hours.find((row) => row.days.includes('Monday'));
+    const byFriday = clinic.hours.find((row) => row.days.includes('Friday'));
+    const bySaturday = clinic.hours.find((row) =>
+      row.days.includes('Saturday'),
+    );
+
+    expect(byMonday).toBeDefined();
+    // Object IDENTITY, not equal times: two rows that happen to share hours
+    // today are still two rows, and the copy would be wrong the day one moves.
+    expect(byFriday).toBe(byMonday);
+    // …and Saturday is its own row, or the caption prints the same span twice.
+    expect(bySaturday).toBeDefined();
+    expect(bySaturday).not.toBe(byMonday);
+  });
+
+  it('names the dialog with the ONE <h2>, above two <h3> group titles', () => {
     // §9's heading rules for a section: the page owns the <h1>, so the modal
     // opens at h2 — and the dialog's accessible name IS that heading, so a
-    // screen reader announces the title once, not twice.
-    // ONE heading again since the 08-28 trim: the schedule's level-3 „Program"
-    // went with the block it titled, so nothing here needs ui/Text to grow an
-    // 'h3' step any more.
-    const { dialog } = mount({ defaultOpen: true });
+    // screen reader announces the title once, not twice. The v4 body adds the
+    // two channel groups at h3, i.e. the level BELOW the title and in document
+    // order under it: logical heading order, never a skipped level.
+    const { dialog, messages } = mount({ defaultOpen: true });
     const headings = within(dialog()).getAllByRole('heading');
-    const [title] = headings;
+    const [title, ...groups] = headings;
 
-    expect(headings).toHaveLength(1);
-    expect(title?.tagName).toBe('H2');
+    expect(headings.map((heading) => heading.tagName)).toEqual([
+      'H2',
+      'H3',
+      'H3',
+    ]);
+    expect(groups.map((heading) => heading.textContent)).toEqual([
+      messages.callHeading,
+      messages.whatsappHeading,
+    ]);
     expect(dialog()).toHaveAttribute('aria-labelledby', title?.id);
     expect(title?.id).toBeTruthy();
     expect(dialog()).toHaveAccessibleName(ro.contact.heading);
@@ -492,17 +657,128 @@ describe('ContactModal — the dialog’s content', () => {
     // Owner, 2026-08-27: the <h2> moved from the first line of the body into
     // ui/Modal's `header` slot, centred on the panel. The slot sits BEFORE the
     // ✕ in DOM order, so it is also before it in the Tab order, and the body
-    // now opens on the lead.
-    const { dialog } = mount({ defaultOpen: true });
+    // now opens on the first group's own title.
+    const { dialog, messages } = mount({ defaultOpen: true });
     const slot = topBar(dialog()).firstElementChild as HTMLElement;
     const title = within(dialog()).getByRole('heading', { level: 2 });
 
     expect(slot).toContainElement(title);
-    // …and the body holds no heading at all: it opens on the lead.
+    // …and the body carries the group titles ONLY — no second <h2> anywhere.
+    const inBody = within(contentRegion(dialog())).getAllByRole('heading');
+    expect(inBody.map((heading) => heading.textContent)).toEqual([
+      messages.callHeading,
+      messages.whatsappHeading,
+    ]);
     expect(
-      within(contentRegion(dialog())).queryAllByRole('heading'),
-    ).toHaveLength(0);
+      within(contentRegion(dialog())).queryByRole('heading', { level: 2 }),
+    ).toBeNull();
   });
+
+  it('reads title → control → caption, twice, in DOM order', () => {
+    // The shape of the answer (board v4): each group is a heading, the control
+    // it names, and the caption that qualifies it — so a screen reader walking
+    // the panel linearly hears "Sunați-ne la / 0700 000 000 / Lun–Vin …" and
+    // then the same three beats for WhatsApp. A caption that drifted above its
+    // button would still LOOK right at one width and read wrong at every one.
+    const weekday = clinic.hours.find((row) => row.days.includes('Monday'));
+    // The sibling case's guard rather than a stringification (G2 ts fold):
+    // `String(weekday?.opens)` would have asserted against the text "undefined"
+    // if the schedule ever stopped covering Monday — a failure naming the DOM
+    // instead of the data. The throw is unreachable past the expect and exists
+    // only to narrow the type, the same shape childrenOf() uses in
+    // FloatingActions.test.tsx for its impossible case.
+    expect(weekday).toBeDefined();
+    if (!weekday) throw new Error('unreachable: the guard above fails first');
+
+    const { dialog, messages } = mount({ defaultOpen: true });
+    const nodes = Array.from(
+      contentRegion(dialog()).querySelectorAll<HTMLElement>('h3, a, p'),
+    );
+
+    expect(nodes.map((node) => node.tagName)).toEqual([
+      'H3',
+      'A',
+      'P',
+      'P',
+      'H3',
+      'A',
+      'P',
+    ]);
+    expect(nodes[0]).toHaveTextContent(messages.callHeading);
+    expect(nodes[1]).toHaveAttribute('href', `tel:${clinic.phone}`);
+    expect(nodes[2]).toHaveTextContent(weekday.opens);
+    // The Or-word sits BETWEEN the groups in the reading order too, which is
+    // the whole reason it is a real text node rather than a drawn rule: linear
+    // reading gets "…, Sâm 09:00–14:00 / SAU / Scrieți-ne / …".
+    expect(nodes[3]).toHaveTextContent(messages.or);
+    expect(nodes[4]).toHaveTextContent(messages.whatsappHeading);
+    expect(nodes[5]).toHaveAttribute(
+      'href',
+      `https://wa.me/${clinic.whatsapp}`,
+    );
+    expect(nodes[6]).toHaveTextContent(messages.whatsappNote);
+  });
+
+  it.each(['ro', 'de'] as const)(
+    'gives both controls the SAME width in %s (one rail, no fixed px)',
+    (locale) => {
+      // §8.4 in one assertion: the two buttons are grid items on one
+      // fit-content rail, so the longer label — German's "Kontaktieren Sie uns
+      // über WhatsApp" — decides the width of BOTH and neither is pinned to a
+      // pixel count that a translation could outgrow. A ragged pair of
+      // different-width green blocks is what this prevents.
+      const { dialog, messages } = mount({ locale, defaultOpen: true });
+      const call = within(dialog()).getByRole('link', {
+        name: clinic.phoneDisplay,
+      });
+      const write = within(dialog()).getByRole('link', {
+        name: messages.whatsapp,
+      });
+
+      const callWidth = call.getBoundingClientRect().width;
+      const writeWidth = write.getBoundingClientRect().width;
+      expect(callWidth).toBeGreaterThan(0);
+      expect(Math.abs(callWidth - writeWidth)).toBeLessThanOrEqual(1);
+    },
+  );
+
+  it.each([
+    { width: 390, height: 844 },
+    { width: 1536, height: 864 },
+  ])(
+    'gives EVERY language the German control size at $width×$height',
+    async ({ width, height }) => {
+      // The owner's 2026-09-05 ruling, asserted literally: "i like the german
+      // ones very much, keep that sizes of elements throughout all languages".
+      // Romanian used to measure 313px against German's 392px at a roomy
+      // viewport — the same dialog in two shapes — because a fit-content rail
+      // is sized by ITS OWN text. `min-w-[min(24.5rem,100%)]` is the German
+      // measurement turned into a floor for everyone, and this is the check
+      // that would fail if the floor were dropped, mistyped, or outgrown by a
+      // future German string (in which case both locales grow together, which
+      // is still a pass — a MINIMUM never freezes the layout).
+      // Both sampled widths matter and for different reasons: at 1536 the floor
+      // is what does the work, at 390 the panel is narrower than the floor and
+      // the `min(…, 100%)` guard makes the two locales equal by the CAP —
+      // proving the guard collapses instead of overflowing the box.
+      await page.viewport(width, height);
+      const measure = (locale: Fixture): number => {
+        const { dialog, unmount } = mount({ locale, defaultOpen: true });
+        const link = within(dialog()).getByRole('link', {
+          name: clinic.phoneDisplay,
+        });
+        const measured = link.getBoundingClientRect().width;
+        unmount();
+        return measured;
+      };
+
+      const ro_ = measure('ro');
+      const de_ = measure('de');
+      expect(ro_).toBeGreaterThan(0);
+      expect(Math.abs(ro_ - de_)).toBeLessThanOrEqual(1);
+      await page.viewport(414, 896);
+    },
+  );
 });
 
 describe('ContactModal — the message keys', () => {
@@ -537,18 +813,37 @@ describe('useContactModal — used outside its provider', () => {
 // ui/Modal's rework the first half is one prop — `scrollable={false}`
 // (D16–D21): the atom puts NO cap on the white box, so the box is always
 // exactly as tall as this composition and can never grow a scrollbar down its
-// own middle. The second half is the 08-28 trim: with the second label and the
-// schedule gone the box is ~200px tall, which is shorter than every viewport
-// in the §7 set — so the atom's full-viewport LAYER has nothing to scroll
-// either, and the sideways phone that used to be an accepted fallback now
-// simply holds the whole card.
+// own middle. The second half is arithmetic, and it moved twice: once when the
+// v4 rework put two channel groups where a lead and one control used to be,
+// and again on 2026-09-05, twice in one day: first the owner's Or-divider added
+// its own line plus a second rail gap, then the "it looks very crammed" round
+// added air to the four MACRO seams (bar→rail, both sides of the divider, and
+// below the second group). MEASURED with the real subset loaded, RO / DE:
+//   320×568   478 / 506  (+58 / +30)   ← the worst upright case in the product
+//   390×844   530 / 506  (+282 / +306)
+//   768×1024 · 1280×800 · 1536×864 · 1920×1080   494 / 494, hundreds to spare
+//   844×390   350 / 350  (+8)          ← sideways, tight rhythm, divider hidden
+//   844×536   350 / 350  (+154)        ← the height query's last row
+//   844×537   494 / 494  (+11)         ← the first row above it, airy again
+// The two states MEET at 536/537 with no gap between them, which is the whole
+// claim: there is no viewport height at which this dialog scrolls.
+// SIDEWAYS IS WHERE IT IS PAID FOR, and it is paid ONLY there: the seams
+// collapse and the divider hides under `@media (max-height: 33.5rem)`, so no
+// upright §7 viewport is ever in that state — the 2026-09-05 live review is
+// what keeps it out of them. The 320px stress width has its OWN lever,
+// `@media (max-width: 21.25rem)`: collapsed seams WITH the divider still at
+// full size, which is what keeps German at 506px against that phone's 536px
+// budget.
 //
 // The matrix has two axes, because the panel's height is content × typography:
 // the WIDTH — both phone sizes the §13 matrix samples, plus the 320px
 // accessibility stress width (§7) — and the LANGUAGE, where German is the
-// longest this site speaks (§8.4, ≈ +30–35%) and its lead runs two lines where
-// Romanian's runs one. DE at 320 is therefore the worst case in the whole
-// product, and it is in here. The sideways phone follows as its own case.
+// longest this site speaks (§8.4, ≈ +30–35%): its title fills the bar and its
+// WhatsApp label is the string the shared rail is sized by, in every locale
+// (the 24.5rem floor). DE at 320 is therefore the worst case in the whole
+// product, and it is in here. The sideways phone follows in BOTH languages,
+// because that is where the box has the least room and the panel only fits
+// while the title and both captions hold one line each.
 //
 // The `role`/`tabindex` check is the atom's own signal, not a guess: ui/Modal
 // grants its body a region and a tab stop ONLY in the scrollable mode and only
@@ -565,9 +860,10 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
    * What `scrollable={false}` must be true of at EVERY viewport: the body is
    * no region and no tab stop, the box holds its whole content without
    * scrolling in either direction, and it is a real card rather than a
-   * collapsed one — the bar, the lead and the 3.5rem control clear 150px at
-   * every width this site serves, and the assertion is deliberately far below
-   * the ~200px the card measures, so it catches a collapse without pinning a
+   * collapsed one — the bar, two group titles, two 3.5rem controls and two
+   * captions clear 300px at every width this site serves, and the assertion is
+   * deliberately below the 350–530px the card measures across both rhythms, so
+   * it catches a collapse (a group that stopped rendering) without pinning a
    * pixel height no one promised.
    */
   const expectUncappedBox = (dialog: HTMLDialogElement) => {
@@ -578,7 +874,7 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     expect(content).not.toHaveAttribute('tabindex');
     expect(box.scrollHeight).toBeLessThanOrEqual(box.clientHeight);
     expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth);
-    expect(box.getBoundingClientRect().height).toBeGreaterThan(150);
+    expect(box.getBoundingClientRect().height).toBeGreaterThan(300);
   };
 
   it.each([
@@ -605,27 +901,200 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     },
   );
 
-  it('holds the whole box even on a phone held sideways', async () => {
-    // 844×390 is the same phone turned over: 358px of room under the layer's
-    // 1rem margins. Before the 08-28 trim the card was taller than that and
-    // the layer scrolled — an owner-accepted fallback. With the second label
-    // and the schedule gone the card fits here too, so this case now asserts
-    // the STRONGER property: not one box on the screen scrolls, and the panel
-    // sits fully inside the viewport with its top edge visible at rest.
-    await page.viewport(844, 390);
+  it('breathes by default and tightens ONLY where the room runs out', async () => {
+    // The two owner rulings, in one case (fb-354's air + the 2026-09-05 "too
+    // crammed" review vs the Q1 motionless-landscape demand): the rhythm is
+    // state-dependent, and the state is the VIEWPORT'S HEIGHT.
+    // Read as COMPUTED STYLE against the real compiled sheet, not as class
+    // names: an arbitrary variant that Tailwind failed to emit — the one real
+    // risk of `[@media(max-height:33.5rem)]:gap-1` — still appears in the class
+    // list while changing nothing, and only getComputedStyle can tell those two
+    // apart. Same for the divider's `hidden`.
+    // The SAME element is measured at both viewports, without remounting, which
+    // additionally proves this is a live media query rather than a decision
+    // taken once at mount (a phone turned in the hand re-lays out; nothing
+    // re-renders).
+    await page.viewport(390, 844);
     const { dialog } = mount({ defaultOpen: true });
     await document.fonts.ready;
     await flush();
-    expect(document.fonts.check(`1rem "${FONT_FAMILY}"`)).toBe(true);
 
-    const layer = dialog();
-    const box = panelBox(layer);
-    expectUncappedBox(layer);
+    const groups = rail(dialog());
+    const firstGroup = groups.firstElementChild as HTMLElement;
+    const word = divider(dialog());
+    // AIRY — the four MACRO seams the owner enumerated on 2026-09-05 ("it looks
+    // very crammed"), which are the seams BETWEEN blocks and not the stacks
+    // inside them: the bar→rail seam (mt-3), the two rail gaps that now flank
+    // the divider (gap-7), and the seam below the second group (mb-4). The
+    // in-group rhythm is untouched at gap-2 — it was never on the owner's list.
+    expect(getComputedStyle(groups).rowGap).toBe('28px');
+    expect(getComputedStyle(groups).marginTop).toBe('12px');
+    expect(getComputedStyle(groups).marginBottom).toBe('16px');
+    expect(getComputedStyle(firstGroup).rowGap).toBe('8px');
+    expect(getComputedStyle(word).display).not.toBe('none');
 
-    expect(layer.scrollHeight).toBeLessThanOrEqual(layer.clientHeight);
-    expect(layer.scrollWidth).toBeLessThanOrEqual(layer.clientWidth);
-    expect(layer.scrollTop).toBe(0);
-    expect(box.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
-    expect(box.getBoundingClientRect().bottom).toBeLessThanOrEqual(390);
+    await page.viewport(844, 390);
+    await flush();
+
+    // TIGHT — and byte-identical to what it measured before the air landed:
+    // this state has 4px of slack, so every one of the four seams collapses
+    // back (gap-1 on the rail, gap-0 inside a group, no margins — option B's
+    // deeper collapse, which is what the 27px title's second line costs) and
+    // the divider yields with them (owner,
+    // 2026-09-05). Two stacked green controls under a title that already names
+    // both channels still read as alternatives.
+    expect(getComputedStyle(groups).rowGap).toBe('4px');
+    expect(getComputedStyle(groups).marginTop).toBe('0px');
+    expect(getComputedStyle(groups).marginBottom).toBe('0px');
+    expect(getComputedStyle(firstGroup).rowGap).toBe('0px');
+    expect(getComputedStyle(word).display).toBe('none');
+
+    // …and the airy rhythm WITH the word is what EVERY §7 upright viewport
+    // gets: 568px is the shortest of them (the 320 stress phone) and it is
+    // above the 536px query, so no story, baseline or real page in the set is
+    // ever photographed without the divider.
+    for (const height of [568, 800, 844, 864, 1024, 1080]) {
+      await page.viewport(390, height);
+      await flush();
+      expect(getComputedStyle(groups).rowGap, `${height}px tall`).toBe('28px');
+      expect(getComputedStyle(word).display, `${height}px tall`).toBe('block');
+    }
+
+    // THE NARROW LEVER is the other axis, and it does NOT take the word with
+    // it: at the 320px stress width the seams collapse (that is what buys
+    // German its slack) while the divider stays visible AT FULL SIZE — the
+    // owner's lever order for an upright overflow.
+    await page.viewport(320, 568);
+    await flush();
+    expect(getComputedStyle(groups).rowGap).toBe('4px');
+    expect(getComputedStyle(groups).marginTop).toBe('0px');
+    expect(getComputedStyle(firstGroup).rowGap).toBe('0px');
+    expect(getComputedStyle(word).display).toBe('block');
+    expect(getComputedStyle(word).fontSize).toBe('27px');
+
+    // THE TITLE NEVER YIELDS — option B (owner, 2026-09-05). The seams collapse
+    // and the word can hide, but the 27px dress the owner asked for holds at
+    // every viewport, in both tight states as well as the airy one. Checked
+    // here at 320 and again on the sideways phone, which are precisely the two
+    // states where a size fallback would have been the cheaper fix and was
+    // deliberately not taken.
+    const title = within(dialog()).getByRole('heading', { level: 2 });
+    expect(getComputedStyle(title).fontSize).toBe('27px');
+    await page.viewport(844, 390);
+    await flush();
+    expect(getComputedStyle(title).fontSize).toBe('27px');
   });
+
+  it('centres a WhatsApp label that wraps, in the language that wraps it', async () => {
+    // Owner, 2026-09-05: "on Kontaktieren Sie uns über WhatsApp i want the text
+    // centered when it goes on 2 lines". ui/Button centres the flex ROW, which
+    // places glyph+label as a group but leaves the label's own lines ragging
+    // left; `text-center` from this section governs those lines (§6.8: a parent
+    // utility on the atom's root, not a restyle of its internals).
+    // 320 + German is the case that HAS the wrap — the assertion checks both
+    // halves, because a centring class on a label that never wraps proves
+    // nothing.
+    await page.viewport(320, 568);
+    const { dialog, messages } = mount({ locale: 'de', defaultOpen: true });
+    await document.fonts.ready;
+    await flush();
+
+    const write = within(dialog()).getByRole('link', {
+      name: messages.whatsapp,
+    });
+    const lineHeight = Number.parseFloat(getComputedStyle(write).lineHeight);
+
+    expect(getComputedStyle(write).textAlign).toBe('center');
+    expect(lineHeight).toBeGreaterThan(0);
+    // It really does wrap here: the control is taller than two of its own line
+    // boxes, which no single-line label can be.
+    expect(write.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+      lineHeight * 2,
+    );
+    // …and the call control carries the same spelling, so the pair cannot
+    // diverge the day a display format grows long enough to wrap.
+    expect(
+      getComputedStyle(
+        within(dialog()).getByRole('link', { name: clinic.phoneDisplay }),
+      ).textAlign,
+    ).toBe('center');
+  });
+
+  it.each(['ro', 'de'] as const)(
+    'holds the whole box in %s even on a phone held sideways',
+    async (locale) => {
+      // 844×390 is the same phone turned over: 358px of room under the layer's
+      // 1rem margins, and the tightest case the site has. The airy rhythm does
+      // NOT fit it — 378px before the divider, 494px with it and the air — so
+      // the owner chose to tighten (2026-09-04) and to drop the divider here
+      // (2026-09-05) rather than accept a scrolling layer: "nothing scrolls, at
+      // any size" is the rule, and it has now survived both a second channel
+      // and a flourish. This viewport is 390px tall, i.e. inside the panel's
+      // `max-height: 33.5rem` query, so what renders here is the tight rhythm
+      // with no word between the groups, and the box measures 350px in BOTH
+      // languages: 8px of slack, and the whole dialog is motionless.
+      // Passing THIS case is therefore also proof that both variants engaged —
+      // an unstyled or mis-compiled one would put 374 or 494px back and fail on
+      // the layer's scrollHeight.
+      // So this case asserts the STRONG property, as it did before the rework:
+      // not one box on the screen scrolls, and the panel sits fully inside the
+      // viewport with its top edge visible at rest.
+      await page.viewport(844, 390);
+      const { dialog } = mount({ locale, defaultOpen: true });
+      await document.fonts.ready;
+      await flush();
+      expect(document.fonts.check(`1rem "${FONT_FAMILY}"`)).toBe(true);
+
+      const layer = dialog();
+      const box = panelBox(layer);
+      expectUncappedBox(layer);
+
+      expect(layer.scrollHeight).toBeLessThanOrEqual(layer.clientHeight);
+      expect(layer.scrollWidth).toBeLessThanOrEqual(layer.clientWidth);
+      expect(layer.scrollTop).toBe(0);
+      expect(box.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+      expect(box.getBoundingClientRect().bottom).toBeLessThanOrEqual(390);
+
+      // THE DIVIDER YIELDS HERE, and it yields by CSS rather than by being
+      // un-rendered: the element stays in the DOM (nothing about this dialog
+      // branches on the viewport at render time, §16) and `display: none` takes
+      // it out of the picture and out of the accessibility tree both.
+      // Asserted as VISIBILITY, not as a text query: getByText matches hidden
+      // nodes too, so it would pass on a divider that still occupied 36px.
+      expect(getComputedStyle(divider(layer)).display).toBe('none');
+      expect(divider(layer)).not.toBeVisible();
+      expect(divider(layer)).toHaveTextContent(MESSAGES[locale].contact.or);
+
+      // THE CONDITION THE 8px OF SLACK RESTS ON, and it CHANGED on 2026-09-05
+      // when the title took the Or-word's 27px: the bar holds TWO lines here
+      // now, not one. That is measured and budgeted for (the bar grew 68 → 88px
+      // and the tight state absorbed it by collapsing its gaps to 4px/0), so
+      // the guard moved with the fact instead of being deleted: the title may
+      // wrap to two lines and no further, and each caption still holds exactly
+      // one. A third title line, or a caption that wrapped, would add ~32px
+      // where 8 are spare.
+      // Measured against each element's OWN computed line-height rather than a
+      // pixel constant, so it keeps meaning the same thing if the type scale
+      // moves; the +0.5 in each bound is the honest midpoint between N and N+1
+      // lines.
+      const atMostLines = (el: HTMLElement, lines: number) => {
+        const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
+        expect(lineHeight).toBeGreaterThan(0);
+        expect(el.getBoundingClientRect().height).toBeLessThan(
+          lineHeight * (lines + 0.5),
+        );
+      };
+
+      atMostLines(within(layer).getByRole('heading', { level: 2 }), 2);
+      // The body's <p>s are the two captions AND the hidden divider — three
+      // elements, of which the two inside the groups are the ones that must
+      // hold one line (the divider is display:none here and measures zero).
+      const captions = Array.from(rail(layer).children)
+        .filter((child) => child !== divider(layer))
+        .map((group) => group.querySelector('p'))
+        .filter((caption): caption is HTMLParagraphElement => caption !== null);
+      expect(captions).toHaveLength(2);
+      for (const caption of captions) atMostLines(caption, 1);
+    },
+  );
 });

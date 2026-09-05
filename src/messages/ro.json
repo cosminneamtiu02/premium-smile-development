@@ -11,7 +11,8 @@
     },
     "actions": {
       "call": "Sună acum",
-      "contact": "Contact"
+      "contact": "Contact",
+      "whatsapp": "Scrieți-ne pe WhatsApp"
     },
     "menu": {
       "label": "Meniu"
@@ -53,8 +54,13 @@
     "title": "Articole și noutăți"
   },
   "contact": {
-    "heading": "Probleme?",
-    "lead": "Sunați-ne la numărul de mai jos.",
+    "heading": "Ne găsiți la telefon sau pe WhatsApp.",
+    "callHeading": "Sunați-ne la",
+    "callHours": "Lun–Vin {weekOpens}–{weekCloses}, Sâm {satOpens}–{satCloses}",
+    "or": "SAU",
+    "whatsappHeading": "Scrieți-ne",
+    "whatsapp": "Contactați-ne pe WhatsApp",
+    "whatsappNote": "Scrieți-ne oricând, revenim cât de curând.",
     "close": "Închide"
   }
 }

@@ -10,7 +10,9 @@ import { ContactModalTrigger } from './ContactModalTrigger';
 // sections/ContactModal — THREE stories: the dialog open on a phone, the same
 // dialog in German on a laptop, and the page before anyone presses anything.
 // They are the declared visual manifest for this lane (owner-approved N2
-// contract, board .claude/plans/contact-modal-n2-contract.plan.md), so the
+// contract, board .claude/plans/contact-modal-n2-contract.plan.md, reworked to
+// the two-channel v4 shape by board
+// .claude/plans/contact-modal-whatsapp-n2-contract.plan.md, fb-351…358), so the
 // export NAMES are load-bearing: renaming one renames its baseline file.
 //
 // Three mechanics that would otherwise fail SILENTLY, in the Footer's order:
@@ -104,6 +106,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * The weekday opening time exactly as lib/clinic.ts holds it — the value the
+ * hours caption interpolates. Read from the module, never typed out, so a
+ * schedule edit moves the assertion with it (§10.1); the plays assert it is
+ * non-empty first, or a missing row would make the check pass on nothing.
+ */
+const weekdayOpens =
+  clinic.hours.find((row) => row.days.includes('Monday'))?.opens ?? '';
+
 /** The panel must never make the page scroll sideways (§7), in any language. */
 const expectNoSidewaysScroll = async (panel: HTMLElement): Promise<void> => {
   await expect(panel.scrollWidth).toBeLessThanOrEqual(panel.clientWidth);
@@ -128,18 +139,47 @@ const expectNoVerticalScroll = async (layer: HTMLElement): Promise<void> => {
 };
 
 /**
- * THE picture: the dialog open, in Romanian — since the owner's 08-28 trim
- * that is the title in the bar, the lead, and the green call control, with
- * nothing under it. The net shoots it at 390 and 1536, and the 'stress-320'
- * tag adds 320 (§13's opt-in), where the panel collapses to 288px wide: the
+ * THE picture: the dialog open, in Romanian — the title in the bar naming both
+ * channels, then two titled groups, each a green control with its caption under
+ * it (hours for the call, a reply promise for WhatsApp), with „SAU" between
+ * them at 27px — the exact size the panel's own title wears since the same
+ * day (owner, 2026-09-05: the title as big as the Or-word).
+ *
+ * TWO THINGS IN THIS SHOT ARE GERMAN, and deliberately: the CONTROL SIZE. The
+ * rail carries a 24.5rem floor measured off the German panel, so the Romanian
+ * buttons here are exactly as wide as GermanStress's — the owner's "keep that
+ * sizes of elements throughout all languages". At 1536 that floor is what sets
+ * the width; at 390 and 320 the panel is narrower than the floor and the
+ * `min(…, 100%)` guard collapses it to the available width instead of
+ * overflowing (§7).
+ *
+ * The net shoots it at 390 and 1536, and the 'stress-320' tag adds 320 (§13's
+ * opt-in), where the panel collapses to 288px wide and every caption wraps: the
  * box is UNCAPPED by `scrollable={false}` (ui/Modal D16), so it can never
- * scroll inside itself, and at ~200px tall it has more than 300px to spare
- * even on that stress phone.
+ * scroll inside itself, and at a measured 478px (506px in German, its worst
+ * case anywhere) it still clears that stress phone's 568px — the four-line
+ * title at that width included.
+ *
+ * EVERY PICTURE IN THIS FILE HAS THE DIVIDER AND THE AIRY SEAMS — mt-3 under
+ * the bar, gap-7 on both sides of the word, mb-4 below the second group, with
+ * the in-group stack left at gap-2 (fb-354, pushed further by the owner's two
+ * 2026-09-05 reviews: "they look too crammed within the modal", then "it looks
+ * very crammed" with those four seams named).
+ * Two states never appear in a baseline: the sideways-phone state, where the
+ * seams collapse and the divider hides (`max-height: 33.5rem`), and — at the 320
+ * shot only — the narrow lever (`max-width: 21.25rem`), which collapses the
+ * same seams while KEEPING the word at full size. So the 320 baseline is the
+ * collapsed-seam picture and the other two are the airy one;
+ * ContactModal.tsx's header note carries both thresholds with their
+ * measurements, and the interaction suite owns the sideways state, where a
+ * viewport can be turned on its side.
  *
  * The play function proves the facts a picture cannot: the dialog is genuinely
  * open and genuinely named by its own <h2>, the tel: href is the E.164 number
- * while the visible text is the human one, and neither the box nor the page
- * scrolls in any direction.
+ * while the visible text is the human one, the wa.me link opens the clinic's
+ * own conversation in a new tab with the noopener pair (PR #68's law), both
+ * captions are really rendered, and neither the box nor the page scrolls in any
+ * direction.
  */
 export const Default: Story = {
   tags: ['stress-320'],
@@ -156,24 +196,59 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('link', { name: clinic.phoneDisplay }),
     ).toHaveAttribute('href', `tel:${clinic.phone}`);
-    await expect(dialog).toHaveTextContent(ro.contact.lead);
+
+    const write = canvas.getByRole('link', { name: ro.contact.whatsapp });
+    await expect(write).toHaveAttribute(
+      'href',
+      `https://wa.me/${clinic.whatsapp}`,
+    );
+    await expect(write).toHaveAttribute('target', '_blank');
+    await expect(write).toHaveAttribute('rel', 'noopener noreferrer');
+
+    await expect(dialog).toHaveTextContent(ro.contact.callHeading);
+    await expect(dialog).toHaveTextContent(ro.contact.whatsappHeading);
+    await expect(dialog).toHaveTextContent(ro.contact.whatsappNote);
+    // The Or-word, from the message file and pre-uppercased there — this is
+    // also the story where the a11y addon audits it, and it must stay OUT of
+    // the outline: a plain <p> wearing the display tokens, never a heading.
+    await expect(dialog).toHaveTextContent(ro.contact.or);
+    await expect(
+      canvas.queryByRole('heading', { name: ro.contact.or }),
+    ).toBeNull();
+    // The hours caption by its DATA, not by its sentence: the times come from
+    // lib/clinic.ts through ICU arguments, so this is what proves the
+    // interpolation ran instead of printing „{weekOpens}".
+    await expect(weekdayOpens).not.toBe('');
+    await expect(dialog).toHaveTextContent(weekdayOpens);
+
     await expectNoSidewaysScroll(dialog);
     await expectNoVerticalScroll(dialog);
   },
 };
 
 /**
- * German — the CALIBRATION story, because German runs ~30–35% longer than
- * English (§8.4) and this panel has no width to spare on a phone. With the
- * dialog down to three lines, the German lead ("Rufen Sie uns unter der unten
- * stehenden Nummer an.") is the longest string it ever holds: it must wrap
- * under the title without clipping, without pushing the control off the card,
- * and without the ✕ leaving its corner.
+ * German — the CALIBRATION story, and since 2026-09-05 it is more than that: it
+ * DEFINES the width every other language wears. German runs ~30–35% longer than
+ * English (§8.4), its "Kontaktieren Sie uns über WhatsApp" is the widest string
+ * the panel holds, and the rail it produced — measured at 391.88px on
+ * 2026-09-05, floored to 24.5rem — is what ContactModal.tsx now hands to all
+ * five locales (the owner's "keep that sizes of elements throughout all
+ * languages"). So a diff in THIS baseline's control width is a diff in every
+ * language's, and the re-measure trigger lives in that file's header.
+ *
+ * It calibrates three strings at once, the three longest the panel holds:
+ *  · the title, "Erreichbar per Anruf oder WhatsApp." — it must fit the bar
+ *    beside the ✕, wrapping without clipping and without moving the ✕ off its
+ *    corner;
+ *  · the WhatsApp label, which sizes the shared rail as described above;
+ *  · both captions, which must stay under their own control rather than
+ *    pushing it off the card.
  *
  * The net shoots this one at both tier widths, which is what makes it a
  * calibration: at 1536 the panel sits at its full 32rem cap, where the
  * container padding has already stepped up to 1.5rem, and at 390 it is the
- * same component 358px wide — with no media query anywhere (§6.5).
+ * same component 358px wide — the only media queries anywhere near it being
+ * the two short/narrow ones neither of these widths triggers (§6.5).
  */
 export const GermanStress: Story = {
   globals: { locale: 'de' },
@@ -182,7 +257,38 @@ export const GermanStress: Story = {
     const dialog = canvas.getByRole('dialog', { name: de.contact.heading });
 
     await expect(dialog).toHaveAttribute('open');
-    await expect(dialog).toHaveTextContent(de.contact.lead);
+    await expect(dialog).toHaveTextContent(de.contact.callHeading);
+    await expect(dialog).toHaveTextContent(de.contact.whatsappHeading);
+    await expect(dialog).toHaveTextContent(de.contact.whatsappNote);
+    await expect(dialog).toHaveTextContent(de.contact.or);
+    await expect(
+      canvas.queryByRole('heading', { name: de.contact.or }),
+    ).toBeNull();
+    await expect(weekdayOpens).not.toBe('');
+    await expect(dialog).toHaveTextContent(weekdayOpens);
+
+    // THE RAIL, in the language that DEFINES its width: both controls are grid
+    // items on one column, so the German WhatsApp label sets the width of the
+    // call button here — and, through the 24.5rem floor measured off it, of
+    // every other locale's pair too. A ragged pair of different-width green
+    // blocks is what this catches, in the picture AND here, to the pixel; the
+    // cross-locale half of the claim is pinned in the interaction suite, which
+    // can mount two languages at one viewport.
+    const call = canvas.getByRole('link', { name: clinic.phoneDisplay });
+    const write = canvas.getByRole('link', { name: de.contact.whatsapp });
+    await expect(write).toHaveAttribute(
+      'href',
+      `https://wa.me/${clinic.whatsapp}`,
+    );
+    await expect(write).toHaveAttribute('target', '_blank');
+    await expect(write).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(
+      Math.abs(
+        call.getBoundingClientRect().width -
+          write.getBoundingClientRect().width,
+      ),
+    ).toBeLessThanOrEqual(1);
+
     await expectNoSidewaysScroll(dialog);
     await expectNoVerticalScroll(dialog);
   },

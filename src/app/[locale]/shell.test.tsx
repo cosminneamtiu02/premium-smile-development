@@ -204,6 +204,12 @@ const stem = () => dialNav().querySelector('ul') as HTMLElement;
 /** The call CTA — an <a href="tel:"> at body level (GlyphButton asChild). */
 const callDisc = () =>
   screen.getByRole('link', { name: ro.common.actions.call });
+/**
+ * The WhatsApp disc — the call CTA's stacked twin in the same corner since
+ * fb-353 (owner, 2026-09-04), an <a href="https://wa.me/…"> at body level.
+ */
+const whatsappDisc = () =>
+  screen.getByRole('link', { name: ro.common.actions.whatsapp });
 const burger = () => screen.getByRole('button', { name: ro.common.menu.label });
 const skipLink = () =>
   screen.getByRole('link', { name: ro.common.skipToContent });
@@ -312,18 +318,21 @@ afterAll(() => {
 });
 
 describe('Shell — the body-level sibling contract (E10/E11, P1)', () => {
-  it('renders skip-link · header · main · footer · dial · call · dialog as direct <body> children, in that order', () => {
+  it('renders skip-link · header · main · footer · dial · whatsapp · call · dialog as direct <body> children, in that order', () => {
     mount();
 
-    // SEVEN since 2026-09-04: FloatingActions' clearance spacer was removed by
-    // the owner, so the section contributes two `fixed` controls and nothing
-    // else (its own header carries the decision).
+    // EIGHT since fb-353 (2026-09-04): FloatingActions' clearance spacer was
+    // removed by the owner the same day the right corner became a stacked pair,
+    // so the section contributes three `fixed` controls and nothing else — the
+    // WhatsApp disc BEFORE the phone, because DOM order follows the corner read
+    // top-to-bottom (its own header carries both decisions).
     expect(shellChildren()).toEqual([
       skipLink(),
       document.querySelector('header'),
       main(),
       footer(),
       dialNav(),
+      whatsappDisc(),
       callDisc(),
       dialog(),
     ]);
@@ -394,6 +403,7 @@ describe('Shell — the freeze reaches the real page (E3/E11)', () => {
       main(),
       footer(),
       dialNav(),
+      whatsappDisc(),
       callDisc(),
       dialog(),
     ];
@@ -702,17 +712,22 @@ describe('Shell — the scroll-padding pair on <html> (E5/E12, boxes 1 + 3)', ()
     expect(paddings().top).toBe('96px');
   });
 
-  it('mirrors the clearance spacer at the bottom, in three steps', async () => {
-    // The steps are the spacer's own heights, and they exist because the corner
-    // discs grow with the screen (--disc-size 56 → 64 → 72px): base 5.5rem,
-    // xl 6rem, 2xl 6.5rem — Tailwind's untouched 1280/1536 breakpoints (§3, §7).
+  it('mirrors the corner stack at the bottom, in three steps', async () => {
+    // The steps are the RIGHT CORNER's full reach, and they exist because the
+    // discs grow with the screen (--disc-size 56 → 64 → 72px). Since fb-353
+    // (owner, 2026-09-04) that corner is a stacked PAIR — the WhatsApp disc
+    // above the phone — so each step is 1rem offset + disc + 0.5rem gap + disc
+    // + 1rem headroom: 9.5rem, 10.5rem, 11.5rem at Tailwind's untouched
+    // 1280/1536 breakpoints (§3, §7). KEEP-IN-SYNC: FloatingActions.test.tsx's
+    // "keeps every control INSIDE the scroll clearance" case derives the same
+    // three numbers from the controls' own classes, from the other side.
     await page.viewport(390, 844);
-    expect(paddings().bottom).toMatch(/(^|\D)88px/);
+    expect(paddings().bottom).toMatch(/(^|\D)152px/);
 
     await page.viewport(1280, 800);
-    expect(paddings().bottom).toMatch(/(^|\D)96px/);
+    expect(paddings().bottom).toMatch(/(^|\D)168px/);
 
     await page.viewport(1536, 864);
-    expect(paddings().bottom).toMatch(/(^|\D)104px/);
+    expect(paddings().bottom).toMatch(/(^|\D)184px/);
   });
 });

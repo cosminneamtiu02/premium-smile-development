@@ -5,6 +5,12 @@ import {
   type CSSProperties,
   type FocusEvent,
   type MouseEvent,
+  // ALIASED, and it has to be: the DOM's own PointerEvent is still the type of
+  // the outside-pointerdown listener further down, and an unaliased import
+  // would shadow it — React's synthetic event is not assignable to a document
+  // listener, so the shadowing shows up as a type error a page away from its
+  // cause.
+  type PointerEvent as ReactPointerEvent,
   type ReactElement,
   useCallback,
   useEffect,
@@ -28,7 +34,10 @@ import { discBase, discBox } from '../disc';
 // chosen one sitting in the bulb. That is model C (D1): the current option is
 // never a stem disc, so the disc under your finger keeps its identity through
 // the animation and the bulb is always the toggle ("tap it again" = close,
-// nothing happens).
+// nothing happens). One rider since hover-open: if HOVERING opened it, the
+// first POINTER click on the bulb claims the dial instead of closing it — the
+// aimer who rested on the target gets the dial they were reaching for — and
+// the second click closes it. A key press never claims; Enter closes at once.
 //
 // DUMB BY CONSTRUCTION (§6.1, D2): it knows its props and nothing else — not
 // that these are languages, not what a URL means, not that a cookie exists. An
@@ -39,16 +48,19 @@ import { discBase, discBox } from '../disc';
 // knows what its value means.
 //
 // 'use client' because it is INHERENTLY stateful (D13): open/close plus the
-// document-level Esc and outside-pointer listeners. Everything it renders is in
-// the build-time HTML either way — the stem is always mounted (D8 = M) and only
-// two attributes change on open — so the pre-hydration and post-hydration
-// documents are identical (§16.2) and search engines see the alternate-language
-// links on every page.
+// document-level Esc and outside-pointer listeners, and — since 2026-09-04 —
+// the two hover timers below. Everything it renders is in the build-time HTML
+// either way — the stem is always mounted (D8 = M) and only two attributes
+// change on open — so the pre-hydration and post-hydration documents are
+// identical (§16.2) and search engines see the alternate-language links on
+// every page.
 //
 // NOT copied from NavMenu, on purpose: the page freeze, the scroll lock and the
 // dimming sheet. A five-disc popover blocks nothing, so it takes that file's
 // MANNERS (Esc, focus return after the commit, bfcache close) and none of its
 // heavy machinery. No portal either: the stem is positioned against the bulb.
+// It has since grown one manner NavMenu deliberately does not share — opening
+// on hover and closing on hover-away (see the two clocks below).
 
 // ── PUBLIC CSS VARIABLES — the two knobs a HOST turns through `className`
 // (§6.8: placement and sizing are the parent's; the atom never reads the
@@ -400,6 +412,42 @@ const toneClasses: Record<SpeedDialTone, string> = {
   cta: 'bg-cta text-ink-inverse hover:bg-cta-hover active:bg-cta-hover',
 };
 
+// ── THE TWO HOVER CLOCKS (owner request, 2026-09-04: "i want language switcher
+// also on hover to open, not just on click"; built to the lane plan
+// .claude/plans/speed-dial-hover.plan.md). Timers rather than CSS, because what
+// opens the dial is INTENT, and intent is only legible as time.
+//
+// WHY A DWELL, AND NOT "the pointer arrives, it opens". Every mouse click is
+// PRECEDED by the pointer arriving — a pointerenter and a pointermove carrying
+// pointerType 'mouse', both the trusted kind Playwright drives over CDP and the
+// synthetic kind user-event dispatches before its own click. An arrive-opens
+// design would therefore turn every click-to-open into open-then-toggle-CLOSED,
+// and take with it the eleven `openPlay` stories, the test suite's `open()`
+// helper and the visual runner's `openDisclosure` poll
+// (tests/visual/stories.spec.ts). A dwell plus a bulb click that CANCELS both
+// timers keeps every click path exactly as it was: nobody clicks a control they
+// have been resting on for a sixth of a second.
+//
+// The leave grace is deliberately the stem sweep's own 300ms — one timing
+// family, so the pill is still fading when the grace runs out. It is NOT a
+// KEEP-IN-SYNC pair (fb-44): that convention names two FILES that must agree,
+// and this number has no twin. It restates a duration that lives in `stemBase`
+// a few lines up, in the same file, where a reader can see both at once.
+//
+// NOT MIRRORED TO NavMenu, and the asymmetry is the decision: the burger opens
+// a full-page panel over the document, and a panel that unfolds because a mouse
+// crossed it ambushes the reader. Esc and the bfcache close ARE twins across
+// those two files; this manner belongs to a five-disc corner popover and to
+// nothing else, so there is nothing to keep in sync.
+//
+// ALWAYS ON, with a named trigger: no opt-out prop ships today because no
+// consumer wants one. The first host that must NOT hover-open — a dial in a
+// dense toolbar, say — is the moment `hoverOpen={false}` becomes a real prop.
+// Not before (§6.2: props are for genuine variants, and a variant with one
+// value is a guess).
+const HOVER_OPEN_DELAY_MS = 150;
+const HOVER_CLOSE_DELAY_MS = 300;
+
 // Dev tripwires fire ONCE PER DISTINCT MESSAGE per session. The once-per-
 // session PRECEDENT is NavMenu's `mountContractWarned` — one module-scope
 // boolean guarding one tripwire — and this file KEYS the guard by MESSAGE
@@ -436,6 +484,12 @@ export function SpeedDial<V extends string = string>({
   className,
   ref,
   onBlur,
+  // CHAINED, never replaced (§6.8, exactly like `onBlur` above): a host that
+  // watches its own corner must not lose an event because this atom took the
+  // same three props for itself.
+  onPointerEnter,
+  onPointerMove,
+  onPointerLeave,
   ...rest
 }: SpeedDialProps<V>): ReactElement {
   // THE TWO-LINE ALGORITHM (D1 = C) — no sorting, no rotation. `options` order
@@ -457,6 +511,50 @@ export function SpeedDial<V extends string = string>({
   // must not pull focus onto the bulb.
   const returningFocus = useRef(false);
 
+  // The other half of that question, and new with hover-open: WHERE focus was
+  // when the close happened. Captured in close(), honoured in the effect — the
+  // argument for it is written at the effect.
+  const focusWasInside = useRef(false);
+
+  // ── HOVER STATE. `hoverOpened` is the whole answer to "what may hovering
+  // close?": it is set ONLY when the open-timer fires, and cleared on every
+  // open→false transition, so HOVER CLOSES ONLY WHAT HOVER OPENED. A
+  // click-opened dial therefore keeps exactly today's persistence, in every
+  // browser and in every runner — which is not a nicety: the visual runner
+  // click-opens each `pin-open` story and then parks its mouse at 0,0
+  // (openDisclosure), i.e. a pointerleave over an open dial. Without this flag
+  // every open baseline would race the grace against `openPlay`'s trailing
+  // `bulb.blur()`, and a focus-only guard would lose that race.
+  const hoverOpened = useRef(false);
+  // "This pointer visit may still open the dial." Set when the pointer ENTERS,
+  // cleared on every open→false transition — so a dial dismissed with Esc, with
+  // a bulb tap or by picking a disc stays dismissed while the pointer is still
+  // sitting on it, and only a fresh visit can open it again (SC 1.4.13's
+  // dismissable half: dismissing must not be undone by the same hover).
+  const hoverMayOpen = useRef(false);
+  const openTimer = useRef<number | undefined>(undefined);
+  const closeTimer = useRef<number | undefined>(undefined);
+
+  // THE COMMITTED STATE, readable the instant it changes. `open` is a render
+  // value: between an event that flips it and the render that publishes it,
+  // every handler still closes over the OLD boolean — so two acts in the same
+  // instant (a leave racing the dwell's commit; the pre-existing Esc landing
+  // with an outside pointerdown) each judge the dial by a state that is already
+  // gone. This ref is the one thing that is never behind.
+  const openRef = useRef(false);
+
+  // Stable, so the hygiene effects below depend on nothing that changes.
+  // clearTimeout on an undefined or already-fired id is a no-op by spec.
+  const cancelHoverOpen = useCallback(() => {
+    window.clearTimeout(openTimer.current);
+    openTimer.current = undefined;
+  }, []);
+
+  const cancelHoverClose = useCallback(() => {
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = undefined;
+  }, []);
+
   // The caller's ref and ours point at the same node: theirs is the §6.8
   // promise (ref reaches the root), ours is what the outside-pointer listener
   // measures "outside" against. Memoised on the caller's ref so React does not
@@ -473,6 +571,13 @@ export function SpeedDial<V extends string = string>({
   // report React's rendering, not the visitor's action).
   const setOpenState = useCallback(
     (next: boolean) => {
+      // …and the flip is now REAL or it is nothing: a caller asking for the
+      // state the dial already holds is dropped here, before React and before
+      // the consumer hear about it. That is what makes "exactly once per real
+      // flip" a property of this function rather than of every call site
+      // remembering to check first.
+      if (next === openRef.current) return;
+      openRef.current = next;
       setOpen(next);
       onOpenChange?.(next);
     },
@@ -487,8 +592,57 @@ export function SpeedDial<V extends string = string>({
    */
   const close = useCallback(() => {
     returningFocus.current = true;
+    // Read HERE and not in the effect: by the time the effect runs the dial is
+    // closed, `inert` has come back over the stem, and a browser blurs whatever
+    // it just made inert — so the effect would find focus on <body> in the very
+    // case this flag exists to recognise.
+    focusWasInside.current =
+      rootRef.current?.contains(document.activeElement) ?? false;
     setOpenState(false);
   }, [setOpenState]);
+
+  // ── HOVER TIMER HYGIENE, in one place. A timer waits for a flip, so the flip
+  // itself makes it moot; killing them here rather than at each call site is
+  // what makes the invariants checkable at a glance:
+  //  1. the open-timer exists only while the dial is CLOSED with the pointer
+  //     inside — killed by leaving, by any bulb click, by `open` becoming true,
+  //     and by unmount;
+  //  2. the close-timer exists only while it is OPEN (and hover-opened) with
+  //     the pointer outside — killed by re-entering, by `open` becoming false,
+  //     and by unmount;
+  //  3. therefore no timer can ever re-report a state the dial is already in,
+  //     and `onOpenChange` still fires exactly once per real flip. The hygiene
+  //     above makes the double report unreachable by ARGUMENT; `openRef`, read
+  //     and written inside setOpenState, makes it unreachable by CONSTRUCTION —
+  //     which is what also seals the pre-existing analog this lane did not
+  //     create, an Esc landing in the same instant as an outside pointerdown.
+  //
+  // The effects below stay keyed on `open`, deliberately: their job is to react
+  // to a COMMITTED flip (bind Esc, clear a spent timer), and post-commit is
+  // exactly when that should happen. Only the pointer handlers, which race the
+  // commit, read the ref.
+  useEffect(() => {
+    if (open) {
+      cancelHoverOpen();
+      return;
+    }
+    cancelHoverClose();
+    // Whatever opened this dial, that open is over: the next one starts with
+    // hover owning nothing, and with this pointer visit spent — a dismissal
+    // the pointer is still resting on must not undo itself.
+    hoverOpened.current = false;
+    hoverMayOpen.current = false;
+  }, [open, cancelHoverOpen, cancelHoverClose]);
+
+  // …and nothing outlives the component: an unmount mid-dwell would otherwise
+  // wake up and set state on a tree that is gone.
+  useEffect(
+    () => () => {
+      cancelHoverOpen();
+      cancelHoverClose();
+    },
+    [cancelHoverOpen, cancelHoverClose],
+  );
 
   // The dev tripwire for a `value` that matches no option. It lives in an
   // EFFECT, not in the render body, because touching module state while
@@ -549,6 +703,25 @@ export function SpeedDial<V extends string = string>({
   useEffect(() => {
     if (open || !returningFocus.current) return;
     returningFocus.current = false;
+    // GUARDED since hover-open (2026-09-04): the focus goes back to the bulb
+    // only if it was INSIDE this dial when the close happened. Unconditional
+    // was right for as long as the only ways in were a click and a key press —
+    // both leave focus on the bulb or on a disc, so "return it" and "leave it
+    // alone" were the same instruction. A dial that opens because a mouse came
+    // to rest on it can now be open while the visitor types somewhere else
+    // entirely, and Esc — document-bound, as SC 1.4.13's dismissable half
+    // requires — would YANK their focus into the corner of the screen. Every
+    // pinned behaviour survives the guard: in an engine that focuses a <button>
+    // on click — Chromium, Firefox, and every runner in this repo — a real
+    // click leaves focus on the bulb or on the disc it landed on, so
+    // Esc-after-click and the href-less pick still hand focus back.
+    // The Safari consequence, stated rather than worked around: WebKit does not
+    // focus a button on click (the same fact `handleBlur` already leans on), so
+    // there a POINTER-opened dial closes into the no-return branch and focus
+    // stays where the visitor put it. That is the pointer-close doctrine of
+    // this file, not a regression — and keyboard activation, which focuses the
+    // bulb everywhere, still returns focus in every engine.
+    if (!focusWasInside.current) return;
     // `preventScroll` — a focus return restores the KEYBOARD position, never
     // the viewport's (owner-reported close-jump, 2026-09-04). focus() scrolls
     // its target into view by default, and the shell's `scroll-padding-bottom`
@@ -556,8 +729,13 @@ export function SpeedDial<V extends string = string>({
     // band and is `fixed` — a clearance it can never reach, so it nudges the
     // page on every close. The bulb is on screen by construction (it is a fixed
     // corner control), so nothing is hidden by suppressing that scroll.
-    // KEEP-IN-SYNC (fb-44): NavMenu's focus-return effect took the same option
-    // in the same edit — the twins' shape stays identical.
+    // KEEP-IN-SYNC (fb-44) — and this pointer names ONE option, `preventScroll`:
+    // NavMenu's focus-return effect took it in the same edit, and that half of
+    // the twins' shape stays identical. The `focusWasInside` guard above is
+    // deliberately NOT mirrored: it exists to answer hover-open, which lives in
+    // this file alone. A burger opens only on a click or a key press, so focus
+    // is always inside it at close time and NavMenu's unconditional return is
+    // still the correct code there. Divergence by argument, not by drift.
     const button = bulbRef.current;
     if (button && button.offsetParent !== null) {
       button.focus({ preventScroll: true });
@@ -646,6 +824,110 @@ export function SpeedDial<V extends string = string>({
     setOpenState(false);
   };
 
+  /**
+   * ENTERING does two small things and deliberately not the big one: it opens
+   * a pointer VISIT (which a later move may cash in) and it cancels a pending
+   * close — the "came back" half of the grace. It does NOT arm the dwell; that
+   * is the move handler's job, for the reason argued there.
+   *
+   * ONE CASE WITNESSES NO ENTER AT ALL: a cursor already parked on the corner
+   * when the page loads. The browser computed hover before this component's
+   * listeners existed, so no enter is ever delivered to them and the visit is
+   * never opened — jiggling in place cannot arm the dwell until the pointer
+   * leaves the dial and comes back. That reads as the same rule from the other
+   * side ("a pointer that has not moved has hovered nothing") and costs the
+   * visitor nothing: clicking the bulb works exactly as it always has.
+   */
+  const handlePointerEnter = (event: ReactPointerEvent<HTMLDivElement>) => {
+    onPointerEnter?.(event);
+    if (event.pointerType !== 'mouse') return;
+    hoverMayOpen.current = true;
+    cancelHoverClose();
+  };
+
+  /**
+   * MOVEMENT is what arms the dwell, and this is the one place where movement
+   * and the boundary event come apart. Chromium re-computes hover whenever the
+   * LAYOUT changes beneath a resting cursor and delivers a full
+   * pointerover/pointerenter pair for whatever arrived there — with no
+   * pointermove at all (probed in this repo's own Chromium, 2026-09-04). Arming
+   * on `enter` therefore let a FIXED corner dial unfold itself the moment it
+   * mounted under somebody's parked mouse, hand nowhere near it; the component
+   * suite caught the same thing as a freshly rendered dial opening under the
+   * cursor the previous case left behind, so the next click closed it instead
+   * of opening it. Hovering is something a VISITOR does — a pointer that has
+   * not moved has hovered nothing.
+   *
+   * MOUSE ONLY. A finger that lands on the dial and drags — the first frames of
+   * a page scroll — does dispatch pointermove, with pointerType 'touch', and
+   * would otherwise unfold a dial the tap's own click then toggles shut. Pen is
+   * excluded WITH touch on purpose rather than probed for: a stylus taps far
+   * more often than it hovers, and guessing wrong for the taps is the more
+   * expensive mistake.
+   *
+   * The FIRST move inside the root starts the clock and later ones do not
+   * restart it (`openTimer` is the guard): a dwell any jitter could reset would
+   * never elapse under a real hand.
+   */
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    onPointerMove?.(event);
+    if (event.pointerType !== 'mouse') return;
+    // `openRef`, not `open`: a move landing in the same instant as the dwell's
+    // own commit must see the dial as already opening, or it would arm a second
+    // dwell over an open dial.
+    if (openRef.current) return;
+    // A spent visit (this dial was dismissed under this very pointer) and a
+    // dwell already running are both "nothing to do".
+    if (!hoverMayOpen.current || openTimer.current !== undefined) return;
+    openTimer.current = window.setTimeout(() => {
+      openTimer.current = undefined;
+      hoverOpened.current = true;
+      // ACCEPTED STALENESS, recorded not machineried: this fires the
+      // `setOpenState` captured when the dwell was armed, so a consumer that
+      // swapped `onOpenChange` mid-dwell would hear the flip through the old
+      // closure. Latent today — no consumer wires the prop at all — and the
+      // cure (a ref-held callback) buys indirection nobody is paying for yet.
+      setOpenState(true);
+    }, HOVER_OPEN_DELAY_MS);
+  };
+
+  /**
+   * LEAVING closes what hovering opened, after a grace long enough to cross a
+   * gap or overshoot a disc.
+   *
+   * SC 1.4.13, all three halves, and none of them cost anything here:
+   * HOVERABLE — the stem is a DOM descendant anchored at the bulb's centre, so
+   * travelling bulb → disc never leaves this root and never starts the clock;
+   * DISMISSABLE — Esc is already bound to the document while open;
+   * PERSISTENT — nothing dismisses it on a timer of its own, it stays for as
+   * long as the pointer does. The SC's focus half is not in play at all: focus
+   * alone never opens this dial, the disclosure keeps Enter/Space.
+   * Reduced motion is untouched — these clocks are intent, not animation.
+   */
+  const handlePointerLeave = (event: ReactPointerEvent<HTMLDivElement>) => {
+    onPointerLeave?.(event);
+    if (event.pointerType !== 'mouse') return;
+    cancelHoverOpen();
+    // `openRef`, not `open`: a pointer that leaves in the very instant the
+    // dwell commits would otherwise judge the dial closed, skip the grace, and
+    // strand an open dial the mouse has already abandoned.
+    if (!openRef.current || !hoverOpened.current) return;
+    cancelHoverClose();
+    closeTimer.current = window.setTimeout(() => {
+      closeTimer.current = undefined;
+      // The same accepted staleness as the dwell above: `setOpenState` is the
+      // one captured when the grace was armed.
+      // THE MIXED-INPUT BELT: a mouse parked outside while somebody walks the
+      // stem with the keyboard. Closing there would hand `inert` a focused disc
+      // and dump the visitor on <body> — so the leave is dropped and the
+      // keyboard keeps the dial (SC 2.4.3).
+      if (rootRef.current?.contains(document.activeElement)) return;
+      // setOpenState, never close(): a pointer-driven close must not move
+      // focus, exactly as the outside-pointerdown listener above does not.
+      setOpenState(false);
+    }, HOVER_CLOSE_DELAY_MS);
+  };
+
   const handleSelect = (
     option: SpeedDialOption<V>,
     event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>,
@@ -654,7 +936,10 @@ export function SpeedDial<V extends string = string>({
     // A LINK pick is left alone: the browser is already leaving, and closing
     // would animate a pill on a page that is being replaced.
     // An href-LESS pick (D2 = B′) has no navigation to end the interaction, so
-    // the dial closes and hands focus back to the bulb — the alternative is
+    // the dial closes and hands focus back to the bulb wherever the engine
+    // focused the disc that was clicked — everywhere but WebKit, which does not
+    // focus a button on click, so the guarded return there finds focus outside
+    // and leaves it alone (see the focus-return effect). The alternative is
     // leaving focus on a disc the parent may re-render away. (Builder-level
     // rule: the board decided the element, not this consequence.)
     if (option.href === undefined) close();
@@ -665,6 +950,9 @@ export function SpeedDial<V extends string = string>({
       ref={setRoot}
       className={cx('inline-flex', rootSize[size], className)}
       onBlur={handleBlur}
+      onPointerEnter={handlePointerEnter}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
       {...rest}
     >
       {/* The positioning scope AND the stacking group: `isolate` keeps the
@@ -676,7 +964,46 @@ export function SpeedDial<V extends string = string>({
           aria-expanded={open}
           aria-controls={listId}
           aria-label={ariaLabel}
-          onClick={() => (open ? close() : setOpenState(true))}
+          // The DECISION starts at the press, not at the click: a press begun
+          // while the dwell is still running kills both clocks here, so the
+          // dial never flashes open under a finger that is already committing
+          // to a click. Nothing to chain — the bulb is this atom's own element,
+          // not a consumer's (§6.8 stops at the root).
+          onPointerDown={() => {
+            cancelHoverOpen();
+            cancelHoverClose();
+          }}
+          // A tap is a DECISION, so it beats both clocks: cancelling them first
+          // is what makes the click path identical to the one that shipped
+          // before hover-open — the pointermove that always precedes a click
+          // has already armed the dwell by the time we get here, and a pending
+          // grace from a pointer that left and came back must not close the
+          // dial this very click is opening.
+          onClick={(event) => {
+            cancelHoverOpen();
+            cancelHoverClose();
+            // THE CLAIM. A slow aimer — §1's seventy-year-old on a phone, and
+            // anyone whose hand parks on a target before pressing it — rests on
+            // the bulb for longer than the dwell, so the dial is ALREADY open
+            // by the time the click they planned arrives. Snapping it shut in
+            // their face would punish them for aiming carefully; instead the
+            // click CLAIMS the dial as click-opened (hoverOpened goes false), so
+            // it now stays put like any clicked-open dial and hover-away can no
+            // longer take it. The very next click closes it, as it always did.
+            //
+            // `event.detail > 0` is what keeps the keyboard honest: Enter and
+            // Space arrive as clicks with detail === 0 and fall straight
+            // through to the toggle, so `aria-expanded` never lies to a
+            // keyboard user about what the next press does. Every pinned path
+            // is untouched: a test's or a runner's click lands INSIDE the dwell,
+            // where `hoverOpened` is still false.
+            if (open && hoverOpened.current && event.detail > 0) {
+              hoverOpened.current = false;
+              return;
+            }
+            if (open) close();
+            else setOpenState(true);
+          }}
           className={cx(
             'peer relative z-10 rounded-full',
             discBase,

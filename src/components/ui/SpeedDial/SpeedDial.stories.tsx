@@ -36,6 +36,14 @@ import {
 // The play function is idempotent (it returns early if the runner already
 // opened it) so the two openers can never cancel each other into a closed
 // baseline.
+//
+// Since 2026-09-04 the dial ALSO opens on hover — a mouse resting on it for
+// 150ms — and closes 300ms after that mouse leaves. No story here changes
+// hands because of it: hover closes only what HOVER opened, and every story
+// below is click-opened (by the runner's poll or by the play function), so the
+// mouse parking at 0,0 inside openDisclosure cannot touch them. There is
+// deliberately no hover story either — the hover-open END state is pixel-for-
+// pixel the pin-open state, so a new baseline would photograph nothing new.
 
 const LANGUAGES: readonly SpeedDialOption[] = [
   {
@@ -270,6 +278,12 @@ type Story = StoryObj<typeof meta>;
  * attached. Blurring lands both orderings on the same pixels, and the dial
  * stays open because the atom ignores a blur with no relatedTarget (D11, the
  * Safari rule).
+ *
+ * The click below still MEANS what it meant before hover-open: the pointerMOVE
+ * user-event dispatches ahead of every click is what arms the 150ms dwell (the
+ * pointerenter only opens the pointer's visit), and the bulb's own press and
+ * click both cancel the hover timers before it toggles — so this function opens
+ * the dial exactly once, whoever gets there first.
  */
 const openPlay: NonNullable<Story['play']> = async ({ canvas, userEvent }) => {
   const bulb = canvas
@@ -287,7 +301,16 @@ const openPlay: NonNullable<Story['play']> = async ({ canvas, userEvent }) => {
   await expect(bulb).toHaveAttribute('aria-expanded', 'true');
 };
 
-/** The whole control at rest: one filled disc, the current language, collapsed. */
+/**
+ * The whole control at rest: one filled disc, the current language, collapsed.
+ *
+ * Also the story to put a real mouse on: since the owner's 2026-09-04 request
+ * the dial opens on a 150ms DWELL — rest the pointer on the bulb and it
+ * unfolds without a click — and closes 300ms after that pointer leaves. Only
+ * ever what hover opened: a dial you clicked open stays open until you dismiss
+ * it. Behaviour, not pixels, which is why the manner adds no story and no
+ * baseline of its own.
+ */
 export const Default: Story = {};
 
 /**

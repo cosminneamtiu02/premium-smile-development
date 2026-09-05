@@ -2,6 +2,11 @@ import { useState } from 'react';
 import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, fn, waitFor } from 'storybook/test';
+import { FranceFlag } from '@/assets/flags/FranceFlag';
+import { GermanyFlag } from '@/assets/flags/GermanyFlag';
+import { ItalyFlag } from '@/assets/flags/ItalyFlag';
+import { RomaniaFlag } from '@/assets/flags/RomaniaFlag';
+import { UnitedKingdomFlag } from '@/assets/flags/UnitedKingdomFlag';
 import { Phone } from '@/assets/glyphs/Phone';
 import { GlyphButton } from '../GlyphButton/GlyphButton';
 import {
@@ -13,11 +18,12 @@ import {
   type SpeedDialTone,
 } from './SpeedDial';
 
-// The fifteen stories ARE the declared visual manifest for this lane (design
-// board .claude/plans/language-dial.plan.md §6, owner-approved), so the export
-// NAMES are load-bearing: renaming one renames its baseline file. Sixteen
-// darwin baselines — 1280 each, plus CornerFit again at 320 through the
-// 'stress-320' tag (§13 UI-tier opt-in).
+// The eighteen stories ARE the declared visual manifest for this atom (design
+// board .claude/plans/language-dial.plan.md §6, owner-approved; the last three
+// added by .claude/plans/speed-dial-flags.plan.md), so the export NAMES are
+// load-bearing: renaming one renames its baseline file. Nineteen darwin
+// baselines — 1280 each, plus CornerFit again at 320 through the 'stress-320'
+// tag (§13 UI-tier opt-in).
 //
 // Demo values are Romanian with diacritics (§15.7) and the atom's first real
 // consumer: the five site locales, their endonyms, and hrefs shaped exactly as
@@ -45,43 +51,44 @@ import {
 // deliberately no hover story either — the hover-open END state is pixel-for-
 // pixel the pin-open state, so a new baseline would photograph nothing new.
 
-const LANGUAGES: readonly SpeedDialOption[] = [
-  {
-    value: 'ro',
-    code: 'RO',
-    label: 'Română',
-    lang: 'ro',
-    href: '/ro/services/',
-  },
-  {
-    value: 'en',
-    code: 'EN',
-    label: 'English',
-    lang: 'en',
-    href: '/en/services/',
-  },
-  {
-    value: 'de',
-    code: 'DE',
-    label: 'Deutsch',
-    lang: 'de',
-    href: '/de/services/',
-  },
-  {
-    value: 'fr',
-    code: 'FR',
-    label: 'Français',
-    lang: 'fr',
-    href: '/fr/services/',
-  },
-  {
-    value: 'it',
-    code: 'IT',
-    label: 'Italiano',
-    lang: 'it',
-    href: '/it/services/',
-  },
-];
+const LANGUAGES: readonly SpeedDialOption<'ro' | 'en' | 'de' | 'fr' | 'it'>[] =
+  [
+    {
+      value: 'ro',
+      code: 'RO',
+      label: 'Română',
+      lang: 'ro',
+      href: '/ro/services/',
+    },
+    {
+      value: 'en',
+      code: 'EN',
+      label: 'English',
+      lang: 'en',
+      href: '/en/services/',
+    },
+    {
+      value: 'de',
+      code: 'DE',
+      label: 'Deutsch',
+      lang: 'de',
+      href: '/de/services/',
+    },
+    {
+      value: 'fr',
+      code: 'FR',
+      label: 'Français',
+      lang: 'fr',
+      href: '/fr/services/',
+    },
+    {
+      value: 'it',
+      code: 'IT',
+      label: 'Italiano',
+      lang: 'it',
+      href: '/it/services/',
+    },
+  ];
 
 // Eight options, five of them the real locales: the stem's length is data, not
 // a hard-coded four. Every endonym here starts with its own code, so Label in
@@ -115,6 +122,36 @@ const MANY: readonly SpeedDialOption[] = [
     href: '/da/services/',
   },
 ];
+
+// ── THE FLAGGED FIXTURE (speed-dial-flags lane, owner 2026-09-04: "b flags
+// everywhere", the bulb included). The same five rows as LANGUAGES with one
+// field added — `art`, the decorative node the atom clips into the disc — so
+// the three stories below photograph exactly what sections/LanguageSwitcher
+// will render once its hook passes the same map.
+//
+// A ui story MAY import assets: the dependency direction is
+// app → sections → ui → assets/tokens, and src/assets/flags is a leaf of
+// whole-svg components with no logic in it (its own README is the folder law).
+// Nothing here reaches into sections/, so the atom stays testable on its own
+// terms — it is still handed nodes it knows nothing about (D2).
+// The owner's picks: the UNION JACK for EN ("for english the english flag so
+// not usa" → "go with union jack") and Germany's for DE.
+// The key type is derived from LANGUAGES itself, so a typo'd or missing key
+// fails to COMPILE — the same both-direction fence the hook's
+// Record<Locale, …> gives the real consumer; Record<string, …> would let a
+// bad key produce a silently artless disc in the baselines (G2 ts MEDIUM,
+// folded 2026-09-05).
+const FLAG_ART: Record<(typeof LANGUAGES)[number]['value'], ReactElement> = {
+  ro: <RomaniaFlag />,
+  en: <UnitedKingdomFlag />,
+  de: <GermanyFlag />,
+  fr: <FranceFlag />,
+  it: <ItalyFlag />,
+};
+
+const FLAGGED_LANGUAGES: readonly SpeedDialOption[] = LANGUAGES.map(
+  (option) => ({ ...option, art: FLAG_ART[option.value] }),
+);
 
 // The same dial with no hrefs at all (D2 = B′): a same-page chooser whose whole
 // outcome is onSelect. Proof that the atom is not tied to navigation.
@@ -212,7 +249,7 @@ const meta = {
     options: {
       control: false,
       description:
-        'Every option in unfold order, the current one INCLUDED — { value, code, label, href?, lang? }. An option with an href becomes an <a>, one without a <button> (D2 = B′)',
+        'Every option in unfold order, the current one INCLUDED — { value, code, label, href?, lang?, art? }. An option with an href becomes an <a>, one without a <button> (D2 = B′); one with `art` gets that node clipped into the disc behind its code, aria-hidden and under a scrim (owner 2026-09-04)',
     },
     value: {
       control: 'select',
@@ -504,5 +541,73 @@ export const ButtonDiscs: Story = {
 export const HostScaled: Story = {
   tags: ['pin-open'],
   args: { size: 'lg', className: '[--disc-size:4.5rem]' },
+  play: openPlay,
+};
+
+/**
+ * ART, at rest — the owner's 2026-09-04 request ("country flag as background of
+ * each round locale button", codes staying visible "prefferably in white"),
+ * built to `.claude/plans/speed-dial-flags.plan.md`.
+ *
+ * The bulb wears the CURRENT option's flag, because the bulb IS the current
+ * option (D1, model C) and the owner asked for "b flags everywhere" — which
+ * deliberately overrode the same-colour corner pair the D4 reversal had bought
+ * a fortnight earlier. `art` is per-OPTION, so every dial above stays exactly
+ * as it was: the atom emits the same class strings and the same single text
+ * node when nothing carries art, which is what makes those sixteen baselines
+ * zero-diff by construction rather than by luck.
+ *
+ * `size: 'lg'` on all three flag stories because that is the size that ships —
+ * FloatingActions' corner — and the size the owner tuned the treatment at
+ * (src/assets/flags Treatment Preview, top row). At md the letters simply park
+ * on their 1rem floor.
+ */
+export const Flags: Story = {
+  args: { options: FLAGGED_LANGUAGES, size: 'lg' },
+};
+
+/**
+ * The dial open, all five wearing their flags — the shot that answers the only
+ * question the treatment really has: can you still read the code?
+ *
+ * The mechanism is a pair, and it is deliberately not "white text on a flag":
+ * a whisper of an ink scrim (`bg-ink/5`, walked down from /35 over two owner
+ * rounds — "they are too dark", "still lighter") plus an 8-way 1px ink HALO
+ * around each glyph. The halo is the load-bearing half — it borders the letter
+ * from OUTSIDE, so unlike the centered text-stroke of rounds 3–5 it never eats
+ * into the body, and it works on the two worst grounds this set has: the white
+ * bands of FR and IT. Weight 640 is round 6 ("20% thinner again") on JetBrains
+ * Mono's variable wght axis.
+ *
+ * Worth stating where the gate cannot: axe reads a background COLOUR, so text
+ * over an image comes back "incomplete", never pass or fail. The contrast
+ * argument here is manual (the lane's pack carries it) and this baseline is
+ * what freezes the result.
+ */
+export const FlagsOpen: Story = {
+  tags: ['pin-open'],
+  args: { options: FLAGGED_LANGUAGES, size: 'lg' },
+  play: openPlay,
+};
+
+/**
+ * The hover MANNER of a flagged disc: the scrim deepens (ink/5 → ink/20) on the
+ * system's own `--fade` clock. The ghost tray a bare disc shows is still in the
+ * class list underneath — covered by an opaque flag, never conditioned away, so
+ * one atom dresses both kinds of disc.
+ *
+ * Two hovers live in this file and they are strangers to each other: this one
+ * is pure CSS on a `group-hover:` scrim, while the 150ms dwell that OPENS the
+ * dial (2026-09-04, the previous lane) is a timer in the component. The art
+ * layer adds no pointer handler at all — which is why the two rounds could ship
+ * a day apart in the same file.
+ *
+ * The runner performs a REAL mouse hover through 'pin-open-hover' — synthetic
+ * events cannot activate CSS :hover — which opens the dial exactly like
+ * 'pin-open' and then hovers the first disc.
+ */
+export const FlagsHoveredDisc: Story = {
+  tags: ['pin-open-hover'],
+  args: { options: FLAGGED_LANGUAGES, size: 'lg' },
   play: openPlay,
 };

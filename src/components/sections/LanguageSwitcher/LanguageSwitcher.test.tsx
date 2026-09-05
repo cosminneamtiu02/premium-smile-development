@@ -224,7 +224,13 @@ describe('LanguageSwitcher — closed: one control, four crawlable alternates', 
     expect(bulbOf()).toHaveAccessibleName(bulbName('ro'));
   });
 
-  it('fills the bulb with the CTA role — rest parity with the call disc (D4 reversed, owner 2026-09-04)', () => {
+  it('keeps the CTA bundle on the bulb — hover-manner parity with the call disc (D4 reversed 2026-09-04; rest-colour half superseded by the flag, 2026-09-05)', () => {
+    // TITLE REWORDED at G2 (2026-09-05, both reviewers): the flag now covers
+    // the bulb at rest, so the old "rest parity" claim is history — see the
+    // SUPERSEDED IN PART note beside tone="cta" in LanguageSwitcher.tsx. The
+    // ASSERTIONS below are byte-identical: the computed --cta fill is the
+    // unflagged fallback under the art, and the hover bundle still drives the
+    // corner pair — both still load-bearing, both still pinned.
     // The owner's ask was a RELATIONSHIP, not a hex code: "at rest phone and
     // language switcher to be same color". So this asserts the ROLE the bulb is
     // painted with, resolved by the real sheet this file already loads — not a
@@ -292,6 +298,44 @@ describe('LanguageSwitcher — closed: one control, four crawlable alternates', 
       // endonym contains it (SC 2.5.3).
       expect(link).toHaveAttribute('aria-label', nativeNames[locale]);
       expect(link.textContent).toBe(link.lang.toUpperCase());
+    }
+  });
+
+  it('backs every disc with its own country flag — decoration only (§8.5, amended 2026-09-04)', () => {
+    // The owner's flag round (board .claude/plans/speed-dial-flags.plan.md):
+    // the hook hands each option a flag, ui/SpeedDial paints it behind the
+    // code. Asserted HERE because this is the tier where a flag becomes a fact
+    // — the atom only knows it was handed a node, and its own suite says so.
+    // Union Jack for `en` and Germany's for `de` are the owner's picks ("so not
+    // usa"); which drawing is which is pinned in src/assets/flags, so what this
+    // proves is that FIVE of them arrive, one per disc, bulb included.
+    const { container } = mount();
+    const controls: Element[] = [bulbOf(), ...alternates(container)];
+    expect(controls).toHaveLength(locales.length);
+    for (const control of controls) {
+      const flag = control.querySelector('svg');
+      expect(flag).not.toBeNull();
+      // Decorative twice over: the flag component hides itself, and the atom's
+      // layer around it is hidden too — so a screen reader walking this dial
+      // hears five languages and not one word about a country.
+      expect(flag).toHaveAttribute('aria-hidden', 'true');
+      expect(flag?.parentElement).toHaveAttribute('aria-hidden', 'true');
+    }
+    // …and the a11y tree is EXACTLY what it was before the flags arrived: the
+    // bulb named from the message file, every alternate named by its endonym,
+    // every visible text still the code (§8.5's surviving half — a flag may
+    // never be the only way a language is identified).
+    expect(bulbOf()).toHaveAccessibleName(bulbName('ro'));
+    for (const link of alternates(container)) {
+      const locale = locales.find((entry) => entry === link.lang);
+      if (!locale) throw new Error(`a disc carries lang="${link.lang}"`);
+      // The ATTRIBUTE, not toHaveAccessibleName: a closed stem is
+      // `visibility: hidden`, and a hidden element has no computed accessible
+      // name at all (the same reason the suite's role queries wait for open).
+      expect(link).toHaveAttribute('aria-label', nativeNames[locale]);
+      // The flag adds no text node, so the DOM text is still the code alone —
+      // what a voice-control user says and what SC 2.5.3 compares (fb-133).
+      expect(link.textContent).toBe(locale.toUpperCase());
     }
   });
 

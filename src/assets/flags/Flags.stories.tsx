@@ -72,9 +72,9 @@ const DIAL: readonly { code: string; flag: ReactNode }[] = [
 
 /**
  * One disc of the board's dressing spec, story-local: flag covers the circle,
- * a WHISPER of an ink/5 scrim sits over it (deepening to /20 on hover, the
- * flagged disc's hover manner — owner tuning 2026-09-05 in two rounds: "they
- * are too dark" then "still lighter" walked the pair /35→/15→/5), and the code
+ * an ink/30 DIM rests over it and LIGHTS UP to the /5 whisper on hover
+ * (owner round 13's inversion: "dark at rest and on hover they light up" —
+ * the bulb wears the /5 permanently, so "lit" is one face), and the code
  * sits on top in white weight-640 mono (rounds 3–6 walked "trippe thicker" →
  * "way too thick" → "a little more thinner" → "20% thinner again" onto the
  * variable wght axis: 800 × 0.8 = 640, no fattening stroke), with the ink
@@ -106,7 +106,7 @@ function PreviewDisc({
       </span>
       <span
         aria-hidden="true"
-        className="absolute inset-0 bg-ink/5 transition-[background-color] duration-[400ms] ease-in-out group-hover:bg-ink/20 motion-reduce:transition-none"
+        className="absolute inset-0 rounded-full bg-ink/30 transition-[background-color] duration-[400ms] ease-in-out group-hover:bg-ink/5 motion-reduce:transition-none"
       />
       <span
         className={`relative font-mono font-[640] tracking-wide leading-none ${text} text-ink-inverse [text-shadow:1px_0_var(--color-ink),-1px_0_var(--color-ink),0_1px_var(--color-ink),0_-1px_var(--color-ink),1px_1px_var(--color-ink),1px_-1px_var(--color-ink),-1px_1px_var(--color-ink),-1px_-1px_var(--color-ink)]`}
@@ -122,7 +122,8 @@ function PreviewDisc({
  * bulb step, bottom row = the 44px lg stem disc (letters 18px and 16px — one
  * step above the atom's bulb×2/7 arithmetic; owner tuning 2026-09-05, "text …
  * a bit bigger and maybe a bit thicker"). Hover any disc to see the scrim
- * deepen. Legibility worst cases to check by eye: FR/IT (white center band —
+ * light up (round 13: dim at rest, lit on hover). Legibility worst cases to
+ * check by eye: FR/IT (white center band —
  * only scrim + outline separate the code), RO (yellow center), EN (cross-work
  * behind the letters).
  */
@@ -153,9 +154,10 @@ export const TreatmentPreview: Story = {
       </div>
       {/* Developer note, not site copy — untranslated on purpose. */}
       <p className="max-w-prose text-sm text-ink-muted">
-        Tunables, verbatim from the board: scrim <code>bg-ink/5</code> →{' '}
-        <code>group-hover:bg-ink/20</code>; body <code>font-[640]</code>; ink
-        rim = 8-way 1px <code>text-shadow</code> halo.
+        Tunables, verbatim from the board: stem scrim <code>bg-ink/30</code> →{' '}
+        <code>group-hover:bg-ink/5</code> (bulb: always <code>/5</code>); body{' '}
+        <code>font-[640]</code>; ink rim = 8-way 1px <code>text-shadow</code>{' '}
+        halo.
       </p>
     </div>
   ),

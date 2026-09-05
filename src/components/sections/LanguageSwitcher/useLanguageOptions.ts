@@ -1,9 +1,15 @@
 'use client';
 
+import { createElement, type ReactElement } from 'react';
 import { useLocale } from 'next-intl';
+import { FranceFlag } from '@/assets/flags/FranceFlag';
+import { GermanyFlag } from '@/assets/flags/GermanyFlag';
+import { ItalyFlag } from '@/assets/flags/ItalyFlag';
+import { RomaniaFlag } from '@/assets/flags/RomaniaFlag';
+import { UnitedKingdomFlag } from '@/assets/flags/UnitedKingdomFlag';
 import type { SpeedDialOption } from '@/components/ui/SpeedDial/SpeedDial';
 import { localeHref } from '@/i18n/href';
-import { locales, nativeNames } from '@/i18n/locales';
+import { locales, type Locale, nativeNames } from '@/i18n/locales';
 import { usePathname } from '@/i18n/navigation';
 import { equivalentPath } from '@/lib/routes';
 
@@ -28,9 +34,48 @@ import { equivalentPath } from '@/lib/routes';
 //
 // §8.1 holds: nothing here calls t() and nothing here IS translated. A code is
 // derived (`'de'.toUpperCase()`), an endonym is DATA — every language named in
-// itself, never translated, never a flag (§8.5, src/i18n/locales.ts) — and the
-// href is a URL. The section's one translated string, the bulb's name, is
-// built one file over, where t() belongs.
+// itself, never translated (§8.5, src/i18n/locales.ts) — and the href is a URL.
+// Since the owner's 2026-09-04 amendment of §8.5 each option ALSO carries
+// decorative flag art (FLAG_ART below): the flag rides the option as a
+// background the atom hides from the a11y tree, while the NAME stays the
+// endonym and the visible text stays the code — "no flags-as-languages" keeps
+// its meaning, that no flag may ever be the only way a language is identified.
+// The section's one translated string, the bulb's name, is built one file over,
+// where t() belongs.
+
+/**
+ * THE ONE MAPPING of a locale to its flag, module-scope and static — five
+ * elements built once at import, not five per render (they carry no props and
+ * never change, so a new element every render would be churn with no meaning).
+ *
+ * The owner's picks, verbatim (2026-09-04): the UNION JACK for `en` — "for
+ * english the english flag so not usa" → "go with union jack" — and Germany's
+ * for `de`. `Record<Locale, …>` is the fence: a sixth locale in the manifest
+ * stops this file typechecking until it has a flag, which is the same
+ * completeness promise `nativeNames` makes for endonyms.
+ *
+ * These are DECORATION. The identification is the endonym + the visible code
+ * (§8.5 as amended); ui/SpeedDial takes the node, clips it to the disc, scrims
+ * it and marks it aria-hidden, so nothing here ever reaches a screen reader.
+ *
+ * `createElement`, not `<RomaniaFlag />`, for one boring reason: this is a
+ * hook module — a `.ts` file, where JSX does not compile — and its whole
+ * charter is data, not markup; the extension is that signal. A `.tsx` rename
+ * would break no import (the section's specifier is extensionless) — it would
+ * only trade the signal for sugar that adds nothing here: with no props and
+ * no children, JSX compiles to exactly this call. One caveat the types do not
+ * catch (probed at G2): `createElement(Comp)` with the props argument OMITTED
+ * compiles even if Comp ever grew a required prop, where JSX would error —
+ * fenced by the flags folder law, which forbids required props by
+ * construction (G2 ts+react LOW, folded 2026-09-05).
+ */
+const FLAG_ART: Record<Locale, ReactElement> = {
+  ro: createElement(RomaniaFlag),
+  en: createElement(UnitedKingdomFlag),
+  de: createElement(GermanyFlag),
+  fr: createElement(FranceFlag),
+  it: createElement(ItalyFlag),
+};
 
 /**
  * The five options in `locales` manifest order — the CURRENT one included, on
@@ -83,6 +128,12 @@ export function useLanguageOptions(): {
     // that locale's home when the page does not exist there (equivalentPath,
     // §5 — the blog is Romanian-only).
     href: localeHref(target, equivalentPath(pathname, target)),
+    // The country flag BEHIND the code — decoration the atom hides, clips and
+    // scrims (owner 2026-09-04, board .claude/plans/speed-dial-flags.plan.md;
+    // §8.5 amended the same day). It rides the option because the atom must
+    // stay dumb: SpeedDial dresses a ReactNode, and only this file knows that
+    // this particular node is Romania's flag.
+    art: FLAG_ART[target],
   }));
 
   return { locale, options };

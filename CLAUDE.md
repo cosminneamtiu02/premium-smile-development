@@ -219,6 +219,12 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
    `min-width` on buttons, `min-height` on cards; never fixed widths on text containers.
 5. **Language switcher:** in the Header; each language named in itself — Română, English,
    Deutsch, Français, Italiano. No flags-as-languages. Fully keyboard-accessible.
+   *(Amended 2026-09-04, owner — speed-dial-flags lane: decorative country-flag art may
+   back the switcher's codes — aria-hidden backgrounds behind white outlined codes,
+   never the identification itself, which stays the name-in-itself + visible code;
+   `en` wears the Union Jack, the owner's pick over any US flag. "No
+   flags-as-languages" keeps meaning: no flag may ever be the only way a language is
+   identified.)*
 6. **First visit:** optional dismissible suggestion banner based on `navigator.language`.
    **Never** redirect by IP/geolocation.
 7. **Language cookie:** first-party, set **only on explicit click** (switcher or banner accept),

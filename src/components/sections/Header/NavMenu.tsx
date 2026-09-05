@@ -202,11 +202,17 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // rounded-lg = 8px, matching the pill — the owner's old-bar rounder corners
 // (2026-08-16; controls keep §15.1's 6px). The dimmed page shows through at
 // all four corners AND through the mt-2 gap above, which is the intended
-// two-cards look. Depth is deliberately NOT invented here — no shadow ships
-// until the N4 pack settles one.
+// two-cards look. Depth is SETTLED (board .claude/plans/header-aura.plan.md,
+// fb-359, owner 2026-09-04): the panel wears the same `shadow-aura` as the
+// pill — the old site's own pairing, where the dropdown carried the stronger
+// shadow too — so the two cards read as genuinely stacked rather than as two
+// flat outlines, and giving the top card an aura and this one none would look
+// like an oversight the moment the menu opens. The token and its provenance
+// live in globals.css; Header.tsx's FLOATING PILL block tells the same story
+// from the bar's side.
 const panelClasses =
   'absolute inset-x-0 top-full mt-2 flex flex-col gap-2 p-4 ' +
-  'rounded-lg border border-line-subtle bg-surface/95 ' +
+  'rounded-lg border border-line-subtle shadow-aura bg-surface/95 ' +
   'backdrop-blur-md backdrop-saturate-150 ' +
   'max-h-[calc(100dvh-6.5rem)] overflow-y-auto ' +
   'translate-y-0 opacity-100 transition-[translate,opacity] ' +

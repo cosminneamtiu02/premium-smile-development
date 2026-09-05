@@ -30,6 +30,76 @@
     var(--font-source-serif), ui-serif, Georgia, 'Times New Roman', serif;
   --font-mono:
     var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* THE AURA — the old top bar's lavender glow, imported as ONE static value
+     (board .claude/plans/header-aura.plan.md, fb-359, owner 2026-09-04: "the
+     old top bar has like a shadow around it. like an aura"). §15.1 locked the
+     token set, so this is an owner-approved ADDITION recorded by that board —
+     approving the board approved the token.
+
+     PROVENANCE. The old bar carried TWO shadows swapped by a scroll listener
+     (`window.scrollY > 8`): a tight rest state, and this one — named
+     `shadow-cta` there, 0 8px 22px at a 40% tint — which its dropdown panel
+     also wore at every scroll position. Only the SCROLLED value is imported,
+     and it is worn permanently, because the new pill is permanently in the
+     posture that value belonged to (floating over content at every scroll
+     position) while the old bar only reached it once you scrolled. The
+     rest/scrolled pair and the listener that drove them stay behind: Header.tsx
+     records D1 — "no scroll listener, no height animation, no chrome that
+     watches the window" — and it stands untouched. One state, nothing to
+     transition.
+
+     THE TINT IS MIXED, NOT PASTED. The old accent was the lavender
+     rgb(131, 119, 163); its successor in this vocabulary is
+     --accent-decorative (#7A6D9C), whose charter fits exactly — "graphics
+     ONLY", and a shadow is pure decoration: no information, no contrast duty.
+     Mixing through the token means §15.1's one still-open sub-item — confirm
+     the purple hue against the real logo — re-tints the aura for free the day
+     that value moves. A pasted rgb would have frozen it.
+
+     WHY PLAIN `@theme`, NOT `@theme inline` — a LAYER CONVENTION, not a
+     behavioral choice, and this paragraph first claimed otherwise (G2 fold,
+     this lane): compiled with this repo's own tailwindcss, the two flavors
+     emit a byte-identical `.shadow-aura` utility. The `--shadow-*` namespace
+     is transformed into the utility under EITHER flavor — Tailwind wraps the
+     color in var(--tw-shadow-color, …) so shadow-color utilities can override
+     it, and builds the @supports fallback below — and the unreferenced
+     `--shadow-aura` custom property is then tree-shaken from the output
+     entirely. The re-tint guarantee above therefore hangs on one thing only:
+     the value mixes FROM var(--accent-decorative) instead of pasting its
+     rgb, and that inner var survives the inlining and resolves at paint time
+     in both modes. Plain `@theme` is simply this layer's spelling (the font
+     tokens sit in it), and the pin test asserts it for uniformity.
+
+     THE NAME IS `shadow-aura`, never the old `shadow-cta`. In this vocabulary
+     `cta` means the GREEN family, so a lavender glow called cta would lie;
+     "aura" is the owner's own word for it. The old family's other steps
+     (soft-sm, soft-md, cta-lg) are NOT imported — zero consumers today; a
+     second depth step arrives by the rule-of-two, through the lane that needs
+     it.
+
+     Tailwind v4 mints the `shadow-aura` utility from the `--shadow-*`
+     namespace automatically (the same mechanism that makes bg-surface out of
+     --color-surface). Consumers are exactly two: the Header pill and NavMenu's
+     dropdown panel — the old site's own pairing.
+
+     COLOR-MIX ON OLD ENGINES is handled by that same generator, and NOT the
+     way a hand-written declaration would be. Compiled and read rather than
+     assumed (this lane, with the real pipeline), `shadow-aura` comes out
+     twice: a base `--tw-shadow: 0 8px 22px
+     var(--tw-shadow-color, var(--accent-decorative))`, then the
+     mixed value inside `@supports (color: color-mix(in lab, red, red))`. So an
+     engine too old for color-mix (pre-2023) paints the glow in SOLID
+     --accent-decorative — stronger than intended, still pure decoration, never
+     a broken bar — while every current engine gets the 40% mix. The frozen
+     phones §1 cares about lose the softness and nothing else. Do not "fix"
+     this with a hand-rolled fallback declaration: the progressive enhancement
+     is Tailwind's, and a second spelling of the value would be the very
+     divergence this token exists to prevent.
+
+     tests/unit/aura-token.test.ts pins this value and both consumers. */
+  --shadow-aura: 0 8px 22px
+    color-mix(in srgb, var(--accent-decorative) 40%, transparent);
 }
 
 /* Semantic color roles — exactly 17 (`success` dropped, §15.1) + the one

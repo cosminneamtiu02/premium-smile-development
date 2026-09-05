@@ -11,7 +11,8 @@
     },
     "actions": {
       "call": "Jetzt anrufen",
-      "contact": "Kontakt"
+      "contact": "Kontakt",
+      "whatsapp": "Schreiben Sie uns auf WhatsApp"
     },
     "menu": {
       "label": "Menü"
@@ -53,8 +54,13 @@
     "title": "Artikel & Neuigkeiten"
   },
   "contact": {
-    "heading": "Probleme?",
-    "lead": "Rufen Sie uns unter der unten stehenden Nummer an.",
+    "heading": "Erreichbar per Anruf oder WhatsApp.",
+    "callHeading": "Rufen Sie uns an unter",
+    "callHours": "Mo.–Fr. {weekOpens}–{weekCloses}, Sa. {satOpens}–{satCloses}",
+    "or": "ODER",
+    "whatsappHeading": "Schreiben Sie uns",
+    "whatsapp": "Kontaktieren Sie uns über WhatsApp",
+    "whatsappNote": "Jederzeit, wir melden uns rasch.",
     "close": "Schließen"
   }
 }

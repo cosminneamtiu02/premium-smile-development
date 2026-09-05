@@ -49,19 +49,23 @@ const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
   </NextIntlClientProvider>
 );
 
-// The Fragment's two siblings in contract order (fb-132): the language dial ·
-// the call CTA. There WAS a third — an aria-hidden clearance spacer — removed
-// by the owner on 2026-09-04 (FloatingActions.tsx §3 carries the decision and
-// what took over its duty).
+// The Fragment's three siblings in DOM order: the language dial (bottom-LEFT) ·
+// the WhatsApp disc · the call CTA (both bottom-RIGHT, WhatsApp stacked above
+// the phone — which is why it comes FIRST here: DOM order and visual
+// top-to-bottom agree, so the tab order walks the right corner downward).
+// There WAS a different third child once — an aria-hidden clearance spacer —
+// removed by the owner on 2026-09-04 (FloatingActions.tsx §3 carries the
+// decision and what took over its duty); the WhatsApp disc arrived the same day
+// with the two-channel rework (fb-353).
 const mount = (locale: Locale = 'ro') => {
   const { container, rerender } = render(<Mounted locale={locale} />);
-  // Guard HERE, not only in the shape test: without it, a 3-child Fragment
-  // binds `call` to the wrong element and the tests below fail with confident
-  // lies about the wrong node. One assertion turns that into one honest failure
-  // repeated identically (G2 typescript review, 2026-08-12).
-  expect(container.children).toHaveLength(2);
-  const [dial, call] = childrenOf(container);
-  return { container, rerender, dial, call };
+  // Guard HERE, not only in the shape test: without it, a Fragment of the wrong
+  // length binds `call` to the wrong element and the tests below fail with
+  // confident lies about the wrong node. One assertion turns that into one
+  // honest failure repeated identically (G2 typescript review, 2026-08-12).
+  expect(container.children).toHaveLength(3);
+  const [dial, write, call] = childrenOf(container);
+  return { container, rerender, dial, write, call };
 };
 
 /**
@@ -108,6 +112,27 @@ const remIn = (token: string): number =>
   Number(/([\d.]+)rem/.exec(token)?.[1] ?? NaN);
 
 /**
+ * A control's WHOLE bottom offset in rem at one breakpoint: every rem literal
+ * in the arbitrary value summed, plus one `--disc-size` step per `var()` the
+ * expression contains.
+ *
+ * `remIn` alone was enough while every control sat on the same 1rem edge; the
+ * stacked WhatsApp disc (fb-353) offsets itself by
+ * `calc(1rem + env(…) + var(--disc-size) + 0.5rem)`, where reading only the
+ * FIRST rem would report 1rem and quietly under-count its reach by a whole disc
+ * — i.e. exactly the confident-wrong number the clearance test exists to catch.
+ * The NaN invariant above holds: no rem literal at all still yields NaN.
+ */
+const offsetRem = (token: string, discRem: number): number => {
+  const rems = Array.from(token.matchAll(/([\d.]+)rem/g), (match) =>
+    Number(match[1]),
+  );
+  if (rems.length === 0) return NaN;
+  const discs = token.split('var(--disc-size)').length - 1;
+  return rems.reduce((sum, value) => sum + value, 0) + discs * discRem;
+};
+
+/**
  * A per-BREAKPOINT rem table read off an element's classes: every token
  * matching `pattern` becomes one entry keyed by its variant prefix ('' for the
  * base step, 'xl', '2xl'), valued by the first rem inside it.
@@ -152,16 +177,86 @@ afterEach(() => {
 });
 
 describe('FloatingActions — a Fragment, never a wrapper (fb-132)', () => {
-  it('renders exactly two siblings with no element around them', () => {
+  it('renders exactly three siblings with no element around them', () => {
     // A wrapper would need position+z-index to carry the layer, which opens a
-    // stacking context around both controls; a full-width fixed wrapper would
-    // additionally swallow pointer events. Two siblings need neither patch.
-    // TWO since 2026-09-04 (owner): the clearance spacer that used to be the
-    // third child is gone, so this section now renders NOTHING in normal flow —
-    // both children are `fixed`. Its place after {children} + Footer in the
-    // shell is therefore about DOM/tab order now, not about geometry.
+    // stacking context around every control; a full-width fixed wrapper would
+    // additionally swallow pointer events. Independent siblings need neither
+    // patch — and the count is not the point, the LACK of a wrapper is, which
+    // is why this test survived the spacer's removal (owner, 2026-09-04) and
+    // the WhatsApp disc's arrival (fb-353) unchanged in intent.
+    // All three children are `fixed`, so this section still renders NOTHING in
+    // normal flow; its place after {children} + Footer in the shell is about
+    // DOM/tab order, not about geometry.
     const { container } = mount();
-    expect(container.children).toHaveLength(2);
+    expect(container.children).toHaveLength(3);
+  });
+});
+
+describe('FloatingActions — the WhatsApp disc (fb-353)', () => {
+  // The right corner became a stacked PAIR on 2026-09-04: the same conversation
+  // the Footer's disc and the ContactModal's second channel open, now within
+  // thumb reach on every page. It is the call disc's exact mirror in clothes and
+  // geometry — only the target and the label differ.
+
+  it('is a LINK to the single-source wa.me number, named in Romanian', () => {
+    mount();
+    const link = screen.getByRole('link', {
+      name: ro.common.actions.whatsapp,
+    });
+    // The digits-only field, never the E.164 spelling with its plus (§10.1).
+    expect(link).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
+  });
+
+  it('opens in a new tab with the noopener pair, while tel: stays targetless', () => {
+    // The Footer's contact-disc law (PR #68), restated in one assertion:
+    // wa.me IS external navigation and travels with target=_blank +
+    // rel="noopener noreferrer"; a tel: protocol handler does not navigate, so
+    // _blank there would orphan a blank tab on the visitor's phone.
+    // Both discs ARE their anchors — asChild hands the <a> the circle's
+    // clothes, so the Fragment child is the link, not a wrapper around one.
+    const { write, call } = mount();
+
+    expect(write).toHaveAttribute('target', '_blank');
+    expect(write).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(call).not.toHaveAttribute('target');
+    expect(call).not.toHaveAttribute('rel');
+  });
+
+  it('carries the TRANSLATED label, never the key path', () => {
+    const { write } = mount();
+    const label = write.getAttribute('aria-label');
+    expect(label).toBe(ro.common.actions.whatsapp);
+    expect(label).not.toMatch(/actions\.whatsapp|^common\./);
+  });
+
+  it('keeps the WhatsApp glyph UNLABELLED so the anchor announces once', () => {
+    // Same rule as the phone disc: a labelled glyph inside an asChild anchor
+    // double-announces (see the `children` prop doc in ui/GlyphButton).
+    const { write } = mount();
+    const svg = write.querySelector('svg');
+    expect(svg).toBeInstanceOf(SVGSVGElement);
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).not.toHaveAttribute('role');
+  });
+
+  it('sits ONE disc plus the row gap above the phone, in the same corner', () => {
+    // The stack is expressed in the disc's own variable rather than in pixels,
+    // so it follows the fb-295 size steps for free: at 2xl both discs are 4.5rem
+    // and the gap between them is still 0.5rem. A hardcoded `bottom-[5rem]`
+    // would overlap the phone disc at exactly the widths the steps exist for.
+    const { write, call } = mount();
+    const stacked = tokenStartingWith(write, 'bottom-');
+    const base = tokenStartingWith(call, 'bottom-');
+
+    expect(stacked).toContain('var(--disc-size)');
+    expect(stacked).toContain('env(safe-area-inset-bottom)');
+    expect(stacked).toContain('0.5rem');
+    // …and it is the phone's own edge it stacks on: same corner, same offset,
+    // one disc higher.
+    expect(base).not.toContain('var(--disc-size)');
+    expect(tokenStartingWith(write, 'right-')).toBe(
+      tokenStartingWith(call, 'right-'),
+    );
   });
 });
 
@@ -257,16 +352,17 @@ describe('FloatingActions — both corners follow the route locale', () => {
   // moment src/i18n/locales.ts grows one. This is the test that a hardcoded
   // "RO" fails — such a badge would claim "you are reading Romanian" on /de.
   it.each(locales)(
-    '%s → the bulb prints that code and is named in that language; so is the CTA',
+    '%s → the bulb prints that code and is named in that language; so are both CTAs',
     (locale) => {
       const { dial } = mount(locale);
       const bulb = within(dial).getByRole('button', { name: bulbName(locale) });
       expect(bulb).toHaveTextContent(locale.toUpperCase());
-      expect(
-        screen.getByRole('link', {
-          name: MESSAGES[locale].common.actions.call,
-        }),
-      ).toBeInTheDocument();
+      for (const name of [
+        MESSAGES[locale].common.actions.call,
+        MESSAGES[locale].common.actions.whatsapp,
+      ]) {
+        expect(screen.getByRole('link', { name })).toBeInTheDocument();
+      }
     },
   );
 
@@ -297,20 +393,23 @@ describe('FloatingActions — both corners follow the route locale', () => {
   });
 });
 
-describe('FloatingActions — one number, two corners (D16 · F2)', () => {
-  it('gives BOTH controls the identical --disc-size token list', () => {
-    // The pair is only a pair if it scales together: a 72px language bulb
-    // beside a 56px call button stops reading as one row. Comparing the sorted
-    // class lists is what makes "one number" checkable — both atoms read the
-    // variable through ui/disc.ts, so equal tokens mean equal boxes.
-    const { dial, call } = mount();
-    expect(discTokens(dial)).toEqual(discTokens(call));
+describe('FloatingActions — one number, every corner (D16 · F2)', () => {
+  it('gives ALL THREE controls the identical --disc-size token list', () => {
+    // The corners are only a set if they scale together: a 72px language bulb
+    // beside a 56px call button stops reading as one row, and a WhatsApp disc
+    // that missed a step would break the right corner's own stack (its offset
+    // is expressed in that same variable). Comparing the sorted class lists is
+    // what makes "one number" checkable — every atom reads the variable through
+    // ui/disc.ts, so equal tokens mean equal boxes.
+    const { dial, write, call } = mount();
+    expect(discTokens(write)).toEqual(discTokens(dial));
+    expect(discTokens(call)).toEqual(discTokens(dial));
     expect(discTokens(dial)).toHaveLength(3);
   });
 
   it('steps at exactly the base, xl and 2xl screen types', () => {
-    const { dial, call } = mount();
-    for (const el of [dial, call]) {
+    const { dial, write, call } = mount();
+    for (const el of [dial, write, call]) {
       expect(Object.keys(stepsIn(el, DISC_STEP)).sort()).toEqual([
         '',
         '2xl',
@@ -321,9 +420,9 @@ describe('FloatingActions — one number, two corners (D16 · F2)', () => {
 });
 
 describe('FloatingActions — layering, safe area, and clearance', () => {
-  it('pins both controls to the viewport on ONE layer (z-40)', () => {
-    const { dial, call } = mount();
-    for (const el of [dial, call]) {
+  it('pins every control to the viewport on ONE layer (z-40)', () => {
+    const { dial, write, call } = mount();
+    for (const el of [dial, write, call]) {
       expect(Array.from(el.classList)).toContain('fixed');
       expect(Array.from(el.classList)).toContain('z-40');
     }
@@ -340,9 +439,12 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     }
   });
 
-  it('anchors BOTH controls at the same offset — the "one row" contract', () => {
+  it('anchors the two CORNERS at the same offset — the "one row" contract', () => {
     // Also the precondition for the clearance test below: the two corners are
-    // only "one row" if they share a bottom edge.
+    // only "one row" if they share a bottom edge. The WhatsApp disc is
+    // deliberately NOT in this pair — it stacks a disc higher inside the right
+    // corner (its own case above pins that), and the row is what the language
+    // bulb and the phone still form across the bottom of the screen.
     const { dial, call } = mount();
     expect(tokenStartingWith(call, 'bottom-')).toBe(
       tokenStartingWith(dial, 'bottom-'),
@@ -361,15 +463,19 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     // checks — the exact hole the spacer version existed to close.
     // KEEP-IN-SYNC: src/styles/globals.css `@layer base` html rules; the
     // computed values are pinned from the other side in
-    // src/app/[locale]/shell.test.tsx ("mirrors the clearance … in three steps").
+    // src/app/[locale]/shell.test.tsx ("mirrors the corner stack … in three
+    // steps").
+    // The numbers GREW on 2026-09-04 with the stacked WhatsApp disc (fb-353):
+    // the right corner is two discs and a 0.5rem gap tall now, so each step is
+    // 1rem offset + disc + 0.5rem + disc + 1rem headroom.
     const CLEARANCE_REM: Record<string, number> = {
-      '': 5.5,
-      xl: 6,
-      '2xl': 6.5,
+      '': 9.5,
+      xl: 10.5,
+      '2xl': 11.5,
     };
-    const { dial, call } = mount();
+    const { dial, write, call } = mount();
 
-    for (const el of [dial, call]) {
+    for (const el of [dial, write, call]) {
       const steps = stepsIn(el, DISC_STEP);
       // globals must define a step for every width the controls grow at — one
       // missing breakpoint is a corner that under-clears exactly there.
@@ -380,8 +486,10 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
         // Each control's reach from ITS OWN bottom token: reading one corner's
         // offset and applying it to both was a real hole (G2 react review,
         // 2026-08-12), and reading one SIZE for all widths became the same hole
-        // when the steps landed (G2, 2026-08-27).
-        const reach = step + remIn(tokenStartingWith(el, 'bottom-'));
+        // when the steps landed (G2, 2026-08-27). `offsetRem` is the third
+        // version of that lesson: the stacked disc's offset CONTAINS a disc, so
+        // the parser has to resolve the variable at the step being examined.
+        const reach = step + offsetRem(tokenStartingWith(el, 'bottom-'), step);
         // NaN from either parser fails here rather than reaching the comparison.
         expect(reach).toBeGreaterThan(0);
         expect(CLEARANCE_REM[prefix]).toBeGreaterThanOrEqual(reach);
@@ -416,16 +524,22 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     }
   });
 
-  it('lifts BOTH controls by the SAME safe-area inset', () => {
+  it('lifts EVERY control by the SAME safe-area inset', () => {
     // Notched/gesture-bar phones: env() resolves to 0px everywhere else, so the
     // calc collapses to the plain rem offset — one expression, both worlds.
+    // The stacked disc carries the term exactly once, for the same reason: it
+    // is lifted off the same bottom edge, and adding it twice would raise the
+    // pair apart on a notched phone.
     // The other half of this pair — that every `scroll-padding-bottom` step
     // carries the same term, not just the base one — used to be asserted here
     // against the spacer's three heights; since the removal it belongs to the
     // rules themselves and is pinned in shell.test.tsx's scroll-padding suite.
-    const { dial, call } = mount();
+    const { dial, write, call } = mount();
     const INSET = 'env(safe-area-inset-bottom)';
-    expect(tokenStartingWith(dial, 'bottom-')).toContain(INSET);
-    expect(tokenStartingWith(call, 'bottom-')).toContain(INSET);
+    for (const el of [dial, write, call]) {
+      const token = tokenStartingWith(el, 'bottom-');
+      expect(token).toContain(INSET);
+      expect(token.split(INSET)).toHaveLength(2);
+    }
   });
 });

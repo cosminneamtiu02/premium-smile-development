@@ -419,14 +419,17 @@ describe('LanguageBanner — it never takes focus, and it never leaves the page'
     // DOM. Nothing else in the repo can catch a change to this number.
     expect(style.position).toBe('fixed');
     expect(style.zIndex).toBe('30');
-    // 6.5rem = 104px above the bottom edge — the tallest of globals'
-    // scroll-padding-bottom steps, which clears the corner row at every width
-    // (the derivation is in LanguageBanner.tsx' anchor comment). Matched by
-    // PATTERN because the value carries an `env(safe-area-inset-bottom)` term
-    // and engines differ on whether they collapse `calc(104px + 0px)` —
-    // shell.test.tsx matches the same family the same way. `(^|\D)` closes the
-    // left boundary a plain substring would leave open ('1104px').
-    expect(style.bottom).toMatch(/(^|\D)104px/);
+    // 11.5rem = 184px above the bottom edge — the tallest of globals'
+    // scroll-padding-bottom steps since fb-353 stacked the right corner
+    // (re-derived 2026-09-05; the first instantiation, 6.5rem/104px, predates
+    // the WhatsApp disc — the derivation is in LanguageBanner.tsx' anchor
+    // comment, and THIS pin is what went red when the corner moved under the
+    // rule, exactly as intended). Matched by PATTERN because the value carries
+    // an `env(safe-area-inset-bottom)` term and engines differ on whether they
+    // collapse `calc(184px + 0px)` — shell.test.tsx matches the same family
+    // the same way. `(^|\D)` closes the left boundary a plain substring would
+    // leave open ('1184px').
+    expect(style.bottom).toMatch(/(^|\D)184px/);
   });
 });
 

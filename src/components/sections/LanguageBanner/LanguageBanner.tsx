@@ -121,22 +121,28 @@ export interface LanguageBannerProps {
   messages: Record<Locale, BannerStrings>;
 }
 
-// ── THE ANCHOR (board §2 · Q-A, owner-approved): a centred toast LIFTED ABOVE
-// the corner row, never a card in a corner.
+// ── THE ANCHOR (board §2 · Q-A, owner-approved; re-derived 2026-09-05 for
+// fb-353): a centred toast LIFTED ABOVE the corner row, never a card in a
+// corner.
 //
-// `bottom-[calc(6.5rem+env(safe-area-inset-bottom))]` — ONE value, no steps,
-// and the number is a CLEARANCE, not a mirror. The corner row's reach is its
-// 1rem offset plus the disc (3.5 → 4 → 4.5rem by breakpoint) = 4.5 / 5 / 5.5rem;
-// globals.css' `scroll-padding-bottom` steps (5.5 / 6 / 6.5rem — their
-// authoritative home is FloatingActions.tsx' mount-contract obligation (a)) add
-// the same breathing room for focus. Taking the TALLEST of those steps once
-// clears the 2xl row by 1rem and the phone row by 2rem. The bond is "at least
-// the row's reach" — an inequality, not an equality — so this is deliberately
+// `bottom-[calc(11.5rem+env(safe-area-inset-bottom))]` — ONE value, no steps,
+// and the number is a CLEARANCE, not a mirror. The tall corner is the RIGHT one
+// since fb-353 (owner, 2026-09-04) stacked the WhatsApp disc above the phone:
+// 1rem offset + disc + 0.5rem gap + disc (discs 3.5 → 4 → 4.5rem by
+// breakpoint) = 8.5 / 9.5 / 10.5rem of reach; globals.css'
+// `scroll-padding-bottom` steps (9.5 / 10.5 / 11.5rem — their authoritative
+// home is FloatingActions.tsx' mount-contract obligation (a)) add the same
+// breathing room for focus. Taking the TALLEST of those steps once clears the
+// 2xl stack by 1rem and the phone stack by 3rem. The bond is "at least the
+// stack's reach" — an inequality, not an equality — so this is deliberately
 // NOT an fb-44 KEEP-IN-SYNC pair: the values need not agree, only exceed, and a
 // three-step mirror would make this a third spelling of the P9(b) family for no
-// gain. The `env()` term rides along because the row itself is lifted by the
-// safe-area inset; like every other spelling of it on the site it resolves to 0
-// until the shell opts into `viewport-fit: cover`.
+// gain. (The rule's first instantiation, 6.5rem, predates fb-353 — under the
+// stacked corner it would have slid the card's right edge BEHIND the WhatsApp
+// disc at phone widths, z-40 painting over z-30.) The `env()` term rides along
+// because the stack itself is lifted by the safe-area inset; like every other
+// spelling of it on the site it resolves to 0 until the shell opts into
+// `viewport-fit: cover`.
 //
 // `fixed inset-x-4 mx-auto w-fit max-w-md` — the card hugs its sentence on wide
 // screens and fills the 288px available at 320 (1rem margins a side, §7: nothing
@@ -181,7 +187,7 @@ export interface LanguageBannerProps {
 // (0,2,0) specificity silently outranked the reduced-motion opt-out.
 const cardClasses =
   'fixed inset-x-4 z-30 mx-auto w-fit max-w-md ' +
-  'bottom-[calc(6.5rem+env(safe-area-inset-bottom))] ' +
+  'bottom-[calc(11.5rem+env(safe-area-inset-bottom))] ' +
   'flex flex-col gap-2 rounded-lg border border-line-subtle bg-surface ' +
   'p-4 text-ink shadow-xl ' +
   'transition-[opacity,translate] duration-200 ease-out ' +
@@ -392,12 +398,13 @@ export interface LanguageBannerCardProps {
  * user-dismissible with a keyboard-reachable control (asserted), it is
  * transient by purpose, and the §9 page-tier keyboard walkthrough already tabs
  * at several scroll positions. THE LOAD-BEARING HALF IS GEOMETRIC AND NAMED
- * (G2 a11y review, 2026-09-04): globals' `scroll-padding-bottom` rests a
- * Tab-scrolled target's bottom edge 5.5/6rem above the viewport bottom below
- * 1536px while this card's lift is 6.5rem, so a 1rem/0.5rem sliver of the
- * focused element stays visible under the card — "not entirely hidden", the
- * AA minimum. At ≥1536px the step EQUALS the lift and a Tab-scrolled target
- * rests flush against the card's bottom edge. The bond is therefore an
+ * (G2 a11y review, 2026-09-04; numbers re-derived 2026-09-05 for fb-353):
+ * globals' `scroll-padding-bottom` rests a Tab-scrolled target's bottom edge
+ * 9.5/10.5rem above the viewport bottom below 1536px while this card's lift is
+ * 11.5rem, so a 2rem/1rem sliver of the focused element stays visible under
+ * the card — "not entirely hidden", the AA minimum. At ≥1536px the step EQUALS
+ * the lift and a Tab-scrolled target rests flush against the card's bottom
+ * edge. The bond is therefore an
  * inequality — the lift must EXCEED every scroll-padding-bottom step it
  * overlaps — and the first centered bottom-band focusable narrower than this
  * card (§14's CTABanner, by design) is the named re-open trigger; the

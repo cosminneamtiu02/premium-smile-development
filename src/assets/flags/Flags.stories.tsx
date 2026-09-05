@@ -106,7 +106,7 @@ function PreviewDisc({
       </span>
       <span
         aria-hidden="true"
-        className="absolute inset-0 bg-ink/5 transition-[background-color] duration-[400ms] ease-in-out group-hover:bg-ink/20 motion-reduce:transition-none"
+        className="absolute inset-0 rounded-full bg-ink/5 transition-[background-color] duration-[400ms] ease-in-out group-hover:bg-ink/20 motion-reduce:transition-none"
       />
       <span
         className={`relative font-mono font-[640] tracking-wide leading-none ${text} text-ink-inverse [text-shadow:1px_0_var(--color-ink),-1px_0_var(--color-ink),0_1px_var(--color-ink),0_-1px_var(--color-ink),1px_1px_var(--color-ink),1px_-1px_var(--color-ink),-1px_1px_var(--color-ink),-1px_-1px_var(--color-ink)]`}

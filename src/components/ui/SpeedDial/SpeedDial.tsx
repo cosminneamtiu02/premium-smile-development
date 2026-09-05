@@ -331,8 +331,16 @@ const artLayerClasses =
 // strips them. The clock is `--fade`, which discBase sets on the CONTROL and
 // custom properties inherit down to this child, so a flagged disc fades on
 // exactly the system clock every other disc uses.
+// `rounded-full` is NOT decoration — it is the scrim's OWN clip. The art layer
+// clips itself; this sibling span does not inherit that, and without a radius
+// its tint painted the control's square padding box: faint dark CORNERS
+// outside the circle, deepening on hover ("that black square is like
+// incastrating the circle … i do not want to see it", owner 2026-09-05 — the
+// board fragment omitted the radius and the preview masked it, because the
+// preview's wrapper clipped everything round; the atom's control deliberately
+// clips nothing, SC 2.4.7).
 const artScrimClasses =
-  'absolute inset-0 bg-ink/5 transition-[background-color] ' +
+  'absolute inset-0 rounded-full bg-ink/5 transition-[background-color] ' +
   'duration-(--fade) ease-in-out ' +
   'group-hover:bg-ink/20 group-active:bg-ink/20 ' +
   'motion-reduce:transition-none forced-colors:hidden';

@@ -372,6 +372,7 @@ const artLayerTokens = [
 const artScrimTokens = [
   'absolute',
   'inset-0',
+  'rounded-full', // the scrim's OWN clip — square corners outside the circle without it (owner, 2026-09-05)
   'bg-ink/5',
   'transition-[background-color]',
   'duration-(--fade)', // discBase's own clock, inherited down from the control

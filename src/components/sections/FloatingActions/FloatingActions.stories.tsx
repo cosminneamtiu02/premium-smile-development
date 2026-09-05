@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor } from 'storybook/test';
 import { nativeNames } from '@/i18n/locales';
+import { clinic } from '@/lib/clinic';
 import de from '@/messages/de.json';
+import ro from '@/messages/ro.json';
 import { FloatingActions } from './FloatingActions';
 
 // The FIRST section story file — it fixes the tier's conventions in one place.
@@ -52,6 +54,13 @@ import { FloatingActions } from './FloatingActions';
 // (72px, D16 · F2), which is the whole point of sampling that width: the pair
 // scales from one number and must still read as one row.
 //
+// ── WHAT fb-353 CHANGED (owner, 2026-09-04). The right corner is a STACKED
+// PAIR now: the WhatsApp disc sits one disc plus a 0.5rem gap above the phone,
+// in the same green. Every picture in this file therefore shows a column of two
+// on the right against the single dial on the left — and at 1536 the stack's
+// own offset steps with `--disc-size`, which is exactly what that width samples:
+// if the gap ever drifted with the size steps, it would show up there first.
+//
 // Both grounds are deliberately SHORT. The visual spec captures fullPage, and a
 // document taller than the viewport renders fixed elements at a mid-document
 // position in the stitched image — an unreadable baseline. Scroll behaviour is
@@ -71,9 +80,15 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * The everyday picture: a short page with content at the top, the language dial
- * bottom-left and the call CTA bottom-right — two boxes of the SAME size (3.5rem
- * up to xl, 4rem at xl, 4.5rem at 2xl) sitting 1rem clear of the bottom edge, on
- * one z-40 layer over ordinary page ground.
+ * bottom-left and — since fb-353 — the WhatsApp disc above the call CTA
+ * bottom-right. All three boxes are the SAME size (3.5rem up to xl, 4rem at xl,
+ * 4.5rem at 2xl), the dial and the phone sit 1rem clear of the bottom edge and
+ * the WhatsApp disc one disc plus 0.5rem above the phone, on one z-40 layer
+ * over ordinary page ground.
+ *
+ * The play pins what the picture cannot say out loud: the new disc is a LINK to
+ * the single-source wa.me number, named from the message file rather than from
+ * a literal, and it opens in a new tab with the noopener pair (PR #68's law).
  */
 export const Default: Story = {
   globals: { locale: 'ro' },
@@ -89,6 +104,22 @@ export const Default: Story = {
       <FloatingActions />
     </div>
   ),
+  play: async ({ canvas }) => {
+    const write = canvas.getByRole('link', {
+      name: ro.common.actions.whatsapp,
+    });
+    await expect(write).toHaveAttribute(
+      'href',
+      `https://wa.me/${clinic.whatsapp}`,
+    );
+    await expect(write).toHaveAttribute('target', '_blank');
+    await expect(write).toHaveAttribute('rel', 'noopener noreferrer');
+    // …while the phone below it stays a targetless tel: link — a protocol
+    // handler does not navigate, so _blank would orphan a blank tab.
+    const call = canvas.getByRole('link', { name: ro.common.actions.call });
+    await expect(call).toHaveAttribute('href', `tel:${clinic.phone}`);
+    await expect(call).not.toHaveAttribute('target');
+  },
 };
 
 /**
@@ -105,8 +136,9 @@ export const Default: Story = {
  *
  * So the ground is kept EXACTLY as it was, and the picture now says the other
  * half of the same sentence: with content pushed hard against the bottom edge,
- * this is precisely how much of a final line the two discs overlap at the
- * narrowest supported width. That is the worst case by construction — a
+ * this is precisely how much of a final line the corner bands overlap at the
+ * narrowest supported width — and since fb-353 the right band is TWO discs
+ * tall, which is the change this baseline shows most plainly. That is the worst case by construction — a
  * top-aligned page cannot reach the bands at all — and it is the baseline that
  * would move the moment someone re-introduced clearance, changed a
  * `--disc-size` step, or shifted a corner's offset.
@@ -205,7 +237,7 @@ const openPlay = async ({
  *    (72px bulb over ≈57px discs) while the call CTA grows to match — one
  *    number, two corners (D16 · F2);
  *  · `--stem-inset` doing its job: the corner passes its own 1rem offset + the
- *    safe area + the Header pill's 5rem reach, and the atom's extreme-zoom cap
+ *    safe area + the Header pill's 6rem reach, and the atom's extreme-zoom cap
  *    reads it;
  *  · at 320 (the 'stress-320' tag) the D6 claim itself — an `up` stem clears
  *    the call CTA, which is exactly why the corner does not open `right`.
@@ -245,5 +277,11 @@ export const GermanOpen: Story = {
     await expect(
       context.canvasElement.querySelector('a[hreflang="ro"]'),
     ).toHaveAttribute('href', '/ro/services/');
+    // …and the right corner speaks the same language as the left one: the
+    // WhatsApp disc's name is the German string, so a missing DE key would fail
+    // here instead of shipping the Romanian label beside a German dial.
+    await expect(
+      context.canvas.getByRole('link', { name: de.common.actions.whatsapp }),
+    ).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
   },
 };

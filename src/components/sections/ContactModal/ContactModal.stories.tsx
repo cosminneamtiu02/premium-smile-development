@@ -141,7 +141,7 @@ const expectNoVerticalScroll = async (layer: HTMLElement): Promise<void> => {
 /**
  * THE picture: the dialog open, in Romanian — the title in the bar naming both
  * channels, then two titled groups, each a green control with its caption under
- * it (hours for the call, a reply promise for WhatsApp), with „SAU" between
+ * it (hours for the call, a reply promise for WhatsApp), with „sau" between
  * them at 27px — the exact size the panel's own title wears since the same
  * day (owner, 2026-09-05: the title as big as the Or-word).
  *
@@ -208,7 +208,7 @@ export const Default: Story = {
     await expect(dialog).toHaveTextContent(ro.contact.callHeading);
     await expect(dialog).toHaveTextContent(ro.contact.whatsappHeading);
     await expect(dialog).toHaveTextContent(ro.contact.whatsappNote);
-    // The Or-word, from the message file and pre-uppercased there — this is
+    // The Or-word, from the message file exactly as displayed there — this is
     // also the story where the a11y addon audits it, and it must stay OUT of
     // the outline: a plain <p> wearing the display tokens, never a heading.
     await expect(dialog).toHaveTextContent(ro.contact.or);

@@ -1768,9 +1768,11 @@ describe('ui/disc.ts — one variable, two corners (D16 · F2 · D17 Road 3)', (
   it('keeps bulb, tube and every disc on ONE centre line (D12, board §8)', () => {
     // A 1px drift here reads as a bent thermometer, and nothing else in the
     // suite would catch it: the tube is the bulb minus 2px, centred on it, and
-    // the first disc clears the bulb's top edge by 7px — the 0.375rem of air in
-    // the padding override plus the tube's own 1px border, which sits outside
-    // that padding. Measured in Chromium, not assumed.
+    // the first disc clears the bulb's top edge by 6px — exactly the 0.375rem
+    // of air in the padding override. It was 7 while the tube wore its 1px
+    // border; the owner struck the whole capsule chrome on 2026-09-05 ("i
+    // fucking hate that square, remove it" — stemBase carries the story), and
+    // the border went with it. Measured in Chromium, not assumed.
     mount({ size: 'lg', direction: 'up' });
     const bulb = bulbOf().getBoundingClientRect();
     const tube = listOf().getBoundingClientRect();
@@ -1779,7 +1781,7 @@ describe('ui/disc.ts — one variable, two corners (D16 · F2 · D17 Road 3)', (
     expect(centre(tube)).toBe(centre(bulb));
     expect(centre(disc)).toBe(centre(bulb));
     expect(Math.round(tube.width)).toBe(Math.round(bulb.width) - 2);
-    expect(Math.round(disc.bottom)).toBe(Math.round(bulb.top) - 7);
+    expect(Math.round(disc.bottom)).toBe(Math.round(bulb.top) - 6);
   });
 
   it('leaves a focused disc’s ring room inside the tube (SC 2.4.7)', async () => {

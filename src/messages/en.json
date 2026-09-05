@@ -19,7 +19,12 @@
     },
     "language": {
       "switch": "{name}, change language",
-      "region": "Language"
+      "region": "Language",
+      "banner": {
+        "text": "This page is also available in English.",
+        "accept": "Continue in English",
+        "dismiss": "Close"
+      }
     },
     "brand": {
       "ariaLabel": "{name}, home"

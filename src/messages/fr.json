@@ -19,7 +19,12 @@
     },
     "language": {
       "switch": "{name}, changer de langue",
-      "region": "Langue"
+      "region": "Langue",
+      "banner": {
+        "text": "Cette page existe aussi en français.",
+        "accept": "Continuer en français",
+        "dismiss": "Fermer"
+      }
     },
     "brand": {
       "ariaLabel": "{name}, accueil"

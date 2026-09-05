@@ -19,7 +19,12 @@
     },
     "language": {
       "switch": "{name}, schimbă limba",
-      "region": "Limbă"
+      "region": "Limbă",
+      "banner": {
+        "text": "Această pagină este disponibilă și în română.",
+        "accept": "Continuă în română",
+        "dismiss": "Închide"
+      }
     },
     "brand": {
       "ariaLabel": "{name}, acasă"

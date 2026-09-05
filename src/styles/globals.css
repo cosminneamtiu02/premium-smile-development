@@ -242,7 +242,17 @@
      Media queries are legal at THIS tier and only here (§6.5 reserves them for
      page-level layout; a section would use container queries).
      src/app/[locale]/shell.test.tsx pins all four numbers against the real
-     compiled sheet, one assertion per step. */
+     compiled sheet, one assertion per step.
+     ONE MORE READER OF THE BOTTOM STEPS (banner-lane G2 a11y, 2026-09-04;
+     re-derived 2026-09-05 for fb-353's stacked corner):
+     sections/LanguageBanner lifts its fixed card by the TALLEST step
+     (calc(11.5rem + env(safe-area-inset-bottom))), so a Tab-scrolled target
+     keeps a visible sliver under the card wherever the local step is smaller
+     (9.5/10.5rem) and rests FLUSH at 2xl, where step and lift are equal. The
+     bond is an inequality — the card's lift must EXCEED every step it
+     overlaps, never the reverse — argued in that component's SC 2.4.11
+     comment; the §9 page-tier walkthrough owns the entirely-hidden check,
+     with §14's CTABanner the named trigger. */
   html {
     scroll-padding-top: 6rem;
     scroll-padding-bottom: calc(9.5rem + env(safe-area-inset-bottom));

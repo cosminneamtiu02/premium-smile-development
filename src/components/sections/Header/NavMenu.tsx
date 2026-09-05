@@ -114,10 +114,14 @@ function bodyLevelAncestor(node: Element | null): Element | null {
  * loads a whole new document, which announces its own <title>, so the element
  * narrates nothing of ours — Next still appends it regardless. Freezing a live
  * region is simply the wrong default: it turns a message into silence, and the
- * first region that does matter here (the language-suggestion banner, a future
- * form status) would inherit that bug without a symptom. Costs nothing either
- * way — a live region is announced, never focused: not a Tab stop, not a tap
- * target.
+ * first region that does matter here (a future form status, say) would inherit
+ * that bug without a symptom. The language-suggestion banner was the case this
+ * comment once anticipated — its contract board then DECLINED the exemption on
+ * purpose (2026-09-04: no `aria-live` anywhere in that file, so the card goes
+ * inert and dimmed with its siblings; sections/LanguageBanner's anchor comment
+ * argues why), which leaves the carve-out with no current consumer and standing
+ * on the general rule alone. Costs nothing either way — a live region is
+ * announced, never focused: not a Tab stop, not a tap target.
  */
 function isLiveRegion(element: Element): boolean {
   return (

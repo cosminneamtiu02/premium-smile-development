@@ -25,14 +25,22 @@ export const fallbackLocale: Locale = 'en';
 
 // THE one spelling of the language-cookie name (§8.7) — the site's only piece
 // of storage, and therefore the whole reason it ships with no consent banner.
-// It has exactly ONE writer and exactly ONE reader, and they live in different
-// worlds, which is why the name needed a home rather than a convention:
-//   · WRITTEN by sections/LanguageSwitcher's handleSelect, in the visitor's
-//     browser, on the explicit click and at no other moment;
-//   · READ by the inline script tools/generate-root-redirect.ts emits into
-//     out/index.html — that tool interpolates THIS constant into the regex at
-//     build time, so the emitted bytes cannot drift from what the switcher
-//     writes. Until 2026-09-02 the two spellings were coupled by prose only.
+// It has exactly ONE writer-helper and exactly ONE value-reader, and they live
+// in different worlds, which is why the name needed a home rather than a
+// convention:
+//   · WRITTEN via src/i18n/cookie.ts' setLocaleCookie — in the visitor's
+//     browser, on an explicit click and at no other moment — whose callers are
+//     sections/LanguageSwitcher's handleSelect (a pick) and
+//     sections/LanguageBanner (accept, and D2's dismiss: "I'm fine here",
+//     stored as the page's own locale; banner lane, 2026-09-04);
+//   · READ — as a VALUE — only by the inline script
+//     tools/generate-root-redirect.ts emits into out/index.html: that tool
+//     interpolates THIS constant into the regex at build time, so the emitted
+//     bytes cannot drift from what setLocaleCookie writes. (The banner's
+//     hasLanguageChoice additionally tests the NAME's presence in
+//     document.cookie — never the value — so the value-reader stays unique;
+//     G2 ts review, 2026-09-04.) Until 2026-09-02 the two spellings were
+//     coupled by prose only.
 // The tests and stories assert the LITERAL 'NEXT_LOCALE' from the OUTSIDE on
 // purpose — never rewire them to import this constant. They are the tripwire
 // that fires if this value ever changes, and a tripwire built out of the thing

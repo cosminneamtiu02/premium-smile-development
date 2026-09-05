@@ -7,7 +7,12 @@ import { ContactModalProvider } from '@/components/sections/ContactModal/Contact
 import { FloatingActions } from '@/components/sections/FloatingActions/FloatingActions';
 import { Footer } from '@/components/sections/Footer/Footer';
 import { Header } from '@/components/sections/Header/Header';
+import {
+  LanguageBanner,
+  type BannerStrings,
+} from '@/components/sections/LanguageBanner/LanguageBanner';
 import { mono, serif } from '@/fonts';
+import { locales, type Locale } from '@/i18n/locales';
 import { routing } from '@/i18n/routing';
 import '@/styles/globals.css';
 
@@ -60,6 +65,42 @@ export default async function LocaleLayout({ children, params }: Props) {
   // Enable static rendering (next-intl static-export requirement).
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'common' });
+
+  // ── THE BANNER'S STRINGS, IN ALL FIVE LANGUAGES, RESOLVED HERE (D6 — the
+  // language-banner board §5; the mirror comment is in LanguageBanner.tsx).
+  // <LanguageBanner /> is a client island, and an island only ever receives THE
+  // PAGE LOCALE'S messages — that is what next-intl serialises alongside the
+  // HTML. Its whole purpose, though, is to speak a language the page does NOT:
+  // a Romanian page offering „Diese Seite gibt es auch auf Deutsch". `t()`
+  // cannot reach a foreign locale, and importing the message JSONs into the
+  // island would drag all five dictionaries into the browser bundle. So the
+  // SHELL — a Server Component, where every locale is reachable — resolves the
+  // three keys for each locale at BUILD TIME (§16: translations are baked into
+  // the markup, never fetched) and hands the finished strings over as a prop.
+  // §8.1 is unaffected: translation still happens in the section/page tier.
+  // WHAT THIS COSTS THE BUILD HTML: nothing visible. The island renders `null`
+  // until it has mounted AND decided (§16.2/P8), so the pre-rendered document
+  // carries no banner — only these fifteen short strings, serialised with the
+  // rest of the island's props.
+  // The cast is the one `Object.fromEntries` always needs: its signature widens
+  // the key back to `string`. It is honest here rather than hopeful, because
+  // the record is TOTAL by construction — the entries come from `locales`
+  // itself, so every key the prop's type promises really is present.
+  const bannerMessages = Object.fromEntries(
+    await Promise.all(
+      locales.map(async (l): Promise<[Locale, BannerStrings]> => {
+        const tl = await getTranslations({ locale: l, namespace: 'common' });
+        return [
+          l,
+          {
+            text: tl('language.banner.text'),
+            accept: tl('language.banner.accept'),
+            dismiss: tl('language.banner.dismiss'),
+          },
+        ];
+      }),
+    ),
+  ) as Record<Locale, BannerStrings>;
 
   return (
     <html lang={locale} className={`${serif.variable} ${mono.variable}`}>
@@ -174,6 +215,20 @@ export default async function LocaleLayout({ children, params }: Props) {
                 FloatingActions' own header carries that decision and what now
                 carries the clearance duty. */}
             <FloatingActions />
+
+            {/* THE §8.6 SUGGESTION BANNER — last of the shell's own children,
+                after the corner controls and before nothing but the provider's
+                <dialog>. It is a body-level sibling like every box above it
+                (P1/E11: NavMenu's freeze walks <body>'s children, so a wrapper
+                would silently freeze nothing — and this card is one of the
+                things the freeze must reach, board §4), and it renders `null`
+                in the build HTML: the decision needs the visitor's cookie and
+                `navigator.languages`, which exist only after mount (§16.2/P8).
+                Being `fixed`, it costs zero layout shift when it does appear.
+                DOM order buys the tab order here, exactly as it does for
+                FloatingActions: a suggestion the visitor did not ask for comes
+                after the page's own content and after the footer's links. */}
+            <LanguageBanner messages={bannerMessages} />
           </ContactModalProvider>
         </NextIntlClientProvider>
       </body>

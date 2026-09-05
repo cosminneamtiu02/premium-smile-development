@@ -1,5 +1,11 @@
 import { createRef, type ReactNode } from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import {
   afterAll,
@@ -596,6 +602,246 @@ describe('SpeedDial — every way it closes (D11)', () => {
       new PageTransitionEvent('pageshow', { persisted: false }),
     );
     expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HOVER — the owner's 2026-09-04 request ("i want language switcher also on
+// hover to open, not just on click"), built to
+// .claude/plans/speed-dial-hover.plan.md. Three facts shape every case below.
+//
+//  · THE POINTER IS PHYSICAL AND IT PERSISTS. Browser mode runs this whole file
+//    in one page, so the CDP mouse is still parked wherever the previous case
+//    left it — and a move onto the element it is ALREADY on crosses no
+//    boundary, which means no pointerenter and no dwell. Every case here
+//    therefore parks it on the OUTSIDE button first; that move is also what
+//    cancels any dwell a fresh render under the resting cursor may have
+//    started (Chromium re-computes hover when the layout changes beneath it).
+//  · THE TWO CLOCKS ARE THE ATOM'S, restated here as literals the way the rest
+//    of this file restates a token: 150ms of dwell before it opens, 300ms of
+//    grace after the pointer leaves. A drift in either shows up as a red case.
+//  · END STATES ONLY, on real timers. There is no fake clock in browser mode,
+//    and sampling INSIDE a 150/300ms window is exactly how a suite goes
+//    CI-flaky (memory: tests-with-real-css-disable-transitions, PR #45):
+//    `waitFor` for the flips, one `settle()` well past the window for the
+//    "and then nothing happened" ones.
+//
+// The CLICK paths are deliberately NOT re-proved here — every suite above
+// already drives this dial with real clicks, and they must all stay green
+// untouched. That is the point of the dwell: a click always arrives after a
+// pointerenter (real CDP and synthetic user-event alike), and cancelling the
+// timers on the bulb's own click is what keeps click semantics byte-identical.
+describe('SpeedDial — hover opens it (mouse only), hover-away closes what hover opened', () => {
+  const outside = () => screen.getByRole('button', { name: OUTSIDE });
+
+  const settle = (ms: number) =>
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+
+  /** Move the REAL pointer clear of the dial — see the note above. */
+  const park = async () => {
+    await userEvent.hover(outside());
+  };
+
+  /** Open it the new way: arrive, rest, unfold. No click anywhere. */
+  const hoverOpen = async (name = RO_LABEL) => {
+    await userEvent.hover(bulbOf(name));
+    await waitFor(() =>
+      expect(bulbOf(name)).toHaveAttribute('aria-expanded', 'true'),
+    );
+    return bulbOf(name);
+  };
+
+  it('opens after the dwell when a real mouse comes to rest on it', async () => {
+    const onOpenChange = vi.fn();
+    mount({ onOpenChange });
+    await park();
+    await userEvent.hover(bulbOf());
+    await waitFor(() =>
+      expect(bulbOf()).toHaveAttribute('aria-expanded', 'true'),
+    );
+    // The same two switches a tap flips, and nothing else (D8 = M).
+    expect(listOf()).not.toHaveAttribute('inert');
+    // ONE report per REAL flip: a timer must never re-report a state the dial
+    // is already in.
+    expect(onOpenChange).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it('never opens for a TOUCH pointer — a tap would open and close in one act', async () => {
+    // fireEvent because the SPECIFIC synthetic events are the point (the file's
+    // two-source doctrine): a finger that lands on the dial and drags — the
+    // first frames of a page scroll — sends exactly this, and the real mouse
+    // this runner drives cannot. Unguarded it would unfold the dial under the
+    // finger, and the tap's own click would then toggle it shut: untappable.
+    mount();
+    await park();
+    fireEvent.pointerEnter(rootOf(), { pointerType: 'touch' });
+    fireEvent.pointerMove(rootOf(), { pointerType: 'touch' });
+    await settle(400); // well past the 150ms dwell
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    expect(listOf()).toHaveAttribute('inert');
+    // …and the same two events with a MOUSE on them do open it. The positive
+    // control is not decoration: without it this case would keep passing on the
+    // day the whole hover manner stopped working.
+    fireEvent.pointerEnter(rootOf(), { pointerType: 'mouse' });
+    fireEvent.pointerMove(rootOf(), { pointerType: 'mouse' });
+    await waitFor(() =>
+      expect(bulbOf()).toHaveAttribute('aria-expanded', 'true'),
+    );
+  });
+
+  it('ignores an arrival no MOVEMENT produced — content landing under a resting mouse', async () => {
+    // Chromium re-computes hover when the layout changes beneath a parked
+    // cursor and delivers pointerover/pointerenter for whatever arrived there,
+    // with NO pointermove (probed 2026-09-04). A fixed corner dial must not
+    // unfold itself at page load because somebody's mouse happened to be
+    // resting on that corner — hovering is something the VISITOR does.
+    const onOpenChange = vi.fn();
+    mount({ onOpenChange });
+    await park();
+    fireEvent.pointerEnter(rootOf(), { pointerType: 'mouse' });
+    await settle(400); // well past the 150ms dwell
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('closes again when the mouse leaves — and steals no focus on the way out', async () => {
+    mount();
+    await park();
+    await hoverOpen();
+    await userEvent.hover(outside()); // a REAL leave: the pointer is elsewhere
+    await waitFor(() =>
+      expect(bulbOf()).toHaveAttribute('aria-expanded', 'false'),
+    );
+    // A pointer-driven close never pulls focus back to the bulb — the visitor
+    // is by definition looking somewhere else (the outside-pointerdown rule).
+    expect(rootOf().contains(document.activeElement)).toBe(false);
+  });
+
+  it('stays open when the mouse comes back inside the 300ms grace', async () => {
+    mount();
+    await park();
+    await hoverOpen();
+    // The leave/re-enter pair is fired SYNTHETICALLY, on purpose: the grace is
+    // 300ms and every real hover is a round trip to the Playwright side, so
+    // racing that window with two of them would make this case a test of the
+    // machine rather than of the atom. That a REAL leave closes it is the case
+    // above; what this one pins is the re-enter cancelling the pending close.
+    fireEvent.pointerLeave(rootOf(), { pointerType: 'mouse' });
+    fireEvent.pointerEnter(rootOf(), { pointerType: 'mouse' });
+    await settle(500); // past the 300ms grace, with room to spare
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('never hover-closes a dial a CLICK opened — the visual runner’s guarantee', async () => {
+    mount();
+    await park();
+    await open();
+    // openPlay's own tail, deliberately reproduced (SpeedDial.stories.tsx): the
+    // visual runner click-opens each pin-open story, the play function blurs
+    // the bulb, and openDisclosure parks the mouse at 0,0 — a pointerleave over
+    // an open dial. With focus off the bulb, "hover closes only what hover
+    // opened" is the ONLY thing keeping this dial open; a focus-only guard
+    // would lose that race and freeze a closed baseline.
+    bulbOf().blur();
+    await userEvent.hover(outside());
+    await settle(500); // past the 300ms grace
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('a pointer click on a hover-opened dial CLAIMS it — hover may no longer close it', async () => {
+    // The slow aimer (§1's audience): a hand that parks on the bulb before
+    // pressing it rests there longer than the dwell, so the dial is already
+    // open when the click they planned lands. Closing in their face would
+    // punish careful aiming — the click claims the dial as click-opened
+    // instead, and the proof of the claim is that hover-away no longer works.
+    mount();
+    await park();
+    await hoverOpen();
+    await userEvent.click(bulbOf());
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.hover(outside());
+    await settle(500); // past the 300ms grace
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('…and the SECOND click closes it, like any click-opened dial', async () => {
+    mount();
+    await park();
+    await hoverOpen();
+    await userEvent.click(bulbOf()); // claims it
+    await userEvent.click(bulbOf()); // closes it
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    expect(listOf()).toHaveAttribute('inert');
+  });
+
+  it('Enter still closes a hover-opened dial — claiming takes a POINTER', async () => {
+    // The claim is keyed on `event.detail > 0`, which a real key activation
+    // never carries: `aria-expanded` must not lie to a keyboard user about
+    // what the next press does.
+    mount();
+    await park();
+    await hoverOpen();
+    bulbOf().focus();
+    await userEvent.keyboard('{Enter}');
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('will not close under a keyboard walk — and Esc still returns focus', async () => {
+    mount();
+    await park();
+    await hoverOpen();
+    await userEvent.tab(); // the bulb
+    await userEvent.tab(); // …and into the stem
+    expect(discsOf()[0]).toHaveFocus();
+    await userEvent.hover(outside());
+    // The mixed-input belt: the close timer FIRES and aborts, because closing
+    // would hand `inert` a focused disc and dump the visitor on <body>.
+    await settle(500);
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+    // …and the guarded focus return is untouched by any of it: focus IS inside
+    // the root at close time, so Esc still hands it back to the bulb.
+    await userEvent.keyboard('{Escape}');
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    expect(bulbOf()).toHaveFocus();
+  });
+
+  it('does not YANK focus on Esc when the visitor is working elsewhere', async () => {
+    // The regression hover-open made possible, and the reason the focus return
+    // is now guarded: a dial can be open because a mouse came to rest on it
+    // while the visitor types somewhere else entirely. Esc must dismiss it
+    // (SC 1.4.13) WITHOUT moving their focus into the corner.
+    mount();
+    await park();
+    await hoverOpen();
+    const elsewhere = outside();
+    elsewhere.focus();
+    await userEvent.keyboard('{Escape}');
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    expect(elsewhere).toHaveFocus();
+  });
+
+  it('stays dismissed while the pointer rests on it — no re-open on a jiggle', async () => {
+    // The dismissable half of SC 1.4.13 taken at its word: dismissing the dial
+    // must not be undone by the very hover it was dismissed under. The pointer
+    // VISIT is spent at the close; only leaving and coming back can spend a new
+    // one. (True of every close — Esc here, a bulb tap and a disc pick alike.)
+    mount();
+    await park();
+    await hoverOpen();
+    await userEvent.keyboard('{Escape}');
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.pointerMove(rootOf(), { pointerType: 'mouse' });
+    await settle(400); // well past the 150ms dwell
+    expect(bulbOf()).toHaveAttribute('aria-expanded', 'false');
+    // …and a FRESH visit still opens it, so "dismissed" never means "dead".
+    fireEvent.pointerLeave(rootOf(), { pointerType: 'mouse' });
+    fireEvent.pointerEnter(rootOf(), { pointerType: 'mouse' });
+    fireEvent.pointerMove(rootOf(), { pointerType: 'mouse' });
+    await waitFor(() =>
+      expect(bulbOf()).toHaveAttribute('aria-expanded', 'true'),
+    );
   });
 });
 

@@ -377,10 +377,21 @@ const artScrimTokens = [
   'transition-[background-color]',
   'duration-(--fade)', // discBase's own clock, inherited down from the control
   'ease-in-out',
-  'group-hover:bg-ink/10', // the flagged disc's hover MANNER — "just a bit darker" (owner, 2026-09-05; /20 before)
-  'group-active:bg-ink/10',
+  'group-hover:bg-ink/20', // the flagged disc's hover MANNER — /20 is the perceptible "bit"; /10 read as no change at all (owner rounds 10–11, 2026-09-05)
+  'group-active:bg-ink/20',
   'motion-reduce:transition-none',
   'forced-colors:hidden', // yields with the art layer (G2 a11y, 2026-09-05)
+];
+
+// The BULB's scrim — the same whisper, STATIC (owner round 12: "ro should not
+// get darker on hover, but the other ones yes"): no transition, no deepen, no
+// clock. The absences are asserted in the loop below.
+const bulbScrimTokens = [
+  'absolute',
+  'inset-0',
+  'rounded-full',
+  'bg-ink/5',
+  'forced-colors:hidden',
 ];
 
 const DIRECTIONS = Object.keys(directionTokens) as SpeedDialDirection[];
@@ -1150,7 +1161,9 @@ describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the code
     expect(artIn(bulbOf())).toBe('ro');
     expect(discsOf().map(artIn)).toEqual(['en', 'de', 'fr', 'it']);
 
-    for (const el of [bulbOf(), ...discsOf()]) {
+    const controls = [bulbOf(), ...discsOf()];
+    for (const el of controls) {
+      const isBulb = el === controls[0];
       const [layer, scrim] = layersOf(el);
       // Decoration, top to bottom: the art is aria-hidden because it says
       // nothing — the disc's spoken name is its endonym and its visible text is
@@ -1162,8 +1175,15 @@ describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the code
       for (const token of artLayerTokens) {
         expect(tokensOf(layer)).toContain(token);
       }
-      for (const token of artScrimTokens) {
+      for (const token of isBulb ? bulbScrimTokens : artScrimTokens) {
         expect(tokensOf(scrim)).toContain(token);
+      }
+      if (isBulb) {
+        // Round 12: the current language is not a CHOICE — its scrim never
+        // deepens and carries no clock. Asserted as absences, the
+        // replaced-not-overridden convention.
+        expect(tokensOf(scrim)).not.toContain('group-hover:bg-ink/20');
+        expect(tokensOf(scrim)).not.toContain('transition-[background-color]');
       }
       // …and the code paints ABOVE both, because it is positioned too: a
       // `relative` in-flow span is the last positioned sibling, so DOM order
@@ -1202,9 +1222,11 @@ describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the code
       expect(tokens).not.toContain(
         'text-[max(0.875rem,calc(var(--bulb)*2/7))]',
       );
-      // The marker the scrim's `group-hover:` reads, and the positioning scope
+      // The marker the STEM scrim's `group-hover:` reads — the bulb dropped
+      // its marker with its deepen (round 12) — and the positioning scope
       // both layers are absolute against.
-      expect(tokens).toContain('group');
+      if (el === bulbOf()) expect(tokens).not.toContain('group');
+      else expect(tokens).toContain('group');
       expect(tokens).toContain('relative');
     }
   });
@@ -1286,13 +1308,16 @@ describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the code
 
     // The scrim really paints, and it fades on the system's own --fade clock
     // (set by discBase on the CONTROL, inherited down to this child).
-    // Measured on the BULB's scrim on purpose: the stillness style at the top
-    // of this file kills transitions inside the stem — `[aria-controls] ~ ul *`
-    // — and the bulb's own children are outside that selector.
+    // Since round 12 the BULB's scrim is STATIC — the current language gives
+    // no hover invitation (artBulbScrimClasses) — so the compiled truth HERE
+    // is the ABSENCE of a clock. The stem discs' 0.4s clock cannot be
+    // computed-measured in this file (the stillness style at the top kills
+    // transitions inside the stem — the tests-with-real-css rule), so their
+    // clock stays pinned at the class level (artScrimTokens' duration-(--fade)).
     const scrim = getComputedStyle(layersOf(bulb)[1]);
     expect(scrim.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
-    expect(scrim.transitionDuration).toBe('0.4s');
-    expect(scrim.transitionProperty).toBe('background-color');
+    expect(scrim.transitionDuration).toBe('0s');
+    expect(scrim.transitionProperty).not.toContain('background-color');
   });
 });
 

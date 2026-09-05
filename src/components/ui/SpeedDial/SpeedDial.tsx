@@ -342,8 +342,16 @@ const artLayerClasses =
 const artScrimClasses =
   'absolute inset-0 rounded-full bg-ink/5 transition-[background-color] ' +
   'duration-(--fade) ease-in-out ' +
-  'group-hover:bg-ink/10 group-active:bg-ink/10 ' +
+  'group-hover:bg-ink/20 group-active:bg-ink/20 ' +
   'motion-reduce:transition-none forced-colors:hidden';
+
+// THE BULB'S scrim is the same whisper, STATIC (owner round 12, 2026-09-05:
+// "ro should not get darker on hover, but the other ones yes"): a stem disc
+// is a CHOICE, so its deepen is the invitation; the bulb is the language you
+// are already reading — not a choice, no invitation. No transition either:
+// nothing about it ever changes, so it needs no clock.
+const artBulbScrimClasses =
+  'absolute inset-0 rounded-full bg-ink/5 forced-colors:hidden';
 
 /**
  * What sits INSIDE a disc, bulb and stem alike — one function so the two can
@@ -355,23 +363,35 @@ const artScrimClasses =
  * a single z-index: the two decorative layers are `absolute` (positioned,
  * z-index auto) and the text is `relative` (positioned too) and LAST in DOM
  * order, so paint order alone puts it above.
+ *
+ * `scrimDeepens` is the round-12 split: the STEM discs pass true (their scrim
+ * answers hover/press), the BULB passes false (static scrim — the current
+ * language gives no hover invitation). The selector lives HERE so the two
+ * call sites cannot drift.
  */
 /**
  * THE one artless test (G2 ts LOW, 2026-09-05): `undefined` is the sentinel —
- * see the `art` field's doc. Every decision site (content here, the `group`
- * marker, both letter/disc class ternaries) reads THIS predicate, so a future
- * edit cannot split content shape from dressing.
+ * see the `art` field's doc. Every decision site (content here, the bulb
+ * letter ternary, both disc class ternaries) reads THIS predicate, so a
+ * future edit cannot split content shape from dressing.
  */
 const hasArt = (art: ReactNode): boolean => art !== undefined;
 
-function discContent(code: string, art: ReactNode): ReactNode {
+function discContent(
+  code: string,
+  art: ReactNode,
+  scrimDeepens: boolean,
+): ReactNode {
   if (!hasArt(art)) return code;
   return (
     <>
       <span aria-hidden="true" className={artLayerClasses}>
         {art}
       </span>
-      <span aria-hidden="true" className={artScrimClasses} />
+      <span
+        aria-hidden="true"
+        className={scrimDeepens ? artScrimClasses : artBulbScrimClasses}
+      />
       <span className="relative">{code}</span>
     </>
   );
@@ -1179,10 +1199,11 @@ export function SpeedDial<V extends string = string>({
           }}
           className={cx(
             'peer relative z-10 rounded-full',
-            // The marker, added ONLY when there is art for it to work on: with
-            // no art `cx` drops the `false` and this joins exactly the tokens
-            // it joined before the lane (the byte-identical promise).
-            hasArt(bulb?.art) && 'group',
+            // No `group` marker here any more: it existed only to drive the
+            // bulb scrim's hover deepen, and round 12 made the bulb's scrim
+            // STATIC (the current language is not a choice — see
+            // artBulbScrimClasses). The stem discs keep theirs inside
+            // artDiscClasses.
             discBase,
             discBox[size],
             hasArt(bulb?.art) ? artLetterClasses : letterClasses,
@@ -1195,7 +1216,7 @@ export function SpeedDial<V extends string = string>({
             discTransition,
           )}
         >
-          {bulb ? discContent(bulb.code, bulb.art) : value}
+          {bulb ? discContent(bulb.code, bulb.art, false) : value}
         </button>
 
         {/* A plain list — no role="menu", no role="dialog", no aria-current
@@ -1235,7 +1256,7 @@ export function SpeedDial<V extends string = string>({
                   onClick={(event) => handleSelect(option, event)}
                   className={hasArt(option.art) ? artDiscClasses : discClasses}
                 >
-                  {discContent(option.code, option.art)}
+                  {discContent(option.code, option.art, true)}
                 </button>
               ) : (
                 <a
@@ -1246,7 +1267,7 @@ export function SpeedDial<V extends string = string>({
                   onClick={(event) => handleSelect(option, event)}
                   className={hasArt(option.art) ? artDiscClasses : discClasses}
                 >
-                  {discContent(option.code, option.art)}
+                  {discContent(option.code, option.art, true)}
                 </a>
               )}
             </li>

@@ -411,9 +411,9 @@ const discTransition = 'transition-[background-color,color]';
 //  · keyboard focus shows discBase's outline ring and nothing else — exact
 //    parity with GlyphButton ghost, which is the point of the reversal;
 //  · rest is TRANSPARENT, so the ground under a disc belongs to its parent —
-//    since the tube chrome was struck (owner 2026-09-05, see stemBase) that is
-//    the PAGE itself behind the open dial. Light grounds only: ghost's
-//    standing caveat, inherited with the bundle and now binding the page.
+//    here the stem's own 95% surface (struck and restored 2026-09-05, see
+//    stemBase). Light grounds only: ghost's standing caveat, inherited with
+//    the bundle.
 //
 // Hover therefore reads as "ready" and chosen stays the filled bulb: still two
 // clearly different looks (tray vs fill), just not a progression any more.
@@ -450,19 +450,18 @@ const artDiscClasses = cx(
 );
 
 // The stem, minus its direction. `absolute` inside the isolated inner box with
-// `-z-10` so the tube's start end hides BEHIND the bulb (fb-262); the bulb is
-// `relative z-10` and paints over it. The tube is an INVISIBLE layout-and-clip
-// box — no border, no fill, no blur. It shipped wearing NavMenu-panel chrome
-// (full border, 95% surface, static blur) for the D12 thermometer look, and
-// the owner struck it the day the flags landed: over opaque flag discs the
-// capsule's straight translucent edges read as a box the buttons were encased
-// in ("i fucking hate that square, remove it", 2026-09-05). The discs now
-// stand on the page ground itself — which is where the ghost stem discs'
-// light-grounds-only caveat (discRest above) now points.
-// `items-center` centres the discs across the tube — the borderless padding
-// box is 2px roomier than the chromed one was (54 − 8 padding = 46 vs 44 lg
-// discs), pure slack: nothing is painted, so nothing reads off-centre, and a
-// focused disc's ring gains a hair of room over its old exact fit.
+// `-z-10` so the tube's round start end hides BEHIND the bulb (fb-262); the
+// bulb is `relative z-10` and paints over it. Chrome copied from NavMenu's
+// panel: full border, 95% surface, static blur — STRUCK and RESTORED within
+// one day (2026-09-05): the owner's "translucent square" complaint was
+// misread as this capsule and the chrome came off, but the real square was
+// the SCRIM's missing circle clip (see artScrimClasses); on seeing the discs
+// float free the owner corrected it — "the container of the round flag
+// buttons is [gone] too … there was just a translucid black flag" — and the
+// capsule chrome is back verbatim, the scrim clip kept.
+// `items-center` centres the discs across the tube — exact at both steps
+// (54 tube − 2 border − 8 padding = 44 = the lg disc) and still right when a
+// host override makes the tube wider than the disc it derives.
 // Both clip-path states live in the direction table below, never here: two
 // unvariant `[clip-path:…]` utilities on one element would fight over emission
 // order instead of over state.
@@ -491,7 +490,7 @@ const artDiscClasses = cx(
 // escape hatch wins in both states, with no specificity fight to lose.
 const stemBase =
   'absolute -z-10 flex items-center gap-1.5 p-1 ' +
-  'rounded-full ' +
+  'rounded-full border border-line-subtle bg-surface/95 backdrop-blur-md ' +
   'inert:invisible ' +
   'transition-[clip-path,visibility] [transition-duration:300ms,0s] ease-out ' +
   'inert:[transition-delay:0s,300ms] motion-reduce:transition-none ' +

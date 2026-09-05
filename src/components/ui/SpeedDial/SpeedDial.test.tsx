@@ -373,12 +373,12 @@ const artScrimTokens = [
   'absolute',
   'inset-0',
   'rounded-full', // the scrim's OWN clip — square corners outside the circle without it (owner, 2026-09-05)
-  'bg-ink/5',
+  'bg-ink/20', // DIMMED at rest — round 13's inversion: the choices sleep
   'transition-[background-color]',
   'duration-(--fade)', // discBase's own clock, inherited down from the control
   'ease-in-out',
-  'group-hover:bg-ink/20', // the flagged disc's hover MANNER — /20 is the perceptible "bit"; /10 read as no change at all (owner rounds 10–11, 2026-09-05)
-  'group-active:bg-ink/20',
+  'group-hover:bg-ink/5', // …and LIGHT UP to the bulb's whisper on hover (the /20↔/5 pair is the delta rounds 10–11 proved perceptible)
+  'group-active:bg-ink/5',
   'motion-reduce:transition-none',
   'forced-colors:hidden', // yields with the art layer (G2 a11y, 2026-09-05)
 ];
@@ -1182,7 +1182,8 @@ describe('SpeedDial — art backgrounds (owner 2026-09-04: flags behind the code
         // Round 12: the current language is not a CHOICE — its scrim never
         // deepens and carries no clock. Asserted as absences, the
         // replaced-not-overridden convention.
-        expect(tokensOf(scrim)).not.toContain('group-hover:bg-ink/20');
+        expect(tokensOf(scrim)).not.toContain('group-hover:bg-ink/5');
+        expect(tokensOf(scrim)).not.toContain('bg-ink/20');
         expect(tokensOf(scrim)).not.toContain('transition-[background-color]');
       }
       // …and the code paints ABOVE both, because it is positioned too: a

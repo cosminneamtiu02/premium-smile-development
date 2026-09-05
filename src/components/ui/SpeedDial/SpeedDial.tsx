@@ -324,10 +324,15 @@ const artLayerClasses =
   'absolute inset-0 overflow-hidden rounded-full [&_svg]:size-full ' +
   'forced-colors:hidden';
 
-// The scrim — a whisper of ink over the art (owner: "they are too dark … still
-// lighter", /35 → /15 → /5), deepening on hover and press. That deepening IS a
-// flagged disc's hover manner: the ghost tray and the tone fill underneath are
-// still in the class list, simply covered by an opaque flag, and nothing here
+// The STEM scrim — INVERTED by owner round 13 (2026-09-05: "i want them to be
+// dark at rest and on hover they light up. the one at root is not to be
+// darkened, it is lit up always"): a choice disc rests DIMMED under ink/20
+// and LIGHTS UP to the ink/5 whisper on hover/press — the same /5 the bulb
+// wears permanently, so "lit" is one face across the dial and hover reads as
+// "this one comes alive". The /20↔/5 pair is the delta rounds 10–11 proved
+// perceptible (a 5-point step read as nothing). That lighting IS a flagged
+// disc's hover manner: the ghost tray and the tone fill underneath are still
+// in the class list, simply covered by an opaque flag, and nothing here
 // strips them. The clock is `--fade`, which discBase sets on the CONTROL and
 // custom properties inherit down to this child, so a flagged disc fades on
 // exactly the system clock every other disc uses.
@@ -340,16 +345,17 @@ const artLayerClasses =
 // preview's wrapper clipped everything round; the atom's control deliberately
 // clips nothing, SC 2.4.7).
 const artScrimClasses =
-  'absolute inset-0 rounded-full bg-ink/5 transition-[background-color] ' +
+  'absolute inset-0 rounded-full bg-ink/20 transition-[background-color] ' +
   'duration-(--fade) ease-in-out ' +
-  'group-hover:bg-ink/20 group-active:bg-ink/20 ' +
+  'group-hover:bg-ink/5 group-active:bg-ink/5 ' +
   'motion-reduce:transition-none forced-colors:hidden';
 
-// THE BULB'S scrim is the same whisper, STATIC (owner round 12, 2026-09-05:
-// "ro should not get darker on hover, but the other ones yes"): a stem disc
-// is a CHOICE, so its deepen is the invitation; the bulb is the language you
-// are already reading — not a choice, no invitation. No transition either:
-// nothing about it ever changes, so it needs no clock.
+// THE BULB'S scrim: the ALWAYS-LIT face, STATIC (owner rounds 12–13,
+// 2026-09-05: "the one at root is not to be darkened, it is lit up always") —
+// the permanent ink/5 whisper the stem discs only reach on hover. The bulb is
+// the language you are already reading, not a choice: no dimming, no hover
+// response, and no transition — nothing about it ever changes, so it needs no
+// clock.
 const artBulbScrimClasses =
   'absolute inset-0 rounded-full bg-ink/5 forced-colors:hidden';
 

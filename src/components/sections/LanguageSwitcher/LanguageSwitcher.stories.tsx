@@ -209,7 +209,7 @@ const meta = {
     className: {
       control: false,
       description:
-        'Placement plus the atom’s two public CSS variables — the --disc-size steps and --stem-inset — merged onto the dial’s root (§6.4/§6.8). FloatingActions is the one caller that sets them',
+        'Placement plus the atom’s three public CSS variables — the --disc-size steps, --stem-inset, and the --bulb-shadow aura feed — merged onto the dial’s root (§6.4/§6.8). FloatingActions is the one caller that sets them',
     },
   },
   render: (args) => <LanguageSwitcherDemo {...args} />,

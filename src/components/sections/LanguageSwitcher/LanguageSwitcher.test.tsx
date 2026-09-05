@@ -521,7 +521,7 @@ describe('LanguageSwitcher — what the HOST passes through (§6.8)', () => {
   });
 
   it('merges `className` onto the LANDMARK and nowhere else', () => {
-    // Placement and the two CSS variables arrive from the corner as one string
+    // Placement and the CSS variables (three since the aura feed) arrive from the corner as one string
     // (§6.4: the parent owns spacing, the section owns no margins of its own),
     // and they land on the outermost box this section renders — the <nav>.
     // The variables are CUSTOM PROPERTIES, so the atom inherits them from here.

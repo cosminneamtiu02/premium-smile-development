@@ -293,7 +293,7 @@ const meta = {
     className: {
       control: false,
       description:
-        'Merged LAST onto the root: the host’s placement (`fixed … left-4 z-40`) and its two CSS variables — the --disc-size steps and --stem-inset for the zoom cap (§6.4/§6.8)',
+        'Merged LAST onto the root: the host’s placement (`fixed … left-4 z-40`) and its three CSS variables — the --disc-size steps, --stem-inset for the zoom cap, and --bulb-shadow for a host-fed static glow (§6.4/§6.8)',
     },
   },
   render: (args) => <SpeedDialDemo key={args.value} {...args} />,

@@ -63,9 +63,15 @@
      emit a byte-identical `.shadow-aura` utility. The `--shadow-*` namespace
      is transformed into the utility under EITHER flavor — Tailwind wraps the
      color in var(--tw-shadow-color, …) so shadow-color utilities can override
-     it, and builds the @supports fallback below — and the unreferenced
-     `--shadow-aura` custom property is then tree-shaken from the output
-     entirely. The re-tint guarantee above therefore hangs on one thing only:
+     it, and builds the @supports fallback below. The custom property itself
+     was TREE-SHAKEN from the output while nothing referenced it (the Header
+     lane's build); since the corner's `[--bulb-shadow:var(--shadow-aura)]`
+     feed READS it (2026-09-05), Tailwind emits it at :root — base +
+     @supports twin — and the language dial's aura rides exactly that
+     emission: remove the last var(--shadow-aura) reader and the property is
+     shaken out again, taking the bulb's glow with it silently (the census in
+     tests/unit/aura-token.test.ts is the guard).
+     The re-tint guarantee above therefore hangs on one thing only:
      the value mixes FROM var(--accent-decorative) instead of pasting its
      rgb, and that inner var survives the inlining and resolves at paint time
      in both modes. Plain `@theme` is simply this layer's spelling (the font
@@ -80,8 +86,11 @@
 
      Tailwind v4 mints the `shadow-aura` utility from the `--shadow-*`
      namespace automatically (the same mechanism that makes bg-surface out of
-     --color-surface). Consumers are exactly two: the Header pill and NavMenu's
-     dropdown panel — the old site's own pairing.
+     --color-surface). Consumers: the Header pill and NavMenu's dropdown panel
+     (the old site's own pairing), and — owner 2026-09-05 — the fixed corner's
+     three permanent residents via FloatingActions: the call and WhatsApp
+     discs wear the utility, the language dial's bulb takes the same value
+     through ui/SpeedDial's `--bulb-shadow` public variable.
 
      COLOR-MIX ON OLD ENGINES is handled by that same generator, and NOT the
      way a hand-written declaration would be. Compiled and read rather than
@@ -97,7 +106,7 @@
      is Tailwind's, and a second spelling of the value would be the very
      divergence this token exists to prevent.
 
-     tests/unit/aura-token.test.ts pins this value and both consumers. */
+     tests/unit/aura-token.test.ts pins this value and the consumer census. */
   --shadow-aura: 0 8px 22px
     color-mix(in srgb, var(--accent-decorative) 40%, transparent);
 }

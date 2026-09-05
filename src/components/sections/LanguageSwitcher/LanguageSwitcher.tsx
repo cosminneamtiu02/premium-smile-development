@@ -65,9 +65,10 @@ import { useLanguageOptions } from './useLanguageOptions';
 // requirement the moment a page has more than one.
 //
 // ── WHY THE <nav>, NOT THE ATOM'S ROOT, CARRIES `className`. The host's string
-// is placement (`fixed … left-4 z-40`) plus two CSS variables, and placement
-// belongs to the OUTERMOST box this section renders. `--disc-size` and
-// `--stem-inset` are CUSTOM PROPERTIES, so they inherit down the tree like a
+// is placement (`fixed … left-4 z-40`) plus the atom's CSS variables, and
+// placement belongs to the OUTERMOST box this section renders. `--disc-size`,
+// `--stem-inset` and `--bulb-shadow` (the corner's aura feed, 2026-09-05) are
+// CUSTOM PROPERTIES, so they inherit down the tree like a
 // font: the atom reads them off the <nav> exactly as it used to read them off
 // its own root, and not a pixel of the dial moves. The `inline-flex` below is
 // not decoration either — a bare <nav> is a BLOCK box, and an inline-level
@@ -100,12 +101,13 @@ export interface LanguageSwitcherProps {
    */
   direction?: SpeedDialDirection;
   /**
-   * Placement plus the two public CSS variables the atom exposes — the
-   * `--disc-size` steps (D16 · F2: both corners scale from one number) and
-   * `--stem-inset` (how much of the viewport the extreme-zoom cap must leave
-   * alone). Merged onto this section's OUTERMOST box, the <nav> landmark, from
-   * where both variables inherit into the dial; never used to restyle an
-   * atom's internals (§6.8), and the section owns no margins of its own (§6.4).
+   * Placement plus the atom's three public CSS variables — the `--disc-size`
+   * steps (D16 · F2: both corners scale from one number), `--stem-inset` (how
+   * much of the viewport the extreme-zoom cap must leave alone) and
+   * `--bulb-shadow` (the corner's static aura feed, owner 2026-09-05). Merged
+   * onto this section's OUTERMOST box, the <nav> landmark, from where the
+   * variables inherit into the dial; never used to restyle an atom's
+   * internals (§6.8), and the section owns no margins of its own (§6.4).
    */
   className?: string;
 }

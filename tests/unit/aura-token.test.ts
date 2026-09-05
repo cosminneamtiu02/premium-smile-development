@@ -14,12 +14,13 @@ import { describe, expect, it } from 'vitest';
 // buried in a 22px blur — while §15.1's still-open "confirm the purple hue
 // against the real logo" silently stops reaching the bar. The board bought that
 // automatic re-tint by mixing from --accent-decorative (D2); this test is what
-// keeps it bought. Second half: both consumers must actually wear the utility,
-// because a token nobody names is invisible in every direction.
+// keeps it bought. Second half: every consumer must actually wear its expected
+// count of the utility, because a token nobody names is invisible in every
+// direction.
 //
 // COMMENTS ARE STRIPPED FIRST, and that is the point — the lesson
 // tests/unit/backdrop-token-layer.test.ts records for the ::backdrop entry,
-// inherited verbatim. All three files under guard EXPLAIN the aura in prose
+// inherited verbatim. Every file under guard EXPLAINS the aura in prose
 // containing the very strings matched below, so a matcher over raw text stays
 // green long after someone deletes the declaration or the class. A guard that
 // cannot fail is not a guard; the negative case in the second `it` proves this
@@ -74,13 +75,29 @@ const AURA_UTILITY = 'shadow-aura';
 
 const globals = code(read('../../src/styles/globals.css'));
 
-/** The pill and the panel: the token's only two consumers on day one (board
- * §4 — "identical mechanics, second consumer → extract"). */
+/** Every wearer, with its EXPECTED post-strip count of the utility's name.
+ * Day one was the pill + the panel (board §4 — "identical mechanics, second
+ * consumer → extract"); the fixed corner joined on the owner's 2026-09-05
+ * "implement that aura on the buttons for calling and whatsapp and for the
+ * language switcher" — FloatingActions counts THREE: `shadow-aura` on each of
+ * the two GlyphButton discs, plus `var(--shadow-aura)` feeding the dial bulb's
+ * `--bulb-shadow` knob (the substring counts, which is the point — the feed
+ * line is a wear). */
 const CONSUMERS = [
-  ['Header.tsx (the pill)', '../../src/components/sections/Header/Header.tsx'],
+  [
+    'Header.tsx (the pill)',
+    '../../src/components/sections/Header/Header.tsx',
+    1,
+  ],
   [
     'NavMenu.tsx (the panel)',
     '../../src/components/sections/Header/NavMenu.tsx',
+    1,
+  ],
+  [
+    'FloatingActions.tsx (the fixed corner: call + WhatsApp discs, dial feed)',
+    '../../src/components/sections/FloatingActions/FloatingActions.tsx',
+    3,
   ],
 ] as const;
 
@@ -106,22 +123,41 @@ describe('the aura token (header-aura board, fb-359)', () => {
     expect(without).not.toContain('--shadow-aura:');
   });
 
-  it('is worn by BOTH consumers — the pill and the panel (D4)', () => {
-    for (const [name, path] of CONSUMERS) {
+  it('is worn by EVERY consumer, each exactly its expected number of times', () => {
+    for (const [name, path, count] of CONSUMERS) {
       const stripped = code(read(path));
       expect(stripped, `${name}: the stripper ate the code`).toContain(
         'className=',
       );
-      // EXACTLY once (G2 fold): each consumer names the utility twice in the
-      // raw file — once in its decision-record comment, once in the class
-      // list — so a count of 1 proves the stripper removed the prose mention
-      // AND the class is worn, in one assertion that can actually fail in
-      // both directions (0 = class dropped; 2 = stripper broke, or a second
-      // wear this file's one-root design does not expect).
+      // EXACT count (G2 fold, extended for the corner): each consumer also
+      // names the utility in its decision-record comments, so matching the
+      // expected count proves the stripper removed the prose mentions AND the
+      // class/feed is worn, in one assertion that can fail in both directions
+      // (low = a wear dropped; high = the stripper broke, or a wear this
+      // file's census does not expect — update CONSUMERS deliberately).
       expect(
         stripped.split(AURA_UTILITY).length - 1,
-        `${name}: wears ${AURA_UTILITY} exactly once outside prose`,
-      ).toBe(1);
+        `${name}: wears ${AURA_UTILITY} exactly ${count}× outside prose`,
+      ).toBe(count);
     }
+  });
+
+  it('reaches the dial bulb through its --bulb-shadow knob, atom kept token-agnostic', () => {
+    // The dial's aura cannot ride className: LanguageSwitcher parks the host
+    // string on its <nav>, and SpeedDial's own className lands on the ROOT
+    // WRAPPER — a square box around a round bulb, so a shadow there would
+    // glow a rectangle. The atom instead exposes a third public CSS variable
+    // (--bulb-shadow, the --disc-size/--stem-inset idiom) with an invisible
+    // fallback, and the SECTION feeds it the aura — inheritance carries the
+    // custom property from the corner const down to the bulb. Two pins:
+    // the hook exists in the atom, and the atom itself never names the
+    // TOKEN — dressing decisions stay in sections (§6.1/§8.1 spirit).
+    const dial = code(read('../../src/components/ui/SpeedDial/SpeedDial.tsx'));
+    expect(dial).toContain('var(--bulb-shadow');
+    expect(dial).not.toContain(AURA_UTILITY);
+    const corner = code(
+      read('../../src/components/sections/FloatingActions/FloatingActions.tsx'),
+    );
+    expect(corner).toContain('[--bulb-shadow:var(--shadow-aura)]');
   });
 });

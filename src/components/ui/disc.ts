@@ -29,8 +29,12 @@
  *
  * What is deliberately NOT in here: the `transition-[…]` PROPERTY LIST. Each
  * atom names its own — GlyphButton fades exactly background-color and color
- * (its border must not move), SpeedDial adds border-color and box-shadow for
- * the creep. A shared list would drag one atom's animation into the other.
+ * (its border must not move), and SpeedDial's list is the same pair since the
+ * owner reversed D5's border-color + box-shadow creep (2026-08-27). box-shadow
+ * therefore sits in NO disc transition list, which is what keeps the corner's
+ * static --bulb-shadow aura frozen through every hover (SpeedDial.test.tsx's
+ * shadow fence argues the full case). A shared list would still be wrong: it
+ * would drag one atom's animation into the other.
  */
 export const discBase =
   'inline-flex shrink-0 items-center justify-center ' +

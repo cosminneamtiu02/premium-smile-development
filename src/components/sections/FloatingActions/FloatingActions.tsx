@@ -163,6 +163,25 @@ const discSteps =
 // if they sit on the same line.
 const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
 
+// ── THE AURA ON THE CORNER (owner, 2026-09-05: "implement that aura on the
+// buttons for calling and whatsapp and for the language switcher, so all
+// items on fixed hover overlay"). Every PERMANENT resident of this fixed
+// layer wears the Header pill's `shadow-aura` (globals.css tells the token's
+// whole story), by two routes that are really one decision:
+//   · the two GlyphButton discs take the utility straight through their
+//     className merge (§6.8 — it lands on the round <a> itself, so the glow
+//     follows the circle);
+//   · the dial takes it through ui/SpeedDial's `--bulb-shadow` public
+//     variable — className would MISS the bulb, because the host string parks
+//     on the switcher's <nav> and the atom's root is a square box around a
+//     round bulb. The custom property inherits from the corner const down to
+//     the circle; the atom's fallback is invisible, so every other SpeedDial
+//     stays exactly as it was.
+// The transient stem discs are deliberately NOT dressed: five simultaneous
+// glows read as noise, and one glow per resident control is this corner's
+// whole depth budget. Reopen only on the owner's word.
+// tests/unit/aura-token.test.ts pins the census: three wears in this file.
+
 // THE LANGUAGE CORNER. `direction="up"` is passed as a prop, not a class: at
 // 320px a `right` stem would run straight into the call CTA (D6).
 //
@@ -188,12 +207,13 @@ const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
 // for a bar that grew only on desktop, and it went out with that step.
 const languageCorner =
   `fixed ${cornerBottom} left-4 z-40 ${discSteps} ` +
-  '[--stem-inset:calc(7rem+env(safe-area-inset-bottom))]';
+  '[--stem-inset:calc(7rem+env(safe-area-inset-bottom))] ' +
+  '[--bulb-shadow:var(--shadow-aura)]';
 
 // THE CALL CORNER — the same bottom edge, the same size steps. GlyphButton's
 // `lg` box reads --disc-size through ui/disc.ts and its glyph follows at half
 // the box, so the phone icon does not stay small inside a bigger disc.
-const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps}`;
+const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps} shadow-aura`;
 
 // THE WHATSAPP DISC — the call corner's exact mirror, one disc higher (fb-353).
 // The offset is written in the disc's OWN variable rather than in a pixel
@@ -207,7 +227,7 @@ const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps}`;
 // leave to it.)
 const whatsappCorner =
   'fixed bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--disc-size)+0.5rem)] ' +
-  `right-4 z-40 ${discSteps}`;
+  `right-4 z-40 ${discSteps} shadow-aura`;
 
 export function FloatingActions(): ReactElement {
   const t = useTranslations('common');

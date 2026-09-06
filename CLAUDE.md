@@ -570,6 +570,20 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     control build pair), the 15 home-page files differ only in RSC flight row ORDER —
     row-sets, script-stripped DOM bytes and byte-lengths all PROVEN equal across all five
     locales; root redirect byte-identical.
+17. **Phase-4 content authorship — DECIDED 2026-09-06 (owner):** the Phase-4 content run
+    (PR #81, one growing PR, stages S1–S7) was halted mid-S4 (owner "ok stop") and the PR
+    **closed unmerged** — **the owner authors all page content personally**; Claude ships
+    machinery only, each piece on an explicit dispatch (§15.7/§17.6 unchanged). Nothing
+    from the run is on develop. Branch `feat/phase4-content` stays as the archive
+    (S1 seo.ts pt 1 `cc749de` — pure machinery, cherry-pickable · S2 Home `f7eec73` ·
+    S3 Services `13408db`; every commit gate-green at its seal). The standing SEO plan +
+    salvage record — part-1 design recap, part-2 sitemap/robots plan, per-page metadata
+    wiring recipe, content rules (CMSR, D-DASH), TODO(owner) gates, absorbed follow-ups —
+    lives in **PHASE4_SEO_PLAN.md** (root); the full run ledger stays machine-local in the
+    main checkout's `.claude/plans/phase4-content-ledger.md`. §14's content model remains
+    the target; only WHO writes the content changed. No archived code lands without the
+    owner's word — the recorded first candidate is the S1 cherry-pick plus the
+    `next typegen && tsc` typecheck hardening (#83's flagged-not-taken item).
 
 ## 16. Build-time vs runtime contract
 

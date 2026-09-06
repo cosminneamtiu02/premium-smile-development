@@ -657,6 +657,13 @@ describe('Shell — the skip-link (mount-contract box 9, Q1)', () => {
     // say nothing about whether the shell actually ships it.
     expect(layoutSource).toContain(`className="${BODY_LAYOUT}"`);
     expect(layoutSource).toContain(`className="${MAIN_GROW}"`);
+    // The §10.2 JSON-LD mount rides the guard too (S1, phase4-content — G2
+    // react MEDIUM): the script is the fifth piece of shell-inline markup, and
+    // shellChildren() FILTERS script elements, so no rendered assertion in this
+    // suite would notice a rebase dropping it. The builders are exhaustively
+    // unit-tested (tests/unit/seo.test.ts); this line pins only that the shell
+    // actually calls them.
+    expect(layoutSource).toContain('serializeJsonLd(dentistJsonLd())');
   });
 
   it('is clipped at rest and a real, visible box while focused (the in-flow reveal)', () => {

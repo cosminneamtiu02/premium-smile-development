@@ -14,6 +14,7 @@ import {
 import { mono, serif } from '@/fonts';
 import { locales, type Locale } from '@/i18n/locales';
 import { routing } from '@/i18n/routing';
+import { dentistJsonLd, serializeJsonLd } from '@/lib/seo';
 import '@/styles/globals.css';
 
 // THE SHELL (brief §5): locale dictates the shell, the sub-route the content.
@@ -122,6 +123,22 @@ export default async function LocaleLayout({ children, params }: Props) {
           here: a flex container establishes a new formatting context, and §6.4
           bans outer margins on sections anyway. */}
       <body className="flex min-h-dvh flex-col bg-page font-body text-ink">
+        {/* THE §10.2 DENTIST JSON-LD — on every page, because the SHELL is on
+            every page: one mount, zero per-page wiring (D-S1-1, phase4-content
+            ledger). It sits in <body> because the Metadata API owns <head> and
+            has no structured-data field; crawlers accept JSON-LD in either.
+            A <script> renders no box and takes no focus, so the body-siblings
+            freeze contract is untouched — shell.test.tsx's shellChildren()
+            filters script elements out by that exact rule, alongside Next's
+            own bootstrap tags. serializeJsonLd escapes `<`, so the payload
+            cannot end the element early; the values are clinic.ts constants
+            (§10.1 — the same ones the Footer prints for crawlers). */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(dentistJsonLd()),
+          }}
+        />
         {/* NEITHER PROVIDER RENDERS A DOM ELEMENT — which is the only reason
             wrapping the whole document in them is legal here. NavMenu's page
             freeze applies `inert` to <body>'s OTHER children, so it freezes

@@ -11,7 +11,7 @@ import type { SpeedDialOption } from '@/components/ui/SpeedDial/SpeedDial';
 import { localeHref } from '@/i18n/href';
 import { locales, type Locale, nativeNames } from '@/i18n/locales';
 import { usePathname } from '@/i18n/navigation';
-import { equivalentPath } from '@/lib/routes';
+import { equivalentPath } from '@/lib/routes/routes';
 
 // sections/LanguageSwitcher — the hook that turns the locale manifest into the
 // five discs of the dial: each one already knowing what it prints, what it is
@@ -87,7 +87,7 @@ const FLAG_ART: Record<Locale, ReactElement> = {
  * `locale` comes back beside them because both callers need it and asking
  * next-intl twice for the same fact invites the two answers to be compared.
  * It is a plain `string`, which is what useLocale() hands back under the
- * default config — the src/lib/routes.ts and src/i18n/href.ts precedent: the
+ * default config — the src/lib/routes/routes.ts and src/i18n/href.ts precedent: the
  * Locale union does its work on the DATA side (locales, nativeNames), where a
  * rename must not go unnoticed.
  *
@@ -102,7 +102,7 @@ export function useLanguageOptions(): {
 } {
   const locale = useLocale();
   // Locale-STRIPPED ('/ro/services/' → '/services/'), which is the shape both
-  // halves below need: equivalentPath compares it against lib/routes.ts' rows,
+  // halves below need: equivalentPath compares it against lib/routes/routes.ts' rows,
   // and localeHref puts a — possibly different — prefix back on.
   const pathname = usePathname();
 

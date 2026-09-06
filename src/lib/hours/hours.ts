@@ -1,4 +1,4 @@
-import type { ClinicInfo, SchemaDay } from './clinic';
+import type { ClinicInfo, SchemaDay } from '../clinic/clinic';
 
 // lib/hours — the opening-hours FORMATTER: schema.org day arrays in, printable
 // rows out. Pure data work, no React and no 'use client', so the Footer's
@@ -80,7 +80,7 @@ function weekdayName(index: number, locale: string): string {
  * place — never reordered, never grouped, never dropped (an empty schedule is
  * seven closed rows, not silence).
  *
- * @param hours       the schema.org entries from lib/clinic.ts — the single
+ * @param hours       the schema.org entries from lib/clinic/clinic.ts — the single
  *                    source of NAP (§10.1). Entries may overlap days; the last
  *                    one wins, exactly as a later correction should.
  * @param locale      BCP-47 tag for Intl — decides the weekday words.

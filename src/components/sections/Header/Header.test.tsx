@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { userEvent as browserUser } from 'vitest/browser';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import type { Locale } from '@/i18n/locales';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
@@ -16,7 +16,7 @@ import { Header } from './Header';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
-// user-facing string comes from the REAL message files or lib/clinic.ts —
+// user-facing string comes from the REAL message files or lib/clinic/clinic.ts —
 // never a literal typed in here (§17.4). A renamed or dropped key then fails
 // HERE as well as in the translation-parity gate, instead of silently
 // rendering the dotted key path (which is what next-intl does for a miss).
@@ -867,7 +867,7 @@ describe('Header — the brand and the two Contact links', () => {
     // SUMMON the panel that holds it. So this proves (a) two distinct openers,
     // neither of them a link any more, and (b) that what they open still dials
     // the single-source number — §10.1's whole point, just read from
-    // lib/clinic.ts inside the dialog instead of from the bar.
+    // lib/clinic/clinic.ts inside the dialog instead of from the bar.
     const user = userEvent.setup();
     const { burger, panel, barCta, dialog, messages } = mount();
 

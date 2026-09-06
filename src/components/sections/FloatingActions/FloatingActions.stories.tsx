@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor } from 'storybook/test';
 import { nativeNames } from '@/i18n/locales';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { FloatingActions } from './FloatingActions';

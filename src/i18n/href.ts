@@ -12,8 +12,8 @@
 // module instead of three habits. A URL rule changes HERE and nowhere else.
 //
 // ── WHY HERE, IN src/i18n/, AND NOT IN src/lib/ (org review, 2026-08-24).
-// The repo's only "where does a builder go" precedent is lib/hours.ts, which
-// sits beside clinic.ts because it formats clinic.hours; this module formats a
+// The repo's only "where does a builder go" precedent is lib/hours/hours.ts, which
+// sits beside clinic/ because it formats clinic.hours; this module formats a
 // LOCALE into a URL, so it sits beside locales.ts. It is also the other half of
 // ./navigation.ts — "where does this go" against "where am I", and since D9
 // both halves are spelled here (stripLocale below), so ./routing.ts's
@@ -27,7 +27,7 @@
 // flips, this function and tests/unit/href.test.ts flip in the same commit.
 //
 // `locale: string` and not the Locale union, deliberately: useLocale() hands
-// back a plain string, and lib/routes.ts already made this exact call for
+// back a plain string, and lib/routes/routes.ts already made this exact call for
 // primaryRoutes(locale: string) — the union does its work on the DATA side,
 // where a rename must not go unnoticed. The PATH is typed the other way round:
 // `/${string}` costs nothing at runtime and refuses 'services' at compile time,

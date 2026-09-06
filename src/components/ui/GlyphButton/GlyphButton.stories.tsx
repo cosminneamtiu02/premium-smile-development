@@ -20,7 +20,7 @@ import {
 // exception is the burger below: a deliberately BESPOKE inline svg — the
 // Header replaces it with the animated morph control (BurgerToggle).
 // Hrefs are placeholders: the real phone number and profile URLs arrive from
-// lib/clinic.ts, the single source of NAP (§10.1), when sections get built.
+// lib/clinic/clinic.ts, the single source of NAP (§10.1), when sections get built.
 
 const meta = {
   title: 'UI/GlyphButton',

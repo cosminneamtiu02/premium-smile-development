@@ -78,7 +78,7 @@ release gate runs the visual suite against a real Storybook.)
       `ecc:skill-health` (moved here per flow-audit F15).
 - [ ] Translation-parity test: all five `messages/*.json` share one identical key set
       (Vitest).
-- [ ] `lib/clinic.ts` created with placeholder NAP values, typed and exported.
+- [ ] `lib/clinic/clinic.ts` created with placeholder NAP values, typed and exported.
 - [ ] **Resolve the image-optimizer parked decision now** (ask the owner per brief §15), then
       build `ui/Image` as the very first component.
 

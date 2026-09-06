@@ -27,7 +27,7 @@ gate-green at its seal (machine gates, two Fable reviews each, visual net, Light
 
 | Commit | Stage | Contents | Content or machinery? |
 | --- | --- | --- | --- |
-| `cc749de` | S1 | `lib/seo.ts` (Dentist JSON-LD builder + metadata/hreflang helpers, 191 lines) + `tests/unit/seo.test.ts` (198 lines) + the JSON-LD mount in `[locale]/layout.tsx` + shell-test pin | **Pure machinery — zero content.** `git cherry-pick cc749de` is expected to apply near-clean onto develop whenever the owner wants it. |
+| `cc749de` | S1 | `lib/seo.ts` (Dentist JSON-LD builder + metadata/hreflang helpers, 191 lines) + `tests/unit/seo.test.ts` (198 lines) + the JSON-LD mount in `[locale]/layout.tsx` + shell-test pin | **Pure machinery — zero content.** `git cherry-pick cc749de` is expected to apply near-clean onto develop whenever the owner wants it. *(Lib-foldering rider, 2026-09-06: the pick lands the since-retired FLAT `src/lib/seo.ts` — follow with `git mv` into `src/lib/seo/seo.ts` and respell its importers to `@/lib/seo/seo` in the same motion, per the §4 folder convention.)* |
 | `f7eec73` | S2 | Home page (Hero · ServicesTeaser · CTABanner), 20 keys × 5 locales (provisional), `lib/services.ts` price data, the `next typegen` typecheck fix, 24 visual baselines | Content, except two machinery nuggets: the typecheck fix (§5 below) and `lib/services.ts`'s data-vs-copy split (D-S2-6). Reference only. |
 | `13408db` | S3 | Services page + `sections/ServiceCard` + `servicesJsonLd` (ItemList/Service) + D-DASH string sweep + 34 baselines | Mostly content; `servicesJsonLd` inside it is machinery and extractable. |
 
@@ -54,7 +54,7 @@ tags telling search engines "this same page exists in these languages"; canonica
 page's one official URL, so indexed duplicates don't split ranking.)
 
 - **`dentistJsonLd()`** — the schema.org **`Dentist`** object (the specific type, §10.2),
-  typed by `schema-dts` so a typo is a compile error, fed **only** from `lib/clinic.ts`
+  typed by `schema-dts` so a typo is a compile error, fed **only** from `lib/clinic/clinic.ts`
   (§10.1: one NAP source feeds Footer, ContactModal AND JSON-LD — consistency by
   construction). schema-dts quirk, found and solved: `Dentist = DentistLeaf | string`, so
   the builder returns `WithContext<Exclude<Dentist, string>>` to keep property access.
@@ -156,7 +156,7 @@ These bind the copy regardless of who writes it:
 
 | Item | What it unblocks |
 | --- | --- |
-| `lib/clinic.ts` real NAP (name, phone, WhatsApp, address, geo, hours, **url**) | `url` gates real canonicals, hreflang and JSON-LD `url`; the rest fills the Dentist object, Footer and ContactModal in one move (§10.1) |
+| `lib/clinic/clinic.ts` real NAP (name, phone, WhatsApp, address, geo, hours, **url**) | `url` gates real canonicals, hreflang and JSON-LD `url`; the rest fills the Dentist object, Footer and ContactModal in one move (§10.1) |
 | §15.6 logo → vectorized SVG → **favicon** + OG share image | favicon is the ONLY Lighthouse deduction; OG image + JSON-LD `image` fields un-omit |
 | og:locale confirmation | `en_GB` vs `en_US` (D-S1-6) |
 

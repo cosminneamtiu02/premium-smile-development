@@ -11,8 +11,8 @@ import type {
   SyntheticEvent,
 } from 'react';
 import { Close } from '@/assets/glyphs/Close';
-import { cx } from '@/lib/cx';
-import { lockScroll } from '@/lib/scroll-lock';
+import { cx } from '@/lib/cx/cx';
+import { lockScroll } from '@/lib/scroll-lock/scroll-lock';
 import { makeAttachRef } from '../attach-ref';
 import { GlyphButton } from '../GlyphButton/GlyphButton';
 

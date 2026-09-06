@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { ContactModalProvider } from './ContactModalProvider';
@@ -51,7 +51,7 @@ import { ContactModalTrigger } from './ContactModalTrigger';
 // Pseudo and every string in the panel must come out accented — untransformed
 // text there is a hardcoded string, i.e. a bug (§8.9). The two strings that
 // must NOT change are the phone number and its display format: they are data
-// from lib/clinic.ts (§10.1), not copy.
+// from lib/clinic/clinic.ts (§10.1), not copy.
 //
 // layout 'fullscreen' because the ground is a whole page and the dialog is a
 // top-layer element that answers to the viewport: Storybook's default 1rem
@@ -107,7 +107,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The weekday opening time exactly as lib/clinic.ts holds it — the value the
+ * The weekday opening time exactly as lib/clinic/clinic.ts holds it — the value the
  * hours caption interpolates. Read from the module, never typed out, so a
  * schedule edit moves the assertion with it (§10.1); the plays assert it is
  * non-empty first, or a missing row would make the check pass on nothing.
@@ -216,7 +216,7 @@ export const Default: Story = {
       canvas.queryByRole('heading', { name: ro.contact.or }),
     ).toBeNull();
     // The hours caption by its DATA, not by its sentence: the times come from
-    // lib/clinic.ts through ICU arguments, so this is what proves the
+    // lib/clinic/clinic.ts through ICU arguments, so this is what proves the
     // interpolation ran instead of printing „{weekOpens}".
     await expect(weekdayOpens).not.toBe('');
     await expect(dialog).toHaveTextContent(weekdayOpens);

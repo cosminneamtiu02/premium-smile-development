@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { localeHref } from '@/i18n/href';
 import { usePathname } from '@/i18n/navigation';
-import { matchesRoute, primaryRoutes } from '@/lib/routes';
+import { matchesRoute, primaryRoutes } from '@/lib/routes/routes';
 import type { NavRoute } from './NavItem';
 
 // sections/Header — the hook that turns the site's route list into the bar's
@@ -17,11 +17,11 @@ import type { NavRoute } from './NavItem';
 // (fb-64): shared non-component machinery sits in a flat sibling module named
 // for exactly what it exports.
 //
-// ── THE ROUTE LIST ITSELF NOW LIVES IN lib/routes.ts (Footer run, 2026-08-17).
+// ── THE ROUTE LIST ITSELF NOW LIVES IN lib/routes/routes.ts (Footer run, 2026-08-17).
 // The Footer renders the same four links, and it is a DIFFERENT section: had
 // the list stayed here, sections/Footer would have to import
 // sections/Header/useNavItems — a sideways dependency §4 does not allow
-// (app → sections → ui). So the pure data climbed to lib/, beside clinic.ts,
+// (app → sections → ui). So the pure data climbed to lib/, beside clinic/,
 // and this hook kept the two things that need the browser. Observable
 // behaviour is unchanged, deliberately: same order, same ro-only blog, same
 // aria-current.
@@ -33,7 +33,7 @@ import type { NavRoute } from './NavItem';
 // second consumer: to decide whether the page you are on exists in the language
 // you are picking, `equivalentPath` has to ask the very same question
 // (/blog/<slug> is under /blog, so it is Romanian-only too, §5). Rule of two,
-// same §4 direction as the list — the rule climbed to lib/routes.ts as
+// same §4 direction as the list — the rule climbed to lib/routes/routes.ts as
 // `matchesRoute` and this hook now calls it. The router did NOT climb with it:
 // comparing two paths was always pure, and asking "where am I?" is still
 // usePathname's job, right here. Zero pixels move; the Header's suites and
@@ -64,7 +64,7 @@ import type { NavRoute } from './NavItem';
  * localeHref's '/ro/services/'; what the ACTIVE rule compares is the
  * locale-less '/services', because @/i18n/navigation's usePathname hands back
  * the pathname with the locale prefix already stripped ('/ro/services/' →
- * '/services/'). lib/routes.ts' rows are the right shape for that comparison
+ * '/services/'). lib/routes/routes.ts' rows are the right shape for that comparison
  * and the wrong one for the anchor — hence `path` fed to matchesRoute in one
  * call and through localeHref in the other. No fallback is needed on the hook
  * any more: since D9 it is ours and it absorbs the no-router case itself,

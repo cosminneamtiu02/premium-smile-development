@@ -12,7 +12,7 @@ import { getTranslations } from 'next-intl/server';
 // through `useTranslations` and pins it (owner, 2026-09-06).
 //
 // ── DELIBERATE, INTERIM §5 DEVIATION, recorded so nobody reads it as a bug.
-// §5 says the blog is ROMANIAN ONLY, and lib/routes.ts already enforces that
+// §5 says the blog is ROMANIAN ONLY, and lib/routes/routes.ts already enforces that
 // where it is visible: `{ path: '/blog', key: 'nav.blog', locale: 'ro' }` keeps
 // the item out of the other four locales' nav, so only /ro/blog/ is ever
 // linked. This file, though, sits under [locale] and `output: 'export'`

@@ -20,7 +20,7 @@ import { Heading } from '@/components/ui/Heading/Heading';
 //
 // ── HOW A VISITOR GETS HERE. Not by clicking: nothing on the site links to it.
 // A static host answers an unknown URL with the single file out/404.html, and
-// that file — built by tools/generate-404.ts from src/lib/not-found-html.ts — is a
+// that file — built by tools/generate-404.ts from src/lib/not-found-html/not-found-html.ts — is a
 // DISPATCHER: it reads the dead URL's first path segment, then the §8.7
 // language cookie, then falls back to the default locale, and forwards here
 // instantly. The miss itself already returned HTTP 404, so no soft-404 is

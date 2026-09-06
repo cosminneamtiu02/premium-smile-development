@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef, ReactElement } from 'react';
 import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
 import { Heading } from '@/components/ui/Heading/Heading';
-import { cx } from '@/lib/cx';
+import { cx } from '@/lib/cx/cx';
 
 // sections/SectionHeading — the opener every content section starts with: the
 // mono kicker over the display title, 8px apart, aligned start or centre.

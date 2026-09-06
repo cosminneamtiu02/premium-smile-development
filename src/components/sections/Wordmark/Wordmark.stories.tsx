@@ -2,8 +2,8 @@ import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
 import { containerClasses } from '@/components/ui/Container/Container';
-import { clinic } from '@/lib/clinic';
-import { cx } from '@/lib/cx';
+import { clinic } from '@/lib/clinic/clinic';
+import { cx } from '@/lib/cx/cx';
 import { Wordmark } from './Wordmark';
 
 // The Wordmark's two stories — the component has ONE axis that can change its

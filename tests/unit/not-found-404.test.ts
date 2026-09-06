@@ -5,7 +5,7 @@ import {
   renderNotFoundHtml,
   type NotFoundBlock,
   type NotFoundLink,
-} from '../../src/lib/not-found-html';
+} from '../../src/lib/not-found-html/not-found-html';
 import { defaultLocale, locales, nativeNames } from '../../src/i18n/locales';
 
 // THE 404 DISPATCHER SUITE — the behavioural half of out/404.html, which since
@@ -35,7 +35,7 @@ import { defaultLocale, locales, nativeNames } from '../../src/i18n/locales';
 // itself and no source-scraping is needed.
 //
 // ── WHY IN tests/unit/: node only (`new Function`, no DOM). The DOM SHAPE of
-// the fallback body belongs to src/lib/not-found-html.test.ts.
+// the fallback body belongs to src/lib/not-found-html/not-found-html.test.ts.
 
 /** Fixture text — never the real messages: this file is about the SHAPE the
  *  builders emit, and the owner-authored strings (§8.10) are asserted where

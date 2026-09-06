@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
 import { containerClasses } from '@/components/ui/Container/Container';
-import { cx } from '@/lib/cx';
+import { cx } from '@/lib/cx/cx';
 import { HeaderNav } from './HeaderNav';
 import { NavMenu } from './NavMenu';
 

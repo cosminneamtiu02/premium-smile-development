@@ -1,12 +1,12 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { cx } from '@/lib/cx';
+import { cx } from '@/lib/cx/cx';
 
 // ui/Container — THE page gutter, and the only place it is spelled. Promoted
 // 2026-09-04 on the owner-approved board .claude/plans/container-gutter.plan.md
 // (fb-343, zero annotations) when the Footer's recorded rule-of-two promise
 // came due: two sections shared the clamp by copy, the first Phase-4 page band
 // is the THIRD consumer, and §15.15's SEQUENCING item (a) exists precisely so
-// that page lane never improvises a third copy (§4's N≥3 row, the lib/cx.ts
+// that page lane never improvises a third copy (§4's N≥3 row, the lib/cx/cx.ts
 // fb-307 precedent).
 //
 // ONE definition, TWO consumption modes — both live in this file:

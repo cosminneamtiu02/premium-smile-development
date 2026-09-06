@@ -9,8 +9,8 @@ import { Modal } from '@/components/ui/Modal/Modal';
 import { Text } from '@/components/ui/Text/Text';
 import { Phone } from '@/assets/glyphs/Phone';
 import { Whatsapp } from '@/assets/glyphs/Whatsapp';
-import { clinic } from '@/lib/clinic';
-import type { OpeningHours, SchemaDay } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
+import type { OpeningHours, SchemaDay } from '@/lib/clinic/clinic';
 import { useContactModal } from './useContactModal';
 
 // sections/ContactModal — the panel itself: the site's one conversion goal
@@ -180,7 +180,7 @@ import { useContactModal } from './useContactModal';
 //
 // ── §8: every visible string is either t() from the `contact` namespace —
 // which exists in all five message files, values authored by the owner — or
-// data from lib/clinic.ts (§10.1: the same phone number, WhatsApp number and
+// data from lib/clinic/clinic.ts (§10.1: the same phone number, WhatsApp number and
 // opening hours the Footer prints and the JSON-LD will publish). EIGHT keys
 // carry the dialog now: heading · callHeading · callHours · or ·
 // whatsappHeading · whatsapp · whatsappNote · close.
@@ -192,7 +192,7 @@ import { useContactModal } from './useContactModal';
 // The hours caption is the §10.5 amendment the owner made on 2026-09-04
 // (fb-349/350): the schedule returns to this panel, but as ONE interpolated
 // line — never the Footer's <dl> block a second time. The times come from
-// lib/clinic.ts and the day-name abbreviations from the translations, which is
+// lib/clinic/clinic.ts and the day-name abbreviations from the translations, which is
 // the only division that keeps five locales honest: „Lun–Vin" and „Mo.–Fr."
 // are copy, 09:00 and 19:00 are data.
 //
@@ -202,11 +202,11 @@ import { useContactModal } from './useContactModal';
 
 /**
  * The schedule row covering `day`, found BY DAY NAME rather than by index
- * (§10.1): lib/clinic.ts is free to REORDER its entries and this keeps
+ * (§10.1): lib/clinic/clinic.ts is free to REORDER its entries and this keeps
  * printing the right times, where a blind `hours[0]`/`hours[1]` would start
  * printing Saturday's as the weekday's the moment it does.
  *
- * Loud on a miss, in lib/hours.ts's idiom: a caption that reads „Sâm –" sends a
+ * Loud on a miss, in lib/hours/hours.ts's idiom: a caption that reads „Sâm –" sends a
  * visitor to a locked door, so a schedule this copy no longer fits fails the
  * build instead of shipping. The `callHours` message names both rows in all
  * five languages, so the copy and the data move together or not at all.
@@ -238,7 +238,7 @@ const saturdayHours = hoursCovering('Saturday');
 // row, showed the truth beside it. So the assumption is checked where it is
 // made, at module scope, and a re-split fails the build with the copy edit it
 // requires spelled out. ContactModal.test.tsx pins the same fact outside-in,
-// straight from lib/clinic.ts.
+// straight from lib/clinic/clinic.ts.
 const WEEKDAY_SPAN = [
   'Monday',
   'Tuesday',
@@ -434,7 +434,7 @@ export function ContactModal(): ReactElement {
               left and UNLABELLED — decorative, so the link's accessible name is
               exactly the visible number and SC 2.5.3 (Label in Name) holds by
               construction. E.164 in the href, the human format on screen: two
-              fields of lib/clinic.ts on purpose (§10.1). `size="lg"` is a
+              fields of lib/clinic/clinic.ts on purpose (§10.1). `size="lg"` is a
               3.5rem target, well past §9's 44px aim for the primary action, and
               `w-full` takes the rail's width so both controls match.
               `text-center` is the WhatsApp control's fix, carried here for

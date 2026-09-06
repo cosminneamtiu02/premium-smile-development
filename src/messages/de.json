@@ -26,6 +26,10 @@
         "dismiss": "Schließen"
       }
     },
+    "notFound": {
+      "title": "Diese Seite existiert nicht",
+      "message": "Die Adresse ist möglicherweise veraltet oder falsch geschrieben, oder die Seite wurde inzwischen verschoben."
+    },
     "brand": {
       "ariaLabel": "{name}, Startseite"
     },

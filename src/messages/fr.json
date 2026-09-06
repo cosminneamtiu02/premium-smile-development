@@ -26,6 +26,10 @@
         "dismiss": "Fermer"
       }
     },
+    "notFound": {
+      "title": "Cette page n'existe pas",
+      "message": "L'adresse est peut-être ancienne ou mal saisie, ou la page a été déplacée entre-temps."
+    },
     "brand": {
       "ariaLabel": "{name}, accueil"
     },

@@ -5,6 +5,9 @@ import { getTranslations } from 'next-intl/server';
 // Phase 3 work; this page only proves the locale shell end-to-end.
 // No `params` plumbing: the locale reaches next-intl through the [locale]
 // root param (src/i18n/request.ts, §15.16) — pages never thread it by hand.
+// KEEP-IN-SYNC with ./Home.stories.tsx: this file is an async Server Component
+// and cannot render in the browser runner, so the story twins its markup
+// through `useTranslations` and pins it (owner, 2026-09-06).
 
 export default async function HomePage() {
   const t = await getTranslations('home');

@@ -7,6 +7,9 @@ import { getTranslations } from 'next-intl/server';
 // primary route, and CI's link check caught the difference (PR #69 — 11 broken
 // internal links).
 // No new message keys: the <h1> reuses the nav label the bar already renders.
+// KEEP-IN-SYNC with ./Team.stories.tsx: this file is an async Server Component
+// and cannot render in the browser runner, so the story twins its markup
+// through `useTranslations` and pins it (owner, 2026-09-06).
 
 export default async function TeamPage() {
   const t = await getTranslations('common');

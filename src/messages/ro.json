@@ -26,6 +26,10 @@
         "dismiss": "Închide"
       }
     },
+    "notFound": {
+      "title": "Această pagină nu există",
+      "message": "Adresa poate fi veche sau scrisă greșit, ori pagina a fost mutată între timp."
+    },
     "brand": {
       "ariaLabel": "{name}, acasă"
     },

@@ -82,12 +82,12 @@ src/
   app/
     [locale]/            # ro | en | de | fr | it
       layout.tsx         # THE SHELL: <html lang>, message provider, Header, {children}, Footer
-      page.tsx           # Home content  → /ro
+      (home)/page.tsx    # Home content  → /ro (route group: folder only, URL-invisible; owner 2026-09-06)
       services/page.tsx  #               → /ro/services
       team/page.tsx      #               → /ro/team
       blog/page.tsx      # ro only       → /ro/blog
       blog/[slug]/page.tsx
-      not-found.tsx      # localized 404
+      404/page.tsx       # localized 404 → /ro/404 — real shell page ×5 (S6, §5; dispatcher = out/404.html)
     page.tsx             # root "/" → client-side locale redirect (see §5)
   lib/
     clinic.ts            # SINGLE SOURCE of NAP: name, address, phone, hours, geo, sameAs links
@@ -95,6 +95,7 @@ src/
     hours.ts             # schedule → printable rows (deterministic reference week)
     scroll-lock.ts       # THE page scroll freeze (React-free mechanics)
     cx.ts                # THE class-join helper — every tier imports it (fb-307 → PR #64)
+    not-found-html.ts    # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo.ts               # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
     locales.ts href.ts navigation.ts routing.ts request.ts   # manifest · URL rule · "where am I" · next-intl wiring
@@ -169,7 +170,15 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 - **Language switcher** navigates to the *equivalent path* under the target locale prefix and sets
   the language cookie — a full document load, like every other link (§15.13). Blog pages switch to
   the target locale's home (no equivalent exists).
-- Localized 404 per locale. Set `trailingSlash: true` for clean static hosting.
+- Localized 404 per locale — **DECIDED 2026-09-06 (S6 lane, owner):** five real
+  `/{locale}/404/` pages inside the shell (heading + message, the message
+  justified per §15.1's dated exception) plus ONE tool-emitted `out/404.html`
+  dispatcher (`tools/generate-404.ts` from `src/lib/not-found-html.ts`) — the
+  file a static host serves with real 404 status for every miss; its inline
+  script forwards instantly, URL first segment → language cookie → `ro`; no-JS
+  fallback = five lang'd blocks + a visible link list. Routing a miss to home
+  and timed redirects are BANNED as soft-404s. The five pages are noindex and
+  never enter the sitemap. Set `trailingSlash: true` for clean static hosting.
 - **Parked decision:** localized slugs (`/de/leistungen`). Default to shared English slugs for now;
   ask before launch — changing URLs later requires redirects.
 
@@ -362,6 +371,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    display text (≥ 3:1 contexts) and graphics only — the a11y addon polices misuse.
    **Only open sub-item:** confirm the purple hue against the real logo/signage when the
    owner supplies it. Until Phase 0 writes these values, provisional neutrals stand.
+   **Exception to the long-prose `text-align: start` lock (2026-09-06, S6 404 lane,
+   owner):** the 404 page's message paragraph ships `text-justify` as a per-element
+   override (§15.15 b canon) — confirmed by the owner after the SC 1.4.8 readability
+   caution was flagged; §15.14's site-wide `hyphens: auto` is the companion that keeps
+   justified German readable. Scope: that one paragraph (and its dispatcher-fallback
+   twins); everything else stays start-aligned.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer

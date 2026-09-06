@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next-image-export-optimizer && node tools/generate-root-redirect.ts",
+    "build": "next build && next-image-export-optimizer && node tools/generate-root-redirect.ts && node tools/generate-404.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -7,6 +7,9 @@ import { getTranslations } from 'next-intl/server';
 // links every primary route, and CI's link check caught the difference
 // (PR #69 — 11 broken internal links).
 // No new message keys: the <h1> reuses the nav label the bar already renders.
+// KEEP-IN-SYNC with ./Blog.stories.tsx: this file is an async Server Component
+// and cannot render in the browser runner, so the story twins its markup
+// through `useTranslations` and pins it (owner, 2026-09-06).
 //
 // ── DELIBERATE, INTERIM §5 DEVIATION, recorded so nobody reads it as a bug.
 // §5 says the blog is ROMANIAN ONLY, and lib/routes.ts already enforces that

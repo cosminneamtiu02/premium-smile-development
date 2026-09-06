@@ -56,7 +56,7 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 | @next/mdx | 16.x (16.3.4 — version-locked to next, §15.16) | Blog posts as MDX in `content/blog/`, Romanian only, compiled at build time | Official, zero-runtime, fully compatible with static export |
 | next-image-export-optimizer + sharp | 1.x (1.20.1) + 0.35.x (0.35.3) | Build-time WebP/AVIF `srcset` generation behind the single `ui/Image` wrapper | Fills the static-export gap (no runtime image optimizer on a static host). Named candidate — confirm at Phase 0 per §15 before the first photo |
 | next/font (local) — **Source Serif 4** (display + body) & **JetBrains Mono** (eyebrows/micro-labels) | OFL variable fonts, latest from google/fonts | Self-hosted, subset at build time with automatic fallback metrics; token names `--font-display` / `--font-body` / `--font-mono` (never `--font-sans`) | Closest verified match to the Publio logo lettering (see font_specimen.png); full five-language coverage incl. Ș ș Ț ț confirmed by cmap inspection; no font CDN (§12); Publio itself ships only inside the vectorized logo SVG |
-| schema-dts | 2.x (2.0.0) | TypeScript types for the `Dentist` JSON-LD builder in `lib/seo.ts` | Structured-data typos become compile errors instead of Rich Results Test failures |
+| schema-dts | 2.x (2.0.0) | TypeScript types for the `Dentist` JSON-LD builder in `lib/seo/seo.ts` | Structured-data typos become compile errors instead of Rich Results Test failures |
 | ~~Docker~~ *(amended 2026-07-31)* | — | **Not required on the development machine.** The pinned Playwright container remains the CI environment where the linux baseline set is generated (`visual-baseline.yml`) and compared (release gate) | Deterministic rendering per platform set; baselines never mix environments (§13) |
 
 **Standing configuration notes (unchanged decisions):**
@@ -89,14 +89,14 @@ src/
       blog/[slug]/page.tsx
       404/page.tsx       # localized 404 → /ro/404 — real shell page ×5 (S6, §5; dispatcher = out/404.html)
     page.tsx             # root "/" → client-side locale redirect (see §5)
-  lib/
-    clinic.ts            # SINGLE SOURCE of NAP: name, address, phone, hours, geo, sameAs links
-    routes.ts            # THE route list + matchesRoute/equivalentPath (one list, all consumers)
-    hours.ts             # schedule → printable rows (deterministic reference week)
-    scroll-lock.ts       # THE page scroll freeze (React-free mechanics)
-    cx.ts                # THE class-join helper — every tier imports it (fb-307 → PR #64)
-    not-found-html.ts    # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
-    seo.ts               # JSON-LD builder, metadata helpers, sitemap/hreflang generation
+  lib/                   # one folder per module, its test beside it (lib-foldering lane, 2026-09-06)
+    clinic/clinic.ts     # SINGLE SOURCE of NAP: name, address, phone, hours, geo, sameAs links
+    routes/routes.ts     # THE route list + matchesRoute/equivalentPath (one list, all consumers)
+    hours/hours.ts       # schedule → printable rows (deterministic reference week)
+    scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
+    cx/cx.ts             # THE class-join helper — every tier imports it (fb-307 → PR #64)
+    not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
+    seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
     locales.ts href.ts navigation.ts routing.ts request.ts   # manifest · URL rule · "where am I" · next-intl wiring
   assets/glyphs/         # whole-svg NOUN components + hand-maintained registry (README = folder law)
@@ -175,7 +175,7 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 - Localized 404 per locale — **DECIDED 2026-09-06 (S6 lane, owner):** five real
   `/{locale}/404/` pages inside the shell (heading + message, the message
   justified per §15.1's dated exception) plus ONE tool-emitted `out/404.html`
-  dispatcher (`tools/generate-404.ts` from `src/lib/not-found-html.ts`) — the
+  dispatcher (`tools/generate-404.ts` from `src/lib/not-found-html/not-found-html.ts`) — the
   file a static host serves with real 404 status for every miss; its inline
   script forwards instantly, URL first segment → language cookie → `ro`; no-JS
   fallback = five lang'd blocks + a visible link list. Routing a miss to home
@@ -273,7 +273,7 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 
 Marketing (Google Business Profile, reviews, directories) is the owner's job. The site's job:
 
-1. **`lib/clinic.ts` is the single source of NAP** (name, address, phone, hours, geo, sameAs).
+1. **`lib/clinic/clinic.ts` is the single source of NAP** (name, address, phone, hours, geo, sameAs).
    It feeds the Footer, the ContactModal, **and** the JSON-LD — consistency by construction.
 2. **JSON-LD on every page:** schema.org type **`Dentist`** (the specific type, not generic
    LocalBusiness) with name, address, geo, telephone, openingHoursSpecification, url, image,

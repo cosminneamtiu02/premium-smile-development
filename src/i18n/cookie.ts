@@ -4,7 +4,7 @@
 // the site that could ever set it; sections/LanguageBanner is the second
 // consumer (its accept link and its dismiss button both write it, D2), so the
 // MECHANICS move to the nearest tier both may import and the POLICY stays where
-// it was (§4 sharing table, row 1 — the `ui/slot.ts` / `lib/routes.ts` shape).
+// it was (§4 sharing table, row 1 — the `ui/slot.ts` / `lib/routes/routes.ts` shape).
 //
 // What moved and what did not, precisely:
 //   · MOVED: the attribute string. `path=/` so the choice counts on every page,
@@ -22,7 +22,7 @@
 // ── WHY HERE, IN src/i18n/, AND NOT src/lib/. It interpolates LOCALE_COOKIE
 // from ./locales, the locale manifest, and writing the language choice IS
 // locale work — the same argument href.ts makes for living beside the data it
-// shapes. lib/cx.ts' two-question home test agrees from the other side: this
+// shapes. lib/cx/cx.ts' two-question home test agrees from the other side: this
 // neither imports React nor encodes an atom's look, so lib/ would take it — but
 // i18n/ is where its one datum lives, and the ring's modules are importable
 // from every tier either way (§4).
@@ -31,7 +31,7 @@
 // here hooks, renders or holds state, and `document` is simply the thing it
 // writes to. Islandness belongs to the IMPORTER — sections/LanguageSwitcher and
 // sections/LanguageBanner each carry their own directive — which is exactly the
-// shape lib/scroll-lock.ts already ships.
+// shape lib/scroll-lock/scroll-lock.ts already ships.
 //
 // ── THE READER IS STILL SOMEWHERE ELSE, and stays there: the inline script
 // tools/generate-root-redirect.ts emits into out/index.html interpolates the

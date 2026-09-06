@@ -11,7 +11,7 @@ import { createPortal, flushSync } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
-import { lockScroll } from '@/lib/scroll-lock';
+import { lockScroll } from '@/lib/scroll-lock/scroll-lock';
 import { BurgerToggle } from './BurgerToggle';
 import { NavItem } from './NavItem';
 import { useNavItems } from './useNavItems';
@@ -424,7 +424,7 @@ export function NavMenu(): ReactElement {
   // ── THE SCROLL-LOCK IS THE OTHER HALF of "the page cannot be scrolled"
   // (fb-154), and it is no longer written out here. This block used to carry
   // the promise "when ContactModal needs the same, this becomes a shared helper
-  // (rule of two)"; that helper shipped on 2026-08-26 as lib/scroll-lock.ts
+  // (rule of two)"; that helper shipped on 2026-08-26 as lib/scroll-lock/scroll-lock.ts
   // (Modal contract board D7 → A) and names this file as the second consumer
   // due to adopt it. THIS IS THAT ADOPTION — the promise is kept, so the three
   // hand-written lines do not come back.

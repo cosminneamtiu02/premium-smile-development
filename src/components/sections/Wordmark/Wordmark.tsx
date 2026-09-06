@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Heading } from '@/components/ui/Heading/Heading';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 
 // sections/Wordmark — the clinic's brand corner as ONE component: the artwork
 // and the name, one gap apart. Built to the owner-approved N2 composition contract
@@ -223,7 +223,7 @@ export function Wordmark({
           title" and never "which element is it": the host is a <span>, an
           inline generic that claims no outline slot — a mark repeated in the
           shell of every route must not (the Header's C2 rule, the Footer's
-          brand row already following it). The text is DATA from lib/clinic.ts
+          brand row already following it). The text is DATA from lib/clinic/clinic.ts
           (§10.1), never a message key, so a rename is one edit. */}
       <Heading asChild>
         <span>{clinic.name}</span>

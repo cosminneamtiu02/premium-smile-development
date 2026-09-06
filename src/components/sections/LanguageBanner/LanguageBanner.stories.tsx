@@ -159,7 +159,7 @@ export const Default: Story = {
     strings: de.common.language.banner,
     // A finished href, spelled out rather than built here: what the wrapper
     // hands over is a string, and localeHref/equivalentPath are pinned by
-    // LanguageBanner.test.tsx and lib/routes.test.ts.
+    // LanguageBanner.test.tsx and lib/routes/routes.test.ts.
     href: '/de/services/',
   },
   play: async ({ canvas }) => {

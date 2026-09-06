@@ -8,7 +8,7 @@ import { localeHref } from '@/i18n/href';
 import { LOCALE_COOKIE, type Locale } from '@/i18n/locales';
 import { matchLocale } from '@/i18n/match';
 import { usePathname } from '@/i18n/navigation';
-import { equivalentPath } from '@/lib/routes';
+import { equivalentPath } from '@/lib/routes/routes';
 
 // sections/LanguageBanner — the §8.6 suggestion banner: "this page also exists
 // in the language you read", offered once, in that language, over the bottom of
@@ -279,7 +279,7 @@ export function LanguageBanner({
 }: LanguageBannerProps): ReactElement | null {
   const pageLocale = useLocale();
   // Locale-STRIPPED ('/ro/blog/' → '/blog/'), which is the shape equivalentPath
-  // compares against lib/routes.ts' rows — the useLanguageOptions precedent.
+  // compares against lib/routes/routes.ts' rows — the useLanguageOptions precedent.
   const pathname = usePathname();
   // `null` = show nothing, and it is BOTH the undecided and the decided-hidden
   // state on purpose: the two render identically, and one variable that cannot

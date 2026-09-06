@@ -302,7 +302,7 @@ describe('SectionHeading — zero islands, two imports', () => {
     expect(specifiers).toEqual([
       '@/components/ui/Eyebrow/Eyebrow',
       '@/components/ui/Heading/Heading',
-      '@/lib/cx',
+      '@/lib/cx/cx',
       'react',
     ]);
     // lib/cx joined the list when the cx-to-lib lane (org-review F2,

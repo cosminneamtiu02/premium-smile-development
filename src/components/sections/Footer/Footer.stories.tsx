@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { Footer } from './Footer';
@@ -34,7 +34,7 @@ import { Footer } from './Footer';
 // Pseudo and every string in the band must come out accented — untransformed
 // text there is a hardcoded string, i.e. a bug (§8.9). The two strings that
 // must NOT change are the clinic name and the address: they are data from
-// lib/clinic.ts (§10.1), not copy.
+// lib/clinic/clinic.ts (§10.1), not copy.
 //
 // layout 'fullscreen' because the band is full-bleed and owns its own gutter
 // clamp: Storybook's default 1rem padding would add a second inset on top of it
@@ -244,7 +244,7 @@ export const GermanStress: Story = {
  *
  * The blog is Romanian-only, so `/de/blog` is never generated and must never be
  * offered. Three links in the site-map column here, four in the Romanian ones —
- * and the difference comes from lib/routes.ts, the same module the Header's row
+ * and the difference comes from lib/routes/routes.ts, the same module the Header's row
  * and panel filter, so this story fails the moment the two disagree.
  */
 export const NonRomanianLocale: Story = {

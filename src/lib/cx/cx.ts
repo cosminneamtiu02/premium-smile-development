@@ -1,4 +1,4 @@
-// lib/cx.ts — THE class-join helper, moved to the foundation ring so every
+// lib/cx/cx.ts — THE class-join helper, moved to the foundation ring so every
 // tier may import it (cx-to-lib lane, org-review F2 decision a′, 2026-09-02).
 // History: promoted into ui/ on owner order fb-307 (2026-09-01: the G2
 // advisory on the Eyebrow lane counted 3 private copies, a full grep found

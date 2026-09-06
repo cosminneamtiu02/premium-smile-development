@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
-import { cx } from '@/lib/cx';
+import { cx } from '@/lib/cx/cx';
 import { slotClone } from '../slot';
 
 // ui/Heading — the display-type step, with the ELEMENT left entirely to the

@@ -15,7 +15,7 @@ import { localeHref, stripLocale } from '../../src/i18n/href';
 // project (node) can flip an env var BETWEEN cases: the components project runs
 // in real Chromium, where `process.env.PAGES_BASE_PATH` is replaced by a
 // literal at build time (vitest.config.ts) and nothing can change it afterwards.
-// The colocated precedent, lib/routes.test.ts, has no environment to flip.
+// The colocated precedent, lib/routes/routes.test.ts, has no environment to flip.
 //
 // Fixtures are the site's own routes (§15.7: Romanian first) — the blog slug is
 // a real one, so a future localized-slug decision (§15.3) lands on a case that
@@ -58,7 +58,7 @@ describe('localeHref — the locale prefix and the trailing slash', () => {
   });
 
   it('never doubles a slash the caller already wrote', () => {
-    // Callers pass lib/routes.ts rows today, but the builder is the site's
+    // Callers pass lib/routes/routes.ts rows today, but the builder is the site's
     // public URL API — a hand-written '/services/' must not produce '//'.
     expect(localeHref('ro', '/services/')).toBe('/ro/services/');
   });

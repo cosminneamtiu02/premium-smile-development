@@ -1,4 +1,4 @@
-import type { Locale } from '../i18n/locales';
+import type { Locale } from '../../i18n/locales';
 
 // THE site's primary route list — pure data, no React, no 'use client', so
 // every tier can reach it: the Header's client islands (bar row + dropdown

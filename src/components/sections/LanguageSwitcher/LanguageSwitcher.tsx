@@ -8,7 +8,7 @@ import {
   type SpeedDialOption,
 } from '@/components/ui/SpeedDial/SpeedDial';
 import { setLocaleCookie } from '@/i18n/cookie';
-import { cx } from '@/lib/cx';
+import { cx } from '@/lib/cx/cx';
 import { useLanguageOptions } from './useLanguageOptions';
 
 // sections/LanguageSwitcher — the floating language dial: the filled disc shows

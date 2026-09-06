@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import { Wordmark } from './Wordmark';
 import source from './Wordmark.tsx?raw';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. The one visible string is Romanian with diacritics by
-// nature — it is `clinic.name` from lib/clinic.ts (§10.1), the single NAP
+// nature — it is `clinic.name` from lib/clinic/clinic.ts (§10.1), the single NAP
 // source, never a literal typed in here (§17.4).
 //
 // Styles are NOT loaded in this project (tests/setup/components.ts imports no
@@ -223,7 +223,7 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
 
     expect(specifiers).toEqual([
       '@/components/ui/Heading/Heading',
-      '@/lib/clinic',
+      '@/lib/clinic/clinic',
       'react',
     ]);
     // Side-effect (`import './x'`) and re-export (`export … from './x'`)

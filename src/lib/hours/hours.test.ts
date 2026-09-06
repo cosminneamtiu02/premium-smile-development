@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { clinic, type SchemaDay } from './clinic';
+import { clinic, type SchemaDay } from '../clinic/clinic';
 import { formatHoursRows } from './hours';
 
 // lib/hours — a PURE formatter (no React, no Date.now): the schema.org day
-// arrays in lib/clinic.ts become the rows the Footer prints — ONE ROW PER
+// arrays in lib/clinic/clinic.ts become the rows the Footer prints — ONE ROW PER
 // DAY, Monday first (owner amendment 2026-08-18; the grouped "Luni – Vineri"
 // ranges are gone). Two properties carry the whole file and both are asserted
 // below:

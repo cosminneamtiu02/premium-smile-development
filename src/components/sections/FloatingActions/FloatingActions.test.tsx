@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Locale, locales, nativeNames } from '@/i18n/locales';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
@@ -264,7 +264,7 @@ describe('FloatingActions — the call CTA', () => {
   it('is a LINK to the single-source clinic number (§10.1), named in Romanian', () => {
     mount();
     const link = screen.getByRole('link', { name: ro.common.actions.call });
-    // Derived from lib/clinic.ts — the number is never re-typed at a call site.
+    // Derived from lib/clinic/clinic.ts — the number is never re-typed at a call site.
     expect(link).toHaveAttribute('href', `tel:${clinic.phone}`);
   });
 

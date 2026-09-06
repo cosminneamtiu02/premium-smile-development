@@ -12,7 +12,7 @@ import {
   it,
   vi,
 } from 'vitest';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 // The REAL stylesheet, compiled by the same Tailwind pipeline the site uses.
@@ -43,7 +43,7 @@ import { useContactModal } from './useContactModal';
 // accessible markup — getByRole('dialog', { name }) only finds a dialog the
 // platform actually names, and getByRole('link', { name: phoneDisplay }) only
 // finds a control whose accessible name IS the visible number (SC 2.5.3).
-// Every user-facing string comes from the REAL message files or lib/clinic.ts,
+// Every user-facing string comes from the REAL message files or lib/clinic/clinic.ts,
 // never a literal typed in here (§17.4): a renamed or dropped key then fails
 // HERE as well as in the translation-parity gate, instead of silently
 // rendering the dotted key path, which is what next-intl does for a miss.
@@ -581,12 +581,12 @@ describe('ContactModal — the dialog’s content', () => {
     },
   );
 
-  it('fills the hours caption from lib/clinic.ts, never from a literal', () => {
+  it('fills the hours caption from lib/clinic/clinic.ts, never from a literal', () => {
     // §10.1: the times are the same data the Footer prints and the JSON-LD will
     // publish, interpolated into ONE translated line (the owner's fb-349/350
     // amendment to §10.5 — a caption, not the Footer's <dl> a second time). The
     // rows are read BY DAY here exactly as the section reads them, so a
-    // reordered lib/clinic.ts moves both together.
+    // reordered lib/clinic/clinic.ts moves both together.
     const weekday = clinic.hours.find((row) => row.days.includes('Monday'));
     const saturday = clinic.hours.find((row) => row.days.includes('Saturday'));
     const { dialog } = mount({ defaultOpen: true });
@@ -607,7 +607,7 @@ describe('ContactModal — the dialog’s content', () => {
     expect(text).not.toMatch(/\{(week|sat)(Opens|Closes)\}/);
   });
 
-  it('rests on ONE weekday row in lib/clinic.ts, Monday through Friday', () => {
+  it('rests on ONE weekday row in lib/clinic/clinic.ts, Monday through Friday', () => {
     // G2 react MEDIUM fold — the hole this closes: the caption prints a SPAN
     // („Lun–Vin 09:00–19:00"), so it is only true while one entry really covers
     // all five weekdays. Split that entry (Mon–Thu one row, Fri another with a

@@ -3,8 +3,8 @@ import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import type { Locale } from '@/i18n/locales';
-import { clinic } from '@/lib/clinic';
-import { formatHoursRows } from '@/lib/hours';
+import { clinic } from '@/lib/clinic/clinic';
+import { formatHoursRows } from '@/lib/hours/hours';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
@@ -14,7 +14,7 @@ import { Footer, socialEntries } from './Footer';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
-// user-facing string comes from the REAL message files or lib/clinic.ts —
+// user-facing string comes from the REAL message files or lib/clinic/clinic.ts —
 // never a literal typed in here (§17.4). A renamed or dropped key then fails
 // HERE as well as in the translation-parity gate, instead of silently
 // rendering the dotted key path (which is what next-intl does for a miss).
@@ -151,7 +151,7 @@ describe('Footer — row 1, the brand', () => {
     // Since the fb-200 swap this row is the SAME lockup the Header's corner
     // renders — artwork, hairline bar, the name at Heading's title step — so
     // the §15.6 logo arrives in one file instead of two. The name is still
-    // data from lib/clinic.ts (§10.1), and the brand is still identified
+    // data from lib/clinic/clinic.ts (§10.1), and the brand is still identified
     // positionally: the first child of the gutter box. The two wrappers are
     // this section owning placement and SIZE (§6.4/§6.8) — `pb-8` is the old
     // row's rhythm, `h-20` the 5rem ruler the lockup's percentages resolve
@@ -549,7 +549,7 @@ describe('Footer — row 3, the legal strip', () => {
     expect(disc).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
     expect(disc).toHaveAttribute('href', 'https://wa.me/40700000000');
     // The field's own format contract, mechanized like clinic.phone's '+'
-    // guard in row 2: wa.me wants digits only, no plus (lib/clinic.ts
+    // guard in row 2: wa.me wants digits only, no plus (lib/clinic/clinic.ts
     // whatsapp doc) — a pasted E.164 value must fail HERE, not ship.
     expect(clinic.whatsapp).toMatch(/^\d+$/);
     // Real external navigation, unlike tel: — so it travels like its row-mates.

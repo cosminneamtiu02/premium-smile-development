@@ -93,7 +93,7 @@ export const clinic: ClinicInfo = {
     longitude: 26.1025,
   },
   // TODO(owner): confirm the real schedule. The shape is the old site's —
-  // weekdays plus a short Saturday, Sunday closed — and lib/hours.ts spreads
+  // weekdays plus a short Saturday, Sunday closed — and lib/hours/hours.ts spreads
   // it into one row PER DAY (owner 2026-08-18): five identical weekday rows,
   // a short Sâmbătă, and Duminică closed in its calendar place.
   hours: [

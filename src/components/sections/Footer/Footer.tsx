@@ -11,10 +11,10 @@ import { Phone } from '@/assets/glyphs/Phone';
 import { Tiktok } from '@/assets/glyphs/Tiktok';
 import { Whatsapp } from '@/assets/glyphs/Whatsapp';
 import { localeHref } from '@/i18n/href';
-import type { ClinicInfo } from '@/lib/clinic';
-import { clinic } from '@/lib/clinic';
-import { formatHoursRows } from '@/lib/hours';
-import { primaryRoutes } from '@/lib/routes';
+import type { ClinicInfo } from '@/lib/clinic/clinic';
+import { clinic } from '@/lib/clinic/clinic';
+import { formatHoursRows } from '@/lib/hours/hours';
+import { primaryRoutes } from '@/lib/routes/routes';
 
 // sections/Footer — the band that closes every page: brand · four info columns
 // (contact · site map · the ANPC/SAL badge · opening hours) · legal strip.
@@ -58,7 +58,7 @@ import { primaryRoutes } from '@/lib/routes';
 // the one <h1> belongs to the page and a band repeated on every route must not
 // claim outline slots (the Header's C2 rule, applied to the other end of the
 // document). And it holds no NAP text of its own — name, phone, address and
-// hours all come from lib/clinic.ts (§10.1), so the crawlable footer NAP (§10.5)
+// hours all come from lib/clinic/clinic.ts (§10.1), so the crawlable footer NAP (§10.5)
 // and the future JSON-LD cannot disagree.
 
 /**
@@ -92,7 +92,7 @@ export interface SocialEntry {
 
 /**
  * The profiles worth a button, in render order. Exported because it IS the
- * conditional the tests need to see from both sides: lib/clinic.ts types both
+ * conditional the tests need to see from both sides: lib/clinic/clinic.ts types both
  * URLs as optional (a network the clinic does not use is simply absent), and a
  * missing one must produce NO control rather than a dead link to an empty
  * profile. Calling this with `{}` is the honest way to prove that — no module
@@ -161,7 +161,7 @@ export function Footer(): ReactElement {
         {/* ── ROW 1 · THE BRAND, since the fb-200 swap the SAME component the
             Header's corner renders (sections/Wordmark, contract v2
             fb-200…fb-208): artwork · hairline bar · the name at Heading's
-            title step. The name is still data from lib/clinic.ts (§10.1) —
+            title step. The name is still data from lib/clinic/clinic.ts (§10.1) —
             never a message key — and the vectorized logo still lands by
             swapping one `src`, but now in ONE file instead of two that can
             disagree.
@@ -226,7 +226,7 @@ export function Footer(): ReactElement {
                 asChild: TextButton leaves no tag of its own, so this emits ONE
                 <a href="tel:"> wearing the atom's clothes. The href is E.164
                 (what a dialler needs), the visible text is the human format
-                (what a reader needs) — two fields in lib/clinic.ts on purpose,
+                (what a reader needs) — two fields in lib/clinic/clinic.ts on purpose,
                 and SC 2.5.3 Label in Name still holds because the glyph beside
                 the number is aria-hidden, so the accessible name IS the visible
                 text.
@@ -262,7 +262,7 @@ export function Footer(): ReactElement {
               HeaderNav's aria-label note anticipated. No new message key for
               it — the visible title is the clinic name (data), so the landmark
               announces as "Premium Smile, navigation".
-              The routes come from lib/routes.ts, the ONE list the Header's row
+              The routes come from lib/routes/routes.ts, the ONE list the Header's row
               and panel render as well; Blog is absent on every non-`ro` locale
               (§5) because the module filters it, not because this file knows. */}
           <nav aria-labelledby={NAV_TITLE_ID} className="flex flex-col gap-2">
@@ -443,7 +443,7 @@ export function Footer(): ReactElement {
               socialEntries above — one control per profile the clinic actually
               has, and NOTHING for a network it does not. The two contact discs
               are written out EXPLICITLY because `phone` and `whatsapp` are
-              REQUIRED fields of ClinicInfo (lib/clinic.ts): there is no absent
+              REQUIRED fields of ClinicInfo (lib/clinic/clinic.ts): there is no absent
               case to filter, so optionality stays socialEntries' job and never
               leaks into theirs (board contact-touchpoints §4/§7, owner
               2026-09-02).

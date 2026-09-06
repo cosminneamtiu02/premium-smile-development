@@ -353,7 +353,7 @@ describe('LanguageSwitcher — the hrefs are the equivalent page (§5, §15.13)'
   it('points at the SAME page under each other prefix, on /services/', () => {
     // Literal strings on purpose, not localeHref(target, equivalentPath(…)):
     // deriving the expectation from the code under test would make a broken
-    // rule agree with itself. lib/routes.test.ts pins the composition; this is
+    // rule agree with itself. lib/routes/routes.test.ts pins the composition; this is
     // what the DOM must contain. (basePath is '' in this runner — pinned by
     // vitest.config's define.)
     const { container } = mount();

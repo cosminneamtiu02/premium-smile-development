@@ -4,7 +4,7 @@ import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { LanguageSwitcher } from '@/components/sections/LanguageSwitcher/LanguageSwitcher';
 import { Phone } from '@/assets/glyphs/Phone';
 import { Whatsapp } from '@/assets/glyphs/Whatsapp';
-import { clinic } from '@/lib/clinic';
+import { clinic } from '@/lib/clinic/clinic';
 
 // sections/FloatingActions — the thumb-reach controls that ride along on every
 // page: the language dial (bottom-LEFT) and, in the bottom-RIGHT corner, the
@@ -239,7 +239,7 @@ export function FloatingActions(): ReactElement {
       {/* THE SECOND CHANNEL, within thumb reach (fb-353): the clinic's own
           WhatsApp conversation — the same wa.me target the Footer's disc and
           the ContactModal's second control open, built from the digits-only
-          `whatsapp` field of lib/clinic.ts (§10.1), never the E.164 spelling
+          `whatsapp` field of lib/clinic/clinic.ts (§10.1), never the E.164 spelling
           with its plus.
           It sits ABOVE the phone because the phone is the site's one
           conversion goal and keeps the thumb's easiest spot.
@@ -270,7 +270,7 @@ export function FloatingActions(): ReactElement {
       {/* The one conversion goal of the entire site (§1): tap-to-call. An
           anchor, not a button — it navigates (tel:), so asChild hands the <a>
           the circle's clothes and the accessible name. size="lg" = 3.5rem, the
-          §9 primary-CTA target. The number comes from lib/clinic.ts, the single
+          §9 primary-CTA target. The number comes from lib/clinic/clinic.ts, the single
           source of NAP (§10.1), where it is still a TODO(owner) placeholder.
           <Phone /> stays UNLABELLED: a labelled glyph inside an asChild anchor
           double-announces (see the `children` prop doc in ui/GlyphButton). */}

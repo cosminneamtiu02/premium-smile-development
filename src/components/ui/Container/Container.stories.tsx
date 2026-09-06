@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { cx } from '@/lib/cx';
+import { cx } from '@/lib/cx/cx';
 import { Container } from './Container';
 
 // EXACTLY ONE story, and the count is the honest one: a transparent box has a

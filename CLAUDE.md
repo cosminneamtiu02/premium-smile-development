@@ -554,6 +554,22 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     Watch items for later lanes: `next dev` now auto-maintains an AGENTS.md block (hygiene
     decision on first dev run); build disk caching is default-on (use cold builds for
     byte-comparison rituals).
+    **Phase C — the migration itself, executed same day (owner: "resume with phase c"; lane
+    `refactor/root-params`, the superseded handoff run to completion on next 16.3.4 +
+    next-intl 4.13.7):** `src/i18n/request.ts` resolves the locale as
+    `explicitLocale ?? (await rootParams.locale())` — the NON-deprecated explicit-`locale`
+    param must win, because the S1 probe caught the migration blog's plain recipe silently
+    collapsing the layout's D6 banner block (five languages' strings) into the page's own
+    locale; explicit `getTranslations({locale})` calls travel via `params.locale` (verified
+    in next-intl's shipped dist). The five `setRequestLocale` call sites are deleted
+    (layout + home + services/team/blog stubs, the pages also dropping their now-dead
+    `params` plumbing) — the deprecated pair has ZERO references left in src, and future
+    pages simply never add the call. Evidence: vitest 1071/1071 · visual 178/178 zero
+    diffs · linkinator ✔ · out/ vs pre-migration baseline: 176/191 files byte-identical
+    modulo the per-build random buildID (noise floor proven ZERO by an identical-source
+    control build pair), the 15 home-page files differ only in RSC flight row ORDER —
+    row-sets, script-stripped DOM bytes and byte-lengths all PROVEN equal across all five
+    locales; root redirect byte-identical.
 
 ## 16. Build-time vs runtime contract
 

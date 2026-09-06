@@ -47,8 +47,8 @@ import layoutSource from './layout.tsx?raw';
 // plan.md` §5 and `.claude/plans/app-shell-layers.plan.md` (E10–E12, P1, P7).
 //
 // ── WHAT IT MOUNTS, AND WHY NOT `layout.tsx` ITSELF. The layout is an async
-// Server Component: it awaits `params`, calls `setRequestLocale` and
-// `getTranslations` (next-intl/server), and returns <html>/<body> — none of
+// Server Component: it awaits `params` and calls `getTranslations`
+// (next-intl/server), and returns <html>/<body> — none of
 // which a browser test runner can render, and all of which is Next's contract
 // rather than this lane's. What the lane actually owes is the ASSEMBLY: which
 // boxes are siblings of <body>, in which order, inside which DOM-less

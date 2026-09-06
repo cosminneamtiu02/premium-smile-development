@@ -81,6 +81,18 @@ export default defineConfig([
               message:
                 'next-intl navigation is not used at all (§15.13, D9): the current path comes from usePathname in @/i18n/navigation, and links from localeHref in @/i18n/href.',
             },
+            {
+              // Retired by §15.16 Phase C (G2 LOW): the locale reaches
+              // next-intl through the [locale] root param resolved in
+              // src/i18n/request.ts — pages never thread it by hand, and a
+              // Phase-4 lane copying an old recipe must fail at lint, not
+              // compile quietly. importNames keeps getTranslations and
+              // getRequestConfig importable.
+              name: 'next-intl/server',
+              importNames: ['setRequestLocale'],
+              message:
+                'setRequestLocale is retired (§15.16 Phase C) — the locale arrives via next/root-params in src/i18n/request.ts; pages never call it.',
+            },
           ],
         },
       ],

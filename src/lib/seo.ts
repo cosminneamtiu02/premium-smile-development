@@ -1,15 +1,16 @@
-import type { Dentist, Thing, WithContext } from 'schema-dts';
+import type { Dentist, ItemList, Thing, WithContext } from 'schema-dts';
 import { localeHref } from '../i18n/href';
 import { defaultLocale, locales, type Locale } from '../i18n/locales';
 import { clinic } from './clinic';
 
 // THE SEO builders (brief §10, part 1 of 2 — playbook Phase-4 order): the
-// `Dentist` JSON-LD every page carries and the per-page metadata/hreflang
-// helper every page's generateMetadata calls. Part 2 (sitemap + robots
-// generation) arrives LAST in Phase 4, once every route it must enumerate
-// exists. Everything here is pure data-shaping over lib/clinic.ts — §10.1's
-// consistency-by-construction: the Footer, the ContactModal and this file
-// repeat the same constants, so they cannot drift apart.
+// `Dentist` JSON-LD every page carries, the Services page's optional `Service`
+// markup (§10.2's second sentence, added in stage S3), and the per-page
+// metadata/hreflang helper every page's generateMetadata calls. Part 2 (sitemap
+// + robots generation) arrives LAST in Phase 4, once every route it must
+// enumerate exists. Everything here is pure data-shaping over lib/clinic.ts —
+// §10.1's consistency-by-construction: the Footer, the ContactModal and this
+// file repeat the same constants, so they cannot drift apart.
 //
 // ── WHY NOTHING HERE NAMES `next` (D-S1-2, phase4-content ledger). §4 places
 // this module in lib/, and lib/ is the React-free foundation ring —
@@ -88,6 +89,67 @@ export function dentistJsonLd(): WithContext<Exclude<Dentist, string>> {
       closes: row.closes,
     })),
     sameAs: [...clinic.sameAs],
+  };
+}
+
+/**
+ * ONE service as §10.2's optional markup needs it: the two strings a crawler
+ * reads. They arrive FINISHED and already translated — t() ran in the page
+ * tier (§8.1), so this ring module still names no locale, no namespace and no
+ * message key, exactly like every other function in this file.
+ */
+export interface ServiceItem {
+  name: string;
+  description: string;
+}
+
+/**
+ * The Services page's `ItemList` of `Service` nodes (§10.2 — "optional
+ * `Service` markup on the Services page", the checklist's own words). An
+ * ItemList rather than three loose Service nodes because the page really is an
+ * ordered list and `position` is how schema.org says so; each item names its
+ * provider so a crawler can tie the service back to the clinic entity the
+ * shell's `Dentist` node already declares (§10.1 — one set of constants, never
+ * a second spelling of the name).
+ *
+ * ── NO PRICES IN HERE, deliberately. The page PRINTS "de la 100 RON" for the
+ * visitor and hands the crawler names and descriptions only. Two reasons, each
+ * decisive alone: the amounts in lib/services.ts are TODO(owner) placeholders
+ * until the owner confirms them (D-S3-1 — the three sourced tiers are all the
+ * pricing that exists as a requirement), and an `offers`/`priceSpecification`
+ * node is a machine-readable PROMISE that search engines may surface as a
+ * quoted price. A visible from-price with a stated disclaimer is honest; the
+ * same number stripped of its "from" and its disclaimer, in a rich result, is
+ * not. `offers` joins these items the day the owner confirms a real price
+ * list, and not before.
+ *
+ * The services themselves are never invented: the caller passes exactly what
+ * it renders, so the markup cannot describe a treatment the page does not.
+ */
+export function servicesJsonLd(
+  services: readonly ServiceItem[],
+): WithContext<ItemList> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: services.map((service, index) => ({
+      '@type': 'ListItem' as const,
+      // 1-based, because schema.org's `position` is a rank and not an index —
+      // the same list order the page paints.
+      position: index + 1,
+      item: {
+        '@type': 'Service' as const,
+        name: service.name,
+        description: service.description,
+        // The provider is the clinic, named from lib/clinic.ts like everything
+        // else here — a reference by name rather than a second copy of the
+        // whole Dentist node, which the shell already emits on this very page.
+        provider: {
+          '@type': 'Dentist' as const,
+          name: clinic.name,
+        },
+      },
+    })),
   };
 }
 

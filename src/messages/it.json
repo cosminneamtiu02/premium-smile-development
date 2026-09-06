@@ -68,6 +68,10 @@
   },
   "services": {
     "title": "I nostri servizi",
+    "intro": {
+      "eyebrow": "Servizi e prezzi",
+      "text": "Prezzi trasparenti per i trattamenti più comuni. I casi complessi vengono valutati dopo la visita."
+    },
     "priceFrom": "da {price}",
     "tiers": {
       "consult": {
@@ -82,6 +86,11 @@
         "name": "Sbiancamento dentale",
         "description": "Seduta di sbiancamento professionale in studio."
       }
+    },
+    "disclaimer": "Il prezzo finale dipende dalla complessità del caso. Prenota una visita per una stima precisa.",
+    "meta": {
+      "title": "Servizi e prezzi — Premium Smile — Bucarest",
+      "description": "Visite, igiene professionale e sbiancamento dentale, con prezzi indicati in modo trasparente. I casi complessi ricevono un piano dopo la visita."
     }
   },
   "team": {

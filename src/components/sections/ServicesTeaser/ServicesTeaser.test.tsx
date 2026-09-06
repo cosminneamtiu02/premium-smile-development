@@ -103,6 +103,30 @@ describe('ServicesTeaser — the three sourced tiers', () => {
     expect(list).toHaveAttribute('role', 'list');
   });
 
+  it('renders each card as sections/ServiceCard in a BARE grid cell (S3)', () => {
+    // THE ZERO-DIFF PIN for the stage-S3 rewire, from the consumer's side. The
+    // <li> used to BE the card; the shape moved to sections/ServiceCard when
+    // the Services page became its second consumer (§4's sharing table row 1,
+    // the #64 promotion-rewires-consumers precedent), and the swap is accepted
+    // on ZERO visual diff. So: every class the <li> carried now sits on the
+    // <article> inside it, byte-identically, plus the `h-full` that hands the
+    // stretched grid cell's height to the card (a block child would otherwise
+    // shrink to its content and the three price rows would stop agreeing).
+    // Written OUT rather than imported from ServiceCard: an edit there must
+    // fail HERE, which an import would follow.
+    const CARD_BASE =
+      'flex flex-col gap-3 rounded-md border border-line-subtle bg-surface p-6';
+    mount();
+
+    for (const item of screen.getAllByRole('listitem')) {
+      expect(item.getAttribute('class')).toBeNull();
+      const card = item.firstElementChild as HTMLElement;
+      expect(card.tagName).toBe('ARTICLE');
+      expect(card.className).toBe(`${CARD_BASE} h-full`);
+      expect(item.children).toHaveLength(1);
+    }
+  });
+
   it('gives every tier its name as an <h3> under the section’s h2', () => {
     const { services } = mount();
     for (const tier of SERVICE_TIERS) {

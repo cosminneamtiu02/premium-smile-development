@@ -42,6 +42,12 @@ import { cx } from '@/lib/cx';
 // the story's play), so the eyebrow sits where it always sat rather than where
 // a fresh guess would put it. The inventory reserved that flag's final verdict
 // for consumer runs like this one; D3 is it.
+// KEEP-IN-SYNC (§4 pair rule, G2 react LOW S3): the Services page's h1 opener
+// copies this exact column by hand — `flex flex-col gap-2` at services/
+// page.tsx "THE OPENER" — because this component's level union deliberately
+// stops at 2|3 (an h1 belongs to the page). If this gap ever changes, that
+// opener moves in the same lane or the two openers drift; the page visual
+// baselines are the late net, this line is the early one.
 //
 // ── THE SIZE STEP CAME FIRST, and from here: ui/Heading grew its second step
 // (`size="section"` → `font-display text-3xl text-ink-strong`) with THIS

@@ -31,7 +31,7 @@
     },
     "cta": {
       "title": "Ai o întrebare sau vrei o programare?",
-      "text": "Sună-ne sau scrie-ne pe WhatsApp — răspundem în programul clinicii.",
+      "text": "Sună-ne sau scrie-ne pe WhatsApp. Răspundem în programul clinicii.",
       "action": "Contactează-ne"
     },
     "footer": {
@@ -68,6 +68,10 @@
   },
   "services": {
     "title": "Serviciile noastre",
+    "intro": {
+      "eyebrow": "Servicii și prețuri",
+      "text": "Prețuri transparente pentru cele mai frecvente tratamente. Cazurile complexe sunt cotate după consultație."
+    },
     "priceFrom": "de la {price}",
     "tiers": {
       "consult": {
@@ -82,6 +86,11 @@
         "name": "Albire dentară",
         "description": "Ședință de albire profesională, realizată în cabinet."
       }
+    },
+    "disclaimer": "Prețul final depinde de complexitatea cazului. Programează o consultație pentru o estimare exactă.",
+    "meta": {
+      "title": "Servicii și prețuri — Premium Smile — București",
+      "description": "Consultații, igienizări profesionale și albire dentară, cu prețuri afișate transparent. Cazurile complexe primesc un plan după consultație."
     }
   },
   "team": {

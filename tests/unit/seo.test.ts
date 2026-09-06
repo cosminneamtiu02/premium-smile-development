@@ -7,6 +7,8 @@ import {
   dentistJsonLd,
   pageMetadata,
   serializeJsonLd,
+  servicesJsonLd,
+  type ServiceItem,
 } from '../../src/lib/seo';
 
 // THE §10.2–10.4 output shapes, pinned: the Dentist JSON-LD repeats clinic.ts
@@ -114,6 +116,113 @@ describe('dentistJsonLd — §10.2, fed only from clinic.ts', () => {
     // The day the owner’s logo lands, this case flips to assert the real URL —
     // it exists so the omission stays a decision, not an accident.
     expect('image' in dentistJsonLd()).toBe(false);
+  });
+});
+
+describe('servicesJsonLd — §10.2’s optional Service markup', () => {
+  // The three tiers as the Services page hands them over: FINISHED Romanian
+  // strings (§8.1 — t() ran in the page tier), diacritics and all.
+  const SERVICES: readonly ServiceItem[] = [
+    {
+      name: 'Consultație',
+      description: 'Evaluare inițială și un plan personalizat de tratament.',
+    },
+    {
+      name: 'Igienizare profesională',
+      description: 'Detartraj, periaj profesional și fluorizare.',
+    },
+    {
+      name: 'Albire dentară',
+      description: 'Ședință de albire profesională, realizată în cabinet.',
+    },
+  ];
+
+  it('is a schema.org ItemList — an ordered list, not three loose nodes', () => {
+    const node = servicesJsonLd(SERVICES);
+    expect(node['@context']).toBe('https://schema.org');
+    expect(node['@type']).toBe('ItemList');
+  });
+
+  it('mirrors the services it is given, verbatim, 1-based and in order', () => {
+    // Written OUT rather than recomputed from the fixture with the builder's
+    // own map: an expectation that repeats the implementation would carry the
+    // same defect on both sides (the clinic.url case above, G2 ts MEDIUM, S1).
+    // So the positions are literal 1, 2, 3 and every string is typed twice.
+    expect(servicesJsonLd(SERVICES).itemListElement).toEqual([
+      {
+        '@type': 'ListItem',
+        position: 1,
+        item: {
+          '@type': 'Service',
+          name: 'Consultație',
+          description:
+            'Evaluare inițială și un plan personalizat de tratament.',
+          provider: { '@type': 'Dentist', name: clinic.name },
+        },
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        item: {
+          '@type': 'Service',
+          name: 'Igienizare profesională',
+          description: 'Detartraj, periaj profesional și fluorizare.',
+          provider: { '@type': 'Dentist', name: clinic.name },
+        },
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        item: {
+          '@type': 'Service',
+          name: 'Albire dentară',
+          description: 'Ședință de albire profesională, realizată în cabinet.',
+          provider: { '@type': 'Dentist', name: clinic.name },
+        },
+      },
+    ]);
+  });
+
+  it('names the clinic as every service’s provider (§10.1, one spelling)', () => {
+    // The same constant the shell's Dentist node and the Footer print — a
+    // crawler must not meet two names for one clinic on one page.
+    const serialized = serializeJsonLd(servicesJsonLd(SERVICES));
+    expect(JSON.parse(serialized).itemListElement).toHaveLength(3);
+    expect(serialized).toContain(clinic.name);
+  });
+
+  it('carries NO price anywhere in the payload (the recorded decision)', () => {
+    // The page prints "de la 100 RON" for the visitor; the crawler is told
+    // nothing about money while the amounts are TODO(owner) placeholders
+    // (D-S3-1). This case exists so adding `offers` stays a decision — the day
+    // the owner confirms a price list, it flips to assert the real node.
+    // Matched as JSON PROPERTY names rather than as free text: a Romanian
+    // description is allowed to contain the letters of a keyword ("cronică"
+    // carries "ron"), and a test that policed prose would fail on content.
+    const serialized = serializeJsonLd(servicesJsonLd(SERVICES));
+    expect(serialized).not.toMatch(
+      // price\w* rather than a spelling list: the page hands servicesJsonLd
+      // objects that CARRY priceLabel beyond ServiceItem (structural typing —
+      // excess fields on a variable argument are legal), so a future
+      // `...service` spread would leak a machine-readable price while a
+      // schema.org-only list stayed silent (G2 ts LOW, S3).
+      /"(offers|price\w*)":/,
+    );
+  });
+
+  it('survives the serializer with its diacritics intact', () => {
+    const parsed = JSON.parse(serializeJsonLd(servicesJsonLd(SERVICES)));
+    expect(parsed.itemListElement[2].item.name).toBe('Albire dentară');
+    expect(parsed.itemListElement[0].item.description).toBe(
+      'Evaluare inițială și un plan personalizat de tratament.',
+    );
+  });
+
+  it('describes nothing when there is nothing to describe', () => {
+    // An empty list yields an empty array, never a missing property: the
+    // builder invents no service, and a page with no priced tiers would emit an
+    // honest empty ItemList rather than a phantom one.
+    expect(servicesJsonLd([]).itemListElement).toEqual([]);
   });
 });
 

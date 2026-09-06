@@ -31,7 +31,7 @@
     },
     "cta": {
       "title": "Haben Sie eine Frage oder möchten Sie einen Termin?",
-      "text": "Rufen Sie uns an oder schreiben Sie uns über WhatsApp – wir antworten während der Öffnungszeiten.",
+      "text": "Rufen Sie uns an oder schreiben Sie uns über WhatsApp. Wir antworten während der Öffnungszeiten.",
       "action": "Kontakt aufnehmen"
     },
     "footer": {
@@ -51,7 +51,7 @@
   "home": {
     "hero": {
       "title": "Moderne Zahnmedizin für die ganze Familie",
-      "subtitle": "Ein Team, das zuhört und jeden Schritt erklärt – in Ihrer Sprache.",
+      "subtitle": "Ein Team, das zuhört und Ihnen jeden Schritt in Ihrer Sprache erklärt.",
       "ctaPrimary": "Termin vereinbaren",
       "ctaSecondary": "Leistungen ansehen"
     },
@@ -63,11 +63,15 @@
     },
     "meta": {
       "title": "Moderne Zahnmedizin in Bukarest – Premium Smile",
-      "description": "Zahnklinik in Bukarest: Beratung, professionelle Zahnreinigung und Behandlungen für die ganze Familie – in fünf Sprachen."
+      "description": "Zahnklinik in Bukarest: Beratung, professionelle Zahnreinigung und Behandlungen für die ganze Familie, in fünf Sprachen."
     }
   },
   "services": {
     "title": "Unsere Leistungen",
+    "intro": {
+      "eyebrow": "Leistungen & Preise",
+      "text": "Transparente Preise für die häufigsten Behandlungen. Komplexe Fälle werden nach der Untersuchung eingeschätzt."
+    },
     "priceFrom": "ab {price}",
     "tiers": {
       "consult": {
@@ -82,6 +86,11 @@
         "name": "Zahnaufhellung",
         "description": "Professionelle Aufhellungssitzung in der Praxis."
       }
+    },
+    "disclaimer": "Der endgültige Preis hängt von der Komplexität des Falls ab. Vereinbaren Sie eine Untersuchung für eine genaue Einschätzung.",
+    "meta": {
+      "title": "Leistungen & Preise – Premium Smile – Bukarest",
+      "description": "Beratung, professionelle Zahnreinigung und Zahnaufhellung mit transparent ausgewiesenen Preisen. Komplexe Fälle erhalten nach der Untersuchung einen Behandlungsplan."
     }
   },
   "team": {

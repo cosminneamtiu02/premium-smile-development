@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
+import { ServiceCard } from '@/components/sections/ServiceCard/ServiceCard';
 import { Container } from '@/components/ui/Container/Container';
-import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
 import { TextButton } from '@/components/ui/TextButton/TextButton';
 import { localeHref } from '@/i18n/href';
@@ -33,6 +33,10 @@ import { SERVICE_TIERS } from '@/lib/services';
 // display on the foreign locales is a PARKED decision (§15.4).
 // maximumFractionDigits: 0 because every price here is a whole number of lei
 // and "100,00 RON" reads as an invoice, not a from-price.
+// TWIN, since stage S3: app/[locale]/services/page.tsx assembles the line the
+// same way from the same two sources (its header, "THE PRICE-LINE TWIN") —
+// what must agree is the OPTION BAG, and a THIRD consumer promotes it in a lane
+// of its own (§4's N≥3 row), never as a drive-by.
 //
 // ── ONE SOURCE OF SERVICE COPY, SHARED WITH THE SERVICES PAGE (D-S2-7). The
 // tier names and descriptions are read from the `services` namespace, not
@@ -58,6 +62,21 @@ import { SERVICE_TIERS } from '@/lib/services';
 // another section's public component, which is the dossier model §4 allows
 // (Header renders Wordmark), and it takes both strings FINISHED because it owns
 // no message key of its own.
+//
+// ── THE CARD IS NO LONGER SPELLED HERE (stage S3). The <li> body used to be
+// this file's own markup; the Services page needed the identical unit, which is
+// §4's sharing table row 1 ("identical MECHANICS, second consumer arrives →
+// extract to the nearest tier both may import"), so the shape moved to
+// sections/ServiceCard and this band was REWIRED to it in the same lane — the
+// #64 precedent that a promotion never leaves its first consumer holding a
+// copy. Another section's public component, again the dossier model §4 allows.
+// The swap is ZERO-DIFF by construction: ServiceCard's base class string is
+// byte-identical to the one this <li> carried, the <li> keeps nothing but its
+// grid-cell role, and `h-full` restores the equal-height stretch the flex <li>
+// used to get for free (the card is a block child now, so it must be told to
+// fill the row its grid cell was stretched to). ServiceCard.tsx's header
+// carries the argument in full; the strings and the price are still computed
+// HERE, because §8.1 keeps t() in the section tier.
 
 export function ServicesTeaser(): ReactElement {
   const t = useTranslations('home');
@@ -97,40 +116,33 @@ export function ServicesTeaser(): ReactElement {
             after it. Calibrated on German, the longest language (§8.4): at that
             step each track is ~15rem, and the longest German name —
             "Professionelle Zahnreinigung" — wraps to two lines inside it rather
-            than clipping; `flex-1` on the description then keeps the three
-            price rows on one baseline however unevenly the text falls, which is
-            the card-grid equivalent of §8.4's min-height rule. The step
-            measures the GUTTER BOX, so with the 10vw clamp the flip lands
-            around a ~960px canvas. */}
+            than clipping; the card's own `flex-1` description (ServiceCard.tsx,
+            "NO CONTAINER QUERY") then keeps the three price rows on one
+            baseline however unevenly the text falls, which is the card-grid
+            equivalent of §8.4's min-height rule. The step measures the GUTTER
+            BOX, so with the 10vw clamp the flip lands around a ~960px
+            canvas. */}
         <ul role="list" className="grid gap-6 @3xl:grid-cols-3">
           {SERVICE_TIERS.map((tier) => (
-            <li
-              key={tier.key}
-              className="flex flex-col gap-3 rounded-md border border-line-subtle bg-surface p-6"
-            >
-              {/* asChild hands ui/Heading a REAL <h3>: the size step and the
-                  document outline are independent decisions (the atom answers
-                  "how big", never "which element"), and h3 is the right rung
-                  under this band's h2 (§9 logical heading order). */}
-              <Heading size="title" asChild>
-                <h3>{tServices(`tiers.${tier.key}.name`)}</h3>
-              </Heading>
-
-              {/* flex-1 pushes the price to the bottom of every card — the
-                  PARENT owning layout (§6.8), not a restyle of the atom. */}
-              <Text tone="muted" className="flex-1">
-                {tServices(`tiers.${tier.key}.description`)}
-              </Text>
-
-              <Text bold>
-                {tServices('priceFrom', {
+            // The <li> is now the GRID CELL and nothing else — every class it
+            // used to carry moved to the card inside it, unchanged.
+            <li key={tier.key}>
+              {/* h-full through className is PLACEMENT, which §6.8 licenses the
+                  parent to do: the cell is stretched to the row by the grid,
+                  and this is what passes that height on to the card so three
+                  unevenly-filled cards still end on one baseline (§8.4). */}
+              <ServiceCard
+                className="h-full"
+                name={tServices(`tiers.${tier.key}.name`)}
+                description={tServices(`tiers.${tier.key}.description`)}
+                priceLabel={tServices('priceFrom', {
                   price: format.number(tier.priceRon, {
                     style: 'currency',
                     currency: 'RON',
                     maximumFractionDigits: 0,
                   }),
                 })}
-              </Text>
+              />
             </li>
           ))}
         </ul>

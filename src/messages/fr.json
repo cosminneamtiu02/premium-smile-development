@@ -31,7 +31,7 @@
     },
     "cta": {
       "title": "Une question ou besoin d'un rendez-vous ?",
-      "text": "Appelez-nous ou écrivez-nous sur WhatsApp — nous répondons pendant les heures d'ouverture.",
+      "text": "Appelez-nous ou écrivez-nous sur WhatsApp. Nous répondons pendant les heures d'ouverture.",
       "action": "Nous contacter"
     },
     "footer": {
@@ -68,6 +68,10 @@
   },
   "services": {
     "title": "Nos soins",
+    "intro": {
+      "eyebrow": "Services et tarifs",
+      "text": "Des tarifs transparents pour les traitements les plus courants. Les cas complexes sont évalués après consultation."
+    },
     "priceFrom": "à partir de {price}",
     "tiers": {
       "consult": {
@@ -82,6 +86,11 @@
         "name": "Blanchiment dentaire",
         "description": "Séance de blanchiment professionnelle au cabinet."
       }
+    },
+    "disclaimer": "Le prix final dépend de la complexité du cas. Prenez rendez-vous pour une estimation exacte.",
+    "meta": {
+      "title": "Services et tarifs — Premium Smile — Bucarest",
+      "description": "Consultations, détartrages professionnels et blanchiment dentaire, avec des tarifs affichés clairement. Les cas complexes reçoivent un plan après consultation."
     }
   },
   "team": {

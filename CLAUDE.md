@@ -162,11 +162,13 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 - `generateStaticParams` emits all locale × route combinations at build time; blog routes are
   generated for `ro` only, and the Blog nav item is hidden on non-`ro` locales.
 - **Root `/`:** a tiny client-side script (static export has no middleware) redirects to the
-  remembered locale cookie if present, else the closest match of `navigator.language`, else `/en`
-  *(amended 2026-09-02, owner — language-autoselect board D1: a visitor whose entire preference
-  list matches none of the five locales is by construction not Romanian-reading, so the no-match
-  branch falls back to English; `/ro` remains `defaultLocale` for the stub's `<html lang>`, its
-  title source, and the future sitemap `x-default`, §10.4)*.
+  remembered locale cookie if present, else `/ro`
+  *(re-amended 2026-09-06, owner — root Romanian-first, superseding the 2026-09-02 D1
+  amendment: the `navigator.language` walk and its `/en` no-match branch left the stub; the
+  §8.6 banner is the only auto-detect surface, so an unmatched visitor lands on Romanian with
+  the switcher one tap away. hreflang routes Google searches before `/` is ever clicked, and
+  `defaultLocale`'s roles are unchanged: the stub's `<html lang>`, its title source, and the
+  sitemap `x-default` — already `/ro` — §10.4)*.
 - **Language switcher** navigates to the *equivalent path* under the target locale prefix and sets
   the language cookie — a full document load, like every other link (§15.13). Blog pages switch to
   the target locale's home (no equivalent exists).
@@ -623,7 +625,7 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
   language-suggestion banner, root `/` redirect script. Everything else stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
-- Visitor-dependent decisions: root redirect (cookie → `navigator.language` → `/ro`), setting
+- Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting
   the language cookie on explicit click, banner show/dismiss state.
 - Theme application: **in v1, nothing** — light is the `:root` default. If a second theme ever
   ships: one `data-theme` attribute flip on `<html>` plus a tiny inline pre-paint script to

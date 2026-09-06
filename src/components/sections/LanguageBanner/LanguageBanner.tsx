@@ -16,10 +16,11 @@ import { equivalentPath } from '@/lib/routes';
 // `.claude/plans/language-banner.plan.md` (verdict fb-345, 2026-09-04) and the
 // language-autoselect board's D2–D6.
 //
-// THE POLITE HALF OF LANGUAGE AUTO-SELECT, and the whole of what it may do.
-// The other half — the root "/" redirect stub — already ships: "/" is not a
-// page, so it MUST send the visitor somewhere, and it does (cookie →
-// navigator.languages → fallbackLocale). A DEEP LINK is different in kind: it
+// THE WHOLE OF LANGUAGE AUTO-SELECT since 2026-09-06 (owner — root
+// Romanian-first): the root "/" stub still must send the visitor somewhere
+// ("/" is not a page) but no longer guesses — cookie → defaultLocale, the
+// browser's language unread — so this banner is the ONLY surface that reads
+// `navigator.languages`. A DEEP LINK is different in kind: it
 // is an address the visitor was given — a search result, a WhatsApp message, a
 // card — and an address that silently becomes another address is a bug however
 // well meant (D3; §8.6 bans IP/geolocation outright for the same reason). So
@@ -257,13 +258,14 @@ function hasLanguageChoice(): boolean {
  */
 function decide(pageLocale: string): Locale | null {
   if (hasLanguageChoice()) return null;
-  // The fallback chain mirrors the emitted root script's own read
-  // (`navigator.languages || [navigator.language || '']`) — the CALLER-side
-  // half of the KEEP-IN-SYNC pair (G2 react review, 2026-09-04). On an engine
-  // without `languages` an unguarded read would throw inside the effect, and
-  // with no error boundary above the shell React would unmount the whole
-  // hydrated tree — menu, dial and modal included — to spare one optional
-  // banner.
+  // The `?? [navigator.language ?? '']` shape is inherited from the root
+  // stub's retired read (its walk left 2026-09-06 — root Romanian-first, the
+  // pair dissolved; this file is now the site's ONLY `navigator.languages`
+  // reader) and kept on its own merits (G2 react review, 2026-09-04): on an
+  // engine without `languages` an unguarded read would throw inside the
+  // effect, and with no error boundary above the shell React would unmount
+  // the whole hydrated tree — menu, dial and modal included — to spare one
+  // optional banner.
   const match = matchLocale(navigator.languages ?? [navigator.language ?? '']);
   return match !== null && match !== pageLocale ? match : null;
 }

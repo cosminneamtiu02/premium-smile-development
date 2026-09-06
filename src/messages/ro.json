@@ -29,6 +29,11 @@
     "brand": {
       "ariaLabel": "{name}, acasă"
     },
+    "cta": {
+      "title": "Ai o întrebare sau vrei o programare?",
+      "text": "Sună-ne sau scrie-ne pe WhatsApp — răspundem în programul clinicii.",
+      "action": "Contactează-ne"
+    },
     "footer": {
       "tagline": "Stomatologie modernă. Îngrijire onestă.",
       "contactLabel": "Contactează-ne aici",
@@ -45,12 +50,39 @@
   },
   "home": {
     "hero": {
-      "title": "Zâmbetul tău, prioritatea noastră",
-      "subtitle": "Îngrijire stomatologică modernă, cu blândețe și profesionalism"
+      "title": "Stomatologie modernă pentru toată familia",
+      "subtitle": "O echipă care ascultă și îți explică fiecare pas, în limba ta.",
+      "ctaPrimary": "Programează o consultație",
+      "ctaSecondary": "Vezi serviciile"
+    },
+    "teaser": {
+      "eyebrow": "Servicii",
+      "title": "Tratamente pentru nevoile de zi cu zi",
+      "intro": "Îți explicăm opțiunile și prețurile înainte de orice tratament.",
+      "all": "Vezi toate serviciile și prețurile"
+    },
+    "meta": {
+      "title": "Stomatologie modernă în București — Premium Smile",
+      "description": "Clinică stomatologică în București: consultații, igienizări și tratamente pentru toată familia, în cinci limbi."
     }
   },
   "services": {
-    "title": "Serviciile noastre"
+    "title": "Serviciile noastre",
+    "priceFrom": "de la {price}",
+    "tiers": {
+      "consult": {
+        "name": "Consultație",
+        "description": "Evaluare inițială, radiografii dacă este necesar și un plan personalizat de tratament."
+      },
+      "cleaning": {
+        "name": "Igienizare profesională",
+        "description": "Detartraj, periaj profesional și fluorizare."
+      },
+      "whitening": {
+        "name": "Albire dentară",
+        "description": "Ședință de albire profesională, realizată în cabinet."
+      }
+    }
   },
   "team": {
     "title": "Echipa noastră"

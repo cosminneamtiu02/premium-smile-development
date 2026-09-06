@@ -46,7 +46,10 @@ jobs:
           npx prettier --check .
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        # next typegen first (G2 ts MEDIUM, phase4 S2): src/i18n/request.ts imports
+        # next/root-params, whose real types are GENERATED into .next/types — a fresh
+        # checkout's bare tsc would typecheck that module as `any` and verify nothing.
+        run: npm run typecheck
 
       - name: Cache Playwright browsers
         uses: actions/cache@v6

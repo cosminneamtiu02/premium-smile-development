@@ -28,8 +28,8 @@ repos:
         language: system
         files: \.(ts|tsx|json|md|css|mdx|ya?ml)$
       - id: typecheck
-        name: tsc --noEmit
-        entry: npx tsc --noEmit
+        name: typecheck (next typegen + tsc)
+        entry: npm run typecheck
         language: system
         pass_filenames: false
         stages: [pre-push]

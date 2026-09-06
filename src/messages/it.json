@@ -29,6 +29,11 @@
     "brand": {
       "ariaLabel": "{name}, home"
     },
+    "cta": {
+      "title": "Hai una domanda o vuoi un appuntamento?",
+      "text": "Chiamaci o scrivici su WhatsApp: rispondiamo durante l'orario della clinica.",
+      "action": "Contattaci"
+    },
     "footer": {
       "tagline": "Odontoiatria moderna. Cure oneste.",
       "contactLabel": "Contattaci qui",
@@ -45,12 +50,39 @@
   },
   "home": {
     "hero": {
-      "title": "Il tuo sorriso, la nostra priorità",
-      "subtitle": "Cure odontoiatriche moderne, con delicatezza e professionalità"
+      "title": "Odontoiatria moderna per tutta la famiglia",
+      "subtitle": "Un team che ascolta e ti spiega ogni passaggio, nella tua lingua.",
+      "ctaPrimary": "Prenota una visita",
+      "ctaSecondary": "Vedi i servizi"
+    },
+    "teaser": {
+      "eyebrow": "Servizi",
+      "title": "Trattamenti per le esigenze di ogni giorno",
+      "intro": "Ti spieghiamo le opzioni e i prezzi prima di qualsiasi trattamento.",
+      "all": "Vedi tutti i servizi e i prezzi"
+    },
+    "meta": {
+      "title": "Odontoiatria moderna a Bucarest — Premium Smile",
+      "description": "Clinica odontoiatrica a Bucarest: visite, igiene dentale e trattamenti per tutta la famiglia, in cinque lingue."
     }
   },
   "services": {
-    "title": "I nostri servizi"
+    "title": "I nostri servizi",
+    "priceFrom": "da {price}",
+    "tiers": {
+      "consult": {
+        "name": "Visita di controllo",
+        "description": "Valutazione iniziale, radiografie se necessarie e un piano di cura personalizzato."
+      },
+      "cleaning": {
+        "name": "Igiene professionale",
+        "description": "Ablazione del tartaro, lucidatura professionale e fluorizzazione."
+      },
+      "whitening": {
+        "name": "Sbiancamento dentale",
+        "description": "Seduta di sbiancamento professionale in studio."
+      }
+    }
   },
   "team": {
     "title": "Il nostro team"

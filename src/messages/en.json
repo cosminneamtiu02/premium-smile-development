@@ -29,6 +29,11 @@
     "brand": {
       "ariaLabel": "{name}, home"
     },
+    "cta": {
+      "title": "Have a question or want to book?",
+      "text": "Call us or message us on WhatsApp — we answer during clinic hours.",
+      "action": "Contact us"
+    },
     "footer": {
       "tagline": "Modern dentistry. Honest care.",
       "contactLabel": "Contact us here",
@@ -45,12 +50,39 @@
   },
   "home": {
     "hero": {
-      "title": "Your smile, our priority",
-      "subtitle": "Modern dental care, gentle and professional"
+      "title": "Modern dentistry for the whole family",
+      "subtitle": "A team that listens and explains every step, in your language.",
+      "ctaPrimary": "Book a consultation",
+      "ctaSecondary": "See our services"
+    },
+    "teaser": {
+      "eyebrow": "Services",
+      "title": "Care for everyday needs",
+      "intro": "We explain your options and prices before any treatment.",
+      "all": "See all services and prices"
+    },
+    "meta": {
+      "title": "Modern dentistry in Bucharest — Premium Smile",
+      "description": "Dental clinic in Bucharest: consultations, cleanings and treatments for the whole family, in five languages."
     }
   },
   "services": {
-    "title": "Our services"
+    "title": "Our services",
+    "priceFrom": "from {price}",
+    "tiers": {
+      "consult": {
+        "name": "Consultation",
+        "description": "Initial assessment, X-rays if needed and a personalised treatment plan."
+      },
+      "cleaning": {
+        "name": "Professional cleaning",
+        "description": "Scaling, professional polishing and fluoride treatment."
+      },
+      "whitening": {
+        "name": "Teeth whitening",
+        "description": "In-clinic professional whitening session."
+      }
+    }
   },
   "team": {
     "title": "Our team"

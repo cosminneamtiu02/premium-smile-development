@@ -29,6 +29,11 @@
     "brand": {
       "ariaLabel": "{name}, Startseite"
     },
+    "cta": {
+      "title": "Haben Sie eine Frage oder möchten Sie einen Termin?",
+      "text": "Rufen Sie uns an oder schreiben Sie uns über WhatsApp – wir antworten während der Öffnungszeiten.",
+      "action": "Kontakt aufnehmen"
+    },
     "footer": {
       "tagline": "Moderne Zahnmedizin. Ehrliche Betreuung.",
       "contactLabel": "Kontaktieren Sie uns hier",
@@ -45,12 +50,39 @@
   },
   "home": {
     "hero": {
-      "title": "Ihr Lächeln, unsere Priorität",
-      "subtitle": "Moderne Zahnmedizin – einfühlsam und professionell"
+      "title": "Moderne Zahnmedizin für die ganze Familie",
+      "subtitle": "Ein Team, das zuhört und jeden Schritt erklärt – in Ihrer Sprache.",
+      "ctaPrimary": "Termin vereinbaren",
+      "ctaSecondary": "Leistungen ansehen"
+    },
+    "teaser": {
+      "eyebrow": "Leistungen",
+      "title": "Behandlungen für den Alltag",
+      "intro": "Wir erklären Ihnen Optionen und Preise vor jeder Behandlung.",
+      "all": "Alle Leistungen und Preise ansehen"
+    },
+    "meta": {
+      "title": "Moderne Zahnmedizin in Bukarest – Premium Smile",
+      "description": "Zahnklinik in Bukarest: Beratung, professionelle Zahnreinigung und Behandlungen für die ganze Familie – in fünf Sprachen."
     }
   },
   "services": {
-    "title": "Unsere Leistungen"
+    "title": "Unsere Leistungen",
+    "priceFrom": "ab {price}",
+    "tiers": {
+      "consult": {
+        "name": "Erstuntersuchung",
+        "description": "Erstuntersuchung, bei Bedarf Röntgenaufnahmen und ein individueller Behandlungsplan."
+      },
+      "cleaning": {
+        "name": "Professionelle Zahnreinigung",
+        "description": "Zahnsteinentfernung, professionelle Politur und Fluoridierung."
+      },
+      "whitening": {
+        "name": "Zahnaufhellung",
+        "description": "Professionelle Aufhellungssitzung in der Praxis."
+      }
+    }
   },
   "team": {
     "title": "Unser Team"

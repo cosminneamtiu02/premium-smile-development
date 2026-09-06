@@ -29,6 +29,11 @@
     "brand": {
       "ariaLabel": "{name}, accueil"
     },
+    "cta": {
+      "title": "Une question ou besoin d'un rendez-vous ?",
+      "text": "Appelez-nous ou écrivez-nous sur WhatsApp — nous répondons pendant les heures d'ouverture.",
+      "action": "Nous contacter"
+    },
     "footer": {
       "tagline": "Dentisterie moderne. Des soins honnêtes.",
       "contactLabel": "Contactez-nous ici",
@@ -45,12 +50,39 @@
   },
   "home": {
     "hero": {
-      "title": "Votre sourire, notre priorité",
-      "subtitle": "Des soins dentaires modernes, en douceur et avec professionnalisme"
+      "title": "Une dentisterie moderne pour toute la famille",
+      "subtitle": "Une équipe qui vous écoute et vous explique chaque étape, dans votre langue.",
+      "ctaPrimary": "Prendre rendez-vous",
+      "ctaSecondary": "Voir les services"
+    },
+    "teaser": {
+      "eyebrow": "Services",
+      "title": "Des soins pour les besoins du quotidien",
+      "intro": "Nous vous expliquons les options et les tarifs avant tout traitement.",
+      "all": "Voir tous les services et les tarifs"
+    },
+    "meta": {
+      "title": "Dentisterie moderne à Bucarest — Premium Smile",
+      "description": "Clinique dentaire à Bucarest : consultations, détartrages et soins pour toute la famille, en cinq langues."
     }
   },
   "services": {
-    "title": "Nos soins"
+    "title": "Nos soins",
+    "priceFrom": "à partir de {price}",
+    "tiers": {
+      "consult": {
+        "name": "Consultation",
+        "description": "Évaluation initiale, radiographies si nécessaire et un plan de traitement personnalisé."
+      },
+      "cleaning": {
+        "name": "Détartrage professionnel",
+        "description": "Détartrage, polissage professionnel et fluoration."
+      },
+      "whitening": {
+        "name": "Blanchiment dentaire",
+        "description": "Séance de blanchiment professionnelle au cabinet."
+      }
+    }
   },
   "team": {
     "title": "Notre équipe"

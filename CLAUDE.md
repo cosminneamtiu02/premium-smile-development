@@ -41,10 +41,10 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 
 | Technology | Version | How it's used | Why it's here |
 |---|---|---|---|
-| Next.js | 16.x (16.2.12) | App Router with the `[locale]` segment; `output: 'export'` pre-renders every locale × route to static HTML; `generateStaticParams`; Metadata API for per-locale titles, descriptions, hreflang, OG | The locale-shell routing model (§5) and static export are first-class features; the Metadata API implements the SEO contract (§10) without hand-rolled head management |
+| Next.js | 16.x (16.3.4 — §15.16 minor crossing, 2026-09-06) | App Router with the `[locale]` segment; `output: 'export'` pre-renders every locale × route to static HTML; `generateStaticParams`; Metadata API for per-locale titles, descriptions, hreflang, OG | The locale-shell routing model (§5) and static export are first-class features; the Metadata API implements the SEO contract (§10) without hand-rolled head management |
 | React | 19.x (19.2.8) | Component model for all three tiers | Required by Next 16; used as a plain rendering substrate — no client data fetching exists in this project |
 | TypeScript | 7.x (7.0.2) | Types across app, components, tests; prop APIs as enforced contracts (e.g., `aria-label` required by the types when children aren't text) | Turns the §6 rules from review-time conventions into compile-time errors; TS 7 is the native-compiler generation, keeping full-repo checks fast in CI. If any tool in the chain lags TS 7, pinning to 6.x is the sanctioned fallback — record it in §15 |
-| next-intl | 4.x (4.13.4) | ICU messages in `messages/{locale}.json`; `useTranslations` in sections/pages only; localized metadata; `useLocale` as the locale source for both halves of the URL rule. **Navigation is not next-intl's job here (§15.13):** internal links are plain anchors built by `src/i18n/href.ts`, and the active-nav path comes from `src/i18n/navigation.ts`'s own hook over `next/navigation` | ICU MessageFormat handles Romanian one/few/other plurals; built for the App Router; works without middleware under static export |
+| next-intl | 4.x (4.13.7 — re-verified against Next 16.3, §15.16: stays) | ICU messages in `messages/{locale}.json`; `useTranslations` in sections/pages only; localized metadata; `useLocale` as the locale source for both halves of the URL rule. **Navigation is not next-intl's job here (§15.13):** internal links are plain anchors built by `src/i18n/href.ts`, and the active-nav path comes from `src/i18n/navigation.ts`'s own hook over `next/navigation` | ICU MessageFormat handles Romanian one/few/other plurals; built for the App Router; works without middleware under static export |
 | Tailwind CSS + @tailwindcss/postcss | 4.x (4.3.3) | All styling as utilities; design tokens via `@theme`; the semantic **light theme** block via `@theme inline`; container queries (core); logical-property utilities | CSS-first tokens make the two-layer/theme architecture native; container queries implement §6.5; the untouched default scales are the industry standard this whole plan leans on |
 | Storybook | 10.x (10.5.5) | The component workbench: stories + controls for every component; the five named viewports + 320; locale toolbar incl. pseudo-locale; page stories with mock messages | Every checkpoint in this brief — viewport, language, a11y state — becomes a dropdown flip instead of a deploy |
 | @storybook/addon-a11y | 10.x (10.5.5) | axe-core checks rendered per story; violations fail CI | Automates the machine-catchable share of WCAG 2.2 AA (§9) at the component level, continuously |
@@ -53,7 +53,7 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 | Playwright | 1.x (1.62.1) | **The decided visual-regression harness** (Lost Pixel fork closed 2026-07-30): one central spec runs `toHaveScreenshot` against the built Storybook; one Playwright project per named viewport; the tier matrix comes from story-title prefixes (`UI/*` → 1280 only · `Sections/*` → 390+1536 · `Pages/*` → all five + 320); **baselines are platform-suffixed dual sets (amended 2026-07-31): the darwin set generated natively on the dev machine (local pre-commit regression net), the linux set generated only in CI's pinned container via `visual-baseline.yml`** | Built-in pixel diffing, no services, unlimited free runs (§13); same tool serves launch smoke tests later; platform-suffixed snapshots kill cross-OS font-rendering false positives without local Docker |
 | ESLint + eslint-plugin-jsx-a11y | ~~10.x (10.8.0)~~ **9.x (~9.39.5) — §15.11 pin** *(annotated 2026-09-02)* + 6.x (6.10.2) | Lint gate in CI incl. write-time accessibility rules (no div-as-button, required alt, ...) | Catches a11y and quality violations at typing time, before Storybook or review sees them |
 | pre-commit framework + Prettier *(amended 2026-08-01, §15.8 — replaces Husky + lint-staged)* | pinned revs + 3.x (3.9.6) | `.pre-commit-config.yaml`: commit stage = eslint --fix + prettier --write on staged files; push stage = tsc --noEmit + vitest run; Prettier check-all repeated in CI | One hook manager, same tool as the owner's other repos; fast feedback before CI; hooks can be bypassed, CI cannot — both exist on purpose |
-| @next/mdx | 16.x (16.2.12) | Blog posts as MDX in `content/blog/`, Romanian only, compiled at build time | Official, zero-runtime, fully compatible with static export |
+| @next/mdx | 16.x (16.3.4 — version-locked to next, §15.16) | Blog posts as MDX in `content/blog/`, Romanian only, compiled at build time | Official, zero-runtime, fully compatible with static export |
 | next-image-export-optimizer + sharp | 1.x (1.20.1) + 0.35.x (0.35.3) | Build-time WebP/AVIF `srcset` generation behind the single `ui/Image` wrapper | Fills the static-export gap (no runtime image optimizer on a static host). Named candidate — confirm at Phase 0 per §15 before the first photo |
 | next/font (local) — **Source Serif 4** (display + body) & **JetBrains Mono** (eyebrows/micro-labels) | OFL variable fonts, latest from google/fonts | Self-hosted, subset at build time with automatic fallback metrics; token names `--font-display` / `--font-body` / `--font-mono` (never `--font-sans`) | Closest verified match to the Publio logo lettering (see font_specimen.png); full five-language coverage incl. Ș ș Ț ț confirmed by cmap inspection; no font CDN (§12); Publio itself ships only inside the vectorized logo SVG |
 | schema-dts | 2.x (2.0.0) | TypeScript types for the `Dentist` JSON-LD builder in `lib/seo.ts` | Structured-data typos become compile errors instead of Rich Results Test failures |
@@ -418,6 +418,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     and `typescript-eslint` via `eslint-config-next` (hard error, no workaround). Per the §3
     TypeScript row this fallback was pre-sanctioned; recorded here as required. Revisit when
     typescript-eslint ships TS 7 support (then restore ~7.0.2 in one deliberate bump).
+    *(Annotated 2026-09-06, §15.16 upgrade: the Next half of this blocker is RESOLVED — Next
+    16.3's build worker officially supports TS 7 type checking. typescript-eslint, still
+    capping TS at <6.1.0 as of 8.69.0, is now the SOLE blocker; the revisit trigger stands.)*
 11. **ESLint pinned to 9.x (~9.39.5) — DECIDED 2026-08-02 (owner, Phase 0):** the React lint
     ecosystem does not support ESLint 10 — `eslint-plugin-react` (newest 7.37.5, peer ≤^9.7)
     crashes on removed ESLint-10 APIs, and `eslint-config-next` ships it. Unlike TS there was
@@ -525,6 +528,32 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     - Micro-items on the owner's word: mechanize the React-free `lib/` fence (eslint
       restriction or source-guard test — G2 LOW, cx lane); add `cx.ts` to §4's lib/ tree
       listing once #64 merges.
+16. **Next.js 16.3 upgrade — DECIDED 2026-09-06 (owner, verbatim: "no, we are upgrading to the
+    new nextjs right now" · "extremley important, versions compatiblity" · set approved "ok
+    then just go"):** the first §3 minor crossing since the lock — **next ~16.2.12 → ~16.3.4**
+    plus its two version-locked companions **@next/mdx ~16.3.4** and **eslint-config-next
+    ~16.3.4**; NOTHING else moves. Purpose: stable `next/root-params` (ships in 16.3) unblocks
+    the parked root-params migration lane (retiring `setRequestLocale`). Proven before the
+    bump by a scratchpad differential build: an identical `[locale]` fixture with
+    `output: 'export'` + `generateStaticParams` builds flag-free on 16.3.4 with correct
+    per-locale HTML, and hard-fails on 16.2.12 ("can only be imported when
+    `experimental.rootParams` is enabled"). Checked-and-stays (the Phase A matrix): next-intl
+    ~4.13.7 (4.13.3 was "Next.js 16.3 compatibility preparation"; the rootParams recipe needs
+    no 4.14 API), react/react-dom ~19.2.8 (= npm latest; peer ^19), next-image-export-optimizer
+    ~1.20.1 + sharp (peer ^16), @storybook/nextjs-vite ~10.5.10 (peer ^16), @playwright/test
+    ~1.62.1 (container lockstep intact). Upgrade evidence (Phase B lane
+    `chore/next-rootparams-upgrade`): lint · prettier · tsc · vitest 1071/1071 ·
+    build-storybook · build · linkinator all green; **visual net 178/178, zero diffs**; out/
+    tree vs pre-upgrade build: css/fonts/images 0 bytes moved, root redirect byte-identical,
+    app-authored markup byte-identical on all 23 differing pages after canonicalizing four
+    framework classes (script tags — hashed srcs, inline flight, count 29→10; hashed
+    preload-link paths; `next-size-adjust` meta reordered after `<title>`; RSC `.txt`
+    metadata renames + buildID dirs). **Flagged, NOT taken:** the TS 7 restore (§15.10
+    annotation — typescript-eslint is now the sole blocker); §15.11 unchanged (ESLint 9 pin
+    unaffected: eslint-config-next@16.3.4 peers >=9 and still ships eslint-plugin-react ^7.37).
+    Watch items for later lanes: `next dev` now auto-maintains an AGENTS.md block (hygiene
+    decision on first dev run); build disk caching is default-on (use cold builds for
+    byte-comparison rituals).
 
 ## 16. Build-time vs runtime contract
 

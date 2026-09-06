@@ -1,4 +1,4 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 
 // INTERIM STUB — the real Blog index arrives in its own Phase-4 lane (see
 // MIGRATION_PLAYBOOK's Phase-4 order: the ro-only MDX pipeline, PostCard list
@@ -22,11 +22,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 // generateStaticParams or by a route shape outside [locale] — and retires this
 // note along with the stub.
 
-type Props = { params: Promise<{ locale: string }> };
-
-export default async function BlogPage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+export default async function BlogPage() {
   const t = await getTranslations('common');
 
   return <h1 className="font-display text-ink-strong">{t('nav.blog')}</h1>;

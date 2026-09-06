@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import { FloatingActions } from '@/components/sections/FloatingActions/FloatingActions';
@@ -62,8 +62,6 @@ export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
 
-  // Enable static rendering (next-intl static-export requirement).
-  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'common' });
 
   // ── THE BANNER'S STRINGS, IN ALL FIVE LANGUAGES, RESOLVED HERE (D6 — the

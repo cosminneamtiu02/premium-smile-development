@@ -224,9 +224,10 @@ describe('LanguageBanner — the visibility matrix (D2/D3, §8.6)', () => {
     stubLanguages(['pl', 'hu-HU']);
     mount('ro');
     // No match is an ORDINARY answer, not a failure: the banner hides and the
-    // visitor keeps the page they asked for. `fallbackLocale` is not consulted
-    // here at all — a deep link is never redirected; that constant belongs to
-    // the root "/" stub, which has no page to leave someone on.
+    // visitor keeps the page they asked for. No fallback is consulted here —
+    // a deep link is never redirected. (The root "/" stub answers its own
+    // no-cookie case with `defaultLocale` since 2026-09-06; the retired
+    // `fallbackLocale` walk is gone with it.)
     expect(card()).toBeNull();
   });
 

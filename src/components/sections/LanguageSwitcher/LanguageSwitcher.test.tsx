@@ -177,7 +177,7 @@ const guardNavigation = (event: MouseEvent) => {
 const spyOnCookie = () => vi.spyOn(Document.prototype, 'cookie', 'set');
 let cookieSetter: ReturnType<typeof spyOnCookie>;
 
-const CLEAR_COOKIE = 'NEXT_LOCALE=; path=/; max-age=0; Secure';
+const CLEAR_COOKIE = 'NEXT_LOCALE=; path=/; max-age=0';
 
 beforeAll(() => {
   stillnessStyle = document.createElement('style');
@@ -456,9 +456,13 @@ describe('LanguageSwitcher — the site’s ONE cookie (§8.7, §12)', () => {
     );
 
     // The string, character for character: 12 months (§8.7), site-wide, and
-    // Lax so it never rides along on another site's request to us.
+    // Lax so it never rides along on another site's request to us. No `Secure`
+    // HERE: this runner is plain-http, and since 2026-09-07 the writer stamps
+    // Secure only on https documents (WebKit refuses insecure-scheme Secure
+    // writes, localhost included — tests/unit/locale-cookie.test.ts pins both
+    // protocol branches).
     expect(cookieSetter).toHaveBeenCalledExactlyOnceWith(
-      'NEXT_LOCALE=de; path=/; max-age=31536000; SameSite=Lax; Secure',
+      'NEXT_LOCALE=de; path=/; max-age=31536000; SameSite=Lax',
     );
     // …and the browser really took it: this is the half tools/generate-root-
     // redirect.ts reads back on the next visit to '/'.

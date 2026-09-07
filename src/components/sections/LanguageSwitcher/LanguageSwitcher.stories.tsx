@@ -359,7 +359,10 @@ export const Picked: Story = {
 
     // The section really wrote it, before the host cancelled anything…
     await expect(document.cookie).toContain('NEXT_LOCALE=de');
-    // …and this run does not get to keep it.
-    document.cookie = 'NEXT_LOCALE=; path=/; max-age=0; Secure';
+    // …and this run does not get to keep it. (No `Secure` on the clear:
+    // WebKit refuses Secure writes from insecure schemes — the 2026-09-07
+    // cookie.ts amendment — and a Safari Storybook session would otherwise
+    // keep the cookie past this cleanup.)
+    document.cookie = 'NEXT_LOCALE=; path=/; max-age=0';
   },
 };

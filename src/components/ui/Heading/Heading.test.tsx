@@ -25,14 +25,20 @@ const TITLE_CLASSES = 'font-display text-xl text-ink-strong';
 // could only ever come back unnoticed. Equality is what keeps them out.
 const SECTION_CLASSES = 'font-display text-3xl text-ink-strong';
 
-// Record<HeadingSize, …> on purpose: this union is BUILT to grow ('page' is
-// the next candidate), so a new step must not be able to ship with zero
+// I1-page · the page-hero step, measured in by the 404 band (owner,
+// 2026-09-07 "make both text and heading larger"): 36px, one additive step
+// over section — same face, same ink, nothing else.
+const PAGE_CLASSES = 'font-display text-4xl text-ink-strong';
+
+// Record<HeadingSize, …> on purpose: this union is BUILT to grow, so a new
+// step must not be able to ship with zero
 // coverage — the file stops typechecking until the member is classified here.
 // That is the compile-time half of the additive-growth rule (§6.6); the
 // runtime half is the per-step equality test below.
 const expectedClasses: Record<HeadingSize, string> = {
   title: TITLE_CLASSES,
   section: SECTION_CLASSES,
+  page: PAGE_CLASSES,
 };
 
 describe('Heading — the title step (I1 zero-diff-rewire, I2 element neutrality)', () => {
@@ -118,6 +124,20 @@ describe('Heading — the section step (D2, the SectionHeading size)', () => {
   });
 });
 
+describe('Heading — the page step (the 404-measured hero size, 2026-09-07)', () => {
+  it('renders size="page" wearing exactly the page classes', () => {
+    // Same equality discipline as the elders: toBe, never toContain — one
+    // returning self-scaler, bold, tracking or margin fails right here. The
+    // fixture is the step's own measuring consumer, the 404 hero (§15.7:
+    // Romanian, diacritics-bearing).
+    render(<Heading size="page">404: Această pagină nu există</Heading>);
+    const hero = screen.getByText('404: Această pagină nu există');
+    expect(hero.tagName).toBe('P');
+    expect(hero.className).toBe(PAGE_CLASSES);
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+  });
+});
+
 describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // The one drift the Record cannot see: WIDENING the axis. `HeadingSize =
   // string` (or `| (string & {})`) keeps the impl Record, the test Record and
@@ -126,7 +146,7 @@ describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // additive growth edits this line consciously, in the same commit as the new
   // Record row (the Eyebrow pin's growth-direction twin; runs at typecheck,
   // costs nothing at runtime).
-  expectTypeOf<HeadingSize>().toEqualTypeOf<'title' | 'section'>();
+  expectTypeOf<HeadingSize>().toEqualTypeOf<'title' | 'section' | 'page'>();
 
   it.each(Object.keys(expectedClasses) as HeadingSize[])(
     'size "%s" emits exactly its own class set and nothing else',

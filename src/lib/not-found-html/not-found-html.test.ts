@@ -62,7 +62,7 @@ const document_ = new DOMParser().parseFromString(
   renderNotFoundHtml({
     lang: defaultLocale,
     htmlClassName: 'serif-variable mono-variable',
-    title: `${ro.common.notFound.title} — ${ro.common.siteName}`,
+    title: `404: ${ro.common.notFound.title} — ${ro.common.siteName}`,
     stylesheets: STYLESHEETS,
     basePath: '',
     cookieName: 'NEXT_LOCALE',
@@ -106,10 +106,11 @@ describe('the generated 404 dispatcher', () => {
       const block = BLOCKS[index];
       expect(paragraph.getAttribute('lang')).toBe(block.locale);
       expect(paragraph.textContent).toBe(block.message);
-      // The owner's 2026-09-06 correction: justified body text, here as on the
+      // The owner's 2026-09-07 reversal ("f*ck justify keep centered",
+      // superseding 2026-09-06's justify): centred body text, here as on the
       // routed shell page — a PER-ELEMENT override, never a wrapper's blanket
       // (§15.15 b, PR #70 canon).
-      expect(paragraph.classList.contains('text-justify')).toBe(true);
+      expect(paragraph.classList.contains('text-center')).toBe(true);
     });
   });
 

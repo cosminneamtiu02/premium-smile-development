@@ -173,8 +173,9 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
   the language cookie — a full document load, like every other link (§15.13). Blog pages switch to
   the target locale's home (no equivalent exists).
 - Localized 404 per locale — **DECIDED 2026-09-06 (S6 lane, owner):** five real
-  `/{locale}/404/` pages inside the shell (heading + message, the message
-  justified per §15.1's dated exception) plus ONE tool-emitted `out/404.html`
+  `/{locale}/404/` pages inside the shell (heading + message, both centred and
+  the heading `404: `-prefixed — owner 2026-09-07, reversing §15.1's one-day
+  justify exception) plus ONE tool-emitted `out/404.html`
   dispatcher (`tools/generate-404.ts` from `src/lib/not-found-html/not-found-html.ts`) — the
   file a static host serves with real 404 status for every miss; its inline
   script forwards instantly, URL first segment → language cookie → `ro`; no-JS
@@ -374,11 +375,13 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    **Only open sub-item:** confirm the purple hue against the real logo/signage when the
    owner supplies it. Until Phase 0 writes these values, provisional neutrals stand.
    **Exception to the long-prose `text-align: start` lock (2026-09-06, S6 404 lane,
-   owner):** the 404 page's message paragraph ships `text-justify` as a per-element
-   override (§15.15 b canon) — confirmed by the owner after the SC 1.4.8 readability
-   caution was flagged; §15.14's site-wide `hyphens: auto` is the companion that keeps
-   justified German readable. Scope: that one paragraph (and its dispatcher-fallback
-   twins); everything else stays start-aligned.
+   owner) — REVERSED 2026-09-07 (owner, 404-polish live round: "f*ck justify keep
+   centered"):** the 404 page's message paragraph now ships `text-center` as a
+   per-element override (§15.15 b canon — the mechanics of the exception survive, its
+   value flipped after one day); the dispatcher-fallback twins mirror it so the sentence
+   before the forward stays the sentence after it. Scope unchanged: that one paragraph
+   and its twins; everything else stays start-aligned. The original justify verdict and
+   the SC 1.4.8 caution that accompanied it are recorded history, not live rules.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer
@@ -487,8 +490,15 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     a11y recommendation adopted; the role word never appears in the name), and the bulb's
     `common.language.switch` separator is a comma, not "·" (screen readers speak the comma
     as a pause, the middle dot by name). **Amended 2026-09-01 (owner, hygiene round):**
-    the cookie gains `Secure` (HTTPS-only travel; localhost dev is a secure context, so
-    development behaviour is unchanged); `hyphens: auto` ships site-wide at the body tier
+    the cookie gains `Secure` (HTTPS-only travel) — **amended 2026-09-07 (owner-hit,
+    WebKit-reproduced, 404-polish lane): `Secure` rides only `https:` documents.** The
+    09-01 rider "localhost dev is a secure context, so development behaviour is
+    unchanged" proved Chrome-true but Safari-FALSE — WebKit refuses `Secure` writes from
+    any insecure scheme, localhost included, so the banner's ✕ and the switcher's pick
+    silently wrote nothing on the plain-http local preview. `src/i18n/cookie.ts`'s pure
+    `localeCookieString(locale, protocol)` is the one writer shape (both branches
+    test-pinned in tests/unit/locale-cookie.test.ts; the section suites pin the
+    http shape through the real writer); deployed HTTPS bytes are unchanged; `hyphens: auto` ships site-wide at the body tier
     (long words — German compounds first — may break at syllable points; engages only
     under a declared `lang`, which the Storybook decorator now stamps per locale exactly
     like the shell). Recorded limitation: Safari's ITP caps any JS-written cookie at

@@ -108,14 +108,17 @@ const SKIP_LINK =
  * (P1/E11) — so `mount()` stamps the same string onto the real <body> and the
  * computed-style assertions below measure the actual cascade.
  *
- * `flex min-h-dvh flex-col` + `flex-1` on <main> is the sticky footer the owner
- * asked for on 2026-09-04 ("on every screen the footer must always stay at the
- * bottom of the page"). Both halves are KEEP-IN-SYNC with layout.tsx and both
- * are mechanized by the source guard, exactly like SKIP_LINK.
+ * `flex min-h-dvh flex-col` + `flex flex-1 flex-col` on <main> is the sticky
+ * footer the owner asked for on 2026-09-04 ("on every screen the footer must
+ * always stay at the bottom of the page"). Both halves are KEEP-IN-SYNC with
+ * layout.tsx and both are mechanized by the source guard, exactly like
+ * SKIP_LINK.
  */
 const BODY_LAYOUT = 'flex min-h-dvh flex-col bg-page font-body text-ink';
-/** The growing half of that pair, on <main>. */
-const MAIN_GROW = 'flex-1';
+/** The growing half of that pair, on <main> — since 2026-09-07 also a COLUMN
+ *  CONTEXT (owner: the 404 band "more central on y axis"), so page bands can
+ *  `grow` and centre vertically; 404/page.tsx is the first consumer. */
+const MAIN_GROW = 'flex flex-1 flex-col';
 
 /**
  * The §8.6 banner's strings in all five languages — the prop the real shell

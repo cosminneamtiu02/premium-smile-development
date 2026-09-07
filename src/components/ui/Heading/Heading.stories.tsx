@@ -28,9 +28,9 @@ const meta = {
   argTypes: {
     size: {
       control: 'select',
-      options: ['title', 'section'] satisfies HeadingSize[],
+      options: ['title', 'section', 'page'] satisfies HeadingSize[],
       description:
-        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01. Further steps ('page') join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07. Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     asChild: {
       control: false,
@@ -103,6 +103,28 @@ export const SectionStep: Story = {
       <Heading {...args} />
       <Heading size="section" lang="de">
         Behandlungsschwerpunkte und Anfahrtsbeschreibung
+      </Heading>
+    </div>
+  ),
+};
+
+/**
+ * The page-hero step, measured in by the 404 band (owner, 2026-09-07): 36px,
+ * one additive step over 'section', same face and ink. Same dual-line shape as
+ * SectionStep — the Romanian line follows the `size` control, the German line
+ * is pinned to 'page' so the comparison holds; both at the default <p> host (a
+ * SIZE sample, not an outline). The fixtures are the step's own measuring
+ * consumer: the routed 404 headings, `404: ` prefix included, and a 36px serif
+ * line in a 320px column is the wrap case — hence 'stress-320'.
+ */
+export const PageStep: Story = {
+  tags: ['stress-320'],
+  args: { size: 'page', children: '404: Această pagină nu există' },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <Heading {...args} />
+      <Heading size="page" lang="de">
+        404: Diese Seite existiert nicht
       </Heading>
     </div>
   ),

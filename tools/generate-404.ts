@@ -148,7 +148,12 @@ const links = locales.map((locale) => ({
 // locale — exactly as out/index.html takes its own (src/i18n/locales.ts' note
 // on defaultLocale's remaining roles). Nobody should read this document long
 // enough to notice: it forwards on the first frame.
-const title = `${messages[defaultLocale].common.notFound.title} — ${messages[defaultLocale].common.siteName}`;
+// `404: ` leads (owner, 2026-09-07) — the same locale-neutral prefix the
+// routed pages' generateMetadata composes, and composed HERE rather than in
+// the message files for the same reason: see that metadata note in
+// src/app/[locale]/404/page.tsx, and the source-text pins in
+// tests/unit/not-found-404.test.ts that hold the pair together.
+const title = `404: ${messages[defaultLocale].common.notFound.title} — ${messages[defaultLocale].common.siteName}`;
 
 // The `--` ban this note observes is enforced by renderNotFoundHtml, which
 // throws rather than ship a truncated HTML comment.

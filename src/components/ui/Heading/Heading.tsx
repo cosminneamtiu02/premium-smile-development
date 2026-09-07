@@ -26,8 +26,13 @@ import { slotClone } from '../slot';
 // already refused; `font-bold` + `tracking-tight` went because they dressed the
 // old sans-serif — the Source Serif 4 display axis carries presence at 30px
 // unbolded, which is why `title` ships unbolded too.
-// The rule stays live for the step after this one: 'page' joins the union when
-// the page runs bring ITS measured numbers, and not before.
+// 'page' JOINED 2026-09-07 by that exact rule: the 404 hero band is the
+// measured consumer (owner, live round — "make both text and heading larger"
+// on the centred error band), and `text-4xl` — 36px, ONE additive step over
+// section's 30px — is its number. Unbolded for the same Source-Serif-4 reason
+// as both elders, no self-scaling, no margins, same ink. The rule stays live
+// for the step after this one: it joins when a page run brings ITS measured
+// number, and not before.
 //
 // ZERO-DIFF-REWIRE INVARIANT — `title` renders byte-exactly
 // `font-display text-xl text-ink-strong`: the string the Footer holds in its
@@ -57,14 +62,15 @@ import { slotClone } from '../slot';
 // hover/focus/disabled styling for the same reason — an asChild <a>'s focus
 // ring belongs to the globals' :focus-visible net, not to this atom.
 
-export type HeadingSize = 'title' | 'section';
+export type HeadingSize = 'title' | 'section' | 'page';
 
 type HeadingOwnProps = {
   /**
    * Step on the display scale: 'title' — the Footer/Header title treatment —
-   * or 'section' — the section-title look SectionHeading passes (D2). The axis
-   * is named by ROLE, not magnitude, so a step landing between two existing
-   * ones is an addition instead of a rename (§6.6).
+   * 'section' — the section-title look SectionHeading passes (D2) — or
+   * 'page' — the page-hero step the 404 band measured in (2026-09-07). The
+   * axis is named by ROLE, not magnitude, so a step landing between two
+   * existing ones is an addition instead of a rename (§6.6).
    */
   size?: HeadingSize;
   /**
@@ -85,6 +91,7 @@ export type HeadingProps = HeadingOwnProps &
 const sizeClasses: Record<HeadingSize, string> = {
   title: 'font-display text-xl text-ink-strong',
   section: 'font-display text-3xl text-ink-strong',
+  page: 'font-display text-4xl text-ink-strong',
 };
 
 export function Heading({

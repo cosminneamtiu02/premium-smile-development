@@ -83,9 +83,13 @@ const BANNER: Record<Locale, BannerStrings> = {
   it: it_.common.language.banner,
 };
 
-/** The exact bytes src/i18n/cookie.ts writes — 12 months, site-wide, Lax, Secure. */
+/** The exact bytes src/i18n/cookie.ts writes IN THIS RUNNER — 12 months,
+ *  site-wide, Lax; no `Secure`, because the runner is plain-http and since
+ *  2026-09-07 the writer stamps Secure only on https documents (WebKit refuses
+ *  insecure-scheme Secure writes — tests/unit/locale-cookie.test.ts pins both
+ *  protocol branches). */
 const cookieFor = (locale: string) =>
-  `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+  `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
 
 // ── THE JAR. `document.cookie` is an accessor on Document.prototype; an own
 // property on the instance shadows it for this file and is deleted in afterAll.
@@ -314,8 +318,9 @@ describe('LanguageBanner — accept: a real navigation, with the choice stamped 
     await userEvent.click(acceptLink());
 
     // The string, character for character — 12 months (§8.7), site-wide, Lax so
-    // it never rides along on another site's request to us, Secure so it only
-    // travels over HTTPS (§15.14).
+    // it never rides along on another site's request to us; Secure rides only
+    // https documents since 2026-09-07 (§15.14 amended — this runner is http,
+    // and both protocol branches are pinned in tests/unit/locale-cookie.test.ts).
     expect(cookieWrites).toEqual([cookieFor('de')]);
     // NOT default-prevented: the section stamps the cookie and gets out of the
     // way — the BROWSER follows the href and loads a whole new document

@@ -197,8 +197,16 @@ export default async function LocaleLayout({ children, params }: Props) {
                 `flex-1` is the growing half of the sticky footer above: it takes
                 the leftover height on short pages and shrinks to nothing extra
                 on long ones (a flex item's `min-height: auto` keeps tall content
-                from being squashed). */}
-            <main id="main" className="flex-1">
+                from being squashed).
+                `flex flex-col` ON <main> (owner, 2026-09-07 — the 404 band
+                "more central on y axis"): the growing half is also a COLUMN
+                CONTEXT, so a page band can `grow` and centre its content in
+                the leftover height — src/app/[locale]/404/page.tsx is the
+                first consumer. Every page's direct children become stretched
+                column items: width-wise identical to blocks, and §6.4's
+                gap-based spacing never leaned on margin collapse, so no other
+                page moves. */}
+            <main id="main" className="flex flex-1 flex-col">
               {children}
             </main>
 

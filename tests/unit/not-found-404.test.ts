@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   notFoundMain,
@@ -239,14 +241,14 @@ describe('the no-JS fallback body', () => {
     expect(main.match(/<span class="block"/g)).toHaveLength(BLOCKS.length);
   });
 
-  it('justifies each message, in its own language', () => {
+  it('centres each message, in its own language', () => {
     const main = notFoundMain(BLOCKS, LINKS);
     for (const { locale, message } of BLOCKS) {
       expect(main).toContain(
-        `<p class="max-w-xl text-justify" lang="${locale}">${message}</p>`,
+        `<p class="max-w-xl text-center" lang="${locale}">${message}</p>`,
       );
     }
-    expect(main.match(/<p class="max-w-xl text-justify"/g)).toHaveLength(
+    expect(main.match(/<p class="max-w-xl text-center"/g)).toHaveLength(
       BLOCKS.length,
     );
   });
@@ -334,5 +336,34 @@ describe('the assembled document', () => {
     // document has said what it is (title, robots, provenance).
     expect(script_).toBeGreaterThan(link);
     expect(script_).toBeLessThan(bodyOpen);
+  });
+});
+
+describe("the owner's 2026-09-07 title correction — `404: ` leads both titles", () => {
+  // SOURCE-TEXT PINS, the root-stub convention (this file's header already
+  // leans on locale-match.test.ts' shape). The prefix is deliberately composed
+  // in the two templates and NOT in src/messages/*.json — a status number is
+  // locale-neutral machinery, not a translatable string; the metadata note in
+  // src/app/[locale]/404/page.tsx carries the full argument. Fixtures above
+  // pass finished titles through renderNotFoundHtml, so the composition
+  // itself is only reachable as source text — exactly what these hold.
+  it('the dispatcher composes its <title> with the prefix', () => {
+    const tool = readFileSync(
+      fileURLToPath(new URL('../../tools/generate-404.ts', import.meta.url)),
+      'utf8',
+    );
+    expect(tool).toContain(
+      'const title = `404: ${messages[defaultLocale].common.notFound.title}',
+    );
+  });
+
+  it("the routed pages' generateMetadata carries the same prefix", () => {
+    const page = readFileSync(
+      fileURLToPath(
+        new URL('../../src/app/[locale]/404/page.tsx', import.meta.url),
+      ),
+      'utf8',
+    );
+    expect(page).toContain("title: `404: ${t('notFound.title')}");
   });
 });

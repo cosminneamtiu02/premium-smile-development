@@ -9,9 +9,18 @@
 // What moved and what did not, precisely:
 //   · MOVED: the attribute string. `path=/` so the choice counts on every page,
 //     `max-age=31536000` = 12 months (§8.7), `SameSite=Lax` so it never rides
-//     along on another site's request to us, `Secure` so it only ever travels
-//     over HTTPS (§15.14, owner 2026-09-01 — localhost is a secure context, so
-//     development is unchanged). One spelling now, not two agreeing ones.
+//     along on another site's request to us, and `Secure` on every https:
+//     document — which is every deployed page — so it only ever travels over
+//     HTTPS (§15.14). AMENDED 2026-09-07 (owner-hit, WebKit-reproduced): the
+//     09-01 rider "localhost is a secure context, so development is unchanged"
+//     is Chrome-true but Safari-FALSE — WebKit refuses a `Secure` write from
+//     ANY insecure scheme, localhost included, so on the plain-http local
+//     preview the banner's ✕ and the switcher's pick wrote NOTHING and the
+//     suggestion re-asked on every page. The attribute is therefore
+//     conditional on `location.protocol`: the bytes shipped over https are
+//     unchanged, and the one insecure place this site ever runs — the local
+//     preview — now behaves like production in every engine.
+//     One spelling now, not two agreeing ones.
 //   · STAYED IN THE SWITCHER: the modified-click guard. ctrl/cmd/shift/alt
 //     leaves THIS document where it is, so no choice was made — that is a
 //     judgement about what a click MEANS, not about how a cookie is written,
@@ -63,7 +72,24 @@ import { LOCALE_COOKIE } from './locales';
  * cookie at ~7 days whatever `max-age` says, so the choice simply re-asks
  * sooner on iPhones (§15.14). A second storage to work around it is banned by
  * §12 — there is nothing to repair here.
+ *
+ * (This block documents the WRITER below — the policy half; the pure builder
+ * beneath it carries only the mechanics of the attribute string.)
  */
 export function setLocaleCookie(locale: string): void {
-  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; SameSite=Lax; Secure`;
+  document.cookie = localeCookieString(locale, location.protocol);
+}
+
+/**
+ * The attribute string itself, split out PURE so the https branch stays
+ * testable: the browser-mode section suites pin the http shape through the
+ * real writer, but a real window's `location` cannot be redefined, so
+ * tests/unit/locale-cookie.test.ts pins BOTH branches here instead.
+ * `protocol` is `location.protocol`-shaped: 'https:' earns `Secure`, anything
+ * else — only ever the plain-http local preview — omits it so WebKit accepts
+ * the write (the 2026-09-07 amendment in this file's header).
+ */
+export function localeCookieString(locale: string, protocol: string): string {
+  const secure = protocol === 'https:' ? '; Secure' : '';
+  return `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; SameSite=Lax${secure}`;
 }

@@ -41,8 +41,9 @@ import { Heading } from '@/components/ui/Heading/Heading';
 // ./NotFound.stories.tsx. This page is an async Server
 // Component, so no browser runner can render it; the story therefore rebuilds
 // the same two elements through the isomorphic `useTranslations` and its play
-// functions pin them from the outside — one real <h1> carrying
-// `notFound.title`, one paragraph whose COMPUTED text-align is `justify`.
+// functions pin them from the outside — one real <h1> whose text leads with
+// `404: ` before `notFound.title` (Heading's 'page' step, 36px), one paragraph
+// whose COMPUTED text-align is `center` at `text-xl`.
 // Change the band here and that suite goes red naming the pair. (The pair is
 // twelve lines of markup, deliberately not extracted: a shared component would
 // buy a third file and an import fence for two elements.)
@@ -56,7 +57,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     // Per locale, and in the §10.3 pattern's spirit: what this page is, then
     // the clinic. A German visitor's tab should not read Romanian.
-    title: `${t('notFound.title')} — ${t('siteName')}`,
+    // `404: ` LEADS (owner, 2026-09-07 — "title should contain 404"): the
+    // status number is locale-neutral machinery, so it rides the template the
+    // way the ` — ` join already does rather than entering five message files
+    // (§17.4 governs translatable strings; a number that reads the same in
+    // every tab is not one). The dispatcher's own <title> carries the same
+    // prefix from the same argument — tools/generate-404.ts — and the
+    // source-text pins in tests/unit/not-found-404.test.ts hold the pair.
+    title: `404: ${t('notFound.title')} — ${t('siteName')}`,
     // NOINDEX ALWAYS — not env-gated like the shell's. This page is reachable
     // at a real URL and a host answers it with 200, so without this meta Google
     // would be free to index five "page not found" pages as ordinary content:
@@ -79,37 +87,80 @@ export default async function NotFoundPage() {
     // same ground would only add a seam — so what it contributes is the
     // element and the rhythm, and the `py` rides the Container exactly as the
     // Footer's does (recipe rule 3, the shipped precedent).
-    <section>
+    // `flex grow flex-col justify-center` (owner, 2026-09-07 — "more central
+    // on y axis"): the shell's <main> is a column flex context since the same
+    // correction (its comment names this band as first consumer), so growing
+    // here hands the section main's leftover height and `justify-center`
+    // centres the Container inside it. The Container's own py-16 stays as the
+    // breathing floor for content taller than the viewport.
+    // `min-h-[calc(100dvh-6rem)]` is what makes the centring VISIBLE: the
+    // Footer is taller than any viewport's leftover, so `grow` alone never
+    // receives space — this floor sizes the band to the first screenful
+    // instead, putting the message mid-screen on landing and the Footer below
+    // the fold. The 6rem is the sticky pill's in-flow reach — its `mt-4` plus
+    // the `h-20` row — and globals.css' `scroll-padding-top: 6rem` is the
+    // same coupled value from the shell's side (§17.7 stable anchors: change
+    // the bar family and both spellings move together).
+    // `pb-24` (6rem) is the OPTICAL LIFT (owner, 2026-09-07 round 4 — "just a
+    // bit higher now"): border-box keeps the pad inside the min-h, so the
+    // centring region loses 6rem at the bottom and the message rides up by
+    // half of it — 3rem — at every viewport. True geometric centre reads
+    // slightly low to the eye; this is the classic correction, spelled as one
+    // spacing-scale step.
+    <section className="flex min-h-[calc(100dvh-6rem)] grow flex-col justify-center pb-24">
       {/* `flex flex-col gap-4` because the PARENT owns spacing (§6.4): neither
           ui/Heading nor a preflight-reset <p> ships a margin, so without a
           stack the heading and the paragraph would sit flush against each
-          other. */}
-      <Container className="flex flex-col gap-4 py-16">
+          other.
+          `items-center text-center` (owner, 2026-09-07 — "centered in the
+          container", this band's second correction): the wrapper centres BOXES
+          and display text, which is exactly the freedom §15.15 b leaves
+          wrappers. The prose below still carries its OWN `text-center` on the
+          element — the canon bars wrapper centring from being what reaches
+          prose, and that stays true even now that the two values coincide
+          (round 3 below): delete the wrapper's utility and the paragraph must
+          not change. Each half is pinned as computed style by the story twin. */}
+      <Container className="flex flex-col items-center gap-4 py-16 text-center">
         {/* ONE h1 per page (§9), and it is a REAL h1: Heading owns the display
             step, never the element, so `asChild` hands the outline slot to the
             markup and the atom can never fake structure (Heading.tsx). `size`
-            is the section step — the largest this scale ships. */}
-        <Heading size="section" asChild>
-          <h1>{t('notFound.title')}</h1>
+            is 'page' — the step THIS band measured into the atom (owner,
+            2026-09-07 round 4, "make both text and heading larger"): 36px, one
+            additive step over 'section', entered through Heading's own
+            one-step-per-measured-consumer law rather than a className override
+            (§6.8 bans restyling an atom's internals). */}
+        {/* `404: ` LEADS THE VISIBLE HEADING TOO (owner, 2026-09-07 round 3 —
+            "add before Această pagină nu există a 404, so 404: Această pagină
+            nu există"): the same locale-neutral prefix generateMetadata
+            composes above, riding the JSX for the same §17.4 reason — the
+            number never enters five message files. The DISPATCHER's fallback
+            h1 stays unprefixed on purpose: it stacks all five titles in one
+            heading, where a single shared number would read as part of none of
+            the five languages — and its document <title> already carries it. */}
+        <Heading size="page" asChild>
+          <h1>404: {t('notFound.title')}</h1>
         </Heading>
 
-        {/* JUSTIFIED, PER ELEMENT — the owner's 2026-09-06 words ("text in
-            justify"), a dated exception to the §15.1 locked decision that long
-            prose aligns to `start`. The utility rides the <p> ITSELF and never
-            a wrapper: that is the §15.15 b canon (PR #70) — globals.css aligns
-            p/li/blockquote to `start` at the base tier precisely so inherited
-            alignment cannot reach prose, so a deliberate exception belongs on
-            the element, where it wins by layer order.
-            It is only acceptable because §15.14's site-wide `hyphens: auto` is
-            already in the sheet and engages under the shell's `<html lang>`:
-            justification without hyphenation opens rivers of white space, and
-            German — the +30–35% language — is where that shows first, which is
-            what the GermanStress story is for.
+        {/* CENTRED, PER ELEMENT (owner, 2026-09-07 round 3 — "f*ck justify
+            keep centered" — SUPERSEDING their 2026-09-06 "text in justify":
+            the §15.1 dated justify exception closes after one day of life,
+            and the dispatcher's fallback body mirrors the reversal so the
+            sentence before the forward stays the sentence after it). The
+            utility still rides the <p> ITSELF and never a wrapper — the
+            §15.15 b canon (PR #70): globals.css aligns p/li/blockquote to
+            `start` at the base tier precisely so inherited alignment cannot
+            reach prose, so a deliberate exception belongs on the element,
+            where it wins by layer order — even while the wrapper above
+            happens to centre display text with the same value.
             `max-w-xl` is the prose MEASURE, which Container deliberately does
             not own (its header's "WHAT THIS ATOM DOES NOT OWN" list): at 1920
             the gutter column is 1536px wide, and 1.125rem body text needs a
             shorter line than that. */}
-        <p className="max-w-xl text-justify">{t('notFound.message')}</p>
+        {/* `text-xl` (1.25rem — owner round 4, "make both text and heading
+            larger"): one step over the site's 1.125rem body base, still rem so
+            zoom and user font settings scale it (§7). Rides the element like
+            the alignment above it. */}
+        <p className="max-w-xl text-center text-xl">{t('notFound.message')}</p>
       </Container>
     </section>
   );

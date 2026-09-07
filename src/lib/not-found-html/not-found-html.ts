@@ -174,11 +174,14 @@ export function notFoundScript(opts: {
 
 /**
  * The page's whole body — what a visitor without JavaScript, and every crawler,
- * actually gets: one heading of five lines, five justified messages, and five
+ * actually gets: one heading of five lines, five centred messages, and five
  * ways out.
  *
- * THE PARAGRAPHS ARE `text-justify`, PER ELEMENT (owner, 2026-09-06: "text in
- * justify"). The utility rides each <p> itself, never a wrapper — the §15.15 b
+ * THE PARAGRAPHS ARE `text-center`, PER ELEMENT (owner, 2026-09-07: "f*ck
+ * justify keep centered" — superseding their 2026-09-06 "text in justify";
+ * the sentence before the forward must stay the sentence after it, so this
+ * fallback mirrors the routed page's reversal). The utility rides each <p>
+ * itself, never a wrapper — the §15.15 b
  * canon (PR #70): globals.css aligns p/li/blockquote to `start` at the base
  * tier precisely so that inherited alignment cannot reach prose, and a
  * deliberate exception therefore belongs ON the element. The routed shell page
@@ -223,7 +226,7 @@ export function notFoundMain(
   const messages = blocks
     .map(
       ({ locale, message }) =>
-        `<p class="max-w-xl text-justify" lang="${locale}">${message}</p>`,
+        `<p class="max-w-xl text-center" lang="${locale}">${message}</p>`,
     )
     .join('\n');
 

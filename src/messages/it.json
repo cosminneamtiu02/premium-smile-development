@@ -51,6 +51,13 @@
     "hero": {
       "title": "Il tuo sorriso, la nostra priorità",
       "subtitle": "Cure odontoiatriche moderne, con delicatezza e professionalità"
+    },
+    "location": {
+      "eyebrow": "Dove siamo",
+      "title": "Visita la nostra clinica",
+      "mapAlt": "Mappa con la posizione della clinica {name}",
+      "directionsLabel": "Vedi le indicazioni per {address}",
+      "callLabel": "Chiama il numero {phone}"
     }
   },
   "services": {

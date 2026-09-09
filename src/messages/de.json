@@ -51,6 +51,13 @@
     "hero": {
       "title": "Ihr Lächeln, unsere Priorität",
       "subtitle": "Moderne Zahnmedizin – einfühlsam und professionell"
+    },
+    "location": {
+      "eyebrow": "So finden Sie uns",
+      "title": "Besuchen Sie unsere Klinik",
+      "mapAlt": "Karte mit dem Standort der Klinik {name}",
+      "directionsLabel": "Route zu {address} anzeigen",
+      "callLabel": "Rufen Sie {phone} an"
     }
   },
   "services": {

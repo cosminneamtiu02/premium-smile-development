@@ -104,6 +104,14 @@ const CONSUMERS = [
     '../../src/components/ui/Card/Card.tsx',
     1,
   ],
+  // The „Ne găsești" band joined on the owner's 2026-09-09 "use current aura
+  // shadow" (board D3): the map box wears it directly, and ONE className on the
+  // ContactRow's GlyphButton dresses both row discs — two wears in code.
+  [
+    'ClinicLocation.tsx (the map box + the row discs through GlyphButton)',
+    '../../src/components/sections/ClinicLocation/ClinicLocation.tsx',
+    2,
+  ],
 ] as const;
 
 describe('the aura token (header-aura board, fb-359)', () => {

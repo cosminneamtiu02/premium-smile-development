@@ -6,6 +6,7 @@ import { Burger } from './Burger';
 import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
+import { Pin } from './Pin';
 import { Tiktok } from './Tiktok';
 import { Whatsapp } from './Whatsapp';
 
@@ -24,6 +25,7 @@ const STROKE_GLYPHS = [
   ['Burger', Burger],
   ['Close', Close],
   ['Phone', Phone],
+  ['Pin', Pin],
 ] as const;
 const FILL_GLYPHS = [
   ['Instagram', Instagram],

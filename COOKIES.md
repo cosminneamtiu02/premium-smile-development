@@ -7,6 +7,11 @@
 > transferable design is preserved in §6. Nothing cookie-consent-related exists in the
 > codebase. This file is the single place to read before choosing a cookie-management
 > solution — first-party, third-party manager modal, or anything else.
+>
+> **Amended 2026-09-09 (owner, ClinicLocation lane — option A): the Google-Maps embed now
+> ships LIVE and UNGATED on develop.** Row 3 and §3 were corrected against a measurement,
+> and **§7 (new)** records the deferral and the exact checklist a future consent
+> implementation must complete. The disclosure obligation moved to §8.
 
 ---
 
@@ -29,7 +34,7 @@ treats it differently.
 |---|---|---|---|---|---|---|---|
 | 1 | `NEXT_LOCALE` | First-party (ours) | LanguageSwitcher click · LanguageBanner accept/dismiss | Only on the visitor's explicit click | Remember the chosen language; root `/` and the 404 dispatcher read it to route | **Exempt-functional** — no consent needed, disclosure only | **LIVE** on develop |
 | 2 | `MAP_CONSENT` | First-party (ours) | The future consent mechanism (Accept/Reject) | Only on the visitor's explicit click | Remember whether the visitor allowed the Google-Maps embed (`granted` / `rejected`) | **Exempt** (a consent *record* is itself strictly necessary) | **NOT BUILT** — design documented in §6; implementation deleted 2026-09-07 on owner instruction |
-| 3 | Google's cookies (`NID`, and whatever Google decides — not under our control) | **Third-party** (google.com) | Google's JavaScript inside the maps-embed iframe | The moment the iframe loads | Google's own purposes: session, preferences, ad/tracking ecosystem | **Consent REQUIRED before load** — the entire reason a consent mechanism exists | **NOT SHIPPED** — the map is designed but blocked on the cookie strategy |
+| 3 | Google's cookies (whatever Google decides — not under our control) | **Third-party** (google.com) | Google's page inside the maps-embed iframe | The moment the iframe loads — **IF Google sets any. Measured 2026-09-09: the embed endpoint set NONE** (positive control: 3 cookies on a top-level maps.google.com visit in the same browser — see §3) | Google's own purposes | The **storage** question (ePrivacy) did not fire in measurement; the **transfer** question (GDPR — every visitor's IP reaches Google on load) is the exposure that remains. **Consent DEFERRED** — accepted risk on the owner's word (§7) | **LIVE, UNGATED** on develop since the ClinicLocation lane (owner 2026-09-09) |
 
 That is the whole list. Nothing else on the site stores anything on the visitor's
 device: no analytics (banned by owner decision, §12), no sessionStorage/localStorage
@@ -64,11 +69,37 @@ use, no font CDN (fonts are self-hosted), no chat widgets, no server sessions
 
 ## 3 · Cookie #3 — Google's cookies, and why the map is the whole problem
 
-The "Ne găsești" section (ClinicLocation, designed 2026-09-06/07) wants the old site's
-scrollable Google map. That map is an `<iframe>` — a browser-within-the-page loading
-`google.com/maps/embed`. The instant it loads, **Google's JavaScript runs and writes
-Google's cookies** on the visitor's device — before the visitor did anything. The legal
-chain, link by link:
+The "Ne găsești" section (ClinicLocation, designed 2026-09-06/07, **built 2026-09-09**)
+wants the old site's scrollable Google map. That map is an `<iframe>` — a browser-within-
+the-page loading `google.com/maps/embed`.
+
+**What was assumed here until 2026-09-09, and what was then measured.** This section used
+to say Google's cookies are written "the instant it loads". Before the owner decided to
+ship the embed, that claim was tested rather than repeated: Playwright's Chromium, a clean
+profile with an empty cookie jar, an EU IP, a page embedding
+`maps.google.com/maps?q=…&output=embed` in an iframe, nobody clicking anything. **Result:
+zero cookies stored.** The control that makes the result meaningful: the same browser,
+same session, visiting `maps.google.com` as a top-level page stored **three** (`SOCS`,
+`__Secure-ENID`, `OTZ`) — so the browser stores Google's cookies when Google sends them,
+and the embed endpoint simply did not send any. Two limits, stated plainly: (1) it is one
+measurement of one endpoint form — the `google.com/maps/embed?pb=…` form the section
+actually ships was not yet measured against the real Sibiu URL (**re-run the probe when
+that URL arrives**); (2) Google can change its endpoint's behaviour at any time and owes
+us no notice.
+
+**What the measurement does NOT retire.** Cookies are the ePrivacy question (storage on the
+device). The GDPR question is different and still stands: on every load of the Home page,
+the visitor's **IP address** — personal data — travels to seven Google hosts
+(`maps.google.com`, `www.google.com`, `maps.googleapis.com`, `maps.gstatic.com`,
+`places.googleapis.com`, `fonts.googleapis.com`, `fonts.gstatic.com`), with no consent
+asked. The Google-Fonts line of cases (LG München I, 2022) was decided on IP transfer
+alone, with no cookie involved, and produced a wave of German warning letters; this site's
+`de` locale targets exactly that market. The old site's `referrerPolicy` additionally sent
+Google the full page URL; the new band sends **none** (`no-referrer` — measured: the
+header is absent, the map renders identically).
+
+The legal chain for the cookie limb, link by link — it applies the moment Google DOES set a
+cookie, which is why the shipped band keeps a seam for a future gate (§7):
 
 1. Storing anything non-essential on the device requires **prior consent** (ePrivacy).
 2. Google's map cookies serve Google's tracking/ads ecosystem — nothing the visitor
@@ -187,7 +218,74 @@ consent-requiring content. The ClinicLocation map section is blocked only on thi
 strategy decision; everything else about it (heading, address/phone rows, placement,
 strings) is decided and waiting in its dossier.
 
-## 7 · The disclosure obligation that exists NO MATTER WHAT
+## 7 · DEFERRED — the map is live and ungated (owner, 2026-09-09), and what a consent implementation must do
+
+**The decision, verbatim from the owner (2026-09-09):** *"until then, bypass somehow cookies
+consent for the moment and write anyways cookies and we'll get to cookies consent and
+implementation later."* Option A on the ClinicLocation board (`.claude/plans/clinic-location.plan.md`,
+approved fb-416): the band ships the old site's live embed with **no consent gate** — an
+**accepted, deferred risk on the owner's word**, recorded in CLAUDE.md §12's rider. Nothing
+about this is "compliant by measurement": the cookie limb measured clean (§3), the
+IP-transfer limb did not, and the owner chose to ship and revisit.
+
+**What ships today** (`src/components/sections/ClinicLocation/ClinicLocation.tsx`):
+- the `<iframe src={clinic.mapEmbedUrl}>`, rendered in the build HTML, live at page load;
+- `referrerPolicy="no-referrer"` (Google learns the IP, never the page URL) · `allow=""`
+  (no frame permissions) · `loading="lazy"`;
+- **no consent record, no banner, no `lib/consent`** — the site still stores exactly one
+  cookie (row 1). §2 of CLAUDE.md stays literally true.
+- The **`CONSENT SEAM`** comment block sits directly above the `<iframe>`; `ClinicLocation.test.tsx`
+  pins the iframe's attributes (`src`, `title`, `loading`, `allow`, `referrerpolicy`), so the
+  future lane inherits a green suite to extend.
+
+**The checklist the consent lane must complete — every item, same lane:**
+1. **A record** with the §6 contract (`getMapConsent / hasMapConsent / grantMapConsent /
+   revokeMapConsent / subscribeMapConsent`), first-party, exempt (§4), cookie shape from §6 —
+   hand-rolled or a CMP vetted against §5. The map island never learns which.
+2. **Wrap the seam:** render the `<iframe>` ONLY when the record grants. **The iframe must be
+   ABSENT from the DOM without consent, never hidden** (`display:none` still loads Google).
+3. **Design the no-consent branch** — that lane's call. The owner **reopened the image
+   fallback** on 2026-09-09 (board fb-387: "maybe a fallback for image is not such a bad
+   idea anymore") after ruling it out on 09-07; alternatives are the address rows alone
+   with a "show map" affordance that grants, or a plain link out to Google Maps. Whatever
+   it is, the affordance that grants must be a real `<button>` ≥ 44px (§9).
+4. **§16 rule 2 (hydration):** the build HTML carries the no-consent branch; the decision
+   happens after mount; never branch on the cookie during the initial render.
+5. **Live flip:** a grant made elsewhere (the banner) turns the map live in place through
+   `subscribeMapConsent`, no reload.
+6. **The band stops being zero-JS** (or its map part does): the section — or an extracted
+   map island — becomes a client component. Update its header comment, its zero-islands
+   test, and the story header; keep the rest of the band inert.
+7. **Tests to add:** absence without consent · presence with `src === clinic.mapEmbedUrl`
+   when granted · grant-affordance click → iframe appears, focus not lost · keyboard
+   activation · per-story axe on BOTH branches. Stories for both branches (the no-consent
+   branch is what the visual net photographs — the fence in `tests/visual/stories.spec.ts`
+   stays, D9).
+8. **Disclosure** on the policy page (§8) + the withdrawal path.
+9. **Close the loop in the records:** delete CLAUDE.md §12's "ungated" rider, rewrite row 3
+   above from "LIVE, UNGATED" to the gated state, and retire this section.
+
+**Two accessibility consequences of the ungated embed, recorded here because the consent
+lane's no-consent branch dissolves both for free (G2 a11y review, 2026-09-09 — MEDIUM, no
+lane-local fix without changing decided geometry):**
+- At 320/390 the site's fixed corner discs (FloatingActions, bottom-right) can sit over
+  Google's zoom/attribution cluster in the frame's bottom-right corner when the map's lower
+  edge is scrolled into the bottom ~136px — a thumb aiming at "+" may hit the WhatsApp or
+  phone disc. Keyboard focus is protected by the site's `scroll-padding-bottom`; pointer
+  use is not. Walk it at several scroll positions in the §9 page-tier keyboard/pointer
+  pass; the band cannot re-inset third-party UI.
+- The embed precedes the rows in the tab sequence: keyboard and switch users Tab through
+  Google's own stops (place card, canvas, zoom, shortcuts, Terms) before reaching the
+  address or the phone. Verified NOT a trap — Tab exits the cross-origin document at both
+  ends — but on today's stub Home the first stop after the skip link is inside Google's
+  English document. Visual order bars a DOM reorder (map above the rows below the
+  side-by-side step).
+
+**Standing regardless of the lane:** keep `referrerPolicy="no-referrer"`; re-run the §3
+probe against the real Sibiu `pb=` URL the day it arrives; never load the iframe from a
+`display:none` box.
+
+## 8 · The disclosure obligation that exists NO MATTER WHAT
 
 Whichever path is chosen, the future §12 privacy-policy page must disclose: the
 language cookie (name, purpose, lifetime, the Safari ~7-day note), the consent record

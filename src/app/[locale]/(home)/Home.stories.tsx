@@ -3,11 +3,15 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
 import { useTranslations } from 'next-intl';
 import ro from '@/messages/ro.json';
+import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 
-// Pages/Home — the INTERIM STUB as it actually ships. The real Hero ·
-// ServicesTeaser · CTABanner arrive with the §14 Home lane, and the owner
-// authors that content (§15.17); this story photographs the placeholder, not a
-// wish.
+// Pages/Home — the INTERIM STUB as it actually ships, PLUS its first real
+// band: sections/ClinicLocation (owner 2026-09-09, board D3 — the „Ne găsești"
+// map + contact rows, mounted below the stub lines exactly as page.tsx does).
+// The real Hero · ServicesTeaser · CTABanner still arrive with the §14 Home
+// lane, and the owner authors that content (§15.17); this story photographs
+// what ships, not a wish. The band's live Google iframe is fenced in the
+// visual net (tests/visual/stories.spec.ts) and photographs as its tray.
 //
 // KEEP-IN-SYNC with ./page.tsx BESIDE this file: that page is an async Server
 // Component (getTranslations from next-intl/server), which no browser runner
@@ -32,6 +36,7 @@ function HomePageBand(): ReactElement {
     <>
       <h1 className="font-display text-ink-strong">{t('hero.title')}</h1>
       <p>{t('hero.subtitle')}</p>
+      <ClinicLocation />
     </>
   );
 }
@@ -53,8 +58,12 @@ export const Romanian: Story = {
       name: ro.home.hero.title,
     });
     await expect(heading.tagName).toBe('H1');
-    // The subtitle is the only other thing this page renders — if the twin
+    // The subtitle is the only other STUB line this page renders — if the twin
     // drifts to one element, this line says so.
     await expect(canvas.getByText(ro.home.hero.subtitle)).toBeInTheDocument();
+    // The first real band, named by its own h2 — the twin must mount it too.
+    await expect(
+      canvas.getByRole('region', { name: ro.home.location.title }),
+    ).toBeInTheDocument();
   },
 };

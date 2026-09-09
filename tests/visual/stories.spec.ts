@@ -124,6 +124,20 @@ for (const story of entries) {
       `${story.id} is not sampled at ${width}px (tier policy §13)`,
     );
 
+    // THE NETWORK FENCE (ClinicLocation board D9, owner 2026-09-09): every
+    // request that is not the served Storybook is answered with an empty 200
+    // document. The one third-party embed on the site — the „Ne găsești"
+    // band's Google-Maps <iframe> — would otherwise photograph LIVE tiles
+    // (nondeterministic pixels, and nothing at all on a network-less CI
+    // runner); fenced, it photographs the band's own bordered tray, identically
+    // on darwin and linux. Nothing else on the site fetches off-origin (§12: no
+    // CDNs, fonts self-hosted), so no other story's picture changes. Registered
+    // BEFORE navigation, as page.route requires.
+    await page.route(
+      (url) => url.hostname !== '127.0.0.1' && url.hostname !== 'localhost',
+      (route) =>
+        route.fulfill({ status: 200, contentType: 'text/html', body: '' }),
+    );
     await page.goto(`/iframe.html?id=${story.id}&viewMode=story`);
     await page.waitForSelector('#storybook-root');
     // Self-hosted fonts must be painted before pixels are compared.

@@ -51,6 +51,13 @@
     "hero": {
       "title": "Votre sourire, notre priorité",
       "subtitle": "Des soins dentaires modernes, en douceur et avec professionnalisme"
+    },
+    "location": {
+      "eyebrow": "Nous trouver",
+      "title": "Visitez notre clinique",
+      "mapAlt": "Carte indiquant l'emplacement de la clinique {name}",
+      "directionsLabel": "Voir l'itinéraire vers {address}",
+      "callLabel": "Appeler le {phone}"
     }
   },
   "services": {

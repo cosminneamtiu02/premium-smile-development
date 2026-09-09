@@ -51,6 +51,13 @@
     "hero": {
       "title": "Zâmbetul tău, prioritatea noastră",
       "subtitle": "Îngrijire stomatologică modernă, cu blândețe și profesionalism"
+    },
+    "location": {
+      "eyebrow": "Ne găsești",
+      "title": "Vizitează clinica noastră",
+      "mapAlt": "Hartă cu locația clinicii {name}",
+      "directionsLabel": "Vezi direcțiile către {address}",
+      "callLabel": "Sună la {phone}"
     }
   },
   "services": {

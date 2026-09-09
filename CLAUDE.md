@@ -94,6 +94,11 @@ src/
     routes/routes.ts     # THE route list + matchesRoute/equivalentPath (one list, all consumers)
     hours/hours.ts       # schedule → printable rows (deterministic reference week)
     scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
+    reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
+    clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
+    rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
+    rotation-group/rotation-group.ts  # one beat, many rings — opt-in sync; the site default stays independent clocks
+    external-store/external-store.ts  # THE useSyncExternalStore protocol (subscribe · getSnapshot · getServerSnapshot · sync) — clock, rotation, rotation-group publish through it (org-review F1, owner fb-426, 2026-09-09)
     cx/cx.ts             # THE class-join helper — every tier imports it (fb-307 → PR #64)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
@@ -625,6 +630,53 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the target; only WHO writes the content changed. No archived code lands without the
     owner's word — the recorded first candidate is the S1 cherry-pick plus the
     `next typegen && tsc` typecheck hardening (#83's flagged-not-taken item).
+
+18. **Rotation clock — DECIDED (owner, board `.claude/plans/rotation-lib.plan.md`,
+    fb-399–424 + G2 amendments, 2026-09-09):** the two old auto-iterators (the Hero's
+    greyed-out photo frame and the reviews deck) share ONE React-free root in `lib/`,
+    not an atom and not a hook — four modules, one job each: `lib/reduced-motion` (the
+    `prefers-reduced-motion` seam), `lib/clock` (THE beat: a timeout chain, never
+    `setInterval`; sticky `pause()`/`play()` vs transient cause-keyed
+    `suspend(cause)`/`resume(cause)`; `startDelayMs` as the FIRST DWELL only; reduced
+    motion declines the automatic start but an explicit `play()` runs; tab-hidden
+    disarms and a return re-arms; `driver: 'external'` + `tick()` for a shared beat),
+    `lib/rotation` (the ring: `active`, `step`, `wrapIndex`, `liveRegion`,
+    `rotationControl`), `lib/rotation-group` (one beat driving many external-driver
+    rings; `play()`/`pause()` fan out; members skip themselves and skip one beat after
+    a hand navigation). Consumed through React's own `useSyncExternalStore` — construction
+    is pure (§16), `start()` is the first browser touch, `dispose()` is re-entrant.
+    `intervalMs` is REQUIRED per consumer (milliseconds, `Ms`-suffixed, `5_500` style —
+    no site default; rhythms differ because content differs), and construction throws
+    unless every delay is finite, at least 1 ms and ≤ 2 147 483 647. **The site default is
+    independent clocks with distinct dossier-owned rhythms; a group is chosen
+    deliberately, in writing.** `rotation.ts`'s header is the consumption LAW every
+    rotator copies: region name + localized `aria-roledescription` from messages, DOM
+    order control → prev/next → slides, the pause/play rotation control (WCAG 2.2.2)
+    outside the hover wrapper and faced by `rotationControl(status)`, keyboard focus
+    entering = sticky pause, pointer focus = transient, inactive slides `inert`, one
+    static h1 outside the slides, no controls below two items, reading-time rider
+    (~150 wpm against the longest slide). Every rotator is a client island: §16's list
+    gains each one in its own lane. Consumer gates stay the owner's: photographs (§11)
+    for the frame, real reviews + the CMSR testimonial check for the deck, the two
+    owner-authored keys `common.carousel.role` / `common.carousel.slideRole` ×5, the
+    "play, then Tab within the region" interaction test, a `next build` probe of the
+    `.ts`-suffixed lib imports at the first consumer. Named triggers: a `RotationGroup`
+    board only if a durable never-move-together guarantee is ever wanted; a
+    discriminated `Rotation<'internal' | 'external'>` — OPTIONS **and** return type —
+    so `intervalMs` is not required under `driver: 'external'`, `tick()` exists only
+    on an external ring (today it is callable on an internal one, where it
+    double-advances) and `group.add()` refuses an internal ring at compile time (the
+    runtime throw stays as the belt), when the first group consumer lands. fb-67's
+    two-lane cap was overridden by the owner for this story-less lane only ("get to
+    development").
+    **Amended 2026-09-09 (org-review board `.claude/plans/lib-rotation-org-review.plan.md`,
+    owner fb-425–430):** the three stores publish through `lib/external-store`
+    (row-1 extraction in the lane where the second and third consumers were born);
+    `classifyFocusEntry`/`leavesRegion` in `lib/rotation` are part of the consumption
+    law (the focus manners as code); WAIT triggers recorded in the headers —
+    `lib/page-visibility` at the second consumer of tab visibility, the discriminated
+    `Rotation<driver>` (options + return type) at the first group consumer, the shared
+    shell/hook at the second rotator lane.
 
 ## 16. Build-time vs runtime contract
 

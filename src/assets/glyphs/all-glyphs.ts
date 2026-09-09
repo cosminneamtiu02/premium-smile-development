@@ -2,6 +2,7 @@ import { Burger } from './Burger';
 import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
+import { Pin } from './Pin';
 import { Tiktok } from './Tiktok';
 import { Whatsapp } from './Whatsapp';
 
@@ -17,6 +18,7 @@ export const ALL_GLYPHS = [
   ['Close', Close],
   ['Instagram', Instagram],
   ['Phone', Phone],
+  ['Pin', Pin],
   ['Tiktok', Tiktok],
   ['Whatsapp', Whatsapp],
 ] as const;

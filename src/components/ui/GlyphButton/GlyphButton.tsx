@@ -141,6 +141,12 @@ const base =
 // Named bundles, not four free color props: every rest AND hover pair is
 // measured once, so §9 holds by construction and no call site can invent an
 // illegal combination (plan §4a). A new look = a new variant, verified once.
+// KEEP-IN-SYNC (ClinicLocation board D6, 2026-09-09): sections/ClinicLocation's
+// `ROW_HOVER` spells solid's `hover:`/`active:` members with the `group-`
+// prefix — a decorative disc (this atom in asChild mode) driven by the ROW
+// link around it, the old site's whole-row hover. ClinicLocation.test.tsx
+// derives its expectation from a rendered instance of THIS bundle, so editing
+// solid's hover face fails that test until the section moves with it.
 const variantClasses: Record<GlyphButtonVariant, string> = {
   // Rest→hover DRAINS to outline's rest face; the press re-fills deep green
   // (the 2026-09-06 mirror law — see the contract above and Button.tsx).

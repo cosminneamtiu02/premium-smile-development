@@ -51,6 +51,13 @@
     "hero": {
       "title": "Your smile, our priority",
       "subtitle": "Modern dental care, gentle and professional"
+    },
+    "location": {
+      "eyebrow": "Find us",
+      "title": "Visit our clinic",
+      "mapAlt": "Map showing the {name} clinic location",
+      "directionsLabel": "Get directions to {address}",
+      "callLabel": "Call {phone}"
     }
   },
   "services": {

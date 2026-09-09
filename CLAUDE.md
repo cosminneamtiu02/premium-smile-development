@@ -310,6 +310,20 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   analytics, embedded Google Maps (use a static map image linking out, or click-to-load),
   YouTube embeds (click-to-load facade only), reCAPTCHA, third-party chat widgets
   (a plain `wa.me` link is fine), Google Fonts CDN (self-host).
+  **AMENDED 2026-09-09 (owner, ClinicLocation lane — option A, board fb-416):** the „Ne
+  găsești" band ships the old site's live `google.com/maps/embed` `<iframe>` with **no
+  consent gate for now** — an accepted, DEFERRED risk on the owner's word ("bypass somehow
+  cookies consent for the moment … we'll get to cookies consent and implementation later").
+  Measured before the decision (Playwright Chromium, clean profile, EU IP; positive control =
+  3 cookies on a top-level maps.google.com visit): the embed itself set **zero** cookies, so
+  the "would force a consent banner" premise does not hold for that endpoint — but it does
+  hand every visitor's IP to Google's hosts on load (a GDPR data-transfer question, the
+  Google-Fonts line of cases, the DE audience), and the page URL no longer travels
+  (`referrerPolicy="no-referrer"`, measured). Consent for that transfer is deferred to the
+  cookie-strategy lane — the checklist is **COOKIES.md §7**; the section's `CONSENT SEAM`
+  comment marks where the future gate wraps the iframe. Everything else in this list stays
+  banned as written; **§2 is untouched** — no banner exists, and the only storage on the
+  visitor's device remains the language cookie.
 - A short **privacy/cookie policy page** (all locales) disclosing the language cookie.
 - **Analytics is out of scope by owner decision** — historical data explicitly not needed,
   so never install any analytics script. If this ever changes: cookieless only (Plausible/
@@ -354,7 +368,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | Hero · ServicesTeaser · TrustStrip (opt) · CTABanner | `home` |
+| Home | Hero · ServicesTeaser · TrustStrip (opt) · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · CTABanner | `home` |
 | Services | ServicesIntro · ServiceCard list with price rows · FAQ (opt) · CTABanner | `services` |
 | Team | TeamIntro · TeamMemberCard grid · ClinicGallery (opt) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |

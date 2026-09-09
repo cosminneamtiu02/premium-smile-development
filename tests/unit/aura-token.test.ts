@@ -99,6 +99,11 @@ const CONSUMERS = [
     '../../src/components/sections/FloatingActions/FloatingActions.tsx',
     3,
   ],
+  [
+    'Card.tsx (the aura prop lookup — board card-atom D7, owner fb-378/381)',
+    '../../src/components/ui/Card/Card.tsx',
+    1,
+  ],
 ] as const;
 
 describe('the aura token (header-aura board, fb-359)', () => {
@@ -152,6 +157,17 @@ describe('the aura token (header-aura board, fb-359)', () => {
     // custom property from the corner const down to the bulb. Two pins:
     // the hook exists in the atom, and the atom itself never names the
     // TOKEN — dressing decisions stay in sections (§6.1/§8.1 spirit).
+    //
+    // WHY ui/Card MAY DO THE OPPOSITE (added with its census row, 2026-09-09):
+    // the dial's silence is GEOMETRIC, not doctrinal. Its className lands on a
+    // square wrapper around a ROUND bulb, so a shadow worn there would glow a
+    // rectangle — hence the variable. A card's className lands on the card
+    // itself, so ui/Card names the utility inside the lookup its `aura` prop
+    // reads, by owner decision (fb-378/381: the glow is chosen per card KIND,
+    // in the section that composes it). The sections that pass `aura` carry no
+    // `shadow-aura` string of their own — nothing for this census to count —
+    // so their WEAR is guarded by their own tests, and what is guarded here is
+    // the atom's single spelling of the token.
     const dial = code(read('../../src/components/ui/SpeedDial/SpeedDial.tsx'));
     expect(dial).toContain('var(--bulb-shadow');
     expect(dial).not.toContain(AURA_UTILITY);

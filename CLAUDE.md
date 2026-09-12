@@ -375,7 +375,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 |---|---|---|
 | Home | Hero · ServicesTeaser · TrustStrip (opt) · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · CTABanner | `home` |
 | Services | ServicesIntro · ServiceCard list with price rows · FAQ (opt) · CTABanner | `services` |
-| Team | TeamIntro · TeamMemberCard grid · ClinicGallery (opt) | `team` |
+| Team | TeamIntro · **PersonnelCard** — doctor profiles (the centred portrait column beside a justified, quoted about-text, sides alternating) + the auxiliary-staff grid (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · ClinicGallery (opt) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
 | Global | Header (nav + Contact button + LanguageSwitcher) · Footer (**full NAP** + hours + policy link) | `common` |
@@ -401,6 +401,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    before the forward stays the sentence after it. Scope unchanged: that one paragraph
    and its twins; everything else stays start-aligned. The original justify verdict and
    the SC 1.4.8 caution that accompanied it are recorded history, not live rules.
+   **Second per-element exception — PersonnelCard (2026-09-10, owner verbatim: "extremley
+   important. quotation text must be in justify"):** the doctor card's `<blockquote>`
+   (sections/PersonnelCard, decision D8) ships `text-justify` ON THE ELEMENT — the §15.15 b
+   canon once more; scope: that one element and nothing else, in every locale. WCAG's
+   justified-text clause is SC 1.4.8 (AAA), outside the AA acceptance bar; the site-wide
+   `hyphens: auto` is what keeps rivers out of justified lines.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer

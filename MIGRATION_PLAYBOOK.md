@@ -131,7 +131,7 @@ the owner's explicit instruction (brief §15.7).**
 ## Phase 3 — `sections/` compositions
 
 **Order (shell first):** `Header` (+ `LanguageSwitcher`) → `ContactModal` → `Footer` →
-`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `TeamMemberCard` → `TeamSection` →
+`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `PersonnelCard` *(was TeamMemberCard — owner 2026-09-10, new design)* → `TeamSection` →
 `CTABanner` → `FAQAccordion` (if kept) → `PostCard`.
 
 ### Per-section checklist

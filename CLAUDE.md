@@ -100,6 +100,9 @@ src/
     rotation-group/rotation-group.ts  # one beat, many rings — opt-in sync; the site default stays independent clocks
     external-store/external-store.ts  # THE useSyncExternalStore protocol (subscribe · getSnapshot · getServerSnapshot · sync) — clock, rotation, rotation-group publish through it (org-review F1, owner fb-426, 2026-09-09)
     cx/cx.ts             # THE class-join helper — every tier imports it (fb-307 → PR #64)
+    rating/rating.ts     # THE star-rating value type (eleven half-steps) + guards — atoms AND the data list import it (reviews run D17, 2026-09-10)
+    initials/initials.ts # THE two-capital monogram type + guards — the twin of lib/rating (D17)
+    reviews/reviews.ts   # THE review list (facts + five-language words per row; ships EMPTY until the owner's real reviews — D2/D15/D18)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -373,7 +376,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | Hero · ServicesTeaser · TrustStrip (opt) · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · CTABanner | `home` |
+| Home | Hero · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTS only when the owner's real review list exists — §15.19) · CTABanner | `home` |
 | Services | ServicesIntro · ServiceCard list with price rows · FAQ (opt) · CTABanner | `services` |
 | Team | TeamIntro · **PersonnelCard** — doctor profiles (the centred portrait column beside a justified, quoted about-text, sides alternating) + the auxiliary-staff grid (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · ClinicGallery (opt) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
@@ -386,7 +389,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    decisions: CTA restored to the green family (`#008854` button face, `#00A968` anchor);
    fonts **Source Serif 4** (display + body) + **JetBrains Mono** (eyebrows), Publio only
    inside the vectorized logo; body base **1.125rem**; default radius **6px**; star
-   `#B29126`; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
+   `#B29126` → **`#D4AF37` (amended 2026-09-12, owner — the rider at the end of this item)**; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
    start`; `success` role dropped (17 semantic roles total). Amendments from contradiction
    review: font tokens are named `--font-display` / `--font-body` / `--font-mono` (never
    `--font-sans`); one additional role `--color-accent-decorative: #7A6D9C` for large
@@ -401,6 +404,13 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    before the forward stays the sentence after it. Scope unchanged: that one paragraph
    and its twins; everything else stays start-aligned. The original justify verdict and
    the SC 1.4.8 caution that accompanied it are recorded history, not live rules.
+   **Star token amended 2026-09-12 (owner, reviews pack round 2 — "more golden,
+   faded/yellowish, not a dark yellow"):** `--star` = `#D4AF37`, the old site's own gold,
+   replacing `#B29126`. Measured: 2.1:1 on white (was 3.0:1 — the SC 1.4.11 star-on-card
+   edge is no longer met by the letter; recorded as the owner's call), 3.5:1 against the
+   `ink-muted` empties (was 2.4:1 — the two inks now differ in LIGHTNESS, which is what lets
+   the rating survive a colour-vision deficiency without the outline the owner struck in the
+   same round); the rating's number always travels in the star row's accessible name.
    **Second per-element exception — PersonnelCard (2026-09-10, owner verbatim: "extremley
    important. quotation text must be in justify"):** the doctor card's `<blockquote>`
    (sections/PersonnelCard, decision D8) ships `text-justify` ON THE ELEMENT — the §15.15 b
@@ -657,7 +667,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     independent clocks with distinct dossier-owned rhythms; a group is chosen
     deliberately, in writing.** `rotation.ts`'s header is the consumption LAW every
     rotator copies: region name + localized `aria-roledescription` from messages, DOM
-    order control → prev/next → slides, the pause/play rotation control (WCAG 2.2.2)
+    order control → prev/next → slides, the pause/play rotation control (WCAG 2.2.2 — struck from the reviews deck on the owner's word 2026-09-12, §15.19 round 2; the law for every other rotator)
     outside the hover wrapper and faced by `rotationControl(status)`, keyboard focus
     entering = sticky pause, pointer focus = transient, inactive slides `inert`, one
     static h1 outside the slides, no controls below two items, reading-time rider
@@ -684,6 +694,64 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `Rotation<driver>` (options + return type) at the first group consumer, the shared
     shell/hook at the second rotator lane.
 
+19. **Reviews deck run — DECIDED (owner, master board `.claude/section-runs/2026-09-10_17-01_reviews-carousel/ledger.md`,
+    fb-432…fb-448, 2026-09-10):** the old reviews carousel returns as MACHINERY — `sections/ReviewsCarousel`
+    (server band + in-folder `ReviewsDeck` client island on `lib/rotation`, the FIRST rotator to ship: the header
+    recipe copied verbatim, the shared-shell extraction stays armed for the Hero frame) · `sections/ReviewCard`
+    (props-in, zero keys) · NEW atoms `ui/Avatar` (picture via ui/Image OR two capital letters — the `Initials` and
+    `Rating` value types live in React-free `lib/initials` + `lib/rating` (mechanics both the atoms and the data list
+    import; type + guard written once) and make a third letter or a `4.3` a COMPILE error in the data list; ground `cta`;
+    the Modal carve-out keeps it `ui/`) and `ui/StarRating` (eleven half-step values; ONE `Star` glyph painted three
+    ways — a filled `Star` and its stroked twin `StarOutline` drawn on top of every slot, so empty is HOLLOW and the
+    state is shape, not colour (G2 a11y); interim geometry = the old site's polygon until the owner's SVG lands) ·
+    `ui/Card` REWORK = an additive tone crossfade on the shared `--fade` clock — PAINT ONLY (`background-color`, `border-color`;
+    the Button doctrine: colours fade, nothing moves). Geometry stays off the list by MEASUREMENT: a transitioning
+    `border-width` snaps to whole device pixels while `padding` interpolates, so the content would drift up to one device
+    pixel mid-fade; with paint-only both change in one style recalculation and the content is provably still (drift 0); the
+    `emphasized` ground became OPAQUE (a 10% mix over the surface with a white base for engines without
+    color-mix) after the a11y reviewer found neighbour text bleeding through the deck's selected card · `lib/reviews` typed data list — facts AND the five-language `words` record per row, so a missing
+    German title is a compile error; reviews are CONTENT like blog MDX, not message keys (ships EMPTY — the owner
+    supplies real reviews + patient consents + the CMSR testimonial check; nothing mounts on Home until then) · quotation marks are CSS `open-quote`/`close-quote` from `quotes: auto` (locale-correct in all five
+    languages from zero strings). **Delivery shape, the owner's COST rule (fb-447): ONE branch, ONE squashed commit,
+    ONE G2 review round over the whole diff, ONE PR** — a recorded deviation from §17.3's one-component-per-commit
+    for this run only. **fb-432 lifted fb-67's two-lane cap for this run** ("use however many parallel lanes you
+    want"): wave 1 ran three parallel builder worktrees merged into the single branch. DE/FR/IT values of the
+    eleven machinery keys (+ the RO/EN of the five new ones) were DRAFTED by Claude on the fb-448 dispatch and are
+    flagged for the owner's confirmation (§15.17 stands for CONTENT; these are control labels).
+    **Round 2 (owner pack feedback, 2026-09-12 — still ONE commit, the same PR):** the selected
+    card's ground = the idle card's frame colour, ONE `--card-tint` in ui/Card (accent-decorative at
+    20% over the surface = the old site's own rgb(229 228 236); opaque, white fallback) read by both
+    rows · stars have NO outline: one `Star` glyph in two inks (empty = the body copy's `ink-muted`,
+    earned = the star token, half = gold clipped over gray; the `StarOutline`, `Pause` and `Play`
+    glyphs removed) and `--star` re-locked at `#D4AF37` (§15.1 rider) · NO rotation control on the
+    deck ("absolutely no pause button") — hover suspends, keyboard entry stops, and a HAND NAVIGATION
+    stops the rotation for good (`rotation.pause()` after prev/next: the touch-reachable stop SC 2.2.2
+    needs, Swiper's `disableOnInteraction` default; the `home.reviews.pause/play` keys dropped ×5;
+    lib/rotation's law records the per-consumer exception) · the deck's STAGE runs edge to edge (the
+    full-bleed margin idiom, with the band's `overflow-x-clip` as the belt — the one deliberate breach
+    of the band recipe, the stage only) and the card is a SHARE of the screen (`--deck-card:
+    clamp(14rem, 66%, 8% + 20rem)`: two-thirds of a phone, half a tablet, a slow line above) so the
+    neighbours peek on every device; every slide stays laid out (no `hidden`) so the stage height is
+    constant at every position of the ring; the credential is pinned to the card's bottom by a second
+    `flex-1` (the blockquote takes the slack) · rhythm 30 s / 34 s ("too fast" at 16 s) · the demo decks
+    alternate portrait / letters (`Review.picture.src` widened to §11's folder; the `reviews/`
+    sub-folder stays a test-enforced convention for the shipped list) · both morph demos fixed (a flex
+    column with `items-start` had let the inline-size-contained card collapse to ~50px).
+    **Round 3 (owner-requested review-and-refactor pass, G3, 2026-09-12):** three Fable reviewers
+    over the whole diff (react · typescript · organization); every MEDIUM/LOW folded — the band's
+    `overflow-x-clip` belt gained its Safari ≤ 15 twin behind `@supports not (overflow: clip)`, the
+    deck's one `react-hooks/refs` exception became React's render-time state adjustment, ui/Avatar
+    reads a photograph that died before hydration from the element at commit, `isTwoLetters` returns
+    a plain boolean (its predicate narrowed a failing string to `never`), ReviewCard Omits
+    `aria-label`/`aria-labelledby`/`title` like PersonnelCard, the initials alphabet gained the
+    Hungarian capitals. The organization verdict: no reorganization before merge. STANDING TRIGGERS
+    (do not build early — the ledger's Round 3 table has the reasons): `signedOffset` → lib/rotation at
+    the second ring-laid-out rotator · a demo-fixture module at the Home mount · a story/test HELPER
+    PROMOTION LANE right after merge (`expectNoSidewaysScroll` ×6, `fill` ×6, `stripComments` ×7,
+    `quietEnv` ×3 — all already ≥ 3 before this lane) · `parkPointer()` at the Hero-frame lane · the
+    20% tint as a §15.1 token at its second consumer · a type-only `lib/image-path` at the next lane
+    that types an image path · `isLocale()` at the next `Record<Locale, …>` band.
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —
@@ -704,7 +772,10 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
 
 **Runtime, in the visitor's browser:**
 - Hydration of the client islands **only**: ContactModal, LanguageSwitcher, mobile nav,
-  language-suggestion banner, root `/` redirect script. Everything else stays inert HTML.
+  language-suggestion banner, root `/` redirect script, and the reviews rotator
+  (`sections/ReviewsCarousel/ReviewsDeck` on `lib/rotation` — added by its own lane per
+  §15.18, 2026-09-12; ui/Avatar's picture→letters fallback rides inside it). Everything else
+  stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting

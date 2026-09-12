@@ -87,7 +87,16 @@ export type ButtonProps = ButtonOwnProps &
 // join the clock through it.
 // KEEP IN SYNC with GlyphButton's --fade AND its byte-identical solid
 // bundle: the two atoms deliberately carry the same clock and the same
-// mirror law (fb-44) so the whole system fades at one speed.
+// mirror law (fb-44) so the whole system fades at one speed. The 400ms is
+// spelled in THREE files, deliberately independently: this one, ui/disc.ts
+// (which serves GlyphButton and SpeedDial), and — since 2026-09-10 —
+// ui/Card, whose tone crossfade runs on the same clock (its "TONE CROSSFADE"
+// paragraph carries the reasoning and the pointer back). Changing the
+// system's feel is therefore a three-file edit that nothing can do by
+// accident. What Card does NOT copy is the property list: it fades PAINT
+// only — background-color and border-color — because it has no hover, no
+// press and no focus ring, so this file's box-shadow channel and
+// `active:duration-0` would be clocks for states a card does not have.
 // `hyphens-none` — INTERACTIVE LABELS NEVER SYLLABLE-SPLIT (owner, 2026-09-04:
 // "text on menu buttons and on buttons in general is never allowed to be
 // split"). §15.14 ships `hyphens: auto` at the body tier so long German

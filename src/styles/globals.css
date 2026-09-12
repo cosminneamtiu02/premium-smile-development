@@ -14,7 +14,7 @@
    `ui/` components consume ONLY semantic utilities (bg-page, text-ink, …),
    never primitives.
 
-   LOCKED (§15.1): cta #008854 · anchor #00A968 · star #B29126 ·
+   LOCKED (§15.1): cta #008854 · anchor #00A968 · star #D4AF37 (amended 2026-09-12, was #B29126) ·
    accent-decorative #7A6D9C (large display text ≥3:1 + graphics ONLY — the
    a11y addon polices misuse) · scrim floor 0.55 · body base 1.125rem ·
    component default radius 6px (= rounded-md; scale untouched) · font tokens
@@ -147,7 +147,7 @@
   /* focus */
   --focus: #1a1714;
   /* specials */
-  --star: #b29126; /* LOCKED */
+  --star: #d4af37; /* LOCKED (§15.1) — value amended 2026-09-12 by the owner (reviews pack round 2): the old site's own gold, was #b29126 */
   --scrim: rgb(0 0 0 / 0.55); /* LOCKED floor — never below 0.55 */
   --error: #b3261e;
   /* additional role outside the 17 (§15.1 amendment) */

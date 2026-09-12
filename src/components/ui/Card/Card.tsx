@@ -129,6 +129,71 @@ import { slotClone } from '../slot';
 // badge, a word in the heading — because colour may never be the sole
 // indicator (§9, SC 1.4.1).
 //
+// ── TONE CROSSFADE (owner D1b, 2026-09-10) — switching `tone` FADES THE
+// PAINT and moves nothing. Two properties on the list, and the list is the
+// decision: `background-color` and `border-color`, both on the system's own
+// --fade clock (400ms, ease-in-out). That is this repo's standing hover
+// doctrine applied rather than re-argued — ui/Button's contract (fb-37/38)
+// bought exactly ONE animation, the colours fading on one clock, after the
+// owner read a moving control as "2 animations at once"; a card is the same
+// promise with a different trigger.
+// THE GEOMETRY IS NOT ON THE CLOCK, and that is what keeps the content still.
+// `border-width` and `padding` change inside ONE style recalculation, so the
+// sum rule holds on both sides of that single frame — 3 + 22 before, 1 + 24
+// after, 25px either way — and the text edge never moves at all: measured in
+// this repo's own Chromium, in both directions, the content's inset is 25px
+// at rest AND at every sampled frame of a live flip. DRIFT ZERO, pinned in
+// Card.test.tsx's "Card — the tone crossfade" describe ("keeps the content
+// exactly 25px in, at every frame of a live %s → %s flip").
+// THE VARIANT THAT WAS MEASURED AND REJECTED (same lane, same Chromium):
+// putting `border-width,padding` on the list too, so the frame would thin
+// gradually. It does not do what it promises. The two values would be
+// interpolated on one clock with equal end-sums — algebraically 25px
+// throughout — but the browser SNAPS a used border width down to whole
+// device pixels while padding keeps sub-pixel precision, so mid-fade the pair
+// really measures e.g. 2 + 22.0008 = 24.0008: the content jumps ~1 device
+// pixel toward the edge, walks back as the padding grows, and jumps again
+// when the border crosses 2→1. A 1px shuffle under a 400ms fade is the second
+// animation the doctrine bans, so the calm option is the one that moves
+// nothing.
+// THE VISIBLE CONSEQUENCE, stated rather than discovered: on a framed ⇄
+// emphasized swap the 3px frame thins to 1px INSTANTLY while the fill and the
+// border colour fade over 400ms. That is the trade — a geometry cut under a
+// colour dissolve — and it is deliberate.
+// WHY `border-color` IS ON THE LIST AT ALL: not because today's rows need it
+// — `framed` and `emphasized` share ONE border colour, `--card-tint` (the ONE
+// TINT paragraph below), so nothing interpolates between those two — but
+// because a tone row whose border colour DOES differ (a future row, or an
+// edit to an existing one) must fade with its fill instead of cutting under
+// it. The list is the axis's contract, not a description of its current
+// members.
+// NOT `transition-colors`: that shorthand also covers `outline-color`, and a
+// focus ring may never ride an animation clock — the Button/GlyphButton
+// lesson, inherited rather than re-learned (no card focuses today, but a
+// consumer's `asChild` element can, and this string travels onto it).
+// `box-shadow` stays off for its own reason: the `aura` below is chosen per
+// card KIND in the section that composes it and is NEVER toggled at runtime,
+// so it has nowhere to travel.
+// KEEP IN SYNC with the system's other two spellings of this clock (fb-44):
+// ui/Button's `base` and ui/disc.ts's `discBase` (which serves GlyphButton and
+// SpeedDial). 400ms in three files, deliberately independent, so changing the
+// system's feel stays a conscious multi-file edit and can never drift; all
+// three carry the matching pointer back to THIS paragraph. What Card does not
+// copy from them is the property list — a card has no hover, no press and no
+// focus ring, so `active:duration-0` and their box-shadow channel would be
+// clocks for states that do not exist here.
+// --fade is INTERNAL: className is merged last, so a caller could stretch the
+// clock with nondeterministic precedence (the className paragraph above).
+// Change the number HERE instead.
+// `motion-reduce:transition-none` is the clean snap for anyone who asked for
+// less motion (§9): the tone still changes — nothing this atom communicates is
+// carried by the animation — only the dissolve is gone.
+// AND WHAT CAN EVEN START IT: cards are not interactive (no hover state, no
+// focus ring — the last paragraph below), so the only thing that can move a
+// tone is a CONSUMER re-rendering the card with a different one. A
+// rotation-driven selection is the case this was built for; a hover repaint is
+// not, and would be a card growing an interaction it does not have.
+//
 // ── `aura` IS A PROP BY OWNER DECISION (fb-378/381): the lavender glow the
 // Header pill and the fixed corner discs wear is chosen per card KIND in the
 // section that composes it, not per card instance and not by the atom. This
@@ -160,6 +225,37 @@ import { slotClone } from '../slot';
 // inside it (§9: semantic HTML first), which brings its own focus-visible
 // styling with it.
 
+// ── ONE TINT, TWO ROWS (owner 2026-09-12, pack round 2: "the current card
+// the same shade as the border of the non-current card" — which is also the
+// old site's own arithmetic, measured: idle frame `3px rgb(229 228 236)`,
+// selected ground `rgb(229 228 236)`, the SAME colour). `--card-tint` is
+// spelled ONCE, in `cardClasses`, as `--accent-decorative` mixed at 20% over
+// the surface — what the old site's rgb(229 228 236) is (its accent at ~20%
+// over white) — and both rows READ it: `framed` as its 3px border,
+// `emphasized` as its ground AND its 1px border (a border the colour of the
+// ground is an edge the eye does not see: the old site's `3px transparent`,
+// without breaking the sum rule). One value, so the two can never drift;
+// Card.test.tsx reads the framed border and the emphasized ground back from
+// the engine and asserts they are equal.
+// THE MIX IS OPAQUE, AND SAYS SO TWICE (G2 a11y HIGH ×2, reviews-deck run,
+// 2026-09-10 — the reasoning outlived the value). A wash over TRANSPARENT
+// (the `/20` opacity spelling) would let a deck's neighbouring cards show
+// through the one card the visitor is meant to read (SC 1.4.3 — no contrast
+// ratio exists for text over text); mixing over `--color-surface` instead
+// gives the same hue at the same strength with nothing behind it visible. The
+// second half is the FALLBACK, because every `color-mix()` Tailwind emits is
+// `@supports`-gated: `--card-tint` starts as the SOLID accent (what the frame
+// degrades to on engines without color-mix — Safari < 16.2, every iPhone
+// frozen on iOS 15, §1), the `supports-[…]` variant re-declares it as the mix,
+// and the `emphasized` row keeps an explicit `bg-surface` base under its own
+// `supports-[…]:bg-(--card-tint)` — so an old engine paints a solid-lavender
+// FRAME (harmless) and a WHITE ground, never lavender under text (1.57:1 for
+// muted body copy). Modern engines paint the tint on both. Measured on the
+// tint: muted body text 5.8:1, the mono eyebrow the same, display ink above
+// 10:1 — every text role on the selected card clears AA with room.
+// The 20% is the ONE number to move if the frame should ever read heavier:
+// 30% still clears AA for muted text (5.1:1); 40% does not (4.4:1).
+//
 /** Named SITUATIONS — which look, never which CSS. */
 export type CardTone = 'surface' | 'tinted' | 'emphasized' | 'framed';
 
@@ -182,10 +278,23 @@ type CardOwnProps = {
 export type CardProps = CardOwnProps &
   Omit<ComponentProps<'div'>, keyof CardOwnProps>; // React 19: ref is a prop
 
-// THE card surface's geometry — ONE spelling in src/ (fence test). Not exported.
+// THE card surface's geometry AND the tone clock — ONE spelling in src/ (fence
+// test: tests/unit/card-single-spelling.test.ts pins the first literal's four
+// utilities as a contiguous signature, so keep them contiguous). Not exported.
 // The PADDING is not here: it rides each tone row, so a rendered card carries exactly one
-// `p-*` utility and a thicker frame can compensate its own border (see below).
-const cardClasses = '@container flex flex-col gap-3 rounded-md';
+// `p-*` utility and a thicker frame can compensate its own border (see below) — and it is
+// deliberately NOT on the transition list, which is what keeps the content still through a
+// tone swap (the TONE CROSSFADE paragraph above).
+const cardClasses =
+  '@container flex flex-col gap-3 rounded-md ' +
+  '[--fade:400ms] transition-[background-color,border-color] ' +
+  'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
+  // THE TINT (the ONE TINT paragraph above): the solid accent first — the
+  // fallback every engine understands — then the opaque 20% mix over the
+  // surface wherever color-mix exists. Declared on every card so the two
+  // rows below can read ONE value; a row that never uses it costs nothing.
+  '[--card-tint:var(--color-accent-decorative)] ' +
+  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]';
 
 // THE SUM RULE: border-width + padding = 25px per side on EVERY row (1 + 24, or 3 + 22 for
 // `framed`), so switching tone never moves content and a framed card's text edges still line
@@ -193,9 +302,9 @@ const cardClasses = '@container flex flex-col gap-3 rounded-md';
 const toneClasses: Record<CardTone, string> = {
   surface: 'border border-line-subtle bg-surface p-6',
   tinted: 'border border-transparent bg-page p-6',
-  emphasized: 'border border-accent-decorative/40 bg-accent-decorative/10 p-6',
-  framed:
-    'border-[3px] border-accent-decorative/40 bg-surface p-[calc(1.5rem-2px)]',
+  emphasized:
+    'border border-(--card-tint) bg-surface supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint) p-6',
+  framed: 'border-[3px] border-(--card-tint) bg-surface p-[calc(1.5rem-2px)]',
 };
 
 export function Card({

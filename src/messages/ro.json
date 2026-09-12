@@ -45,6 +45,10 @@
       "socialTiktok": "{name} pe TikTok",
       "contactWhatsapp": "{name} pe WhatsApp",
       "contactPhone": "Sună {name}"
+    },
+    "carousel": {
+      "role": "carusel",
+      "slideRole": "diapozitiv"
     }
   },
   "home": {
@@ -58,6 +62,15 @@
       "mapAlt": "Hartă cu locația clinicii {name}",
       "directionsLabel": "Vezi direcțiile către {address}",
       "callLabel": "Sună la {phone}"
+    },
+    "reviews": {
+      "eyebrow": "Părerea ta contează",
+      "title": "Alte păreri ale pacienților noștri",
+      "region": "Recenziile pacienților",
+      "previous": "Recenzia anterioară",
+      "next": "Recenzia următoare",
+      "slide": "Recenzia {index} din {total}",
+      "rating": "{rating, number} din 5 stele"
     }
   },
   "services": {

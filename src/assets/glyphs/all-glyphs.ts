@@ -1,8 +1,11 @@
 import { Burger } from './Burger';
+import { ChevronLeft } from './ChevronLeft';
+import { ChevronRight } from './ChevronRight';
 import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
 import { Pin } from './Pin';
+import { Star } from './Star';
 import { Tiktok } from './Tiktok';
 import { Whatsapp } from './Whatsapp';
 
@@ -15,10 +18,13 @@ import { Whatsapp } from './Whatsapp';
 // Alphabetical by name; the name is the exported component's own name.
 export const ALL_GLYPHS = [
   ['Burger', Burger],
+  ['ChevronLeft', ChevronLeft],
+  ['ChevronRight', ChevronRight],
   ['Close', Close],
   ['Instagram', Instagram],
   ['Phone', Phone],
   ['Pin', Pin],
+  ['Star', Star],
   ['Tiktok', Tiktok],
   ['Whatsapp', Whatsapp],
 ] as const;

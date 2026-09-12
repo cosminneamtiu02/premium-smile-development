@@ -45,6 +45,10 @@
       "socialTiktok": "{name} sur TikTok",
       "contactWhatsapp": "{name} sur WhatsApp",
       "contactPhone": "Appeler {name}"
+    },
+    "carousel": {
+      "role": "carrousel",
+      "slideRole": "diapositive"
     }
   },
   "home": {
@@ -58,6 +62,15 @@
       "mapAlt": "Carte indiquant l'emplacement de la clinique {name}",
       "directionsLabel": "Voir l'itinéraire vers {address}",
       "callLabel": "Appeler le {phone}"
+    },
+    "reviews": {
+      "eyebrow": "Votre avis compte",
+      "title": "D'autres avis de nos patients",
+      "region": "Avis des patients",
+      "previous": "Avis précédent",
+      "next": "Avis suivant",
+      "slide": "Avis {index} sur {total}",
+      "rating": "{rating, number} étoiles sur 5"
     }
   },
   "services": {

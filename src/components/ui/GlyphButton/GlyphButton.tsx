@@ -88,8 +88,16 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // (fb-49/fb-50, plan D2/D5); "jumps at you" was two extra animations.
 // KEEP IN SYNC with Button's --fade (fb-44): 400ms here and 400ms there is
 // deliberate — the two files are independent on purpose (plan D7), so
-// changing the system's feel is a two-file edit, never a drift. Button.tsx
-// carries the matching pointer back to this one.
+// changing the system's feel is a multi-file edit, never a drift. Button.tsx
+// carries the matching pointer back, and since 2026-09-10 there is a THIRD
+// holder: ui/Card's tone crossfade runs on the same 400ms (see Card.tsx's
+// "TONE CROSSFADE" paragraph, which points back here). The clock is what is
+// shared — the property list is not: a card fades PAINT only
+// (background-color, border-color), with no press snap and no box-shadow
+// channel, because it has no hover state to snap out of. NOTE for anyone
+// editing the number: this atom does not spell `--fade` itself — it arrives
+// through `discBase` in ../disc.ts, which SpeedDial imports too, so the three
+// LITERAL holders are Button.tsx, ../disc.ts and Card.tsx.
 // The icon needs no hover logic of its own: <Icon> (and any well-formed svg)
 // paints with currentColor, so `color` — which IS in the transition list —
 // carries the glyph through the fade for free.

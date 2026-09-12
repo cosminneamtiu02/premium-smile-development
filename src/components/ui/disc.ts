@@ -23,9 +23,13 @@
  * · the focus ring (§9, SC 2.4.7): 2px, offset OUTSIDE the box, painted with
  *   --focus. LIGHT GROUNDS ONLY — the ring vanishes on dark surfaces (1.11:1 on
  *   inverse-surface); GlyphButton.tsx carries the full standing caveat.
- * · `--fade` — ONE clock for the whole system (Button ↔ GlyphButton fb-44), with
- *   `active:duration-0` snapping press feedback and `motion-reduce:transition-none`
- *   giving clean snaps to anyone who asked for less motion (§9).
+ * · `--fade` — ONE clock for the whole system (fb-44), spelled in THREE places
+ *   that must agree: this file (GlyphButton + SpeedDial), ui/Button's `base`,
+ *   and — since 2026-09-10 — ui/Card's `cardClasses`, whose tone crossfade runs
+ *   on the same 400ms (see Card.tsx's TONE CROSSFADE paragraph; the clock is
+ *   shared, its property list is not). Here it comes with `active:duration-0`
+ *   snapping press feedback and `motion-reduce:transition-none` giving clean
+ *   snaps to anyone who asked for less motion (§9).
  *
  * What is deliberately NOT in here: the `transition-[…]` PROPERTY LIST. Each
  * atom names its own — GlyphButton fades background-color, color and

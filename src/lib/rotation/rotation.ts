@@ -106,7 +106,8 @@ import {
 //    HAS a role — so the label is not optional. ARIA requires the
 //    roledescription to be localized, which means two message keys (
 //    common.carousel.role, common.carousel.slideRole) in all five files,
-//    OWNER-AUTHORED (§15.17), flagged at the first consumer lane.
+//    OWNER-AUTHORED (§15.17) — the first consumer shipped them as Claude
+//    DRAFTS in all five files, flagged in PR #97 for the owner's word.
 //
 //  · DOM ORDER (the APG example's order, and the reason for it): the rotation
 //    control FIRST, then prev/next, then the slides — a keyboard visitor can
@@ -124,6 +125,17 @@ import {
 //    either way, because hiding it until mount buys a layout shift. Render NO
 //    rotation control and NO prev/next when `count < 2`, derived from COUNT
 //    (never from idleReason, which also carries reduced motion).
+//    OWNER EXCEPTION, RECORDED (2026-09-12, the reviews deck): the owner
+//    struck the button from that deck ("absolutely no pause button"). What
+//    stands in for it there — pointer hover suspends, keyboard entry is the
+//    sticky pause, and a HAND NAVIGATION (prev/next) calls pause() so the
+//    first tap stops the rotation for good (the touch-reachable stop;
+//    Swiper's `disableOnInteraction` default) — is written up in
+//    sections/ReviewsCarousel/ReviewsDeck.tsx's NO ROTATION CONTROL
+//    paragraph. This bullet stays the law for every OTHER rotator: a consumer
+//    omits the control only on the owner's word, per consumer, with that
+//    paragraph's four mechanisms in place; `rotationControl()` below is
+//    untouched and waits for the Hero frame.
 //
 //  · THE HOVER WRAPPER: the pointer handlers go on a wrapper that holds
 //    prev/next and the slides, with the rotation control a SIBLING inside the
@@ -152,9 +164,13 @@ import {
 //      onBlur={(event) => {
 //        if (leavesRegion(event)) rotation.resume('focus');
 //      }}
-//    The first consumer lane owes the interaction test for "play, then Tab
-//    within the region: still running" — the one claim only a real browser
-//    driving real focus can make.
+//    The interaction test only a real browser driving real focus can make —
+//    "keyboard focus entering STOPS the rotation; a Tab within the region is
+//    not a second entry" — was discharged by the first consumer
+//    (sections/ReviewsCarousel/ReviewsDeck.test.tsx, 2026-09-12). Its "play,
+//    then Tab within: still running" form waits for the first rotator that
+//    renders the control (the Hero frame): the reviews deck has no play
+//    button to press (the owner exception above).
 //
 //  · NAVIGATION: prev and next as native buttons (ui/GlyphButton, labels from
 //    the messages, ≥24×24 px and aiming at 44 — §9) calling rotation.prev /
@@ -452,7 +468,12 @@ function withinRegion(event: FocusLike): boolean {
  * 'pointer' — Chrome and Firefox focus a button when it is CLICKED, and
  * :focus-visible is the browser's own verdict on which kind of focus this was.
  * A mouse press must not stop the rotation for good, so this is the transient
- * suspend('focus') the pointer leaving undoes.
+ * suspend('focus') — undone by the FOCUS leaving the region (onBlur →
+ * leavesRegion → resume('focus')), not by the pointer leaving: a mouse click
+ * on prev/next leaves focus on the button, so the rotation stays suspended
+ * until the visitor clicks or tabs elsewhere (G2 react note, reviews-deck
+ * run 2026-09-10 — an inherited manner of the recipe, recorded here so the
+ * first consumer's behaviour reads as intended).
  */
 export function classifyFocusEntry(event: FocusLike): FocusEntry {
   if (withinRegion(event)) return 'within';

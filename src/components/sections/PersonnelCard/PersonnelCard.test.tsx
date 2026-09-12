@@ -114,6 +114,19 @@ const CARD_SURFACE = [
   'flex-col',
   'gap-3',
   'rounded-md',
+  // The TONE CROSSFADE utilities (ui/Card rework, reviews-deck run 2026-09-10):
+  // paint fades on the shared --fade clock, geometry never moves. Part of the
+  // atom's own `cardClasses`, so a consumer's byte-pin carries them too.
+  '[--fade:400ms]',
+  'transition-[background-color,border-color]',
+  'duration-(--fade)',
+  'ease-in-out',
+  'motion-reduce:transition-none',
+  // The ONE TINT declarations (ui/Card, owner 2026-09-12): the solid accent,
+  // then the opaque 20% mix behind a @supports gate — worn by every card,
+  // read only by the `framed`/`emphasized` rows. Part of `cardClasses` too.
+  '[--card-tint:var(--color-accent-decorative)]',
+  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]',
   'border',
   'border-line-subtle',
   'bg-surface',

@@ -45,6 +45,10 @@
       "socialTiktok": "{name} on TikTok",
       "contactWhatsapp": "{name} on WhatsApp",
       "contactPhone": "Call {name}"
+    },
+    "carousel": {
+      "role": "carousel",
+      "slideRole": "slide"
     }
   },
   "home": {
@@ -58,6 +62,15 @@
       "mapAlt": "Map showing the {name} clinic location",
       "directionsLabel": "Get directions to {address}",
       "callLabel": "Call {phone}"
+    },
+    "reviews": {
+      "eyebrow": "Your voice matters",
+      "title": "More from our patients",
+      "region": "Patient reviews",
+      "previous": "Previous review",
+      "next": "Next review",
+      "slide": "Review {index} of {total}",
+      "rating": "{rating, number} out of 5 stars"
     }
   },
   "services": {

@@ -3,10 +3,13 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ALL_GLYPHS } from './all-glyphs';
 import { Burger } from './Burger';
+import { ChevronLeft } from './ChevronLeft';
+import { ChevronRight } from './ChevronRight';
 import { Close } from './Close';
 import { Instagram } from './Instagram';
 import { Phone } from './Phone';
 import { Pin } from './Pin';
+import { Star } from './Star';
 import { Tiktok } from './Tiktok';
 import { Whatsapp } from './Whatsapp';
 
@@ -23,12 +26,15 @@ import { Whatsapp } from './Whatsapp';
 
 const STROKE_GLYPHS = [
   ['Burger', Burger],
+  ['ChevronLeft', ChevronLeft],
+  ['ChevronRight', ChevronRight],
   ['Close', Close],
   ['Phone', Phone],
   ['Pin', Pin],
 ] as const;
 const FILL_GLYPHS = [
   ['Instagram', Instagram],
+  ['Star', Star],
   ['Tiktok', Tiktok],
   ['Whatsapp', Whatsapp],
 ] as const;

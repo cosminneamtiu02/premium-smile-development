@@ -1,24 +1,27 @@
-import type { ReactElement, ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect, userEvent } from 'storybook/test';
+import { Button } from '../Button/Button';
 import { Container } from '../Container/Container';
 import { Heading } from '../Heading/Heading';
 import { Text } from '../Text/Text';
-import { Card, type CardTone } from './Card';
+import { Card, type CardProps, type CardTone } from './Card';
 
-// SIX stories, and the count is the honest one: the four tones, the two
+// SEVEN stories, and the count is the honest one: the four tones, the two
 // elements a real consumer slots into (an <article>, a list of <li>), the glow,
-// and the German stress width. The export NAMES are load-bearing — each one
-// names a baseline file (`ui-card--default`, `ui-card--in-a-grid`, …), so
-// renaming or adding an export re-records pictures; this list IS the atom's
-// contribution to the lane's visual manifest.
+// the German stress width — and, since the tone crossfade shipped (owner D1b,
+// 2026-09-10), the one frame that is about a CHANGE rather than about a state.
+// The export NAMES are load-bearing — each one names a baseline file
+// (`ui-card--default`, `ui-card--in-a-grid`, …), so renaming or adding an
+// export re-records pictures; this list IS the atom's contribution to the
+// lane's visual manifest.
 //
-// ── SIX, NOT SEVEN: there is deliberately NO PseudoLocale story, the
-// ui/Container and sections/Wordmark precedent for the same reason — this
-// component renders no translated string of its own and reads no message key
-// (§8.1: children arrive finished). Flip the locale toolbar to Pseudo and
-// nothing here may change; that is the §8.9 sweep passing, not a gap. Text
-// expansion is a concern for whatever rides INSIDE the card, which is exactly
-// what GermanLongest photographs.
+// ── STILL NO PseudoLocale STORY, the ui/Container and sections/Wordmark
+// precedent for the same reason — this component renders no translated string
+// of its own and reads no message key (§8.1: children arrive finished). Flip
+// the locale toolbar to Pseudo and nothing here may change; that is the §8.9
+// sweep passing, not a gap. Text expansion is a concern for whatever rides
+// INSIDE the card, which is exactly what GermanLongest photographs.
 //
 // ── EVERY STORY RENDERS THE CARD INSIDE THE PAGE-BAND RECIPE (the standing
 // law in Container.tsx's header): a semantic full-bleed <section> that PAINTS,
@@ -94,7 +97,7 @@ const meta = {
       control: 'select',
       options: Object.values(TONE_OPTIONS),
       description:
-        'Named SITUATIONS, never CSS knobs: surface = the default card on a page band (border-line-subtle on bg-surface) · tinted = the quiet card that sits ON a surface band (transparent border, bg-page) · emphasized = the highlighted row (accent-decorative fill + border colour) · framed = the old site’s review-card frame, 3px of accent-decorative on surface paint (owner fb-423). Every row spends the same 25px per side on border width + padding — 1 + 24, or 3 + 22 for framed — so switching tone never moves content by a pixel',
+        'Named SITUATIONS, never CSS knobs: surface = the default card on a page band (border-line-subtle on bg-surface) · tinted = the quiet card that sits ON a surface band (transparent border, bg-page) · emphasized = the selected row: its ground is the framed row’s own border colour (`--card-tint`, accent-decorative at 20% over the surface — the old site’s rgb(229 228 236); owner 2026-09-12) · framed = the old site’s review-card frame, 3px of accent-decorative on surface paint (owner fb-423). Every row spends the same 25px per side on border width + padding — 1 + 24, or 3 + 22 for framed — so switching tone never moves content by a pixel',
     },
     aura: {
       control: 'boolean',
@@ -404,4 +407,163 @@ export const GermanLongest: Story = {
       </Card>
     </Band>
   ),
+};
+
+/** The two tones a rotation-driven selection swaps between, spelled once and
+ *  read by the demo below AND by its play function, so the frame and its
+ *  assertions can never describe different flips. */
+const MORPH: { selected: CardTone; idle: CardTone } = {
+  selected: 'emphasized',
+  idle: 'framed',
+};
+
+/** A real stateful consumer in miniature — the shape the atom's fade exists
+ *  for: ONE card whose tone is re-rendered from the outside (a deck marking
+ *  its current slide), never a card reacting to its own hover. The control is
+ *  a real <button> with a Romanian name: cards are not interactive, so the
+ *  thing you press is deliberately NOT the card. */
+function ToneMorphDemo(args: CardProps): ReactElement {
+  const [selected, setSelected] = useState(false);
+  return (
+    <Band>
+      {/* A COLUMN THAT STRETCHES, on purpose. ui/Card applies inline-size
+          containment (its @container mark — Card.tsx's "hand the card a
+          width" rule), so a card whose column said `items-start` was left
+          to size itself and shrank to its padding and border: ~50px, one
+          hyphenated word per line. The first spelling of this demo did
+          exactly that (owner 2026-09-12: "looks absolutely shit"). The
+          default stretch hands the card the column; the BUTTON is the one
+          that opts out of it. */}
+      <div className="flex flex-col gap-6">
+        <Card {...args} asChild tone={selected ? MORPH.selected : MORPH.idle}>
+          <article aria-labelledby="card-morph-titlu">
+            <Heading size="title" asChild>
+              <h3 id="card-morph-titlu">Recenzia unei paciente</h3>
+            </Heading>
+            <Text tone="muted">
+              Am venit pentru o consultație și mi s-au explicat pe îndelete
+              pașii tratamentului. Ședințele au început la ora programată.
+            </Text>
+            <Text bold>Ioana T., Târgoviște</Text>
+          </article>
+        </Card>
+        <Button
+          variant="outline"
+          className="self-center"
+          onClick={() => setSelected((on) => !on)}
+        >
+          Schimbă tonul
+        </Button>
+      </div>
+    </Band>
+  );
+}
+
+/**
+ * THE frame for the one thing a still picture cannot hold: switching `tone`
+ * FADES. Press „Schimbă tonul" and the card crossfades between `framed` (the
+ * idle slide of the reviews deck) and `emphasized` (its selected slide), over 400ms on the
+ * system's shared `--fade` clock — the same number Button and GlyphButton
+ * carry (fb-44).
+ *
+ * WHAT FADES IS THE PAINT — the fill and the border colour — and nothing else.
+ * The geometry does not travel: the 3px frame thins to 1px in ONE style
+ * recalculation while the colour dissolves over it, and because every tone
+ * spends the same 25px per side on border + padding, that cut moves the text by
+ * exactly ZERO pixels (measured at every frame, in both directions, in
+ * Card.test.tsx). Putting the border width and the padding on the clock too was
+ * measured and REJECTED: the browser snaps a used border width to whole device
+ * pixels while the padding interpolates, so the words would shuffle about a
+ * pixel and back mid-fade — the second animation this repo's hover doctrine
+ * bans. Card.tsx's TONE CROSSFADE paragraph carries the whole argument.
+ *
+ * Anyone browsing with `prefers-reduced-motion: reduce` gets the same two
+ * states with no travel at all (§9) — the tone still changes, which is the
+ * test of whether an animation carries meaning: this one does not.
+ *
+ * THE PLAY FUNCTION ENDS WHERE IT STARTED, on `framed`, and that is a visual-
+ * net contract rather than tidiness: this story's play runs inside the preview
+ * iframe the screenshot is taken from, so a one-way flip would make the
+ * baseline depend on who got there first. Flipping back also buys the reverse
+ * direction's assertions for free.
+ */
+export const ToneMorph: Story = {
+  // The demo owns both: `tone` is state here, and the fixture is a fixed
+  // review card — live controls would fight the frame's whole subject.
+  argTypes: { children: { control: false }, tone: { control: false } },
+  render: (args) => <ToneMorphDemo {...args} />,
+  play: async ({ canvas }) => {
+    const card = canvas.getByRole('article');
+    // The FIRST content child, reached by role rather than by
+    // `firstElementChild` — and then proven to be exactly that, because the
+    // measurement below is only meaningful against the element the card's
+    // inset actually positions.
+    const content = canvas.getByRole('heading', { level: 3 });
+    await expect(card.firstElementChild).toBe(content);
+
+    // Measured as the content's INSET INSIDE THE CARD, never as viewport
+    // coordinates: `userEvent.click` scrolls its target into view, so a raw
+    // getBoundingClientRect().top would drift by the scroll offset and this
+    // frame would be asserting the canvas's scroll position instead of the
+    // sum rule. The inset IS the claim — border + padding, 25px per side.
+    const insetOf = () => {
+      const box = card.getBoundingClientRect();
+      const inner = content.getBoundingClientRect();
+      return { inline: inner.left - box.left, block: inner.top - box.top };
+    };
+
+    /** Leave the canvas at REST — before measuring again, and before handing
+     *  it to a camera. No polling and no timeout: an empty animation list —
+     *  which is exactly what a visitor with `prefers-reduced-motion: reduce`
+     *  produces — resolves immediately, and a running fade is awaited to the
+     *  frame. */
+    const settle = async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+      await Promise.all(
+        card.getAnimations().map((animation) => animation.finished),
+      );
+    };
+
+    const before = insetOf();
+    await expect(before.inline).toBe(25);
+    await expect(card).toHaveClass('border-[3px]');
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Schimbă tonul' }),
+    );
+
+    // ONE element through the whole swap — a fade needs a node with a previous
+    // value to interpolate from; a re-created node would cut in production
+    // while every class assertion still passed.
+    await expect(canvas.getByRole('article')).toBe(card);
+    await expect(card).not.toHaveClass('border-[3px]');
+    await expect(card).toHaveClass(
+      'supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint)',
+    );
+
+    // Measured IMMEDIATELY, with the paint still dissolving: the geometry is
+    // OFF the clock, so 3 + 22 became 1 + 24 inside one style recalculation
+    // and the inset is already — still — 25px. This is the instant the
+    // rejected variant would have failed.
+    const during = insetOf();
+    await expect(during.inline).toBe(before.inline);
+    await expect(during.block).toBe(before.block);
+
+    await settle();
+    const after = insetOf();
+    await expect(after.inline).toBe(before.inline);
+    await expect(after.block).toBe(before.block);
+
+    // …and back, which restores the baseline state AND proves the other
+    // direction lands on the same pixel.
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Schimbă tonul' }),
+    );
+    await settle();
+    const restored = insetOf();
+    await expect(restored.inline).toBe(before.inline);
+    await expect(restored.block).toBe(before.block);
+  },
 };

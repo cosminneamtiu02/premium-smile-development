@@ -1,5 +1,5 @@
-import { createRef, type Ref } from 'react';
-import { render, screen } from '@testing-library/react';
+import { createRef, useState, type Ref } from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 // The REAL stylesheet, compiled by the same Tailwind pipeline the site uses.
 // The SUM-RULE pin below is meaningless without it: "border + padding = 25px
@@ -34,20 +34,48 @@ const RO_BODY = 'Evaluare completă a danturii și plan de tratament.';
 // rather than imported from the component, so a silent edit to `cardClasses`
 // or to a tone row fails HERE instead of quietly re-defining what the test
 // compares against. Every card in every future section wears these bytes.
+// The clock joined the geometry on 2026-09-10 (owner D1b — Card.tsx's TONE
+// CROSSFADE paragraph): a tone swap fades its PAINT instead of cutting, so
+// `--fade`, the two-property list, the duration, the easing and the
+// reduced-motion reset are part of what a bare <Card> emits and therefore part
+// of this pin. The geometry pair is pointedly NOT on that list — which is why
+// the content cannot move mid-swap, measured below.
 // Since the padding moved into the rows (pack round 1, the `framed`
 // amendment) this order also coincides, after the `@container` prefix, with
 // the root the two dossiers spelled by hand — which is what lets the fence's
 // contiguous signature catch a pasted dossier root as well as a pasted
 // definition.
+// THE TINT'S TWO DECLARATIONS (owner 2026-09-12 — Card.tsx's ONE TINT
+// paragraph): the solid accent every engine understands, then the opaque 20%
+// mix over the surface behind a `@supports` gate. They are part of
+// `cardClasses`, so EVERY card emits them and every byte-pin below carries
+// them — a bare `surface` card included, which never reads the value.
+const TINT_DECLARATION =
+  '[--card-tint:var(--color-accent-decorative)] ' +
+  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]';
+
 const DEFAULT_CARD =
-  '@container flex flex-col gap-3 rounded-md border border-line-subtle bg-surface p-6';
+  '@container flex flex-col gap-3 rounded-md ' +
+  '[--fade:400ms] transition-[background-color,border-color] ' +
+  'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
+  `${TINT_DECLARATION} ` +
+  'border border-line-subtle bg-surface p-6';
 
 // The same bytes DECOMPOSED into the two halves the atom actually assembles —
 // the geometry every card shares, and the tone row that varies (PADDING
 // included: exactly one `p-*` per rendered card, never two). The composition
 // assertion in the first `it` below is what keeps the two spellings honest
 // about each other, so neither can drift alone.
-const GEOMETRY = '@container flex flex-col gap-3 rounded-md';
+const GEOMETRY =
+  '@container flex flex-col gap-3 rounded-md ' +
+  '[--fade:400ms] transition-[background-color,border-color] ' +
+  'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
+  TINT_DECLARATION;
+
+/** The tone clock's own half of that string, named once so the crossfade
+ *  assertions below read as a list of decisions rather than as string soup:
+ *  the PAINT fades, the geometry does not travel at all. */
+const CROSSFADE_LIST = 'transition-[background-color,border-color]';
 
 // Record<CardTone, …> on purpose: the tone axis is BUILT to grow, and already
 // has — `framed` joined as the fourth situation on the owner's word (fb-423).
@@ -63,9 +91,9 @@ const GEOMETRY = '@container flex flex-col gap-3 rounded-md';
 const TONE_CLASSES: Record<CardTone, string> = {
   surface: 'border border-line-subtle bg-surface p-6',
   tinted: 'border border-transparent bg-page p-6',
-  emphasized: 'border border-accent-decorative/40 bg-accent-decorative/10 p-6',
-  framed:
-    'border-[3px] border-accent-decorative/40 bg-surface p-[calc(1.5rem-2px)]',
+  emphasized:
+    'border border-(--card-tint) bg-surface supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint) p-6',
+  framed: 'border-[3px] border-(--card-tint) bg-surface p-[calc(1.5rem-2px)]',
 };
 
 const tokensOf = (element: Element) =>
@@ -196,6 +224,236 @@ describe('Card — THE surface definition', () => {
     // (1 + 24 four times). The two widths ARE the claim.
     expect(borders.get('framed')).toBe(3);
     expect(borders.get('surface')).toBe(1);
+  });
+});
+
+describe('Card — the tone crossfade (owner D1b, 2026-09-10)', () => {
+  // Two layers, and they answer different questions. The CLASS layer says
+  // which properties were put on the clock — a decision, only readable as
+  // tokens (and, once, as the browser's own computed transition-property, so
+  // the utility is proven to COMPILE and not merely to be spelled). The PIXEL
+  // layer says what that decision does to the content while the fade runs,
+  // which no class assertion can see and which is the whole reason the
+  // geometry pair is kept OFF the list (Card.tsx's TONE CROSSFADE paragraph).
+  // Both run in real Chromium against the real stylesheet imported at the top
+  // of this file.
+
+  const tokensOfDefault = () => {
+    const { unmount } = render(<Card>{RO_TITLE}</Card>);
+    const tokens = tokensOf(screen.getByText(RO_TITLE));
+    unmount();
+    return tokens;
+  };
+
+  it('fades the PAINT on the shared 400ms --fade clock', () => {
+    // Whole tokens, never substrings (the Button.test convention): every one
+    // of these sits inside some longer spelling — `transition-none` inside
+    // `motion-reduce:transition-none`, `ease-in-out` inside a hypothetical
+    // `hover:ease-in-out` — so an `includes()` check would pass on the wrong
+    // string.
+    const tokens = tokensOfDefault();
+    expect(tokens).toContain('[--fade:400ms]');
+    expect(tokens).toContain(CROSSFADE_LIST);
+    expect(tokens).toContain('duration-(--fade)');
+    expect(tokens).toContain('ease-in-out');
+    expect(tokens).toContain('motion-reduce:transition-none');
+  });
+
+  it('keeps the SUM-RULE PAIR off the clock — the geometry never travels', () => {
+    // The rejected variant, pinned as an absence (the measurement behind it is
+    // in Card.tsx's TONE CROSSFADE paragraph): with `border-width` on the list
+    // the browser snaps the used width down to whole device pixels while the
+    // padding interpolates, so the content walks ~1 device pixel and back
+    // mid-fade — the second animation this repo's hover doctrine bans.
+    const list = tokensOfDefault().filter((t) => /^transition-\[/.test(t));
+    expect(list).toEqual([CROSSFADE_LIST]);
+    expect(list[0]).not.toContain('border-width');
+    expect(list[0]).not.toContain('padding');
+  });
+
+  it('names its properties instead of reaching for a shorthand', () => {
+    const tokens = tokensOfDefault();
+    // `transition-colors` also covers outline-color — the Button/GlyphButton
+    // lesson: a focus ring may never ride an animation clock, and a card's
+    // classes travel onto whatever element `asChild` slots them into.
+    expect(tokens).not.toContain('transition-colors');
+    // `transition-all` would additionally put every future utility a caller
+    // merges through className onto the clock, sight unseen.
+    expect(tokens).not.toContain('transition-all');
+    // Exactly ONE unprefixed transition utility: a second one does not "add"
+    // properties, it REPLACES the first, and which of the two wins is decided
+    // by their order in the compiled sheet rather than by this file.
+    expect(tokens.filter((t) => /^transition-/.test(t))).toEqual([
+      CROSSFADE_LIST,
+    ]);
+    // …and the only variant-prefixed one is the §9 reset.
+    expect(tokens.filter((t) => /^[^:]+:transition-/.test(t))).toEqual([
+      'motion-reduce:transition-none',
+    ]);
+  });
+
+  it('admits no second clock, no second easing and no delay', () => {
+    // In and out must mirror each other (the Button precedent): a lone
+    // `hover:duration-1000` or a `delay-150` would desynchronise the two
+    // directions of a swap that is supposed to feel like one calm move.
+    const tokens = tokensOfDefault();
+    expect(
+      tokens.filter(
+        (t) => /(^|:)duration-/.test(t) && t !== 'duration-(--fade)',
+      ),
+    ).toEqual([]);
+    expect(
+      tokens.filter((t) => /(^|:)ease-/.test(t) && t !== 'ease-in-out'),
+    ).toEqual([]);
+    expect(tokens.filter((t) => /(^|:)delay-/.test(t))).toEqual([]);
+  });
+
+  it('compiles to exactly those two properties on a 0.4s clock', () => {
+    // The class layer's blind spot: an arbitrary-value utility that Tailwind
+    // never emits leaves the element with NO transition and every token
+    // assertion above still green. This reads the decision back from the
+    // browser — the property list, the clock resolved through var(--fade),
+    // and the easing.
+    render(<Card>{RO_TITLE}</Card>);
+    const box = getComputedStyle(screen.getByText(RO_TITLE));
+    expect(box.transitionProperty).toBe('background-color, border-color');
+    expect(box.transitionDuration).toBe('0.4s');
+    expect(box.transitionTimingFunction).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+  });
+
+  // ── The pixel layer. A stateful host is the only honest fixture here: the
+  // fade exists exactly because a CONSUMER re-renders the SAME card with a
+  // different tone (a rotation-driven selection), which is a different event
+  // from mounting two cards side by side — the two-render sum-rule test above
+  // can never start a transition.
+  function ToneSwitcher({ from, to }: { from: CardTone; to: CardTone }) {
+    const [tone, setTone] = useState(from);
+    return (
+      <Card tone={tone} data-testid="card">
+        <p data-testid="body">{RO_TITLE}</p>
+        <button type="button" onClick={() => setTone(to)}>
+          schimbă tonul
+        </button>
+      </Card>
+    );
+  }
+
+  const nextFrame = () =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
+  /** Flip the tone and SCRUB the fade to fixed points, watching the two things
+   *  that must disagree: the content's INSET, which may not move at all, and
+   *  the background COLOUR, which must (or the stillness below would be the
+   *  stillness of a fade that never ran). */
+  async function flipAndWatch(from: CardTone, to: CardTone) {
+    const { unmount } = render(<ToneSwitcher from={from} to={to} />);
+    const body = screen.getByTestId('body');
+    const card = screen.getByTestId('card');
+
+    // The content's inset INSIDE THE CARD — border + padding per side, which
+    // is exactly what the sum rule promises — rather than viewport
+    // coordinates, which a click can shift by scrolling the document (the
+    // ui-card--tone-morph story met that).
+    const inset = () => {
+      const box = card.getBoundingClientRect();
+      const inner = body.getBoundingClientRect();
+      return { inline: inner.left - box.left, block: inner.top - box.top };
+    };
+    const startInset = inset();
+    const startPaint = getComputedStyle(card).backgroundColor;
+
+    fireEvent.click(screen.getByRole('button'));
+
+    const insets = new Set<string>([
+      `${startInset.inline}/${startInset.block}`,
+    ]);
+    const paints = new Set<string>();
+    // SCRUB the fade instead of waiting for it (G3 react L2). The transition
+    // the click started is a CSSTransition the Web Animations API can hold
+    // still and set to any time, so the samples are taken at FIXED points of
+    // the 400ms — 0, a quarter, half, three quarters, the last millisecond —
+    // on any machine, with no frame budget in the loop: a wall-clock rAF loop
+    // needed at least one frame to land inside the fade, and a throttled CI
+    // runner can miss that. One frame first, so the style change has been
+    // flushed and the transition exists to be scrubbed.
+    await nextFrame();
+    const fades = card.getAnimations();
+    expect(fades.length, 'the click must have started a fade').toBeGreaterThan(
+      0,
+    );
+    for (const time of [0, 100, 200, 300, 399]) {
+      for (const fade of fades) {
+        fade.pause();
+        fade.currentTime = time;
+      }
+      const now = inset();
+      insets.add(`${now.inline}/${now.block}`);
+      paints.add(getComputedStyle(card).backgroundColor);
+    }
+    for (const fade of fades) fade.finish();
+
+    const endPaint = getComputedStyle(card).backgroundColor;
+    unmount();
+    return {
+      insets: [...insets],
+      paints: [...paints],
+      startPaint,
+      endPaint,
+    };
+  }
+
+  const DIRECTIONS: ReadonlyArray<[CardTone, CardTone]> = [
+    ['framed', 'emphasized'],
+    ['emphasized', 'framed'],
+  ];
+
+  it.each(DIRECTIONS)(
+    'keeps the content exactly 25px in, at every frame of a live %s → %s flip',
+    async (from, to) => {
+      const { insets, paints, startPaint, endPaint } = await flipAndWatch(
+        from,
+        to,
+      );
+
+      // NEVER-VACUOUS: a swap that never faded would make the stillness below
+      // true for the wrong reason. `framed` rests on --surface and
+      // `emphasized` on the 20% tint, so an intermediate paint — equal to
+      // NEITHER end — is proof the clock really ran during the samples.
+      expect(startPaint, 'the two tones must differ in paint').not.toBe(
+        endPaint,
+      );
+      expect(
+        paints.some((paint) => paint !== startPaint && paint !== endPaint),
+        `background never left its two ends: ${paints.join(' | ')}`,
+      ).toBe(true);
+
+      // THE MEASUREMENT THE DECISION WAS MADE ON (owner, via the planner,
+      // 2026-09-10): with the geometry pair off the clock, `border-width` and
+      // `padding` swap inside ONE style recalculation and their sum is 25px on
+      // both sides of it. Not "within a pixel" — the SAME value at rest and at
+      // every frame in between, in both directions. Putting them on the list
+      // measured up to 1 device pixel of drift instead (Card.tsx's TONE
+      // CROSSFADE paragraph records that variant and why it was rejected).
+      expect(insets, 'every sampled inset, inline/block').toEqual(['25/25']);
+    },
+  );
+
+  it('keeps the tone swap on ONE element — a fade needs the node to survive', () => {
+    // If a consumer's re-render replaced the DOM node instead of updating it,
+    // there would be no previous value to interpolate from and the "fade"
+    // would silently become a cut in production while every class assertion
+    // above stayed green.
+    render(<ToneSwitcher from="framed" to="emphasized" />);
+    const before = screen.getByTestId('card');
+    expect(before.className).toBe(`${GEOMETRY} ${TONE_CLASSES.framed}`);
+
+    fireEvent.click(screen.getByRole('button'));
+
+    const after = screen.getByTestId('card');
+    expect(after).toBe(before);
+    expect(after.className).toBe(`${GEOMETRY} ${TONE_CLASSES.emphasized}`);
   });
 });
 
@@ -483,5 +741,60 @@ describe('Card — the zero-island invariant (source guard)', () => {
     // counter cannot see any other file — the src-WIDE half, "no second
     // spelling anywhere", is tests/unit/card-single-spelling.test.ts.
     expect(source.split('flex flex-col gap-3 rounded-md').length - 1).toBe(1);
+  });
+});
+
+describe('Card — ONE tint: the idle frame IS the selected ground (owner 2026-09-12)', () => {
+  it('paints the emphasized ground in EXACTLY the framed border colour — read back from the engine', () => {
+    // The owner's sentence at pack round 2 ("the current card the same shade
+    // as the border of the non-current card"), asserted as computed colour:
+    // both rows read `--card-tint`, so the two values are one value. Rendered
+    // side by side so the same stylesheet resolves both.
+    render(
+      <>
+        <Card tone="framed">{RO_TITLE}</Card>
+        <Card tone="emphasized">{RO_BODY}</Card>
+      </>,
+    );
+    const frame = getComputedStyle(screen.getByText(RO_TITLE)).borderTopColor;
+    const ground = getComputedStyle(screen.getByText(RO_BODY)).backgroundColor;
+
+    expect(ground).toBe(frame);
+    // …and it is the MIX, not either fallback: neither the white base nor the
+    // solid accent (#7a6d9c) an engine without color-mix would paint. A
+    // readback of either would mean the `supports-[…]` declaration never
+    // compiled and every engine would see the fallback.
+    expect(ground).not.toBe('rgb(255, 255, 255)');
+    expect(ground).not.toBe('rgb(122, 109, 156)');
+  });
+
+  it('paints an OPAQUE tint — no alpha channel, never a wash over transparent (G2 a11y, 2026-09-10)', () => {
+    const { container } = render(<Card tone="emphasized">x</Card>);
+    const card = container.firstElementChild as HTMLElement;
+    const paint = getComputedStyle(card).backgroundColor;
+    // No alpha channel below 1 in any serialization Chromium may pick.
+    expect(paint).not.toMatch(/rgba\(.*,\s*0?\.\d+\)$/);
+    expect(paint).not.toMatch(/\/\s*0?\.\d+\)$/);
+    expect(paint).not.toBe('rgba(0, 0, 0, 0)');
+  });
+
+  it('keeps an explicit white base under the mix for engines without color-mix', () => {
+    const { container } = render(<Card tone="emphasized">x</Card>);
+    const classes = (
+      container.firstElementChild as HTMLElement
+    ).className.split(' ');
+    expect(classes).toContain('bg-surface');
+    expect(classes).toContain(
+      'supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint)',
+    );
+    // The tint is declared exactly once, as its two halves, on every card.
+    expect(classes).toContain('[--card-tint:var(--color-accent-decorative)]');
+    expect(
+      classes.filter((token) => token.includes('--card-tint:')),
+    ).toHaveLength(2);
+    // …and never as a transparent wash, in any spelling.
+    expect(classes.some((token) => /accent-decorative\/\d+/.test(token))).toBe(
+      false,
+    );
   });
 });

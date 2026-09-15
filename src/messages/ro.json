@@ -74,7 +74,11 @@
     }
   },
   "services": {
-    "title": "Serviciile noastre"
+    "title": "Serviciile noastre",
+    "prices": {
+      "menu": "Categorii",
+      "amount": "{amount, number} RON"
+    }
   },
   "team": {
     "title": "Echipa noastră"

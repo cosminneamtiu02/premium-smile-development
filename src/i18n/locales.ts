@@ -15,6 +15,41 @@ export const defaultLocale: Locale = 'ro';
 // branch, was deleted — the stub now lands cookie-less visitors on
 // `defaultLocale`, whose other roles were always Romanian anyway.)
 
+/**
+ * Whether `value` is one of the five routed locales — the guard §15.19 named as
+ * the trigger "at the next `Record<Locale, …>` band", and `lib/prices` is that
+ * band (price-list board §2.6). A page receives its locale as a plain `string`
+ * and must narrow it before indexing a `LocalizedName`; without a guard that
+ * narrowing is a cast, which type-checks a typo just as happily as a locale.
+ * The predicate is honest in both directions: the true branch gives `Locale`,
+ * and the false branch leaves a `string` a `string` (TypeScript subtracts a
+ * predicate's type there, and `string` minus a union of its own literals is
+ * still `string` — the `never` trap lib/initials' `isTwoLetters` header
+ * measured does not exist here).
+ *
+ * NOT the only guard, on purpose: next-intl's `hasLocale(routing.locales, x)`
+ * narrows an `unknown` on the ROUTING side (app/[locale]/layout.tsx and
+ * src/i18n/request.ts). This one exists for the `string`s the routing layer
+ * hands back afterwards — `getLocale()`, a story's toolbar global — and for
+ * the manifest's promise of zero imports: a data module may not import a
+ * framework to ask which of its own five values it is looking at.
+ *
+ * `some` rather than `locales.includes(value)`: `includes` on the `as const`
+ * tuple takes only a `Locale`, so a `string` argument would need a widening
+ * cast — and this module's header promise is data with zero imports and zero
+ * ceremony.
+ *
+ * ONE CONSUMER TODAY, ONE OWED: app/[locale]/services/page.tsx narrows with
+ * this guard; sections/ReviewsCarousel still spells the same question as
+ * `locales.find(…) ?? defaultLocale` (a silent fallback where the page throws).
+ * The next lane that touches ReviewsCarousel folds it onto this guard — not
+ * the price-list lane, whose visual manifest must not drag the deck's in
+ * (G2 react L3).
+ */
+export function isLocale(value: string): value is Locale {
+  return locales.some((locale) => locale === value);
+}
+
 // THE one spelling of the language-cookie name (§8.7) — the site's only piece
 // of storage, and therefore the whole reason it ships with no consent banner.
 // It has exactly ONE writer-helper and exactly ONE value-reader, and they live

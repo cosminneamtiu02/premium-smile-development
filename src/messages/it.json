@@ -74,7 +74,11 @@
     }
   },
   "services": {
-    "title": "I nostri servizi"
+    "title": "I nostri servizi",
+    "prices": {
+      "menu": "Categorie",
+      "amount": "{amount, number} RON"
+    }
   },
   "team": {
     "title": "Il nostro team"

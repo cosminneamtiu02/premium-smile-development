@@ -94,6 +94,7 @@ src/
     routes/routes.ts     # THE route list + matchesRoute/equivalentPath (one list, all consumers)
     hours/hours.ts       # schedule → printable rows (deterministic reference week)
     scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
+    scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic: landing-line walk + bottom rule + top fallback + click pin (React-free; price-list pack round 2, 2026-09-14)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
     rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
@@ -103,6 +104,7 @@ src/
     rating/rating.ts     # THE star-rating value type (eleven half-steps) + guards — atoms AND the data list import it (reviews run D17, 2026-09-10)
     initials/initials.ts # THE two-capital monogram type + guards — the twin of lib/rating (D17)
     reviews/reviews.ts   # THE review list (facts + five-language words per row; ships EMPTY until the owner's real reviews — D2/D15/D18)
+    prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -377,7 +379,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Page | Sections | Namespace |
 |---|---|---|
 | Home | Hero · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTS only when the owner's real review list exists — §15.19) · CTABanner | `home` |
-| Services | ServicesIntro · ServiceCard list with price rows · FAQ (opt) · CTABanner | `services` |
+| Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven aura'd category cards — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu's `<ul>` is the band's one client island `PriceMenu` on `lib/scroll-spy`, marking the current category `aria-current="location"` in BOTH directions, scroll and click; a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
 | Team | TeamIntro · **PersonnelCard** — doctor profiles (the centred portrait column beside a justified, quoted about-text, sides alternating) + the auxiliary-staff grid (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · ClinicGallery (opt) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
@@ -752,6 +754,85 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     20% tint as a §15.1 token at its second consumer · a type-only `lib/image-path` at the next lane
     that types an image path · `isLocale()` at the next `Record<Locale, …>` band.
 
+20. **Price-list run — DECIDED (owner, consultation board `.claude/plans/price-list.plan.md`,
+    fb-449 – fb-466, 2026-09-13; build dispatched the same day, epic #99, lane `feat/price-list`,
+    run ledger `.claude/section-runs/2026-09-13_17-50_price-list/ledger.md`):** the Services
+    page's price list as MACHINERY — `sections/PriceList`, a **DUMB props-in band** (owner fb-459:
+    zero message keys, zero data imports; every string arrives finished) — a `ui/Card asChild`
+    `<nav aria-labelledby>` jump menu, sticky from the Container's `@3xl` step (`top-28` = the
+    header's 6rem reach + 1rem, the FIFTH coupled spelling, registered in Header.tsx's mount
+    contract) beside a column of in-folder `CategoryCard`s (`ui/Card asChild` onto
+    `<section id tabIndex={-1} aria-labelledby>` so the fragment target RECEIVES focus;
+    `sections/SectionHeading` eyebrow + h2; a `<dl>` of `ui/Text dt/dd` rows that stack below the
+    card's `@sm` and flow into two CSS columns from the card's `@3xl`); below the step the menu is
+    a stacked table of contents with a „back to categories" link under each card (fb-460). Data
+    = `lib/prices/prices.ts`: a typed list (`Record<Locale, string>` words on every row — a
+    missing language is a compile error; a `.ts` module, never JSON, fb-465), 11 categories ·
+    102 rows, ALL fixed whole-RON amounts (the owner's printed tariff, transcribed 2026-09-13,
+    full diacritics fb-454; five rows carry `TODO(owner): verify`); the discriminated `Price`
+    union is the RECORDED upgrade path for the first non-fixed row; no discount/old-price variant
+    by design (CMSR, §12's sibling rule). `i18n/locales.ts` gains `isLocale()` — the §15.19
+    trigger, consumed. `app/[locale]/services/page.tsx` is THE ONE POPULATOR (`getLocale` →
+    `isLocale` → `populatePriceList` → the band), the only place a number becomes words through
+    `services.prices.amount = "{amount, number} RON"` — **„RON" everywhere, no euros (fb-450)**;
+    a EUR column „maybe, on every language" is recorded as §15.4's successor, still parked.
+    Fragment ids are English (fb-461). Every internal link stays a plain `<a href="#id">`
+    (§15.13); zero client JavaScript ships for the band (§16's island list is unchanged) — **that JavaScript sentence is superseded by Round 2 below**.
+    **Strings:** the three UI keys ×5, the 11 short category names, the three eyebrows and the
+    EN/DE/FR/IT row words were DRAFTED by Claude on the owner's „create the whole thing here …
+    I want to see the whole prices page" dispatch and are flagged in the file headers for the
+    owner's confirmation — §15.17 stands for content; the §15.19 reviews-lane precedent. fb-466
+    („decide for me everywhere needed") was a ONE-TIME delegation for the items then open, per
+    the owner's same-day correction — not a standing rule. Delivery shape: the reviews-run
+    shape — one branch, one commit on the owner's word, one review round, one PR.
+    **Round 2 (owner pack feedback, 2026-09-14 — the same lane, still uncommitted; eight
+    decisions, all the owner's):** (1) the menu title „Categorii" wears ui/Heading's `section`
+    step (text-3xl — the category h2s' own step, honest siblings) over a rule line, so it reads
+    as the navigation's TITLE and not as its first item; (2) ONE column of rows, always
+    (`@3xl:columns-2` and its `break-inside-avoid` deleted); (3) the visible „Serviciile
+    noastre" opener DROPPED — the `<h1>` survives `sr-only`, because §9's one-h1 rule and the
+    SEO lane's outline both need the element and only its pixels were the complaint; (4) `aura`
+    on the menu card and on every category card, the cards column opened to `gap-8` so
+    neighbouring glows do not stack; (5) the sticky menu moves to `@3xl:top-34` = 8.5rem —
+    MEASURED, not chosen: the pill's `--shadow-aura` tints the page ground down to y = 126px
+    (pixel-sampled under Chromium at 1280/1536/1920) and the old 7rem top put the menu 14px
+    INSIDE that glow; 8.5rem = 136px clears it by 10px, the midpoint of the owner's „1-2 rem".
+    The belt follows (`calc(100dvh-9.5rem)`) and the cards' landing line moves to the SAME
+    2.5rem (`scroll-mt-10`), so a jumped-to card's top edge and the stuck menu's rest on one
+    line; still the FIFTH coupled spelling in Header.tsx's mount contract; (6) **BIDIRECTIONAL
+    scroll <-> menu sync** — the ONE client island this band now ships,
+    `sections/PriceList/PriceMenu` (the `<ul>` of links alone; the nav, its title, the card
+    surfaces and all 102 rows stay inert HTML), on NEW React-free `lib/scroll-spy`: the current
+    target is the last one that has reached its own LANDING LINE (`rect.top −
+    scroll-margin-top ≤ scroll-padding-top` — the same two CSS properties the browser's own
+    fragment jump consults, so a click and a scroll can never disagree about where „current"
+    begins), plus the BOTTOM RULE (at the document's end the last target is current — measured:
+    at 1920×1080 the last card is 145px short of its line and could otherwise never be
+    reached), the TOP FALLBACK (the first target while none has reached its line) and the CLICK
+    PIN (a menu click holds its mark through the scrolling the jump itself causes — until no
+    scroll event has arrived for 150 ms AND the visitor then scrolls by hand; `hashchange` and
+    a load-time hash pin the same way; a middle or modified click never pins; and at the
+    settle the pin VERIFIES ARRIVAL — a target that never reached its landing line, because a
+    reload or a Back restored the old position or a scroll lock froze the glide, hands the
+    mark back to the walk within 150 ms (G2 react on Fable, 2026-09-15, measured in Chromium
+    and WebKit); the visitor's own `wheel`/`touchmove`/scrolling keys drop it at once, keys a
+    control swallows — `button`, `dialog`, inputs — never do). Marked
+    `aria-current="location"` (the location WITHIN the page, never `page`) wearing
+    ui/TextButton's `active` rest look; the static HTML carries no marker at all, so hydration
+    is safe (§16's rule 2); consumed through `useSyncExternalStore` exactly like the reviews
+    deck. Reverses board §4.3 option A and this item's own „zero client JavaScript" sentence;
+    §16's island list amended in the same change-set; (7) the „înapoi la categorii" link
+    DELETED outright, `services.prices.back` ×5 removed with it; (8) an eyebrow on EVERY
+    category — `eyebrow` REQUIRED in the data type and in the band's props, so a category
+    without one is a compile error rather than a card that quietly reads differently from its
+    neighbours; the eight new eyebrows ×5 are Claude DRAFTS, flagged with the lane's other
+    strings. Deliberately NOT built, named triggers in lib/scroll-spy's header: `scrollend`
+    (every Safari before 26 lacks it, so the settle timer must exist anyway), scrolling the
+    current link into view inside the menu's overflow belt, `setIds()` for a list that can
+    change, a top-fallback option for a consumer whose targets sit below a long intro, and
+    ignoring `wheel`/`touchmove` while the document is scroll-locked (needs lib/scroll-lock to
+    expose `isLocked()`; today such a drop is bounded — it lands on what is on screen).
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —
@@ -774,8 +855,10 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
 - Hydration of the client islands **only**: ContactModal, LanguageSwitcher, mobile nav,
   language-suggestion banner, root `/` redirect script, and the reviews rotator
   (`sections/ReviewsCarousel/ReviewsDeck` on `lib/rotation` — added by its own lane per
-  §15.18, 2026-09-12; ui/Avatar's picture→letters fallback rides inside it). Everything else
-  stays inert HTML.
+  §15.18, 2026-09-12; ui/Avatar's picture→letters fallback rides inside it), and the price
+  menu's current-category marker (`sections/PriceList/PriceMenu` on `lib/scroll-spy` — its own
+  lane's pack round 2, owner 2026-09-14, §15.20: the `<ul>` of links alone; its `<nav>`, the
+  title and every category card stay inert). Everything else stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting

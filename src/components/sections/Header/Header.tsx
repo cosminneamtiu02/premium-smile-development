@@ -77,7 +77,7 @@ import { NavMenu } from './NavMenu';
 //    keep that strip clear. It CANNOT be set from here — §6 forbids a section
 //    from styling the shell — and it must equal the pill's reach, top-4 +
 //    h-20 = 6rem (uniform at every width since the owner's 2026-09-04
-//    "same size on every screen"), so the four numbers move together or the
+//    "same size on every screen"), so the five numbers move together or the
 //    debt reopens — the fourth being NavMenu's panel cap, which joined the
 //    family the moment the burger widths stopped being h-16.
 //    (FloatingActions books `scroll-padding-bottom` on the same element for
@@ -187,7 +187,18 @@ export function Header(): ReactElement {
                              the panel only exists below @3xl and those widths
                              were still h-16 — that reasoning expires the moment
                              the burger widths get the taller bar too.
-          Four spellings, one number: change this height and all four move.
+          Five spellings, one number: change this height and all five move.
+            PriceList        `@3xl:top-34` on the sticky price menu (reach 6rem +
+                             2.5rem of air) — the FIFTH spelling, added by the
+                             price-list lane (its board §3.3, 2026-09-13; the air
+                             widened from 1rem in that lane's pack round 2,
+                             2026-09-14, and MEASURED: the pill's aura tints the
+                             page ground down to y = 126px, so the old 7rem menu
+                             sat 14px inside the glow). Its cards mirror the same
+                             2.5rem as `scroll-mt-10` over globals' 6rem
+                             scroll-padding, so a jumped-to card and the stuck
+                             menu rest on one line: change this height and all
+                             five move.
           No max-w cap in here: the PILL is the column — its own side margins
           already narrow it, and the old bar ran brand-to-CTA across its full
           width. All sizing in rem so browser zoom and user font settings

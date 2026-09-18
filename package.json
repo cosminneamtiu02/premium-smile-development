@@ -16,7 +16,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "next-image-export-optimizer && storybook build",
     "visual": "playwright test tests/visual",
-    "visual:update": "playwright test tests/visual --update-snapshots"
+    "visual:update": "playwright test tests/visual --update-snapshots",
+    "e2e": "playwright test --config playwright.e2e.config.ts"
   },
   "dependencies": {
     "next": "~16.3.4",

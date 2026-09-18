@@ -118,7 +118,7 @@ import { cx } from '@/lib/cx/cx';
 //
 // No 'use client', no hook, no state, no handler: this compiles into the
 // static HTML of the services page and ships zero bytes of JavaScript (§16).
-// The band's ONE island is the menu list (sections/PriceList/PriceMenu), and
+// The band's ONE island is the menu CARD (sections/PriceList/PriceMenu), and
 // PriceList.test.tsx pins the directive's absence from this file's source
 // text, because no runtime assertion can see one.
 

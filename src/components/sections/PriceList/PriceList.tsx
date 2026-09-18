@@ -1,7 +1,5 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { Card } from '@/components/ui/Card/Card';
 import { Container } from '@/components/ui/Container/Container';
-import { Heading } from '@/components/ui/Heading/Heading';
 import { cx } from '@/lib/cx/cx';
 import { CategoryCard, type PriceCategoryProps } from './CategoryCard';
 import { PriceMenu } from './PriceMenu';
@@ -31,18 +29,26 @@ import { PriceMenu } from './PriceMenu';
 // SectionHeading / ReviewCard / PersonnelCard group — not a wired page BAND
 // like Header, Footer or ClinicLocation.
 //
-// ── ONE ISLAND, THE MENU LIST (§16; owner 2026-09-14, reversing board §4.3
-// option A). This file ships NO JavaScript: no 'use client', no state, no
-// hook, no handler — the band, the grid, the menu card, its <nav> landmark and
-// <h2>, every category card and all its price rows compile into the static
-// HTML of every locale's services page and stay inert. What the visitor now
-// downloads is ./PriceMenu, the list of links alone, because ONE attribute on
-// ONE link depends on this visitor: which category they are currently looking
-// at. Its mechanics are lib/scroll-spy — scroll marks the menu, a click marks
-// it too, and the click's mark survives the scrolling the jump itself causes
-// (the pin). PriceList.test.tsx pins the split from the source text of all
-// three files, because no runtime assertion can see a directive: this file and
-// CategoryCard.tsx must carry none, PriceMenu.tsx exactly one.
+// ── ONE ISLAND, THE MENU CARD (§16; owner 2026-09-14, reversing board §4.3
+// option A; widened from the list to the card on the owner's 2026-09-18
+// verdict, next paragraph). This file ships NO JavaScript: no 'use client',
+// no state, no hook, no handler — the band, the grid, every category card and
+// all its price rows compile into the static HTML of every locale's services
+// page and stay inert. What the visitor downloads is ./PriceMenu — the menu
+// card: its <nav> landmark, its <h2> and the list of links — because TWO
+// things about it depend on this visitor: which category they are currently
+// looking at (one attribute on one link; lib/scroll-spy — scroll marks the
+// menu, a click marks it too, and the click's mark survives the scrolling the
+// jump itself causes, the pin) and, since 2026-09-18, where the card itself is
+// held when it is taller than their window (one attribute and one number on
+// the <nav>; lib/sticky-rail). PriceList.test.tsx pins the split from the
+// source text of all three files, because no runtime assertion can see a
+// directive: this file and CategoryCard.tsx must carry none, PriceMenu.tsx
+// exactly one. PRICE_MENU_ID stays HERE and travels down as a prop: a value
+// exported from a 'use client' module reaches a server component as a client
+// reference, not as the string it was, so the band's public address lives on
+// the server side of the boundary and the island derives the title's id from
+// it (the CategoryCard idiom).
 //
 // ── THE BAND RECIPE, APPLIED (the standing law in ui/Container's header, its
 // "THE PAGE-BAND RECIPE" block): the semantic full-bleed outer owns the paint,
@@ -73,7 +79,9 @@ import { PriceMenu } from './PriceMenu';
 //
 // ── `@3xl:top-34` IS THE FIFTH COUPLED SPELLING OF THE HEADER PILL'S REACH,
 // PLUS THE AIR THE GLOW NEEDS (owner 2026-09-14: move the menu "1-2 rem"
-// down). KEEP-IN-SYNC with sections/Header.tsx's "THE MOUNT CONTRACT" block
+// down). It rides the island's <nav> (./PriceMenu) since the card became the
+// island, but it is THIS band's number and this paragraph is where it is
+// argued. KEEP-IN-SYNC with sections/Header.tsx's "THE MOUNT CONTRACT" block
 // (item a) and with src/styles/globals.css's `scroll-padding-top` — cited by
 // those anchors, never by line number (§17.7). The pill floats at `top-4`
 // (1rem) and is `h-20` (5rem) at every width, so its reach is 6rem; what
@@ -94,18 +102,38 @@ import { PriceMenu } from './PriceMenu';
 // 6rem`, so a jumped-to card comes to rest with its top edge on the very line
 // the stuck menu's top edge sits on. Two numbers, one visual line.
 //
-// ── THE HEIGHT BELT is the NavMenu precedent, and it engages only when it
-// must (board §3.3): a stuck menu taller than the viewport minus its own
-// offset would hide its last categories with no way to reach them.
-// `max-h-[calc(100dvh-9.5rem)] overflow-y-auto` turns that case into a
-// scrollable card — nested scrolling, which older visitors do find confusing,
-// and still strictly better than unreachable links. The 9.5rem is the offset
-// above (8.5rem) plus one rem of breathing room at the bottom, so the belt
-// moves with the menu instead of being a number of its own. With eleven
-// one-line categories the belt never engages above a ~800px-tall window. Both
-// halves are `@3xl:`-gated: below the step the menu is not sticky, so capping
-// its height would only mutilate a table of contents that is free to be as
-// tall as it likes.
+// ── NO HEIGHT BELT — THE MENU IS NEVER A SCROLL CONTAINER (owner 2026-09-18,
+// reversing board §3.3's belt). The band shipped with the NavMenu precedent
+// on the card, `max-h-[calc(100dvh-9.5rem)] overflow-y-auto`, on the argument
+// that a stuck menu taller than the window would otherwise hide its last
+// categories. What that belt did in practice was MEASURED in Chromium against
+// the built export: the menu is 653px tall with eleven categories (Romanian
+// and German identical), so under its 136px offset plus 16px of bottom air a
+// window must be at least 805px tall — and every laptop got a nested
+// scrollbar inside the card with the wheel scrolling the menu instead of the
+// page:
+//
+//     window                      innerHeight   usable (−136 −16)   fits?
+//     1366×768 laptop                     633                 481      no
+//     1080p at 125% scaling               737                 585      no
+//     1280×800 MacBook                    688                 536      no
+//     1440×900 MacBook                    789                 637      no
+//     1080p desktop at 100%               945                 793     yes
+//
+// "That should absolutely not be possible" (owner). Nor can it be shrunk away:
+// 11 × 44px links = 484px is already more than the 481px the first row
+// leaves, and 44px is the §9 target floor. So the belt is gone and the card
+// is held by lib/sticky-rail — DIRECTION-AWARE PINNING, read by ./PriceMenu:
+// a menu that FITS keeps exactly the CSS above (sticky at `top-34`, nothing
+// written); a taller one rides with the page while the visitor scrolls down
+// until its bottom edge meets the window's bottom line and pins there, rides
+// with the page while they scroll up until its top edge meets the 8.5rem line
+// and pins there, and between the two — after a reversal — holds a frozen
+// relative offset so it never jumps. Every link is reachable by scrolling the
+// PAGE, with the wheel, a drag or the keys; a link that takes focus pins
+// whichever edge reveals it. The island's header records what it writes to
+// make that real (one attribute, one number, one gated class) and why the
+// static classes are untouched.
 // TRAP, recorded because it is invisible: `overflow-x-hidden` anywhere above
 // the menu would turn that ancestor into a scroll container and KILL the
 // sticky. If this band ever needs a horizontal belt it takes the reviews
@@ -167,11 +195,6 @@ import { PriceMenu } from './PriceMenu';
  * like every fragment id in this band (owner fb-461).
  */
 export const PRICE_MENU_ID = 'price-categories';
-
-/** Half of the menu landmark's `aria-labelledby` pair — derived from the id
- *  above so the two can never drift, and not exported: nothing outside this
- *  file has business pointing at the title element. */
-const MENU_TITLE_ID = `${PRICE_MENU_ID}-title`;
 
 // The row and category shapes live with the component that renders them
 // (CategoryCard.tsx) and are re-exported here so a page imports the band's
@@ -238,57 +261,31 @@ export function PriceList({
             together. `gap-8` is the section owning ALL child spacing (§6.4).
             `items-start` is load-bearing for the sticky menu — see the header. */}
         <div className="grid gap-8 py-12 @lg:py-16 @3xl:py-20 @3xl:grid-cols-[minmax(15rem,1fr)_4fr] @3xl:items-start">
-          <Card asChild aura>
-            {/* The <nav> IS the card (ui/slot.ts): the surface lands on the
-                landmark itself, so a screen reader can jump to it by role and
-                hears its visible title as the name. Sticky, its 8.5rem offset
-                and the height belt all ride here through className, which
-                ui/slot.ts merges LAST — placement only (§6.8), never a
-                restyle of the atom's paint.
-                `tabIndex={-1}` + `scroll-mt-10`: PRICE_MENU_ID is a public
-                address — the URL bar, a link from another page — so arriving
-                at it gets the same treatment a card's arrival gets
-                (CategoryCard.tsx, THE FRAGMENT TARGET): real focus, hence an
-                announcement by name, and the same 2.5rem of air that puts its
-                top edge on the stuck menu's own line (G2 a11y M1). */}
-            <nav
-              id={PRICE_MENU_ID}
-              aria-labelledby={MENU_TITLE_ID}
-              tabIndex={-1}
-              className="scroll-mt-10 @3xl:sticky @3xl:top-34 @3xl:max-h-[calc(100dvh-9.5rem)] @3xl:overflow-y-auto"
-            >
-              {/* ui/Heading's `section` step on a REAL <h2> — the same step
-                  every category card's title wears, which is the owner's
-                  2026-09-14 decision in one word: „Categorii" is the TITLE of
-                  this navigation, an honest sibling of the card titles beside
-                  it, not the first of its own items. A visible title and an
-                  outline entry are two independent decisions, which is what
-                  `asChild` exists for; the id closes the landmark's
-                  aria-labelledby pair, and the rule that separates the title
-                  from the list rides the <ul> in ./PriceMenu. */}
-              <Heading asChild size="section">
-                <h2 id={MENU_TITLE_ID}>{menuTitle}</h2>
-              </Heading>
-              {/* THE ISLAND. Only the pairs it renders cross the boundary —
-                  never the rows, which are server HTML (PriceMenu.tsx says
-                  why). */}
-              {/* THE KEY IS THE RING'S IDENTITY (G2 react, 2026-09-14). The
-                island freezes the ids it watches in a useState initializer and
-                has no `setIds` — deliberately, because page data on this site
-                is compiled at build time (§16) and a tariff cannot change
-                while a visitor reads it. The one place that is not true is the
-                workbench: Storybook controls can swap one deck's categories
-                for another's on a MOUNTED story, and the spy would go on
-                walking ids no link carries, marking nothing. Keying the island
-                by its own id list makes React remount it exactly when the ring
-                would otherwise go stale — and on the real page the key never
-                changes, so it costs nothing there. */}
-              <PriceMenu
-                key={JSON.stringify(categories.map((category) => category.id))}
-                items={categories.map(({ id, name }) => ({ id, name }))}
-              />
-            </nav>
-          </Card>
+          {/* THE ISLAND: the whole menu card — ui/Card asChild onto the <nav>
+              landmark, its <h2>, the list (PriceMenu.tsx says why the card
+              and not the list). It is the grid's FIRST child, and lib/
+              sticky-rail reads its normal-flow position as this grid's
+              content edge: keep it first, keep `items-start`. Only the
+              finished title and the id/name pairs cross the boundary — never
+              the rows, which are server HTML. */}
+          {/* THE KEY IS THE RING'S IDENTITY (G2 react, 2026-09-14). The
+              island freezes the ids it watches in a useState initializer and
+              has no `setIds` — deliberately, because page data on this site
+              is compiled at build time (§16) and a tariff cannot change while
+              a visitor reads it. The one place that is not true is the
+              workbench: Storybook controls can swap one deck's categories for
+              another's on a MOUNTED story, and the spy would go on walking ids
+              no link carries, marking nothing. Keying the island by its own id
+              list makes React remount it exactly when the ring would otherwise
+              go stale — the rail's element with it, found again by the same id
+              — and on the real page the key never changes, so it costs nothing
+              there. */}
+          <PriceMenu
+            key={JSON.stringify(categories.map((category) => category.id))}
+            id={PRICE_MENU_ID}
+            title={menuTitle}
+            items={categories.map(({ id, name }) => ({ id, name }))}
+          />
           {/* The cards column. `gap-8` between cards is the section owning its
               children's spacing (§6.4) — and it is the aura's number, see the
               header; the cards themselves own no height — each is as tall as

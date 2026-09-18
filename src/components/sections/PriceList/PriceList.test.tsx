@@ -39,6 +39,15 @@ import menuSource from './PriceMenu.tsx?raw';
 // The mechanics have their own suite next door (src/lib/scroll-spy); what is
 // pinned here is the WIRING — that the marker exists, that it starts on the
 // first category, that scrolling moves it and that a click pins it.
+// AND SINCE 2026-09-18 the island is the whole menu CARD, holding a second
+// store (lib/sticky-rail) that decides where the card is held when it is
+// taller than the window. Same division of labour: the state machine has its
+// own suite beside the module; here the WIRING is pinned — the rail finds the
+// nav by the band's id, the mode lands as `data-rail`, the number as an
+// inline `top`, and the server HTML carries neither. The stylesheet's absence
+// cuts the other way for this store: no CSS makes the nav sticky, so the
+// wiring test lends it an inline sticky rule and a resize, and reads the
+// attribute back.
 //
 // NOTHING IS MOCKED: no router, no cookie, no clock, no message provider. A
 // dumb band needs none of them, which is the point of the shape.
@@ -397,20 +406,33 @@ describe('PriceList — the jump menu', () => {
       expect.arrayContaining(['@container', 'bg-surface', 'p-6', AURA]),
     );
     // …and the placement className is merged after them (ui/slot.ts). 8.5rem
-    // of offset = the pill's 6rem reach + 2.5rem that clears its glow; the
-    // belt is that offset plus one rem of air at the bottom.
+    // of offset = the pill's 6rem reach + 2.5rem that clears its glow, and
+    // the ONE rule lib/sticky-rail's 'travel' mode asks for, under the same
+    // container gate.
     expect(tokensOf(menu)).toEqual(
       expect.arrayContaining([
         'scroll-mt-10',
         '@3xl:sticky',
         '@3xl:top-34',
-        '@3xl:max-h-[calc(100dvh-9.5rem)]',
-        '@3xl:overflow-y-auto',
+        '@3xl:data-[rail=travel]:relative',
       ]),
     );
     expect(menu.className.indexOf('@container')).toBeLessThan(
       menu.className.indexOf('@3xl:sticky'),
     );
+  });
+
+  it('is NEVER a scroll container — no height belt, no overflow (owner 2026-09-18)', () => {
+    // The belt (`max-h-[calc(100dvh-9.5rem)] overflow-y-auto`) made the card
+    // its own scroller on every laptop: the wheel scrolled the menu, not the
+    // page. Reversed for lib/sticky-rail's pinning; nothing on the nav may
+    // cap its height or clip its overflow again.
+    mount();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+
+    expect(
+      tokensOf(menu).filter((c) => /overflow|max-h|dvh|h-\[/.test(c)),
+    ).toEqual([]);
   });
 
   it('separates the title from the list with a rule, and nothing else', () => {
@@ -680,16 +702,54 @@ describe('PriceList — the jump itself', () => {
 
 describe('PriceList — the current category (the island)', () => {
   it('marks NOTHING in the server HTML — hydration-safe by construction', () => {
-    // The island's store publishes `{ current: null }` from its frozen server
-    // snapshot (lib/scroll-spy), so the pre-rendered page every visitor
-    // downloads carries no aria-current at all and the browser's first render
-    // agrees with it byte for byte (§16's hydration-safety rule).
+    // The island's two stores publish `{ current: null }` and
+    // `{ mode: 'fits' }` from their frozen server snapshots (lib/scroll-spy,
+    // lib/sticky-rail), so the pre-rendered page every visitor downloads
+    // carries no aria-current, no data-rail and no inline style at all, and
+    // the browser's first render agrees with it byte for byte (§16's
+    // hydration-safety rule).
     const html = renderToStaticMarkup(
       <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />,
     );
 
     expect(html).not.toContain('aria-current');
+    expect(html).not.toContain('data-rail');
+    expect(html).not.toContain('style=');
     expect(html).toContain(`href="#${CATEGORIES[0].id}"`);
+    expect(html).toMatch(/<nav[^>]*id="price-categories"/);
+  });
+
+  it('answers the rail on the nav — the mode as data-rail, the number as top', async () => {
+    // The WIRING of the second store, not its state machine (that is
+    // src/lib/sticky-rail's suite): the rail finds the nav by PRICE_MENU_ID,
+    // and what it publishes lands where the island says it does. No
+    // stylesheet is loaded, so the nav is lent its sticky rule inline and made
+    // taller than the window, then told about it the only way 'fits' can be
+    // left — a resize; the scroll that follows engages the sticky and opens
+    // 'travel'.
+    mount();
+    stretchCards();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    expect(menu).not.toHaveAttribute('data-rail');
+    expect(menu).not.toHaveAttribute('style');
+
+    menu.style.position = 'sticky';
+    menu.style.top = `${SCROLL_PADDING + 40}px`;
+    menu.style.minHeight = `${window.innerHeight}px`;
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+      await nextFrame();
+      await nextFrame();
+    });
+    expect(menu).toHaveAttribute('data-rail', 'top');
+    expect(menu.style.top).toBe(`${SCROLL_PADDING + 40}px`);
+
+    const engage =
+      menu.getBoundingClientRect().top + window.scrollY - (SCROLL_PADDING + 40);
+    await scrollToY(engage + 30);
+
+    expect(menu).toHaveAttribute('data-rail', 'travel');
+    expect(menu.style.top).toMatch(/^\d+(\.\d+)?px$/);
   });
 
   it('marks the FIRST category once it is mounted at the top of the page', async () => {
@@ -785,16 +845,21 @@ describe('PriceList — dumb by construction', () => {
 
   it('imports no data and no translation machinery', () => {
     // The page is the one populator (board §2c.1): these three files may reach
-    // for lib/cx and — since the pack round — for lib/scroll-spy, the island's
-    // React-free mechanics, and for nothing else under lib/. None of them may
-    // know what a locale is. All three are checked, prose stripped.
+    // for lib/cx and — the island's two React-free mechanics — for
+    // lib/scroll-spy (the pack round) and lib/sticky-rail (2026-09-18), and
+    // for nothing else under lib/. None of them may know what a locale is.
+    // All three are checked, prose stripped.
     for (const code of [CODE, CARD_CODE, MENU_CODE]) {
       const libImports = [...code.matchAll(/from '(@\/lib\/[^']+)'/g)].map(
         (match) => match[1],
       );
       expect(
         libImports.every((path) =>
-          ['@/lib/cx/cx', '@/lib/scroll-spy/scroll-spy'].includes(path),
+          [
+            '@/lib/cx/cx',
+            '@/lib/scroll-spy/scroll-spy',
+            '@/lib/sticky-rail/sticky-rail',
+          ].includes(path),
         ),
       ).toBe(true);
       expect(code).not.toMatch(/next-intl|useTranslations|getTranslations/);
@@ -802,18 +867,28 @@ describe('PriceList — dumb by construction', () => {
     }
   });
 
-  it('ships ONE island, and it is the menu list (§16)', () => {
+  it('ships ONE island, and it is the menu CARD (§16; widened 2026-09-18)', () => {
     // The source guard, read through Vite's ?raw (typed by the repo's own
     // src/types/raw-import.d.ts). Anchored to a line of its OWN, because that
     // is what a directive is, and tolerant of a trailing comment. The band and
-    // the card stay inert HTML on every page; only the list of links ships.
+    // the category cards stay inert HTML on every page; the menu card — its
+    // <nav>, its <h2>, its list — is what ships, because the rail must
+    // position the <nav> itself. So the landmark is spelled in the island and
+    // nowhere else, and the band's file renders no <nav> of its own.
     const directive = /^\s*['"]use client['"]\s*;?\s*(\/\/.*)?$/gm;
 
     for (const code of [CODE, CARD_CODE]) {
       expect(code).not.toMatch(directive);
       expect(code).not.toMatch(/\buseState\b|\buseEffect\b|\buseRef\b/);
       expect(code).not.toMatch(/\bon[A-Z]\w*=/);
+      expect(code).not.toMatch(/<nav\b/);
     }
     expect(MENU_CODE.match(directive)).toHaveLength(1);
+    expect(MENU_CODE).toMatch(/<nav\b/);
+    expect(MENU_CODE).toMatch(/<h2\b/);
+    // The public address stays on the server side of the boundary and
+    // travels down as a prop (PriceList.tsx, ONE ISLAND, THE MENU CARD).
+    expect(CODE).toMatch(/id=\{PRICE_MENU_ID\}/);
+    expect(MENU_CODE).not.toMatch(/PRICE_MENU_ID/);
   });
 });

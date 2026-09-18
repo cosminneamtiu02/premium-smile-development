@@ -95,6 +95,7 @@ src/
     hours/hours.ts       # schedule → printable rows (deterministic reference week)
     scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
     scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic: landing-line walk + bottom rule + top fallback + click pin (React-free; price-list pack round 2, 2026-09-14)
+    sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a focused link reveals its edge (React-free; price-menu-pin lane, 2026-09-18)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
     rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
@@ -379,7 +380,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Page | Sections | Namespace |
 |---|---|---|
 | Home | Hero · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTS only when the owner's real review list exists — §15.19) · CTABanner | `home` |
-| Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven aura'd category cards — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu's `<ul>` is the band's one client island `PriceMenu` on `lib/scroll-spy`, marking the current category `aria-current="location"` in BOTH directions, scroll and click; a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
+| Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven aura'd category cards — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` in BOTH directions, scroll and click) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
 | Team | TeamIntro · **PersonnelCard** — doctor profiles (the centred portrait column beside a justified, quoted about-text, sides alternating) + the auxiliary-staff grid (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · ClinicGallery (opt) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
@@ -833,6 +834,52 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     ignoring `wheel`/`touchmove` while the document is scroll-locked (needs lib/scroll-lock to
     expose `isLocked()`; today such a drop is bounded — it lands on what is on screen).
 
+    **Round 3 (owner, 2026-09-18 — the sticky behaviour reworked; lane `fix/price-menu-pin`):**
+    the HEIGHT BELT REVERSED. Measured in Chromium against the built export: the menu is
+    653px tall with eleven categories (RO and DE identical), so under its 136px offset plus
+    16px of bottom air a window must be ≥ 805px tall — and the belt's
+    `max-h-[calc(100dvh-9.5rem)] overflow-y-auto` made the card its own scroll container on
+    every laptop (1366×768 → 481px usable · 1080p at 125% → 585 · 1280×800 MacBook → 536 ·
+    1440×900 → 637; only 1080p at 100% → 793 fits), the wheel scrolling the menu instead of
+    the page ("that should absolutely not be possible"); it cannot be shrunk away (11 × 44px
+    = 484px > 481px). Decided: DIRECTION-AWARE PINNING on NEW React-free `lib/sticky-rail`
+    (the scroll-spy's shape — pure construction, `start()` the first browser touch, re-entrant
+    `dispose()`, `lib/external-store`; snapshot `{ mode: 'fits' | 'top' | 'bottom' | 'travel',
+    topPx }`; one passive scroll listener + a ResizeObserver on the rail + window resize,
+    coalesced through requestAnimationFrame so state moves only at transitions; a `focusin`
+    listener on the rail pins whichever edge reveals a focused link — the keyboard half of
+    "every link reachable", since a pinned rail does not move with the browser's own
+    scroll-into-view): a menu that FITS keeps exactly the CSS sticky at `top-34` with nothing
+    written; a taller one rides with the page scrolling down until its bottom edge meets
+    `innerHeight − 1rem` and pins there (sticky, negative `top`), rides up until its top edge
+    meets the 8.5rem line and pins there (the static CSS), and holds a frozen relative offset
+    between the two so it never jumps. The ISLAND WIDENED from the `<ul>` to the `<nav>`:
+    `PriceMenu` is now the menu CARD (ui/Card asChild onto the nav, the h2, the list;
+    PRICE_MENU_ID stays in PriceList.tsx and travels down as a prop, because a value exported
+    from a 'use client' module reaches a server component as a client reference) holding BOTH
+    stores through `useSyncExternalStore`; it renders the mode as `data-rail` (absent for
+    'fits' — the server HTML and a desktop that fits are byte-identical, §16 rule 2), the
+    number as an inline `top`, and gains ONE class, `@3xl:data-[rail=travel]:relative`, under
+    the same container gate as the base sticky (an inline `position` would follow the mode
+    below the step — a tablet rotated mid-travel would show the menu displaced over its own
+    cards). The static classes `@3xl:sticky @3xl:top-34 scroll-mt-10` are untouched, the
+    8.5rem / 2.5rem pair and Header.tsx's mount contract unchanged (the rail READS the line
+    from its computed `top` rather than being told it — no sixth spelling). Evidence: the e2e
+    suite `tests/e2e/price-menu-pin.spec.ts` (`npm run e2e` over the built export, its own
+    `playwright.e2e.config.ts` + `tools/serve-export.mjs` on the engine extracted to
+    `tools/serve-static.mjs` — 1366×633 RO + DE: bottom pin with the last link on screen, top
+    pin at 136 with the title on screen, Tab and Shift+Tab through all eleven links each on
+    screen, never a scroll container, the server HTML carrying no mode; 1920×945: no
+    attribute, no style, 136px throughout). WAIT triggers in lib/sticky-rail's header:
+    merging the spy's and the rail's listeners into one loop (the second consumer of both),
+    tab-visibility handling (lib/clock's page-visibility seam). Known consequence, not a bug:
+    one large jump (End key, a reduced-motion teleport) opens 'travel' with the menu still at
+    its line until the next hand scroll. Visual: the Pages/Services 1280×800 frames (Romanian + German) are the only two
+    that change — 800 < 805, the belt was engaged there (a 648px clip with a nested
+    scrollbar) and is gone, ~21k differing pixels each, MEASURED before/after on this lane; Sections/PriceList (four categories) and every other width fit
+    and are pixel-identical by construction. Darwin/linux re-records of those two frames are
+    the owner's, on the owner's machine (no win32 set exists — §15.7).
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —
@@ -856,9 +903,11 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
   language-suggestion banner, root `/` redirect script, and the reviews rotator
   (`sections/ReviewsCarousel/ReviewsDeck` on `lib/rotation` — added by its own lane per
   §15.18, 2026-09-12; ui/Avatar's picture→letters fallback rides inside it), and the price
-  menu's current-category marker (`sections/PriceList/PriceMenu` on `lib/scroll-spy` — its own
-  lane's pack round 2, owner 2026-09-14, §15.20: the `<ul>` of links alone; its `<nav>`, the
-  title and every category card stay inert). Everything else stays inert HTML.
+  menu CARD (`sections/PriceList/PriceMenu` on `lib/scroll-spy` + `lib/sticky-rail` — its own
+  lane's pack round 2, owner 2026-09-14, widened from the `<ul>` to the `<nav>` in round 3,
+  2026-09-18, §15.20: the nav, its title and the list of links — the current-category marker
+  and, when the menu is taller than the window, where the card is held, as `data-rail` + an
+  inline `top` that the server HTML never carries; every category card stays inert). Everything else stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting

@@ -59,6 +59,11 @@ describe('the card surface has ONE definition in src/ (board fb-415)', () => {
     encoding: 'utf8',
   })
     .filter((name) => /\.(ts|tsx)$/.test(name))
+    // readdirSync answers with the platform's separator — backslashes on
+    // Windows — while ALLOWED is spelled with slashes; normalize so the
+    // census compares paths, not separators (the win32 workstation,
+    // 2026-09-18). join() below accepts either.
+    .map((name) => name.replaceAll('\\', '/'))
     .sort();
 
   it('scans a real tree (the fence never passes vacuously)', () => {

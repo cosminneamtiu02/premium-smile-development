@@ -263,7 +263,7 @@ export function Footer(): ReactElement {
               it — the visible title is the clinic name (data), so the landmark
               announces as "Premium Smile, navigation".
               The routes come from lib/routes/routes.ts, the ONE list the Header's row
-              and panel render as well; Blog is absent on every non-`ro` locale
+              and panel render as well; Blog is absent on every non-`ro` locale — and hidden on `ro` too for now (owner 2026-09-20, lib/routes' `hidden`)
               (§5) because the module filters it, not because this file knows. */}
           <nav aria-labelledby={NAV_TITLE_ID} className="flex flex-col gap-2">
             {/* Both column titles are Heading's `title` step — visual twins by

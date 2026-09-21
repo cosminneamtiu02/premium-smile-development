@@ -32,6 +32,18 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:6116',
     deviceScaleFactor: 1,
+    // THE STILLNESS LEVER (G2 react on the hero lane, 2026-09-19; taken
+    // 2026-09-20, round 3): every rotator on lib/clock DECLINES its automatic
+    // start under `prefers-reduced-motion: reduce`, so a story's first frame
+    // is still by construction — no story needs a workbench-only dwell to be
+    // photographable, and the stories run the product's own rhythm for the
+    // eye. Nothing else on the site lays out differently under the flag: the
+    // only `motion-reduce:` utilities in src are `transition-none` (46 at the
+    // time of writing), which `animations: 'disabled'` above already
+    // neutralises in a snapshot. Pixels of every earlier baseline are
+    // unchanged by this line. (A context option, not a test option — hence
+    // the wrapper.)
+    contextOptions: { reducedMotion: 'reduce' },
   },
 
   // `w${width}` reproduces today's project names exactly — w320 … w1920 — and

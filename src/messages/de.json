@@ -54,7 +54,12 @@
   "home": {
     "hero": {
       "title": "Ihr Lächeln, unsere Priorität",
-      "subtitle": "Moderne Zahnmedizin – einfühlsam und professionell"
+      "subtitle": "Moderne Zahnmedizin – einfühlsam und professionell",
+      "region": "Klinikvorstellung",
+      "slide": "Bild {index} von {total}",
+      "contact": "Beratungstermin vereinbaren",
+      "services": "Unsere Leistungen ansehen",
+      "picker": "Bild wählen (stoppt den Wechsel)"
     },
     "location": {
       "eyebrow": "So finden Sie uns",

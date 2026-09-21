@@ -704,13 +704,15 @@ describe('Header — the nav row, the panel list, and the current page', () => {
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('marks a nested route as its section (e.g. /blog/<slug> → Blog)', () => {
+  it('marks NOTHING on a blog page while the Blog item is hidden (owner, 2026-09-20)', () => {
+    // The section rule (a nested route reports as its section) still holds
+    // in lib/routes; it simply has no Blog item to mark while that row wears
+    // `hidden`. Delete the flag and this test's twin — one current item,
+    // reading Blog — is what returns.
     nav.pathname = '/blog/coroane-ceramice';
-    const { container, messages } = mount();
+    const { container } = mount();
 
-    const current = container.querySelectorAll('[aria-current="page"]');
-    expect(current).toHaveLength(1);
-    expect(current[0]).toHaveTextContent(messages.nav.blog);
+    expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(0);
   });
 
   it('does NOT mark a route whose path merely starts with another one', () => {
@@ -753,9 +755,9 @@ describe('Header — the nav row, the panel list, and the current page', () => {
         [messages.nav.services, `/${locale}/services/`],
         [messages.nav.team, `/${locale}/team/`],
       ];
-      // Romanian alone carries the blog (§5): /de/blog is never generated, so
-      // no href for it may exist either.
-      if (locale === 'ro') expected.push([messages.nav.blog, '/ro/blog/']);
+      // Romanian alone carried the blog (§5) — and since 2026-09-20 the row
+      // is hidden on `ro` too (owner: "drop it for now"), so NO locale offers
+      // it; the absence is asserted below for both.
 
       await user.click(burger());
       for (const [label, href] of expected) {
@@ -771,31 +773,33 @@ describe('Header — the nav row, the panel list, and the current page', () => {
         }
       }
 
-      if (locale === 'de') {
+      for (const scope of [barNav(), panel() as HTMLElement]) {
         expect(
-          within(panel() as HTMLElement).queryByRole('link', {
-            name: messages.nav.blog,
-          }),
+          within(scope).queryByRole('link', { name: messages.nav.blog }),
         ).toBeNull();
       }
       unmount();
     }
   });
 
-  it('renders Blog for `ro` in BOTH the bar row and the panel', async () => {
+  it('offers NO Blog on `ro` either — in the bar row or the panel — while the row is hidden (owner, 2026-09-20)', async () => {
     const user = userEvent.setup();
     const { burger, panel, barNav, messages } = mount('ro');
 
     expect(
-      within(barNav()).getByRole('link', { name: messages.nav.blog }),
+      within(barNav()).queryByRole('link', { name: messages.nav.blog }),
+    ).toBeNull();
+    // The other three still ship.
+    expect(
+      within(barNav()).getByRole('link', { name: messages.nav.team }),
     ).toBeInTheDocument();
 
     await user.click(burger());
     expect(
-      within(panel() as HTMLElement).getByRole('link', {
+      within(panel() as HTMLElement).queryByRole('link', {
         name: messages.nav.blog,
       }),
-    ).toBeInTheDocument();
+    ).toBeNull();
   });
 
   it('drops Blog off Romanian — the blog is `ro`-only (§5)', async () => {

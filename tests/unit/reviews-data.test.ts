@@ -5,6 +5,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { isTwoLetters } from '../../src/lib/initials/initials';
 import { isRating } from '../../src/lib/rating/rating';
 import {
+  demoReviews,
   reviews,
   type Review,
   type ReviewWords,
@@ -27,6 +28,35 @@ import { locales, type Locale } from '../../src/i18n/locales';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const PUBLIC = join(ROOT, 'public');
+
+describe('lib/reviews — the demo rows (the Home band’s stand-in while the list is empty; owner, 2026-09-20)', () => {
+  // The Storybook "Five" rows, moved here so the page and the workbench show
+  // the same six. Held to the shipped list's own integrity rules: unique
+  // kebab ids, real two-letter monograms and half-step ratings, five
+  // languages of real text, and every portrait a file that exists.
+  it('are six well-formed rows whose portraits exist', () => {
+    expect(demoReviews).toHaveLength(6);
+    const ids = demoReviews.map((row) => row.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const row of demoReviews) {
+      expect(row.id).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      expect(isTwoLetters(row.initials)).toBe(true);
+      expect(isRating(row.rating)).toBe(true);
+      if (row.picture)
+        expect(existsSync(join(PUBLIC, row.picture.src))).toBe(true);
+      for (const locale of locales) {
+        expect(row.words[locale].title.trim()).not.toBe('');
+        expect(row.words[locale].text.trim()).not.toBe('');
+        expect(row.words[locale].procedure.trim()).not.toBe('');
+      }
+    }
+  });
+
+  it('never share an id with the real list', () => {
+    const real = new Set(reviews.map((row) => row.id));
+    for (const row of demoReviews) expect(real.has(row.id)).toBe(false);
+  });
+});
 
 describe('lib/reviews — the list is well-formed', () => {
   it('is an array (empty is a legal state — board D15)', () => {

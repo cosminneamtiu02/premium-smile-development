@@ -12,7 +12,12 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-merge-conflict
+        # entry overridden 2026-09-21 (win32 workstation): an Application Control policy
+        # blocks pip's console-script .exe launchers, the default entry; the module path runs
+        # the same code at the same pinned rev through the hook env's own python on every OS.
+        entry: python -m pre_commit_hooks.check_merge_conflict
       - id: check-yaml
+        entry: python -m pre_commit_hooks.check_yaml
         exclude: ^\.github/ # Actions YAML uses expressions plain check-yaml dislikes
 
   - repo: local

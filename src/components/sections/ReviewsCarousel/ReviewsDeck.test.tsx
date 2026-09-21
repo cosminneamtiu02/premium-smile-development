@@ -645,29 +645,29 @@ describe('ReviewsDeck — hand navigation, and the morph it performs', () => {
   });
 });
 
-describe('ReviewsDeck — a hand on the deck STOPS it (SC 2.2.2 without a button)', () => {
-  it('ends the automatic rotation for good on next — polite, and still polite after the pointer leaves', async () => {
-    // The touch-reachable stop (the header's NO ROTATION CONTROL paragraph):
-    // the first tap on a button steps AND calls the sticky pause(). A pointer
-    // leaving afterwards resumes nothing — resume() only lifts a SUSPENSION,
-    // and this is a stop.
-    const user = testingUser.setup();
+describe('ReviewsDeck — a hand on the deck picks a card and the ring goes on (the Hero’s manners, owner 2026-09-20)', () => {
+  it('next lands on the second review and the deck keeps running — with the focus the click left on the button', async () => {
+    // Nothing stops for good any more (the header's NO ROTATION CONTROL
+    // paragraph): the press steps and buys a full interval, and the focus a
+    // click leaves on the button holds nothing (pointerEntry 'none'). A REAL
+    // click, because only a trusted one focuses the button WITHOUT
+    // :focus-visible — user-event's synthetic click focuses by script, which
+    // Chromium reports as keyboard modality and would hold the ring for the
+    // wrong reason.
     const { next, stage, selected } = mount();
 
     expect(stage()).toHaveAttribute('aria-live', 'off');
 
-    await user.click(next());
+    await realUser.click(next());
 
+    expect(document.activeElement).toBe(next());
     expect(selected()).toHaveAccessibleName('Recenzia 2 din 6');
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
-
-    await user.unhover(next());
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
+    expect(stage()).toHaveAttribute('aria-live', 'off');
   });
 
   it('…and on prev, with no browser in the loop', () => {
     // A bare click event — no focus, no pointer — so what is under test is
-    // the `stepThenStop` wiring alone.
+    // the `rotation.prev` wiring alone.
     const { prev, stage, selected, slides } = mount();
 
     fireEvent.click(prev());
@@ -675,13 +675,13 @@ describe('ReviewsDeck — a hand on the deck STOPS it (SC 2.2.2 without a button
     expect(selected()).toHaveAccessibleName(
       `Recenzia ${slides.length} din ${slides.length}`,
     );
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
+    expect(stage()).toHaveAttribute('aria-live', 'off');
   });
 
   it('still navigates by hand under reduced motion, where the deck never ran', async () => {
     // The preference declines the AUTOMATIC start; the buttons are a
-    // different statement and keep working (pause() on an idle ring is a
-    // no-op — there is nothing to stop).
+    // different statement and keep working (goto on an idle ring lands and
+    // restarts nothing).
     const user = testingUser.setup();
     const { next, stage, selected } = mount({ reduced: true });
 
@@ -694,55 +694,29 @@ describe('ReviewsDeck — a hand on the deck STOPS it (SC 2.2.2 without a button
   });
 });
 
-describe('ReviewsDeck — the hover area is the region', () => {
-  it('suspends while the pointer is over a slide and resumes when it leaves', async () => {
-    // Proof that React's onPointerEnter/Leave fire by DOM ANCESTRY: the
-    // handlers sit on the region, and the pointer never touches the region's
-    // own edge — it touches a slide inside it.
+describe('ReviewsDeck — no pointer holds it (the Hero’s manners, owner 2026-09-20)', () => {
+  it('a pointer over a slide, over the region’s own gap or over a button leaves the ring running', async () => {
+    // The pointer pair is not spread on the region any more (the header's
+    // NO ROTATION CONTROL paragraph): a resting hand is not a hold.
     const user = testingUser.setup();
-    const { stage, selected } = mount();
+    const { stage, selected, region, prev } = mount();
 
     expect(stage()).toHaveAttribute('aria-live', 'off');
-
     await user.hover(selected());
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
-
-    await user.unhover(selected());
     expect(stage()).toHaveAttribute('aria-live', 'off');
-  });
-
-  it('suspends for a pointer resting in the region’s OWN space — the gap', async () => {
-    // The region is a real grid box (stage, gap, buttons), so the row gap
-    // between the stage and the buttons suspends too: a visitor whose pointer
-    // rests there, reading, is not moved on.
-    const user = testingUser.setup();
-    const { stage, region } = mount();
-
     await user.hover(region());
-
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
-  });
-
-  it('suspends over the buttons as well — nothing is excluded from the area now', async () => {
-    // With no rotation control there is nothing the APG asks to keep out of
-    // the hover area; prev and next are inside it, like the old deck's were.
-    const user = testingUser.setup();
-    const { stage, prev } = mount();
-
+    expect(stage()).toHaveAttribute('aria-live', 'off');
     await user.hover(prev());
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
-
-    await user.unhover(prev());
     expect(stage()).toHaveAttribute('aria-live', 'off');
   });
 });
 
-describe('ReviewsDeck — focus, and why it is not just another suspension', () => {
-  it('STOPS the rotation when keyboard focus enters (a real Tab)', async () => {
-    // The APG sentence: "stops rotating when keyboard focus enters; does not
-    // restart unless the user explicitly requests it". Only a trusted Tab sets
-    // Chromium's keyboard modality, which is what :focus-visible reports and
-    // classifyFocusEntry() reads — hence the Playwright-driven user here.
+describe('ReviewsDeck — focus: a keyboard entry HOLDS the ring, leaving lets it go', () => {
+  it('HOLDS the rotation when keyboard focus enters (a real Tab)', async () => {
+    // Only a trusted Tab sets Chromium's keyboard modality, which is what
+    // :focus-visible reports and classifyFocusEntry() reads — hence the
+    // Playwright-driven user here. The hold is TRANSIENT (keyboardEntry
+    // 'suspend'), not the APG's sticky pause.
     const { prev, stage, before } = mount({ neighbours: true });
 
     await realUser.click(before());
@@ -752,32 +726,33 @@ describe('ReviewsDeck — focus, and why it is not just another suspension', () 
     expect(stage()).toHaveAttribute('aria-live', 'polite');
   });
 
-  it('Tab WITHIN the region moves on to "next" and the deck stays stopped', async () => {
+  it('Tab WITHIN the region moves on to "next" and the hold stays; Tab OUT lets it go', async () => {
     // focusin BUBBLES, so every Tab inside the region fires the region's
     // onFocus again; the 'within' classification keeps that from being read
-    // as a fresh entry. With no play button there is nothing a second entry
-    // could undo — the deck is stopped, and stopped it stays.
-    const { prev, next, stage, before } = mount({ neighbours: true });
+    // as a fresh entry. Leaving the region resumes the ring.
+    const { prev, next, stage, before, region } = mount({ neighbours: true });
 
     await realUser.click(before());
-    await realUser.tab(); // …into the region: sticky pause
+    await realUser.tab(); // …into the region: held
     expect(document.activeElement).toBe(prev());
     expect(stage()).toHaveAttribute('aria-live', 'polite');
 
     await realUser.tab(); // …to "next", still inside the region
     expect(document.activeElement).toBe(next());
     expect(stage()).toHaveAttribute('aria-live', 'polite');
+
+    for (let i = 0; i < 8 && region().contains(document.activeElement); i++)
+      await realUser.tab();
+    expect(region().contains(document.activeElement)).toBe(false);
+    expect(stage()).toHaveAttribute('aria-live', 'off');
   });
 
-  it('suspends TRANSIENTLY for a pointer-initiated focus, and resumes on leaving', () => {
+  it('ignores a pointer-initiated focus — a click-focused button holds nothing', () => {
     // A mouse press focuses a button in Chrome and Firefox without making it
-    // :focus-visible — so it must not stop the rotation for good. Dispatched
-    // rather than driven: an unfocused target is exactly what "not
-    // focus-visible" looks like, which is the classification under test.
-    const { region, stage, before } = mount({ neighbours: true });
-    // Running BEFORE the focus arrives — a resting pointer would make the
-    // "polite" below true for the wrong reason; the parking `beforeEach` is
-    // what makes this a claim about the focus.
+    // :focus-visible. Dispatched rather than driven: an unfocused target is
+    // exactly what "not focus-visible" looks like, which is the
+    // classification under test — and with pointerEntry 'none' it is a no-op.
+    const { region, stage } = mount({ neighbours: true });
     expect(stage()).toHaveAttribute('aria-live', 'off');
 
     act(() => {
@@ -785,25 +760,15 @@ describe('ReviewsDeck — focus, and why it is not just another suspension', () 
         new FocusEvent('focusin', { bubbles: true, relatedTarget: null }),
       );
     });
-    expect(stage()).toHaveAttribute('aria-live', 'polite');
-
-    act(() => {
-      region().dispatchEvent(
-        new FocusEvent('focusout', { bubbles: true, relatedTarget: before() }),
-      );
-    });
-    // …and it WAS transient: the rotation runs again.
     expect(stage()).toHaveAttribute('aria-live', 'off');
   });
 
-  it('ignores a focusout that never leaves the region', () => {
-    const { region, stage, prev, next } = mount();
+  it('a focusout that never leaves the region keeps a keyboard hold', async () => {
+    const { region, stage, prev, next, before } = mount({ neighbours: true });
 
-    act(() => {
-      region().dispatchEvent(
-        new FocusEvent('focusin', { bubbles: true, relatedTarget: null }),
-      );
-    });
+    await realUser.click(before());
+    await realUser.tab();
+    expect(document.activeElement).toBe(prev());
     expect(stage()).toHaveAttribute('aria-live', 'polite');
 
     act(() => {
@@ -811,8 +776,9 @@ describe('ReviewsDeck — focus, and why it is not just another suspension', () 
         new FocusEvent('focusout', { bubbles: true, relatedTarget: next() }),
       );
     });
-    // Still suspended: a move between the region's own controls is not an exit.
+    // Still held: a move between the region's own controls is not an exit.
     expect(stage()).toHaveAttribute('aria-live', 'polite');
+    expect(region().contains(document.activeElement)).toBe(true);
   });
 });
 
@@ -848,13 +814,13 @@ describe('ReviewsDeck — the rhythm', () => {
     expect(selected()).toHaveAccessibleName('Recenzia 3 din 6');
   });
 
-  it('never moves on its own again after a hand navigation', () => {
+  it('goes on a FULL interval after a hand navigation — never the remainder, never stopped (2026-09-20)', () => {
     // fireEvent rather than user-event: @testing-library/user-event schedules
     // its own delays, which fake timers would have to be taught to advance —
     // and the claim here is about the ring's clock, not about input. The old
-    // countdown had 1 000 ms left on it; the visitor's tap does not buy a
-    // fresh interval, it ends the automatic rotation (the header's NO
-    // ROTATION CONTROL paragraph).
+    // countdown had 1 000 ms left on it; the visitor's tap buys a fresh
+    // interval (lib/rotation's goto manner) and the deck goes on from there
+    // (the header's NO ROTATION CONTROL paragraph).
     const { next, selected } = mount({
       intervalMs: 5_000,
       startDelayMs: 15_000,
@@ -864,9 +830,10 @@ describe('ReviewsDeck — the rhythm', () => {
     fireEvent.click(next());
     expect(selected()).toHaveAccessibleName('Recenzia 2 din 6');
 
-    act(() => vi.advanceTimersByTime(60_000));
+    act(() => vi.advanceTimersByTime(4_999));
     expect(selected()).toHaveAccessibleName('Recenzia 2 din 6');
-    expect(vi.getTimerCount()).toBe(0);
+    act(() => vi.advanceTimersByTime(1));
+    expect(selected()).toHaveAccessibleName('Recenzia 3 din 6');
   });
 
   it('leaves no timer behind when the deck unmounts', () => {

@@ -40,14 +40,18 @@ import {
 // ══════════════════════════════════════════════════════════════════════════
 // THE CONSUMPTION RECIPE — HEADER LAW (board Q4, owner fb-401; completed by
 // the G2 a11y + react round). Every rotator this repo ever ships writes
-// exactly this. It is copied verbatim, so an omission here is a site-wide
-// defect — and it is copied verbatim UNTIL THE SECOND ROTATOR LANE, which
-// extracts the shared shell (and decides the shared hook's home) IN THAT SAME
-// LANE: §4's second-consumer law, the sections/Header/useNavItems.ts precedent
-// of a hook extracted where its second consumer was born. Two consumers are
-// what tell you which parts are the pattern and which were one band's taste;
-// guessing that from one is how a shell gets a signature nobody can use
-// (org-review F3b/F9, owner-approved 2026-09-09).
+// exactly this. THE SHARED SHELL EXISTS SINCE 2026-09-19: the second rotator
+// lane (sections/Hero, epic #103) extracted the React half of this recipe —
+// the store in a pure initializer, the external-store trio, the start/dispose
+// and setCount effects, the clamped `shown`, the focus and pointer manners,
+// the control-less stop — into src/components/ui/use-rotation.ts (ui/, by
+// lib/cx's question 1: it imports React; this ring stays React-free) and
+// rewired the first consumer onto it, exactly as this paragraph asked: §4's
+// second-consumer law, the sections/Header/useNavItems.ts precedent of a hook
+// extracted where its second consumer was born. Two consumers are what tell
+// you which parts are the pattern and which were one band's taste (org-review
+// F3b/F9, owner-approved 2026-09-09). A rotator now COMPOSES that hook and
+// spells only what is not shared: the markup duties below.
 // ══════════════════════════════════════════════════════════════════════════
 //
 // Terms, for the reader who has not met them: a CLIENT COMPONENT is one whose
@@ -134,8 +138,27 @@ import {
 //    sections/ReviewsCarousel/ReviewsDeck.tsx's NO ROTATION CONTROL
 //    paragraph. This bullet stays the law for every OTHER rotator: a consumer
 //    omits the control only on the owner's word, per consumer, with that
-//    paragraph's four mechanisms in place; `rotationControl()` below is
-//    untouched and waits for the Hero frame.
+//    paragraph's four mechanisms in place (ui/use-rotation's handNavigation
+//    is those mechanisms' stop-for-good, written once). The Hero frame
+//    (2026-09-19) took the same exception on the same word — and then, on
+//    the owner's pack feedback of 2026-09-20, went further: NO POINTER HOLD
+//    AT ALL (a band that fills the whole first screen would stand still under
+//    every resting cursor; a hand resting on the bead it just pressed, or
+//    the focus that click leaves on the bead, would hold it too) and
+//    NOTHING STOPS IT FOR GOOD ("automatically resume even if you interact
+//    with it"): a bead press calls goto — the manner below for a rotator
+//    WITH a control — and keyboard focus inside is the ONE hold, transient
+//    (ui/use-rotation's `keyboardEntry: 'suspend'` + `pointerEntry: 'none'`),
+//    not the sticky pause. Hero.tsx's NO ROTATION CONTROL paragraph carries
+//    the measurements and the SC 2.2.2 record (mouse and touch visitors
+//    have no stop). THE DECK FOLLOWED the same evening on the owner's word
+//    ("not autoscrolling like … the slides"): the 2026-09-12 stand-ins named
+//    at the top of this bullet are history, both rotators share the Hero's
+//    manners and the Hero's 5.5 s rhythm, and `handNavigation` has no
+//    consumer.
+//    The hover-wrapper and focus bullets below stay the law for every other
+//    rotator. `rotationControl()` below is untouched and waits for the first
+//    rotator that renders the control — unnamed today.
 //
 //  · THE HOVER WRAPPER: the pointer handlers go on a wrapper that holds
 //    prev/next and the slides, with the rotation control a SIBLING inside the
@@ -169,8 +192,8 @@ import {
 //    not a second entry" — was discharged by the first consumer
 //    (sections/ReviewsCarousel/ReviewsDeck.test.tsx, 2026-09-12). Its "play,
 //    then Tab within: still running" form waits for the first rotator that
-//    renders the control (the Hero frame): the reviews deck has no play
-//    button to press (the owner exception above).
+//    renders the control — neither the reviews deck nor the Hero frame has a
+//    play button to press (the owner exception above, taken twice).
 //
 //  · NAVIGATION: prev and next as native buttons (ui/GlyphButton, labels from
 //    the messages, ≥24×24 px and aiming at 44 — §9) calling rotation.prev /

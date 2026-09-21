@@ -129,7 +129,7 @@ const expectLockupChain = async (
  * The everyday picture, Romanian, on the laptop width the §13 matrix samples.
  *
  * This is the story that shows the FOUR-COLUMN row: contact with the phone
- * link · the site map (four links, Blog included) · the ANPC/SAL badge · the
+ * link · the site map (three links — Blog hidden for now, owner 2026-09-20) · the ANPC/SAL badge · the
  * opening hours with Sunday dimmed. Above it the centred brand line, below it
  * the three-part legal strip — copyright left, back-to-top centred, the
  * four-disc contact row right (Instagram · TikTok · WhatsApp · phone, the
@@ -147,8 +147,13 @@ export const Default: Story = {
     const phone = canvas.getByRole('link', { name: clinic.phoneDisplay });
 
     await expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
+    // The blog row is hidden for now (lib/routes' `hidden`, owner
+    // 2026-09-20): no Blog link on `ro` either.
     await expect(
-      canvas.getByRole('link', { name: ro.common.nav.blog }),
+      canvas.queryByRole('link', { name: ro.common.nav.blog }),
+    ).toBeNull();
+    await expect(
+      canvas.getByRole('link', { name: ro.common.nav.team }),
     ).toBeInTheDocument();
     // The strip's two contact discs act DIRECTLY (board D1/D2): the WhatsApp
     // one opens the clinic's own chat, the phone one dials — never a modal.

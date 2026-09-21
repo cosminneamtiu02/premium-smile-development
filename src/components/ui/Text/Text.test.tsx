@@ -63,6 +63,9 @@ describe('Text — tone is the whole style axis', () => {
     default: 'text-base text-ink',
     muted: 'text-base text-ink-muted',
     strong: 'text-base text-ink-strong',
+    // The fourth tone this comment foresaw, classified here on arrival
+    // (sections/Hero, 2026-09-19): copy over the §15.1 scrim.
+    inverse: 'text-base text-ink-inverse',
   };
 
   it.each(Object.keys(expected) as TextTone[])(
@@ -109,6 +112,7 @@ describe('Text — weight axis (owner 2026-08-19)', () => {
     default: 'text-base text-ink font-bold',
     muted: 'text-base text-ink-muted font-bold',
     strong: 'text-base text-ink-strong font-bold',
+    inverse: 'text-base text-ink-inverse font-bold',
   };
 
   it('stays at the default weight until asked (bold is opt-in)', () => {

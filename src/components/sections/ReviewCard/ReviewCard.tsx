@@ -5,6 +5,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { StarRating } from '@/components/ui/StarRating/StarRating';
 import { Text } from '@/components/ui/Text/Text';
+import type { ImagePath } from '@/lib/image-path/image-path';
 import type { Initials } from '@/lib/initials/initials';
 import type { Rating } from '@/lib/rating/rating';
 
@@ -143,7 +144,7 @@ export type ReviewCardProps = {
    * Optional portrait, path under `public/images/` (§11). Decorative in the
    * deck, which passes `alt=""`: the name is printed two lines below.
    */
-  picture?: { src: `/images/${string}`; alt: string };
+  picture?: { src: ImagePath; alt: string };
   /** Whole or half stars, 0 to 5. */
   rating: Rating;
   /** Finished ICU output, e.g. "4,5 din 5 stele" (§8.1) — never a number. */

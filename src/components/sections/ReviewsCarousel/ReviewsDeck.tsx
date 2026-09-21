@@ -1,27 +1,17 @@
 'use client';
 
-import {
-  useEffect,
-  useState,
-  useSyncExternalStore,
-  type CSSProperties,
-  type ReactElement,
-} from 'react';
+import { useState, type CSSProperties, type ReactElement } from 'react';
 import { ReviewCard } from '@/components/sections/ReviewCard/ReviewCard';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
+import { focusManners, useRotation } from '@/components/ui/use-rotation';
 import { ChevronLeft } from '@/assets/glyphs/ChevronLeft';
 import { ChevronRight } from '@/assets/glyphs/ChevronRight';
 import type { ClockEnv } from '@/lib/clock/clock';
 import { cx } from '@/lib/cx/cx';
+import type { ImagePath } from '@/lib/image-path/image-path';
 import type { Initials } from '@/lib/initials/initials';
 import type { Rating } from '@/lib/rating/rating';
-import {
-  classifyFocusEntry,
-  createRotation,
-  leavesRegion,
-  liveRegion,
-  wrapIndex,
-} from '@/lib/rotation/rotation';
+import { liveRegion, wrapIndex } from '@/lib/rotation/rotation';
 
 // sections/ReviewsCarousel/ReviewsDeck — THE ISLAND: the fanned deck of review
 // cards and the two controls under it. The site's FIRST rotator on
@@ -39,59 +29,56 @@ import {
 // in here calls t(); §8.1 holds by construction, because there is no message
 // file within reach.
 //
-// ── THE CONSUMPTION RECIPE IS COPIED from lib/rotation.ts's header — it is
-// LAW there, and this is the first file to obey it: the useState initializer,
-// the useSyncExternalStore trio, the start/dispose effect, the setCount
-// effect, the CLAMPED `shown`, the DOM order (the controls before the
-// slides), the focus manners through classifyFocusEntry/leavesRegion, `inert`
-// on every slide but one, aria-live from liveRegion(status), and no
-// aria-current anywhere — with ONE owner-decided departure, the rotation
-// control, which this deck does not render (the NO ROTATION CONTROL paragraph
-// below carries the decision and what stands in for it). Two riders that law
-// hands its FIRST consumer, both discharged here:
+// ── THE CONSUMPTION RECIPE comes from lib/rotation.ts's header — it is LAW
+// there, and this was the first file to obey it. SINCE 2026-09-19 THE SHARED
+// SHELL IS ui/use-rotation: the hero lane — the "next rotator lane" this
+// paragraph used to wait for — extracted the React half of the recipe where
+// its second consumer was born (§4's second-consumer law, spelled out in
+// rotation.ts) and rewired this deck onto it in the same lane. What this
+// file still spells itself is what is NOT shared: the DOM order (the
+// controls before the slides), `inert` on every slide but one, aria-live
+// from liveRegion(status), no aria-current anywhere, the fan — and ONE
+// owner-decided departure, the rotation control, which this deck does not
+// render (the NO ROTATION CONTROL paragraph below carries the decision and
+// what stands in for it — since 2026-09-20 the Hero's manners, nothing that
+// stops for good; `handNavigation` in the hook waits for a consumer). Two riders
+// that law hands its FIRST consumer, both discharged here:
 //   · the keyboard-entry interaction test driven by a real browser
 //     (ReviewsDeck.test.tsx — only a trusted Tab sets the keyboard modality
 //     :focus-visible reports);
 //   · the two message keys `common.carousel.role` / `common.carousel.slideRole`
 //     in all five files, owner-authored (§15.17) and flagged in the PR.
-// THE NEXT ROTATOR LANE (the Hero's photo frame) is the one that extracts the
-// shared shell and decides the shared hook's home — §4's second-consumer law,
-// spelled out in rotation.ts. Until then this file is the pattern's only
-// witness, and copying it is correct rather than lazy.
 //
 // ── NO ROTATION CONTROL, ON THE OWNER'S WORD (2026-09-12, pack round 2:
 // "absolutely no pause button on the reviews iterator"). The law asks every
 // rotator for a pause/play button — WCAG 2.2 SC 2.2.2: moving content that
 // starts automatically and lasts over five seconds needs a way to pause, stop
-// or hide it — and the first spelling of this deck had one. It is gone, and
-// this is what stands in for it, one mechanism per way of arriving:
-//   · POINTER: resting over the deck SUSPENDS the rotation (the hover
-//     paragraph below), so a mouse user reading is never moved on; leaving
-//     resumes it with a full interval owed (lib/clock's courtesy).
-//   · KEYBOARD: focus entering the region by Tab is the APG's STICKY pause —
-//     the deck stops and, having no play button, stays stopped; the visitor
-//     reads with prev/next.
-//   · TOUCH — the case hover and focus cannot cover, and the reason the two
-//     buttons changed meaning: A HAND ON THE DECK STOPS IT FOR GOOD. prev and
-//     next call rotation.pause() after their step, so the first tap ends the
-//     automatic rotation and the visitor is in control from then on. That is
-//     Swiper's own default (`autoplay.disableOnInteraction: true`) and the
-//     APG's intent ("does not restart unless the user explicitly requests it")
-//     applied to the one input that has neither hover nor :focus-visible. A
-//     tap that merely RESET the timer — the previous spelling's "buy a full
-//     interval" — left a phone visitor with no way to make the deck hold
-//     still.
-//   · PREFERENCE: `prefers-reduced-motion` declines the automatic start in
-//     lib/clock, so the deck never moves on its own for a visitor who asked
-//     for that at the OS.
-// Recorded honestly: the letter of SC 2.2.2 wants a mechanism a visitor can
-// find BEFORE the content moves, and a button is the canonical one; hover,
-// focus and stop-on-hand are the mechanisms this deck offers instead. The way
-// back — should the owner ever want it — is the control lib/rotation's header
-// prescribes, whose `rotationControl(status)` still exists for the Hero
-// frame. The ONE-LINE FLIP in the other direction (a hand navigation that
-// only resets the timer instead of stopping) is the `rotation.pause()` in
-// `stepThenStop` below.
+// or hide it — and the first spelling of this deck had one. It is gone. What
+// stood in for it from 2026-09-12 to 2026-09-20 — hover suspends, keyboard
+// entry is the sticky pause, a hand on prev/next stops for good — is HISTORY
+// TOO: on 2026-09-20 (the hero lane's round 6, owner verbatim: "why the fuck
+// are the reviews not autoscrolling like a circular list like is the slides
+// with images and heading") this deck ADOPTED THE HERO'S MANNERS, the ones
+// Hero.tsx's NO ROTATION CONTROL paragraph argues and measures:
+//   · a hand on prev/next STEPS and the ring goes on a full interval later
+//     (`rotation.prev` / `rotation.next` — lib/rotation's goto manner; the
+//     shell's `handNavigation` stop-for-good is no longer used here);
+//   · keyboard focus inside the region is a TRANSIENT hold that lifts when
+//     focus leaves (`focusManners(rotation, { keyboardEntry: 'suspend',
+//     pointerEntry: 'none' })`), never the sticky pause;
+//   · NO pointer holds it — not hover over the deck, not the focus a click
+//     leaves on a button: the owner's "automatically resume even if you
+//     interact with it" (Hero round 3) cannot survive a hand that rests where
+//     it clicked, and the deck's 30 s rhythm plus its hover hold is why the
+//     owner never saw it move;
+//   · `prefers-reduced-motion` still declines the automatic start in
+//     lib/clock, and a hidden tab still disarms it.
+// WHAT THIS COSTS, RECORDED (the Hero's record, now the deck's): SC 2.2.2
+// (Level A) is met for a keyboard (Tab into the deck holds it) but a MOUSE
+// or TOUCH visitor has no way to stop this deck. The owner's call (§17.5).
+// The way back — should the owner ever want it — is the control
+// lib/rotation's header prescribes, whose `rotationControl(status)` still
+// waits for its first consumer.
 //
 // ── A SECOND, SMALLER DEPARTURE FROM THE RECIPE'S LETTER — this one the
 // builder's, and its reason. The
@@ -190,14 +177,11 @@ import {
 // disagree only in the way the APG example's own do. Every button keeps its
 // 44px box (ui/GlyphButton's `md`, §9).
 //
-// ── THE HOVER AREA IS THE REGION ITSELF. The law puts the pointer handlers on
-// a wrapper that excludes the rotation control (hovering it must not suspend
-// the very thing it offers to stop); with no control there is nothing to
-// exclude, so the two pointer handlers sit on the region beside the two focus
-// handlers, and the region's own grid box — stage, gap and buttons — is the
-// whole hover area. A pointer resting anywhere in it, the gap included, keeps
-// the deck still; the suite pins hover-a-slide, hover-a-button and
-// hover-the-gap.
+// ── THERE IS NO HOVER AREA ANY MORE (2026-09-20, the NO ROTATION CONTROL
+// paragraph above): the law's pointer handlers are not spread on this
+// region, and the suite pins that a pointer over a slide, the gap or a
+// button leaves the ring running. The paragraph this replaces argued the
+// whole region as one hover area; that argument is recorded in git.
 //
 // ── THE MOVE, AND WHAT REDUCED MOTION DOES TO IT. `transition-[translate,
 // rotate] duration-500` on each slide is the carousel's own essential
@@ -248,7 +232,7 @@ export type ReviewSlide = Readonly<{
   /** Exactly two capitals — the reviewer's own (lib/initials). */
   initials: Initials;
   /** Optional portrait. Decorative in a deck: the band passes `alt=""`. */
-  picture?: Readonly<{ src: `/images/${string}`; alt: string }>;
+  picture?: Readonly<{ src: ImagePath; alt: string }>;
   /** Whole or half stars, 0 to 5 (lib/rating). */
   rating: Rating;
   /** Finished ICU output, e.g. "4,5 din 5 stele" — never a number (§8.1). */
@@ -437,33 +421,21 @@ export function ReviewsDeck({
   startDelayMs,
   env,
 }: ReviewsDeckProps): ReactElement {
-  // The initializer runs ONCE per render tree — once on the server during the
-  // static export and once in the browser at hydration — and construction is
-  // PURE (lib/clock: no timer, no media query, no document until start()), so
-  // both stores publish the same first snapshot and hydration stays safe.
-  const [rotation] = useState(() =>
-    createRotation({ count: slides.length, intervalMs, startDelayMs, env }),
-  );
-  const { active, status } = useSyncExternalStore(
-    rotation.subscribe,
-    rotation.getSnapshot,
-    rotation.getServerSnapshot,
-  );
-
-  useEffect(() => {
-    rotation.start();
-    return () => rotation.dispose();
-  }, [rotation]);
-
-  useEffect(() => {
-    rotation.setCount(slides.length);
-  }, [rotation, slides.length]);
-
+  // THE SHARED SHELL (ui/use-rotation, extracted by the hero lane on
+  // 2026-09-19 — the law's own "second rotator lane" moment): the store built
+  // once in a pure initializer (so both render trees publish the same first
+  // snapshot and hydration stays safe), the external-store trio, the
+  // start/dispose and setCount effects, and `shown` — `active` CLAMPED to
+  // the list this render maps, never wrapped (setCount() runs one frame
+  // after a list shrinks; this frame shows the slide it is about to land
+  // on rather than jumping through slide 0 on the way).
   const count = slides.length;
-  // CLAMP, not wrap: setCount() runs one frame after a list shrinks, so this
-  // frame shows the slide setCount() is about to land on rather than jumping
-  // through slide 0 on the way (the recipe's own guard).
-  const shown = Math.min(active, Math.max(0, count - 1));
+  const { rotation, shown, status } = useRotation({
+    count,
+    intervalMs,
+    startDelayMs,
+    env,
+  });
   // Derived from COUNT, never from idleReason — which also carries reduced
   // motion. The same number decides the SEMANTICS (G2 a11y, item E): a single
   // review is not a carousel, so it announces itself as one review inside a
@@ -504,60 +476,38 @@ export function ReviewsDeck({
   }
   const wrapped = painted.wrapped;
 
-  /**
-   * A HAND ON THE DECK: the step the button names, then the STOP FOR GOOD —
-   * `pause()` is the sticky one, the state only a play button could undo, and
-   * this deck has none (the header's NO ROTATION CONTROL paragraph: this call
-   * is the touch-reachable stop SC 2.2.2 needs, and the one-line flip back).
-   * A no-op while the ring is idle (reduced motion, too few), where there is
-   * nothing to stop.
-   */
-  const stepThenStop = (step: () => void) => (): void => {
-    step();
-    rotation.pause();
-  };
-
   return (
     <section
       aria-label={labels.region}
       aria-roledescription={isCarousel ? labels.role : undefined}
-      // BOTH focus handlers on the REGION: a Tab landing on prev or next IS an
-      // entry. The three cases — a move within, a keyboard entry, a pointer
-      // one — are lib/rotation's two functions. A keyboard entry is the sticky
-      // pause, and with no play button it is final: the visitor reads with
-      // the buttons under their fingers.
-      onFocus={(event) => {
-        const entry = classifyFocusEntry(event);
-        if (entry === 'keyboard') rotation.pause();
-        else if (entry === 'pointer') rotation.suspend('focus');
-      }}
-      onBlur={(event) => {
-        if (leavesRegion(event)) rotation.resume('focus');
-      }}
-      // …and BOTH pointer handlers on the region too (the header's HOVER
-      // paragraph): stage, gap and buttons are one hover area, because there
-      // is no rotation control to keep out of it.
-      onPointerEnter={() => rotation.suspend('pointer')}
-      onPointerLeave={() => rotation.resume('pointer')}
+      // The focus pair on the REGION with the Hero's options (the header's NO
+      // ROTATION CONTROL paragraph): a Tab landing on prev or next is an entry
+      // that HOLDS the ring while focus is inside; a click-focused button holds
+      // nothing. No pointer pair anywhere.
+      {...focusManners(rotation, {
+        keyboardEntry: 'suspend',
+        pointerEntry: 'none',
+      })}
       className="grid gap-y-4"
     >
       {/* THE NAVIGATION — FIRST in the DOM (the law's order: a keyboard
           visitor meets the controls before the reviews), row 2 in the
           picture (owner D12: the buttons sit under the deck). Each press
-          steps AND stops the automatic rotation — see `stepThenStop`. */}
+          steps, and the ring goes on a full interval later (nothing stops
+          it for good — 2026-09-20). */}
       {isCarousel && (
         <div className="row-start-2 flex justify-center gap-3">
           <GlyphButton
             variant="outline"
             aria-label={labels.previous}
-            onClick={stepThenStop(rotation.prev)}
+            onClick={rotation.prev}
           >
             <ChevronLeft />
           </GlyphButton>
           <GlyphButton
             variant="outline"
             aria-label={labels.next}
-            onClick={stepThenStop(rotation.next)}
+            onClick={rotation.next}
           >
             <ChevronRight />
           </GlyphButton>

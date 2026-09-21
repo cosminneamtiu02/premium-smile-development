@@ -70,6 +70,14 @@ export interface PrimaryRoute {
    * dead string behind (the rule the Header used to spell as BLOG_LOCALE).
    */
   readonly locale?: Locale;
+  /**
+   * Present ⇒ the route exists (matchesRoute and equivalentPath still see it —
+   * a blog post still switches languages to the target's home) but is OFFERED
+   * NOWHERE: not in the bar, the panel or the footer. The blog wears it for
+   * now (owner, 2026-09-20: "why the hell is blog back up in the top bar.
+   * drop it for now"); delete the flag to offer it again.
+   */
+  readonly hidden?: true;
 }
 
 /**
@@ -81,13 +89,16 @@ export const PRIMARY_ROUTES: readonly PrimaryRoute[] = [
   { path: '/services', key: 'nav.services' },
   { path: '/team', key: 'nav.team' },
   // The blog exists in Romanian only (§5): /de/blog is never generated, so it
-  // must never be offered either — in the bar, the panel or the footer.
-  { path: '/blog', key: 'nav.blog', locale: 'ro' },
+  // must never be offered either — in the bar, the panel or the footer. And
+  // for now it is offered NOWHERE (`hidden`, owner 2026-09-20): the row stays
+  // so the switcher's equivalent-path rule keeps sending /ro/blog/… to the
+  // target locale's home instead of to a page that was never generated.
+  { path: '/blog', key: 'nav.blog', locale: 'ro', hidden: true },
 ];
 
 /**
- * The routes this locale actually has: the full list minus every row scoped to
- * a different locale.
+ * The routes this locale actually OFFERS: the full list minus every row scoped
+ * to a different locale, minus every row hidden for now.
  *
  * Takes a plain `string` because that is what next-intl's `useLocale()` hands
  * back under the default config — the Locale union does its work on the DATA
@@ -95,7 +106,9 @@ export const PRIMARY_ROUTES: readonly PrimaryRoute[] = [
  */
 export function primaryRoutes(locale: string): readonly PrimaryRoute[] {
   return PRIMARY_ROUTES.filter(
-    (route) => route.locale === undefined || route.locale === locale,
+    (route) =>
+      route.hidden !== true &&
+      (route.locale === undefined || route.locale === locale),
   );
 }
 

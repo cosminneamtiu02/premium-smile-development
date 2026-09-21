@@ -40,12 +40,23 @@ export type ButtonProps = ButtonOwnProps &
 // out mirror each other. Nothing moves — the v1 center-out sweep read as a
 // second animation and is gone, taking its jitter and stranded-band bugs
 // with it.
-// solid and outline are HOVER-MIRRORS: each variant's hover face is the
-// other's rest face, and both press to the same deep-green active face.
-// outline FILLS on hover (rest → bg-cta + ink-inverse, unchanged since
-// fb-38); solid DRAINS on hover (rest → bg-surface + cta label + a 1px cta
-// hairline, keeping the control's ≥3:1 boundary on white grounds,
-// SC 1.4.11). The hairline is an INSET-RING — box-shadow, never a border —
+// solid and outline WERE HOVER-MIRRORS: each variant's hover face the
+// other's rest face, both pressing to the same deep-green active face.
+// AMENDED 2026-09-20 (owner, hero pack round 3 — "the vezi serviciile
+// button should not turn green, but rather gray out a little"): outline no
+// longer fills. It GREYS — ground → line-subtle, label → cta-hover — and
+// its press shares that face (the ghost precedent: the snap shows from a
+// non-hover state). The label darkens ONE step because it must: cta itself
+// measures 3.63:1 on line-subtle, under SC 1.4.3's 4.5:1, while cta-hover
+// measures 5.31:1 there; the border stays cta (3.63:1 on the grey clears
+// SC 1.4.11's 3:1 boundary, and border-color is not on the fade clock, so
+// a border that changed would snap). The mirror law now holds in ONE
+// direction only: solid's hover face is STILL outline's rest face; the
+// outline half is its own grey. This variant is worn by the Footer's three
+// outline buttons, the reviews deck's prev/next and the Hero's services
+// link — one look, everywhere (§6.6). solid DRAINS on hover (rest →
+// bg-surface + cta label + a 1px cta hairline, keeping the control's ≥3:1
+// boundary on white grounds, SC 1.4.11). The hairline is an INSET-RING — box-shadow, never a border —
 // because a border arriving on hover would grow this auto-width box by 2px:
 // movement, i.e. the second animation fb-49/fb-50 banned. inset-ring paints
 // inside the box exactly where outline's border sits and joins the same fade
@@ -58,10 +69,12 @@ export type ButtonProps = ButtonOwnProps &
 // over #006b42 = 6.60:1). ghost still lerps the ground only (ink over
 // #e9e6e2 = 11.9:1) and rests bg-transparent, so its REST contrast belongs
 // to the parent: light grounds only (on #24211e the label sits at 1.08:1).
-// The crossfade window: solid and outline pass label and ground through each
+// The crossfade window: solid passes label and ground through each
 // other mid-fade — measured below 4.5:1 for ≈92% of the fade (both
 // directions), 1:1 at the midpoint. KNOWINGLY ACCEPTED for outline since
-// fb-38 and extended to solid by the same reasoning with the 2026-09-06
+// fb-38 (its old fill; since the 2026-09-20 grey the outline fade only
+// runs surface → line-subtle under cta → cta-hover, and never drops below
+// ~3.6:1) and extended to solid by the same reasoning with the 2026-09-06
 // decision — SC 1.4.3 has no transient exemption, but the window is
 // user-initiated and unfreezable (any interruption retargets to a discrete
 // AA state), and a cta-colored edge holds the control's boundary throughout
@@ -124,12 +137,14 @@ const variantClasses: Record<ButtonVariant, string> = {
     'bg-cta text-ink-inverse inset-ring inset-ring-transparent ' +
     'hover:bg-surface hover:text-cta hover:inset-ring-cta ' +
     'active:bg-cta-hover active:text-ink-inverse',
-  // Rest→hover swaps BOTH colors as one crossfade on the shared --fade clock
-  // (owner decision 2026-08-04, plan button-hover-fade.plan.md §4).
+  // Rest→hover GREYS a little on the shared --fade clock: the ground to
+  // line-subtle, the label one step darker (owner, 2026-09-20 — the
+  // contract above; supersedes the 2026-08-04 fill, fb-38). The press
+  // shares the hover face, like ghost.
   outline:
     'border border-cta bg-surface text-cta ' +
-    'hover:bg-cta hover:text-ink-inverse ' +
-    'active:bg-cta-hover active:text-ink-inverse',
+    'hover:bg-line-subtle hover:text-cta-hover ' +
+    'active:bg-line-subtle active:text-cta-hover',
   ghost: 'bg-transparent text-ink hover:bg-line-subtle active:bg-line-subtle',
 };
 

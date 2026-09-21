@@ -204,7 +204,8 @@ export const MenuOpen: Story = {
  * English, on `/en/services` — the story that proves the BLOG LINK IS GONE.
  *
  * The blog is Romanian-only (§5), so `/en/blog` must never be offered. Three
- * links here, four in the Romanian stories.
+ * links here — and, while lib/routes hides the blog row (owner 2026-09-20,
+ * "drop it for now"), three in the Romanian stories too.
  *
  * Scope, stated exactly: the play function proves the absence in the BAR ROW,
  * which is the whole of what this story renders (the panel is closed, so
@@ -231,7 +232,8 @@ export const NonRomanianLocale: Story = {
  * German, on `/de/services` — the C1 proof.
  *
  * German runs ~30–35% longer than English (§8.4), so GERMAN is what decides
- * where the breakpoint sits: "Startseite · Leistungen · Team · Blog" plus
+ * where the breakpoint sits: "Startseite · Leistungen · Team" (Blog hidden
+ * for now; it never shipped on `de` anyway) plus
  * "Kontakt" is the longest this row ever gets. At 1536 it must sit on one line
  * with room to spare, and nothing may wrap, clip or push the CTA off the edge.
  * If it ever stops fitting, the number moves (@3xl → @4xl) — never the

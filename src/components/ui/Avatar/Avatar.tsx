@@ -2,6 +2,7 @@
 
 import { type ComponentPropsWithRef, type ReactElement, useState } from 'react';
 import { cx } from '@/lib/cx/cx';
+import type { ImagePath } from '@/lib/image-path/image-path';
 import { assertTwoLetters, type Initials } from '@/lib/initials/initials';
 import { Image } from '../Image/Image';
 
@@ -121,7 +122,7 @@ type Picture =
        * Under `public/images/` — the folder next-image-export-optimizer scans,
        * so anything outside it silently ships unoptimized (§11, §15.5).
        */
-      src: `/images/${string}`;
+      src: ImagePath;
       /**
        * Finished, already-translated text (§11, §8.1). `''` is the DEFAULT the
        * reviews deck passes and is a decision, not a missing string: the disc

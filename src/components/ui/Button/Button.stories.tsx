@@ -41,7 +41,7 @@ type Story = StoryObj<typeof meta>;
 /** Solid CTA — the „Programează o consultație" hero/topbar action. */
 export const Default: Story = {};
 
-/** Outlined tone — ground and label crossfade (swap colors) on hover. */
+/** Outlined tone — greys a little on hover (ground to line-subtle, label one step darker; owner 2026-09-20), never fills. */
 export const Outline: Story = {
   args: { variant: 'outline', children: 'Vezi serviciile' },
 };
@@ -147,9 +147,11 @@ export const PseudoLocale: Story = {
  * visual spec perform a true mouse hover before the (animation-disabled)
  * screenshot — synthetic play() events cannot activate CSS :hover.
  * Since the 2026-09-06 mirror law, HoverSolid's END face IS the outline
- * variant's rest face (surface ground, cta label, 1px cta hairline) and
- * HoverOutline's END face is solid's rest face — if either pinned frame
- * drifts from its mirror twin, the mirror broke, not just a color.
+ * variant's rest face (surface ground, cta label, 1px cta hairline) — if
+ * that pinned frame drifts from outline's rest, the mirror broke, not just a
+ * color. HoverOutline's END face is its OWN grey since 2026-09-20 (owner:
+ * "gray out a little") — line-subtle ground, cta-hover label, cta border —
+ * no longer solid's rest face; Button.tsx's contract carries the arithmetic.
  */
 export const HoverSolid: Story = {
   tags: ['pin-hover'],

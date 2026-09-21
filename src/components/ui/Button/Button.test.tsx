@@ -388,10 +388,10 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
       'border-cta',
       'bg-surface',
       'text-cta',
-      'hover:bg-cta',
-      'hover:text-ink-inverse',
-      'active:bg-cta-hover',
-      'active:text-ink-inverse',
+      'hover:bg-line-subtle',
+      'hover:text-cta-hover',
+      'active:bg-line-subtle',
+      'active:text-cta-hover',
     ],
     ghost: [
       'bg-transparent',
@@ -454,16 +454,20 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
     );
   });
 
-  it("solid and outline are hover-mirrors — each hover face is the other's rest face", () => {
+  it("solid's hover face is outline's rest face; outline's hover is its own grey (the mirror, one direction since 2026-09-20)", () => {
     // THE 2026-09-06 LAW as a DERIVED relation, never a third hardcoded list
     // (G2 react LOW, 2026-09-06): the variant-distinctive rest color tokens
-    // of each side are computed by set difference — shared base/size tokens
+    // of outline are computed by set difference — shared base/size tokens
     // (text-lg…) cancel out — and every one of them must reappear
-    // hover:-prefixed on the other side. Colors only — outline draws its line
-    // as a real border while solid draws it as an inset-ring hairline (a
-    // border arriving on hover would grow the auto-width box by 2px, i.e.
+    // hover:-prefixed on solid. Colors only — outline draws its line as a
+    // real border while solid draws it as an inset-ring hairline (a border
+    // arriving on hover would grow the auto-width box by 2px, i.e.
     // movement), so the line's channel is deliberately variant-local and not
     // part of the mirror. GlyphButton.test.tsx carries the derived twin.
+    // THE OTHER DIRECTION ENDED 2026-09-20 (owner, hero pack round 3: "should
+    // not turn green, but rather gray out a little"): outline no longer
+    // fills with solid's rest face — it greys, and the label darkens one
+    // step for SC 1.4.3 (Button.tsx's contract has the arithmetic).
     const solid = tokensOf('solid').tokens;
     const outline = tokensOf('outline').tokens;
     const restColors = (tokens: string[], other: string[]) =>
@@ -474,7 +478,11 @@ describe('Button — one calm color fade (owner decision 2026-08-04)', () => {
     // would pass the loops below while proving nothing.
     expect(solidRest).not.toHaveLength(0);
     expect(outlineRest).not.toHaveLength(0);
-    for (const rest of solidRest) expect(outline).toContain(`hover:${rest}`);
     for (const rest of outlineRest) expect(solid).toContain(`hover:${rest}`);
+    // outline's hover is NOT solid's rest any more — the grey face instead.
+    for (const rest of solidRest)
+      expect(outline).not.toContain(`hover:${rest}`);
+    expect(outline).toContain('hover:bg-line-subtle');
+    expect(outline).toContain('hover:text-cta-hover');
   });
 });

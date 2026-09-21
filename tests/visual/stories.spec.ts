@@ -17,6 +17,11 @@ import { expect, type Page, test } from '@playwright/test';
 //   pin-open        → open the first disclosure and wait for what it controls
 //   pin-open-hover  → the same open, then a real hover on the first disc INSIDE
 //                     it (never combine with pin-open — this tag includes it)
+//   no-visual       → never photographed: a story whose frame MOVES by design
+//                     (Sections/Hero's Rotating — the band running at its own
+//                     rhythm for the eye, hero lane round 2, 2026-09-20). Its
+//                     play and per-story axe still run in the Vitest storybook
+//                     project; only the pixel net skips it.
 
 const kebab = (s: string) =>
   s
@@ -111,6 +116,7 @@ try {
 }
 
 for (const story of entries) {
+  if (story.tags?.includes('no-visual')) continue;
   const matched = MATRIX.find(([pattern]) => pattern.test(story.title));
   let widths = matched ? matched[1] : DEFAULT_WIDTHS;
   if (story.tags?.includes('stress-320') && !widths.includes(320)) {

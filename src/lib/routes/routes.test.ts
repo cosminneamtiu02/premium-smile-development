@@ -81,13 +81,18 @@ describe('lib/routes — the ONE primary route list', () => {
 });
 
 describe('lib/routes — primaryRoutes(locale) filters the ro-only blog (§5)', () => {
-  it('offers all four routes on `ro`', () => {
+  it('offers three routes on `ro` — the blog row is HIDDEN for now (owner, 2026-09-20)', () => {
     expect(primaryRoutes('ro').map((route) => route.path)).toEqual([
       '/',
       '/services',
       '/team',
-      '/blog',
     ]);
+  });
+
+  it('keeps the hidden blog row for the switcher: a post still switches to the target home', () => {
+    const blog = PRIMARY_ROUTES.find((route) => route.path === '/blog');
+    expect(blog?.hidden).toBe(true);
+    expect(equivalentPath('/blog/some-post/', 'de')).toBe('/');
   });
 
   it.each(locales.filter((locale) => locale !== 'ro'))(
@@ -100,9 +105,13 @@ describe('lib/routes — primaryRoutes(locale) filters the ro-only blog (§5)', 
   );
 
   it('returns the rows themselves, in list order, never a copy that can drift', () => {
-    // Same objects, same order: the filter is the ONLY transformation, so a
-    // consumer reading `key` gets exactly what the list declares.
-    expect(primaryRoutes('ro')).toEqual([...PRIMARY_ROUTES]);
+    // Same objects, same order: the filter is the ONLY transformation (the
+    // locale scope and, since 2026-09-20, the `hidden` flag), so a consumer
+    // reading `key` gets exactly what the list declares.
+    const offered = PRIMARY_ROUTES.filter((route) => route.hidden !== true);
+    expect(primaryRoutes('ro')).toEqual(offered);
+    for (const [index, route] of primaryRoutes('ro').entries())
+      expect(route).toBe(offered[index]);
   });
 
   it('is pure — calling it twice hands back equal lists', () => {

@@ -104,8 +104,10 @@ src/
     cx/cx.ts             # THE class-join helper — every tier imports it (fb-307 → PR #64)
     rating/rating.ts     # THE star-rating value type (eleven half-steps) + guards — atoms AND the data list import it (reviews run D17, 2026-09-10)
     initials/initials.ts # THE two-capital monogram type + guards — the twin of lib/rating (D17)
-    reviews/reviews.ts   # THE review list (facts + five-language words per row; ships EMPTY until the owner's real reviews — D2/D15/D18)
+    reviews/reviews.ts   # THE review list (facts + five-language words per row; ships EMPTY until the owner's real reviews — D2/D15/D18; beside it `demoReviews`, the stories' six fabricated rows, of which the Home band shows five until then — owner 2026-09-20, flagged)
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
+    image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
+    hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row (RO/EN the old site's own; DE/FR/IT, the short names and every `text` line DRAFTED, flagged; demo pictures until the owner's photographs); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -171,7 +173,9 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 
 - **Home lives at `/{locale}` itself.** Do not create `/{locale}/home`.
 - `generateStaticParams` emits all locale × route combinations at build time; blog routes are
-  generated for `ro` only, and the Blog nav item is hidden on non-`ro` locales.
+  generated for `ro` only, and the Blog nav item is hidden on non-`ro` locales — and, since
+  2026-09-20, offered NOWHERE for now (owner: "drop it for now"; `lib/routes`' `hidden` flag on
+  the row, which the switcher's equivalent-path rule still reads).
 - **Root `/`:** a tiny client-side script (static export has no middleware) redirects to the
   remembered locale cookie if present, else `/ro`
   *(re-amended 2026-09-06, owner — root Romanian-first, superseding the 2026-09-02 D1
@@ -379,7 +383,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | Hero · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTS only when the owner's real review list exists — §15.19) · CTABanner | `home` |
+| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — on the first five of `lib/reviews`' `demoReviews` (the Storybook "Five" story's rows, moved into shipped data on the owner's word, flagged) until the real list has a row, at which point the band drops them by itself — §15.19, §15.21) · CTABanner | `home` |
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven aura'd category cards — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` in BOTH directions, scroll and click) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
 | Team | TeamIntro · **PersonnelCard** — doctor profiles (the centred portrait column beside a justified, quoted about-text, sides alternating) + the auxiliary-staff grid (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · ClinicGallery (opt) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
@@ -414,6 +418,15 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    `ink-muted` empties (was 2.4:1 — the two inks now differ in LIGHTNESS, which is what lets
    the rating survive a colour-vision deficiency without the outline the owner struck in the
    same round); the rating's number always travels in the star row's accessible name.
+   **Hero veil amended 2026-09-20 (owner, hero pack round 3 — "still a little too dark
+   the filter, i want it lighter like in old webpage"):** the Hero's ground peaks at the
+   old site's own **0.40**, BELOW the 0.55 floor, spelled in `sections/Hero`'s
+   `groundClasses`; the `--scrim` token itself (the modal's backdrop) stays 0.55. Measured
+   by the letter: white ink on the worst-case ground (a white photograph at the picture's
+   80 % over the page ground, under 0.40) = 2.88:1 and the idle bead 2.40:1, against §9's
+   4.5:1 / 3:1 — the old page's `text-shadow` returns on the words as the legibility aid it
+   used (the lavender stroke is not ported) and the beads gain a soft shadow; axe measures
+   neither. RECORDED AS THE OWNER'S CALL; the lever is that one constant.
    **Second per-element exception — PersonnelCard (2026-09-10, owner verbatim: "extremley
    important. quotation text must be in justify"):** the doctor card's `<blockquote>`
    (sections/PersonnelCard, decision D8) ships `text-justify` ON THE ELEMENT — the §15.15 b
@@ -714,7 +727,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `emphasized` ground became OPAQUE (a 10% mix over the surface with a white base for engines without
     color-mix) after the a11y reviewer found neighbour text bleeding through the deck's selected card · `lib/reviews` typed data list — facts AND the five-language `words` record per row, so a missing
     German title is a compile error; reviews are CONTENT like blog MDX, not message keys (ships EMPTY — the owner
-    supplies real reviews + patient consents + the CMSR testimonial check; nothing mounts on Home until then) · quotation marks are CSS `open-quote`/`close-quote` from `quotes: auto` (locale-correct in all five
+    supplies real reviews + patient consents + the CMSR testimonial check; since 2026-09-20 the band mounts on Home over the first five of `demoReviews` — the stories' six fabricated rows, moved into this file on the owner's round-5 word, which REVERSES D15's "never enters this file" for the demo rows only and is flagged TODO(owner): consented real reviews must replace them before launch — until the real rows land) · quotation marks are CSS `open-quote`/`close-quote` from `quotes: auto` (locale-correct in all five
     languages from zero strings). **Delivery shape, the owner's COST rule (fb-447): ONE branch, ONE squashed commit,
     ONE G2 review round over the whole diff, ONE PR** — a recorded deviation from §17.3's one-component-per-commit
     for this run only. **fb-432 lifted fb-67's two-lane cap for this run** ("use however many parallel lanes you
@@ -736,7 +749,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     clamp(14rem, 66%, 8% + 20rem)`: two-thirds of a phone, half a tablet, a slow line above) so the
     neighbours peek on every device; every slide stays laid out (no `hidden`) so the stage height is
     constant at every position of the ring; the credential is pinned to the card's bottom by a second
-    `flex-1` (the blockquote takes the slack) · rhythm 30 s / 34 s ("too fast" at 16 s) · the demo decks
+    `flex-1` (the blockquote takes the slack) · rhythm 30 s / 34 s ("too fast" at 16 s — SUPERSEDED 2026-09-20 by the hero's 5.5 s / 1.5 s and the hero's manners, §15.21 round 6) · the demo decks
     alternate portrait / letters (`Review.picture.src` widened to §11's folder; the `reviews/`
     sub-folder stays a test-enforced convention for the shipped list) · both morph demos fixed (a flex
     column with `items-start` had let the inline-size-contained card collapse to ~50px).
@@ -880,6 +893,250 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     and are pixel-identical by construction. Darwin/linux re-records of those two frames are
     the owner's, on the owner's machine (no win32 set exists — §15.7).
 
+21. **Hero run — BUILT ON THE OWNER'S DISPATCH (2026-09-19, verbatim: "i want to bring onto the new
+    project … the images auto scrolling section … use here from lib the auto iteration of images
+    with no stop play etc, just the n number of beads … use image atom … keep gray filter …
+    the whole thing as a whole to be a dumb component and i populate it with path and text …
+    one button is the contact us button that opens the contact us modal and the other is
+    taking you to the services page. extremley careful with adaptability … the first thing
+    you see when you open the page and it should sit below the top bar"; epic #103, lane
+    `feat/hero`, board `.claude/plans/hero.plan.md` — machine-local, gitignored):**
+    `sections/Hero`, the site's SECOND rotator, a DUMB props-in band (zero keys, zero data,
+    the PriceList shape) populated by `app/[locale]/(home)/page.tsx` through its own
+    `populate.ts` from NEW `lib/hero-slides` (picture + five-language words per row — RO/EN
+    the old site's own slogans, DE/FR/IT and every `text` line DRAFTED and flagged, §15.17;
+    demo pictures until the owner's photographs, §11). THE WHOLE BAND IS THE ISLAND (§16).
+    Decisions, each argued in Hero.tsx's header: below the pill and filling the first
+    screen as a MINIMUM — `min-h-[calc(100svh-6rem)]` with a `100vh` twin (the small
+    viewport unit, never `dvh`, so the URL bar's collapse resizes nothing; the SIXTH coupled
+    spelling of the pill's reach, registered in Header.tsx's mount contract) · a three-row
+    grid with the slides stacked in row 1, the buttons in row 2 and the beads in row 3 —
+    every text box in normal flow, so German at 320px pushes the stage taller and can never
+    collide (the old absolute text block's failure class deleted) · the picture escapes to
+    the stage through an UNPOSITIONED slide (`ui/Image fill` resolves against the nearest
+    positioned ancestor; `ui/Container`'s `container-type` is a containing block, so the
+    photograph can never sit inside it) · ONE `opacity` crossfades picture, scrim and words
+    (1 s, the old site's; `motion-reduce:transition-none`), the scrim INSIDE each slide ·
+    the grey filter kept as `grayscale blur-xs` ON the picture (same pixels as the old
+    `backdrop-filter`, one paint, no containing-block caveat; the wrapper overshoots 4px for
+    the blur's edge, `overflow-clip` trims it) — the old 20 % white wash dropped · a UNIFORM
+    `bg-scrim` (§15.1's locked 0.55 floor: white on 0.55-black-over-white = 4.77:1) · the
+    first dark band: `[--focus:var(--ink-inverse)]` on the band root remaps the ONE semantic
+    focus variable for every control inside (§3's theme mechanism in miniature, no atom
+    touched) · an intrinsic CTA row (`flex-wrap`, `*:grow *:basis-64`, `max-w-3xl`: side by
+    side from ~33rem of column, stacked full-width below) · BEADS = buttons with
+    `aria-current` (lib/rotation's law, not a tablist), named by the SAME „{index} din
+    {total}" sentence as their slides (`home.hero.slide` ×5), DOM-first / picture-last, 24 ×
+    44 hit boxes, only width and ink move · NO ROTATION CONTROL on the owner's word — the
+    reviews deck's exception applied a second time (hover suspends, keyboard entry stops,
+    A HAND ON A BEAD STOPS FOR GOOD) · rhythm 8 000 / first dwell 10 000 (the reading-time
+    rider at the ~120 wpm of an older reader, G2 a11y) · ONE STATIC h1 outside the ring — the page's, `sr-only` (the Services
+    precedent); the slogans are `<p>`s. **Atoms (additive, anticipated by their own
+    headers):** `ui/Heading` gains `size: 'hero'` — FLUID `clamp(2rem, 1rem + 3.5vw,
+    4.5rem)/tight`, 32 → 72px with the viewport, replacing the old four-prefix staircase
+    (the `vw` term is the gutter's own licence: page-scale geometry follows the page) — and
+    `tone: 'default' | 'inverse'` (the ink split from the size rows; every elder
+    byte-identical, test-pinned); `ui/Text` gains `tone: 'inverse'`; `ui/Image` untouched
+    (`plain` + `fill` + `preload` + `fetchPriority="high"` on the LCP slide was written for
+    this consumer). **Two law-named extractions folded in:** `ui/use-rotation` — THE SHARED
+    ROTATOR SHELL the consumption law reserved for "the second rotator lane" (useRotation +
+    focusManners/pointerManners + handNavigation; ui/ by lib/cx's question 1, it imports
+    React; ReviewsDeck rewired, 54/54 unchanged) — and `lib/image-path` (type-only
+    `ImagePath`, the §15.19 round-3 trigger "at the next lane that types an image path":
+    lib/reviews, ui/Avatar, ReviewCard, ReviewsDeck and lib/hero-slides all import it).
+    **Strings:** `home.hero.{region,slide,picker,contact,services}` ×5 DRAFTED and flagged
+    (RO/EN contact/services are the old site's); `home.hero.subtitle` is now unused (the
+    stub's second line) and stays until the owner strikes it. **Evidence at READY:** see
+    the lane's PR. **Visual:** no win32 baseline set exists (§15.7) — the darwin re-record of
+    Pages/Home (RO + DE × 6 widths), Sections/Hero (5 stories × 2 + the 320 stress) and the
+    two new UI stories per atom is the owner's, on the owner's machine. **G2 (three Fable
+    reviewers, 2026-09-19, all folded or recorded in the files):** the beads' group name
+    says a press stops the slideshow (SC 2.2.2's stand-in made audible); the demo pictures
+    carry honest alts with the old site's alts parked in `TODO(owner)` rows; idle beads at
+    80 % white (3.69:1 over the worst-case ground, KEEP-IN-SYNC with the scrim); the
+    rhythm 8 s / 10 s; `HeroProps` refuses `aria-labelledby` and the four manner handlers
+    by type; the hook hands back `RotationRing` (no lifecycle); lib/rotation's three
+    stale pointers amended (§17.7). **Owner's calls, recorded not built:** the fixed
+    WhatsApp disc over the outline button's last ~33 px on the phone first screen (not a
+    WCAG failure; three levers in Hero.tsx's header); `reducedMotion: 'reduce'` on the
+    visual Playwright projects as the harness-side stillness lever; a descriptive
+    `home.hero.title` for the sr-only h1.
+    **Round 2 (owner pack feedback, 2026-09-20 — the same lane, still uncommitted; four
+    asks, all the owner's):** (1) **UNDER THE PILL** — "the auto-scrolling of images should
+    be there on the whole starting screen of whatever device": the band pulls itself up by
+    the Header's FLOW BOX, `-mt-[calc(6rem+2px)]` (mt-4 + h-20 + two 1px borders — the
+    old site's own `-mt-4` idea), and the stage is `min-h-svh` (`min-h-screen` twin); the
+    sixth coupled spelling is now TWO numbers in Hero.tsx (the margin, and a `minmax(8rem,
+    1fr)` first row so the words never start under the pill when the content is taller
+    than the screen); a negative outer margin on a band is a RECORDED departure from the
+    recipe's "the outer owns rhythm", because the overlap is the band's nature and one file
+    holding both numbers keeps the coupling one spelling. Both story files (Sections/Hero,
+    Pages/Home) now mount the real `sections/Header` above the band — the first page story
+    to compose the pill — since the band assumes the pill's box above it. (2) **IT
+    AUTO-SCROLLS** — "I do not see it autoscrolling": MEASURED on the dev server, the
+    system reports no reduced-motion preference and one mouse move over the band held bead
+    1 for 12 s — the law's hover suspension on a band that IS the whole first screen means
+    a mouse user at rest never sees a second picture. The pointer pair moved from the
+    region to the BEADS ALONE (a hand about to choose gets a still target; leaving
+    resumes) — the lane's second recorded departure from lib/rotation's letter, pointed to
+    from the law and from `ui/use-rotation`; `HeroProps` no longer refuses the pointer
+    pair; the interaction tests pin both halves (picker suspends, picture does not).
+    Storybook gains a `Rotating` story (the product rhythm, a one-second first dwell) under
+    a NEW `no-visual` tag the central spec skips — a frame that moves by design is never a
+    baseline. (3) **LIGHTER** — "the filter … should not be that dark": round 1's uniform
+    0.55 over the whole stage is replaced by ONE static ground (a grid item spanning the
+    words, buttons, beads and fade rows, pulled 9rem into the picture row) whose gradient
+    runs transparent → the §15.1 floor from 8rem down, held to the bottom: the floor is
+    anchored to the words' OWN row, so every word, button and bead sits on 0.55 by
+    construction in every language and at every height, while the picture zone above
+    darkens by nothing — the old 20 % wash returns as the picture's `opacity-80` over the
+    band's `bg-page` ground. The §15.1 lock ("hero TEXT scrim floor ≥ 0.55") is kept to the
+    letter (white on the worst-case ground #727272 = 4.81:1; the idle bead 3.75:1). Per-
+    slide fading moved from the slide box to its two children (picture wrapper, words
+    Container), because a fading slide is a stacking context its words could never leave to
+    paint above a ground outside the slides. (4) **THE FADE, WITHOUT THE LINE** — "a
+    transition part where it fades towards a background color … do not port that thin
+    line": a fifth grid row (`h-24`, IN FLOW, the band's last box) carrying the old site's
+    own five-stop gradient into `--page`, over a band whose own ground is `bg-page`; the
+    old line was an absolute fade over a stage of another colour meeting the next section
+    at the band's edge — here the fade's last pixel, the band's ground and the next band's
+    ground are one colour, and the words/buttons/beads ground is ONE element (two
+    translucent boxes meeting at a fractional row edge leave a hairline), so no seam can
+    exist by construction. CONSEQUENCE, measured: the corner-disc overlap round 1 recorded
+    is gone — the fade and the beads now sit between the buttons and the phone's bottom
+    edge (Hero.tsx's header carries the numbers). Visual: the Sections/Hero and Pages/Home
+    frames all change; the darwin re-record remains the owner's (§15.7).
+    **Round 3 (owner pack feedback, later on 2026-09-20 — the same lane, still uncommitted;
+    six asks, all the owner's):** (1) **LIGHTER STILL, "like in old webpage"** — the veil
+    under the words is the old site's own 0.40, below §15.1's 0.55 floor: the owner's
+    amendment of the owner's lock, recorded as §15.1's rider with the contrast arithmetic
+    (2.88:1 white ink, 2.40:1 idle bead on the worst case); the old page's `text-shadow`
+    returns on the words' wrapper (inherited, no atom restyled) and the beads gain a soft
+    shadow. (2) **IT RESUMES AFTER ANY INTERACTION** — "i want it to automatically resume
+    even if you interact with it": a bead press now calls `goto` (lands, buys a full
+    interval — the law's manner for a rotator WITH a control; `handNavigation`'s stop-for-
+    good is no longer used here), keyboard focus inside the region is a TRANSIENT hold that
+    lifts when focus leaves, and NO POINTER HOLDS IT AT ALL — round 2's hover hold on the
+    beads went too, and so did the law's click-focus hold, because MEASURED a click leaves
+    both the hand and the focus on the bead and either would have held the ring the owner
+    wants moving (`ui/use-rotation`'s `focusManners` gains `keyboardEntry: 'pause' |
+    'suspend'` and `pointerEntry: 'suspend' | 'none'`, defaults the law's). NOTHING STOPS
+    THE BAND FOR GOOD. RECORDED, the owner's call: SC 2.2.2 (Level A) is met for a keyboard
+    (Tab into the band holds it) but a MOUSE or TOUCH visitor has no way to stop the motion
+    — the third departure from lib/rotation's law on this band, pointed to from the law and
+    from the shell. (3) crossfade speed kept. (4)+(6) **THE FADE, LONGER, EASED, STARTING
+    LOWER** — `h-27` (6.75rem, the asked tenth on the scale) with ten stops on a slow-in
+    curve replacing the old front-loaded five (the "balcony"): invisible for its first
+    fifth, so the visible onset sits lower though the row is taller; no straight segment,
+    ~150 tonal steps over ~108px, so no banding. (5) **THE OUTLINE BUTTON GREYS ON HOVER**
+    — `ui/Button`'s outline variant no longer fills green: ground → line-subtle, label →
+    cta-hover (cta itself is 3.63:1 on that grey, under 4.5:1; cta-hover 5.31:1), border
+    stays cta, press shares the hover face (ghost's precedent). The 2026-09-06 mirror law
+    now holds in ONE direction (solid's hover is still outline's rest). This is the
+    VARIANT, so the Footer's three outline buttons and the reviews deck's prev/next grey
+    the same way — one look (§6.6); the owner may narrow it to the hero. **Harness:** the
+    Sections/Hero stories run the product's own rhythm (the one-minute dwell dropped —
+    the owner opened Default and saw nothing move); stillness in the net now comes from
+    `reducedMotion: 'reduce'` on the visual projects (playwright.config.ts — the lever G2
+    react named on 2026-09-19; the only `motion-reduce:` utilities in src are
+    `transition-none`, which `animations: 'disabled'` already neutralises, so no earlier
+    baseline's pixels change). `Stopped` → `Picked` (its premise died with the stop);
+    baseline filename follows.
+    **Round 4 (owner, later still on 2026-09-20 — the same lane, still uncommitted):**
+    (1) **THE RHYTHM IS THE OLD SITE'S OWN 5.5 s**, first beat included ("it should be way
+    shorter"): `HERO_INTERVAL_MS` = `HERO_FIRST_DWELL_MS` = 5 500 — the old component's
+    `DEFAULT_INTERVAL_MS`; the reading-time rider's 8 000 / 10 000 (G2 a11y) is recorded as
+    superseded by the owner's word. The tab-hidden rule is unchanged: a hidden tab disarms
+    the clock and a return re-arms it with a full interval, so after switching back to the
+    page the first change comes 5.5 s later. (2) The ring was always circular
+    (`wrapIndex`, test-pinned: after slide 3 comes slide 1); the owner never saw the wrap
+    because rounds 1–2 stopped the ring for good on a bead press. (3) **THE REVIEWS DECK
+    MOUNTS ON HOME BELOW THE MAP** ("it is missing. It should be below the map") — reversing
+    §15.19's "nothing mounts until the real reviews": `lib/reviews` gains `placeholderReviews`,
+    three rows that SAY they are placeholders in all five languages (Demo 1–3, letters, no
+    portraits; drafted, flagged), and `sections/ReviewsCarousel`'s default is the site list
+    when it has rows, the placeholders while it is empty — the first real row retires them
+    without touching the band or the page; an explicit empty prop still renders nothing. D15
+    (no fabricated testimonials in shipped data) stands. (4) Storybook: the band IS under
+    Sections › Hero (the story file's `title`); only the lane's Storybook on port 6007 was
+    running when the owner looked, and it lists it.
+    **Round 5 (owner, the same evening, 2026-09-20):** (1) **THE FIVE DEMO REVIEWS ON HOME**
+    ("bring the 5 examples story from storybook as demo on home page"): the stories' six
+    fabricated rows moved from `ReviewsCarousel.stories.tsx` into `lib/reviews` as
+    `demoReviews` (the stories import them back, so page and workbench cannot drift); the
+    band's default while the site list is empty is `demoReviews.slice(0, 5)` — the "Five"
+    story — replacing round 4's three labelled placeholders. This REVERSES D15's "fabricated
+    demo copy never enters this file" for the demo rows, on the owner's word: invented
+    testimonials under invented names now ship in the export (the interim host is public,
+    noindex), flagged TODO(owner) — consented real reviews must replace them before launch;
+    the first real row retires them by itself. (2) **THE FIRST BEAT IS 1.5 s**
+    (`HERO_FIRST_DWELL_MS` = 1 500; "instantly once you enter the page you see it"); the
+    rhythm stays 5.5 s. lib/clock's return-from-hidden rule is untouched (a return re-arms
+    the pending delay — normally the full 5.5 s). (3) Storybook, checked in a real browser:
+    http://localhost:6007/?path=/story/sections-hero--default renders the band with no
+    error, and the sidebar lists Sections › Hero with six stories; no other Storybook (6006,
+    6009) was running. The screenshot was sent to the owner.
+    **Round 6 (owner, the same evening, 2026-09-20 — "more of the older look"):** (1) **THE
+    REVIEWS DECK ROTATES LIKE THE HERO** ("why … are the reviews not autoscrolling like a
+    circular list like … the slides"): `REVIEWS_INTERVAL_MS` 30 000 → 5 500 and
+    `REVIEWS_FIRST_DWELL_MS` 34 000 → 1 500 (the hero's numbers; §15.19 round 2's 30 s / 34 s
+    recorded as superseded), and the deck ADOPTS THE HERO'S MANNERS: prev/next call the ring
+    directly (a full interval, then on — `handNavigation` has no consumer), keyboard focus
+    inside is a transient hold, NO pointer hold; the 2026-09-12 stand-ins (hover suspends,
+    keyboard stops, a hand stops for good) are history, and the SC 2.2.2 record (no stop for
+    mouse or touch) now covers both rotators. `Stopped` → `Picked` in the deck's stories too.
+    The ring was always circular. (2) **BLOG OUT OF THE BAR** ("drop it for now"): `lib/routes`
+    gains a `hidden?: true` field; the blog row wears it, so `primaryRoutes()` offers it
+    nowhere (bar, panel, footer) while `equivalentPath` still sees the row (a blog post still
+    switches languages to the target's home). Delete the flag to offer it again. (3) **THE
+    HERO'S BLOCK IS CENTRED ON THE SCREEN** ("the median of the whole thing should coincide
+    with the center of the screen on oy axis"): the stage is four rows — `minmax(8rem,1fr)` ·
+    words · buttons · `minmax(9rem,1fr)` — the two spacers share the slack equally, the CTA
+    row lost its bottom padding so the visual block IS the centred rows, and Default's play
+    pins the median to ±3px of the viewport's centre. (4) **BEADS LOWER, FADE THINNER** ("as
+    thin as in the old page"): both ABSOLUTE at the stage's bottom — the fade `h-[10%]` (the
+    old page's own tenth; the eased ten stops kept), the beads `bottom-[8%]` over its
+    invisible start — out of flow so they cannot pull the block down; the ground spans to the
+    stage's bottom under them. (5) **THE OLD PAGE'S THICK STROKED HEADING** ("create … the
+    thick heading with border … keep in mind the current heading"): `ui/Heading` gains
+    `tone: 'inverse-stroked'` — the old atom's `font-bold tracking-tight` plus the old hero's
+    2px `-webkit-text-stroke` in `--color-accent-decorative` (§15.1's display role) behind the
+    fill (`paint-order: stroke fill`); Sections/Hero gains `slogan: 'stroked' | 'plain'`,
+    default 'stroked' (applied), 'plain' one prop away (the PlainSlogan story). Heading's
+    StrokedTone story added.
+    **Round 7 (owner, 2026-09-20):** the `team` slide's drafted supporting line struck from
+    `lib/hero-slides` ("remove this text … but leave the space it occupies there, but blank"
+    — the stacked words cell keeps the row's height, nothing to spell); and, instead of
+    rolling the slogan back, `slogan` gains **'alternate'** — slide 1 thin, slide 2 thick,
+    slide 3 thin — which the page passes for now so the owner can compare the two faces on
+    the rotating band ("1 slide thin, 1 slide thick so i can compare them"); the pick
+    replaces the prop's value. And the block moved 8 % down from the centre ("a little more
+    downwards, like maybe 5-10%"): `pt-[16svh]` on the stage above the two equal spacers
+    (+ a `16vh` twin) puts the median at 58 % of the viewport; Default's play pins it.
+    **Round 8 (owner, 2026-09-21):** a third face — "the third slide make it as the initial
+    thin, but with that border that the old style has": `ui/Heading` gains
+    `tone: 'inverse-outlined'` (the 2px accent stroke alone on the plain weight; OutlinedTone
+    story, the same axe note as StrokedTone), Sections/Hero's `slogan` gains `'outlined'`, and
+    `'alternate'` now cycles plain · stroked · outlined by slide; the page still passes it.
+    And, clarifying round 7 ("i told you to remove all text … leave it blank on every slide …
+    remove the whole thing that holds that text and replace with empty space"): EVERY
+    supporting line is struck — `text` is gone from `lib/hero-slides`' type and rows, from
+    `populate.ts` and from `HeroSlide`; the band renders an empty `aria-hidden` box one
+    text line tall (`h-7`) where the line stood, so the slogan keeps its distance from the
+    buttons. The WithoutText story is gone with the field; `ui/Text`'s `inverse` tone keeps no
+    consumer for now (recorded, not removed).
+    **Round 9 (owner, 2026-09-21):** "keep first and third as options" — `'alternate'` now
+    alternates plain · outlined by slide (the bold face stays a value, out of the cycle); and
+    "push downwards the heading until right above the button and keep buttons in place" —
+    the blank is gone and its room (`pt-10`) sits ABOVE the slogan as the words Container's
+    top padding, so the block keeps its height, the buttons stay where round 7 put them, and
+    the slogan sits 24 px above them (Default's play pins both).
+    **Round 10 (owner, 2026-09-21 — the pick): "i want to keep just the thin with no border
+    heading. it does look pretty much perfect now, but do not create pr yet":** `slogan`
+    defaults to `'plain'`, the page passes nothing, the `'alternate'` comparison mode is gone;
+    `'stroked'` and `'outlined'` stay as values (Hero tests, StrokedSlogan / OutlinedSlogan
+    stories, the atom's tones). NO commit, NO PR — the owner’s word; the lane stayed at READY until the owner’s seal, “create pr”, later on 2026-09-21: one squashed commit, one PR into develop.
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —
@@ -907,7 +1164,7 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
   lane's pack round 2, owner 2026-09-14, widened from the `<ul>` to the `<nav>` in round 3,
   2026-09-18, §15.20: the nav, its title and the list of links — the current-category marker
   and, when the menu is taller than the window, where the card is held, as `data-rail` + an
-  inline `top` that the server HTML never carries; every category card stays inert). Everything else stays inert HTML.
+  inline `top` that the server HTML never carries; every category card stays inert), and the **Home Hero** (`sections/Hero` — the WHOLE band is the island, on `ui/use-rotation` over `lib/rotation`: which picture is opaque, which slogan readable and which bead current all depend on the active index, and its one static part, the two calls to action, hydrates anyway through ContactModalTrigger; the static HTML still carries every slide, both buttons and the beads at index 0 — hero lane, 2026-09-19, §15.21). Everything else stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting

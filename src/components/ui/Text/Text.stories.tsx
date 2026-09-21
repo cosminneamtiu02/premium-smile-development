@@ -30,9 +30,9 @@ const meta = {
     },
     tone: {
       control: 'select',
-      options: ['default', 'muted', 'strong'],
+      options: ['default', 'muted', 'strong', 'inverse'],
       description:
-        'Ink axis (fb-182): default → text-ink · muted → text-ink-muted · strong → text-ink-strong',
+        'Ink axis (fb-182): default → text-ink · muted → text-ink-muted · strong → text-ink-strong · inverse → text-ink-inverse, copy over the §15.1 scrim (sections/Hero, 2026-09-19 — see InverseTone for its ground; on this white canvas it is invisible by design)',
     },
     bold: {
       control: 'boolean',
@@ -72,6 +72,30 @@ export const Tones: Story = {
         © 2026 Premium Smile. Toate drepturile rezervate.
       </Text>
       <Text tone="strong">Sâmbătă: 09:00 – 14:00</Text>
+    </div>
+  ),
+};
+
+/**
+ * The fourth tone on the ground it exists for (sections/Hero, 2026-09-19):
+ * copy over the §15.1 scrim. The wrapper paints `bg-scrim` over `bg-page`,
+ * which is the scrim's worst case on this site — the 0.55 token over a white
+ * photograph — and where white body copy still measures 4.77:1. The German
+ * line is the wrap stress at 320 (a supporting line wraps to three rows in a
+ * 256px column); the wrapper owns the padding, never the atom (§6.4).
+ */
+export const InverseTone: Story = {
+  tags: ['stress-320'],
+  render: () => (
+    <div className="bg-page">
+      <div className="flex flex-col gap-2 bg-scrim p-6">
+        <Text tone="inverse">
+          Programări rapide, tratamente explicate pe înțelesul tău.
+        </Text>
+        <Text tone="inverse" lang="de">
+          Schnelle Terminvergabe, verständlich erklärte Behandlungen.
+        </Text>
+      </div>
     </div>
   ),
 };

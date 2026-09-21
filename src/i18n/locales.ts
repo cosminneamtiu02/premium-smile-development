@@ -39,8 +39,9 @@ export const defaultLocale: Locale = 'ro';
  * cast — and this module's header promise is data with zero imports and zero
  * ceremony.
  *
- * ONE CONSUMER TODAY, ONE OWED: app/[locale]/services/page.tsx narrows with
- * this guard; sections/ReviewsCarousel still spells the same question as
+ * TWO CONSUMERS TODAY (app/[locale]/services/page.tsx and, since the hero
+ * lane of 2026-09-19, app/[locale]/(home)/page.tsx with its story twin),
+ * ONE OWED: sections/ReviewsCarousel still spells the same question as
  * `locales.find(…) ?? defaultLocale` (a silent fallback where the page throws).
  * The next lane that touches ReviewsCarousel folds it onto this guard — not
  * the price-list lane, whose visual manifest must not drag the deck's in

@@ -258,7 +258,7 @@ describe('Footer — row 2, the contact column', () => {
 });
 
 describe('Footer — row 2, the nav column', () => {
-  it('links the four primary routes in Romanian, locale-prefixed', () => {
+  it('links the three OFFERED primary routes in Romanian, locale-prefixed — the blog row is hidden for now (owner, 2026-09-20)', () => {
     const { messages } = mount('ro');
 
     // The exact strings the export serves: /{locale} because localePrefix is
@@ -270,13 +270,13 @@ describe('Footer — row 2, the nav column', () => {
       [messages.nav.home, '/ro/'],
       [messages.nav.services, '/ro/services/'],
       [messages.nav.team, '/ro/team/'],
-      [messages.nav.blog, '/ro/blog/'],
     ] as const) {
       expect(screen.getByRole('link', { name: label })).toHaveAttribute(
         'href',
         href,
       );
     }
+    expect(screen.queryByRole('link', { name: messages.nav.blog })).toBeNull();
   });
 
   it('drops Blog on non-Romanian locales — the blog is `ro`-only (§5)', () => {

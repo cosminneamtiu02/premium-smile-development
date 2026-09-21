@@ -19,16 +19,23 @@ import { cx } from '@/lib/cx/cx';
 // Weight axis added 2026-08-19 (owner, addendum v3): `bold` → font-bold,
 // orthogonal to the untouched fb-182 tone triple, CSS only (D-C: never a
 // <strong> — the `as` prop alone decides the element).
+// A FOURTH tone, `inverse`, joined 2026-09-19 with sections/Hero as its
+// measured consumer (epic #103): the slide's supporting line rides over the
+// §15.1 scrim, where the three light-ground inks are unreadable. Additive —
+// the triple, the default and every existing class string are untouched; the
+// ui/Heading tone axis landed in the same lane for the same ground.
 
 export type TextElement = 'p' | 'span' | 'dt' | 'dd';
-export type TextTone = 'default' | 'muted' | 'strong';
+export type TextTone = 'default' | 'muted' | 'strong' | 'inverse';
 
 type TextOwnProps<E extends TextElement> = {
   /** Which native element wears the treatment. @default 'p' */
   as?: E;
   /**
    * Ink axis (fb-182): default → text-ink · muted → text-ink-muted ·
-   * strong → text-ink-strong (speculative, no consumer yet — owner call).
+   * strong → text-ink-strong (speculative, no consumer yet — owner call) ·
+   * inverse → text-ink-inverse, copy over the §15.1 scrim (the Hero,
+   * 2026-09-19).
    * @default 'default'
    */
   tone?: TextTone;
@@ -50,6 +57,7 @@ const toneClasses: Record<TextTone, string> = {
   default: 'text-ink',
   muted: 'text-ink-muted',
   strong: 'text-ink-strong',
+  inverse: 'text-ink-inverse',
 };
 
 // D5 — Text is the repo's FIRST tag-generic atom, and the generic is the whole

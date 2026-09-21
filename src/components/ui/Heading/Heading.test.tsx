@@ -1,7 +1,7 @@
 import { createRef, type Ref } from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Heading, type HeadingSize } from './Heading';
+import { Heading, type HeadingSize, type HeadingTone } from './Heading';
 
 // Role-based queries wherever a role exists (§3, §9): the asChild cases are
 // queried as heading/link — exactly what a screen reader announces. The
@@ -30,6 +30,15 @@ const SECTION_CLASSES = 'font-display text-3xl text-ink-strong';
 // over section — same face, same ink, nothing else.
 const PAGE_CLASSES = 'font-display text-4xl text-ink-strong';
 
+// I1-hero · the fluid slogan step, measured in by sections/Hero (owner
+// dispatch 2026-09-19, epic #103): 32px floor, 3.5vw slope, 72px cap — the
+// old site's four-prefix staircase (30/36/60/72) as one curve, so no `sm:`/
+// `lg:` self-scaler can return under a different spelling. `/tight` is the
+// step's own line-height (an arbitrary size carries none), not an extra
+// utility — the header argues it; equality here keeps it exactly that.
+const HERO_CLASSES =
+  'font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight text-ink-strong';
+
 // Record<HeadingSize, …> on purpose: this union is BUILT to grow, so a new
 // step must not be able to ship with zero
 // coverage — the file stops typechecking until the member is classified here.
@@ -39,6 +48,7 @@ const expectedClasses: Record<HeadingSize, string> = {
   title: TITLE_CLASSES,
   section: SECTION_CLASSES,
   page: PAGE_CLASSES,
+  hero: HERO_CLASSES,
 };
 
 describe('Heading — the title step (I1 zero-diff-rewire, I2 element neutrality)', () => {
@@ -138,6 +148,109 @@ describe('Heading — the page step (the 404-measured hero size, 2026-09-07)', (
   });
 });
 
+describe('Heading — the hero step (the fluid slogan size, 2026-09-19)', () => {
+  it('renders size="hero" wearing exactly the hero classes on a plain <p>', () => {
+    // The measuring consumer's own fixture: the old site's first slogan,
+    // Romanian with diacritics (§15.7). A <p> host on purpose — the Hero's
+    // slogans are display text inside the slides, never the page's h1 (that
+    // one is static and outside the ring, lib/rotation's law).
+    render(
+      <Heading size="hero">
+        O clinică stomatologică modernă pentru toată familia
+      </Heading>,
+    );
+    const slogan = screen.getByText(
+      'O clinică stomatologică modernă pentru toată familia',
+    );
+    expect(slogan.tagName).toBe('P');
+    expect(slogan.className).toBe(HERO_CLASSES);
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+  });
+
+  it('carries no viewport prefix — the curve replaced the staircase', () => {
+    // The old site's `text-3xl sm:text-4xl lg:text-6xl xl:text-7xl` is the
+    // §6.5 self-scaling smell `title` refused on day one; a fluid clamp is the
+    // step's whole answer to it, so a `sm:`/`md:`/`lg:`/`xl:` token returning
+    // to this row is a regression by definition.
+    expect(HERO_CLASSES).not.toMatch(/\b(sm|md|lg|xl|2xl):/);
+  });
+});
+
+describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', () => {
+  // Record<HeadingTone, …> on purpose, the size table's twin: a third ink
+  // cannot ship with zero coverage — this file stops typechecking until it
+  // is classified here.
+  const expectedInk: Record<HeadingTone, string> = {
+    default: 'text-ink-strong',
+    inverse: 'text-ink-inverse',
+    // The old page's slogan face (2026-09-20): the same white ink, bold and
+    // tight, the accent stroke painted behind the fill.
+    'inverse-stroked':
+      'text-ink-inverse font-bold tracking-tight [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill]',
+    // The stroke alone on the plain weight (2026-09-21, the Hero's third face).
+    'inverse-outlined':
+      'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill]',
+  };
+
+  // Pin the union itself, exactly as the size axis does: widening it to
+  // `string` would keep every Record compiling with stale rows.
+  expectTypeOf<HeadingTone>().toEqualTypeOf<
+    'default' | 'inverse' | 'inverse-stroked' | 'inverse-outlined'
+  >();
+
+  it.each(Object.keys(expectedInk) as HeadingTone[])(
+    'tone "%s" swaps only the ink — size classes first, ink last, nothing else',
+    (tone) => {
+      render(
+        <Heading size="hero" tone={tone}>
+          O echipă care ascultă, pe limba ta
+        </Heading>,
+      );
+      expect(
+        screen.getByText('O echipă care ascultă, pe limba ta').className,
+      ).toBe(
+        `font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight ${expectedInk[tone]}`,
+      );
+    },
+  );
+
+  it('leaves every elder byte-identical: the bare call is tone="default"', () => {
+    // The tone axis joined AFTER four steps had shipped with their ink baked
+    // into the size row; splitting the tables must not move a single existing
+    // call site (§6.6). Bare ≡ explicit default, and both ≡ the pinned string.
+    const { unmount } = render(<Heading>Servicii și prețuri</Heading>);
+    const bare = screen.getByText('Servicii și prețuri').className;
+    unmount();
+    render(<Heading tone="default">Servicii și prețuri</Heading>);
+    expect(screen.getByText('Servicii și prețuri').className).toBe(bare);
+    expect(bare).toBe(TITLE_CLASSES);
+  });
+
+  it('is orthogonal to size — any step may wear the inverse ink', () => {
+    render(
+      <Heading size="section" tone="inverse">
+        Vizitează clinica noastră
+      </Heading>,
+    );
+    expect(screen.getByText('Vizitează clinica noastră').className).toBe(
+      'font-display text-3xl text-ink-inverse',
+    );
+  });
+
+  it('keeps the caller className LAST, after the ink', () => {
+    render(
+      <Heading size="hero" tone="inverse" className="text-center">
+        O echipă care ascultă, pe limba ta
+      </Heading>,
+    );
+    expect(
+      screen.getByText('O echipă care ascultă, pe limba ta').className,
+    ).toBe(
+      `${HERO_CLASSES.replace('text-ink-strong', 'text-ink-inverse')} text-center`,
+    );
+  });
+});
+
 describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // The one drift the Record cannot see: WIDENING the axis. `HeadingSize =
   // string` (or `| (string & {})`) keeps the impl Record, the test Record and
@@ -146,7 +259,9 @@ describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // additive growth edits this line consciously, in the same commit as the new
   // Record row (the Eyebrow pin's growth-direction twin; runs at typecheck,
   // costs nothing at runtime).
-  expectTypeOf<HeadingSize>().toEqualTypeOf<'title' | 'section' | 'page'>();
+  expectTypeOf<HeadingSize>().toEqualTypeOf<
+    'title' | 'section' | 'page' | 'hero'
+  >();
 
   it.each(Object.keys(expectedClasses) as HeadingSize[])(
     'size "%s" emits exactly its own class set and nothing else',

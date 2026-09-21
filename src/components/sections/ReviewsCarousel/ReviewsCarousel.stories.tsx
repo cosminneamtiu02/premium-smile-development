@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, fireEvent, waitFor } from 'storybook/test';
-import type { Review } from '@/lib/reviews/reviews';
+import { demoReviews as DEMO } from '@/lib/reviews/reviews';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { ReviewsCarousel } from './ReviewsCarousel';
@@ -14,16 +14,20 @@ import { ReviewsCarousel } from './ReviewsCarousel';
 // visual manifest. `Sections/*` routes every one of them to 390 + 1536 (§13,
 // tests/visual/stories.spec.ts).
 //
-// ── EVERY REVIEW BELOW IS DEMO COPY, AND THAT IS A DECISION, NOT A
+// ── EVERY REVIEW HERE IS DEMO COPY, AND THAT IS A DECISION, NOT A
 // PLACEHOLDER (board D15, owner fb-446). The Romanian and English words are
 // the OLD SITE's own fabricated testimonials; the German, French and Italian
-// ones are demo drafts written for this file. NONE of it may be copied into
-// lib/reviews or into a message file: the shipped list is EMPTY, and the real
-// reviews are the owner's to supply, each with the patient's written consent
-// (a name plus a procedure is health data, GDPR art. 9) and the CMSR
-// testimonial check (in force since 2025-07-01). That is exactly what the
-// `reviews` prop exists for (board D18): a story fabricates rows without
-// touching shipped data.
+// ones are demo drafts written for this file. THE ROWS MOVED to lib/reviews
+// as `demoReviews` on 2026-09-20 (owner, the hero lane's round 5: "bring the
+// 5 examples story from storybook as demo on home page") — the Home band
+// shows the first five of them until the owner's real list has a row, and
+// these stories import the same six so the workbench and the page can never
+// drift apart. D15's "never into lib/reviews" is therefore REVERSED for the
+// demo rows by the owner's word (lib/reviews' header carries the record and
+// the TODO): the real reviews remain the owner's to supply, each with the
+// patient's written consent (a name plus a procedure is health data, GDPR
+// art. 9) and the CMSR testimonial check (in force since 2025-07-01). The
+// `reviews` prop (board D18) is still how a story picks its rows.
 //
 // ── EVERY STORY PINS ITS OWN LANGUAGE with per-story `globals`. The locale
 // toolbar is preview-level state in the Storybook manager; the visual runner
@@ -58,245 +62,19 @@ import { ReviewsCarousel } from './ReviewsCarousel';
 // ── THE ENVIRONMENT IS THE REAL ONE, deliberately: the band owns lib/clock's
 // numbers and does not forward the env seam (functions cannot cross a
 // server→client boundary, so a prop that only tests could pass would be a prop
-// the site can never use). What keeps the baselines still is the FIRST DWELL:
-// REVIEWS_FIRST_DWELL_MS is 34 000 ms, and every screenshot is taken seconds
-// after the story mounts, so no automatic advance can move a frame — and the
-// stories that press "next" stop the rotation for good in that same click
-// (there is no rotation control: ReviewsDeck.tsx's NO ROTATION CONTROL
-// paragraph). Headless Chromium reports `prefers-reduced-motion:
-// no-preference` unless a project emulates it, and playwright.config.ts does
-// not — so Default really is the running deck.
+// the site can never use). Since 2026-09-20 the deck runs the HERO'S rhythm
+// (5.5 s, a 1.5 s first beat) and nothing stops it for good, so what keeps a
+// BASELINE still is the harness: the visual projects run with
+// `reducedMotion: 'reduce'` (playwright.config.ts), under which lib/clock
+// declines every automatic start — the net photographs an idle ring's first
+// frame by construction, and a story that presses "next" lands on the second
+// card without restarting anything. The Vitest storybook project has no such
+// preference and sees the running deck; Picked therefore asserts only where
+// the press landed, never the live region's state.
 //
 // layout 'fullscreen' because the band is full-bleed and owns its own gutter
 // clamp: Storybook's default 1rem padding would put the story's ground and the
 // band's margins on two different rulers.
-
-/**
- * The three committed DEMO portraits — synthetic silhouettes under
- * public/images/demo/, the PersonnelCard lane's fixtures — standing in for
- * reviewer photographs, which are the owner's §11 gate. Every OTHER row
- * carries one, so the deck shows the two faces side by side: a photograph,
- * then two letters, then a photograph (owner 2026-09-12: "the image/name
- * initials to alternate"). Under `npm run test` the optimizer's width variants
- * may not exist and those discs fall back to the letters — the atom's own belt
- * firing, not a broken story; the built Storybook and the baselines carry the
- * portraits.
- */
-const PORTRAIT_1 = { src: '/images/demo/portrait-1.jpg' } as const;
-const PORTRAIT_2 = { src: '/images/demo/portrait-2.jpg' } as const;
-const PORTRAIT_3 = { src: '/images/demo/portrait-3.jpg' } as const;
-
-/**
- * Six DEMO reviews (see the header). Ratings cover the halves ui/StarRating
- * draws — 5, 4.5, 4 and 3.5 — and rows one, three and five carry a portrait,
- * so every disc face alternates with the next.
- */
-const DEMO: readonly Review[] = [
-  {
-    id: 'ana-petrescu',
-    name: 'Ana Petrescu',
-    initials: 'AP',
-    rating: 5,
-    picture: PORTRAIT_1,
-    words: {
-      ro: {
-        title: 'Copiii îmi cer să mergem',
-        text: 'Doi copii, zero crize. Camera pediatrică și personalul fac fiecare vizită să pară o aventură.',
-        procedure: 'Pacient familie',
-      },
-      en: {
-        title: 'My kids actually ask to go',
-        text: 'Two children, zero tantrums. The pediatric room and the staff make every visit feel like an adventure.',
-        procedure: 'Family patient',
-      },
-      de: {
-        title: 'Meine Kinder wollen sogar hin',
-        text: 'Zwei Kinder, kein Theater. Das Kinderzimmer und das Team machen jeden Besuch zu einem Abenteuer.',
-        procedure: 'Familienbehandlung',
-      },
-      fr: {
-        title: 'Mes enfants demandent à y aller',
-        text: 'Deux enfants, aucune crise. La salle pédiatrique et l’équipe font de chaque visite une aventure.',
-        procedure: 'Patient famille',
-      },
-      it: {
-        title: 'I bambini chiedono di andarci',
-        text: 'Due bambini, zero capricci. La sala pediatrica e il personale rendono ogni visita un’avventura.',
-        procedure: 'Paziente famiglia',
-      },
-    },
-  },
-  {
-    id: 'cristian-voicu',
-    name: 'Cristian Voicu',
-    initials: 'CV',
-    rating: 5,
-    words: {
-      ro: {
-        title: 'Au văzut imaginea de ansamblu',
-        text: 'Alte clinici mi-au dat un preț. Premium Smile mi-a dat un plan. Trei ani mai târziu, gura mea este sănătoasă.',
-        procedure: 'Plan complet',
-      },
-      en: {
-        title: 'They saw the whole picture',
-        text: 'Other clinics gave me a price. Premium Smile gave me a plan. Three years later, my mouth is healthy.',
-        procedure: 'Full mouth plan',
-      },
-      de: {
-        title: 'Sie haben das Ganze gesehen',
-        text: 'Andere Praxen nannten mir einen Preis. Premium Smile gab mir einen Plan. Drei Jahre später ist mein Mund gesund.',
-        procedure: 'Gesamtbehandlungsplan',
-      },
-      fr: {
-        title: 'Ils ont vu l’ensemble',
-        text: 'D’autres cliniques m’ont donné un prix. Premium Smile m’a donné un plan. Trois ans plus tard, ma bouche est saine.',
-        procedure: 'Plan complet',
-      },
-      it: {
-        title: 'Hanno visto il quadro completo',
-        text: 'Altre cliniche mi hanno dato un prezzo. Premium Smile mi ha dato un piano. Tre anni dopo, la mia bocca è sana.',
-        procedure: 'Piano completo',
-      },
-    },
-  },
-  {
-    // THE GERMAN STRESS ROW (§8.4): the longest body in the deck by a wide
-    // margin, with two compounds that cannot break at a space. It is what
-    // decides whether the stage's tallest card still fits its neighbours.
-    id: 'bogdan-ene',
-    name: 'Bogdan Ene',
-    initials: 'BE',
-    rating: 4.5,
-    picture: PORTRAIT_2,
-    words: {
-      ro: {
-        title: 'Fără durere, chiar și la tratamentul de canal',
-        text: 'Sincer, mă așteptam la ce e mai rău. Mi-au explicat fiecare minut, m-au ținut anesteziat și am plecat fără pic de durere.',
-        procedure: 'Tratament canal',
-      },
-      en: {
-        title: 'Painless, even the root canal',
-        text: 'Honestly, I expected the worst. They walked me through every minute, kept me numb, and I left without a single ache.',
-        procedure: 'Root canal',
-      },
-      de: {
-        title: 'Schmerzfrei, sogar bei der Wurzelkanalbehandlung',
-        text: 'Ehrlich gesagt hatte ich mit dem Schlimmsten gerechnet. Die einzelnen Behandlungsschritte wurden mir in aller Ruhe erklärt, die Betäubung hielt durchgehend, und am nächsten Morgen kam sogar noch ein Kontrollanruf aus der Praxis.',
-        procedure: 'Wurzelkanalbehandlung',
-      },
-      fr: {
-        title: 'Sans douleur, même le traitement de canal',
-        text: 'Honnêtement, je m’attendais au pire. On m’a expliqué chaque minute, l’anesthésie a tenu, et je suis reparti sans la moindre douleur.',
-        procedure: 'Traitement de canal',
-      },
-      it: {
-        title: 'Senza dolore, anche la devitalizzazione',
-        text: 'Sinceramente mi aspettavo il peggio. Mi hanno spiegato ogni minuto, l’anestesia ha tenuto e sono uscito senza un dolore.',
-        procedure: 'Devitalizzazione',
-      },
-    },
-  },
-  {
-    id: 'ioana-stan',
-    name: 'Ioana Stan',
-    initials: 'IS',
-    rating: 4.5,
-    words: {
-      ro: {
-        title: 'Ca o persoană diferită',
-        text: 'Optsprezece luni de aligneri transparenți, controale săptămânale, zero presiune. Alinierea și ocluzia sunt în sfârșit corecte.',
-        procedure: 'Ortodonție',
-      },
-      en: {
-        title: 'Like a different person',
-        text: 'Eighteen months of clear aligners, weekly check-ins, zero pressure. My alignment and bite are finally right.',
-        procedure: 'Orthodontics',
-      },
-      de: {
-        title: 'Wie ein anderer Mensch',
-        text: 'Achtzehn Monate transparente Schienen, wöchentliche Kontrollen, kein Druck. Zahnstellung und Biss stimmen endlich.',
-        procedure: 'Kieferorthopädie',
-      },
-      fr: {
-        title: 'Comme une autre personne',
-        text: 'Dix-huit mois de gouttières transparentes, des contrôles chaque semaine, aucune pression. L’alignement et l’occlusion sont enfin corrects.',
-        procedure: 'Orthodontie',
-      },
-      it: {
-        title: 'Come una persona diversa',
-        text: 'Diciotto mesi di allineatori trasparenti, controlli settimanali, zero pressione. Allineamento e occlusione sono finalmente giusti.',
-        procedure: 'Ortodonzia',
-      },
-    },
-  },
-  {
-    id: 'diana-munteanu',
-    name: 'Diana Munteanu',
-    initials: 'DM',
-    rating: 4,
-    picture: PORTRAIT_3,
-    words: {
-      ro: {
-        title: 'O reparație mică a schimbat totul',
-        text: 'Doar un dinte din față ciobit, dar mă deranja de ani buni. Douăzeci de minute aici și nu mai disting care a fost reparat.',
-        procedure: 'Lipire estetică',
-      },
-      en: {
-        title: 'A small fix that changed everything',
-        text: 'Just one chipped front tooth, but it bothered me for years. Twenty minutes here and I cannot tell which one was repaired.',
-        procedure: 'Cosmetic bonding',
-      },
-      de: {
-        title: 'Eine kleine Korrektur, die alles verändert hat',
-        text: 'Nur ein abgesplitterter Schneidezahn, der mich jahrelang gestört hat. Zwanzig Minuten hier, und ich erkenne nicht mehr, welcher es war.',
-        procedure: 'Ästhetische Füllung',
-      },
-      fr: {
-        title: 'Une petite réparation qui a tout changé',
-        text: 'Une seule dent de devant ébréchée, mais elle me gênait depuis des années. Vingt minutes ici et je ne distingue plus laquelle a été réparée.',
-        procedure: 'Collage esthétique',
-      },
-      it: {
-        title: 'Una piccola riparazione ha cambiato tutto',
-        text: 'Solo un dente davanti scheggiato, ma mi dava fastidio da anni. Venti minuti qui e non distinguo più quale sia stato riparato.',
-        procedure: 'Ricostruzione estetica',
-      },
-    },
-  },
-  {
-    id: 'stefan-radu',
-    name: 'Ștefan Radu',
-    initials: 'ȘR',
-    rating: 3.5,
-    words: {
-      ro: {
-        title: 'Rapid, lin, prietenos',
-        text: 'Toate cele patru măsele de minte într-o dimineață. Instrucțiuni clare, mâini blânde și un telefon de control a doua zi.',
-        procedure: 'Măsele de minte',
-      },
-      en: {
-        title: 'Smooth, swift, friendly',
-        text: 'All four wisdom teeth in one morning. Clear instructions, gentle hands, and a follow-up call the next day.',
-        procedure: 'Wisdom teeth',
-      },
-      de: {
-        title: 'Schnell, ruhig, freundlich',
-        text: 'Alle vier Weisheitszähne an einem Vormittag. Klare Anweisungen, sanfte Hände und am nächsten Tag ein Kontrollanruf.',
-        procedure: 'Weisheitszähne',
-      },
-      fr: {
-        title: 'Rapide, calme, aimable',
-        text: 'Les quatre dents de sagesse en une matinée. Des consignes claires, des gestes doux et un appel de suivi le lendemain.',
-        procedure: 'Dents de sagesse',
-      },
-      it: {
-        title: 'Rapido, calmo, gentile',
-        text: 'Tutti e quattro i denti del giudizio in una mattina. Istruzioni chiare, mani delicate e una telefonata di controllo il giorno dopo.',
-        procedure: 'Denti del giudizio',
-      },
-    },
-  },
-];
 
 const meta = {
   title: 'Sections/ReviewsCarousel',
@@ -516,24 +294,14 @@ export const GermanStress: Story = {
 };
 
 /**
- * The deck AFTER A HAND NAVIGATION — stopped for good (owner 2026-09-12: no
- * pause button; ReviewsDeck.tsx's NO ROTATION CONTROL paragraph — the
- * navigation itself is SC 2.2.2's stop mechanism for touch).
- *
- * Pressing "next" moves the selection to the second review AND ends the
- * automatic rotation: the slides' container flips from `aria-live="off"` to
- * `polite` in the same breath — from now on a change means the visitor asked
- * for one, and deserves to hear it. The second card now wears the tint and
- * the first has taken the frame, on the same two nodes.
- *
- * `fireEvent` rather than `userEvent` here, and the reason is measured: a
- * DISPATCHED click focuses the button programmatically, which Chromium reports
- * as `:focus-visible` — the STICKY-pause classification — so the stop would
- * arrive from the focus before the click. Same picture either way, but the
- * story is about the navigation, not the focus (ReviewsDeck.test.tsx drives
- * the focus path with a real browser).
+ * The deck AFTER A HAND NAVIGATION — the second review selected, and the ring
+ * goes on from there a full interval later (2026-09-20: nothing stops for
+ * good; ReviewsDeck.tsx's NO ROTATION CONTROL paragraph). The second card
+ * now wears the tint and the first has taken the frame, on the same two
+ * nodes. Under the net's reduced motion the ring is idle and the frame is
+ * still; here the play asserts only where the press landed.
  */
-export const Stopped: Story = {
+export const Picked: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   play: async ({ canvas, canvasElement }) => {
     const deck = canvas.getByRole('region', { name: ro.home.reviews.region });
@@ -545,10 +313,6 @@ export const Stopped: Story = {
       await expect(slides[1]).not.toHaveAttribute('inert');
       await expect(slides[0]).toHaveAttribute('inert');
     });
-    await expect(deck.querySelector('[aria-live]')).toHaveAttribute(
-      'aria-live',
-      'polite',
-    );
     // Still no rotation control anywhere in the region.
     await expect(deck.querySelectorAll('button')).toHaveLength(2);
     await expectFannedStage(canvasElement);

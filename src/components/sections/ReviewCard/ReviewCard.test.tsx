@@ -427,14 +427,17 @@ describe('ReviewCard — zero islands of its own, zero message keys', () => {
     expect(CODE).not.toMatch(/\bt\(/);
   });
 
-  it('imports EXACTLY the six atoms it composes plus the two value types', () => {
+  it('imports EXACTLY the six atoms it composes plus the three value types', () => {
     // The import surface is the guard that sees what a regex cannot. One of
     // these SIX carries a client directive of its own — ui/Avatar, for its
     // picture→letters fallback — so the card costs the page that atom's island
     // and nothing else; adding an import here has to be a deliberate edit to
-    // this test, with that question asked out loud. lib/initials and lib/rating
-    // arrive as TYPES only, which is also why no lib DATA (lib/reviews) is
-    // reachable from this tier: the band binds the list, the card takes props.
+    // this test, with that question asked out loud. lib/initials, lib/rating
+    // and lib/image-path (the picture-path type, promoted by the hero lane on
+    // 2026-09-19 — asked and answered: a type-only import, zero islands, zero
+    // bytes) arrive as TYPES only, which is also why no lib DATA (lib/reviews)
+    // is reachable from this tier: the band binds the list, the card takes
+    // props.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -448,6 +451,7 @@ describe('ReviewCard — zero islands of its own, zero message keys', () => {
       '@/components/ui/Heading/Heading',
       '@/components/ui/StarRating/StarRating',
       '@/components/ui/Text/Text',
+      '@/lib/image-path/image-path',
       '@/lib/initials/initials',
       '@/lib/rating/rating',
       'react',

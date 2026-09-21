@@ -14,6 +14,7 @@ import {
   REVIEWS_FIRST_DWELL_MS,
   REVIEWS_INTERVAL_MS,
 } from './ReviewsCarousel';
+import { demoReviews } from '@/lib/reviews/reviews';
 import source from './ReviewsCarousel.tsx?raw';
 
 // sections/ReviewsCarousel — the BAND's suite: the half of this section that
@@ -202,16 +203,22 @@ describe('ReviewsCarousel — no reviews, no band', () => {
     expect(screen.queryByRole('region')).toBeNull();
   });
 
-  it('defaults to the site list, which ships empty until the owner fills it', () => {
-    // No `reviews` prop: the band reads lib/reviews. The day that list has
-    // rows this test states what the band will do with them.
-    const { container } = render(
+  it('defaults to the site list — and while that ships empty, to the first FIVE demo rows (owner, 2026-09-20)', () => {
+    // No `reviews` prop: the band reads lib/reviews; empty today, so the
+    // Storybook "Five" rows stand in. The day the list has rows, the demo is
+    // gone and this test states what the band does with the real ones.
+    render(
       <NextIntlClientProvider locale="ro" messages={ro}>
         <ReviewsCarousel />
       </NextIntlClientProvider>,
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(
+      screen.getByRole('region', { name: ro.home.reviews.region }),
+    ).toBeInTheDocument();
+    for (const row of demoReviews.slice(0, 5))
+      expect(screen.getByText(row.name)).toBeInTheDocument();
+    expect(screen.queryByText(demoReviews[5].name)).not.toBeInTheDocument();
   });
 });
 
@@ -393,14 +400,13 @@ describe('ReviewsCarousel — the strings the island is handed', () => {
 });
 
 describe('ReviewsCarousel — the rhythm is the dossier’s, and it is stated here', () => {
-  it('exports the two numbers the deck runs on (owner D11, round 2)', () => {
-    // Recomputed against the WHOLE card after the G2 a11y round (41 words →
-    // ~16.4 s at 150 wpm, §9), then slowed on the owner's own eye at pack
-    // round 2 ("the iteration is too fast" at 16 s): thirty seconds allows a
-    // slower reader and the seconds spent finding the card before reading;
-    // the first dwell adds the journey down from the heading.
-    expect(REVIEWS_INTERVAL_MS).toBe(30_000);
-    expect(REVIEWS_FIRST_DWELL_MS).toBe(34_000);
+  it('exports the two numbers the deck runs on — the hero’s own since 2026-09-20', () => {
+    // Round 2 of the reviews lane slowed the deck to 30 s / 34 s on the
+    // owner's eye; the hero lane's round 6 ("why … are the reviews not
+    // autoscrolling like … the slides") gave it the hero's 5.5 s and 1.5 s
+    // first beat. The reading arithmetic is recorded in ReviewsCarousel.tsx.
+    expect(REVIEWS_INTERVAL_MS).toBe(5_500);
+    expect(REVIEWS_FIRST_DWELL_MS).toBe(1_500);
   });
 
   it('hands both of them to the island, and nothing else timing-related', () => {

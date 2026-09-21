@@ -3,7 +3,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { Container } from '@/components/ui/Container/Container';
 import { defaultLocale, locales, type Locale } from '@/i18n/locales';
-import { reviews as siteReviews, type Review } from '@/lib/reviews/reviews';
+import {
+  demoReviews,
+  reviews as siteReviews,
+  type Review,
+} from '@/lib/reviews/reviews';
 import {
   ReviewsDeck,
   type ReviewSlide,
@@ -33,8 +37,17 @@ import {
 // never entered this repo, and the real ones are the owner's to supply, each
 // with the patient's written consent (a name plus a procedure is health data,
 // GDPR art. 9) and the CMSR testimonial check. A heading over an empty deck is
-// worse than no band, so `null` is the honest answer — and it is TODAY's
-// answer, which is also why the Home page does not mount this band yet.
+// worse than no band, so `null` is the honest answer for an empty LIST — and
+// since 2026-09-20 (owner, the hero lane's round 4: the band "is missing. It
+// should be below the map"; round 5: "bring the 5 examples story from
+// storybook as demo on home page") the Home page mounts this band, so while
+// the site list is empty the DEFAULT is the first FIVE of lib/reviews'
+// `demoReviews` — the Storybook "Five" story's rows, fabricated demo copy
+// the owner chose to show (lib/reviews' header carries the D15 reversal and
+// the TODO): the band's place on the page is visible today, and the first
+// real row in lib/reviews retires the demo without touching this file or the
+// page. A caller that passes an empty list explicitly still gets `null` (the
+// tests' and stories' seam below).
 //
 // ── THE `reviews` PROP IS THE STORY/TEST SEAM (board D18), not a
 // configuration knob. It defaults to the site list, so the page mount will
@@ -105,19 +118,21 @@ const HEADING_ID = 'reviews-heading';
  *
  * RECORDED TRIGGER: when the owner's REAL reviews land, count the whole card
  * again; anything past ~60 words re-opens this number rather than being
- * silently outrun. The hover suspension, the keyboard entry and a hand on
- * the deck (ReviewsDeck.tsx's NO ROTATION CONTROL paragraph) are the floor
- * under that, never a substitute for it.
+ * silently outrun.
+ *
+ * SUPERSEDED 2026-09-20 (owner, the hero lane's round 6: "why … are the
+ * reviews not autoscrolling like a circular list like … the slides with
+ * images and heading"): the deck now keeps THE HERO'S OWN RHYTHM — 5.5 s, the
+ * old site's number — and the arithmetic above is recorded, not applied. The
+ * owner watched a 30 s deck and saw a deck that never moved.
  */
-export const REVIEWS_INTERVAL_MS = 30_000;
+export const REVIEWS_INTERVAL_MS = 5_500;
 
 /**
- * The FIRST dwell — longer than the interval on purpose (lib/clock's
- * `startDelayMs` exists to lengthen it): the opening slide is the one every
- * visitor lives through while their eye is still travelling down from the
- * heading, so it gets the reading time PLUS the journey.
+ * The FIRST dwell: 1.5 s, the hero's — the first change is seen at once
+ * (owner, 2026-09-20; the 34 s "reading time plus the journey" is history).
  */
-export const REVIEWS_FIRST_DWELL_MS = 34_000;
+export const REVIEWS_FIRST_DWELL_MS = 1_500;
 
 export type ReviewsCarouselProps = {
   /**
@@ -130,7 +145,7 @@ export type ReviewsCarouselProps = {
 };
 
 export function ReviewsCarousel({
-  reviews = siteReviews,
+  reviews = siteReviews.length > 0 ? siteReviews : demoReviews.slice(0, 5),
 }: ReviewsCarouselProps): ReactElement | null {
   const t = useTranslations('home');
   const tc = useTranslations('common');

@@ -199,6 +199,19 @@ export function Header(): ReactElement {
                              scroll-padding, so a jumped-to card and the stuck
                              menu rest on one line: change this height and all
                              five move.
+            Hero             `-mt-[calc(6rem+2px)]` on the Home opener's root —
+                             this pill's FLOW BOX (mt-4 + h-20 + the two 1px
+                             borders), by which the band pulls itself UNDER the
+                             pill (owner, pack round 2, 2026-09-20; the round-1
+                             `min-h-[calc(100svh-6rem)]` stage is gone, the
+                             stage is `min-h-svh` now) — and its `minmax(8rem,
+                             1fr)` first row, the air the words keep from the
+                             viewport's top when the content is taller than the
+                             screen (8rem clears the 98px box by 30px). The
+                             SIXTH spelling, two numbers in ONE file (hero lane
+                             2026-09-19, board .claude/plans/hero.plan.md §3).
+                             Change this height — or the border — and all six
+                             move.
           No max-w cap in here: the PILL is the column — its own side margins
           already narrow it, and the old bar ran brand-to-CTA across its full
           width. All sizing in rem so browser zoom and user font settings

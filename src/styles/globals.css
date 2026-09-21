@@ -148,6 +148,8 @@
   --focus: #1a1714;
   /* specials */
   --star: #d4af37; /* LOCKED (§15.1) — value amended 2026-09-12 by the owner (reviews pack round 2): the old site's own gold, was #b29126 */
+  /* The modal's dim. The Hero's own veil is the old site's 0.40, spelled in
+     sections/Hero (§15.1's rider, owner 2026-09-20) — this token is untouched. */
   --scrim: rgb(0 0 0 / 0.55); /* LOCKED floor — never below 0.55 */
   --error: #b3261e;
   /* additional role outside the 17 (§15.1 amendment) */

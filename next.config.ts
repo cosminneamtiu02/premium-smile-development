@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   ...(pagesBasePath ? { basePath: pagesBasePath } : {}),
 
+  // next dev ONLY (no effect on the export): Next 16's dev server accepts its
+  // HMR WebSocket from localhost alone, and under 16.3 that socket also
+  // carries React's debug channel, which the RSC client waits on before it
+  // hydrates. A page opened at http://127.0.0.1:3000 therefore stayed inert
+  // HTML (no rotators, no menu, no modal) with nothing but a failing socket in
+  // the console (root cause 2026-09-25). Add the LAN address (e.g.
+  // '192.168.*.*') here if the "Network:" URL is ever used.
+  allowedDevOrigins: ['127.0.0.1'],
+
   // next-image-export-optimizer (owner decision 2026-08-01, brief §15.5): the runtime
   // optimizer doesn't exist under static export, so images are pre-generated at build
   // time and served from srcset baked into the HTML (brief §11).

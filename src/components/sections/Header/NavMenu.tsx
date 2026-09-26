@@ -189,8 +189,9 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // screen as it is on a standard pc screen now"), 5.5rem → 6.5rem. Worth
 // recording why it moved THIS round and pointedly did not the round before,
 // because the two look like the same edit: the first ask grew the row only at
-// the bar's @5xl step, and this panel can only ever EXIST below @3xl — the
-// burger that opens it is `@3xl:hidden`, and a display:none button cannot be
+// the bar's @5xl step, and this panel can only ever EXIST below the bar's step
+// (`@3xl` then, `@min-[60rem]:` since 2026-09-26 — Header.tsx) — the burger
+// that opens it is hidden at the step, and a display:none button cannot be
 // pressed — so every width where a panel is reachable still had an h-16 row and
 // the cap was already correct. The uniform height removes that shelter: the
 // burger widths now get the taller bar too, so the panel really does hang 1rem
@@ -266,8 +267,8 @@ export function NavMenu(): ReactElement {
   // close(), because closing can HIDE the very button we want to focus.
   // Board §4c, the row-4 → row-3 transition: the menu was opened below the
   // breakpoint, the container then grew past it (rotation, a resized window),
-  // and closing re-applies `@3xl:hidden` to the burger. Focusing it before
-  // that commit lands focus on an element that is about to become
+  // and closing re-applies the step's `hidden` to the burger. Focusing it
+  // before that commit lands focus on an element that is about to become
   // `display: none`, and the browser drops focus to <body> — a keyboard user
   // is silently teleported to the top of the document (G2 review, 2026-08-13).
   // Reading offsetParent after the commit is what tells the two cases apart:
@@ -275,7 +276,7 @@ export function NavMenu(): ReactElement {
   // The fallback is the FIRST `a[href]` in the bar. That used to be the brand
   // link; since the brand became Wordmark's hrefless placeholder anchor (D9)
   // it is the nav row's first link — safe by construction, because this path
-  // only runs when the burger vanished, i.e. above the @3xl step, exactly
+  // only runs when the burger vanished, i.e. above the bar's step, exactly
   // where the row is visible. Header.test.tsx asserts the target.
   useEffect(() => {
     if (open || !returningFocus.current) return;
@@ -473,20 +474,23 @@ export function NavMenu(): ReactElement {
           "Meniu, button, expanded". Swapping the label to "Închide" would
           double-announce the state (Wave-1 a11y verdict: three keys → two).
           THE AUTO MARGINS ARE GONE (2026-09-04, Header's three-cell grid).
-          This button used to carry `ml-auto` (and `@3xl:ml-0` while closed) to
-          push itself to the bar's right edge and then to hand that job back to
-          the CTA's own auto margin above the step — three classes doing one
-          thing that the layout would not do by itself. It does now: the burger
-          sits in Header's right-hand cell, which is `justify-self-end`, so the
-          free space is outside the cell and the ✕ is at the right edge at every
-          width and in both states, including the open one where the
-          single-menu rule (fb-164/165/166) has removed the row and the bar's
-          CTA. An `ml-auto` inside a content-sized flex cell moves nothing, so
-          keeping it would have left a class that reads like a rule and is not.
-          The hide-rule is what remains, and it is DROPPED while open
-          (fb-145/149): a menu opened before rotating a tablet must stay
-          closable, and one conditional class beats JavaScript watching the
-          window (which D1 deleted). */}
+          This button used to carry `ml-auto` (and a step-scoped `ml-0` while
+          closed) to push itself to the bar's right edge and then to hand that
+          job back to the CTA's own auto margin above the step — three classes
+          doing one thing that the layout would not do by itself. It does now:
+          the burger sits in Header's right-hand cell, which is
+          `justify-self-end`, so the free space is outside the cell and the ✕
+          is at the right edge at every width and in both states, including
+          the open one where the single-menu rule (fb-164/165/166) has removed
+          the row and the bar's CTA. An `ml-auto` inside a content-sized flex
+          cell moves nothing, so keeping it would have left a class that reads
+          like a rule and is not.
+          The hide-rule is what remains — the bar's step, whose number
+          Header.tsx argues ("THE BREAKPOINT IS A CONTAINER STEP") — and it is
+          DROPPED while open (fb-145/149): a menu opened before a large tablet
+          rotates or a window widens past the step must stay closable, and one
+          conditional class beats JavaScript watching the window (which D1
+          deleted). */}
       <GlyphButton
         ref={burgerRef}
         variant="ghost"
@@ -495,7 +499,7 @@ export function NavMenu(): ReactElement {
         aria-expanded={open}
         aria-controls={PANEL_ID}
         onClick={() => (open ? close() : setOpen(true))}
-        className={open ? undefined : '@3xl:hidden'}
+        className={open ? undefined : '@min-[60rem]:hidden'}
       >
         <BurgerToggle />
       </GlyphButton>

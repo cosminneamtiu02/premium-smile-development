@@ -262,7 +262,7 @@ const bulb = () =>
 /**
  * Focusables in DOM order, filtered to the ones a browser would actually stop
  * on: `checkVisibility()` drops anything display:none (the bar row and the bar
- * CTA below the @3xl container step, the closed dialog), and the `[inert]`
+ * CTA below the bar's container step, the closed dialog), and the `[inert]`
  * ancestor walk drops the closed stem's discs. Same selector as
  * Header.test.tsx's helper, widened to the whole document.
  */
@@ -348,7 +348,7 @@ beforeAll(async () => {
 
   // Pin the phone width (§7's Smartphone step) for the whole file: the bar is a
   // @container, so the burger↔row flip is decided by the BAR's width, and a
-  // runner-default viewport wide enough to cross the @3xl step would take the
+  // runner-default viewport wide enough to cross the bar's step (Header.tsx) would take the
   // burger to display:none and make every menu assertion unqueryable. The
   // scroll-padding suite at the bottom moves the viewport deliberately and puts
   // it back here.
@@ -420,7 +420,7 @@ describe('Shell — the body-level sibling contract (E10/E11, P1)', () => {
     // FIRST IN THE TAB ORDER. `sr-only` clips the link but never hides it, so it
     // stays a real tab stop; everything above it in the bar is either
     // unfocusable (Wordmark's hrefless D9 placeholder) or display:none below the
-    // @3xl container step.
+    // bar's container step (Header.tsx; header-nav-gap lane, 2026-09-26).
     expect(focusablesInDocument()[0]).toBe(skipLink());
   });
 

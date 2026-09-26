@@ -13,6 +13,11 @@ import fr from '@/messages/fr.json';
 import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
 import { Header } from './Header';
+import headerSource from './Header.tsx?raw';
+import navSource from './HeaderNav.tsx?raw';
+import menuSource from './NavMenu.tsx?raw';
+import burgerSource from './BurgerToggle.tsx?raw';
+import itemSource from './NavItem.tsx?raw';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
@@ -25,9 +30,10 @@ import { Header } from './Header';
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, same convention as GlyphButton.test.tsx
 // and FloatingActions.test.tsx. A direct consequence, and the reason so many
-// queries below are scoped with within(): `hidden @3xl:flex` hides nothing in
-// this runner, so the bar row AND the open panel are both fully queryable and
-// a bare getByRole('link', { name: 'Blog' }) would find two (board §5·B7).
+// queries below are scoped with within(): `hidden @min-[60rem]:flex` hides
+// nothing in this runner, so the bar row AND the open panel are both fully
+// queryable and a bare getByRole('link', { name: 'Blog' }) would find two
+// (board §5·B7).
 // The one thing the missing stylesheet still hides for us is the CLOSED
 // <dialog> the provider renders: the UA sheet's own `dialog:not([open])`
 // display:none keeps its phone link out of every role query until a trigger is
@@ -184,6 +190,39 @@ const focusablesIn = (root: ParentNode): HTMLElement[] =>
 /** SVG elements expose className as SVGAnimatedString — read the attribute. */
 const classesOf = (el: Element): string[] =>
   (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/**
+ * THE BAR'S STEP, spelled once for this suite: Tailwind v4's arbitrary
+ * container variant, `@container (width >= 60rem)` — a MEASURED number since
+ * the header-nav-gap lane (the owner's ask, 2026-09-26; Tailwind's named
+ * `@3xl`, 48rem, before). Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"
+ * block carries the arithmetic; the single-spelling fence at the bottom of
+ * this file pins that the three source files agree with this constant.
+ */
+const STEP = '@min-[60rem]:';
+
+/**
+ * The three files' source with their PROSE removed, which is what the
+ * single-spelling fence runs against (mechanism from ClinicLocation.test.tsx,
+ * reasoning — and the known limit — written out in Wordmark.test.tsx). The
+ * files' comments legitimately NAME the old step as history; only the class
+ * strings are the breakpoint.
+ */
+const stripComments = (code: string): string =>
+  code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+
+/** The three components that spell the bar's step — and only these three. */
+const STEP_FILES = {
+  'Header.tsx': stripComments(headerSource),
+  'HeaderNav.tsx': stripComments(navSource),
+  'NavMenu.tsx': stripComments(menuSource),
+} as const;
+
+/** The folder's other two components, which spell no container step at all. */
+const STEPLESS_FILES = {
+  'NavItem.tsx': stripComments(itemSource),
+  'BurgerToggle.tsx': stripComments(burgerSource),
+} as const;
 
 describe('Header — the burger toggles the panel (disclosure, not a dialog)', () => {
   it('flips aria-expanded false → true → false and mounts/unmounts the panel', async () => {
@@ -459,7 +498,8 @@ describe('Header — every close path returns focus to the burger', () => {
   it('falls back to the first bar LINK when closing HIDES the ✕ (board §4c, row 4 → 3)', async () => {
     // The transition nobody can trigger deliberately: the menu was opened
     // below the breakpoint, the container then grew past it (a rotated tablet,
-    // a resized window), and closing re-applies `@3xl:hidden` to the burger.
+    // a resized window), and closing re-applies the bar step's `hidden` to the
+    // burger.
     // Focusing a button that the same commit turns into display:none drops
     // focus on <body>, i.e. silently teleports a keyboard user to the top of
     // the document.
@@ -933,7 +973,7 @@ describe('Header — the brand and the two Contact links', () => {
     // the wrapper exists to stay out of.
     const { barCta, barCtaBox } = mount();
 
-    for (const token of ['hidden', '@3xl:flex', '@3xl:inline-flex']) {
+    for (const token of ['hidden', `${STEP}flex`, `${STEP}inline-flex`]) {
       expect(classesOf(barCta())).not.toContain(token);
     }
     expect(classesOf(barCta())).toContain('inline-flex'); // the atom's own
@@ -942,22 +982,29 @@ describe('Header — the brand and the two Contact links', () => {
 
   it('renders the bar CTA and the row only above the container step', () => {
     // The ENTIRE breakpoint: both variants exist in the HTML at every width
-    // and CSS decides which is drawn — @3xl is Tailwind's own 48rem step
-    // (C1), measured against the BAR, never the viewport (§6.5).
+    // and CSS decides which is drawn — the bar's step, 60rem, measured
+    // against the BAR, never the viewport (§6.5).
     const { barNav, barCtaBox, burger } = mount();
 
     // The CTA's box, not the atom — see the wrapper rationale in Header.tsx.
     expect(classesOf(barCtaBox())).toEqual(
-      expect.arrayContaining(['hidden', '@3xl:flex']),
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
     );
     expect(classesOf(barNav())).toEqual(
-      expect.arrayContaining(['hidden', '@3xl:flex']),
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
     );
-    expect(classesOf(burger())).toContain('@3xl:hidden');
+    expect(classesOf(burger())).toContain(`${STEP}hidden`);
     // Container steps only: a viewport media query here would measure the
     // window instead of the bar (§6.5). Token-wise, not a substring match —
-    // `@3xl:` legitimately contains "xl:".
-    const viewportVariant = /^(sm|md|lg|xl|2xl):/;
+    // `@min-[60rem]:` legitimately contains "min-[". The arbitrary spelling
+    // put the MEDIA twin one character away: `min-[60rem]:` without the `@`
+    // is a viewport query. So every media shape Tailwind v4 compiles from a
+    // breakpoint is rejected: the bare names, their `min-*` / `max-*` /
+    // `not-*` forms (`min-md:` → `@media (width >= 48rem)`, `not-sm:` →
+    // `@media not (width >= 40rem)` — compiled with this repo's Tailwind by
+    // the G2 typescript reviewer) and the arbitrary `min-[…]` / `max-[…]`.
+    const viewportVariant =
+      /^(sm|md|lg|xl|2xl|(min|max|not)-(sm|md|lg|xl|2xl)|min-\[[^\]]*\]|max-\[[^\]]*\]):/;
     for (const el of [barCtaBox(), barNav(), burger()]) {
       expect(classesOf(el).filter((c) => viewportVariant.test(c))).toEqual([]);
     }
@@ -996,28 +1043,29 @@ describe('Header — the brand and the two Contact links', () => {
     const { barNav, barCtaBox, burger } = mount();
 
     expect(classesOf(barNav())).toEqual(
-      expect.arrayContaining(['hidden', '@3xl:flex']),
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
     );
     expect(classesOf(barCtaBox())).toEqual(
-      expect.arrayContaining(['hidden', '@3xl:flex']),
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
     );
-    expect(classesOf(burger())).toContain('@3xl:hidden');
+    expect(classesOf(burger())).toContain(`${STEP}hidden`);
 
     // NO AUTO MARGINS ANYWHERE ANY MORE (Header's three-cell grid,
-    // 2026-09-04). `ml-auto` and `@3xl:ml-0` used to push the ✕ and the CTA to
-    // the bar's right edge and hand that job between them across the step; the
-    // right-hand grid cell is `justify-self-end`, so the free space now sits
-    // outside both boxes and an auto margin inside a content-sized cell would
-    // move nothing. Asserted as ABSENT rather than simply dropped, so nobody
-    // reintroduces a class that reads like a rule and is not.
+    // 2026-09-04). `ml-auto` and a step-scoped `ml-0` used to push the ✕ and
+    // the CTA to the bar's right edge and hand that job between them across
+    // the step; the right-hand grid cell is `justify-self-end`, so the free
+    // space now sits outside both boxes and an auto margin inside a
+    // content-sized cell would move nothing. Asserted as ABSENT rather than
+    // simply dropped, so nobody reintroduces a class that reads like a rule
+    // and is not.
     for (const el of [barCtaBox(), burger()]) {
       expect(classesOf(el)).not.toContain('ml-auto');
-      expect(classesOf(el)).not.toContain('@3xl:ml-0');
+      expect(classesOf(el)).not.toContain(`${STEP}ml-0`);
     }
 
     // …and OPEN, the burger keeps only the dropped hide-rule (fb-145/149).
     await user.click(burger());
-    expect(classesOf(burger())).not.toContain('@3xl:hidden');
+    expect(classesOf(burger())).not.toContain(`${STEP}hidden`);
     expect(classesOf(burger())).not.toContain('ml-auto');
   });
 
@@ -1030,6 +1078,43 @@ describe('Header — the brand and the two Contact links', () => {
     const { burger } = mount();
     await user.click(burger());
 
-    expect(classesOf(burger())).not.toContain('@3xl:hidden');
+    expect(classesOf(burger())).not.toContain(`${STEP}hidden`);
+  });
+});
+
+describe("Header — the bar's step is ONE number in three files", () => {
+  it('spells the step `@min-[60rem]:` in Header, HeaderNav and NavMenu, and nothing else', () => {
+    // THE SINGLE-SPELLING FENCE (header-nav-gap lane, the owner's ask,
+    // 2026-09-26). The breakpoint has no home of its own: it is the same
+    // container variant written into three files — the grid and the CTA box
+    // (Header.tsx), the row (HeaderNav.tsx), the burger (NavMenu.tsx). A
+    // stale step left in ONE of them splits the breakpoint silently: the row
+    // arriving at one width while the burger leaves at another, so a band of
+    // widths shows both menus or neither. The class-token tests above read
+    // the rendered DOM; this one reads the source, so a spelling in a branch
+    // the DOM tests never render cannot slip past either. The source is read
+    // through Vite's ?raw (typed by the repo's own src/types/raw-import.d.ts),
+    // prose stripped — the comments NAME the old step as history.
+    // Three files spell it, the folder's other two spell none: every
+    // container variant in the three must be THE step, and NavItem.tsx and
+    // BurgerToggle.tsx must carry no container variant at all — so the step
+    // cannot leak into a fourth file behind Header.tsx's "spelled in THREE
+    // files" claim. The old named step is asserted absent by name for a
+    // readable failure; any other `@<step>:` (a `@4xl:` added to one file, a
+    // `@min-[56rem]:` typo) fails the set check. The pattern also takes the
+    // NAMED-container form (`@3xl/bar:`, `@min-[60rem]/x:` — the optional
+    // `/name` before the colon), which would otherwise evade both checks.
+    const containerVariant =
+      /(?<![\w-])@[a-z0-9-]+(?:\[[^\]]*\])?(?:\/[\w-]+)?:/g;
+    for (const [file, code] of Object.entries(STEP_FILES)) {
+      expect(code, file).toContain(STEP);
+      expect(code, file).not.toMatch(/@3xl[:/]/);
+      expect(new Set(code.match(containerVariant)), file).toEqual(
+        new Set([STEP]),
+      );
+    }
+    for (const [file, code] of Object.entries(STEPLESS_FILES)) {
+      expect(code.match(containerVariant) ?? [], file).toEqual([]);
+    }
   });
 });

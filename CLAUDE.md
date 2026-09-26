@@ -1137,6 +1137,64 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `'stroked'` and `'outlined'` stay as values (Hero tests, StrokedSlogan / OutlinedSlogan
     stories, the atom's tones). NO commit, NO PR — the owner’s word; the lane stayed at READY until the owner’s seal, “create pr”, later on 2026-09-21: one squashed commit, one PR into develop.
 
+22. **Header brand-to-nav gap — DECIDED (owner, 2026-09-26, verbatim: "small refactor on top
+    bar. it should maintain at least a little space between 'premium smile' and first button of
+    menu, like idk, 70% of the width of the menu button … if not fit due to thinning web tab or
+    screen size, switch to dropdown menu"; lane `refactor/header-nav-gap`, its own worktree):**
+    the bar's container step MOVES, `@3xl` (48rem) → a MEASURED arbitrary step `@min-[60rem]:`
+    — Header.tsx's own doctrine ("move the NUMBER, never the architecture"), the architecture
+    untouched: `1fr auto 1fr`, the nav on the screen's centre line (2026-09-04), no column-gap,
+    no new element, zero JavaScript. MEASURED on three engines (Chromium, Firefox, WebKit agree
+    at the visible edges): the brand paints 258.5px, the German row 279.3 (RO 231.3, EN 228.0),
+    and the visible gap is `(row − nav) / 2 − 258.5`. At the 48rem step German sat 30.2px UNDER
+    the first link and Romanian 6.2px — seen in a 985px Chromium window as side tracks of
+    229.9 / 253.8px against the 258.5px brand, "Startseite" painted over "Smile" — because
+    `1fr`'s auto floor is the brand's MIN-CONTENT, 150.8px in every engine, in which the
+    percentage-height artwork counts for ZERO. A 4rem floor (≈ 70 % of "Startseite", 94px —
+    the owner's number on the calibration language) needs a bar ≥ 956.3px → 60rem, the
+    smallest whole rem: at the flip German 65.9px, Romanian 89.9, English 91.5. Named steps
+    rejected: `@4xl` (56rem) leaves German 33.9px; `@5xl` (64rem) flips the 1280 Notebook
+    sampling point to the burger (bar 1007px in Chromium with the 15px classic gutter
+    `scrollbar-gutter: stable` reserves, 1022 in Firefox/WebKit, both < 1024). Rejected BY
+    MEASUREMENT, recorded in Header.tsx: `column-gap` (it holds off the brand's TRACK edge,
+    which can be narrower than the brand) and `minmax(max-content,1fr)` side tracks
+    (Chromium's max-content is 258.5 and it works; Firefox/WebKit compute 406.8 — the artwork
+    at its natural 256px — and shove the nav ≥ 100px right with the CTA out of the pill under
+    ~1180px). The flip in a window: `0.8 × V − gutter − 2 ≥ 960` (`vw` counts the gutter, the
+    containing block does not) → ≈ 1221px with Chromium's 15px gutter, ≈ 1203 with none (it was
+    ≈ 981 at 48rem) — a 1024 landscape tablet and laptops under ~1220 now get the burger, where
+    the row did not fit anyway (German overlapped the brand in every window under ~1055).
+    Pixels: 1280 / 1536 / 1920 and 768 / 390 / 320 are identical by construction (the step is
+    the only change and every sampled bar is on the same side of it as before; verified by
+    before/after screenshots of every Header and Pages story); the only NEW frames are the
+    `AtTheStep` story's (German, the bar pinned at 60rem + 4px by a story wrapper — the proof at
+    the flip, its play pinning the gap within [4rem, 5rem]), and `tests/e2e/header-step.spec.ts`
+    straddles the flip at 1180 / 1240 on the built export in RO + DE. The darwin re-record of the
+    two new frames is the owner's (§15.7). The three files that spell the step (Header ·
+    HeaderNav · NavMenu) are pinned to ONE spelling by a `?raw` fence in Header.test.tsx, and the
+    folder's other two files (NavItem · BurgerToggle) to NONE.
+    **G2 (owner's "did you review it?", the same day — three Fable reviewers, react · typescript
+    · a11y): 0 CRITICAL / 0 HIGH.** Folded: the brand selector in the story play and the e2e no
+    longer keys off Wordmark's D9 hrefless placeholder (the artwork `<img>` → `closest('a')`, a
+    named throw when absent — the declared home-link wiring would have broken both with a bare
+    TypeError); the play asserts the webfont is loaded before measuring (a 404'd woff2 would have
+    failed it with a number that reads as "the step moved"); the e2e's lower window 1200 → 1180
+    (1200 was 2px under the step on a scrollbar-less engine, and those 2px were the pill's
+    borders); the fence covers named-container variants and all five files of the folder; the
+    test's viewport-variant belt covers the named `min-*` / `not-*` media forms; the coupled
+    spellings of 60 are registered in Header.tsx; the stale "not mounted / Phase 4 debts" framing
+    in Header.tsx's header corrected (the shell mounts it, the two obligations are discharged).
+    RECORDED, not built — the owner's calls: ui/Container's recipe rule 2 still cites the Header
+    row-flip as a NAMED-step precedent (the law gains an "arbitrary when measured" clause or drops
+    the example); an optional test for the open-below-the-step, widen-past-it, press-the-panel's-
+    Contact path (focus falls back to the row's Home link, then the dialog returns there — sensible,
+    unpinned); the Vitest storybook project's default 1200px canvas now sits UNDER the flip, so the
+    unpinned Pages/Home stories render the burger there (plays and per-story axe stay green; the
+    row state is audited by Sections/Header's own pinned stories; the pixel net sets its own widths
+    and is unaffected — pin Home at `notebook` if the page audit should see the row); `stripComments`
+    is now the ninth copy (the §15.19 round-3 helper-promotion trigger stands); AtTheStep's 390
+    frame duplicates GermanStress's 390 (harmless).
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —

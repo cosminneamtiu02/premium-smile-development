@@ -33,12 +33,18 @@ export function HeaderNav(): ReactElement {
   const items = useNavItems();
 
   return (
-    // `hidden @3xl:flex` is one half of the entire breakpoint (the burger's
-    // `@3xl:hidden` is the other): both exist in the HTML at every width and
-    // CSS decides which is drawn. @3xl is Tailwind's own container step for
-    // 48rem/768px — C1, no custom value introduced — and it measures the BAR,
-    // not the viewport (§6.5), so the row behaves correctly wherever the
-    // section is placed and can be tested at any width in Storybook.
+    // `hidden @min-[60rem]:flex` is one half of the entire breakpoint (the
+    // burger's `@min-[60rem]:hidden` in NavMenu.tsx is the other): both exist
+    // in the HTML at every width and CSS decides which is drawn. The step is a
+    // MEASURED container step, 60rem of bar (header-nav-gap lane, the owner's
+    // ask, 2026-09-26 — Tailwind's named `@3xl`, 48rem, before): the smallest
+    // whole rem at which German, the longest row, keeps 4rem of air between
+    // the brand and its first link. Header.tsx's "THE BREAKPOINT IS A
+    // CONTAINER STEP" block carries the arithmetic; the number is spelled in
+    // exactly three files, and Header.test.tsx pins that they agree. It
+    // measures the BAR, not the viewport (§6.5), so the row behaves correctly
+    // wherever the section is placed and can be tested at any width in
+    // Storybook.
     // aria-label names the landmark: "Navigare principală, navigation" instead
     // of a bare "navigation" once the Footer adds a second nav.
     //
@@ -48,8 +54,8 @@ export function HeaderNav(): ReactElement {
     // menus at once. Zero JS — the panel exists in the bar's subtree exactly
     // while it is open, so `:has()` on the named `group/bar` root (Header.tsx)
     // is the whole mechanism, and the state never crosses a component
-    // boundary. It outranks `@3xl:flex` by specificity (an id inside `:has()`
-    // → (1,1,0) vs (0,1,0)), not by source order.
+    // boundary. It outranks the step's `flex` by specificity (an id inside
+    // `:has()` → (1,1,0) vs (0,1,0)), not by source order.
     // A11y consequence, deliberate: display:none is unfocusable, so while the
     // panel is open the Tab cycle tightens to ✕ → panel — the brand corner is
     // sections/Wordmark's hrefless placeholder anchor since D9, visible but
@@ -58,8 +64,8 @@ export function HeaderNav(): ReactElement {
     // panel carries the same links. The
     // elements stay in the DOM, though, which is why the tests still scope
     // their queries with within() (board §5·B7).
-    // `@3xl:col-start-2 @3xl:justify-self-center` is this element's placement in
-    // Header's three-cell grid (owner, 2026-09-04 — the nav row sits on the
+    // `col-start-2 justify-self-center` at the step is this element's placement
+    // in Header's three-cell grid (owner, 2026-09-04 — the nav row sits on the
     // screen's centre line). It lives HERE rather than on a wrapper in
     // Header.tsx because this file renders the grid item: the <nav> IS cell 2,
     // and a wrapper added only to carry two classes would put a box between the
@@ -67,14 +73,14 @@ export function HeaderNav(): ReactElement {
     // `1fr auto 1fr` — Header.tsx argues why that equals the SCREEN's centre;
     // these classes only say "you are the middle column, sit in the middle of
     // it", which is what keeps the two halves independent.
-    // Both are @3xl-scoped because the row is a plain flex line below that step
+    // Both are step-scoped because the row is a plain flex line below the step
     // (Header.tsx explains what auto-placement did to the phone), and the
     // explicit column is what keeps the OTHER cells honest when the single-menu
     // rule takes this one to display:none — a hidden element is not a grid item
     // at all, so without `col-start-*` the right cell would slide into column 2.
     <nav
       aria-label={t('nav.ariaLabel')}
-      className="hidden @3xl:col-start-2 @3xl:flex @3xl:justify-self-center group-has-[#header-menu]/bar:hidden"
+      className="hidden @min-[60rem]:col-start-2 @min-[60rem]:flex @min-[60rem]:justify-self-center group-has-[#header-menu]/bar:hidden"
     >
       {/* A list, because it IS one: screen readers announce "list, 4 items"
           and offer item-by-item navigation. The section owns the spacing

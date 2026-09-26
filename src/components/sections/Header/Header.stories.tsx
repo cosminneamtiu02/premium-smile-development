@@ -1,14 +1,15 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import ro from '@/messages/ro.json';
 import { Header } from './Header';
 
-// The Header's four stories, built to the owner-approved N2 contract board
-// .claude/plans/header-n2-contract.plan.md §6.
+// The Header's five stories, built to the owner-approved N2 contract board
+// .claude/plans/header-n2-contract.plan.md §6 — the fifth, AtTheStep, added by
+// the header-nav-gap lane (the owner's ask, 2026-09-26).
 //
 // TWO mechanics here would otherwise fail SILENTLY, so both are spelled out:
 //
@@ -46,18 +47,21 @@ import { Header } from './Header';
 // text there is a hardcoded string, i.e. a bug (§8.9).
 //
 // ── 3. Every story PINS ITS OWN VIEWPORT — the MenuOpen precedent, extended
-// to all four when the bar became a floating pill (owner, 2026-08-16). The
-// breakpoint measures the BAR, and the pill's side margins mean the row
-// appears only once the canvas is ≈960px+ (bar = canvas − 2×10vw ≥ 48rem).
-// A manager canvas narrowed by the sidebar and addons panel sits right in
-// that band, so an unpinned row-proving play would throw
+// to all four when the bar became a floating pill (owner, 2026-08-16), and
+// worn by the fifth. The breakpoint measures the BAR, and the pill's side
+// margins mean the row appears only once the canvas is ≈1220px+ (bar =
+// canvas − the scrollbar gutter − 2×10vw − 2px ≥ 60rem, the bar's step since
+// 2026-09-26 — Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"). A manager
+// canvas narrowed by the sidebar and addons panel sits right in that band —
+// the Notebook pin itself is 1280, only ~60px past it — so an unpinned
+// row-proving play would throw
 // TestingLibraryElementError on smaller screens — the row it asserts is
 // legitimately display:none there. Each pin puts the story at a width where
 // its contract holds; Playwright ignores the pin (it sets its own per-project
 // page size), so visual baselines still sample 390 + 1536.
 
 /**
- * Page GROUND, deliberately IDENTICAL in all four stories and deliberately
+ * Page GROUND, deliberately IDENTICAL in all five stories and deliberately
  * Romanian (§15.7): it is not component copy, it is the page the bar sits on.
  * Holding it constant means the only thing that differs between two baselines
  * is the bar itself — a diff cannot hide in the scenery.
@@ -119,9 +123,9 @@ type Story = StoryObj<typeof meta>;
  *
  * Proves the whole contract in one frame at each sampled width: at 390 the
  * links are gone and the burger is the only control; at 1536 the full row is
- * on one line — brand, four links with Servicii underlined, green Contact
+ * on one line — brand, three links with Servicii underlined, green Contact
  * button — and no burger. Both variants are in the HTML at both widths; the
- * container query decides which is drawn (C1, §6.5).
+ * container query decides which is drawn (the bar's step, §6.5).
  *
  * The play function is the standing proof that the underline is REAL, i.e.
  * that the pathname → next-intl → `active` → `aria-current` chain still works
@@ -229,18 +233,20 @@ export const NonRomanianLocale: Story = {
 };
 
 /**
- * German, on `/de/services` — the C1 proof.
+ * German, on `/de/services` — the calibration language at the laptop width.
  *
  * German runs ~30–35% longer than English (§8.4), so GERMAN is what decides
  * where the breakpoint sits: "Startseite · Leistungen · Team" (Blog hidden
  * for now; it never shipped on `de` anyway) plus
  * "Kontakt" is the longest this row ever gets. At 1536 it must sit on one line
  * with room to spare, and nothing may wrap, clip or push the CTA off the edge.
- * If it ever stops fitting, the number moves (@3xl → @4xl) — never the
- * architecture, and never without the planning loop.
+ * This is the proof far from the step; AtTheStep below is the proof AT it.
+ * If German ever stops fitting there, the number moves (Header.tsx carries
+ * the arithmetic that put it at 60rem) — never the architecture, and never
+ * without the planning loop.
  */
 export const GermanStress: Story = {
-  // laptop = 1536, the width the C1 calibration sentence names.
+  // laptop = 1536, the sampled width far past the bar's step.
   globals: { locale: 'de', viewport: { value: 'laptop' } },
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/de/services' } },
@@ -253,5 +259,119 @@ export const GermanStress: Story = {
     // sideways (§7 — nothing may require horizontal scrolling).
     const bar = canvas.getByRole('banner');
     await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth);
+  },
+};
+
+/**
+ * German, on `/de/services`, with the bar's content box held at 60rem + 4px —
+ * THE PROOF AT THE FLIP (header-nav-gap lane, the owner's ask, 2026-09-26:
+ * "it should maintain at least a little space between 'premium smile' and
+ * first button of menu, like idk, 70% of the width of the menu button …").
+ *
+ * The narrowest bar that ever shows the row, in the language that makes the
+ * row widest: this is where the brand-to-first-link gap sits at its FLOOR.
+ * Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block puts the step at
+ * 60rem so that German keeps ≥ 4rem (64px — ~70% of the 94px "Startseite")
+ * there; at this story's 964px bar the expected gap is
+ * (932 − 279.3) / 2 − 258.5 ≈ 67.85px (row = bar − the `px-4`; nav 279.3;
+ * brand 258.5).
+ *
+ * HOW THE FRAME REACHES THE STEP at any window width: the pill's side margins
+ * are `clamp(1rem, 10vw, 12.5rem)` each (ui/Container's `containerClasses`),
+ * so a box of 60rem + 6px + twice that clamp leaves the bar's border box at
+ * 60rem + 6px and its CONTENT box at exactly 60rem + 4px — four pixels above
+ * the step, so sub-pixel rounding can never drop it under. The wrapper sits
+ * INSIDE the shared Ground, so the page ground is the other stories'. At the
+ * 390 phone width the `100%` branch of the `min()` wins and the frame is the
+ * ordinary phone — the burger, as it must be. The Sections/* tier photographs
+ * 390 + 1536; at 1536 the wrapper is 60rem + 6px + 307.2px ≈ 1273px, so that
+ * frame IS the step.
+ *
+ * The play measures, it does not read classes back: the row is drawn (the
+ * current link is reachable by role, which a display:none row is not), the
+ * bar really is at the step, the gap is within [4rem, 5rem], the bar never
+ * scrolls sideways, and the nav still sits on the bar's centre line — at the
+ * step each side track is ≥ 324px against the 258.5px brand, so exact
+ * centring holds here too.
+ */
+export const AtTheStep: Story = {
+  globals: { locale: 'de', viewport: { value: 'notebook' } },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/de/services' } },
+  },
+  render: () => (
+    <Ground>
+      <div className="mx-auto w-[min(100%,calc(60rem+6px+clamp(2rem,20vw,25rem)))]">
+        <Header />
+      </div>
+    </Ground>
+  ),
+  play: async ({ canvas }) => {
+    // Widths below are text widths: measure only once the fonts have landed —
+    // and ASSERT that they did. `fonts.ready` resolves on a load FAILURE too,
+    // and the gap has ~4px of headroom over its floor, so a 404'd subset (a CI
+    // container, a `staticDirs` edit) would otherwise fail below with a bare
+    // number that reads as "the step moved". ContactModal.test.tsx's idiom:
+    // load() REJECTS on a 404, a non-empty result proves .storybook/
+    // preview-fonts.css still declares the family, and check() is the premise.
+    const FONT = '1rem "Source Serif 4 SB"';
+    await expect(await document.fonts.load(FONT)).not.toHaveLength(0);
+    await document.fonts.ready;
+    await expect(document.fonts.check(FONT)).toBe(true);
+
+    await expect(
+      canvas.getByRole('link', { name: de.common.nav.services }),
+    ).toHaveAttribute('aria-current', 'page');
+
+    const bar = canvas.getByRole('banner');
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    // The frame IS the step: the bar's content box (no padding on the
+    // <header>, so clientWidth) sits 0–8px above 60rem — the wrapper's
+    // arithmetic, which a change to the pill's margins would silently void.
+    await expect(bar.clientWidth - 60 * rem).toBeGreaterThanOrEqual(0);
+    await expect(bar.clientWidth - 60 * rem).toBeLessThanOrEqual(8);
+
+    // The brand corner is sections/Wordmark's lockup: an <a> around the
+    // artwork <img> and the name. Found through the <img> — which Wordmark's
+    // D10 renders at every width — and `closest('a')` (Wordmark.test.tsx's own
+    // idiom), NOT through its missing href: that D9 placeholder is scheduled
+    // to become a real home link, and a selector keyed on the absence would
+    // then find nothing. A missing lockup is thrown by NAME rather than left
+    // to a TypeError further down. The gap is measured from what the lockup
+    // PAINTS, the right edge of its last child (the name), never from the
+    // anchor's own box: WebKit sizes that box from the artwork's natural
+    // width — 301.5px around the 258.5px of lockup it paints (measured
+    // 2026-09-26), and in Firefox the brand's CELL spans the whole track — so
+    // a box edge would misreport the air between "Smile" and the first link.
+    const brand = bar.querySelector('img')?.closest('a');
+    if (!brand) {
+      throw new Error(
+        'AtTheStep: the bar has no brand lockup (an <img> inside an <a>) — ' +
+          'sections/Wordmark changed shape, so the gap this story proves has ' +
+          'no left edge to measure from.',
+      );
+    }
+    const brandRight = Math.max(
+      ...Array.from(brand.children, (c) => c.getBoundingClientRect().right),
+    );
+    const nav = canvas.getByRole('navigation', {
+      name: de.common.nav.ariaLabel,
+    });
+    const [first] = within(nav).getAllByRole('link');
+    const gap = first.getBoundingClientRect().left - brandRight;
+    // ≥ 4rem is the owner's floor; ≤ 5rem proves this frame really is AT the
+    // step rather than comfortably past it.
+    await expect(gap).toBeGreaterThanOrEqual(4 * rem);
+    await expect(gap).toBeLessThanOrEqual(5 * rem);
+
+    // §7 — nothing may require horizontal scrolling.
+    await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth);
+
+    // The nav on the bar's centre line, within a pixel.
+    const b = bar.getBoundingClientRect();
+    const n = nav.getBoundingClientRect();
+    await expect(
+      Math.abs((n.left + n.right) / 2 - (b.left + b.right) / 2),
+    ).toBeLessThanOrEqual(1);
   },
 };

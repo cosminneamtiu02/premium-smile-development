@@ -14,8 +14,9 @@ import { NavMenu } from './NavMenu';
 // Header.md) are SUPERSEDED — the design is a DROPDOWN under the bar, not a
 // side drawer (D11 as amended, board §8).
 //
-// This section is still NOT mounted into the shell — that is Phase 4,
-// deliberately. Not here either: the LanguageSwitcher (deferred, fb-129) and
+// This section IS mounted: src/app/[locale]/layout.tsx renders it in the shell
+// as a body-level sibling (skip link · Header · main · Footer · FloatingActions
+// · LanguageBanner). Not here: the LanguageSwitcher (deferred, fb-129) and
 // the real Publio logo (§15.6 — the brand corner is sections/Wordmark since the
 // fb-200 swap, carrying interim demo artwork beside the name until the owner
 // supplies the vectorized mark).
@@ -27,10 +28,11 @@ import { NavMenu } from './NavMenu';
 // model this file already practices with Wordmark. What is NOT here is the
 // <ContactModalProvider>: it owns the one `open` boolean and renders the ONE
 // <dialog> after its children, so it belongs to whoever wraps the document —
-// Phase 4, beside the two scroll-padding debts below. Until that lands, a
-// Header rendered outside a provider THROWS from useContactModal by design (the
-// hook names the missing wrapper rather than shipping a dead button), which is
-// why Header.test.tsx and Header.stories.tsx each supply one.
+// src/app/[locale]/layout.tsx wraps the shell in it, beside the obligations
+// "THE MOUNT CONTRACT" below records as discharged. A Header rendered outside
+// a provider THROWS from useContactModal by design (the hook names the missing
+// wrapper rather than shipping a dead button), which is why Header.test.tsx
+// and Header.stories.tsx each supply one.
 //
 // ── NO 'use client' here, and it still calls t() — the FloatingActions
 // precedent (§16 + board §1.1). next-intl's useTranslations is ISOMORPHIC: it
@@ -49,19 +51,98 @@ import { NavMenu } from './NavMenu';
 //   NavMenu                    holds the `open` boolean
 //   the bar's Contact trigger  opens the one dialog the provider renders
 //
-// ── THE BREAKPOINT IS A CONTAINER STEP, never a media query (§6.5).
-// `@container` marks the bar as the thing measured, and `@3xl` is Tailwind's
-// own step for 48rem = 768px — the number recorded as C1, so no custom value
-// enters the untouched default scale (§3). Calibrated against GERMAN, which
-// runs ~30% longer than English (§8.4) and therefore decides where the step
-// sits: the GermanStress story is that proof. Move the NUMBER if German ever
-// stops fitting — never the architecture, and never in this file alone.
+// ── THE BREAKPOINT IS A CONTAINER STEP, never a media query (§6.5), and
+// since 2026-09-26 a MEASURED one: `@min-[60rem]:`, Tailwind v4's arbitrary
+// container variant — it compiles to `@container (width >= 60rem)`.
+// `@container` marks the bar as the thing measured. The step is spelled in
+// THREE files — this one, HeaderNav.tsx (the row) and NavMenu.tsx (the
+// burger) — and nowhere else; prose calls it "the bar's step". Header.test.tsx
+// pins that the three agree, because a stale spelling in ONE of them splits
+// the breakpoint: the row arriving at one width, the burger leaving at
+// another.
+//
+// WHY THE NUMBER MOVED (header-nav-gap lane, the owner's ask, 2026-09-26:
+// "it should maintain at least a little space between 'premium smile' and
+// first button of menu, like idk, 70% of the width of the menu button …
+// if not fit due to thinning web tab or screen size, switch to dropdown
+// menu"). Until then the step was Tailwind's named `@3xl` — 48rem = 768px of
+// bar, the number recorded as C1 — and it had never been measured against the
+// BRAND. Measured in Chromium, Firefox and WebKit (Storybook, statics at
+// 1536): the lockup is 258.5px wide (artwork 107.8 + `gap-3` 12 + the name
+// 138.8); the row "Startseite · Leistungen · Team" is 279.3 (German, the
+// longest, §8.4 — Romanian 231.3, English 228.0); and the grid holds the nav
+// EXACTLY on the bar's centre line in all three engines. So the visible gap
+// between the brand and the first link is simply
+//     (row − nav) / 2 − 258.5,   row = the bar's content box − 32 (`px-4`)
+// — and at a bar of 48rem it was NEGATIVE: −30.2px in German, −6.2 in
+// Romanian, an OVERLAP. Seen in a 985px Chromium window (a 771px bar): side
+// tracks of 229.9px (German) and 253.8 (Romanian) against the 258.5px brand,
+// "Startseite" painted over "Smile". The grid paragraph below (RECORDED
+// TRADE-OFF) says why the brand slides under the nav instead of the nav
+// drifting.
+//
+// THE ARITHMETIC OF THE STEP. The owner's floor is ~70% of a menu button,
+// calibrated on German: "Startseite" is 94px, so 4rem (64px). A German gap
+// ≥ 64 needs a row ≥ 2 × (258.5 + 64) + 279.3 = 924.3, i.e. a bar content box
+// ≥ 956.3px, and 60rem (960px) is the smallest whole rem past it. At the
+// step: German 65.85px (≈ 70% of "Startseite" — the owner's own number, on
+// the calibration language), Romanian 89.85, English 91.5; a wider bar only
+// adds. Named steps were weighed and rejected: `@4xl` (56rem) leaves German
+// 33.9px at the flip; `@5xl` (64rem = 1024px) flips the 1280 Notebook
+// sampling point (§7) to the burger — the bar's content box there is 1007px
+// in Chromium (a classic scrollbar gutter reserved by `scrollbar-gutter:
+// stable`) and 1022 in Firefox and WebKit, both under 1024. §3's untouched
+// default scale holds: no theme edit, an arbitrary value in the Header's own
+// files — the licence `mx-[clamp(…)]` and the Hero's `-mt-[calc(6rem+2px)]`
+// already use.
+//
+// TWO MECHANISMS MEASURED AND NOT TAKEN. No intrinsic-size-dependent fix is
+// cross-engine safe here, which is why the NUMBER moved and the architecture
+// did not:
+//   a) a `column-gap` on the grid. The gap holds off the brand's TRACK edge,
+//      and the track can be narrower than the brand (see RECORDED TRADE-OFF
+//      below), so it guarantees nothing.
+//   b) `minmax(max-content, 1fr)` side tracks. In Chromium the brand's
+//      max-content is 258.5 (the artwork's percentage height resolved against
+//      the definite row) and the floor works; in Firefox and WebKit it is
+//      406.8 — the artwork at its natural 256px — so the left track floors at
+//      407px, the nav is pushed ≥ 100px right of centre and the CTA overflows
+//      the pill at windows under ~1180px.
+//
+// The proofs: the AtTheStep story (German, the bar's content box held at 60rem
+// + 4px — the gap at its floor) and GermanStress (German at 1536). Move the
+// NUMBER if the brand or German ever outgrows it — re-run the arithmetic
+// above, never the architecture, and never without the planning loop.
+//
+// THE COUPLED SPELLINGS — one number, every place it is written. Move the step
+// and ALL of these move in the same change-set:
+//   the class strings    this file (the row's grid, the brand cell, the right
+//                        cell, the CTA box), HeaderNav.tsx (the <nav>),
+//                        NavMenu.tsx (the burger's hide-rule) — the ONLY
+//                        three files that spell it; NavItem.tsx and
+//                        BurgerToggle.tsx spell no container step at all;
+//   Header.test.tsx      `STEP` — the constant the token tests and "the bar's
+//                        step is ONE number in three files" fence read;
+//   Header.stories.tsx   AtTheStep — its wrapper's `calc(60rem+6px+…)` and
+//                        its play's `60 * rem` (the "frame IS the step"
+//                        check) and the gap bounds that follow from the step;
+//   tests/e2e/           header-step.spec.ts — `BELOW` / `ABOVE`, the windows
+//                        derived from the step (KNOWN CONSEQUENCE below);
+//   the prose            KNOWN CONSEQUENCE's window widths (this file) and
+//                        Header.stories.tsx's "3. Every story PINS ITS OWN
+//                        VIEWPORT" flip width.
+// The fence catches a stale class string; nothing mechanical catches the
+// rest — a DOWNWARD move that updated `STEP` and the sources would leave
+// AtTheStep green and no longer AT the step, so its premise would die silently.
 //
 // KNOWN CONSEQUENCE, not a bug (board §4b): container-type establishes a
 // positioning scope AND the sticky z-50 opens a stacking context, which is
 // exactly why NavMenu portals its dimming sheet to <body>. See that file.
 //
-// ── THE MOUNT CONTRACT — TWO DEBTS PHASE 4 INHERITS FROM THIS SECTION.
+// ── THE MOUNT CONTRACT — TWO OBLIGATIONS THE SHELL OWES THIS SECTION, BOTH
+// DISCHARGED: (a) by globals.css' `scroll-padding-top: 6rem` on <html>, (b) by
+// src/app/[locale]/layout.tsx's body-level siblings. The text below stays as
+// the record of what the shell owes and why.
 // (The FloatingActions header carries the same kind of block for its own
 // spacer; this is the sticky bar's half of the same bill.)
 //
@@ -81,7 +162,7 @@ import { NavMenu } from './NavMenu';
 //    debt reopens — the fourth being NavMenu's panel cap, which joined the
 //    family the moment the burger widths stopped being h-16.
 //    (FloatingActions books `scroll-padding-bottom` on the same element for
-//    the same clause; Phase 4 sets both.)
+//    the same clause; globals.css sets both.)
 //
 // b) HEADER · MAIN · FOOTER · FloatingActions AS BODY-LEVEL SIBLINGS. Not a
 //    style preference — NavMenu's page freeze is built on `inert`, which it
@@ -133,12 +214,20 @@ export function Header(): ReactElement {
     // same one, which is the old site's own pairing.
     //
     // KNOWN CONSEQUENCE of margins on a @container root: the breakpoint
-    // measures the BAR, so the burger → row flip now happens where the BAR
-    // reaches 48rem, i.e. at a somewhat wider viewport than before (~950px
-    // with 10vw margins) — the container-query architecture behaving as
-    // designed (§6.5). German still calibrates the step (GermanStress story);
-    // the sampled widths are unaffected: 390 is burger territory either way,
-    // and at 1536 the bar is ~1229px, comfortably past the step.
+    // measures the BAR, not the window, so the burger → row flip happens
+    // where the BAR reaches the step. In a window V wide the bar's content
+    // box is V − the scrollbar gutter − 2 × 10vw − 2px of borders (`vw`
+    // counts the gutter, the containing block does not), so 60rem arrives at
+    // 0.8 × V − gutter − 2 ≥ 960: ≈ 1221px with the 15px classic gutter
+    // `scrollbar-gutter: stable` reserves in the Chromium measured, ≈ 1203
+    // with none (header-nav-gap lane, 2026-09-26 — it was ≈ 985 at 48rem).
+    // DELIBERATE: a 1024px landscape tablet and the small laptops under
+    // ~1220px now get the burger, because at those widths the row did not
+    // fit — German overlapped the brand in every window under ~1055. The
+    // container-query architecture behaving as designed (§6.5). The sampled
+    // widths: 390 and 768 are burger territory either way, and at 1280 / 1536
+    // / 1920 the bar is past the step (at 1536 it is ~1212px), so the row
+    // there computes exactly as before.
     //
     // ── `group/bar` — ONE MENU ON SCREEN (owner, fb-164/165/166).
     // While the panel is open the bar shows BRAND + ✕ only, at every width:
@@ -184,9 +273,10 @@ export function Header(): ReactElement {
             NavMenu          the panel cap MOVED this round, unlike last:
                              `100dvh − 6.5rem` (reach 6rem + the `mt-2` gap).
                              Last round it deliberately stayed at 5.5rem because
-                             the panel only exists below @3xl and those widths
-                             were still h-16 — that reasoning expires the moment
-                             the burger widths get the taller bar too.
+                             the panel only exists below the bar's step and
+                             those widths were still h-16 — that reasoning
+                             expires the moment the burger widths get the
+                             taller bar too.
           Five spellings, one number: change this height and all five move.
             PriceList        `@3xl:top-34` on the sticky price menu (reach 6rem +
                              2.5rem of air) — the FIFTH spelling, added by the
@@ -216,7 +306,9 @@ export function Header(): ReactElement {
           already narrow it, and the old bar ran brand-to-CTA across its full
           width. All sizing in rem so browser zoom and user font settings
           behave (§7).
-          ── THE GRID STARTS AT @3xl, AND THE COLUMNS ARE PLACED EXPLICITLY.
+          ── THE GRID STARTS AT THE BAR'S STEP (`@min-[60rem]:` since
+          2026-09-26 — `@3xl` before; the file header argues the number), AND
+          THE COLUMNS ARE PLACED EXPLICITLY.
           Both halves were measured, not guessed (2026-09-04): a grid at EVERY
           width, with auto-placement, broke the phone in two ways at once.
           `display: none` removes an element from the grid entirely — it is not
@@ -224,13 +316,13 @@ export function Header(): ReactElement {
           right-hand cell auto-placed into column TWO and the burger sat in the
           middle of the bar; and the brand, handed a 1fr track instead of its
           natural width, wrapped mid-word into "Pre-mium Smi-le". Hence: below
-          @3xl this row stays the FLEX row it always was (brand left, burger
-          pushed right by the cell's own `ml-auto`), and from @3xl it becomes
-          the grid. `col-start-*` then pins each cell to its own column, which
-          matters in one further state auto-placement also gets wrong — the
-          single-menu rule takes the nav to `display:none` while the panel is
-          open, at EVERY width, so a wide screen with an open menu would put
-          the ✕ in the middle for exactly the same reason.
+          the step this row stays the FLEX row it always was (brand left,
+          burger pushed right by the cell's own `ml-auto`), and from the step on
+          it becomes the grid. `col-start-*` then pins each cell to its own
+          column, which matters in one further state auto-placement also gets
+          wrong — the single-menu rule takes the nav to `display:none` while the
+          panel is open, at EVERY width, so a wide screen with an open menu
+          would put the ✕ in the middle for exactly the same reason.
           ── THREE CELLS, BECAUSE THE MIDDLE ONE MUST BE SCREEN-CENTRED (owner,
           2026-09-04: "the middle one/middle two should sit at the center of the
           screen and the rest left and right always"). `1fr auto 1fr` is the
@@ -242,22 +334,34 @@ export function Header(): ReactElement {
           `justify-between` would park the nav wherever the brand and CTA widths
           happened to leave it — the nav would drift every time a locale changed
           the brand or CTA width. `1fr` here is CSS's `minmax(auto,1fr)`, so a
-          side track never shrinks below its own content and a long German CTA
-          pushes rather than clips.
+          side track never shrinks below its own MIN-CONTENT and a long German
+          CTA pushes rather than clips — but the brand's min-content is not its
+          width (RECORDED TRADE-OFF below).
           Spacing moved INTO the cells with the grid (§6.4 still holds — the
           section owns it): the side tracks' free space separates the three
           cells, and the right cell keeps a `gap-4` of its own between the
           Contact CTA and the burger.
-          RECORDED TRADE-OFF: `1fr` is `minmax(auto,1fr)`, so a side track never
-          shrinks below its own min-content — but for wrappable text min-content
-          is the longest WORD, not the phrase. Where the bar has slack (every
-          width the row is shown at, 1536 included: ~1197px of row against
-          ~200px of brand and ~360px of nav) the two side tracks are equal and
-          the nav sits on the screen's centre line exactly. Where slack ran out
-          the brand would break mid-word before the nav drifted — the worse of
-          the two failures — so the brand cell carries `whitespace-nowrap` and
-          the nav gives up exact centring first instead. */}
-      <div className="flex h-20 items-center px-4 @3xl:grid @3xl:grid-rows-1 @3xl:grid-cols-[1fr_auto_1fr]">
+          RECORDED TRADE-OFF — REWRITTEN AS MEASURED (header-nav-gap lane, the
+          owner's ask, 2026-09-26). The earlier text said that where slack ran
+          out the brand "would break mid-word before the nav drifted", so
+          `whitespace-nowrap` made the nav give up exact centring first. Three
+          engines say otherwise. `1fr` is `minmax(auto,1fr)`, and the auto floor
+          is the brand's MIN-CONTENT — 150.8px in Chromium, Firefox and WebKit
+          alike, where the lockup is 258.5px wide: the artwork counts for ZERO
+          there, because its width comes from a percentage HEIGHT (`h-[90%]` of
+          the `h-full` anchor), which is cyclic while intrinsic sizes are
+          computed. So the side tracks stay EQUAL and the nav stays on the
+          centre line down to a 150.8px track; below the brand's real width the
+          nowrap lockup does not break, it OVERFLOWS its track and the brand
+          slides UNDER the nav (the file header's 985px window). Nothing in the
+          grid can floor the track at the whole lockup across engines (the
+          header's two mechanisms not taken), so the guarantee is the STEP:
+          past `@min-[60rem]:` each side track is at least 324.35px (German)
+          against the 258.5px brand, and the gap between them is ≥ 4rem.
+          Where the row is shown, the two side tracks are equal and the nav
+          sits on the screen's centre line exactly (1536, Chromium: side
+          tracks of ~450px German, ~474 Romanian — measured). */}
+      <div className="flex h-20 items-center px-4 @min-[60rem]:grid @min-[60rem]:grid-rows-1 @min-[60rem]:grid-cols-[1fr_auto_1fr]">
         {/* The brand corner — now ONE component shared with the Footer
             (sections/Wordmark, built to the owner-approved contract
             .claude/plans/brand-lockup-contract.plan.md v2, fb-200…fb-208).
@@ -287,8 +391,8 @@ export function Header(): ReactElement {
             full row height its percentage-sized artwork needs — and it now
             follows the h-20 step for free. */}
         {/* `self-stretch` is what hands the lockup the full row height its
-            percentage-sized artwork needs — and `@3xl:grid-rows-1` on the row
-            is what makes that height DEFINITE once the row is a grid. Measured
+            percentage-sized artwork needs — and the step's `grid-rows-1` on the
+            row is what makes that height DEFINITE once the row is a grid. Measured
             the hard way (2026-09-04): a grid's implicit row is content-sized,
             so stretching into it gives a height that percentages cannot resolve
             against — `h-[90%]` on the Wordmark's artwork fell back to `auto`,
@@ -300,14 +404,18 @@ export function Header(): ReactElement {
             `1fr` = `minmax(auto,1fr)`, and for wrappable text that auto floor is
             the longest WORD, so a squeezed track would break the brand mid-word
             (measured: "Pre-mium Smi-le" at 390 before the grid was scoped to
-            @3xl). With nowrap the track floors at the whole lockup instead. */}
-        <div className="flex self-stretch whitespace-nowrap @3xl:col-start-1 @3xl:justify-self-start">
+            the bar's step). WHAT NOWRAP DOES NOT DO, measured 2026-09-26: it
+            does not floor the track at the whole lockup — the brand's
+            min-content ignores the percentage-height artwork, so a squeezed
+            track OVERFLOWS instead (the grid's RECORDED TRADE-OFF above). The
+            bar's step is what keeps every shown track wider than the brand. */}
+        <div className="flex self-stretch whitespace-nowrap @min-[60rem]:col-start-1 @min-[60rem]:justify-self-start">
           <Wordmark />
         </div>
 
         {/* CELL 2 — the nav row, centred. `justify-self-center` lives on
             HeaderNav's own root (it renders the <nav>, so it owns its
-            placement within this grid); below @3xl that element is
+            placement within this grid); below the bar's step that element is
             `display:none`, which removes it as a grid item entirely, and the
             auto track collapses to zero — leaving brand-left / burger-right,
             pixel-identical to the flex layout it replaced. */}
@@ -332,21 +440,22 @@ export function Header(): ReactElement {
             this opener into wearing an anchor's clothes again.
 
             WHY THE VISIBILITY LIVES ON A WRAPPER AND NOT ON THE BUTTON.
-            Passing `hidden @3xl:inline-flex` as the atom's className does not
-            work, and fails SILENTLY: ui/Button's own base sets `inline-flex`,
-            so two `display` utilities of equal specificity (0,1,0) end up in
-            one class list and the winner is decided by their order in the
-            generated sheet — where `.inline-flex` is emitted after `.hidden`.
-            The result was a Contact button visible at 390, next to the burger,
-            against the board's phone sketch (measured, then fixed, 2026-08-13;
-            TextButton.tsx's header carries the same warning about
-            same-property utilities).
+            Passing `hidden @min-[60rem]:inline-flex` as the atom's className
+            does not work, and fails SILENTLY: ui/Button's own base sets
+            `inline-flex`, so two `display` utilities of equal specificity
+            (0,1,0) end up in one class list and the winner is decided by their
+            order in the generated sheet — where `.inline-flex` is emitted
+            after `.hidden`. The result was a Contact button visible at 390,
+            next to the burger, against the board's phone sketch (measured,
+            then fixed, 2026-08-13; TextButton.tsx's header carries the same
+            warning about same-property utilities).
             So the SECTION owns the box (§6.4/§6.8 — the parent owns placement)
-            and the atom keeps its own display: `hidden @3xl:flex` is the
-            breakpoint (below the step the panel's own full-width Contact takes
-            over, fb-151), and `@3xl:flex` — not `@3xl:block` — because a flex
-            container gives its single item no baseline line-box, so the button
-            lands on exactly the same pixels it did as a direct flex item.
+            and the atom keeps its own display: `hidden @min-[60rem]:flex` is
+            the breakpoint (below the bar's step the panel's own full-width
+            Contact takes over, fb-151), and `flex` at the step — not `block` —
+            because a flex container gives its single item no baseline
+            line-box, so the button lands on exactly the same pixels it did as
+            a direct flex item.
             `ml-auto` USED TO LIVE HERE and was dropped with the grid rework
             (2026-09-04): the right cell is `justify-self-end`, so the free
             space is already outside this box and an auto margin inside a
@@ -355,21 +464,21 @@ export function Header(): ReactElement {
             The last class is the single-menu rule (fb-165, owner: "hide the
             bar's Contact, leave only the panel's"): while the panel is open
             this box goes away at EVERY width, so the only Contact on screen is
-            the panel's own. That one beats `@3xl:flex` on SPECIFICITY, not on
-            source order — its compiled selector carries an id inside `:has()`,
-            (1,1,0) against the utility's (0,1,0) — which is exactly the
-            guarantee the plain `hidden` above could not give. */}
+            the panel's own. That one beats the step's `flex` on SPECIFICITY,
+            not on source order — its compiled selector carries an id inside
+            `:has()`, (1,1,0) against the utility's (0,1,0) — which is exactly
+            the guarantee the plain `hidden` above could not give. */}
         {/* CELL 3 — everything that belongs at the right edge, in one box, so
             the grid has exactly three children whatever the width. `gap-4` is
             the spacing the row used to own directly. Two spellings of "sit at
             the right edge", one per layout mode: `ml-auto` while the row is
-            still a flex line (below @3xl, where this cell holds only the
-            burger), and `col-start-3 justify-self-end` once it is a grid — the
+            still a flex line (below the bar's step, where this cell holds only
+            the burger), and `col-start-3 justify-self-end` once it is a grid — the
             auto margin is explicitly cancelled there, because inside a track it
             would absorb the free space itself and make `justify-self` a no-op.
             Together they are what NavMenu's own `ml-auto` used to buy. */}
-        <div className="ml-auto flex items-center gap-4 @3xl:col-start-3 @3xl:ml-0 @3xl:justify-self-end">
-          <div className="hidden @3xl:flex group-has-[#header-menu]/bar:hidden">
+        <div className="ml-auto flex items-center gap-4 @min-[60rem]:col-start-3 @min-[60rem]:ml-0 @min-[60rem]:justify-self-end">
+          <div className="hidden @min-[60rem]:flex group-has-[#header-menu]/bar:hidden">
             <ContactModalTrigger variant="solid">
               {t('actions.contact')}
             </ContactModalTrigger>

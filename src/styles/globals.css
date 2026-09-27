@@ -19,6 +19,17 @@
    a11y addon polices misuse) · scrim floor 0.55 · body base 1.125rem ·
    component default radius 6px (= rounded-md; scale untouched) · font tokens
    named display/body/mono, never --font-sans.
+   ADDED (D56, the doctor-pages run, owner 2026-09-26): accent-strong — accent
+   ink for body-size text (≥4.5:1), the 18th semantic role; its charter and its
+   numbers sit on the declaration below. VALUE #4b3a86 since D57 (the same day,
+   the owner after seeing D56's #655885: "a darker accent of lilla. a more
+   seeable one … make it just jump at you more"). The candidates weighed, on
+   the page ground: #5b4e7a 7.09 · #55467c 7.82 · #4f3f78 8.62 · #4b3a86 8.88
+   (the saturated one — taken) · #4a3878 9.38 · #453372 10.13.
+   ADDED (D58, the doctor-pages run, owner 2026-09-26, after D57's violet
+   keywords: "what if you make the faint text lighter"): ink-faint — washed
+   prose that still passes body text's 4.5:1, the 19th semantic role; its
+   charter and its numbers sit on the declaration below.
    Everything else is PROVISIONAL warm-grayscale until the token-audit values
    land (open: purple hue confirm against the real logo, §15.1 + §15.6).
    ──────────────────────────────────────────────────────────────────────────── */
@@ -109,10 +120,84 @@
      tests/unit/aura-token.test.ts pins this value and the consumer census. */
   --shadow-aura: 0 8px 22px
     color-mix(in srgb, var(--accent-decorative) 40%, transparent);
+
+  /* THE POP — the "jump at you" the owner asked of the current year on a
+     doctor's course timeline (2026-09-26, the doctor-pages run's round 2g,
+     D36): 0.7 → 1.25 → 1 over 450ms on an overshoot curve, fill `both` so the
+     first frame is already small. Tailwind v4 mints `animate-pop` from the
+     `--animate-*` namespace and emits the keyframes only where it is worn.
+     It animates `transform`, so it COMPOSES with a `scale-*` utility (v4's
+     separate `scale` property): the lit dot, which also wears `scale-125`,
+     lands at 1.25; the year, at 1. Every wearer pairs it with
+     `motion-reduce:animate-none` (§9). Consumer: sections/DoctorCourses/
+     CourseTimeline (the lit dot and the lit year). Declared AFTER the aura
+     on purpose: tests/unit/aura-token.test.ts reads this block up to its
+     first closing brace, and the keyframes below bring the first ones. */
+  --animate-pop: pop 450ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+
+  @keyframes pop {
+    from {
+      transform: scale(0.7);
+    }
+    60% {
+      transform: scale(1.25);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  /* THE FORWARD — the "come for you on a theoretical z axis" the owner asked
+     of the current subsection of a doctor's course timeline (2026-09-26, the
+     doctor-pages run's round 2j, D44c): the WHOLE group — its stretch of
+     line, its dot, its year, its courses — grows toward the viewer, drawn
+     1 → 1.06 → 1.04 over 450ms on the pop's overshoot curve, and STAYS at
+     1.04 for as long as it is current. THE KEYFRAMES ARE RELATIVE TO THE
+     WEARER'S OWN SETTLED SIZE (G2-R2 tier 2, react F1, 2026-09-26): the
+     current group wears a static `scale-104`, and this animation carries
+     ONLY the overshoot on top of it — 0.9615 → 1.0192 → 1 on `transform`,
+     which multiplies with the `scale` property, so the product is the drawn
+     1 → ~1.06 → 1.04 above (MEASURED peak ~1.065 at ~160ms: the overshoot
+     curve runs over each keyframe interval separately, so the 60 % stop is
+     overshot too — true of the first cut as well). Why not 1 → 1.06 → 1.04 held by `fill: both`, as
+     the first cut had it: a value an ANIMATION holds is not a value a
+     TRANSITION can ease from — when the group stopped being current, the
+     computed transform dropped from 1.04 to `none` in ONE frame while its
+     opacity faded over 300ms (measured in Chromium, a 4 % pop-back). With
+     the settled size in a transitioned property, the wearer eases the
+     recede 1.04 → 1 over its own 300ms; the ENTRY still starts at a drawn
+     1.0 because the wearer's current state transitions opacity alone (the
+     `scale` jumps to 1.04 at once, the animation begins at 0.9615 × 1.04 =
+     1.0). Same namespace, same composition rule as the pop above: it
+     animates `transform`, so a `scale-*` utility worn inside the group (the
+     lit dot's `scale-125`) multiplies with it.
+     `forward` is a legal keyframes name — NOT the `forwards` fill keyword,
+     which the shorthand's parser matches only with its final "s". Every
+     wearer pairs it with `motion-reduce:animate-none` (§9); under reduced
+     motion only the static `scale-104` remains — a size, not a motion — and
+     the wearer's `motion-reduce:transition-none` makes both directions an
+     instant switch. Consumer: sections/DoctorCourses/CourseTimeline
+     (the current group). Declared AFTER the aura for the same reason as the
+     pop: tests/unit/aura-token.test.ts reads this block up to its first
+     closing brace. */
+  --animate-forward: forward 450ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+
+  @keyframes forward {
+    from {
+      transform: scale(0.9615);
+    }
+    60% {
+      transform: scale(1.0192);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
 }
 
-/* Semantic color roles — exactly 17 (`success` dropped, §15.1) + the one
-   additional accent-decorative role.
+/* Semantic color roles — exactly 19: §15.1's 17 (`success` dropped) +
+   accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) — plus
+   the one additional accent-decorative role.
 
    `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
    modal's scrim IS the backdrop pseudo-element, `backdrop:bg-scrim` compiles to
@@ -136,6 +221,25 @@
   --ink: #2b2724;
   --ink-strong: #1a1714;
   --ink-muted: #5b554f;
+  /* faint ink — the 19th semantic role (D58, owner 2026-09-26, after D57's
+     deep violet keywords: "what if you make the faint text lighter").
+     THE CHARTER: washed prose that still passes body text's 4.5:1 — the
+     owner's "relatively washed or ghost" for a doctor's own words
+     (sections/PersonnelCard D8) given an ink of its own, lighter than
+     --ink-muted, so the --accent-strong keywords inside it stand further
+     off. Consumers: the two doctor quotes ONLY — PersonnelCard's
+     <blockquote> and sections/DoctorIntro's CredoCard <p>; every other quiet
+     text keeps --ink-muted.
+     Measured (WCAG 2.2 relative luminance, sRGB): 4.94:1 on --surface white ·
+     4.70:1 on --page — the ground that binds: #79726c, three units lighter
+     per channel, already reads 4.499:1 there · 1.89:1 against --accent-strong,
+     where --ink-muted reads 1.27:1: the keyword's gap widens · 1.49:1
+     against --ink-muted.
+     NOT FOR THE TINT: 3.24:1 on sections/TintedBand's 30% lilac ground
+     (#d4cfdc), under 4.5:1 — prose on the lilac band keeps --ink or
+     --ink-muted. Dark grounds are outside the charter: 3.24:1 on
+     --inverse-surface. */
+  --ink-faint: #766f69;
   --ink-inverse: #ffffff;
   /* lines */
   --line: #d8d4cf;
@@ -152,7 +256,25 @@
      sections/Hero (§15.1's rider, owner 2026-09-20) — this token is untouched. */
   --scrim: rgb(0 0 0 / 0.55); /* LOCKED floor — never below 0.55 */
   --error: #b3261e;
-  /* additional role outside the 17 (§15.1 amendment) */
+  /* accent ink — the 18th semantic role (D56, owner 2026-09-26: "a darker
+     lilla"). THE CHARTER: accent ink for body-size text — the lilac that
+     passes 4.5:1; keywords are its first consumer (ui/Keyword);
+     `accent-decorative` stays the display/graphics role.
+     THE VALUE is D57's (the same day: "a more seeable one … make it just jump
+     at you more, as keyword, important information"): #4b3a86, darker AND
+     more saturated than D56's #655885 — R75 G58 B134, a clear violet.
+     Measured (WCAG 2.2 relative luminance, sRGB): 9.34:1 on --surface white ·
+     8.88:1 on --page · 6.12:1 on sections/TintedBand's 30% lilac ground
+     (#d4cfdc) — over 4.5:1 on all three light grounds (D56's value read 4.18:1
+     there, under the bar) · 1.27:1 against --ink-muted, the accent now the
+     DARKER of the two (D56's was the lighter, 1.15:1): beside muted copy it
+     stands apart by lightness as well as by hue and its consumer's weight ·
+     1.91:1 against --ink-strong. Dark grounds are outside the charter: 1.71:1
+     on --inverse-surface.
+     A literal, not a mix: the day §15.1's hue confirm moves
+     --accent-decorative, this value is re-derived by hand. */
+  --accent-strong: #4b3a86;
+  /* additional role outside the 19 (§15.1 amendment) */
   --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
 }
 
@@ -164,6 +286,7 @@
   --color-ink: var(--ink);
   --color-ink-strong: var(--ink-strong);
   --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
   --color-ink-inverse: var(--ink-inverse);
   --color-line: var(--line);
   --color-line-subtle: var(--line-subtle);
@@ -174,6 +297,7 @@
   --color-star: var(--star);
   --color-scrim: var(--scrim);
   --color-error: var(--error);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-decorative: var(--accent-decorative);
 }
 

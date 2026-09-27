@@ -94,7 +94,7 @@ src/
     routes/routes.ts     # THE route list + matchesRoute/equivalentPath (one list, all consumers)
     hours/hours.ts       # schedule → printable rows (deterministic reference week)
     scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
-    scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic: landing-line walk + bottom rule + top fallback + click pin (React-free; price-list pack round 2, 2026-09-14)
+    scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic: landing-line walk (or, with `line: 'middle'`, the viewport's centre — the doctor page's timeline, round 2k) + bottom rule + top fallback (`topFallback: 'first' | 'none'` — the named trigger fired by the doctor page's timeline, 2026-09-26) + click pin (React-free; price-list pack round 2, 2026-09-14)
     sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a focused link reveals its edge (React-free; price-menu-pin lane, 2026-09-18)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
@@ -108,6 +108,7 @@ src/
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
     hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row (RO/EN the old site's own; DE/FR/IT, the short names and every `text` line DRAFTED, flagged; demo pictures until the owner's photographs); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
+    team/team.ts         # THE clinic's people — doctors (portrait + transparent cutout, own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles, an optional lib/prices category) and auxiliaries, five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); DEMO people + DRAFTED words (EN/DE/FR/IT, and the RO paragraphs) until the owner's real team (doctor-pages run, 2026-09-21; round 2 2026-09-25, §15.23)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -169,6 +170,7 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 | Services (incl. prices) | `/ro/services` | ✓ | ✓ | ✓ | ✓ |
 | Team | `/ro/team` | ✓ | ✓ | ✓ | ✓ |
 | Blog index + posts | `/ro/blog`, `/ro/blog/[slug]` | — | — | — | — |
+| Doctor pages *(2026-09-21, §15.23)* | `/ro/team/[slug]` — one per `lib/team` doctor id, every locale (`generateStaticParams` over the list, `dynamicParams = false`); no `lib/routes` row: `matchesRoute` already files them under Team and `equivalentPath` keeps the slug across languages | ✓ | ✓ | ✓ | ✓ |
 | Contact | modal, no route (see §14) | | | | |
 
 - **Home lives at `/{locale}` itself.** Do not create `/{locale}/home`.
@@ -365,6 +367,15 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   FAQ accordion, mobile nav.
 - **Translation-parity test:** a Vitest check asserting all five `messages/*.json` share an
   identical key set — a missing translation fails CI instead of leaking English.
+- **CMSR wording scan** *(owner, 2026-09-27, doctor-pages round 2s: "add a step for checking for
+  illegal guarantees or things aiming in that direction")*: `tests/unit/cmsr-scan.test.ts` walks every
+  string lib/team ships (names excluded) and every `team.*` message value in the five languages
+  against one narrow pattern list per language — superlatives, guarantees, pain/risk promises,
+  percentages, "number one"/"leader"/"unique"/"excellent", a RESULT qualified as
+  predictable/constant/safe/guaranteed, recognition and awards, a success count — and fails CI on a
+  hit; an owner-maintained `ALLOWED` list carries documented exceptions verbatim. Widening it to
+  other data lists and namespaces is one more `SOURCES` row, a deliberate act (the older copy must be
+  read first).
 - **Link check:** linkinator crawls the built export for broken internal links and hreflang
   targets on every CI run.
 - **CI lanes (decided, see GITHUB_SETUP.md):** branches `main` (production) + `develop`
@@ -385,7 +396,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 |---|---|---|
 | Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — on the first five of `lib/reviews`' `demoReviews` (the Storybook "Five" story's rows, moved into shipped data on the owner's word, flagged) until the real list has a row, at which point the band drops them by itself — §15.19, §15.21) · CTABanner | `home` |
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven aura'd category cards — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` in BOTH directions, scroll and click) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
-| Team | TeamIntro · **PersonnelCard** — doctor profiles (the centred portrait column beside a justified, quoted about-text, sides alternating) + the auxiliary-staff grid (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · ClinicGallery (opt) | `team` |
+| Team | **TeamRoster** — the visible h1 over **PersonnelCard** doctor cards (the centred portrait column beside a justified, quoted about-text, sides alternating — and, since 2026-09-21, TWO LINKS in the Hero's button faces on row 2 of a 2×2 grid at the card's own `@3xl`: „Vezi serviciile” solid → `/services#<category>`, „Vezi profilul” outline → the doctor's page, level with the name + position, centred under the words) + the auxiliary-staff grid on `repeat(auto-fit, minmax(16rem, 1fr))` (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier; owner 2026-09-21: „as simple as possible as it is now in team composition”) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
+| Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step, an `align: start \| center \| end` axis for the words' seat beside the photo — the page passes `lowered`, the top seat dropped 7rem — 3rem on the owner's "push this a bit more down" of 2026-09-25, halved to 1.5rem on his "push it a little more upwards" of 2026-09-26, then 7rem (20 % of the figure's box at 1280) on his "push like 20% more down just the textual part" the same evening, round 2l, one token to dial; the band's own rhythm halved the same day (round 2j, "it starts height wise too low … also the image, so the whole thing") and the words track widened to ⅔ of the row for a BIGGER credo card, its quote on `text-xl`; then, in round 2k the same day, the picture ~30 % larger, the two columns content-sized and CENTRED in the row with the words capped at 28rem (a narrower, taller card — "70% as wide … and taller rather", "left and right they have same as much space"), and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred ("name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the deep violet `accent-strong` (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the roster card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Excelență confirmată în timp” centred over a lead sentence and four tiles: a light disc with a green line glyph, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the sr-only twin SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
 | Global | Header (nav + Contact button + LanguageSwitcher) · Footer (**full NAP** + hours + policy link) | `common` |
@@ -397,7 +409,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    fonts **Source Serif 4** (display + body) + **JetBrains Mono** (eyebrows), Publio only
    inside the vectorized logo; body base **1.125rem**; default radius **6px**; star
    `#B29126` → **`#D4AF37` (amended 2026-09-12, owner — the rider at the end of this item)**; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
-   start`; `success` role dropped (17 semantic roles total). Amendments from contradiction
+   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter). Amendments from contradiction
    review: font tokens are named `--font-display` / `--font-body` / `--font-mono` (never
    `--font-sans`); one additional role `--color-accent-decorative: #7A6D9C` for large
    display text (≥ 3:1 contexts) and graphics only — the a11y addon polices misuse.
@@ -433,6 +445,14 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    canon once more; scope: that one element and nothing else, in every locale. WCAG's
    justified-text clause is SC 1.4.8 (AAA), outside the AA acceptance bar; the site-wide
    `hyphens: auto` is what keeps rivers out of justified lines.
+   **Third per-element exception — the doctor page's prose (2026-09-25, owner, the
+   doctor-pages run's round-2 pack, two sentences the same day: "these texts do not feel like
+   justify" · "this text just isn't justified"):** the `CredoCard` `<p>` in sections/DoctorIntro
+   — the SAME quoted words as the roster card's `<blockquote>`, repeated on the doctor's own
+   page — and EACH „Despre” paragraph `<p>` in sections/DoctorProfile ship `text-justify` ON
+   THE ELEMENT (§15.15 b once more). Both were built start-aligned first, because this
+   exception's scope was "that one element", and flipped on the owner's sentences. Scope:
+   those paragraphs, in every locale; every other prose on the site stays start-aligned.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer
@@ -570,7 +590,10 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     - **Overlay-manners consolidation (WAIT):** Esc-close, bfcache-close, focus-return and
       warnOnce exist as two deliberately-divergent, cross-signposted copies (NavMenu ↔
       SpeedDial). Merge ONLY when a **third stateful overlay** ships — candidates: the §8.6
-      language-suggestion banner (optional) or a ClinicGallery lightbox. **FAQ is out of
+      language-suggestion banner (optional), a ClinicGallery lightbox, or a **doctors dropdown
+      under „Echipa" in the navigation** (owner, 2026-09-27: "what if you could have a dropdown in
+      navigation? add for future implementation as possible option" — the SC 2.4.5 second way to
+      a doctor page, §15.23 round 2s; recorded, not built). **FAQ is out of
       scope forever (owner, 2026-09-02)** — never a trigger, never built; §14's `FAQ (opt)`
       entries are void. If no third overlay ever ships, the two copies stay — a final,
       correct state; nothing is owed.
@@ -843,7 +866,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     strings. Deliberately NOT built, named triggers in lib/scroll-spy's header: `scrollend`
     (every Safari before 26 lacks it, so the settle timer must exist anyway), scrolling the
     current link into view inside the menu's overflow belt, `setIds()` for a list that can
-    change, a top-fallback option for a consumer whose targets sit below a long intro, and
+    change, a top-fallback option for a consumer whose targets sit below a long intro (BUILT 2026-09-26 as `topFallback: 'none'` for the doctor page's timeline, §15.23 round 2g), and
     ignoring `wheel`/`touchmove` while the document is scroll-locked (needs lib/scroll-lock to
     expose `isLocked()`; today such a drop is bounded — it lands on what is on screen).
 
@@ -1195,6 +1218,386 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     is now the ninth copy (the §15.19 round-3 helper-promotion trigger stands); AtTheStep's 390
     frame duplicates GermanStress's 390 (harmless).
 
+23. **Doctor-pages run — BUILT ON THE OWNER'S DISPATCH (2026-09-21, verbatim: "starting from
+    latest development … a rework on the doctors card … 2 buttons identical as aspect to the
+    ones in the hero section … at the same level on the oy axis as [name + position] and
+    centered below the description text … the left button is see services done by doctor and
+    the right one takes you to the doctor page. Each doctor will have his own page … this page
+    as structure will be reused for more doctors … accessibility and adaptability in mind …
+    build every section … do not run full code review until i do large pr in the end … build
+    personnel page as simple as possible as it is now in team composition and add at the end
+    the map"; epic #107, lane `feat/doctor-pages`, run workspace
+    `.claude/section-runs/2026-09-21_11-58_doctor-pages/` — machine-local, gitignored — whose
+    ledger carries the run's D1–D11):** NET-NEW design (the old repo never had a per-doctor
+    route, a schedule, courses or portrait assets — its short-lived `/$lang/team` page was
+    deleted in `244192f`; §17.2 satisfied by absence). Eight units, built by five parallel
+    Opus builders in wave 1 and two in wave 2, every band DUMB props-in (zero keys, zero data
+    — the PriceList/Hero shape; `app/[locale]/team/populate.ts` is the ONE populator for both
+    pages, with `renderAbout`/`closedLabel` callbacks as the seam): **`ui/Keyword`** — the
+    promotion PersonnelCard D9 reserved for "the second section that wants keyword fragments"
+    (`Keyword` byte-identical, plus `Keywords`: structural `{ text, keyword }` segments →
+    fragments, so `lib/team` never imports ui) · **`sections/PersonnelCard` rework** — the
+    doctor kind REQUIRES `actions: { services, profile }` (typed `never` on auxiliary): the
+    Hero's pair face for face (`ui/Button` solid lg · outline lg, both `asChild` on plain
+    `<a href>`s) in the Hero's own row under `max-w-3xl`; at the card's `@3xl` the layout is
+    a 2×2 grid — portrait ‖ quote on row 1, name + position ‖ buttons on row 2, both row-2
+    cells `self-center` (the owner's "same level on the oy axis"), the D6 block dissolving
+    through `@3xl:contents` so the stacked phone shape is byte-identical to before; DOM order
+    who → what they say → what you can do; `side` still a visual-only mirror; and
+    `headingLevel: 2 | 3` (default 3) — D4's recorded trigger, fired INVERTED: the Team page
+    puts the cards directly under the page `<h1>` (D10 struck the sub-headings), where a
+    level-3 title skips a level (§9; axe's heading-order fired on every roster story), so
+    TeamRoster passes 2 and NO axe rule is silenced anywhere (the builders' interim
+    per-story suppression was removed by the planner) ·
+    **`sections/DoctorIntro`** (`ui/Image artwork` + `preload`/`fetchPriority=high` — the
+    page's LCP — `alt=""` by D3's adjacent-heading rule, h1 on Heading `hero`, `align`
+    default `'start'` = the referenced page, the three seats storied for the owner's pick) ·
+    **`sections/DoctorProfile`** (ONE `--tint` variable = `color-mix(in srgb,
+    accent-decorative 20%, transparent)` over `bg-page`; the two fades are the Hero's ten
+    eased stops with the tint in place of `--page`, so a fade's last pixel IS the middle's
+    ground — no seam by construction; measured ink on the tint 11.0:1 / muted 5.5:1, AA; an
+    engine without color-mix falls to the plain page, never a dark band) ·
+    **`sections/DoctorTeam`** + in-folder **`ScheduleCard`** (`ui/Card emphasized asChild` on
+    a named `<section>` — a "Programul meu" region inside the "Echipa mea" region — the
+    Footer's `<dl>` recipe over `lib/hours` rows; `members` is a TUPLE of exactly two, the
+    owner's "always … 2"; `@md:grid-cols-2` with the schedule spanning, `@3xl:grid-cols-3`
+    = one row) · **`sections/TeamRoster`** (the visible h1, doctors alternating sides,
+    auxiliaries on `repeat(auto-fit, minmax(16rem, 1fr))` — PersonnelCard D5's 16rem floor
+    honoured at every width) · **`lib/team`** (D2 of the run: content is DATA — a doctor's
+    words travel with his pictures, `Record<Locale, …>` per row, the `<k>…</k>` marks kept
+    from D9 and split by `splitKeywords`; DEMO people = the PersonnelCard fixtures, two
+    synthetic transparent cutouts `public/images/demo/cutout-{1,2}.png`; every EN/DE/FR/IT
+    word DRAFTED and flagged; course lines D-DASH-clean) · **the pages**: `/team` rebuilt
+    (TeamRoster + ClinicLocation) and NEW `/team/[slug]` (DoctorIntro → DoctorProfile →
+    DoctorTeam → ClinicLocation; `generateStaticParams` over `lib/team`'s ids under the
+    layout's five locales, `dynamicParams = false`), story twins Pages/Team + Pages/Doctor
+    in RO + DE, ten `team.*` keys ×5 DRAFTED (§15.17). **G2 — the three-persona review, run
+    on the owner's word the same day (react · typescript · a11y, Fable @ max; the run ledger's
+    G2 section + `g2-fixes.md` carry the eighteen folded items):** 0 CRITICAL · 1 HIGH — both
+    new pages shipped the bare site name as `<title>` (SC 2.4.2, Level A): each page now has a
+    MINIMAL `generateMetadata` (`{h1 text} — {siteName}`, the 404 page's idiom) until the SEO
+    lane authors the full §10.3 pattern · 3 MEDIUM — `splitKeywords` swallowed a doubled
+    opening `<k>` (the capture is tempered, the residue check now throws); the Hero ↔
+    DoctorProfile fade curve became a proper KEEP-IN-SYNC pair (pointer in Hero.tsx beside
+    `fadeClasses`, a `?raw` cross-pin in DoctorProfile.test.tsx); every doctor card's two
+    links carry `aria-labelledby="{link} {heading}"`, so a links list reads „Vezi profilul
+    Dr. Elena Marin" (SC 2.5.3 holds — the visible label leads the name) · LOWs folded: the
+    opener's h1 precedes the specialty in DOM (`flex-col-reverse` keeps the eyebrow above), the
+    schedule `<dl>` capped at 24 rem, ceilings in the data test (16-char unbreakable name
+    tokens at the `hero` step, 21-char mono positions — the DE draft „Patientenbetreuung"),
+    the opener's `sizes` corrected to `min(28rem, 32vw)`, courses unique and `<k>`-free in
+    every field, the two typings the earlier list had parked are TAKEN (`photo.src` is
+    `ImagePath` on the four section shapes — the lane's own fixtures had spelled root-less
+    paths), the vacuous "map is last" play fixed, a duplicate-assistant belt in the populator.
+    **Owner decisions, recorded NOT built:** SC 2.4.5 Multiple Ways (AA) — a doctor page is
+    reachable only through its Team card; options: an "other doctors" strip on the doctor page,
+    the doctors listed under „Echipa" in the Footer's site map, or an HTML site-map page (the SEO
+    lane's `sitemap.xml` is not a user-facing way); forced-colors on `ui/Button`'s solid face
+    when it dresses an `<a>` (a ui/Button follow-up: `forced-colors:border`); the nav's
+    `aria-current="page"` on „Echipa" while on a doctor page (`lib/routes`' section rule,
+    pre-existing); the 320 sideways-scroll plays are not a failing gate (harness follow-up: a
+    `pageerror` hook in the visual spec); `team.doctor.schedule.closed` duplicates
+    `common.footer.closed`; `servicesCategory: string` stays (a compile-time union needs
+    lib/prices re-declared `as const satisfies`); the doctor page ships no CTA pair of its own
+    (the opener's slot exists — the `WithActions` story). **Visual:** no win32 set exists — the
+    manifest in the run ledger (new UI/Keyword · Sections/{DoctorIntro,DoctorProfile,
+    DoctorTeam,TeamRoster} · Pages/Doctor; changed Sections/PersonnelCard doctor frames ·
+    Pages/Team) is the declaration; the darwin re-record is the owner's (§15.7).
+    **Round 2 (owner pack feedback, 2026-09-25 — the same lane, still uncommitted; the run
+    ledger's `round2/ledger-round2.md` carries D12–D21):** the doctor page RESHAPED. (1) **THE
+    CREDO CARD** — "below [the specialty + the name] I need the card from reviews, but … the
+    non current one … just the internationalised quotations and … the original doctor text
+    from the doctor card with bold text … a heading with eyebrow with „filozofia mea” … an
+    eyebrow text you decide": `DoctorIntro` gains a REQUIRED `credo`, rendered by the
+    in-folder `CredoCard` — ui/Card `framed` (the deck's idle card: 3px `--card-tint` frame on white; since round 2r, 2026-09-26, with the atom's `aura` — the owner: "add an aura around the filozofia mea card" — the ONE prop PriceMenu and every CategoryCard pass, D61; the opener's phone floor `pb-8` so the next band never paints over the glow's 32 px tail) (the deck's idle card: 3px `--card-tint` frame on
+    white) on a `<section>` named by its h2, SectionHeading eyebrow „În cuvintele mele” (Claude's
+    pick) + „Filozofia mea”, a `<blockquote>` `<p>` in CSS `open-quote`/`close-quote` carrying
+    the same `ui/Keyword` fragments the roster card quotes; built START-aligned (§15.1's
+    justify exception was scoped to the roster card's one element) and JUSTIFIED the same
+    day on the owner's pack verdict — "these texts do not feel like justify", then "this
+    text just isn't justified" for the „Despre” paragraphs — now §15.1's third per-element
+    exception, the doctor page's prose; the slot stays after the card (D12). (2) **„ECHIPA MEA” DROPPED** — "will be completely
+    dropped": `sections/DoctorTeam` deleted, `assistants` out of lib/team, `team.doctor.team.*`
+    removed ×5 (D13). (3) **THE LILAC BAND, NEW CONTENT** — the fades and the tint stay (the
+    Hero KEEP-IN-SYNC pair and the `?raw` cross-pin untouched); inside: „Biografie / Despre
+    {name}” (the title takes the doctor's name as an ICU argument, so every page's h2 is its
+    own) over three third-person paragraphs (`text-ink`, not muted — reading prose for §1's
+    70-year-old; `max-w-4xl` the one lever on line length) on ~80 % of the row ‖ the white
+    **ScheduleCard** on ~20 % — "the reviews' current one, but white" = ui/Card `surface`, the
+    atom's default row (no new tone: on the tint the 1px `line-subtle` edge is invisible and the
+    white ground IS the edge), moved from DoctorTeam, now eyebrow „La clinică” + h2 „Program” over
+    the `<dl>`; `@3xl:grid-cols-[minmax(0,4fr)_minmax(16rem,1fr)]`, MEASURED against the gutter
+    box: 256 / 720px at 1280 (25 %), 256 / ~925 at 1536 (20.8 %, the 16rem floor still binds),
+    ~298 / ~1190 at 1920 (19.4 %); the card its own height, `self-center` on the prose's (owner, the same day: "centered in its section vertically"); the prose OUTDENTED 2rem into the gutter at the step (`@3xl:-ms-8` on the about half — owner: "move left margin of text a bit more to the left … only the lilac band's prose"; a recorded departure from the band recipe, one utility, this band alone); the divider gone (D14). THE TINT
+    IS 30 %, NOT THE CARD'S 20 % — the owner's same-day pack verdict, "the faded section is
+    too faded": measured on the 30 % ground (rgb 212 207 220) `--ink` 9.7:1 · `--ink-strong`
+    11.7:1 · `--ink-muted` 4.8:1, and that muted 14px eyebrow is the ceiling — 40 % would put
+    it at 4.2:1, under §9's 4.5:1 — so a darker band means a darker eyebrow ink first; the
+    two fade curves are untouched (the KEEP-IN-SYNC pair and the cross-pin still hold). THE
+    SCHEDULE CARD, the same day ("a thin line like there is already in the project below
+    heading and above effective schedule … schedule centered in its section"): the price
+    menu's own rule under its heading — `mt-4 … border-t border-line-subtle pt-4` on the
+    `<dl>`, the three utilities PriceMenu puts on its list — and the week CENTRED in the card
+    as a two-column grid (`grid-cols-[auto_auto] justify-center`, the `<div>` pairs
+    `contents`), which retires G2 F4's 24rem cap: a content-sized block keeps day and hours
+    in one magnifier window by construction. ROUND 2E (the same evening, six asks): the
+    schedule card BROADER — its track `minmax(20rem, 1fr)` beside `3fr` (~25 %: 320px on every
+    laptop, 380 at 1920), the week's columns `gap-x-10`; the round-2c RULE STRUCK ("remove thin
+    line"); the pair renamed „Program” / „Când mă găsiți la clinică” (the owner's direction, ×5
+    drafts); the opener CENTRED with the week (SectionHeading `align="center"` — "equal space
+    left and right in the section"); the card's top LEVEL WITH THE FIRST PARAGRAPH ("starts on y
+    axis where text starts" — a two-row grid at the step: the „Despre” opener alone in row 1, the
+    paragraphs and the card in row 2, the about half dissolving through `@3xl:contents`, the
+    PersonnelCard idiom; supersedes 2d's `self-center`); the card now ui/Card `framed` ("the one
+    with the non current review, the one with border" — the credo card's face; on the 30 % tint
+    the 3px `--card-tint` frame is LIGHTER than the ground, 1.1:1, a pale halo, the white ground
+    still the edge); the outdent moved from the about half to the GRID (`@3xl:-ms-8`, one
+    spelling, the prose column widens leftward, the card's right edge stays on the gutter); the
+    OPENER's words 3rem lower — `DoctorIntro`'s `align` gains `'lowered'` (`self-start` +
+    `pt-12`, the fourth seat; the page passes it; `center` would have moved them ~125px, "a bit"
+    is 48); and the COURSES BAND BECOMES A CV TIMELINE (D28 — "central a line, dots at year left and right alternatively, the years and with bullet the course per year"): a central `accent-decorative/40` line the rail's full height, one year group per row on `@3xl:w-1/2` alternating left (`pe-12`) and right (`self-end ps-12`), a 12px accent dot with a page-coloured ring on the line at each year's line; below the step one column, the line 1.5 spacing units in on the left (`start-1.25` + half of `w-0.5` — scale tokens, no pixel, §7), every group `ps-10`; line and dots `aria-hidden`, the h2 / h3-per-year / list semantics untouched; the page twin's courses play pins the stagger, the line and every dot on it in both branches.
+    **Round 2f (owner, 2026-09-26, mid-turn: "a section below cursuri si specializari, another lila
+    section like the one below … each page populated like a dumb component"):** THREE units. (1)
+    **`sections/TintedBand`** (D29) — the lilac ground (the 30 % tint, the Hero's two ten-stop
+    fades, the `bg-page` outer, ui/Container inside) EXTRACTED from DoctorProfile at its second
+    consumer, §4's first sharing row; DoctorProfile and DoctorStats compose it; the Hero ↔ band
+    KEEP-IN-SYNC pointer and the `?raw` cross-pin now live with it; names pass through, so a
+    consumer may be a region while DoctorProfile stays unnamed by its own Omit. (2)
+    **`sections/DoctorStats`** (D30) — DUMB props-in on TintedBand: SectionHeading `align="center"`
+    + a centred lead `<p>` (per element) + a `<ul role="list">` of tiles — a 7rem `border-line
+    bg-surface` disc with a 3rem `text-cta` glyph, the number on Heading's `page` step in a `<p>`
+    (36px; the reference's ~48px is a Heading step away, recorded), an `<h3>` label, a muted
+    sentence — `@md:grid-cols-2 @3xl:grid-cols-4`, one column on the phone (D21); `format` is the
+    page's `Intl.NumberFormat(locale).format` (§8.3) — CALLED BY THE BAND ON THE SERVER: a function cannot cross into a client
+    island (React refuses to serialize it; the ReviewsCarousel precedent), so `countFrames` runs the
+    page's formatter once per step and the island receives 46 finished strings per tile (45 ease-out-
+    cubic steps + `format(value)` itself; ~1 kB of flight for four tiles, 293 B gzipped — measured) and
+    formats NOTHING — the builder's recorded friction, the band's public API unchanged. The lead and
+    each description wear `wrap-anywhere` ON THE ELEMENT: the pseudo-locale's 70-character token laid
+    the band 418px wide in a 375px window (measured); in a shrink-to-fit box `break-word` lowers no
+    min-content, `anywhere` does. Four NEW glyphs drawn for the run per the
+    README checklist (CalendarCheck — the owner's 2026-09-26 replacement for the first PersonCheck draft, "i do not like that one at all" — · People · Trophy · ToothCheck), the owner's to replace. (3)
+    **`StatNumber`** (D31), the doctor page's FIRST OWN ISLAND (§16's list amended): the server
+    HTML and the first client render print the FINAL value (rule 2); after mount, unless
+    `prefersReducedMotion()`, the first ≥ 50 % intersection runs one 1.5 s eased rAF count 0 →
+    value, once; the visible span is `aria-hidden`, an `sr-only` twin carries the final value
+    throughout — AT never hears the count. The reference's rolling-digit odometer is not ported.
+    **Data** (D32): `lib/team` `stats` per doctor (`icon` id · `value` · `suffix?` · five-language
+    `{ label, description }`; a digit run in a sentence must equal the row's value; a `courses`
+    tile never claims fewer than the rows the page lists — the demo numbers were re-aligned to the
+    page: Elena 10+ years beside her „de peste zece ani”, five courses over five rows); the band's
+    `team.doctor.stats.{eyebrow,title,lead}` ×5 (eyebrow „În cifre”; title + lead the owner's
+    sentences, „Recunoaștere” / „Rezultate predictibile și sigure” flagged TODO(owner) as
+    CMSR-sensitive, not rewritten). **Page order** (D33): … DoctorCourses → DoctorStats → [the
+    D19 seam] → ClinicLocation.
+    **Round 2g (owner, 2026-09-26, five asks; the run ledger's D34–D39):** (1) **THE LINE ON THE LEFT**
+    (D34, "now that i think about it, the line should be on the left side, not centered"): the timeline
+    keeps ONLY its stacked recipe at every width; the rail capped at `max-w-4xl`. (2) **ONE CURRENT YEAR
+    ON SCROLL** (D35, "highlight top dot with year and dots … a single subsection … all are grayed out at
+    rest … the current should have a non grayed out jump at you animation"): the doctor page's SECOND
+    island, `sections/DoctorCourses/CourseTimeline` (`'use client'`, the rail + groups, strings only), on
+    `lib/scroll-spy` — the price menu's mechanic at its second consumer, whose header's NAMED TRIGGER is
+    fired: `topFallback: 'none'` ("none yet" while no target has reached its landing line; PriceMenu keeps
+    `'first'`, byte-identical). Current = the last year that has reached the pill's landing line
+    (`scroll-padding-top` 6rem — "the top dot"); REST = grey (line + dot `bg-line`, the year on
+    ui/Heading's NEW additive tone `accent-idle` = bold `ink-muted` — the `accent` tone's rest twin at the
+    same weight, so a lit/unlit pair never reflows —, the list `text-ink-muted`); CURRENT = the dot in the
+    accent at `scale-125` + a pop, the year in the `accent` tone + a pop, the list in `text-ink` with accent
+    markers; colours transition, `motion-reduce` = the colour change alone; `data-current` on the lit group
+    only and NEVER in the server HTML (§16 rule 2). Nothing is interactive — no `aria-current`; the h2 →
+    h3 → list semantics are the same in every state. (3) **`--animate-pop`** (D36) in globals.css's
+    `@theme` — the token layer, not global CSS: 0.7 → 1.25 → 1 over 450 ms on an overshoot curve,
+    composing with the dot's `scale-125`. (4) **THE SCHEDULE CARD** (D37, "remove the Program line …
+    center it also vertically in the lila section"): `ScheduleCard` drops its `eyebrow` PROP (and
+    `team.doctor.schedule.eyebrow` ×5 with it — a prop nobody passes is dead API); the card spans BOTH grid
+    rows in column 2 (`row-start-1 row-span-2 self-center`), its middle on the opener + prose block's middle
+    = the tinted box's middle; round 2e's "level with the first paragraph" is superseded. (5) **THE OPENER'S
+    SEAT HALVED** (D38, "push it a little more upwards … not too much so that at rest it is not covered by
+    the top bar"): `lowered` = `@3xl:pt-6` (1.5rem; 3rem was round 2e's "a bit"); the pill is IN FLOW
+    above the band, so no seat can sit under it at rest — the worry cannot happen by construction.
+    (6) **MORE DEMO ROWS** (D39, "add more examples"): four drafted rows more per doctor in all five
+    languages — nine rows over eight years each — and the `courses` tiles say 9 (the round-2f guard: an
+    exact count equals the rows).
+    **Round 2j (owner, 2026-09-26, later — five builders in parallel, ONE per section, the owner's new
+    process rule: "delegate an agent for sections/atoms that apply changes locally. Do not delegate 2
+    agents / section/atom"; the run ledger's D42–D47):** (1) the BAND TITLES one step up — ui/Heading gains the
+    container-responsive `band` step (30px on a phone column, 36px from the container's `@md`; D48 —
+    a fixed 36px would have outranked the h1 on phones), SectionHeading's title step `section` → `band`,
+    §15.24 amended, PriceMenu's title and PersonnelCard's level-2 names with it, the ContactModal's
+    title the recorded exception; (2) the OPENER HIGHER — DoctorIntro's
+    rhythm halved (`py-6 @lg:py-8 @3xl:py-10`), the whole block, picture included, starting right under
+    the pill — and the CREDO CARD BIGGER: the words track ⅔ of the row (`[minmax(0,1fr)_minmax(0,2fr)]`),
+    the quote `text-xl`, the title at `page`; the two eyebrows („Medic specialist ortodonție", „În
+    cuvintele mele") are ONE atom with identical classes — measured equal by the builder, the optical
+    difference (a 14px label beside a ~60px name vs beside a 36px title) recorded, nothing changed; (3) the
+    TIMELINE: years on `section` (30px), `gap-20`, and the SPOTLIGHT reworked — the one line becomes
+    per-group segments (each group's own stretch, `top-2 -bottom-20`, the last `bottom-0`), the current
+    group comes forward (`--animate-forward` in `@theme`: scale 1 → 1.06 → 1.04, `origin-left`) with its
+    segment, dot, year and list in colour, the others recede (the strongest opacity fade that keeps the
+    idle list text ≥ 4.5:1 — the arithmetic in CourseTimeline's header); the mechanic (the spy, the
+    pill's landing line, `topFallback: 'none'`, no `data-current` in the server HTML) is unchanged.
+    **Round 2k (owner, 2026-09-26, "way better" — six builders in parallel, one per folder; the run
+    ledger's D49–D53):** (1) **THE LINE IS THE SCREEN'S CENTRE** (D49): lib/scroll-spy gains `line:
+    'landing' | 'middle'` (default `'landing'`, PriceMenu byte-identical) — with `'middle'` a target has
+    reached its line when its top passes `innerHeight / 2`; the bottom rule, `topFallback`, the pins and
+    the arrival check all use the one line; the timeline passes it, so a year lights as it crosses the
+    middle of the screen. (2) **THE STRETCH STOPS SHORT** (D50): each group's stretch ends 0.25rem above
+    the next group (`-bottom-19`), 12px of ground above every next dot, so a lit stretch never runs under
+    the next subsection's dot — round 2j's seamless rail lasted a round, the owner's choice. (3) **THE
+    OPENER** (D51): the picture ~30 % larger (the cap one step up; the band's rhythm unchanged); at `@3xl`
+    content-sized tracks centred in the column (`grid-cols-[auto_auto] justify-center`), the words capped
+    at 28rem — the credo card ~70 % of its round-2j width and taller by its wrapping; below `@3xl` the
+    words block dissolves (`contents`) and the pair climbs above the picture (`-order-1`), the eyebrow
+    and the h1 `text-center` per element (§15.15 b) — DOM order unchanged, the decorative picture stays
+    first. (4) **BOLD KEYWORDS** (D52): ui/Keyword's `RECIPE` = `font-bold text-ink-strong` — weight AND
+    ink; PersonnelCard D9's "ink, not weight" is superseded on the owner's word; the roster's quotes and
+    the credo card both show it. (5) **THE SCHEDULE CARD'S ONE WIDTH** (D53): a `20rem` track at `@3xl`,
+    `w-full max-w-80 mx-auto` below it.
+    **Round 2l (owner, 2026-09-26, the last word of the evening: "push like idk, 20% more down just
+    textual part next to image in doctor hero section. i'll adjust if needed"; D54):** the `lowered`
+    seat's drop is 7rem (`@3xl:pt-28` — 112px, 20 % of the figure's 555px box at 1280; 17 % at 1536,
+    15 % at 1920), only the words column beside the picture moves; one token to dial. And the KEYWORDS
+    ITALIC, NOT BOLD (D55, minutes later: "bold is now too bold … with so much thin text the bold stick
+    out too much. try italic instead of bold"): ui/Keyword's `RECIPE` = `font-normal italic
+    text-ink-strong` — the slant and the darkest ink are the cue, the weight the running text's; the
+    bundle ships no italic Source Serif 4, so the slant is browser-synthesized — a true italic face
+    (`SourceSerif4Italic-subset.woff2` as a second `src` in `src/fonts/index.ts`) is the owner's call.
+    **Round 2m (owner, 2026-09-26, minutes after the italic: "italic looks stupid. i liked more the bold
+    before. what about, you use a darker lilla and just a little bold and drop italic. before it was too
+    bold"; D56):** a NEW semantic role `--accent-strong` = `#655885` — re-set to **`#4b3a86`** within the hour, round 2n (D57, "a darker accent of lilla. a more seeable one … make it just jump at you more": 8.88:1 on the page, 9.34:1 on white, the keyword now DARKER than the muted quote around it, so lightness joins hue and weight as the cue; the weight stays 600; and, round 2o, the quote's RUNNING TEXT lighter — the owner's "what if you make the faint text lighter": a 19th role `--ink-faint` #766f69, 4.94:1 on the white cards, worn by PersonnelCard's `<blockquote>` and CredoCard's `<p>` alone, the keyword now 1.89:1 off its sentence) — (§15.1: 19 roles) — the lilac that
+    clears body text's 4.5:1 (#655885 read 6.07:1 on the page and 6.39:1 on white; the live #4b3a86 reads 8.88:1 and 9.34:1, §15.1 — the two pairs were once run together here, G2-R2 tier 1; the display lilac `accent-decorative`
+    is 4.44:1 and keeps its charter) — and ui/Keyword's `RECIPE` = `font-semibold text-accent-strong` — since round 2p `font-[650] text-accent-strong` (D59, then D60 one look later — "remove the underline" — dropping the `underline decoration-1 underline-offset-2` trio D59 had added: "looks better. add just a little more bold and underline them maybe" — 650 sits between the 600 of this round and the 700 the owner called too bold; the underline is the owner's "maybe", recorded with the link-lookalike risk: the site's links are green and not underlined, so the violet, non-interactive underline differs by colour and cursor):
+    weight 600, no italic, the keyword set apart by hue and a little weight (1.15:1 against the quote's
+    muted ink — not by lightness); the italic road (and its missing face) is history, recorded. (4) **COURSES
+    BY YEAR** — "sub-sections … the heading without eyebrow with year … the courses with dot …
+    the year headings bold and lilac; maybe they shouldn't even be headings, you decide": NEW
+    `sections/DoctorCourses`, a named region (h2 „Cursuri și specializări”) over one group per
+    year on `@3xl:grid-cols-2`; THE YEARS ARE `<h3>`s — a year labels the list beneath it, a
+    screen reader's H key stops on each, the outline h2 → h3 is honest; a bold `<p>` would look
+    the same and mean nothing (D15). `ui/Heading` gains tone `'accent'` = `font-bold
+    text-accent-decorative`, additive, elders byte-identical — and BOLD BY CONSTRUCTION: §15.1's
+    accent role is for large display text (≥ 3:1), and MEASURED #7a6d9c on `--page` #faf9f7 is
+    4.44:1, under body text's 4.5:1, so at the `title` step (20px) the bold weight is what makes
+    the text "large" in WCAG's sense (≥ 18.67px bold) and 3:1 the bar (D16). Row-major grid, not
+    CSS columns: DOM order = reading order. `year` travels as a STRING label — `Intl.NumberFormat`
+    prints „2.024” in Romanian (measured). (5) **lib/team reshaped** (D17): `DoctorWords.about`
+    → `philosophy` (the `<k>` quote), NEW `about: readonly string[]` (three paragraphs, drafted
+    in all five languages — the RO too, flagged: the owner's sample text was another clinic's and
+    was not copied), courses as rows `{ year: number; words: Record<Locale, string> }` (the
+    lib/prices row shape: the fact once, five-language words beside it; one extra row per doctor
+    so a year shows two bullets) grouped by `coursesByYear` (years descending). (6) **THE FUTURE
+    SEAM** (D19, owner: "remember this for the future, very important … links to blog … a new
+    section with articles from this doctor … it will sit above map section"): a band of the
+    doctor's blog articles goes between the courses and the map — NOT built (the blog is
+    unbuilt, §5); a `FUTURE SEAM` comment marks the place in `[slug]/page.tsx`, §14's Doctor
+    row and MIGRATION_INVENTORY carry the parked row. (7) **THE ADAPTABILITY RULE** (D21, owner
+    rider: "sections that are next to each other when in phone mode … must come one above the
+    other"): every side-by-side arrangement flips to one column below the Container's `@3xl`
+    step, and every smartphone-pinned story ASSERTS it in a play. **Keys** (D20, drafts ×5):
+    `team.doctor.philosophy.{eyebrow,title}` NEW, `about.{eyebrow,title}` reworded (title with
+    `{name}`), `schedule.eyebrow` NEW, `schedule.title` „Program”, `courses.*` unchanged, `team.*`
+    gone — twelve `team.*` keys in the namespace at D20, eleven of them this lane's; FOURTEEN since rounds 2f/2g (+ `doctor.stats.{eyebrow,title,lead}`, − `doctor.schedule.eyebrow`), thirteen the lane's — the count G2-R2 tier 3 re-took against the five files. **Page order** (D18): DoctorIntro → DoctorProfile → DoctorCourses
+    → [seam] → ClinicLocation; the Team page untouched. **Visual:** new Sections/DoctorCourses (5)
+    + UI/Heading/AccentTone; changed Sections/DoctorIntro (6), Sections/DoctorProfile (4, `Stacked`
+    re-pinned to the phone, `NoCourses` gone), Pages/Doctor (RO + DE × 6); removed
+    Sections/DoctorTeam (4). G2 still deferred to the owner's word before the big PR.
+
+    **G2-R2 — the tiered three-persona review over the whole lane (owner, 2026-09-26: "run reviews on all new code, start from small and go to big, so start
+    with new atoms and new helping components and stuff and then go to pages"; his "create pr" of the same
+    minute withdrawn by his own "did you run the reviews?"):** three Fable personas (react · typescript ·
+    a11y-architect, READ-ONLY) per TIER — 1 atoms · lib · tokens · glyphs, 2 shared compositions ·
+    sub-components · sections, 3 pages · populator · twins · messages — each tier's findings folded through ONE
+    Opus builder per folder before the next tier ran (the owner's process rule; the planner kept globals.css,
+    lib data, the pages, the twins, the messages and the docs). Verdicts: nine reports, ZERO CRITICAL / HIGH,
+    ONE MEDIUM (tier 1, react: ui/Heading's `'band' JOINED` paragraph put the credo card in the 36px group —
+    a card title answers to the card's own `@container`, so „Filozofia mea" reads 30px beside the picture
+    and 36px stacked on a tablet: RECORDED, an OPEN OWNER DECISION — accept 30px, a `size` seam on
+    SectionHeading (the planner's recommendation), or a words column ≥ 498px), thirty LOW — all folded, none
+    a shipped-byte defect except four the review MEASURED: the timeline's recede SNAPPED 1.04 → 1 in one frame
+    (the settled size now lives in a static `scale-104` under RELATIVE `--animate-forward` keyframes
+    0.9615 → 1.0192 → 1, each state with its own transition list so the entry pops from a drawn 1.00 and the
+    exit eases over 300 ms; the lit dot likewise), StatNumber read the motion preference at mount only (now
+    again when the count starts), `countFrames` accepted 6.5 / −5 / NaN / −0 (a server-side `RangeError`
+    now), and ContactModal's tight state fit with 0 px to spare after §15.24's 30px title (re-measured; the
+    tight rail's last gap collapsed → 4 px; a combined width-and-height query rule for the 200 %-zoom phone
+    where both queries hold, RO pinned; the German dialog on a DESKTOP at 200 % zoom with classic scrollbars
+    still scrolls — KNOWN BOUNDARY, the owner's). Structure: the biography is a named region (six regions on
+    the doctor page), the stat tile's `<h3>` precedes its number in the DOM, `STRAY_TAG` is `/i`, the stat-
+    icon map lives ONCE in `[slug]/stat-tiles.tsx` for the page and its twin, the populator imports no
+    `react` specifier, `PersonnelPhoto` is the roster shapes' type and `Readonly`. Guards added: the
+    `--ink-faint` census (its two wearers named WITH their white ground; never on the tint), the pictures'
+    intrinsic size read off the PNG/JPEG headers, a D-DASH scan over every shipped team string, the 30-a-second
+    count relation, the throw paths through the populator's `list` seam, viewport pins + a heading-level
+    census in the page twins, clock-seeking hand-over pins in the timeline's `Current` play. Every stale
+    header sentence the reviewers named was reworded (the `dynamicParams` docstring's reason from Next's own
+    source: an explicit `true` throws under export). Recorded for later lanes (in `round2/g2/*.md`): SC
+    2.4.5, the doctor title identical across ro/en/de, the twins' plays unobserved in the visual net, the
+    helper-promotion census, the `hero` clamp under browser zoom, `accent` on the tint at 3.06:1 when the
+    logo violet lands.
+
+    **Round 2s (owner, 2026-09-27 — his answers to the review's open decisions, verbatim where it matters):**
+    (1) ContactModal's tight state: "i accept this: Accept +4px. Nothing more to do" — the 4 px lever and the
+    combined-query rule stand, the German desktop-at-200 %-zoom case stays a KNOWN BOUNDARY. (2) THE SPOKEN
+    „PESTE": the stat tile's sr-only twin reads „peste 3.000" / "over 3,000" / „über 3.000" / « plus de 3 000 »
+    / « oltre 3.000 » — a NEW page key `team.doctor.stats.atLeast` ×5 (Claude's drafts, flagged) passed to the
+    DUMB band as REQUIRED `atLeast`, which composes the spoken string ON THE SERVER per suffixed tile and hands
+    the island a finished `spoken` string (never a word in the data list, never one inside the island); the
+    visible span keeps „3.000+". (3) THE FRENCH AND ITALIAN „DESPRE" TITLES ("fix or decide for me … a clean
+    thing"): decided ARTICLE-FREE — fr « {name} en quelques mots », it « {name} in breve » — because « À propos de
+    {name} » needs « du Dr » and « Chi è {name} » needs « la Dott.ssa » / « il Dott. », an article that depends on
+    the honorific inside the name and on gender; the new shapes read cleanly for any doctor (drafts, flagged);
+    ro/en/de keep „Despre / About / Über {name}". (4) THE CMSR SCAN ("these are very sensible. add a step for
+    checking for illegal guarantees or things aiming in that direction"): `tests/unit/cmsr-scan.test.ts` (§13)
+    — and the demo copy it refused was REWRITTEN to descriptive copy in five languages, drafts flagged like the
+    rest: the band's title „Excelență confirmată în timp" → „Experiență confirmată în timp", its lead (a
+    recognition-and-awards sentence) → „Cifrele de mai jos spun, pe scurt, cum lucrăm: …", the tiles
+    „Intervenții reușite" → „Intervenții", „Rezultate predictibile și sigure, obținute prin …" → „Atenție la
+    detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.", „Recunoaștere pentru
+    inovație, calitate și grijă autentică." → „Formare continuă în tehnici și tehnologii moderne."; the originals
+    are in the run ledger for the owner. (5) The four stat glyphs STAY ("they are good"). (6) SC 2.4.5: a
+    **doctors dropdown in the navigation** recorded as the future option (§15.15's third-overlay candidate),
+    not built. (7) The doctor page's tab title with the specialty → the SEO lane (PHASE4_SEO_PLAN.md §4).
+    (8) The credo card's h2 at 30 px beside the picture (tier-1 react F1), ACCEPTED ("idk i feel like it
+    looks good now"): the rule is recorded in §15.24 — a title INSIDE A CARD reads one step under a band
+    title, because the `band` step answers to the card's own `@container`.
+
+24. **Heading scale, app-wide — DECIDED 2026-09-26 (owner, verbatim: "i need all headings and
+    eyebrows app wide to be made the same size as they are on the
+    http://localhost:3000/ro/team/elena-marin/ page"):** ONE size per outline level, the doctor
+    page's — `<h1>` = ui/Heading `hero` (the fluid `clamp(2rem, 1rem + 3.5vw, 4.5rem)`; sections/Hero
+    and DoctorIntro already wore it — TeamRoster's „Echipa noastră” and the 404 page's h1 leave the
+    `page` step), `<h2>` = **`band`** (a NEW container-responsive step, `font-display text-3xl @md:text-4xl`: 30px on
+    a column narrower than the container's 28rem step — every phone column, the 320px schedule card —
+    and 36px from it — the same day's round 2j, the owner on the band titles: "bring those headings to
+    the next order of heading height … i do not want them so large [as the h1], but larger definitely";
+    a fixed 36px would have outranked the h1 on phones, where `hero` bottoms out at 32px — the residual
+    448px-column-to-571px-viewport window where the h2 may still exceed the h1 by up to 4px is accepted
+    and recorded, D48): sections/SectionHeading's title step moved `section` → `band`, so every band and
+    card opener follows — Home's two, the doctor page's five, Services' eleven categories, the stats
+    band, the schedule and credo cards — and PriceMenu's „Categorii" and PersonnelCard's name at
+    `headingLevel` 2 with it; the ONE exception is the ContactModal's title at `section`, 30px — a 32rem
+    dialog is not a page, and a third title line would cost its tight-viewport states; the planner's
+    call, the owner's to overrule — which that morning had left the Or-word's 27px dress, the ornament
+    keeping 27px as its one consumer, Heading's third-step promotion disarmed), `<h3>` = `title`
+    (text-xl, 20px: review titles, the modal's channel titles, the stat labels) with ONE exception, the
+    timeline's years on `section` (30px — round 2j, the owner: "at least the size of what is now
+    Cursuri și specializări"; an h3 one step under the band's h2 wherever the column is wide enough),
+    eyebrows = ui/Eyebrow's one step (`font-mono text-sm font-medium tracking-widest uppercase` —
+    unchanged everywhere). MEASURED on the dev server before the change (h1 · h2 · h3 · eyebrow):
+    Home sr-only · 30 · 20 · 14; Services sr-only · 30 · 20 · 14; Team **36** · **20** (the card names)
+    · 20 · 14; Doctor hero · 30 · 20 · 14; 404 **36**; the ContactModal on every page **27** · 20. The
+    `page` step (36px) stays on the axis for its non-heading consumer, DoctorStats' numbers.
+    PersonnelCard's name step now FOLLOWS ITS LEVEL (`band` at 2 since round 2j, `title` at 3): a card
+    reads its size from the outline it sits in, never from the card. **A TITLE INSIDE A CARD READS ONE STEP
+    UNDER A BAND TITLE (owner, 2026-09-27, accepting G2-R2 tier 1's react F1):** the `band` step answers to the
+    nearest `@container`, and ui/Card is one, with 25px of border + padding per side, so a card title reaches
+    36px only on a card at least 498px wide — the credo card (448px beside the picture), the 20rem schedule
+    card and the price menu's „Categorii" all read 30px on a laptop, a smaller thing inside a band; the credo
+    card reads 36px only where it stacks full-width on a tablet (the recorded inversion, D48). Not a defect,
+    the rule; the arithmetic lives in Heading.tsx's `'band' JOINED` paragraph. Visual: Pages/Team, Sections/TeamRoster (the
+    cards at level 2), Pages/NotFound and Sections/ContactModal's open frames change; Sections/
+    PersonnelCard's own stories (default level 3) do not; the darwin re-record is the owner's (§15.7).
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —
@@ -1222,7 +1625,7 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
   lane's pack round 2, owner 2026-09-14, widened from the `<ul>` to the `<nav>` in round 3,
   2026-09-18, §15.20: the nav, its title and the list of links — the current-category marker
   and, when the menu is taller than the window, where the card is held, as `data-rail` + an
-  inline `top` that the server HTML never carries; every category card stays inert), and the **Home Hero** (`sections/Hero` — the WHOLE band is the island, on `ui/use-rotation` over `lib/rotation`: which picture is opaque, which slogan readable and which bead current all depend on the active index, and its one static part, the two calls to action, hydrates anyway through ContactModalTrigger; the static HTML still carries every slide, both buttons and the beads at index 0 — hero lane, 2026-09-19, §15.21). Everything else stays inert HTML.
+  inline `top` that the server HTML never carries; every category card stays inert), and the **Home Hero** (`sections/Hero` — the WHOLE band is the island, on `ui/use-rotation` over `lib/rotation`: which picture is opaque, which slogan readable and which bead current all depend on the active index, and its one static part, the two calls to action, hydrates anyway through ContactModalTrigger; the static HTML still carries every slide, both buttons and the beads at index 0 — hero lane, 2026-09-19, §15.21). **The Team page adds NO island; the doctor pages add TWO** (doctor-pages run, 2026-09-21, round 2 2026-09-25, rounds 2f–2g 2026-09-26, §15.23): TeamRoster, DoctorIntro (with its CredoCard), DoctorProfile (with its ScheduleCard), the DoctorCourses band's heading, TintedBand and the reworked PersonnelCard compile to inert HTML; `sections/DoctorStats/StatNumber` is the count-up under each „în cifre” tile, which prints the final value in the static HTML and only decides after mount whether to count (reduced motion: never), and `sections/DoctorCourses/CourseTimeline` is the timeline's rail on `lib/scroll-spy` — which year is CURRENT depends on the scroll position, so the static HTML carries every group grey and no `data-current` at all — plain `<a href>` links, CSS-only layout; the only script that rides with them is ui/Image's optimizer island under each portrait (PersonnelCard D11), which every page with a photograph already pays. Everything else stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting

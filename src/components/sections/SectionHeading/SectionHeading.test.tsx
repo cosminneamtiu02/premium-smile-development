@@ -27,8 +27,8 @@ import source from './SectionHeading.tsx?raw';
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
 // this repo follows. What needs real CSS — the 8px gap that replaces the
-// dropped Stack, and the wrap behaviour at 320 — is asserted one tier up, in
-// SectionHeading.stories.tsx.
+// dropped Stack, the title's computed size against its column, and the wrap
+// behaviour at 320 — is asserted one tier up, in SectionHeading.stories.tsx.
 
 const RO_ALL = 'Ședințe în Târgoviște — găsiți Țepeș';
 
@@ -41,8 +41,12 @@ const RO_CARD_TITLE = 'Dr. Elena Marin';
 
 // The two atom recipes and the two root strings, in canonical order and
 // written OUT rather than imported: the test must fail on a silent edit to
-// either component's constant, which an import would follow.
-const SECTION_STEP = 'font-display text-3xl text-ink-strong';
+// either component's constant, which an import would follow. The title wears
+// ui/Heading's `band` row since D48 (2026-09-26 — `section`'s text-3xl under
+// the container's 28rem `@md` step, `page`'s text-4xl from it; D47's fixed
+// `page` row lasted an hour, because on a phone it outranked the hero h1's
+// 32px floor); the eyebrow recipe did not move.
+const BAND_STEP = 'font-display text-3xl @md:text-4xl text-ink-strong';
 const EYEBROW_RECIPE =
   'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase';
 const ROOT_START = 'flex flex-col gap-2 items-start text-start';
@@ -109,24 +113,30 @@ describe('SectionHeading — a REAL heading, at the level the caller asked for',
   });
 });
 
-describe('SectionHeading — the section step, byte-exactly', () => {
-  it('dresses the h2 in ui/Heading’s `section` row and nothing else', () => {
-    // The string ui/Heading's D2 table holds. Byte exactness is the contract:
-    // an extra utility here is a defect, not polish — it would also mean the
-    // section had started restyling an atom's internals (§6.8).
+describe('SectionHeading — the band step, byte-exactly (D48)', () => {
+  it('dresses the h2 in ui/Heading’s `band` row and nothing else', () => {
+    // The string ui/Heading's `band` row holds — text-3xl (30px) on a column
+    // under the container's 28rem step, @md:text-4xl (36px) from it: the h2
+    // step D48 settled on, so a band title never outranks the hero h1's 32px
+    // floor on a phone. Byte exactness is the contract: an extra utility here
+    // is a defect, not polish — it would also mean the section had started
+    // restyling an atom's internals (§6.8).
     render(<SectionHeading eyebrow={RO_EYEBROW} title={RO_TITLE} />);
 
-    expect(screen.getByRole('heading', { level: 2 }).className).toBe(
-      SECTION_STEP,
-    );
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading.className).toBe(BAND_STEP);
+    // The step it left, named so a revert cannot pass by accident: D47's
+    // `page` row is a BARE text-4xl, which puts 36px on every phone. The 36px
+    // half may arrive through the container variant only.
+    const tokens = tokensOf(heading);
+    expect(tokens).toContain('@md:text-4xl');
+    expect(tokens).not.toContain('text-4xl');
   });
 
   it('dresses an h3 in the SAME row — element and look are independent', () => {
     render(<SectionHeading title={RO_CARD_TITLE} level={3} />);
 
-    expect(screen.getByRole('heading', { level: 3 }).className).toBe(
-      SECTION_STEP,
-    );
+    expect(screen.getByRole('heading', { level: 3 }).className).toBe(BAND_STEP);
   });
 });
 
@@ -232,15 +242,24 @@ describe('SectionHeading — align, and §6.8 native-element fidelity', () => {
       <SectionHeading eyebrow={RO_EYEBROW} title={RO_TITLE} align="center" />,
     );
 
-    for (const element of [
+    const elements = [
       rootOf(container),
       ...rootOf(container).querySelectorAll('*'),
-    ]) {
+    ];
+    for (const element of elements) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
         expect(token).not.toMatch(/(min|max)-\[/);
       }
     }
+    // The title's `@md:text-4xl` passes the loop on purpose: an `@`-prefixed
+    // variant is a CONTAINER query — ui/Heading's `band` row (D48) answering
+    // the column it sits in, the component responsiveness §6.5 prescribes —
+    // and only the viewport prefixes are refused. It is also the ONE
+    // responsive token in the whole block: nothing this section adds.
+    expect(
+      elements.flatMap(tokensOf).filter((token) => token.includes(':')),
+    ).toEqual(['@md:text-4xl']);
   });
 
   it('accepts ref as a regular prop (React 19) — it is the root <div>', () => {

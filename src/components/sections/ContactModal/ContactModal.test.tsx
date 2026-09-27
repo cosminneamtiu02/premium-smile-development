@@ -554,21 +554,14 @@ describe('ContactModal — the dialog’s content', () => {
       // inherited size.
       expect(getComputedStyle(word).fontSize).toBe('27px');
       expect(word).toHaveClass('font-display', 'text-ink-strong');
-      // THE TWIN PIN (owner, 2026-09-05): the panel's title wears the SAME 27px
-      // dress as this word — that is what made the size a second consumer, and
-      // it is the fact ui/Heading's promotion lane will consolidate. Asserted
-      // as computed sizes so the two literals cannot drift apart while both
-      // still "have" their own class, and UNQUALIFIED by viewport: option B
-      // keeps the title at 27px in every state, including the two where the
-      // Or-word itself is hidden (this case runs at the runner's default
-      // viewport, and the box-matrix cases below cover the tight ones).
+      // THE TITLE IS ONE STEP ABOVE THE WORD (owner 2026-09-26, §15.24):
+      // ui/Heading's `section` step, 30px — the h2 size every page shares —
+      // over the word's 27px ornament. The 2026-09-05 twin pin (title = word,
+      // which had made 27px a second consumer) is history; 27px is back to one
+      // consumer. Computed, UNQUALIFIED by viewport, in every state.
       const title = within(dialog()).getByRole('heading', { level: 2 });
-      expect(getComputedStyle(title).fontSize).toBe(
-        getComputedStyle(word).fontSize,
-      );
-      expect(getComputedStyle(title).lineHeight).toBe(
-        getComputedStyle(word).lineHeight,
-      );
+      expect(getComputedStyle(title).fontSize).toBe('30px');
+      expect(title).toHaveClass('font-display', 'text-3xl', 'text-ink-strong');
       expect(word).not.toHaveAttribute('role');
       expect(
         within(dialog()).queryByRole('heading', { name: messages.or }),
@@ -821,13 +814,16 @@ describe('useContactModal — used outside its provider', () => {
 // and again on 2026-09-05, twice in one day: first the owner's Or-divider added
 // its own line plus a second rail gap, then the "it looks very crammed" round
 // added air to the four MACRO seams (bar→rail, both sides of the divider, and
-// below the second group). MEASURED with the real subset loaded, RO / DE:
-//   320×568   478 / 506  (+58 / +30)   ← the worst upright case in the product
-//   390×844   530 / 506  (+282 / +306)
-//   768×1024 · 1280×800 · 1536×864 · 1920×1080   494 / 494, hundreds to spare
-//   844×390   350 / 350  (+8)          ← sideways, tight rhythm, divider hidden
-//   844×536   350 / 350  (+154)        ← the height query's last row
-//   844×537   494 / 494  (+11)         ← the first row above it, airy again
+// below the second group). MEASURED with the real subset loaded, RO / DE —
+// re-measured 2026-09-26 at 30px, when the title took Heading's `section`
+// step (§15.24) and the rail's height-query gap went to 0 (G2-R2 tier 2):
+//   320×568   494 / 506  (+42 / +30)   ← the worst upright case in the product
+//   390×844   518 / 518  (+294 / +294)
+//   768×1024 · 1280×800 · 1536×864 · 1920×1080   502 / 502, hundreds to spare
+//   844×390   354 / 354  (+4)          ← sideways, tight rhythm, divider hidden
+//   844×536   354 / 354  (+150)        ← the height query's last row
+//   844×537   502 / 502  (+3)          ← the first row above it, airy again
+//   320×500   454 / 466  (+14 / +2)    ← BOTH queries, a 200%-zoom window
 // The two states MEET at 536/537 with no gap between them, which is the whole
 // claim: there is no viewport height at which this dialog scrolls.
 // SIDEWAYS IS WHERE IT IS PAID FOR, and it is paid ONLY there: the seams
@@ -865,7 +861,8 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
    * scrolling in either direction, and it is a real card rather than a
    * collapsed one — the bar, two group titles, two 3.5rem controls and two
    * captions clear 300px at every width this site serves, and the assertion is
-   * deliberately below the 350–530px the card measures across both rhythms, so
+   * deliberately below the 354–518px the card measures across both rhythms
+   * (measured 2026-09-26 at 30px), so
    * it catches a collapse (a group that stopped rendering) without pinning a
    * pixel height no one promised.
    */
@@ -910,7 +907,7 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     // state-dependent, and the state is the VIEWPORT'S HEIGHT.
     // Read as COMPUTED STYLE against the real compiled sheet, not as class
     // names: an arbitrary variant that Tailwind failed to emit — the one real
-    // risk of `[@media(max-height:33.5rem)]:gap-1` — still appears in the class
+    // risk of `[@media(max-height:33.5rem)]:gap-0` — still appears in the class
     // list while changing nothing, and only getComputedStyle can tell those two
     // apart. Same for the divider's `hidden`.
     // The SAME element is measured at both viewports, without remounting, which
@@ -939,14 +936,14 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     await page.viewport(844, 390);
     await flush();
 
-    // TIGHT — and byte-identical to what it measured before the air landed:
-    // this state has 4px of slack, so every one of the four seams collapses
-    // back (gap-1 on the rail, gap-0 inside a group, no margins — option B's
-    // deeper collapse, which is what the 27px title's second line costs) and
-    // the divider yields with them (owner,
-    // 2026-09-05). Two stacked green controls under a title that already names
-    // both channels still read as alternatives.
-    expect(getComputedStyle(groups).rowGap).toBe('4px');
+    // TIGHT — every one of the four seams collapses (no margins, gap-0 inside
+    // a group — option B's deeper collapse, which is what the title's second
+    // line costs — and, since 2026-09-26, gap-0 on the rail too: G2-R2 tier 2,
+    // the 30px title's cost bought back in part, 0 → 4px of slack) and the
+    // divider yields with them (owner, 2026-09-05). Two stacked green controls
+    // under a title that already names both channels still read as
+    // alternatives.
+    expect(getComputedStyle(groups).rowGap).toBe('0px');
     expect(getComputedStyle(groups).marginTop).toBe('0px');
     expect(getComputedStyle(groups).marginBottom).toBe('0px');
     expect(getComputedStyle(firstGroup).rowGap).toBe('0px');
@@ -976,16 +973,17 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     expect(getComputedStyle(word).fontSize).toBe('27px');
 
     // THE TITLE NEVER YIELDS — option B (owner, 2026-09-05). The seams collapse
-    // and the word can hide, but the 27px dress the owner asked for holds at
+    // and the word can hide, but the title's 30px `section` step (§15.24; the
+    // 27px dress until 2026-09-26) holds at
     // every viewport, in both tight states as well as the airy one. Checked
     // here at 320 and again on the sideways phone, which are precisely the two
     // states where a size fallback would have been the cheaper fix and was
     // deliberately not taken.
     const title = within(dialog()).getByRole('heading', { level: 2 });
-    expect(getComputedStyle(title).fontSize).toBe('27px');
+    expect(getComputedStyle(title).fontSize).toBe('30px');
     await page.viewport(844, 390);
     await flush();
-    expect(getComputedStyle(title).fontSize).toBe('27px');
+    expect(getComputedStyle(title).fontSize).toBe('30px');
   });
 
   it('centres a WhatsApp label that wraps, in the language that wraps it', async () => {
@@ -1028,17 +1026,20 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     async (locale) => {
       // 844×390 is the same phone turned over: 358px of room under the layer's
       // 1rem margins, and the tightest case the site has. The airy rhythm does
-      // NOT fit it — 378px before the divider, 494px with it and the air — so
-      // the owner chose to tighten (2026-09-04) and to drop the divider here
-      // (2026-09-05) rather than accept a scrolling layer: "nothing scrolls, at
-      // any size" is the rule, and it has now survived both a second channel
-      // and a flourish. This viewport is 390px tall, i.e. inside the panel's
-      // `max-height: 33.5rem` query, so what renders here is the tight rhythm
-      // with no word between the groups, and the box measures 350px in BOTH
-      // languages: 8px of slack, and the whole dialog is motionless.
+      // NOT fit it — 502px with the divider and the air (measured 2026-09-26
+      // at 30px) — so the owner chose to tighten (2026-09-04) and to drop the
+      // divider here (2026-09-05) rather than accept a scrolling layer:
+      // "nothing scrolls, at any size" is the rule, and it has now survived
+      // both a second channel and a flourish. This viewport is 390px tall, i.e.
+      // inside the panel's `max-height: 33.5rem` query, so what renders here is
+      // the tight rhythm with no word between the groups, and the box measures
+      // 354px in BOTH languages: 4px of slack, and the whole dialog is
+      // motionless (measured 2026-09-26 at 30px with the rail's gap at 0 —
+      // G2-R2 tier 2; the 27px title had left 8, the 30px title on gap-1 0).
       // Passing THIS case is therefore also proof that both variants engaged —
-      // an unstyled or mis-compiled one would put 374 or 494px back and fail on
-      // the layer's scrollHeight.
+      // an unstyled or mis-compiled one would put 386px (the word left showing)
+      // or 442px (the seams left airy) back, both measured 2026-09-26 at 30px,
+      // and fail on the layer's scrollHeight.
       // So this case asserts the STRONG property, as it did before the rework:
       // not one box on the screen scrolls, and the panel sits fully inside the
       // viewport with its top edge visible at rest.
@@ -1068,14 +1069,17 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
       expect(divider(layer)).not.toBeVisible();
       expect(divider(layer)).toHaveTextContent(MESSAGES[locale].contact.or);
 
-      // THE CONDITION THE 8px OF SLACK RESTS ON, and it CHANGED on 2026-09-05
-      // when the title took the Or-word's 27px: the bar holds TWO lines here
-      // now, not one. That is measured and budgeted for (the bar grew 68 → 88px
-      // and the tight state absorbed it by collapsing its gaps to 4px/0), so
-      // the guard moved with the fact instead of being deleted: the title may
-      // wrap to two lines and no further, and each caption still holds exactly
-      // one. A third title line, or a caption that wrapped, would add ~32px
-      // where 8 are spare.
+      // THE CONDITION THE FIT RESTS ON, and it CHANGED on 2026-09-05 when the
+      // title took the Or-word's 27px: the bar holds TWO lines here, not one.
+      // That was measured and budgeted for then (the bar grew 68 → 88px and
+      // the tight state absorbed it by collapsing its gaps to 4px/0), and
+      // re-measured 2026-09-26 at 30px, when the title took Heading's
+      // `section` step (§15.24): the bar goes 68 → 96px and the box — the
+      // rail's gap at 0 since the same day (G2-R2 tier 2) — is 354px against a
+      // 358px budget, 4px to spare. So the guard moved with the fact instead of
+      // being deleted: the title may wrap to two lines and no further, and each
+      // caption still holds exactly one. A third title line (36px, measured) or
+      // a caption that wrapped would push the box past a budget with 4px spare.
       // Measured against each element's OWN computed line-height rather than a
       // pixel constant, so it keeps meaning the same thing if the type scale
       // moves; the +0.5 in each bound is the honest midpoint between N and N+1
@@ -1098,6 +1102,52 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
         .filter((caption): caption is HTMLParagraphElement => caption !== null);
       expect(captions).toHaveLength(2);
       for (const caption of captions) atMostLines(caption, 1);
+    },
+  );
+
+  it.each(['ro'] as const)(
+    'holds the whole box in %s at 320×500, where BOTH queries hold',
+    async (locale) => {
+      // A 200%-zoom window at the stress width (§9 reflow): 500px tall, so the
+      // height query hides the divider and collapses the seams, and 320px
+      // wide, so the width query claims the rail's gap too — with `gap-1`,
+      // which the compiled sheet emits AFTER the height query's `gap-0` and
+      // therefore wins. That left German 2px over (470 against 468) and the
+      // layer scrolling. The rail's combined-regime rule (G2-R2 tier 2,
+      // 2026-09-26; ContactModal.tsx's rail note has the class and why its
+      // operand order matters) closes the gap there: 454 / 466px, +14 / +2,
+      // measured 2026-09-26 at 30px. The sideways case's STRONG property,
+      // restated for this window: not one box scrolls, and the panel sits
+      // fully inside the viewport.
+      // GERMAN IS NOT IN THIS PIN, deliberately. Its +2 is read in Storybook
+      // with overlay scrollbars (a phone's), and this harness is not that
+      // page: on the Windows workstation its layer carries the 15px
+      // classic-scrollbar gutter (globals' `scrollbar-gutter: stable`) and it
+      // mounts without the shell's `lang`, so the German panel lays out 273px
+      // wide and unhyphenated, 482px tall, and the layer overflows by 14 (514
+      // against 500) — measured 2026-09-26 at 30px, the rail's gap at 0 there
+      // too. Whether German joins this pin is open (G2-R2 tier 2).
+      await page.viewport(320, 500);
+      const { dialog } = mount({ locale, defaultOpen: true });
+      await document.fonts.ready;
+      await flush();
+      expect(document.fonts.check(`1rem "${FONT_FAMILY}"`)).toBe(true);
+
+      const layer = dialog();
+      const box = panelBox(layer);
+      expectUncappedBox(layer);
+
+      expect(layer.scrollHeight).toBe(layer.clientHeight);
+      expect(layer.scrollWidth).toBeLessThanOrEqual(layer.clientWidth);
+      expect(layer.scrollTop).toBe(0);
+      expect(box.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+      expect(box.getBoundingClientRect().bottom).toBeLessThanOrEqual(500);
+
+      // The rule that pays for it, read as COMPUTED style: a height-first
+      // spelling of the same class would sit in the class list, compile, and
+      // lose to the width query's 4px — only the computed gap can tell.
+      expect(getComputedStyle(rail(layer)).rowGap).toBe('0px');
+      expect(getComputedStyle(divider(layer)).display).toBe('none');
     },
   );
 });

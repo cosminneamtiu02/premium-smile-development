@@ -98,6 +98,48 @@ import type { PriceCategoryProps } from './CategoryCard';
 // <h2>'s `id` are one expression, so the pair can never drift, and a page
 // that links to `#price-categories` finds the title at a guessable address.
 //
+// ── THE TITLE'S STEP IS `band` (D48, 2026-09-26) — AND BESIDE THE CARDS IT
+// READS ONE STEP UNDER THEM. Every page <h2> wears ui/Heading's `band` step,
+// §15.24's one size per outline level: 30px on a column narrower than the
+// container's 28rem `@md` step, 36px from it — the step is Heading's, and the
+// arithmetic is in Heading.tsx's `'band' JOINED` paragraph. It replaced
+// `page` (D46) after an hour, because a FIXED 36px <h2> outranked the page's
+// own <h1> on every phone, where Heading's fluid `hero` step sits on its 32px
+// floor.
+// The step answers to the NEAREST container, and this title's container is
+// the menu card itself (ui/Card's `@container`, landed on the <nav>) — not
+// the band's column. Beside the cards that card is the 15rem track
+// (PriceList.tsx's `minmax(15rem,1fr) 4fr` paragraph): 190px of content
+// inside ui/Card's 25px sides, so „Categorii" reads 30px while every category
+// card — its own container, four shares of the row — reads 36px. By the
+// band's own arithmetic at the named widths (ui/Container's 10vw gutters, the
+// grid's gap-8; the stories' expectHeadingOutline reads each title back from
+// real CSS against its own container):
+//
+//     viewport   arrangement   menu content   card content   menu / cards
+//          390   stacked              262px          262px     30 / 30
+//          768   stacked              564px          564px     36 / 36
+//         1280   beside               190px          702px     30 / 36
+//         1536   beside               190px          907px     30 / 36
+//         1920   beside               251px         1153px     30 / 36
+//
+// (Read back in the Storybook test browser, whose classic scrollbar takes
+// 15px off the column, 2026-09-26: 247/247px → 30/30 at 390, 190/892px →
+// 30/36 at 1536, 190/623px → 30/36 on its 1200px default canvas — the 15rem
+// floor holds the menu at 190px beside the cards up to a ~1540px viewport,
+// where its 1fr share takes over.)
+//
+// So "one step under" holds wherever the menu sits BESIDE the cards — from
+// the split to a ~2922px viewport, where the 1fr share would finally carry
+// the card past 28rem — bar a 2.5px sliver at the split itself (a 960px
+// viewport), where the cards' track is still under 498px and both read 30px.
+// STACKED, the menu spans the same column as the cards and wears the SAME
+// step: 30/30 on a phone, 36/36 from a ~622px viewport. That is the honest
+// reading of a 15rem track, not a size of this file's own (§6.6): the title
+// is still a sibling of the card titles — the owner's 2026-09-14 decision, a
+// TITLE and not the first item — and the rule over the <ul> is what separates
+// it from its links at either step.
+//
 // ── THE CONSUMPTION IDIOM IS lib/rotation's RECIPE, COPIED — twice now, once
 // per store (ReviewsDeck was its first witness; the two stores here are
 // different, the three lines around each are the same):
@@ -243,15 +285,19 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
         }
         className="scroll-mt-10 @3xl:sticky @3xl:top-34 @3xl:data-[rail=travel]:relative"
       >
-        {/* ui/Heading's `section` step on a REAL <h2> — the same step every
-            category card's title wears, which is the owner's 2026-09-14
-            decision in one word: „Categorii" is the TITLE of this navigation,
-            an honest sibling of the card titles beside it, not the first of
-            its own items. A visible title and an outline entry are two
+        {/* ui/Heading's `band` step on a REAL <h2> — the step every page <h2>
+            wears (D48, over D46's hour-long `page`), the category card titles
+            included through sections/SectionHeading, which is the owner's
+            2026-09-14 decision in one word: „Categorii" is the TITLE of this
+            navigation, an honest sibling of the card titles beside it, not
+            the first of its own items. Beside them it reads one step under,
+            30px to their 36px, because the step answers to this card's own
+            15rem container (THE TITLE'S STEP IS `band`, in the header, has
+            the measurements). A visible title and an outline entry are two
             independent decisions, which is what `asChild` exists for; the id
             closes the landmark's aria-labelledby pair, and the rule that
             separates the title from the list rides the <ul> below. */}
-        <Heading asChild size="section">
+        <Heading asChild size="band">
           <h2 id={titleId}>{title}</h2>
         </Heading>
         {/* A list, because it IS one: a screen reader announces "list, N
@@ -262,9 +308,10 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
             own label instead of stretching to the card's width.
             THE RULE ABOVE IT is what makes the card's <h2> read as the TITLE
             of this navigation rather than as its first item (owner,
-            2026-09-14): the title wears the same `section` step the category
-            cards wear, so the border and the matching `mt-4`/`pt-4` are what
-            separate the two. */}
+            2026-09-14): the title wears the category cards' own `band` step
+            (D48) — the same size wherever the menu stacks above them, one
+            step under wherever it sits beside them — so the border and the
+            matching `mt-4`/`pt-4` are what separate the two. */}
         <ul className="mt-4 flex flex-col items-start gap-1 border-t border-line-subtle pt-4">
           {items.map((item) => {
             const isCurrent = current === item.id;

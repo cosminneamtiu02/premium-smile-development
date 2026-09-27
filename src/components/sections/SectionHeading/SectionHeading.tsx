@@ -43,14 +43,45 @@ import { cx } from '@/lib/cx/cx';
 // a fresh guess would put it. The inventory reserved that flag's final verdict
 // for consumer runs like this one; D3 is it.
 //
-// ── THE SIZE STEP CAME FIRST, and from here: ui/Heading grew its second step
-// (`size="section"` → `font-display text-3xl text-ink-strong`) with THIS
-// component as its measured consumer (epic #54, D2). The division of labour is
-// the atom's own rule — Heading answers "how big is this title", never "which
-// element is it", so `asChild` lets this section hand it a REAL <h2>/<h3>. The
-// heading in the document outline and the look on the screen are therefore two
-// independent decisions, which is exactly what the old repo needed `visualLevel`
-// for and no longer does.
+// ── THE SIZE STEP IS `band` — 30px on a column under 28rem, 36px from it —
+// since D48 (the planner's, 2026-09-26), which corrected D47 (the owner's,
+// the same day) within the hour. The step came FROM here first: ui/Heading
+// grew its second step (`size="section"` → `font-display text-3xl
+// text-ink-strong`, 30px) with THIS component as its measured consumer (epic
+// #54, D2), and every band title on the site wore it until the owner read
+// them on the doctor page — „Alte păreri ale pacienților noștri”, „Vizitează
+// clinica noastră”, „Filozofia mea”, „Despre Dr. Elena Marin”, „Cursuri și
+// specializări” — and ruled them "too small … bring those headings to the
+// next order of heading height, so to make them larger … i do not want them
+// so large [as the h1], but larger definitely".
+// D47 took "the next order" literally: `page` (`font-display text-4xl
+// text-ink-strong`, a fixed 36px, the step the 404 band measured in on
+// 2026-09-07). It lasted an hour, because the relation to the h1 is
+// WIDTH-DEPENDENT: the h1 wears `hero`, the fluid `clamp(2rem, 1rem + 3.5vw,
+// 4.5rem)`, which floors at 32px on the Smartphone 390 and the 320 stress
+// width — so a fixed 36px title OUTRANKED the page's own h1 on every phone,
+// the one reading the owner's second clause forbids. That inversion was
+// found here and returned to the planner with D47; D48 is the answer:
+// `band` (`font-display text-3xl @md:text-4xl text-ink-strong`) — `section`'s
+// 30px byte for byte on a column narrower than the container's 28rem `@md`
+// step, `page`'s 36px from it. The ARITHMETIC — where the h1 crosses 36px,
+// the residual window in which the two may briefly meet — is not repeated
+// here: it lives in ui/Heading's header, in the paragraph that opens
+// "'band' JOINED 2026-09-26", beside the row it argues for. What THIS file
+// needs is the consequence: the `@md:` half queries the NEAREST ANCESTOR
+// container, which every consumer already supplies (ui/Container's
+// `containerClasses`, ui/Card's root); with none above it the title stays at
+// 30px — it can fail small, never large. This component still writes no
+// container query of its own (§6.5): the response rides the atom's row.
+// ONE step, same face, same ink, unbolded, no size invented (§6.6); it lands
+// on the title in every consumer at once — that is what one opener is for —
+// and the eyebrow row does not move. §15.24's one-size-per-level table is
+// the planner's to amend with it (<h2> through this opener = `band`).
+// The division of labour is the atom's own rule — Heading answers "how big is
+// this title", never "which element is it", so `asChild` lets this section
+// hand it a REAL <h2>/<h3>. The heading in the document outline and the look
+// on the screen are therefore two independent decisions, which is exactly
+// what the old repo needed `visualLevel` for and no longer does.
 //
 // ── THE `id` LANDS ON THE HEADING, NEVER ON THE ROOT. Every old call site that
 // passes one pairs it with `aria-labelledby` on the wrapping <section>, and
@@ -75,8 +106,9 @@ import { cx } from '@/lib/cx/cx';
 //     smell: media queries are the page's judgement, not a fragment's;
 //   · `visualLevel` — 1 call site, doctor-card (level 3 that reads like a
 //     section title). RETIRED rather than deferred: `asChild` already decouples
-//     the element from the look, so `<Heading size="section" asChild><h3>` IS
-//     that call site — which is precisely what this component renders for
+//     the element from the look, so `<Heading size="band" asChild><h3>` IS
+//     that call site (`section` when v1 was cut; D47 and D48 moved the step,
+//     not the argument) — which is precisely what this component renders for
 //     `level={3}`. The axis has nothing left to do.
 // The first four join ADDITIVELY when a real design measures them, defaults
 // pinned (§6.6), breaking nobody.
@@ -133,7 +165,7 @@ type SectionHeadingOwnProps = {
   title: string;
   /**
    * Which REAL heading element the title becomes — the document outline, kept
-   * independent of the size step (which is always `section`). Default 2: a
+   * independent of the size step (which is always `band`, D48). Default 2: a
    * page's one <h1> is the page's, and 3 is the shape a card uses inside a
    * section that already opened with an <h2>.
    */
@@ -200,7 +232,7 @@ export function SectionHeading({
       {...rest}
     >
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      <Heading size="section" asChild>
+      <Heading size="band" asChild>
         <HeadingElement {...(id ? { id } : {})}>{title}</HeadingElement>
       </Heading>
     </div>

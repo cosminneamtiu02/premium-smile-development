@@ -63,57 +63,93 @@ import { useContactModal } from './useContactModal';
 //     (mt-3 · gap-7 · gap-7 · mb-4);
 //   · the Q1 answer the day before (2026-09-04, "tighten the gaps") demanded
 //     that a phone held SIDEWAYS keep the whole panel motionless, which no airy
-//     rhythm can do: at 844×390 the layer offers 358px and the airy box now
-//     measures 494px;
+//     rhythm can do: at 844×390 the layer offers 358px and the airy box
+//     measures 502px (measured 2026-09-26 at 30px);
 //   · and the title's 27px (the peer-applied edit below, owner 2026-09-05) put
-//     a SECOND LINE in the bar at every width the site serves — 68 → 88px on a
-//     sideways phone, three lines at 390 and four at 320 — which broke both
-//     tight budgets at once (sideways −16px, German at 320 −2px). The owner
-//     chose OPTION B to fix it (2026-09-05, in-terminal): the title keeps 27px
-//     at EVERY viewport and the tight states buy the pixels from their own
-//     gaps instead — rail 12 → 4px, group 4 → 0. Measured: +8 sideways, +30 at
-//     320 in German. The alternative on the table, a title that fell back to
-//     Heading's 20px step in those two states, was explicitly NOT taken.
+//     a SECOND LINE in the bar at every width the site serves, which broke
+//     both tight budgets at once (sideways −16px, German at 320 −2px — measured
+//     then, at 27px). The owner chose OPTION B to fix it (2026-09-05,
+//     in-terminal): the title keeps its size at EVERY viewport and the tight
+//     states buy the pixels from their own gaps instead — rail 12 → 4px, group
+//     4 → 0. The alternative on the table, a title that fell back to Heading's
+//     20px step in those two states, was explicitly NOT taken. Since
+//     2026-09-26 the title wears Heading's 30px `section` step (§15.24) and
+//     option B still pays for it — measured 2026-09-26 at 30px: the bar goes
+//     68 → 96px on a sideways phone (one title line → two), the title runs to
+//     three lines at 390 and four at 320 (five in German), which left the
+//     tight states 0px of slack sideways and 30px at 320 in German. The same
+//     day the sideways state gave up its last rail gap, `gap-1` → `gap-0`
+//     under the height query only (G2-R2 tier 2 — the 30px title's cost
+//     bought back in part; candidates B–I measured and rejected, see the
+//     ledger): 844×390 box 358 → 354, slack 0 → 4, RO and DE; every airy state
+//     byte-identical (measured 2026-09-26 at 30px). The width query keeps its
+//     `gap-1`, and where BOTH queries hold (a 320×500 zoom window) the height
+//     rule ALONE loses to it — Tailwind emits the width rule after the height
+//     rule — which left German there 2px over (470 against 468). That is the
+//     ONE place the combined regime needed its own rule: a rail gap of 0 under
+//     both queries at once (the rail's note has the class and why its operand
+//     order matters), which takes 320×500 from 458 / 470 (+10 / −2, the layer
+//     scrolling in German) to 454 / 466 (+14 / +2), measured 2026-09-26 at
+//     30px.
 // So the air is the DEFAULT and the tightening is a RESPONSE TO ROOM, not a
 // global trade. TWO QUERIES turn it on, and each one is a measured boundary
 // rather than a taste:
 //   · `max-height: 33.5rem` (536px) — the sideways phone. Above it the panel
-//     with its divider and its seams measures 494px and needs 526px of
-//     viewport; at 537 the slack is 11px and at 536 the tight state takes over
-//     with 154px, so the two states MEET with no gap: there is no height at
-//     which this dialog scrolls. In that state ALL FOUR SEAMS collapse and go
-//     further than they used to — `mt-0 · gap-1 · mb-0` on the rail and `gap-0`
-//     inside each group (owner, 2026-09-05, option B) — which is what pays for
-//     the 27px title's SECOND LINE at that width and still leaves 8px: 350px
-//     against a 358px budget.
+//     with its divider and its seams measures 502px and needs 534px of
+//     viewport; at 537 the slack is 3px and at 536 the tight state takes over
+//     with 150px (measured 2026-09-26 at 30px), so the two states MEET with no
+//     gap: there is no height at which this dialog scrolls. In that state ALL
+//     FOUR SEAMS collapse and go further than they used to — `mt-0 · gap-0 ·
+//     mb-0` on the rail (its gap `gap-1` from option B, owner 2026-09-05,
+//     until G2-R2 tier 2 on 2026-09-26) and `gap-0` inside each group — which
+//     is what pays for the title's SECOND LINE at that width: 354px against a
+//     358px budget, 4px to spare (measured 2026-09-26 at 30px; the 27px title
+//     had left 8, the 30px title on `gap-1` 0).
 //     (This query has moved three times, and always behind a measurement it
 //     lost to: 26.875rem when the airy box was 378px, 29.5rem when the divider
-//     made it 434, 32rem when the seams made it 474, 33.5rem now that the 27px
-//     title makes it 494. A threshold that stays behind its own arithmetic is
+//     made it 434, 32rem when the seams made it 474, 33.5rem when the 27px
+//     title made it 494. The 30px title did NOT move it: the airy box's 534px
+//     of need still sits below 537, the first row of the airy state (measured
+//     2026-09-26 at 30px). A threshold that stays behind its own arithmetic is
 //     just a scrolling band nobody measured — probed on BOTH sides every time,
 //     and all three variant families — rail, ChannelGroup, the divider's
 //     `hidden` — sit on the same number, because a mixed band is the other way
 //     this goes wrong.)
 //   · `max-width: 21.25rem` (340px) — the 320px accessibility stress width,
-//     where the panel is only 288px wide, every caption wraps, the title runs
-//     to four lines and the German box would otherwise reach 566px against that
-//     phone's 536px budget. The same collapse lands it at 506 (30px of slack),
-//     WITH the divider still at full size — the owner's lever order for an
-//     upright overflow (2026-09-05). Probed at 340/341; 390 and up are never
+//     where the panel is only 288px wide, the captions wrap (all but German's
+//     second), the title runs to four lines (five in German) and the German
+//     box would otherwise reach 614px against that phone's 536px budget. The
+//     same collapse lands it at 506 (30px of slack), WITH the divider still at
+//     full size (all measured 2026-09-26 at 30px) — the owner's lever order for
+//     an upright overflow (2026-09-05). Probed at 340/341; 390 and up are never
 //     affected.
-// MEASURED, RO / DE, box height (slack against the layer's budget):
-//   844×390  tight, no divider  350 / 350  (+8)   ← the case the height query is for
-//   844×536  tight, no divider  350 / 350  (+154) ← its last row
-//   844×537  airy               494 / 494  (+11)  ← the first row above it
-//   320×568  collapsed seams, divider  478 / 506  (+58 / +30) ← worst upright
-//   390×844  airy               530 / 506  (+282 / +306)
-//   768×1024 · 1280×800 · 1536×864 · 1920×1080  airy  494 / 494 everywhere
+// MEASURED 2026-09-26 AT 30px, the rail's height-query gap at 0 (Chromium,
+// overlay scrollbars — a phone's), RO / DE, box height (slack against the
+// layer's budget):
+//   844×390  tight, no divider  354 / 354  (+4)   ← the case the height query is for
+//   844×536  tight, no divider  354 / 354  (+150) ← its last row
+//   844×537  airy               502 / 502  (+3)   ← the first row above it
+//   320×568  collapsed seams, divider  494 / 506  (+42 / +30) ← worst upright
+//   390×844  airy               518 / 518  (+294 / +294)
+//   768×1024 · 1280×800 · 1536×864 · 1920×1080  airy  502 / 502 everywhere
+//   320×500  both queries, no divider  454 / 466  (+14 / +2) ← the combined rule
 // KNOWN BOUNDARY, recorded rather than smoothed: at the 320px width the panel
-// needs 538px of viewport height in German, which the §7 stress phone (568)
-// has and a 200%-zoom window of 320×500 does not — there the LAYER scrolls,
-// which is ui/Modal's designed answer for content that cannot fit (D17/D18)
-// and the §9 reflow regime rather than a device. Hiding the divider upright to
-// buy those pixels is NOT this lane's call (owner, 2026-09-05).
+// needs 538px of viewport height in German (measured 2026-09-26 at 30px),
+// which the §7 stress phone (568) has and a 200%-zoom window of 320×500 does
+// not — but there both queries hold, the divider hides and the rail's
+// combined-regime rule closes its gap, so the German box is 466px against a
+// 468px budget and even that window does not scroll (measured 2026-09-26 at
+// 30px). Below it — under 498px of height at that width in German, the 466
+// plus the layer's 32 — the LAYER scrolls, which is ui/Modal's designed answer
+// for content that cannot fit (D17/D18) and the §9 reflow regime rather than
+// a device. Hiding the divider upright to buy those pixels is NOT this lane's
+// call (owner, 2026-09-05). The same regime covers a desktop engine with
+// CLASSIC scrollbars at that width: globals' `scrollbar-gutter: stable` on
+// <html> takes 15px off the layer, so the German panel is 273px wide, its
+// title runs to six lines and the layer scrolls 58px at 320×568 — and 86px
+// at 320×500, the combined-regime rule notwithstanding (both measured
+// 2026-09-26 at 30px, Chromium on Windows) — which is why the table above is
+// read with overlay scrollbars.
 // §6.5 ON THE MEDIA QUERIES, which an atom would not be allowed: media queries
 // are the section/page tier's tool, and this section is the one place they are
 // unavoidable — a container query cannot see what this needs, because the
@@ -283,7 +319,10 @@ interface ChannelGroupProps {
  *
  * Its inner gap is the rail's smaller half and moves with it: `gap-2` normally,
  * `gap-0` under either tightening query — the stack closes up entirely there,
- * which is where option B found the pixels the 27px title costs (header note).
+ * which is where option B found the pixels the title's second line costs
+ * (header note): 32px of the 88px the sideways collapse saves (the rail's last
+ * 4px joined it on 2026-09-26, G2-R2 tier 2), and with the 30px title's 96px
+ * bar that state keeps 4px to spare (measured 2026-09-26 at 30px).
  * Written here in
  * full rather than passed in as a prop — the two literals are a KEEP-IN-SYNC
  * pair with the rail's, and a gap arriving from outside would let a caller give
@@ -365,28 +404,26 @@ export function ContactModal(): ReactElement {
       // wants that block shorter, the pad is the thing to revisit (it buys
       // optical centring on the panel, not legibility) — never the size, which
       // is the owner's own instruction.
-      // A PLAIN <h2> WEARING THE OR-WORD'S 27px DRESS, no <Heading asChild>
-      // (owner, 2026-09-05: the title as big as the Or-word). Heading's axis
-      // offers 20px and 30px only, and §6.8 bars a caller from re-sizing the
-      // atom through className — so the title takes the same road the Or-word
-      // documents below: the semantic tokens Heading itself uses, with only
-      // the SIZE local (1.6875rem over a 2rem line box). This makes the title
-      // 27px's SECOND consumer — exactly the "measured consumer" the Or-word's
-      // note says turns this size into Heading's third step; that promotion is
-      // a Heading-lane conversation, and both call sites here switch to the
-      // new step when it lands. h2 because the page owns the one <h1> (§9:
+      // THE TITLE WEARS ui/Heading's `section` STEP (30px) through `asChild` —
+      // the ONE h2 step every page shares since 2026-09-26 (owner: "all
+      // headings and eyebrows app wide … the same size as they are on the
+      // [doctor] page", CLAUDE.md §15.24). Until then it was a plain <h2> in
+      // the Or-word's 27px dress (owner, 2026-09-05: the title as big as the
+      // Or-word), which made 27px a second consumer and armed Heading's
+      // third-step promotion — DISARMED now: the ornament below keeps its
+      // 27px alone, the one-off its own note describes. h2 because the page
+      // owns the one <h1> (§9:
       // logical heading order) — a dialog summoned from anywhere may not claim
       // the document's top level. `text-center` on the heading itself because
       // the slot is `flex-wrap`: a long German title wraps to two lines there,
       // and both must stay centred.
       header={
         <div className="flex flex-1 justify-center ps-14">
-          <h2
-            id={titleId}
-            className="text-center font-display text-[1.6875rem]/[2rem] text-ink-strong"
-          >
-            {t('heading')}
-          </h2>
+          <Heading size="section" asChild>
+            <h2 id={titleId} className="text-center">
+              {t('heading')}
+            </h2>
+          </Heading>
         </div>
       }
     >
@@ -407,16 +444,36 @@ export function ContactModal(): ReactElement {
           thing (7:2 now, where it was 5:2).
           ALL FOUR COLLAPSE TOGETHER in the two tight states — a short viewport
           (Q1, 2026-09-04) and the 320px stress width — because neither has room
-          for any of it: `mt-0 mb-0 gap-1`, with ChannelGroup going to `gap-0`
+          for any of it: `mt-0 mb-0` in both, the rail gap `gap-0` on the short
+          viewport and `gap-1` at the stress width (where the Or-word stays and
+          the gap keeps it off the groups), with ChannelGroup going to `gap-0`
           beside it. That is option B (owner, 2026-09-05): when the title took
           the Or-word's 27px and grew a second line in the bar, those states
           went 16px and 2px over budget, and the owner chose to pay it out of
-          the gaps rather than shrink the title back. The result is deliberately
-          dense — 4px between the two controls' groups and none inside one —
-          because the alternative was a scrolling card, and both states already
-          drop the Or-word for the same reason. Their thresholds and the
-          measurements behind them are in the header note. */}
-      <div className="mx-auto mt-3 mb-4 grid w-fit max-w-full min-w-[min(24.5rem,100%)] gap-7 [@media(max-height:33.5rem)]:mt-0 [@media(max-height:33.5rem)]:mb-0 [@media(max-height:33.5rem)]:gap-1 [@media(max-width:21.25rem)]:mt-0 [@media(max-width:21.25rem)]:mb-0 [@media(max-width:21.25rem)]:gap-1">
+          the gaps rather than shrink the title back; the short viewport's rail
+          gap went from `gap-1` to `gap-0` on 2026-09-26 (G2-R2 tier 2 — the
+          30px title's cost bought back in part). The result is deliberately
+          dense — nothing between the two controls' groups on a sideways phone,
+          4px at 320, and none inside a group — because the alternative was a
+          scrolling card, and the short-viewport state already drops the
+          Or-word for the same reason. Their thresholds and the measurements
+          behind them are in the header note.
+          WHERE BOTH QUERIES HOLD (a zoomed 320×500 window: the divider hidden
+          by the height query, the rail's gap claimed by both) the two
+          single-query gaps disagree, and the width query's `gap-1` wins — so
+          the combined regime has its OWN rule, the last class below: `gap-0`
+          under `(max-width: 21.25rem) and (max-height: 33.5rem)` (G2-R2 tier
+          2, 2026-09-26: German there 470 → 466px against a 468px budget).
+          ITS OPERAND ORDER IS LOAD-BEARING. Tailwind emits arbitrary media
+          variants in the order their query text sorts (read off the compiled
+          sheet, 2026-09-26), and all of them share one specificity, so the
+          later rule wins: written width-first, the combined rule sorts AFTER
+          the width query's `gap-1` and wins; written height-first, it sorts
+          between the height query's rules and the width query's and loses to
+          that `gap-1` — an identical-looking class that silently does
+          nothing. The 320×500 interaction case reads the computed gap, which
+          is the only check that can tell the two spellings apart. */}
+      <div className="mx-auto mt-3 mb-4 grid w-fit max-w-full min-w-[min(24.5rem,100%)] gap-7 [@media(max-height:33.5rem)]:mt-0 [@media(max-height:33.5rem)]:mb-0 [@media(max-height:33.5rem)]:gap-0 [@media(max-width:21.25rem)]:mt-0 [@media(max-width:21.25rem)]:mb-0 [@media(max-width:21.25rem)]:gap-1 [@media(max-width:21.25rem)_and_(max-height:33.5rem)]:gap-0">
         <ChannelGroup
           heading={t('callHeading')}
           caption={t('callHours', {
@@ -482,9 +539,12 @@ export function ContactModal(): ReactElement {
             2rem line box.
             IF A SECOND CONSUMER EVER WANTS 27px, that is the measured consumer
             Heading's law asks for, and this <p> becomes the atom's third step
-            in that lane — not before. (Met on 2026-09-05: the panel's own
-            title now wears the same 27px on the owner's word — the
-            Heading-step lane is unlocked, not jumped.)
+            in that lane — not before. (Met on 2026-09-05, when the panel's own
+            title wore the same 27px on the owner's word, and UNDONE on
+            2026-09-26: the title now wears ui/Heading's `section` step (30px)
+            per CLAUDE.md §15.24, so 27px is back to one consumer — this
+            ornament — and the Heading-step lane is disarmed again; G2-R2
+            tier 2, typescript F6.)
             It contributes NOTHING to the document outline, which is the other
             half of why it is a <p>: the panel's structure stays h2 → h3 · h3,
             what a screen-reader user navigates by, while linear reading still
@@ -499,8 +559,9 @@ export function ContactModal(): ReactElement {
             a phone held sideways the flourish yields to the never-scroll rule.
             Nothing is lost — two stacked green controls under one title that
             already names both channels read as alternatives without a word
-            between them, and the word costs 60px there (its own 32px line plus
-            a second 28px rail gap), which is 15× the slack that state has. */}
+            between them, and the word costs 32px there (its own line; the
+            rail gap it would add is 0 since 2026-09-26) where that state has
+            4px to spare (both measured 2026-09-26 at 30px). */}
         <p className="text-center font-display text-[1.6875rem]/[2rem] text-ink-strong [@media(max-height:33.5rem)]:hidden">
           {t('or')}
         </p>

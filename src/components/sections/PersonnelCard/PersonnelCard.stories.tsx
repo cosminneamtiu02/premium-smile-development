@@ -2,9 +2,10 @@ import type { ReactElement, ReactNode } from 'react';
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
 import { Container } from '@/components/ui/Container/Container';
+import { Keyword } from '@/components/ui/Keyword/Keyword';
 import {
-  Keyword,
   PersonnelCard,
+  type PersonnelActions,
   type PersonnelKind,
   type PersonnelPhoto,
   type PersonnelSide,
@@ -33,7 +34,8 @@ import {
 //     pseudo stress below is typed out as a fixture instead of produced by the
 //     toolbar (the SectionHeading precedent);
 //   · the viewport pin, because this card CHANGES SHAPE with the box it is
-//     handed: the doctor row flips at `@3xl` = 768px of CARD width (D7). A
+//     handed: the doctor card becomes a 2×2 grid at `@3xl` = 768px of CARD
+//     width (D7, D15), and is one column below it. A
 //     manager canvas narrowed by the sidebar sits in the middle of that band,
 //     so an unpinned story would photograph an accident. Playwright ignores the
 //     pin — it sets its own page size per project — which is exactly why every
@@ -62,6 +64,13 @@ import {
 // no result guarantees (CMSR advertising rules for dental practices, in force
 // since 2025-07-01). The real people, in five languages, are the owner's to
 // author (§15.17).
+//
+// ── THE FOUR DOCTOR FRAMES CHANGED on 2026-09-21 (the doctor-pages run, D15):
+// every doctor card now carries its two links, and above the card's `@3xl` the
+// arrangement is the 2×2 grid rather than a flex row. The hrefs below are
+// FIXTURES in the shape the Team page will build — a services anchor into the
+// price list's own category id, a doctor page under /team/ — and, like every
+// string here, they arrive finished (§8.1).
 
 const Band = ({ children }: { children: ReactNode }): ReactElement => (
   <section className="bg-page">
@@ -91,9 +100,9 @@ const withBand: Decorator = (Story) => (
 
 /** The three committed demo portraits, all at the ONE team ratio (3:4, D3). */
 const PORTRAITS = {
-  elena: { src: 'images/demo/portrait-1.jpg', width: 600, height: 800 },
-  ioana: { src: 'images/demo/portrait-2.jpg', width: 600, height: 800 },
-  andrei: { src: 'images/demo/portrait-3.jpg', width: 600, height: 800 },
+  elena: { src: '/images/demo/portrait-1.jpg', width: 600, height: 800 },
+  ioana: { src: '/images/demo/portrait-2.jpg', width: 600, height: 800 },
+  andrei: { src: '/images/demo/portrait-3.jpg', width: 600, height: 800 },
 } satisfies Record<string, PersonnelPhoto>;
 
 /** The two doctors' own words (D8), with the keyword fragments a `t.rich(…, {
@@ -116,6 +125,29 @@ const ANDREI_ABOUT = (
     săptămână.
   </>
 );
+
+/** The two doctors' calls to action (D15), and the German pair the expansion
+ *  stress carries: finished hrefs — the Team page's localeHref() output — and
+ *  finished labels, which are also the links' accessible names. The left one
+ *  is "see the services this doctor does" (an anchor into the price list's own
+ *  category), the right one "go to his page" (the owner's brief, verbatim). */
+const ACTIONS = {
+  elena: {
+    services: { href: '/ro/services/#orthodontics', label: 'Vezi serviciile' },
+    profile: { href: '/ro/team/elena-marin/', label: 'Vezi profilul' },
+  },
+  andrei: {
+    services: { href: '/ro/services/#oral-surgery', label: 'Vezi serviciile' },
+    profile: { href: '/ro/team/andrei-serban/', label: 'Vezi profilul' },
+  },
+  german: {
+    services: {
+      href: '/de/services/#orthodontics',
+      label: 'Leistungen ansehen',
+    },
+    profile: { href: '/de/team/elena-marin/', label: 'Profil ansehen' },
+  },
+} satisfies Record<string, PersonnelActions>;
 
 /** The three auxiliary tiles the grid stories share. The third position is
  *  deliberately long enough to WRAP inside a three-column track, so the grid
@@ -193,54 +225,142 @@ const sitsBeside = (card: HTMLElement): boolean => {
   return contentWidth >= step;
 };
 
+/** A doctor card's five boxes, reached from the one element that has a role:
+ *  the quote sits between the portrait block and the actions row, and the
+ *  block holds the portrait cell and the name/position pair (D6, D7, D15).
+ *  None of them carries a role — they are layout boxes — so structure is the
+ *  only honest way in. */
+const partsOf = (quote: HTMLElement) => {
+  const block = quote.previousElementSibling as HTMLElement;
+  return {
+    layout: quote.parentElement as HTMLElement,
+    block,
+    portrait: block.children[0] as HTMLElement,
+    names: block.children[1] as HTMLElement,
+    actions: quote.nextElementSibling as HTMLElement,
+  };
+};
+
+const centreY = (box: DOMRect): number => box.top + box.height / 2;
+
 /** The arrangement contract in one place: the DOM order never moves, and the
- *  boxes sit where the measured width says they should (D7). */
+ *  boxes sit where the measured width says they should (D7, D15). */
 const expectArrangement = async (
   card: HTMLElement,
-  block: HTMLElement,
   quote: HTMLElement,
   side: PersonnelSide,
 ): Promise<void> => {
-  // Reading order is "who, then what they say" whichever way the row faces —
-  // `side` is a visual-only mirror, so a screen reader and the stacked phone
-  // layout see the same sequence in both stories.
+  const { layout, block, portrait, names, actions } = partsOf(quote);
+
+  // Reading order is "who, then what they say, then what you can do" whichever
+  // way the card faces — `side` is a visual-only mirror, so a screen reader
+  // and the stacked phone layout see the same sequence in both stories.
   await expect(
     block.compareDocumentPosition(quote) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
+  await expect(
+    quote.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
 
-  // The step itself, read off the layout box: `column` below `@3xl`, and the
-  // row the `side` lookup names above it. Asserting this as well as the
-  // geometry is what keeps the frame honest at every width — whichever branch
-  // the runner lands in, one of the two is being proved rather than skipped.
+  // The step itself, read off the layout box: a flex `column` below `@3xl`, the
+  // 2×2 grid above it. Asserting this as well as the geometry is what keeps
+  // the frame honest at every width — whichever branch the runner lands in,
+  // one of the two is being proved rather than skipped.
   const beside = sitsBeside(card);
-  const layout = block.parentElement as HTMLElement;
-  await expect(getComputedStyle(layout).flexDirection).toBe(
-    beside ? (side === 'start' ? 'row' : 'row-reverse') : 'column',
-  );
+  const layoutStyle = getComputedStyle(layout);
+  await expect(layoutStyle.display).toBe(beside ? 'grid' : 'flex');
 
-  const blockBox = block.getBoundingClientRect();
   const quoteBox = quote.getBoundingClientRect();
+  const actionsBox = actions.getBoundingClientRect();
   // A collapsed quote (zero height) would satisfy the stacked comparison
   // below by accident — the words must occupy real space first (G2 react).
   await expect(quoteBox.height).toBeGreaterThan(0);
+  await expect(actionsBox.height).toBeGreaterThan(0);
 
   if (!beside) {
-    // Below the step: one column, portrait first, the justified words below —
-    // the owner's brief, verbatim.
-    await expect(quoteBox.top).toBeGreaterThanOrEqual(blockBox.bottom);
+    // Below the step: one column, portrait first, the justified words below,
+    // the two links under them — the owner's brief, verbatim.
+    await expect(layoutStyle.flexDirection).toBe('column');
+    await expect(getComputedStyle(block).display).toBe('flex');
+    await expect(quoteBox.top).toBeGreaterThanOrEqual(
+      block.getBoundingClientRect().bottom,
+    );
+    await expect(actionsBox.top).toBeGreaterThanOrEqual(quoteBox.bottom);
     return;
   }
+
+  // At the step the D6 block DISSOLVES (`display: contents`, D15) so its two
+  // boxes are grid items of their own — which is why nothing here measures the
+  // block itself: an element with no box has no rectangle to measure.
+  await expect(getComputedStyle(block).display).toBe('contents');
+  // The two gaps are the grid's longhands, not the column's 24px shorthand:
+  // 32px across, 12px down (the card's own rhythm between the portrait and the
+  // name). Compared rather than read in pixels, so the assertion survives a
+  // visitor's root font-size.
+  await expect(parseFloat(layoutStyle.columnGap)).toBeGreaterThan(
+    parseFloat(layoutStyle.rowGap),
+  );
+
+  const portraitBox = portrait.getBoundingClientRect();
+  const namesBox = names.getBoundingClientRect();
   if (side === 'start') {
-    await expect(blockBox.right).toBeLessThanOrEqual(quoteBox.left);
+    await expect(portraitBox.right).toBeLessThanOrEqual(quoteBox.left);
+    await expect(namesBox.right).toBeLessThanOrEqual(actionsBox.left);
   } else {
-    await expect(quoteBox.right).toBeLessThanOrEqual(blockBox.left);
+    await expect(quoteBox.right).toBeLessThanOrEqual(portraitBox.left);
+    await expect(actionsBox.right).toBeLessThanOrEqual(namesBox.left);
   }
+
+  // Row 2 sits under row 1: the words over the links, the portrait over the
+  // name — one grid, read down each column.
+  await expect(actionsBox.top).toBeGreaterThanOrEqual(quoteBox.bottom);
+  await expect(namesBox.top).toBeGreaterThanOrEqual(portraitBox.bottom);
+
+  // THE OWNER'S OWN SENTENCE, measured: the two buttons sit "at the same level
+  // on the oy axis as [name + position]". Both row-2 cells are `self-center`,
+  // so their vertical centres coincide whichever of the two is taller —
+  // ±2px for sub-pixel rounding (D15).
+  await expect(
+    Math.abs(centreY(namesBox) - centreY(actionsBox)),
+  ).toBeLessThanOrEqual(2);
+
+  // …and "centered below the description text": the row is capped at 48rem and
+  // centred in its column, whose edges are the quote's own (the quote stretches
+  // across it). Equal slack left and right, ±2px.
+  await expect(actionsBox.width).toBeLessThanOrEqual(quoteBox.width + 1);
+  await expect(
+    Math.abs(
+      actionsBox.left - quoteBox.left - (quoteBox.right - actionsBox.right),
+    ),
+  ).toBeLessThanOrEqual(2);
 };
 
-/** The portrait block is the quote's previous sibling — reached by structure
- *  because it carries no role of its own (it is a layout box). */
-const blockBeside = (quote: HTMLElement): HTMLElement =>
-  quote.previousElementSibling as HTMLElement;
+/** THE ACCESSIBLE NAME of a doctor's link: the label, then the person (D15's
+ *  EACH LINK NAMES ITSELF bullet — a page of doctors repeats the same two
+ *  labels, and a rotor reads names out of context). The VISIBLE text is still
+ *  the label alone, which is the leading substring SC 2.5.3 asks for. */
+const linkName = (label: string, doctor: string): string =>
+  `${label} ${doctor}`;
+
+/** Both links of a doctor card, by role and by name — the composed name is
+ *  what a screen reader announces, which is the assertion §9 wants made
+ *  (D15), and the label alone is what a visitor reads. */
+const expectBothLinks = async (
+  canvas: {
+    getByRole: (role: string, options: { name: string }) => HTMLElement;
+  },
+  actions: PersonnelActions,
+  doctor: string,
+): Promise<void> => {
+  for (const link of [actions.services, actions.profile]) {
+    const anchor = canvas.getByRole('link', {
+      name: linkName(link.label, doctor),
+    });
+    await expect(anchor).toBeVisible();
+    await expect(anchor).toHaveAttribute('href', link.href);
+    await expect(anchor).toHaveTextContent(link.label);
+  }
+};
 
 /** The two controls' options, derived from keyed objects rather than typed as
  *  arrays (the Card.stories `TONE_OPTIONS` reasoning): `satisfies { [K in
@@ -276,7 +396,7 @@ const meta = {
     name: {
       control: 'text',
       description:
-        'The full name, finished and already translated (§8.1) — becomes the card’s real <h3> and, through aria-labelledby, the article’s accessible name (D4). Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
+        'The full name, finished and already translated (§8.1) — becomes the card’s real heading — an <h3> by default, an <h2> under `headingLevel={2}` (the Team page) — and, through aria-labelledby, the article’s accessible name (D4). Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
     },
     position: {
       control: 'text',
@@ -297,7 +417,18 @@ const meta = {
       control: 'inline-radio',
       options: Object.values(SIDE_OPTIONS),
       description:
-        'Which side the portrait block sits on at the wide step. Default `start`. It mirrors the ROW ONLY (`flex-row-reverse`): the DOM order stays block-then-quote for both values, so reading order never moves (D7)',
+        'Which side the portrait block sits on at the wide step. Default `start`. It mirrors the COLUMNS ONLY: the DOM order stays block → quote → actions for both values, so reading order never moves (D7)',
+    },
+    headingLevel: {
+      control: 'inline-radio',
+      options: [2, 3],
+      description:
+        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1, which is what sections/TeamRoster passes. The element and the Heading step change together (§15.24, run D48: `band` at 2 — 30px on a card narrower than 28rem, 36px from it, read against the card’s own container — `title` at 3); the id and the aria-labelledby pair do not',
+    },
+    actions: {
+      control: false,
+      description:
+        'The doctor’s two calls to action — REQUIRED on that kind, refused on the auxiliary one (D15). Finished hrefs and finished labels (§8.1): `services` wears the Hero’s solid `lg` face and goes to the work he does, `profile` its outline twin and goes to his page. Not a live control: a text knob over two hrefs and two labels would only ever produce a broken pair',
     },
     className: {
       control: false,
@@ -404,14 +535,21 @@ export const AuxiliaryGrid: Story = {
  * This is the frame where the quote's dress is actually measurable, and the
  * play measures all of it because none of it survives in a unit test (no
  * stylesheet there): `text-justify` (OWNER DECISION, "extremely important" — a
- * per-element override of §15.1's start-aligned prose lock, D8), the muted ink
- * that is the owner's "washed / ghost", the keyword fragments one ink step
- * darker at the SAME weight as the running text (D9 — `<b>` without the
- * bolding Preflight would give it), and the opening mark as CSS generated
+ * per-element override of §15.1's start-aligned prose lock, D8), the faint ink
+ * that is the owner's "washed / ghost" (D58), the keyword fragments in a DARKER
+ * LILAC and a LITTLE BOLD, upright (D9 as amended by D56 — the owner's "italic
+ * looks stupid … use a darker lilla and just a little bold and drop italic.
+ * before it was too bold"; on 2026-09-26 D9's ink-only first shape became D52's
+ * bold, then D55's italic, then this), and the opening mark as CSS generated
  * content rather than a character in a string.
  *
+ * It is also the frame where the TWO LINKS are measured (D15): the owner's
+ * "at the same level on the oy axis as [name + position] and centered below
+ * the description text" is two geometry assertions inside expectArrangement,
+ * and their faces are the Hero's pair — solid left, outline right.
+ *
  * The arrangement assertion is DERIVED from the card's measured content width,
- * not from the pinned viewport: at 1536 the card is beside-arranged and at 390
+ * not from the pinned viewport: at 1536 the card is the 2×2 grid and at 390
  * and 320 it is the stacked one column the owner asked for, and one assertion
  * covers all three.
  */
@@ -431,6 +569,7 @@ export const Doctor: Story = {
       position="Medic specialist ortodonție"
       photo={PORTRAITS.elena}
       about={ELENA_ABOUT}
+      actions={ACTIONS.elena}
       {...(side ? { side } : {})}
     />
   ),
@@ -445,8 +584,10 @@ export const Doctor: Story = {
 
     const quoteStyle = getComputedStyle(quote);
     await expect(quoteStyle.textAlign).toBe('justify');
-    // --ink-muted (#5b554f), the repo's quiet ink at 7.35:1 on the surface.
-    await expect(quoteStyle.color).toBe('rgb(91, 85, 79)');
+    // --ink-faint (#766f69), the 19th role D58 gave the owner's "washed or
+    // ghost" ("what if you make the faint text lighter"): 4.94:1 on the
+    // surface, still AA for body text, and lighter than --ink-muted.
+    await expect(quoteStyle.color).toBe('rgb(118, 111, 105)');
     // …and the marks the reader sees are the LANGUAGE's, taken from `quotes`
     // (initial value `auto`) rather than from any string (D8).
     await expect(getComputedStyle(quote, '::before').content).toBe(
@@ -458,12 +599,45 @@ export const Doctor: Story = {
 
     const keyword = quote.querySelector('b') as HTMLElement;
     const keywordStyle = getComputedStyle(keyword);
-    // --ink-strong (#1a1714): "more colored towards black", at 400 — the
-    // running text's weight, with Preflight's `bolder` undone (D9).
-    await expect(keywordStyle.color).toBe('rgb(26, 23, 20)');
-    await expect(keywordStyle.fontWeight).toBe('400');
+    // --accent-strong (#4b3a86, a deep lilac) at 650, upright, no underline: hue
+    // AND a little weight, the owner's "use a darker lilla and just a little
+    // bold and drop italic" (D56, over D55's italic and D52's one round at 700),
+    // then "add just a little more bold and underline them maybe" (D59: 650,
+    // between D56's 600 and the 700 that was too bold, plus a thin underline in
+    // the keyword's own violet — dropped after one look by D60, "remove the
+    // underline", the 650 and the violet kept), the value deepened from
+    // #655885 by D57 ("a
+    // more seeable one … make it just jump at you more") — darker and more
+    // saturated, so the keyword now reads darker than the quote around it, and
+    // further off it since D58 lightened that quote's ink (1.89:1 between the
+    // two, was 1.27:1).
+    await expect(keywordStyle.color).toBe('rgb(75, 58, 134)');
+    await expect(keywordStyle.fontWeight).toBe('650');
+    await expect(keywordStyle.fontStyle).toBe('normal');
+    await expect(keywordStyle.textDecorationLine).toBe('none');
 
-    await expectArrangement(card, blockBeside(quote), quote, 'start');
+    await expectBothLinks(canvas, ACTIONS.elena, 'Dr. Elena Marin');
+    // The faces, measured rather than read off a class list: the solid CTA is
+    // filled, the outline one is not — the Hero's pair (D15). --cta is
+    // #008854; an outline button rests on the surface with a cta border.
+    const services = canvas.getByRole('link', {
+      name: linkName(ACTIONS.elena.services.label, 'Dr. Elena Marin'),
+    });
+    const profile = canvas.getByRole('link', {
+      name: linkName(ACTIONS.elena.profile.label, 'Dr. Elena Marin'),
+    });
+    await expect(getComputedStyle(services).backgroundColor).toBe(
+      'rgb(0, 136, 84)',
+    );
+    await expect(getComputedStyle(profile).borderTopColor).toBe(
+      'rgb(0, 136, 84)',
+    );
+    // ≥44px for a primary action (§9); `lg` is 56px of min-height.
+    await expect(
+      services.getBoundingClientRect().height,
+    ).toBeGreaterThanOrEqual(44);
+
+    await expectArrangement(card, quote, 'start');
     await expectNoSidewaysScroll(card);
   },
 };
@@ -474,11 +648,12 @@ export const Doctor: Story = {
  * name, etc on right side and text on left").
  *
  * The whole point of the frame is that only the PICTURE changes: the play
- * asserts the quote's box now sits left of the portrait's while the DOM order
- * is still block-then-quote, which is what `flex-row-reverse` buys and why the
- * mirror costs a screen reader nothing (D7). Below the step this story is
- * byte-identical in arrangement to `Doctor` — portrait first, words below — and
- * the derived assertion says so at whatever width it is rendered.
+ * asserts the quote's box now sits left of the portrait's — and the links left
+ * of the name — while the DOM order is still block → quote → actions, which is
+ * what the mirrored COLUMN placement buys and why the mirror costs a screen
+ * reader nothing (D7, D15). Below the step this story is byte-identical in
+ * arrangement to `Doctor` — portrait first, words, then the two links — and the
+ * derived assertion says so at whatever width it is rendered.
  */
 export const DoctorMirrored: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -498,6 +673,7 @@ export const DoctorMirrored: Story = {
       position="Medic dentist, chirurgie orală"
       photo={PORTRAITS.andrei}
       about={ANDREI_ABOUT}
+      actions={ACTIONS.andrei}
       side="end"
     />
   ),
@@ -505,7 +681,8 @@ export const DoctorMirrored: Story = {
     const card = canvas.getByRole('article', { name: 'Dr. Andrei Șerban' });
     const quote = canvas.getByRole('blockquote');
 
-    await expectArrangement(card, blockBeside(quote), quote, 'end');
+    await expectBothLinks(canvas, ACTIONS.andrei, 'Dr. Andrei Șerban');
+    await expectArrangement(card, quote, 'end');
     await expectNoSidewaysScroll(card);
   },
 };
@@ -539,6 +716,7 @@ export const TeamComposition: Story = {
         position="Medic specialist ortodonție"
         photo={PORTRAITS.elena}
         about={ELENA_ABOUT}
+        actions={ACTIONS.elena}
         side="start"
       />
       <PersonnelCard
@@ -547,6 +725,7 @@ export const TeamComposition: Story = {
         position="Medic dentist, chirurgie orală"
         photo={PORTRAITS.andrei}
         about={ANDREI_ABOUT}
+        actions={ACTIONS.andrei}
         side="end"
       />
       <AuxiliaryTiles />
@@ -556,17 +735,17 @@ export const TeamComposition: Story = {
     await expect(canvas.getAllByRole('article')).toHaveLength(5);
     await expect(canvas.getAllByRole('blockquote')).toHaveLength(2);
     await expect(canvasElement.querySelectorAll('img')).toHaveLength(5);
+    // Two doctors, two links each; the three auxiliary tiles bring none (D15).
+    await expect(canvas.getAllByRole('link')).toHaveLength(4);
 
     const [first, second] = canvas.getAllByRole('blockquote');
     await expectArrangement(
       canvas.getByRole('article', { name: 'Dr. Elena Marin' }),
-      blockBeside(first),
       first,
       'start',
     );
     await expectArrangement(
       canvas.getByRole('article', { name: 'Dr. Andrei Șerban' }),
-      blockBeside(second),
       second,
       'end',
     );
@@ -591,6 +770,12 @@ export const TeamComposition: Story = {
  * `hyphens-none` (D4, D5), so they may only wrap between words. If the name
  * ever clips at 320, the fix is the page's measure, never a syllable break
  * through a person's surname.
+ *
+ * The two LABELS are German too — „Leistungen ansehen" / „Profil ansehen", the
+ * longest of the five (§8.4) — and the row they sit in is the stress: at 390
+ * and 320 there is no room for two 16rem bases, so each link takes its own
+ * full-width line, and ui/Button's `hyphens-none` (§15.14's rider) means a
+ * label may wrap between words but never split one (D15).
  */
 export const GermanLongest: Story = {
   tags: ['stress-320'],
@@ -617,6 +802,7 @@ export const GermanLongest: Story = {
           gemeinsam.
         </>
       }
+      actions={ACTIONS.german}
     />
   ),
   play: async ({ canvas }) => {
@@ -626,7 +812,18 @@ export const GermanLongest: Story = {
     const quote = canvas.getByRole('blockquote');
 
     await expect(card).toHaveAttribute('lang', 'de');
-    await expectArrangement(card, blockBeside(quote), quote, 'start');
+    await expectBothLinks(
+      canvas,
+      ACTIONS.german,
+      'Dr. Friederike Schwarzenbeck-Hoffmann',
+    );
+    // Neither label may be split at a syllable (§15.14's rider): whatever the
+    // row does with them, the words stay whole.
+    for (const link of canvas.getAllByRole('link')) {
+      await expect(getComputedStyle(link).hyphens).toBe('none');
+    }
+
+    await expectArrangement(card, quote, 'start');
     await expectNoSidewaysScroll(card);
   },
 };

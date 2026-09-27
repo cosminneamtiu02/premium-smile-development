@@ -142,8 +142,10 @@ const expectNoVerticalScroll = async (layer: HTMLElement): Promise<void> => {
  * THE picture: the dialog open, in Romanian — the title in the bar naming both
  * channels, then two titled groups, each a green control with its caption under
  * it (hours for the call, a reply promise for WhatsApp), with „sau" between
- * them at 27px — the exact size the panel's own title wears since the same
- * day (owner, 2026-09-05: the title as big as the Or-word).
+ * them at 27px — one step under the panel's own title, which wears
+ * ui/Heading's `section` step (30px) since 2026-09-26 (CLAUDE.md §15.24); it
+ * wore the Or-word's 27px from 2026-09-05 until then, so 27px is this
+ * ornament's alone again (G2-R2 tier 2, typescript F6).
  *
  * TWO THINGS IN THIS SHOT ARE GERMAN, and deliberately: the CONTROL SIZE. The
  * rail carries a 24.5rem floor measured off the German panel, so the Romanian
@@ -156,9 +158,9 @@ const expectNoVerticalScroll = async (layer: HTMLElement): Promise<void> => {
  * The net shoots it at 390 and 1536, and the 'stress-320' tag adds 320 (§13's
  * opt-in), where the panel collapses to 288px wide and every caption wraps: the
  * box is UNCAPPED by `scrollable={false}` (ui/Modal D16), so it can never
- * scroll inside itself, and at a measured 478px (506px in German, its worst
- * case anywhere) it still clears that stress phone's 568px — the four-line
- * title at that width included.
+ * scroll inside itself, and at 494px (506px in German, its worst case
+ * anywhere — both measured 2026-09-26 at 30px) it still clears that stress
+ * phone's 568px — the four-line title at that width (five in German) included.
  *
  * EVERY PICTURE IN THIS FILE HAS THE DIVIDER AND THE AIRY SEAMS — mt-3 under
  * the bar, gap-7 on both sides of the word, mb-4 below the second group, with

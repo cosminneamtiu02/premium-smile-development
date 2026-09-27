@@ -382,17 +382,30 @@ describe('PriceList — the jump menu', () => {
 
   it('gives that <h2> the CATEGORY CARDS’ own step — a title, not an item', () => {
     // Owner 2026-09-14: „Categorii" must read as the TITLE of this navigation.
-    // ui/Heading's `section` step is text-3xl, the same one every card title
-    // wears, so the two are honest siblings; the rule under it (asserted with
-    // the list below) is what separates the title from the items.
+    // ui/Heading's `band` step is every page <h2>'s (D48, §15.24 — the card
+    // titles wear it through sections/SectionHeading), so the two are honest
+    // siblings; the rule under it (asserted with the list below) is what
+    // separates the title from the items. The step is CONTAINER-responsive —
+    // 30px under the card's 28rem `@md` step, 36px from it — and this project
+    // loads no stylesheet, so the size each title actually reads, menu and
+    // cards side by side, is measured in PriceList.stories.tsx's
+    // expectHeadingOutline; here the TOKENS are the contract.
     mount();
     const title = within(
       screen.getByRole('navigation', { name: MENU_TITLE }),
     ).getByRole('heading', { level: 2, name: MENU_TITLE });
 
     expect(tokensOf(title)).toEqual(
-      expect.arrayContaining(['font-display', 'text-3xl', 'text-ink-strong']),
+      expect.arrayContaining([
+        'font-display',
+        'text-3xl',
+        '@md:text-4xl',
+        'text-ink-strong',
+      ]),
     );
+    // …and never D46's FIXED 36px, which outranked the page's own <h1> on a
+    // phone (its `hero` curve sits on a 32px floor there).
+    expect(tokensOf(title)).not.toContain('text-4xl');
   });
 
   it('wears ui/Card’s surface AND its aura on the nav itself (asChild, no wrapper)', () => {

@@ -426,21 +426,97 @@ const expectCardContents = async (
   }
 };
 
-/** The outline: the menu's title and one title per card, all <h2>, nothing
- *  skipped and nothing invented (§9). The page's own <h1> lives above the
- *  band, which is why there is none here — and the menu's title wears the same
- *  30px step as the card titles (owner 2026-09-14), read back from real CSS. */
+/** The query container a heading's `@md:` step answers to: the nearest
+ *  ancestor that carries a container-type. For every title in this band that
+ *  is ITS OWN CARD (ui/Card puts `@container` on the element it lands on) —
+ *  never the band's column — which is the whole reason the menu's title and
+ *  the card titles can read different sizes side by side. */
+const queryContainerOf = (element: HTMLElement): HTMLElement | null => {
+  let node = element.parentElement;
+  while (node !== null && getComputedStyle(node).containerType === 'normal') {
+    node = node.parentElement;
+  }
+  return node;
+};
+
+/** The box a container query measures: the CONTENT width — border and
+ *  padding off — taken fractionally, for splitHasFired's sub-pixel reason. */
+const contentWidth = (element: HTMLElement): number => {
+  const style = getComputedStyle(element);
+  return (
+    element.getBoundingClientRect().width -
+    parseFloat(style.borderInlineStartWidth) -
+    parseFloat(style.borderInlineEndWidth) -
+    parseFloat(style.paddingInlineStart) -
+    parseFloat(style.paddingInlineEnd)
+  );
+};
+
+/**
+ * The outline: the menu's title and one title per card, all <h2>, nothing
+ * skipped and nothing invented (§9). The page's own <h1> lives above the band,
+ * which is why there is none here.
+ *
+ * THE SIZES, read back from real CSS and derived per element rather than
+ * assumed per story. Every title wears ui/Heading's `band` step (D48, §15.24's
+ * one size per outline level): 30px on a container narrower than 28rem, 36px
+ * from it — and each title's container is its own card. So the expectation is
+ * computed from THAT card's measured content box, which keeps the play true at
+ * whatever width the canvas or the visual runner gives it (the splitHasFired
+ * precedent). What that implies, measured in PriceMenu.tsx's "THE TITLE'S STEP
+ * IS `band`" table: beside the cards, „Categorii" sits in a 15rem track —
+ * 190px of content at 1280 and 1536 — and reads 30px next to 36px card titles;
+ * stacked, the menu spans the cards' column and reads their size exactly (30px
+ * on the phone). Two relations are pinned on top of the per-element sizes,
+ * because they are the design claims and not the engine's arithmetic: beside,
+ * the menu's title never outranks a card title; stacked, every title in the
+ * band is one size.
+ */
 const expectHeadingOutline = async (
   band: HTMLElement,
   categories: readonly PriceCategoryProps[],
 ): Promise<void> => {
-  const headings = Array.from(band.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+  const headings = Array.from(
+    band.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'),
+  );
 
   await expect(headings.map((heading) => heading.tagName)).toEqual(
     Array<string>(categories.length + 1).fill('H2'),
   );
-  for (const heading of headings) {
-    await expect(getComputedStyle(heading).fontSize).toBe(`${1.875 * rem()}px`);
+
+  // Each title paired with the card it belongs to — the menu's with the <nav>,
+  // each category's with its <section> — in DOM order, which is the outline's.
+  const document_ = band.ownerDocument;
+  const menu = band.querySelector('nav') as HTMLElement;
+  const pairs: ReadonlyArray<readonly [HTMLElement, HTMLElement]> = [
+    [menu.querySelector('h2') as HTMLElement, menu],
+    ...categories.map(
+      (category) =>
+        [
+          document_.getElementById(`${category.id}-title`) as HTMLElement,
+          document_.getElementById(category.id) as HTMLElement,
+        ] as const,
+    ),
+  ];
+  for (const [index, [title]] of pairs.entries()) {
+    await expect(title).toBe(headings[index]);
+  }
+
+  const sizeOf = (title: HTMLElement): number =>
+    parseFloat(getComputedStyle(title).fontSize);
+  for (const [title, card] of pairs) {
+    await expect(queryContainerOf(title)).toBe(card);
+    const step = contentWidth(card) >= 28 * rem() ? 2.25 : 1.875;
+    await expect(getComputedStyle(title).fontSize).toBe(`${step * rem()}px`);
+  }
+
+  const [menuTitle, ...cardTitles] = headings;
+  for (const cardTitle of cardTitles) {
+    if (splitHasFired(band)) {
+      await expect(sizeOf(menuTitle)).toBeLessThanOrEqual(sizeOf(cardTitle));
+    } else {
+      await expect(sizeOf(cardTitle)).toBe(sizeOf(menuTitle));
+    }
   }
 };
 
@@ -477,14 +553,15 @@ const longestRowName = (categories: readonly PriceCategoryProps[]): number =>
 /**
  * The everyday picture, Romanian, at whatever width the canvas gives it.
  *
- * What to look at: the menu card on the left, its „Categorii" title at the
- * same 30px step as the card titles with a rule under it, then four links,
- * each a 44px row — the first one green and underlined, because that is where
- * the page currently is; the cards on the right, each opening with its own
- * eyebrow and <h2>, each wearing the header pill's lavender glow; the price
- * column right-aligned with tabular digits so „2.300 RON" and „150 RON" line
- * up, one column however wide the card gets. Click a menu entry and the
- * browser jumps — the jump itself is still the browser's, and the only
+ * What to look at: the menu card on the left, its „Categorii" title one step
+ * under the card titles beside it — 30px to their 36px, the `band` step read
+ * against a 15rem card (PriceMenu.tsx's header) — with a rule under it, then
+ * four links, each a 44px row — the first one green and underlined, because
+ * that is where the page currently is; the cards on the right, each opening
+ * with its own eyebrow and <h2>, each wearing the header pill's lavender glow;
+ * the price column right-aligned with tabular digits so „2.300 RON" and
+ * „150 RON" line up, one column however wide the card gets. Click a menu entry
+ * and the browser jumps — the jump itself is still the browser's, and the only
  * JavaScript involved is the one line that marks the item you chose.
  */
 export const Romanian: Story = {

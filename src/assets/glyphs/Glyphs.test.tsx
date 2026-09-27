@@ -3,14 +3,18 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ALL_GLYPHS } from './all-glyphs';
 import { Burger } from './Burger';
+import { CalendarCheck } from './CalendarCheck';
 import { ChevronLeft } from './ChevronLeft';
 import { ChevronRight } from './ChevronRight';
 import { Close } from './Close';
 import { Instagram } from './Instagram';
+import { People } from './People';
 import { Phone } from './Phone';
 import { Pin } from './Pin';
 import { Star } from './Star';
 import { Tiktok } from './Tiktok';
+import { ToothCheck } from './ToothCheck';
+import { Trophy } from './Trophy';
 import { Whatsapp } from './Whatsapp';
 
 // Role-based queries wherever the element belongs in the a11y tree (§3, §9) —
@@ -26,11 +30,15 @@ import { Whatsapp } from './Whatsapp';
 
 const STROKE_GLYPHS = [
   ['Burger', Burger],
+  ['CalendarCheck', CalendarCheck],
   ['ChevronLeft', ChevronLeft],
   ['ChevronRight', ChevronRight],
   ['Close', Close],
+  ['People', People],
   ['Phone', Phone],
   ['Pin', Pin],
+  ['ToothCheck', ToothCheck],
+  ['Trophy', Trophy],
 ] as const;
 const FILL_GLYPHS = [
   ['Instagram', Instagram],

@@ -42,7 +42,7 @@ import { Heading } from '@/components/ui/Heading/Heading';
 // Component, so no browser runner can render it; the story therefore rebuilds
 // the same two elements through the isomorphic `useTranslations` and its play
 // functions pin them from the outside — one real <h1> whose text leads with
-// `404: ` before `notFound.title` (Heading's 'page' step, 36px), one paragraph
+// `404: ` before `notFound.title` (Heading's 'hero' step since 2026-09-26, §15.24), one paragraph
 // whose COMPUTED text-align is `center` at `text-xl`.
 // Change the band here and that suite goes red naming the pair. (The pair is
 // twelve lines of markup, deliberately not extracted: a shared component would
@@ -124,11 +124,12 @@ export default async function NotFoundPage() {
         {/* ONE h1 per page (§9), and it is a REAL h1: Heading owns the display
             step, never the element, so `asChild` hands the outline slot to the
             markup and the atom can never fake structure (Heading.tsx). `size`
-            is 'page' — the step THIS band measured into the atom (owner,
-            2026-09-07 round 4, "make both text and heading larger"): 36px, one
-            additive step over 'section', entered through Heading's own
-            one-step-per-measured-consumer law rather than a className override
-            (§6.8 bans restyling an atom's internals). */}
+            is 'hero' — the ONE h1 step every page shares since 2026-09-26
+            (owner, CLAUDE.md §15.24: every heading level app-wide at the doctor
+            page's size). This band had measured the 'page' step (36px) into the
+            atom on 2026-09-07 round 4 ("make both text and heading larger")
+            and wore it until then; the step stays on the axis for its
+            non-heading consumer (DoctorStats' numbers). */}
         {/* `404: ` LEADS THE VISIBLE HEADING TOO (owner, 2026-09-07 round 3 —
             "add before Această pagină nu există a 404, so 404: Această pagină
             nu există"): the same locale-neutral prefix generateMetadata
@@ -137,7 +138,7 @@ export default async function NotFoundPage() {
             h1 stays unprefixed on purpose: it stacks all five titles in one
             heading, where a single shared number would read as part of none of
             the five languages — and its document <title> already carries it. */}
-        <Heading size="page" asChild>
+        <Heading size="hero" asChild>
           <h1>404: {t('notFound.title')}</h1>
         </Heading>
 

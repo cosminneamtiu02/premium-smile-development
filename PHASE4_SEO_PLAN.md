@@ -95,6 +95,12 @@ per page, `@type: Dentist`, values === clinic.ts, no raw `<` in the payload.
    _Service — Clinic — City_), which brings canonical + hreflang + OG along. New pages
    **never call `setRequestLocale`** — §15.16 Phase C retired the pair; the locale
    arrives via `next/root-params` inside `i18n/request.ts` automatically.
+   **The doctor pages (`/team/[slug]`, owner 2026-09-27):** today's MINIMAL title „{name} — {siteName}" is
+   byte-identical in ro/en/de (the name is a proper noun; only `<html lang>` differs), so a visitor with two
+   language tabs of one doctor cannot tell them apart by title. The full pattern here is
+   `{name} — {position} — {siteName}` (the specialty is the page's one locale-varying fact: „Dr. Elena
+   Marin — Medic specialist ortodonție — Premium Smile"), from lib/team's `words[locale].position`; the
+   description from the biography's first paragraph.
 2. **seo.ts part 2 (the old S7)** — build-time generation (§16: everything identical for
    every visitor is compiled) of:
    - `sitemap.xml`: every locale × route with hreflang alternates + `x-default` (ro);

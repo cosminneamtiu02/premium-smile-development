@@ -21,7 +21,7 @@ import ro from '@/messages/ro.json';
 // ── THIS IS A KEEP-IN-SYNC PAIR (§4's sharing table), and it is written down
 // rather than assumed: the twin lives here, the original in
 // src/app/[locale]/404/page.tsx, and that file's header points back at this
-// one. Both must render one `<Heading size="page" asChild><h1>` whose text
+// one. Both must render one `<Heading size="hero" asChild><h1>` whose text
 // leads with `404: `, and one `<p className="max-w-xl text-center text-xl">`, reading
 // `common.notFound.*`, inside a Container carrying `items-center` +
 // `text-center` (the owner's 2026-09-07 corrections — centering round 2,
@@ -67,7 +67,7 @@ function NotFoundBand(): ReactElement {
   return (
     <section className="flex min-h-[calc(100dvh-6rem)] grow flex-col justify-center pb-24">
       <Container className="flex flex-col items-center gap-4 py-16 text-center">
-        <Heading size="page" asChild>
+        <Heading size="hero" asChild>
           <h1>404: {t('notFound.title')}</h1>
         </Heading>
         <p className="max-w-xl text-center text-xl">{t('notFound.message')}</p>
@@ -137,10 +137,21 @@ export const Romanian: Story = {
     await expect(getComputedStyle(section).justifyContent).toBe('center');
 
     // ROUND 4 (owner, "make both text and heading larger"), pinned as computed
-    // px at the runner's 16px root: the heading wears Heading's 'page' step
-    // (text-4xl = 36px — the step this band measured into the atom) and the
-    // message one step over the 1.125rem body base (text-xl = 20px).
-    await expect(getComputedStyle(heading).fontSize).toBe('36px');
+    // px — and since 2026-09-26 (§15.24) the heading wears Heading's 'hero'
+    // step, the fluid clamp(2rem, 1rem + 3.5vw, 4.5rem) every page's h1 shares,
+    // so the expectation is that clamp evaluated at the runner's own width and
+    // root; the message stays one step over the 1.125rem body base (text-xl =
+    // 20px).
+    const root = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    const fluid = Math.min(
+      4.5 * root,
+      Math.max(2 * root, root + 0.035 * window.innerWidth),
+    );
+    await expect(
+      Math.abs(parseFloat(getComputedStyle(heading).fontSize) - fluid),
+    ).toBeLessThanOrEqual(0.5);
     await expect(getComputedStyle(paragraph).fontSize).toBe('20px');
   },
 };

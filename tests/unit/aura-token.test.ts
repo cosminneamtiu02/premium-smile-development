@@ -125,8 +125,10 @@ describe('the aura token (header-aura board, fb-359)', () => {
     expect(globals).toContain('@theme {');
     const theme = globals.slice(globals.indexOf('@theme {'));
     // The first `}` closes the block only while @theme holds no nested braces
-    // (true today; a future @keyframes-inside-@theme would truncate this slice
-    // and fail LOUDLY — cure then with a brace-aware extractor, G2 note).
+    // (true today, and still true since rounds 2g and 2j put `@keyframes pop`
+    // and `@keyframes forward` INSIDE @theme — both sit AFTER this declaration,
+    // so the slice up to the first `}` still holds it; a keyframes block moved ABOVE the aura would truncate the
+    // slice and fail LOUDLY — cure then with a brace-aware extractor, G2 note).
     expect(theme.slice(0, theme.indexOf('}'))).toContain(AURA_DECLARATION);
   });
 

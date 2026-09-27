@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect } from 'storybook/test';
 import { Heading, type HeadingSize, type HeadingTone } from './Heading';
 
 // One story per meaningful state (§13). Demo values are Romanian with
@@ -28,9 +29,15 @@ const meta = {
   argTypes: {
     size: {
       control: 'select',
-      options: ['title', 'section', 'page', 'hero'] satisfies HeadingSize[],
+      options: [
+        'title',
+        'section',
+        'band',
+        'page',
+        'hero',
+      ] satisfies HeadingSize[],
       description:
-        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid slogan step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19. Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's one container-responsive row, joined 2026-09-26 (D48, see Band) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid slogan step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19. Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     tone: {
       control: 'select',
@@ -39,9 +46,11 @@ const meta = {
         'inverse',
         'inverse-stroked',
         'inverse-outlined',
+        'accent',
+        'accent-idle',
       ] satisfies HeadingTone[],
       description:
-        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21). Joined with sections/Hero; the default stays 'default' forever",
+        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'accent' = the lilac accent-decorative ink, ALWAYS bold — the year labels over a doctor's courses (sections/DoctorCourses, 2026-09-25): 4.44:1 on the page ground is large-text contrast only, and bold is what makes the 20px title step large · 'accent-idle' = the same bold in ink-muted, accent's REST twin — the course timeline's grey years at rest (2026-09-26): the pair differs in the ink alone, so a year switching between them never reflows. Joined with sections/Hero; the default stays 'default' forever",
     },
     asChild: {
       control: false,
@@ -117,6 +126,67 @@ export const SectionStep: Story = {
       </Heading>
     </div>
   ),
+};
+
+/**
+ * THE h2 step (2026-09-26, the doctor-pages run's D48): one row, two sizes,
+ * decided by the NEAREST `@container`, never by the screen — ui/Container's
+ * column for a band title, the ui/Card itself for a card title, measured on
+ * the card's content box, 25px inside its border-box on every side
+ * (Heading.tsx's `'band' JOINED` paragraph). The same words in two
+ * `@container` frames: a `w-xs` one — a 320px CONTAINER, the narrow case:
+ * the 20rem schedule card (270px of content) and a 390px phone's column
+ * (312px) both land under it, and every container under 448px reads 30px —
+ * where the step rests on section's 30px, and a `w-md` one (28rem = 448px —
+ * the container's `@md` threshold itself, which is inclusive) where it
+ * reaches page's 36px. That is how a band title stays under the `hero` h1's
+ * 32px floor on a phone and still reads as the "next order" below it wherever
+ * its container can carry it. In each frame the
+ * Romanian line follows the controls and the German one (the schedule card's
+ * DE title — the longest language, §8.4) is pinned to 'band'. Real <h2>s
+ * through asChild, the shape every consumer passes; four consecutive h2s give
+ * axe's heading-order no increment to score. The frames — their widths, their
+ * gap, their dashed OUTLINE (not a border: a border would eat into the content
+ * box the container query measures) — are the story's, never the atom's
+ * (§6.4). No 'stress-320' tag: a 448px frame cannot fit a 320px viewport, and
+ * the narrow frame already stands for the phone column.
+ */
+export const Band: Story = {
+  args: { size: 'band', children: 'Când mă găsiți la clinică' },
+  render: (args) => (
+    <div className="flex flex-col gap-6">
+      <div className="@container flex w-xs flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h2>{args.children}</h2>
+        </Heading>
+        <Heading size="band" asChild>
+          <h2 lang="de">Wann Sie mich in der Praxis finden</h2>
+        </Heading>
+      </div>
+      <div className="@container flex w-md flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h2>{args.children}</h2>
+        </Heading>
+        <Heading size="band" asChild>
+          <h2 lang="de">Wann Sie mich in der Praxis finden</h2>
+        </Heading>
+      </div>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // Read off the engine, in DOM order — narrow RO, narrow DE, wide RO, wide
+    // DE. The frames are measured first, so a width utility that failed to
+    // generate cannot let the sizes pass for the wrong reason.
+    const titles = canvas.getAllByRole('heading', { level: 2 });
+    await expect(
+      titles.map(
+        (title) => title.parentElement?.getBoundingClientRect().width ?? 0,
+      ),
+    ).toEqual([320, 320, 448, 448]);
+    await expect(
+      titles.map((title) => parseFloat(getComputedStyle(title).fontSize)),
+    ).toEqual([30, 30, 36, 36]);
+  },
 };
 
 /**
@@ -261,6 +331,93 @@ export const OutlinedTone: Story = {
       </div>
     </div>
   ),
+};
+
+/**
+ * The accent ink (2026-09-25, the doctor-pages run's round 2, D16): the lilac
+ * year label sections/DoctorCourses opens each group of courses with — a real
+ * <h3> through asChild on the page ground it ships on, photographed at the
+ * `title` step ON PURPOSE: the consumer has worn `section` (30px, large by
+ * size alone) since round 2j (D44a), and 20px is the harder case — the one
+ * where the weight is what makes the label large, so a frame that passes here
+ * passes at every step above it.
+ * The owner asked for "bold and lilac"; the arithmetic is why the two travel
+ * together. `--color-accent-decorative` #7a6d9c on `--page` #faf9f7 measures
+ * 4.44:1 — UNDER the 4.5:1 normal text needs, which is why §15.1 licenses the
+ * role for large display text and graphics only. WCAG's "large" is ≥ 24px, or
+ * ≥ 18.67px BOLD: the title step is 20px, so the tone's own `font-bold` is
+ * what lifts this label into the 3:1 bracket, where 4.44:1 clears with room.
+ * That is why the weight is in the TONE row and not the caller's className —
+ * the pair cannot be split at a call site.
+ * axe runs with every rule ON here, color-contrast included: it reads the
+ * computed weight (700) and size (20px), classifies the text as large and
+ * scores it against 3:1 — the story is the arithmetic, checked by the engine.
+ * The lone <h3> passes heading-order for AsHeadingElement's reason: the rule
+ * scores the INCREMENT between consecutive headings, and the first has none.
+ * The wrapper paints the ground and owns the padding, never the atom (§6.4).
+ */
+export const AccentTone: Story = {
+  args: { size: 'title', tone: 'accent', children: '2024' },
+  render: (args) => (
+    <div className="bg-page p-6">
+      <Heading {...args} asChild>
+        <h3>{args.children}</h3>
+      </Heading>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // The "large" claim, read off the engine rather than asserted in prose:
+    // the weight the tone row ships and the size the title step resolves to.
+    // 18.66 rather than 18.67 is float slack on WCAG's 14pt (= 18.666…px).
+    const label = canvas.getByRole('heading', { level: 3 });
+    const style = getComputedStyle(label);
+    await expect(Number(style.fontWeight)).toBeGreaterThanOrEqual(700);
+    await expect(parseFloat(style.fontSize)).toBeGreaterThanOrEqual(18.66);
+  },
+};
+
+/**
+ * The accent ink's REST twin (2026-09-26, the doctor-pages run's round 2g,
+ * D35): the grey year a course timeline shows while that year is not the one
+ * being read — "all are grayed out at rest", in the owner's words. The SAME
+ * `font-bold` as AccentTone, in `ink-muted`: the two are a lit/unlit pair that
+ * sections/DoctorCourses switches as the visitor scrolls, and a pair that
+ * differed in weight would reflow the line — and every course under it — on
+ * every switch. Only the ink moves (the test file pins exactly one token of
+ * difference). `--ink-muted` #5b554f on `--page` #faf9f7 measures 6.99:1 at
+ * full opacity, so unlike the accent this ink clears body-text contrast at any
+ * weight; at full opacity the bold is here for the pair, not for the
+ * arithmetic.
+ * KEEP-IN-SYNC with sections/DoctorCourses/CourseTimeline.tsx (its CONTRAST,
+ * MEASURED paragraph and `groupIdle`): the one consumer fades the whole
+ * resting group to 0.65, where this ink blends to rgb(147 142 138) and reads
+ * 3.07:1 on `--page` — the large-text bar, which every step of this atom
+ * meets by construction (the smallest, `title`, is 20px, and this row is
+ * bold: ≥ 18.67px bold is large) — so no consumer may fade it below 0.65
+ * without re-measuring (at 0.50 it would read 2.27:1, a failure). This frame
+ * shows the ink at full opacity.
+ * Same shape as AccentTone — a real <h3> through asChild on the page ground,
+ * at the same `title` step for AccentTone's reason (the consumer is at
+ * `section`, D44a) — so the two frames sit side by side in the pack as the
+ * two states of one label. axe runs with every rule on, color-contrast
+ * included.
+ */
+export const AccentIdleTone: Story = {
+  args: { size: 'title', tone: 'accent-idle', children: '2024' },
+  render: (args) => (
+    <div className="bg-page p-6">
+      <Heading {...args} asChild>
+        <h3>{args.children}</h3>
+      </Heading>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // The weight the pair shares, read off the engine: bold at rest too.
+    const label = canvas.getByRole('heading', { level: 3 });
+    await expect(
+      Number(getComputedStyle(label).fontWeight),
+    ).toBeGreaterThanOrEqual(700);
+  },
 };
 
 /**

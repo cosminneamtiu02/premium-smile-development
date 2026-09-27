@@ -39,6 +39,13 @@ const PAGE_CLASSES = 'font-display text-4xl text-ink-strong';
 const HERO_CLASSES =
   'font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight text-ink-strong';
 
+// I1-band · the h2 step (the doctor-pages run's D48, 2026-09-26 — §15.24's
+// "next order of heading height" under the h1): 30px on a column narrower than
+// the container's `@md` step (28rem), 36px from it. The ONE container-
+// responsive row on the axis, pinned byte-exactly like its elders so a viewport
+// prefix, a bold or a third size can never slip into it unnoticed.
+const BAND_CLASSES = 'font-display text-3xl @md:text-4xl text-ink-strong';
+
 // Record<HeadingSize, …> on purpose: this union is BUILT to grow, so a new
 // step must not be able to ship with zero
 // coverage — the file stops typechecking until the member is classified here.
@@ -49,6 +56,7 @@ const expectedClasses: Record<HeadingSize, string> = {
   section: SECTION_CLASSES,
   page: PAGE_CLASSES,
   hero: HERO_CLASSES,
+  band: BAND_CLASSES,
 };
 
 describe('Heading — the title step (I1 zero-diff-rewire, I2 element neutrality)', () => {
@@ -176,6 +184,79 @@ describe('Heading — the hero step (the fluid slogan size, 2026-09-19)', () => 
   });
 });
 
+describe('Heading — the band step (the h2 step, D48, 2026-09-26)', () => {
+  // A token that carries a variant: `@md:text-4xl`, `sm:text-4xl`. The tone
+  // rows' arbitrary properties (`[-webkit-text-stroke:…]`) open with a bracket
+  // and never match; only the size rows are sampled below anyway.
+  const variantTokens = (classes: string) =>
+    classes.split(' ').filter((token) => /^@?[a-z0-9-]+:/.test(token));
+
+  it('renders size="band" wearing exactly the band classes on a plain <p>', () => {
+    // The narrow consumer's own words: the schedule card's title, the 320px
+    // column where the step rests at 30px (§15.7: Romanian, diacritics).
+    render(<Heading size="band">Când mă găsiți la clinică</Heading>);
+    const title = screen.getByText('Când mă găsiți la clinică');
+    expect(title.tagName).toBe('P');
+    expect(title.className).toBe(BAND_CLASSES);
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+  });
+
+  it('wears the band classes on an asChild <h2> — the SectionHeading shape', () => {
+    // How every consumer arrives (SectionHeading's openers, the price menu's
+    // title, PersonnelCard's level-2 names): a real outline slot asking for
+    // the step, the child's own classes after the atom's.
+    render(
+      <Heading asChild size="band">
+        <h2 className="child-own">Cursuri și specializări</h2>
+      </Heading>,
+    );
+    const heading = screen.getByRole('heading', {
+      level: 2,
+      name: 'Cursuri și specializări',
+    });
+    expect(heading.className).toBe(`${BAND_CLASSES} child-own`);
+  });
+
+  it.each(Object.keys(expectedClasses) as HeadingSize[])(
+    'size "%s" carries a responsive token only if it is the band step',
+    (size) => {
+      // The axis stays static everywhere else: `hero` answers the page with a
+      // clamp, never a variant; the three fixed steps answer nothing at all.
+      // `band` is the ONE row that reads its surroundings, and it reads them
+      // through exactly one container step.
+      expect(variantTokens(expectedClasses[size])).toEqual(
+        size === 'band' ? ['@md:text-4xl'] : [],
+      );
+    },
+  );
+
+  it('responds to its CONTAINER, never to the viewport (§6.5)', () => {
+    // `@md:` queries the nearest ancestor container — the band's
+    // ui/Container column, a ui/Card — which is the component-responsiveness
+    // §6.5 prescribes. A bare `md:`/`sm:` would be the viewport self-scaling
+    // `title` refused on day one (the old site's `sm:text-4xl`).
+    const tokens = variantTokens(BAND_CLASSES);
+    expect(tokens.every((token) => token.startsWith('@'))).toBe(true);
+    expect(tokens.some((token) => /^(sm|md|lg|xl|2xl):/.test(token))).toBe(
+      false,
+    );
+  });
+
+  it('invents no size: it rests on the section step and steps up to the page step', () => {
+    // §6.6 — one step per measured consumer, never an invented number. The
+    // band row is the section row below 28rem and the page row's size from
+    // it: remove the variant and the section string is left byte for byte;
+    // strip the prefix and it is the page row's own size token.
+    const tokens = BAND_CLASSES.split(' ');
+    expect(tokens.filter((token) => token !== '@md:text-4xl').join(' ')).toBe(
+      SECTION_CLASSES,
+    );
+    expect(PAGE_CLASSES.split(' ')).toContain(
+      '@md:text-4xl'.replace('@md:', ''),
+    );
+  });
+});
+
 describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', () => {
   // Record<HeadingTone, …> on purpose, the size table's twin: a third ink
   // cannot ship with zero coverage — this file stops typechecking until it
@@ -190,12 +271,24 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     // The stroke alone on the plain weight (2026-09-21, the Hero's third face).
     'inverse-outlined':
       'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill]',
+    // The lilac year labels (2026-09-25, the doctor-pages run's D16): the
+    // accent ink with its weight — 4.44:1 on the page ground is large-text
+    // contrast only, and bold is what makes the 20px title step large.
+    accent: 'font-bold text-accent-decorative',
+    // Their REST twin (2026-09-26, the run's D35): the same weight in the
+    // muted ink, so a year switching between the two never reflows.
+    'accent-idle': 'font-bold text-ink-muted',
   };
 
   // Pin the union itself, exactly as the size axis does: widening it to
   // `string` would keep every Record compiling with stale rows.
   expectTypeOf<HeadingTone>().toEqualTypeOf<
-    'default' | 'inverse' | 'inverse-stroked' | 'inverse-outlined'
+    | 'default'
+    | 'inverse'
+    | 'inverse-stroked'
+    | 'inverse-outlined'
+    | 'accent'
+    | 'accent-idle'
   >();
 
   it.each(Object.keys(expectedInk) as HeadingTone[])(
@@ -237,6 +330,74 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     );
   });
 
+  it('is orthogonal to size for the accent ink too — the DoctorCourses <h3>', () => {
+    // The measuring consumer's own shape (D16): a real <h3> handed in through
+    // asChild at the title step, a year as its whole text. Size row first,
+    // the tone row after it, the child's own classes (none here) last — so
+    // the title step's `font-display text-xl` is untouched and the ink swaps
+    // in whole, weight included.
+    render(
+      <Heading size="title" tone="accent" asChild>
+        <h3>2024</h3>
+      </Heading>,
+    );
+    expect(
+      screen.getByRole('heading', { level: 3, name: '2024' }).className,
+    ).toBe('font-display text-xl font-bold text-accent-decorative');
+  });
+
+  it.each(Object.keys(expectedClasses) as HeadingSize[])(
+    'tone "accent" is bold at the "%s" step — the weight never leaves the ink (D16)',
+    (size) => {
+      // §15.1 licenses the accent for LARGE display text only; at the 20px
+      // title step the bold IS what makes it large (≥ 18.67px bold), and at
+      // every larger step it keeps the look one face. A future edit that moved
+      // `font-bold` out of the tone row (onto one caller's className, say)
+      // would leave the other call sites under 4.5:1 at body weight.
+      render(
+        <Heading size={size} tone="accent">
+          Formare continuă
+        </Heading>,
+      );
+      const tokens = screen.getByText('Formare continuă').className.split(' ');
+      expect(tokens).toContain('font-bold');
+      expect(tokens).toContain('text-accent-decorative');
+      expect(tokens).not.toContain('text-ink-strong');
+    },
+  );
+
+  it.each(Object.keys(expectedClasses) as HeadingSize[])(
+    'tones "accent" and "accent-idle" differ in the INK alone at the "%s" step — a lit/unlit pair never reflows (D35)',
+    (size) => {
+      // The course timeline switches ONE year between the two as the visitor
+      // scrolls. Anything but the colour changing — the weight above all —
+      // would re-measure the line and nudge every course under it. So the
+      // two class strings must be the same tokens with exactly one swapped.
+      const { unmount } = render(
+        <Heading size={size} tone="accent">
+          2024
+        </Heading>,
+      );
+      const lit = screen.getByText('2024').className.split(' ');
+      unmount();
+      render(
+        <Heading size={size} tone="accent-idle">
+          2024
+        </Heading>,
+      );
+      const rest = screen.getByText('2024').className.split(' ');
+
+      expect(rest).toContain('font-bold');
+      expect(rest).toContain('text-ink-muted');
+      expect(lit.filter((token) => !rest.includes(token))).toEqual([
+        'text-accent-decorative',
+      ]);
+      expect(rest.filter((token) => !lit.includes(token))).toEqual([
+        'text-ink-muted',
+      ]);
+    },
+  );
+
   it('keeps the caller className LAST, after the ink', () => {
     render(
       <Heading size="hero" tone="inverse" className="text-center">
@@ -260,7 +421,7 @@ describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // Record row (the Eyebrow pin's growth-direction twin; runs at typecheck,
   // costs nothing at runtime).
   expectTypeOf<HeadingSize>().toEqualTypeOf<
-    'title' | 'section' | 'page' | 'hero'
+    'title' | 'section' | 'band' | 'page' | 'hero'
   >();
 
   it.each(Object.keys(expectedClasses) as HeadingSize[])(

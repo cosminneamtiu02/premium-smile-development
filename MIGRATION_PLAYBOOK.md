@@ -131,7 +131,7 @@ the owner's explicit instruction (brief §15.7).**
 ## Phase 3 — `sections/` compositions
 
 **Order (shell first):** `Header` (+ `LanguageSwitcher`) → `ContactModal` → `Footer` →
-`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `PersonnelCard` *(was TeamMemberCard — owner 2026-09-10, new design)* → `TeamSection` →
+`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `PersonnelCard` *(was TeamMemberCard — owner 2026-09-10, new design; reworked 2026-09-21 with the two links)* → `TeamRoster` *(was TeamSection — the Team page's band, 2026-09-21)* → the doctor-page bands `DoctorIntro` (+ its `CredoCard`) → `DoctorProfile` (+ its `ScheduleCard`) → `DoctorCourses` (+ its `CourseTimeline` island, round 2g) → `TintedBand` (extracted) → `DoctorStats` (+ its `StatNumber` island) *(2026-09-21; rounds 2–2g 2026-09-25/26 — `DoctorTeam` dropped, §15.23)* → *[future: the doctor's blog-articles band, above the map]* →
 `CTABanner` → `FAQAccordion` (if kept) → `PostCard`.
 
 ### Per-section checklist
@@ -159,7 +159,7 @@ the owner's explicit instruction (brief §15.7).**
 items 3–4 have their helpers from page one instead of refactoring four pages at the end)*:
 locale layout shell (real Header/Footer + skip-link — **the mount contract below**) → root
 `/` redirect script → `seo.ts` **part 1**: JSON-LD builder + metadata helper → Home →
-Services → Team → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts` **part 2**:
+Services → Team → Doctor pages (`/team/[slug]`, one per `lib/team` row — 2026-09-21, reshaped 2026-09-25) → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts` **part 2**:
 sitemap + robots generation (needs every route to exist — stays last).
 
 ### Shell mount contract (assembled 2026-09-02, org-review board)

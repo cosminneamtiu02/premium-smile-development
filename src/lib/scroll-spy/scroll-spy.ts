@@ -40,15 +40,20 @@ import {
 // two-question home test in lib/cx/cx.ts):
 //   1. Does it import React, or exist to construct components? No — it is a
 //      listener, an arithmetic walk and a store; the `useSyncExternalStore`
-//      that reads it lives in the consumer (sections/PriceList/PriceMenu).
+//      that reads it lives in each consumer (sections/PriceList/PriceMenu,
+//      sections/DoctorCourses/CourseTimeline).
 //   2. Does it encode a specific atom's look or API? No — no class string, no
 //      message key, no DOM output, nothing about a price.
 // Both answers put it in the foundation ring, beside lib/scroll-lock, which is
 // the same kind of thing: browser MECHANICS with no React in them (the ring is
 // React-free, not browser-free — the cx-to-lib lane, 2026-09-02). The second
-// consumer is already foreseeable and is why this is not five lines inside the
-// island: a Team-page table of contents, or a long blog post's outline, asks
-// exactly this question and must not re-derive the landing arithmetic.
+// consumer was foreseeable and is why this was not five lines inside the
+// island — and it ARRIVED (the doctor-pages run's round 2g, 2026-09-26, D35):
+// the doctor page's course timeline lights the one year being read, which is
+// exactly this question with no menu attached, and it reuses the walk
+// instead of re-deriving it — since round 2k measured against the middle of
+// the screen rather than the landing line (THE MIDDLE LINE, D49). A long blog
+// post's outline is the next one in line.
 //
 // ── CONSTRUCTION IS PURE; start() IS THE FIRST BROWSER TOUCH. `output:
 // 'export'` renders every client component in Node during the static build,
@@ -58,12 +63,14 @@ import {
 // no document, no window and no timer (the lib/clock precedent). Its
 // construction snapshot is `{ current: null }`, which is therefore also the
 // FROZEN server snapshot for the store's whole life (lib/external-store's
-// third rule) — the static HTML carries no `aria-current` anywhere, the
-// browser's first render agrees with it byte for byte, and the marker appears
-// one frame later when start() has looked at the real page.
+// third rule) — the static HTML carries no marker anywhere (the price menu's
+// `aria-current`, the timeline's `data-current`), the browser's first render
+// agrees with it byte for byte, and the marker appears one frame later when
+// start() has looked at the real page.
 //
-// ── THE LANDING LINE, and why it is not a magic offset. A fragment jump comes
-// to rest so that
+// ── THE LANDING LINE, and why it is not a magic offset — the DEFAULT line
+// (`line: 'landing'`; THE MIDDLE LINE below is the other). A fragment jump
+// comes to rest so that
 //     target.getBoundingClientRect().top − scroll-margin-top(target)
 //       === scroll-padding-top(<html>)
 // — the scroll padding is the strip this site keeps clear at the top of the
@@ -78,6 +85,41 @@ import {
 // never disagree about where "current" begins: there is no second definition
 // of the landing line anywhere in this repo, and no consumer-supplied offset
 // to keep in sync with a header's height.
+//
+// ── THE MIDDLE LINE — the one other line a consumer may choose (`line:
+// 'middle'`; the doctor-pages run's round 2k, 2026-09-26, D49 — owner: "move
+// at the center of the screen on y axis the line activating 'current'"). The
+// walk's line is then the viewport's vertical centre, `window.innerHeight /
+// 2`, and a target has REACHED it when
+//     rect.top <= innerHeight / 2 + 1
+// — its bare top edge, with the landing line's same pixel of grace. The
+// target's `scroll-margin-top` and the document's `scroll-padding-top` play NO
+// part on this line: those two say where a JUMP comes to rest, and a
+// middle-line consumer asks where the READER's eye is — the middle of the
+// screen, whatever the stylesheet keeps clear at the top. `innerHeight` is
+// read afresh on every walk, so the `resize` listener below moves the line
+// with the window, and no style is read at all (one getBoundingClientRect per
+// target). What that buys the doctor page's course timeline, its consumer: a
+// year lights as its top crosses the middle of the screen and stays lit until
+// the next year's top does — the year being READ, where the landing line lit
+// the one that had just slid under the header pill. PriceMenu passes no
+// `line`, so it walks the landing line exactly as before the option existed.
+//   · ONE LINE PER SPY, AND EVERY RULE ASKS IT. The line is chosen once, at
+//     construction, and each rule below that asks "has it reached?" asks it
+//     of that line and no other: the POSITION WALK, the TOP FALLBACK (nothing
+//     has reached THE line yet) and the PIN's arrival check (on THE line with
+//     the same pixel of grace, or still below it at the page's end). The
+//     BOTTOM RULE holds no line at all and is the same rule under both. So a
+//     spy never carries two notions of "reached".
+//   · THE CONSEQUENCE, stated rather than discovered. A fragment jump is the
+//     BROWSER's, and the browser lands a target on the landing line whatever
+//     this option says; on the middle line a pin — a `select()`, a `#id` —
+//     therefore ARRIVES only when its target sits on the middle, or below it
+//     with the page at its end. A jump that parked it under the header pill
+//     fails the check at the settle and the walk answers for where the page
+//     actually is. The timeline links nowhere and pins nothing, so this costs
+//     its one consumer nothing (see WHAT IS DELIBERATELY NOT BUILT for the day
+//     a middle-line consumer is also jumped to).
 //
 // ── THE POSITION WALK is a pure function of the document's scroll state: the
 // ids, mapped through getElementById (anything missing is skipped — a menu may
@@ -95,12 +137,25 @@ import {
 //     "last", not "first", because every target above the visitor has reached
 //     it too and the one nearest the top of the viewport is the one being
 //     read.
-//   · otherwise the FIRST target: the top fallback. This band begins at the
-//     top of its page, so at scrollY 0 the first card is what the visitor is
-//     looking at and the menu should say so. NAMED TRIGGER, deliberately not
-//     built: a consumer with a long intro ABOVE its first target wants "none
-//     yet" there, which is one option (`topFallback: 'first' | 'none'`) the
-//     day such a consumer exists — never guessed at now.
+//   · otherwise THE TOP FALLBACK, and it is the consumer's choice
+//     (`topFallback`, default 'first'):
+//       'first' — the first target. The price band begins at the top of its
+//         page, so at scrollY 0 the first card is what the visitor is looking
+//         at and the menu should say so. PriceMenu passes no option and its
+//         answer is byte-identical to the days before the option existed.
+//       'none' — nothing: `current` stays null until the first target has
+//         reached its own line. For a consumer with a long intro ABOVE its
+//         first target, where "the first one" would mark something the
+//         visitor has not scrolled to yet. This paragraph used to carry that
+//         option as a NAMED TRIGGER, "never guessed at now"; the doctor page's
+//         course timeline FIRED it (round 2g, 2026-09-26, D35 — the opener
+//         and the profile band sit above the first year, and the owner asked
+//         for "all are grayed out at rest").
+//     ONLY THE TOP FALLBACK MOVES. The bottom rule above still wins at the
+//     document's end, the walk is the same walk, and the pin — a click, a
+//     `hashchange`, the load-time `#id` — still outranks all of it: 'none'
+//     answers "where is the page" when the answer is "above every target",
+//     never "what did the visitor ask for".
 //
 // ── THE PIN — the click's intent, and the half that makes "both ways" safe.
 // Without it the two directions fight: a click jumps, the jump scrolls, the
@@ -154,8 +209,9 @@ import {
 // further scroll event arrives, the settle fires, and the stale mark would
 // stand until the visitor's own hand. So the settle — the one moment the
 // scrolling has provably stopped — CHECKS the pin against the page: the target
-// has ARRIVED when it sits on its landing line (the walk's own pixel of
-// grace), or when it is still below that line while the page has reached its
+// has ARRIVED when it sits on its line — the landing line, or the middle on a
+// middle-line spy (THE MIDDLE LINE) — with the walk's own pixel of grace, or
+// when it is still below that line while the page has reached its
 // end — the browser went as far as it could, which is what the unreachable
 // last card, a short category at the end and a page that fits its viewport
 // all look like. A pin whose target has not arrived is dropped, and the walk
@@ -181,21 +237,23 @@ import {
 // ── EVENTS, six of them, all on window and all removed by dispose(). Three
 // ask "where are we now?": `scroll`, `{ passive: true }` (this listener never
 // calls preventDefault, and saying so lets the compositor scroll without
-// waiting for it); `resize`, which changes every rect and therefore the answer;
-// `hashchange`, which is how Back, Forward and any other link to a `#id` on
-// this page reach us. Three ask "is a person doing this?" and exist only to
-// drop the pin: `wheel` and `touchmove` (both passive, same reason) and
-// `keydown`, filtered to the scrolling keys — see THE VISITOR'S OWN INPUT.
+// waiting for it); `resize`, which changes every rect — and the middle line
+// itself — and therefore the answer; `hashchange`, which is how Back, Forward
+// and any other link to a `#id` on this page reach us. Three ask "is a person
+// doing this?" and exist only to drop the pin: `wheel` and `touchmove` (both
+// passive, same reason) and `keydown`, filtered to the scrolling keys — see
+// THE VISITOR'S OWN INPUT.
 // NO requestAnimationFrame THROTTLE, on purpose: the browser already coalesces
 // scroll events to at most one per frame, and a walk over a menu-sized list is
 // one getComputedStyle for the document plus, per target, one more and one
-// getBoundingClientRect — 23 layout reads for eleven categories, all of them
-// against a layout the browser has just finished anyway (the event fires after
-// the move). A rAF wrapper would buy nothing at that size and cost a frame of
-// latency plus a cancel path to get wrong. The per-target style read is not
-// hoisted out of the loop on purpose: `scroll-margin-top` is a CSS value like
-// any other and may differ at another breakpoint, so reading it once at start()
-// would be wrong the moment the window is resized.
+// getBoundingClientRect — 23 layout reads for eleven categories on the
+// landing line (the middle line reads no style: one rect per target), all of
+// them against a layout the browser has just finished anyway (the event fires
+// after the move). A rAF wrapper would buy nothing at that size and cost a
+// frame of latency plus a cancel path to get wrong. The per-target style read
+// is not hoisted out of the loop on purpose: `scroll-margin-top` is a CSS
+// value like any other and may differ at another breakpoint, so reading it
+// once at start() would be wrong the moment the window is resized.
 //
 // ── IT PUBLISHES THROUGH lib/external-store, like the clock and the ring:
 // one FLAT snapshot, `sync()` after every change, and the store keeps the old
@@ -218,6 +276,13 @@ import {
 //     categories are compiled into the HTML at build time (§16). A ring's
 //     `setCount` exists because a deck can be handed a new list; a table of
 //     contents cannot. The day one can, this is where it joins.
+//   · A MIDDLE LINE FOR TARGETS THAT ARE ALSO JUMPED TO. The browser lands a
+//     fragment jump on the landing line, so a middle-line pin is handed back
+//     to the walk at the settle (THE MIDDLE LINE's CONSEQUENCE). Its one
+//     consumer, the course timeline, has no links to its years; the first
+//     middle-line consumer that does chooses then — a `scroll-margin-top`
+//     that lands its targets on the middle, or a pin that trusts the jump —
+//     a NAMED TRIGGER, never guessed at now.
 //
 // ── REDUCED MOTION: nothing here animates, so there is nothing to switch off
 // (§9). The gliding a jump does is the shell's own `scroll-behavior: smooth`,
@@ -257,7 +322,32 @@ export type ScrollSpyOptions = Readonly<{
    * lib/clock argues that bound in full). @default DEFAULT_SETTLE_MS
    */
   settleMs?: number;
+  /**
+   * What the walk answers while NO target has reached its line — the `line`
+   * option's, landing or middle (the header's POSITION WALK): 'first' — the first target, for a navigation
+   * that starts at the top of its page (the price menu); 'none' — null, for
+   * targets below a long intro (the doctor page's course timeline, D35). The
+   * bottom rule and the pin are unaffected either way. @default 'first'
+   */
+  topFallback?: ScrollSpyTopFallback;
+  /**
+   * The ONE line every rule of this spy measures against (the header's
+   * LANDING LINE and MIDDLE LINE): 'landing' — where a fragment jump comes to
+   * rest, `rect.top − scroll-margin-top ≤ scroll-padding-top` (the price
+   * menu); 'middle' — the viewport's vertical centre, `rect.top ≤ innerHeight
+   * / 2`, margin and padding playing no part (the doctor page's course
+   * timeline, D49). The walk, the top fallback and the pin's arrival check
+   * all use it; the bottom rule has no line. @default 'landing'
+   */
+  line?: ScrollSpyLine;
 }>;
+
+/** The two answers the walk can give while the page is above every target's
+ *  line (ScrollSpyOptions' `topFallback`). */
+export type ScrollSpyTopFallback = 'first' | 'none';
+
+/** The two lines a spy can measure against (ScrollSpyOptions' `line`). */
+export type ScrollSpyLine = 'landing' | 'middle';
 
 /**
  * The spy's public surface: React's external-store protocol — exactly the trio
@@ -317,14 +407,22 @@ function cssPixels(value: string): number {
  * Build a spy. Touches nothing until start().
  *
  * @param options the fragment ids in document order, and (optionally) the
- * settle window.
+ * settle window, the top fallback and the line.
  * @throws when `ids` is empty, holds a blank id or repeats one — each of those
  * is a menu that cannot work, and it has to die at the call site rather than
- * mark the wrong item forever — and when `settleMs` is not a finite number of
- * milliseconds inside setTimeout's own range.
+ * mark the wrong item forever — when `settleMs` is not a finite number of
+ * milliseconds inside setTimeout's own range, when `topFallback` is neither
+ * 'first' nor 'none', and when `line` is neither 'landing' nor 'middle' (a
+ * plain-JS caller's third word would otherwise fall silently to one of the
+ * two).
  */
 export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
-  const { ids, settleMs = DEFAULT_SETTLE_MS } = options;
+  const {
+    ids,
+    settleMs = DEFAULT_SETTLE_MS,
+    topFallback = 'first',
+    line = 'landing',
+  } = options;
 
   if (ids.length === 0) {
     throw new RangeError(
@@ -352,6 +450,16 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
       `createScrollSpy: settleMs must be a finite number of milliseconds, at least 1 and at most ${MAX_DELAY_MS} (received ${String(settleMs)}). Omit it to inherit DEFAULT_SETTLE_MS.`,
     );
   }
+  if (topFallback !== 'first' && topFallback !== 'none') {
+    throw new RangeError(
+      `createScrollSpy: topFallback must be 'first' or 'none' (received ${String(topFallback)}). Omit it to inherit 'first'.`,
+    );
+  }
+  if (line !== 'landing' && line !== 'middle') {
+    throw new RangeError(
+      `createScrollSpy: line must be 'landing' or 'middle' (received ${String(line)}). Omit it to inherit 'landing'.`,
+    );
+  }
 
   /** The visitor's click, until they scroll again (THE PIN above). */
   let pinned: string | null = null;
@@ -373,11 +481,29 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     current: pinned ?? position,
   }));
 
-  /** Has this target reached its landing line? `padding` is passed in because
-   *  it is one read for the whole walk, not one per target. */
-  function reachedLandingLine(target: Element, padding: number): boolean {
-    const margin = cssPixels(getComputedStyle(target).scrollMarginTop);
-    return target.getBoundingClientRect().top - margin <= padding + 1;
+  /**
+   * THE LINE, in viewport pixels (the header's LANDING LINE and MIDDLE LINE):
+   * the document's `scroll-padding-top`, or half the window's height. One
+   * value for every target, so the walk reads it once, not once per target.
+   */
+  function lineY(): number {
+    if (line === 'middle') return window.innerHeight / 2;
+    return cssPixels(
+      getComputedStyle(document.documentElement).scrollPaddingTop,
+    );
+  }
+
+  /**
+   * The y of the edge that meets the line: on the landing line the target's
+   * top less its own `scroll-margin-top` (the air a jump leaves above it); on
+   * the middle line its bare top. With lineY() this is the module's ONE
+   * definition of "reached" — `edgeY(target) <= lineY() + 1` in the walk, the
+   * same difference within a pixel in arrived().
+   */
+  function edgeY(target: Element): number {
+    const top = target.getBoundingClientRect().top;
+    if (line === 'middle') return top;
+    return top - cssPixels(getComputedStyle(target).scrollMarginTop);
   }
 
   /** THE POSITION WALK (see the header): a pure read of the document. */
@@ -395,12 +521,13 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
       return targets[targets.length - 1].id;
     }
 
-    const padding = cssPixels(getComputedStyle(root).scrollPaddingTop);
-    // The top fallback, overwritten by every target that has reached its line
-    // — so what remains is the LAST one that has.
-    let current = targets[0].id;
+    const y = lineY();
+    // The top fallback — the first target, or nothing (`topFallback`, the
+    // header) — overwritten by every target that has reached THE line, so
+    // what remains is the LAST one that has.
+    let current: string | null = topFallback === 'first' ? targets[0].id : null;
     for (const target of targets) {
-      if (reachedLandingLine(target, padding)) current = target.id;
+      if (edgeY(target) <= y + 1) current = target.id;
     }
     return current;
   }
@@ -417,20 +544,19 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
   }
 
   /**
-   * Has the pinned target come to rest where a jump would have put it (THE PIN
-   * VERIFIES ARRIVAL, in the header)? On its landing line, with the walk's own
-   * pixel of grace — or still below that line while the page has reached its
-   * end, i.e. the browser went as far as it could. A target that has left the
-   * page has not arrived.
+   * Has the pinned target come to rest ON THE LINE (THE PIN VERIFIES ARRIVAL,
+   * in the header)? On it, with the walk's own pixel of grace — or still below
+   * it while the page has reached its end, i.e. the browser went as far as it
+   * could. The SAME line the walk measures against: on a middle-line spy that
+   * is the middle, whatever a jump did (THE MIDDLE LINE's CONSEQUENCE). A
+   * target that has left the page has not arrived.
    */
   function arrived(id: string): boolean {
     const target = document.getElementById(id);
     if (target === null) return false;
-    const root = document.documentElement;
-    const padding = cssPixels(getComputedStyle(root).scrollPaddingTop);
-    const margin = cssPixels(getComputedStyle(target).scrollMarginTop);
-    const offset = target.getBoundingClientRect().top - margin - padding;
+    const offset = edgeY(target) - lineY();
     if (Math.abs(offset) <= 1) return true;
+    const root = document.documentElement;
     const maxScrollY = root.scrollHeight - window.innerHeight;
     return offset > 0 && window.scrollY >= maxScrollY - 1;
   }
@@ -510,8 +636,9 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
   }
 
   function onResize(): void {
-    // Every rect changed, so the answer may have; a resize is never a reason
-    // to drop the visitor's pin.
+    // Every rect changed — and on a middle-line spy the line itself, which
+    // lineY() reads afresh — so the answer may have; a resize is never a
+    // reason to drop the visitor's pin.
     recompute();
   }
 

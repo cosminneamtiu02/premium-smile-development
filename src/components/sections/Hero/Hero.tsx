@@ -474,6 +474,21 @@ const groundClasses =
  * for its first fifth, never straight enough to show a corner, solid `--page`
  * at its last pixel (the header's THE FADE bullet). Absolute at the stage's
  * bottom, a tenth of the stage tall — the old page's own thinness (round 6).
+ *
+ * KEEP-IN-SYNC PAIR (§4's sharing table: bidirectional pointers, one side
+ * test-pinned) with sections/TintedBand's `fadeInClasses`/`fadeOutClasses`
+ * — the SAME ten stops with `var(--tint)` in place of `var(--color-page)`,
+ * because the doctor page's lilac ground arrives and leaves the way the home
+ * page's stage does. That ground is ONE component every lilac band composes
+ * (DoctorProfile, DoctorStats — extracted from DoctorProfile in the
+ * doctor-pages run's D29), so the curve has one other spelling, not one per
+ * band. The pin lives on that side: TintedBand.test.tsx reads THIS constant
+ * through `?raw`, substitutes the variable and demands the two gradients
+ * match, so retuning the curve here turns that suite red in the same
+ * change-set instead of leaving two curves that only used to agree (G2 react,
+ * 2026-09-21; moved with the ground, D29). The BOXES are each file's own —
+ * this one is absolute at 10 % of the stage, that one is 6rem in flow — and
+ * only the stop list travels.
  */
 const fadeClasses =
   'absolute inset-x-0 bottom-0 z-10 h-[10%] bg-[linear-gradient(to_bottom,transparent_0%,color-mix(in_srgb,var(--color-page)_1%,transparent)_20%,color-mix(in_srgb,var(--color-page)_4%,transparent)_30%,color-mix(in_srgb,var(--color-page)_10%,transparent)_40%,color-mix(in_srgb,var(--color-page)_20%,transparent)_50%,color-mix(in_srgb,var(--color-page)_34%,transparent)_60%,color-mix(in_srgb,var(--color-page)_52%,transparent)_70%,color-mix(in_srgb,var(--color-page)_72%,transparent)_80%,color-mix(in_srgb,var(--color-page)_90%,transparent)_90%,var(--color-page)_100%)]';

@@ -86,7 +86,35 @@
     }
   },
   "team": {
-    "title": "Unser Team"
+    "title": "Unser Team",
+    "roster": {
+      "services": "Leistungen ansehen",
+      "profile": "Profil ansehen"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "In meinen Worten",
+        "title": "Meine Philosophie"
+      },
+      "about": {
+        "eyebrow": "Biografie",
+        "title": "Über {name}"
+      },
+      "courses": {
+        "eyebrow": "Fortbildung",
+        "title": "Kurse und Spezialisierungen"
+      },
+      "stats": {
+        "eyebrow": "In Zahlen",
+        "title": "Über die Jahre bestätigte Erfahrung",
+        "lead": "Die Zahlen unten sagen in Kürze, wie wir arbeiten: sorgfältig, mit moderner Technik und mit echter Aufmerksamkeit für jeden Patienten.",
+        "atLeast": "über"
+      },
+      "schedule": {
+        "title": "Wann Sie mich in der Praxis finden",
+        "closed": "Geschlossen"
+      }
+    }
   },
   "blog": {
     "title": "Artikel & Neuigkeiten"

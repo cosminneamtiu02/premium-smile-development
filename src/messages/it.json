@@ -86,7 +86,35 @@
     }
   },
   "team": {
-    "title": "Il nostro team"
+    "title": "Il nostro team",
+    "roster": {
+      "services": "Vedi i servizi",
+      "profile": "Vedi il profilo"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "Con le mie parole",
+        "title": "La mia filosofia"
+      },
+      "about": {
+        "eyebrow": "Biografia",
+        "title": "{name} in breve"
+      },
+      "courses": {
+        "eyebrow": "Formazione continua",
+        "title": "Corsi e specializzazioni"
+      },
+      "stats": {
+        "eyebrow": "In cifre",
+        "title": "Un’esperienza confermata nel tempo",
+        "lead": "I numeri qui sotto raccontano, in breve, come lavoriamo: con cura, con tecnologie moderne e con un’attenzione autentica per ogni paziente.",
+        "atLeast": "oltre"
+      },
+      "schedule": {
+        "title": "Quando mi trovate in clinica",
+        "closed": "Chiuso"
+      }
+    }
   },
   "blog": {
     "title": "Articoli e novità"

@@ -86,7 +86,35 @@
     }
   },
   "team": {
-    "title": "Echipa noastră"
+    "title": "Echipa noastră",
+    "roster": {
+      "services": "Vezi serviciile",
+      "profile": "Vezi profilul"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "În cuvintele mele",
+        "title": "Filozofia mea"
+      },
+      "about": {
+        "eyebrow": "Biografie",
+        "title": "Despre {name}"
+      },
+      "courses": {
+        "eyebrow": "Formare continuă",
+        "title": "Cursuri și specializări"
+      },
+      "stats": {
+        "eyebrow": "În cifre",
+        "title": "Experiență confirmată în timp",
+        "lead": "Cifrele de mai jos spun, pe scurt, cum lucrăm: cu atenție, cu tehnologie modernă și cu grijă reală pentru fiecare pacient.",
+        "atLeast": "peste"
+      },
+      "schedule": {
+        "title": "Când mă găsiți la clinică",
+        "closed": "Închis"
+      }
+    }
   },
   "blog": {
     "title": "Articole și noutăți"

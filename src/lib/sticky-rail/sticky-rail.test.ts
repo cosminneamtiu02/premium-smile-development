@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import {
   createStickyRail,
   type StickyRail,
+  type StickyRailMode,
   type StickyRailSnapshot,
 } from './sticky-rail.ts';
 
@@ -18,6 +20,17 @@ import {
 // requestAnimationFrame, which the scroll events it reacts to ride anyway.
 // Waiting for a real frame (two, to be safe — one for the event, one for
 // anything it scheduled) is the honest wait, exactly as in scroll-spy.test.
+//
+// ── REAL INPUT FOR EVERYTHING ABOUT FOCUS. The rail answers only a focus the
+// KEYBOARD made (the header's ONLY THE KEYBOARD'S FOCUS IS ANSWERED), and it
+// asks `:focus-visible` who made it — which is document state a script cannot
+// set. Measured in this runner, 2026-09-29: a script `focus()` in a fresh
+// document matches `:focus-visible`, but after ONE real mouse press in the
+// same document a script `focus()` no longer does; a real Tab or Enter always
+// makes a keyboard focus again. So a keyboard claim below is made with a real
+// key from `userEvent` (Playwright), a pointer claim with a real press, and a
+// script `focus()` is used only to put focus on a link that needs no reveal
+// whoever made it — which keeps every test true in any order.
 //
 // ── THE FIXTURE IS THE PRICE BAND, IN NUMBERS THIS FILE OWNS: a spacer above
 // the band (so the rail starts below the fold), a grid with padding-top (so
@@ -166,6 +179,8 @@ afterEach(() => {
   host = undefined;
   sheet?.remove();
   sheet = undefined;
+  // A real fragment jump (the rail's own id) leaves its hash in the URL.
+  window.history.replaceState(null, '', window.location.pathname);
   window.scrollTo(0, 0);
   vi.restoreAllMocks();
 });
@@ -530,41 +545,114 @@ describe('createStickyRail — a resize re-evaluates', () => {
 });
 
 describe('createStickyRail — a focused descendant must be on screen', () => {
-  it("pins 'bottom' for a link below the fold while top-pinned, at once", async () => {
-    const element = buildPage({ height: tallHeight(), links: 8 });
-    const rail = makeRail();
-    attach(rail, element);
-    rail.start();
-    // Down to the bottom pin, up to the top pin: the sticky now HOLDS the
-    // rail at its line, so the browser's own scroll-into-view cannot reveal a
-    // link below the fold — only a pin can.
+  /**
+   * Down to the bottom pin and back up to the top pin: the sticky now HOLDS
+   * the rail at its line, so the browser's own scroll-into-view cannot reveal
+   * a link below the fold — only a pin can.
+   */
+  async function topPinnedFromBelow(rail: StickyRail): Promise<void> {
     await scrollToY(engageY() + 30);
     await scrollToY(engageY() + 1_500);
     for (let y = engageY() + 1_440; y >= engageY(); y -= 60) {
       await scrollToY(y);
       if (rail.getSnapshot().mode === 'top') break;
     }
+  }
+
+  /**
+   * The rail's mode AT THE MOMENT `target` receives focus, read by a listener
+   * on the document — which a bubbling focusin reaches only after the rail's
+   * own listener has run. It is how a test awaiting a real key still proves
+   * the pin is published inside the focus event itself, before any frame.
+   */
+  function modeAtFocusin(
+    target: Element,
+    rail: StickyRail,
+  ): () => StickyRailMode | undefined {
+    let seen: StickyRailMode | undefined;
+    const listener = (event: FocusEvent): void => {
+      if (event.target !== target) return;
+      seen = rail.getSnapshot().mode;
+      document.removeEventListener('focusin', listener);
+    };
+    document.addEventListener('focusin', listener);
+    return () => seen;
+  }
+
+  /**
+   * THE DEFECT'S OWN GEOMETRY (the planner's real-click probe, 1366×633: a
+   * link from 578 to 622 under a bottom line at 617). A link a top-pinned rail
+   * shows whole — so a pointer can press it — whose bottom edge nonetheless
+   * sits under the bottom line.
+   */
+  function linkAcrossTheBottomLine(element: HTMLElement): HTMLAnchorElement {
+    const floor = window.innerHeight - GAP;
+    const link = document.createElement('a');
+    link.href = '#across';
+    link.textContent = 'across the bottom line';
+    link.style.display = 'block';
+    link.style.position = 'absolute';
+    link.style.height = '20px';
+    link.style.top = `${floor - LINE - 5}px`;
+    element.append(link);
+    return link;
+  }
+
+  /** Swallow the next click's navigation and report what it landed on. */
+  function nextClickTarget(): () => EventTarget | null {
+    let target: EventTarget | null = null;
+    document.addEventListener(
+      'click',
+      (event) => {
+        target = event.target;
+        event.preventDefault();
+      },
+      { capture: true, once: true },
+    );
+    return () => target;
+  }
+
+  it("pins 'bottom' for a link below the fold while top-pinned, at once — reached by a real Tab", async () => {
+    const element = buildPage({ height: tallHeight(), links: 8 });
+    const rail = makeRail();
+    attach(rail, element);
+    rail.start();
+    await topPinnedFromBelow(rail);
     expect(rail.getSnapshot().mode).toBe('top');
-    const last = element.querySelectorAll('a')[7];
-    expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
+    const links = [...element.querySelectorAll('a')];
+    const floor = window.innerHeight - GAP;
+    // The first link under the bottom line; the one before it is on screen
+    // and needs no reveal, whoever focuses it.
+    const hidden = links.findIndex(
+      (link) => link.getBoundingClientRect().bottom > floor + 1,
+    );
+    expect(hidden).toBeGreaterThan(0);
+    expect(links[hidden].getBoundingClientRect().bottom).toBeGreaterThan(
       window.innerHeight,
     );
+    links[hidden - 1].focus();
+    expect(rail.getSnapshot().mode).toBe('top');
+    const atFocusin = modeAtFocusin(links[hidden], rail);
 
-    last.focus();
+    await userEvent.tab();
 
-    // Synchronous — no frame was awaited: the pin is published inside the
-    // focusin listener itself.
+    expect(document.activeElement).toBe(links[hidden]);
+    // Inside the focusin itself — the pin is published by the listener, not
+    // a frame later.
+    expect(atFocusin()).toBe('bottom');
     expect(rail.getSnapshot().mode).toBe('bottom');
-    const rect = last.getBoundingClientRect();
-    expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight - GAP + 1);
+    const rect = links[hidden].getBoundingClientRect();
+    expect(rect.bottom).toBeLessThanOrEqual(floor + 1);
     expect(rect.top).toBeGreaterThanOrEqual(0);
   });
 
   it('needs no pin while travelling: the rail rides with the page, so the browser reveals the link itself', async () => {
     // Measured here: Chromium performs its scroll-into-view BEFORE it
     // dispatches focusin, and a travelling rail moves with that scroll. The
-    // listener then reads a link already on screen and leaves the mode alone
-    // — the header's "pins only what is still hidden".
+    // listener then reads a link already on screen — the header's "pins only
+    // what is still hidden". (The browser may bring the link's bottom edge to
+    // the window's own bottom, inside the bottom line's air, where a pin
+    // 'bottom' is the rail's honest answer — hence the pair of modes.)
     const element = buildPage({ height: tallHeight(), links: 8 });
     const rail = makeRail();
     attach(rail, element);
@@ -572,20 +660,23 @@ describe('createStickyRail — a focused descendant must be on screen', () => {
     await scrollToY(engageY() + 30);
     await scrollToY(engageY() + 60);
     expect(rail.getSnapshot().mode).toBe('travel');
-    const last = element.querySelectorAll('a')[7];
+    const links = element.querySelectorAll('a');
+    const last = links[7];
     expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
       window.innerHeight,
     );
+    links[6].focus({ preventScroll: true });
 
-    last.focus();
+    await userEvent.tab();
 
+    expect(document.activeElement).toBe(last);
     const rect = last.getBoundingClientRect();
     expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight + 1);
     expect(rect.top).toBeGreaterThanOrEqual(0);
     expect(['travel', 'bottom']).toContain(rail.getSnapshot().mode);
   });
 
-  it("pins 'top' for a link above the line while bottom-pinned", async () => {
+  it("pins 'top' for a link above the line while bottom-pinned — reached by a real Shift+Tab", async () => {
     const element = buildPage({ height: tallHeight(), links: 8 });
     const rail = makeRail();
     attach(rail, element);
@@ -593,16 +684,32 @@ describe('createStickyRail — a focused descendant must be on screen', () => {
     await scrollToY(engageY() + 30);
     await scrollToY(engageY() + 1_500);
     expect(rail.getSnapshot().mode).toBe('bottom');
-    const first = element.querySelectorAll('a')[0];
-    expect(first.getBoundingClientRect().top).toBeLessThan(0);
+    const links = [...element.querySelectorAll('a')];
+    // The last link above the line; the one after it is on screen, below the
+    // line, and needs no reveal.
+    const hidden = links.findLastIndex(
+      (link) => link.getBoundingClientRect().top < LINE - 1,
+    );
+    expect(hidden).toBeGreaterThanOrEqual(0);
+    expect(links[hidden].getBoundingClientRect().top).toBeLessThan(0);
+    links[hidden + 1].focus();
+    expect(rail.getSnapshot().mode).toBe('bottom');
+    const atFocusin = modeAtFocusin(links[hidden], rail);
 
-    first.focus();
+    await userEvent.tab({ shift: true });
 
-    expect(rail.getSnapshot().mode).toBe('top');
-    expect(first.getBoundingClientRect().top).toBeGreaterThanOrEqual(LINE - 1);
+    expect(document.activeElement).toBe(links[hidden]);
+    expect(atFocusin()).toBe('top');
+    expect(links[hidden].getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      LINE - 1,
+    );
   });
 
-  it("pins 'top' when the rail itself takes focus — a fragment jump to its own id", async () => {
+  it("pins 'top' when the KEYBOARD jumps to the rail's own id — Enter on a link to it", async () => {
+    // The rail is a public address (the price menu's `#price-categories`), and
+    // arriving there by keyboard gets the visitor to its title. The jump is
+    // the browser's own: Enter on a link to the id focuses the rail — a
+    // keyboard focus, `:focus-visible` in both engines.
     const element = buildPage({ height: tallHeight(), links: 2 });
     const rail = makeRail();
     attach(rail, element);
@@ -610,10 +717,17 @@ describe('createStickyRail — a focused descendant must be on screen', () => {
     await scrollToY(engageY() + 30);
     await scrollToY(engageY() + 1_500);
     expect(rail.getSnapshot().mode).toBe('bottom');
+    const jump = document.createElement('a');
+    jump.href = `#${RAIL_ID}`;
+    jump.textContent = 'to the rail';
+    host?.prepend(jump);
+    jump.focus({ preventScroll: true });
+    const atFocusin = modeAtFocusin(element, rail);
 
-    element.focus();
+    await userEvent.keyboard('{Enter}');
 
-    expect(rail.getSnapshot().mode).toBe('top');
+    expect(document.activeElement).toBe(element);
+    expect(atFocusin()).toBe('top');
   });
 
   it('leaves a link that is already on screen alone', async () => {
@@ -622,22 +736,130 @@ describe('createStickyRail — a focused descendant must be on screen', () => {
     const seen = attach(rail, element);
     rail.start();
     await scrollToY(engageY() + 30);
+    // Let every frame the scroll and the observer's first delivery asked for
+    // run BEFORE counting: the rail has just opened 'travel' exactly on its
+    // line, and the next evaluation returns it to 'top' — a transition that
+    // belongs to the scroll, not to the focus. A real key awaits frames, so
+    // they must already be spent.
+    await settle();
+    await settle();
     const before = seen.length;
+    const links = element.querySelectorAll('a');
+    links[0].focus({ preventScroll: true });
 
-    element.querySelectorAll('a')[1].focus();
+    await userEvent.tab();
 
+    expect(document.activeElement).toBe(links[1]);
     expect(seen.length).toBe(before);
   });
 
-  it("does nothing in 'fits' — the CSS sticky already shows the whole rail", () => {
+  it("does nothing in 'fits' — the CSS sticky already shows the whole rail", async () => {
     const element = buildPage({ height: shortHeight(), links: 3 });
     const rail = makeRail();
     const seen = attach(rail, element);
     rail.start();
+    const links = element.querySelectorAll('a');
+    links[1].focus({ preventScroll: true });
 
-    element.querySelectorAll('a')[2].focus();
+    await userEvent.tab();
 
+    expect(document.activeElement).toBe(links[2]);
     expect(seen).toEqual([]);
+  });
+
+  // ONLY THE KEYBOARD'S FOCUS IS ANSWERED (the header; owner 2026-09-29, "fix
+  // them for me"). A real pointer is already on what it pressed, and a rail
+  // that moved under it between mousedown and mouseup swallowed the click.
+
+  it('a REAL pointer press on a link under the bottom line of a top-pinned rail changes nothing — and the click lands on the link', async () => {
+    // Before this rule, Chromium's press focused the link, the rail pinned
+    // 'bottom' and jumped 174px mid-click, and the click landed on the <nav>
+    // (the planner's real-click probe). Now the press still focuses the link
+    // — without a focus ring, the pointer's focus — and the rail does not
+    // move a pixel.
+    const element = buildPage({ height: tallHeight() });
+    const rail = makeRail();
+    attach(rail, element);
+    rail.start();
+    await topPinnedFromBelow(rail);
+    expect(rail.getSnapshot().mode).toBe('top');
+    const link = linkAcrossTheBottomLine(element);
+    const before = link.getBoundingClientRect().toJSON();
+    const railTop = element.getBoundingClientRect().top;
+    expect(before.bottom).toBeGreaterThan(window.innerHeight - GAP + 1);
+    expect(before.bottom).toBeLessThanOrEqual(window.innerHeight);
+    const clicked = nextClickTarget();
+
+    await userEvent.click(link);
+
+    expect(clicked()).toBe(link);
+    expect(document.activeElement).toBe(link);
+    expect(link.matches(':focus-visible')).toBe(false);
+    expect(rail.getSnapshot().mode).toBe('top');
+    expect(element.getBoundingClientRect().top).toBe(railTop);
+    expect(link.getBoundingClientRect().toJSON()).toEqual(before);
+  });
+
+  it("a press inside a bottom-pinned rail does not pin 'top' — though it focuses the rail itself", async () => {
+    // WebKit's press on ANY link focuses the nearest focusable ancestor — the
+    // rail, `tabindex="-1"` — and every engine does so for a press on plain
+    // words inside it; before this rule that focus pinned 'top' under the
+    // pointer. Plain words here, so the press focuses the rail in Chromium
+    // too.
+    const element = buildPage({ height: tallHeight() });
+    const rail = makeRail();
+    attach(rail, element);
+    rail.start();
+    await scrollToY(engageY() + 30);
+    await scrollToY(engageY() + 1_500);
+    expect(rail.getSnapshot().mode).toBe('bottom');
+    const words = document.createElement('p');
+    words.textContent = 'Categorii';
+    words.style.position = 'absolute';
+    words.style.margin = '0';
+    words.style.top = `${tallHeight() - 100}px`;
+    element.append(words);
+    const railTop = element.getBoundingClientRect().top;
+    const clicked = nextClickTarget();
+
+    await userEvent.click(words);
+
+    expect(clicked()).toBe(words);
+    expect(document.activeElement).toBe(element);
+    expect(element.matches(':focus-visible')).toBe(false);
+    expect(rail.getSnapshot().mode).toBe('bottom');
+    expect(element.getBoundingClientRect().top).toBe(railTop);
+  });
+
+  it('an engine without `:focus-visible` answers every focus as before — the pointer’s included', async () => {
+    // Safari before 15.4 throws on the unknown selector. The rail then treats
+    // every focus as the keyboard's, exactly as before the rule existed: the
+    // same real press on the same link pins 'bottom' again.
+    const element = buildPage({ height: tallHeight() });
+    const rail = makeRail();
+    attach(rail, element);
+    rail.start();
+    await topPinnedFromBelow(rail);
+    expect(rail.getSnapshot().mode).toBe('top');
+    const link = linkAcrossTheBottomLine(element);
+    const matches = Element.prototype.matches;
+    const asked = vi
+      .spyOn(Element.prototype, 'matches')
+      .mockImplementation(function (this: Element, selector: string) {
+        if (selector === ':focus-visible') {
+          throw new DOMException(
+            `'${selector}' is not a valid selector.`,
+            'SyntaxError',
+          );
+        }
+        return matches.call(this, selector);
+      });
+    nextClickTarget();
+
+    await userEvent.click(link);
+
+    expect(asked).toHaveBeenCalledWith(':focus-visible');
+    expect(rail.getSnapshot().mode).toBe('bottom');
   });
 });
 

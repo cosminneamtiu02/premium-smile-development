@@ -99,30 +99,53 @@ import {
 // hidden as it was. The old belt hid this — Tab scrolled the card's own
 // scroller instead. So the rail listens for `focusin` on itself and answers
 // in the same task as the focus itself: a target still below the bottom line
-// pins 'bottom', one still above the top line pins 'top', and focus
-// on the rail element itself (a fragment jump to its own id) pins 'top', so
-// the visitor arrives at its title. Published synchronously — no frame wait —
-// and reading the geometry AS IT STANDS, which is what makes the order of
-// the browser's own scroll-into-view irrelevant (measured in Chromium: the
-// scroll comes first, then the event). A rail in 'travel' rides with that
-// scroll, so the browser has already revealed the link and the listener
-// leaves it alone; a PINNED rail does not move with the page, the link is
-// still hidden when the listener runs, and the pin is what reveals it. A pin
-// is independent of the scroll position, and the browser's scroll lands on a
-// direction the pin already holds — so it never opens 'travel' a frame later.
+// pins 'bottom', one still above the top line pins 'top', and focus on the
+// rail element itself (a fragment jump to its own id, the keyboard's) pins
+// 'top', so the visitor arrives at its title. Published synchronously — no
+// frame wait — and reading the geometry AS IT STANDS, which is what makes the
+// order of the browser's own scroll-into-view irrelevant (measured in
+// Chromium: the scroll comes first, then the event). A rail in 'travel' rides
+// with that scroll, so the browser has already revealed the link and the
+// listener leaves it alone; a PINNED rail does not move with the page, the
+// link is still hidden when the listener runs, and the pin is what reveals
+// it. A pin is independent of the scroll position, and the browser's scroll
+// lands on a direction the pin already holds — so it never opens 'travel' a
+// frame later.
+// ONLY THE KEYBOARD'S FOCUS IS ANSWERED (owner, 2026-09-29, of the defect the
+// planner found in the lane's previous round: "fix them for me"). A focus the
+// POINTER made needs no reveal — the pointer is already on what it pressed —
+// and answering it was a defect, measured on the built page in both engines:
+// in Chromium a mouse press on a link focuses the link, so pressing a link
+// whose bottom edge sat under the bottom line of a top-pinned rail pinned
+// 'bottom' and moved the menu 174px between mousedown and mouseup — the click
+// landed on the <nav>, and nothing navigated; in WebKit a press does not
+// focus the link at all but its nearest focusable ancestor, the
+// `<nav tabindex="-1">` — the rail itself — so ANY press inside a
+// bottom-pinned or travelling menu pinned 'top' under the pointer. Both
+// engines already know who made a focus at the moment of `focusin`:
+// `:focus-visible` is false for those two mouse-made focuses and true for
+// every Tab (the planner's focus probe, 2026-09-29). So the listener asks the
+// focused element that before anything else — a descendant and the rail
+// itself alike — and an engine too old for the selector (Safari before 15.4),
+// which throws on it, answers every focus as it did before this rule. One
+// consequence, stated rather than discovered: a fragment jump to the rail's
+// own id that the keyboard did not make — a mouse click on a link to it — no
+// longer pins 'top' on focus; the jump's own scrolling carries the rail to its
+// top line through the ordinary transitions.
 //
 // ── EVENTS, four sources, one evaluation per frame. `scroll` on window,
 // `{ passive: true }` (this listener never calls preventDefault, and saying so
 // lets the compositor scroll without waiting for it); `resize` on window (the
 // bottom line and the fit both move with innerHeight); a ResizeObserver on the
 // rail (fonts arriving, a zoom, content changing its height); and `focusin`
-// on the rail, the one that runs immediately. The first three are COALESCED
-// through requestAnimationFrame: each schedules at most one frame callback,
-// and the callback reads the geometry once. A rAF requested from a scroll
-// handler runs in that same frame before paint, so this costs no latency;
-// what it buys is one evaluation for any number of events, and a place where
-// the direction is measured once per frame rather than once per event. The
-// store then keeps the old snapshot whenever nothing changed
+// on the rail, the one that runs immediately — and answers only a focus the
+// keyboard made (A FOCUSED DESCENDANT MUST BE ON SCREEN). The first three are
+// COALESCED through requestAnimationFrame: each schedules at most one frame
+// callback, and the callback reads the geometry once. A rAF requested from a
+// scroll handler runs in that same frame before paint, so this costs no
+// latency; what it buys is one evaluation for any number of events, and a
+// place where the direction is measured once per frame rather than once per
+// event. The store then keeps the old snapshot whenever nothing changed
 // (lib/external-store): state moves only at a transition, so React re-renders
 // a handful of times per direction reversal and never per scroll event. In
 // 'fits' the scroll listener does not even schedule — the only way out of
@@ -161,10 +184,11 @@ import {
 //   · MERGING THIS MODULE'S LISTENERS WITH lib/scroll-spy's into one loop. The
 //     price menu's island runs both stores, so two scroll listeners and two
 //     geometry reads exist per frame. They measure different things (the
-//     cards' landing lines vs the rail's own edges) and they are cheap; a
-//     shared "one scroll, many readers" loop is §4's sharing-table row 1 and
-//     earns its file when a SECOND consumer of both stores appears — never a
-//     drive-by here.
+//     cards against the spy's line — its reading line since round 5,
+//     2026-09-29, their landing lines before — vs the rail's own edges) and
+//     they are cheap; a shared "one scroll, many readers" loop is §4's
+//     sharing-table row 1 and earns its file when a SECOND consumer of both
+//     stores appears — never a drive-by here.
 //   · TAB VISIBILITY. A hidden tab neither scrolls nor resizes, so the rail
 //     already does nothing there; lib/clock's `lib/page-visibility` trigger
 //     is the one place that seam will be promoted from, at its second
@@ -231,6 +255,22 @@ const GRACE_PX = 1;
 function cssPixels(value: string): number {
   const pixels = parseFloat(value);
   return Number.isNaN(pixels) ? 0 : pixels;
+}
+
+/**
+ * Did the KEYBOARD make this focus? (ONLY THE KEYBOARD'S FOCUS IS ANSWERED, in
+ * the header.) `:focus-visible` is the engine's own answer, known at the
+ * moment of `focusin`: false for a focus a mouse press made — the link in
+ * Chromium, the rail itself in WebKit — and true for every Tab.
+ */
+function keyboardMade(target: Element): boolean {
+  try {
+    return target.matches(':focus-visible');
+  } catch {
+    // An engine too old for the selector throws on it (Safari before 15.4).
+    // There the rail answers every focus, as it did before this rule.
+    return true;
+  }
 }
 
 /**
@@ -391,12 +431,15 @@ export function createStickyRail(options: StickyRailOptions): StickyRail {
   /**
    * A FOCUSED DESCENDANT MUST BE ON SCREEN (header): pin whichever edge
    * reveals the target, now, before the browser's own scroll-into-view reads
-   * the layout. In 'fits' the CSS sticky already shows the whole rail.
+   * the layout — but only for a focus the KEYBOARD made, asked before anything
+   * else: a pointer is already on what it pressed, and a rail that moved under
+   * it swallowed the click. In 'fits' the CSS sticky already shows the whole
+   * rail.
    */
   function onFocusIn(event: FocusEvent): void {
-    if (rail === undefined || mode === 'fits') return;
     const target = event.target;
-    if (!(target instanceof Element)) return;
+    if (!(target instanceof Element) || !keyboardMade(target)) return;
+    if (rail === undefined || mode === 'fits') return;
     if (target === rail) {
       publish('top', 0);
       return;

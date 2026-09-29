@@ -1,10 +1,11 @@
-import { createRef } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { act, render, screen, within } from '@testing-library/react';
+import { createRef, StrictMode } from 'react';
+import { renderToStaticMarkup, renderToString } from 'react-dom/server';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { containerClasses } from '@/components/ui/Container/Container';
 import { TextButton } from '@/components/ui/TextButton/TextButton';
+import arrivalSource from './arrival.ts?raw';
 import cardSource from './CategoryCard.tsx?raw';
 import {
   PriceList,
@@ -13,6 +14,7 @@ import {
   type PriceRowProps,
 } from './PriceList';
 import source from './PriceList.tsx?raw';
+import { PriceMenu } from './PriceMenu';
 import menuSource from './PriceMenu.tsx?raw';
 
 // sections/PriceList — the interaction suite. Role-based queries on purpose
@@ -47,7 +49,25 @@ import menuSource from './PriceMenu.tsx?raw';
 // inline `top`, and the server HTML carries neither. The stylesheet's absence
 // cuts the other way for this store: no CSS makes the nav sticky, so the
 // wiring test lends it an inline sticky rule and a resize, and reads the
-// attribute back.
+// attribute back. AND SINCE 2026-09-29 the spy's one answer lands twice — as
+// the link's `aria-current` and as `data-current` on the category card that
+// link points at, the mark ui/Card's `aura="current"` shows its glow for —
+// so the tests that follow the first mark follow the second too, and pin
+// that the two never disagree and that the card's mark leaves with the island.
+// AND SINCE ROUND 5 (owner, 2026-09-29) two things more. The spy measures
+// against THE READING LINE — the middle of the window's clear area,
+// `(scroll-padding-top + innerHeight) / 2`, bent near both ends of the page —
+// and writes each card's landing as its inline `scroll-margin-top`, so the
+// scrolling tests are argued against that line: from the fixture's own
+// geometry and the design's own statement of it (a card becomes current as its
+// top crosses the line; the first at the top; the last at the end), never from
+// a copy of lib/reading-line's arithmetic, whose own suite owns the numbers.
+// And the island tells a keyboard's arrival from a pointer's — a click's
+// `detail`, 0 for the keyboard's, the click count for a pointer's — and stamps
+// the keyboard's card `data-arrival="keyboard"`, so that card alone keeps its
+// focus ring. user-event drives both kinds for real: its Enter on a link
+// dispatches a click with `detail` 0 and its pointer click counts 1, as both
+// engines do (the planner's probe on the built page).
 //
 // NOTHING IS MOCKED: no router, no cookie, no clock, no message provider. A
 // dumb band needs none of them, which is the point of the shape.
@@ -122,9 +142,45 @@ const FIXTURE_WORDS = [
  *  stays guarded. */
 const AURA = 'shadow-aura';
 
+/** The two tokens of the ARMED glow (`aura="current"`, owner 2026-09-29): the
+ *  same glow on the card's `::before` layer, and the one rule that shows that
+ *  layer while the card carries the mark. Spelled here for AURA's reason. */
+const ARMED_GLOW = 'before:shadow-aura';
+const SHOWN_WHILE = 'data-current:before:opacity-100';
+
+/** The mark the island stamps on the category card the visitor is at — the
+ *  attribute ui/Card's `aura="current"` answers to. Spelled independently of
+ *  the atom's CARD_CURRENT_ATTRIBUTE, so a silent rename fails here. */
+const CURRENT = 'data-current';
+
+/** Every category card that carries the mark, in document order. */
+const markedCards = (): HTMLElement[] =>
+  screen.getAllByRole('region').filter((card) => card.hasAttribute(CURRENT));
+
+/** The island's stamp on a card the KEYBOARD jumped to, and its one value
+ *  (owner 2026-09-29) — spelled here, never imported from ./arrival, CURRENT's
+ *  reason. */
+const ARRIVAL = 'data-arrival';
+const KEYBOARD = 'keyboard';
+
+/** The card's class that hides the ring wherever that stamp is absent. */
+const QUIET_RING = 'not-data-[arrival=keyboard]:focus-visible:outline-hidden';
+
+/** Every element in the document that carries the stamp — the whole document,
+ *  so a stamp left on a card that has already left it is still found through
+ *  the node a test kept. */
+const stampedElements = (): Element[] =>
+  Array.from(document.querySelectorAll(`[${ARRIVAL}]`));
+
 /** The shell's own `scroll-padding-top: 6rem`, in the pixels this file sets on
  *  <html> for the scrolling tests — globals.css is not loaded here. */
 const SCROLL_PADDING = 96;
+
+/** THE READING LINE as this project can have it: the middle of the window's
+ *  clear area, `(scroll-padding-top + innerHeight) / 2`, in viewport pixels —
+ *  the design's own statement of it (lib/scroll-spy's THE READING LINE), with
+ *  the shell's padding this file sets. */
+const readingLine = (): number => (SCROLL_PADDING + window.innerHeight) / 2;
 
 const mount = () =>
   render(<PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />);
@@ -159,10 +215,12 @@ const scrollToY = async (y: number): Promise<void> => {
   });
 };
 
-/** Make the cards tall enough to be reached one at a time, and give <html> the
- *  scroll padding the real shell has. Returns the scroll offset a jump to that
- *  card would produce: `rect.top − scroll-margin-top === scroll-padding-top`,
- *  with the margin at 0 because no stylesheet turns `scroll-mt-10` into one. */
+/** Make the cards tall enough to be read one at a time, and give <html> the
+ *  scroll padding the real shell has. Returns, for a card, the scroll offset
+ *  at which its top edge sits exactly ON the reading line — where the design
+ *  says it becomes current. Every stretched card is taller than the window and
+ *  far from both ends of the page, where nothing bends the line (lib/scroll-
+ *  spy's THE READING LINE); a test that reads the line near an end says so. */
 const stretchCards = (): ((id: string) => number) => {
   document.documentElement.style.scrollPaddingTop = `${SCROLL_PADDING}px`;
   for (const category of CATEGORIES) {
@@ -173,8 +231,21 @@ const stretchCards = (): ((id: string) => number) => {
     Math.round(
       (document.getElementById(id) as HTMLElement).getBoundingClientRect().top +
         window.scrollY -
-        SCROLL_PADDING,
+        readingLine(),
     );
+};
+
+/** Tab until `link` has focus — the way a keyboard visitor reaches it — with a
+ *  guard of a dozen presses and a failure that says so BY NAME. */
+const tabTo = async (link: HTMLElement): Promise<void> => {
+  for (
+    let press = 0;
+    press < 12 && document.activeElement !== link;
+    press += 1
+  ) {
+    await userEvent.tab();
+  }
+  expect(link, 'Tab never reached the menu link').toHaveFocus();
 };
 
 /**
@@ -190,6 +261,7 @@ const stripComments = (code: string): string =>
 const CODE = stripComments(source);
 const CARD_CODE = stripComments(cardSource);
 const MENU_CODE = stripComments(menuSource);
+const ARRIVAL_CODE = stripComments(arrivalSource);
 
 // The jump really navigates in this runner (see the fragment test) and the
 // island really scrolls the page, so both survive a test. Put the URL, the
@@ -205,6 +277,8 @@ afterEach(() => {
   }
   document.documentElement.style.scrollPaddingTop = '';
   window.scrollTo(0, 0);
+  // The stamp tests spy on a card's listeners; the spies go with the test.
+  vi.restoreAllMocks();
 });
 
 describe('PriceList — the band', () => {
@@ -355,6 +429,10 @@ describe('PriceList — the band', () => {
     );
     expect(marked).toHaveLength(1);
     expect(marked[0]).toHaveAttribute('href', '#other-0');
+    // …and the new ring marks the new deck's CARD too: one region, the first.
+    const cards = markedCards();
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toHaveAttribute('id', 'other-0');
   });
 });
 
@@ -418,6 +496,10 @@ describe('PriceList — the jump menu', () => {
     expect(tokensOf(menu)).toEqual(
       expect.arrayContaining(['@container', 'bg-surface', 'p-6', AURA]),
     );
+    // The menu card is NOT armed: no token of the nav starts with `before:` —
+    // its glow is WORN, for good, where every category card's is armed and
+    // shown only while the island marks it (owner 2026-09-29).
+    expect(tokensOf(menu).filter((t) => t.startsWith('before:'))).toEqual([]);
     // …and the placement className is merged after them (ui/slot.ts). 8.5rem
     // of offset = the pill's 6rem reach + 2.5rem that clears its glow, and
     // the ONE rule lib/sticky-rail's 'travel' mode asks for, under the same
@@ -569,19 +651,28 @@ describe('PriceList — one card per category', () => {
     }
   });
 
-  it('gives every card the pill’s glow (ui/Card’s aura prop)', () => {
+  it('ARMS every card with the glow — none wears it on its own (owner 2026-09-29)', () => {
+    // "what category card is not selected gets no aura": every card carries
+    // the pill's glow ARMED on its `::before` layer (ui/Card's `aura`
+    // prop, `"current"`), shown only while the island marks it — and no card
+    // wears the glow on its own box.
     mount();
 
     for (const category of CATEGORIES) {
-      const card = screen.getByRole('region', { name: category.name });
-      expect(tokensOf(card).filter((c) => c === AURA)).toEqual([AURA]);
+      const tokens = tokensOf(
+        screen.getByRole('region', { name: category.name }),
+      );
+      expect(tokens).toContain(ARMED_GLOW);
+      expect(tokens).toContain(SHOWN_WHILE);
+      expect(tokens).not.toContain(AURA);
     }
   });
 
   it('stacks the cards with the gap the glow needs', () => {
-    // `gap-8` = 32px. The aura is `0 8px 22px`, so a `gap-6` column would let
-    // two neighbouring glows stack into a seam between cards (PriceList.tsx,
-    // THE GLOW IS A CARD KIND).
+    // `gap-8` = 32px. The aura is `0 8px 22px`, and ANY card can be the
+    // glowing one — whichever the visitor is at — so a `gap-6` column would
+    // let that glow run into the next card's edge (PriceList.tsx, THE GLOW IS
+    // A CARD KIND).
     mount();
     const column = screen.getByRole('region', { name: CATEGORIES[0].name })
       .parentElement as HTMLElement;
@@ -728,8 +819,25 @@ describe('PriceList — the current category (the island)', () => {
     expect(html).not.toContain('aria-current');
     expect(html).not.toContain('data-rail');
     expect(html).not.toContain('style=');
+    // …and no card arrives marked (owner 2026-09-29): the island stamps the
+    // mark after mount. A REGEX on the ATTRIBUTE form and not `toContain`,
+    // because the armed class token `data-current:before:opacity-100` holds
+    // the very substring on every card — the attribute is the name followed
+    // by `=`, a space or the tag's end, the class token by a colon.
+    expect(html).not.toMatch(/\sdata-current(=|\s|>)/);
+    // The cards ARE armed in that HTML — the glow waits for the mark only.
+    expect(html).toContain(SHOWN_WHILE);
     expect(html).toContain(`href="#${CATEGORIES[0].id}"`);
     expect(html).toMatch(/<nav[^>]*id="price-categories"/);
+    // …and nothing of round 5's (owner 2026-09-29) either: no card arrives
+    // with a planned landing — the reading spy writes each card's
+    // `scroll-margin-top` at start() — and none arrives stamped, because only
+    // a click stamps. The same ATTRIBUTE-form regex as the mark's: every card
+    // carries the quiet ring's class token, whose `not-data-[arrival=…` holds
+    // a bracket where the attribute has none.
+    expect(html).not.toContain('scroll-margin');
+    expect(html).not.toMatch(/\sdata-arrival(=|\s|>)/);
+    expect(html).toContain(QUIET_RING);
   });
 
   it('answers the rail on the nav — the mode as data-rail, the number as top', async () => {
@@ -783,32 +891,72 @@ describe('PriceList — the current category (the island)', () => {
         expect.arrayContaining(['text-ink', 'after:scale-x-0']),
       );
     }
+    // …and the same answer lands on the CARD (owner 2026-09-29): one region
+    // carries the mark, and it is the first category's.
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[0].name }),
+    ]);
   });
 
-  it('follows an ordinary scroll: the card at its landing line wins', async () => {
+  it('follows an ordinary scroll: the card whose top has crossed the middle of the clear area wins', async () => {
     // The first of the owner's two directions (2026-09-14: "normal scrolling
-    // also dictates menu item"). The cards are stretched here and <html> is
-    // given the shell's own scroll padding, because this project loads no
-    // stylesheet — the arithmetic is the page's, the numbers are this file's.
+    // also dictates menu item"), on the line round 5 moved it to (owner
+    // 2026-09-29: "keeps the line lower for currently selected items"): a
+    // card becomes current as its top edge crosses the middle of the window's
+    // clear area — no longer as it slides under the header. The cards are
+    // stretched here and <html> is given the shell's own scroll padding,
+    // because this project loads no stylesheet: the rule is the page's, the
+    // numbers are this file's.
     mount();
-    const landingOf = stretchCards();
-    // The premise, so the assertion below cannot pass by standing still.
+    const crossingOf = stretchCards();
+    const line = readingLine();
+    const third = screen.getByRole('region', { name: CATEGORIES[2].name });
+    // The premise, so the assertions below cannot pass by standing still.
     expect(menuLinks()[0]).toHaveAttribute('aria-current', 'location');
 
-    await scrollToY(landingOf(CATEGORIES[2].id));
+    // Ten pixels short of the line the third card is not current yet: the
+    // second is, its top long past the line.
+    await scrollToY(crossingOf(CATEGORIES[2].id) - 10);
+    expect(third.getBoundingClientRect().top).toBeGreaterThan(line + 1);
+    expect(menuLinks()[1]).toHaveAttribute('aria-current', 'location');
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[1].name }),
+    ]);
 
+    // Ten pixels past it, it is.
+    await scrollToY(crossingOf(CATEGORIES[2].id) + 10);
+    expect(third.getBoundingClientRect().top).toBeLessThan(line);
     const links = menuLinks();
     expect(links[2]).toHaveAttribute('aria-current', 'location');
+    expect(links[1]).not.toHaveAttribute('aria-current');
     expect(links[0]).not.toHaveAttribute('aria-current');
+    // The card's mark moves with the link's: the third card alone carries it
+    // now, and the first has lost it.
+    expect(markedCards()).toEqual([third]);
+    expect(
+      screen.getByRole('region', { name: CATEGORIES[0].name }),
+    ).not.toHaveAttribute(CURRENT);
   });
 
-  it('pins the category a click chose, at once and whatever the scroll says', async () => {
+  it('pins the category a click chose at once, and lands it where the scroll names it too', async () => {
     // The other direction ("menu item click takes you also to navigation
-    // item"), and the reason the pin exists at all: the last category is
-    // marked the instant it is clicked, before — and after — the jump's own
-    // scrolling has anything to say about it.
+    // item"): the last category is marked the instant it is clicked, before
+    // the jump's own scrolling has anything to say about it — that is the
+    // pin. What that scrolling says once it has landed is round 5's claim
+    // (owner 2026-09-29): the jump lands the card on the line that names it
+    // current, so when the visitor's own hand lets the pin go the walk names
+    // the SAME card — a click and a scroll never disagree.
     mount();
+    stretchCards();
     const last = CATEGORIES[CATEGORIES.length - 1];
+    // The cards just grew. The spy re-plans their landings from its
+    // ResizeObserver, which delivers in the next rendering step — so the click
+    // waits for it, or the jump would land by the plan made for the short
+    // cards (the lib suite's own wait for the observer's delivery).
+    await act(async () => {
+      await nextFrame();
+      await nextFrame();
+    });
 
     await userEvent.click(
       within(screen.getByRole('navigation', { name: MENU_TITLE })).getByRole(
@@ -824,6 +972,512 @@ describe('PriceList — the current category (the island)', () => {
     );
     expect(links[0]).not.toHaveAttribute('aria-current');
     expect(window.location.hash).toBe(`#${last.id}`);
+    // The pin marks the CARD at once too: the last one, and only it.
+    const card = screen.getByRole('region', { name: last.name });
+    expect(markedCards()).toEqual([card]);
+    // The premise of the hand-over: the jump really moved the page, and the
+    // card it brought sits BELOW the header's strip — never under the pill.
+    expect(window.scrollY).toBeGreaterThan(0);
+    expect(card.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      SCROLL_PADDING - 1,
+    );
+
+    // A wheel — the visitor's own input — drops the pin at once (lib/scroll-
+    // spy's THE VISITOR'S OWN INPUT), and the walk answers for the page as it
+    // lies: the same card.
+    await act(async () => {
+      window.dispatchEvent(new WheelEvent('wheel', { deltaY: 1 }));
+    });
+    expect(markedCards()).toEqual([card]);
+    expect(menuLinks()[CATEGORIES.length - 1]).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+  });
+
+  it('marks the card the link names — the two marks never disagree', async () => {
+    // One store, two marks (owner 2026-09-29): the link's `aria-current` and
+    // the card's `data-current` are the scroll-spy's ONE answer printed
+    // twice, so whichever way the visitor got somewhere, the ONE marked card
+    // is the card the ONE marked link points at. Checked after each of the
+    // three ways in — the top fallback at mount, an ordinary scroll and a
+    // click's pin — each step naming where it must have moved the answer, so
+    // the pairing cannot pass by standing still.
+    const expectOneAnswer = (id: string): void => {
+      const links = menuLinks().filter(
+        (link) => link.getAttribute('aria-current') === 'location',
+      );
+      const cards = markedCards();
+      expect(links).toHaveLength(1);
+      expect(cards).toHaveLength(1);
+      expect(`#${cards[0].id}`).toBe(links[0].getAttribute('href'));
+      expect(cards[0]).toHaveAttribute('id', id);
+    };
+    const last = CATEGORIES[CATEGORIES.length - 1];
+
+    mount();
+    expectOneAnswer(CATEGORIES[0].id);
+
+    // The second card's top ten pixels past the reading line.
+    const crossingOf = stretchCards();
+    await scrollToY(crossingOf(CATEGORIES[1].id) + 10);
+    expectOneAnswer(CATEGORIES[1].id);
+
+    await userEvent.click(
+      within(screen.getByRole('navigation', { name: MENU_TITLE })).getByRole(
+        'link',
+        { name: last.name },
+      ),
+    );
+    expectOneAnswer(last.id);
+  });
+
+  it('takes the mark off when the island leaves', () => {
+    // The effect's cleanup runs on the SAME node the mark was put on — held
+    // in its closure, so it reaches that node even once it has left the
+    // document — and the mark leaves with the island.
+    const { unmount } = mount();
+    const first = screen.getByRole('region', { name: CATEGORIES[0].name });
+    expect(first).toHaveAttribute(CURRENT);
+
+    unmount();
+
+    expect(first).not.toHaveAttribute(CURRENT);
+  });
+
+  it('skips a target that is not in the document — no throw, no mark', async () => {
+    // The island ALONE, so every id it holds names an element that is not
+    // there (a hot reload can leave a menu briefly outliving its cards). The
+    // click still PINS its id — the link says so — and the effect, finding
+    // no element by that id, skips it exactly as the spy's walk skips a
+    // missing target (PriceMenu.tsx, THE SPY'S OWN IDIOM). A throw from the
+    // effect would surface through the click's act() and reject it.
+    render(
+      <PriceMenu
+        id={PRICE_MENU_ID}
+        title={MENU_TITLE}
+        items={CATEGORIES.map(({ id, name }) => ({ id, name }))}
+      />,
+    );
+    // The premise: no card exists anywhere.
+    for (const category of CATEGORIES) {
+      expect(document.getElementById(category.id)).toBeNull();
+    }
+    const link = within(
+      screen.getByRole('navigation', { name: MENU_TITLE }),
+    ).getByRole('link', { name: CATEGORIES[1].name });
+
+    await expect(userEvent.click(link)).resolves.toBeUndefined();
+
+    expect(link).toHaveAttribute('aria-current', 'location');
+    expect(document.querySelectorAll(`[${CURRENT}]`)).toHaveLength(0);
+  });
+
+  it('marks exactly one card under React’s Strict Mode, and none after it leaves', () => {
+    // Strict Mode mounts every effect, cleans it up and mounts it again — the
+    // spy's start() and dispose() included — which is the rehearsal of every
+    // remount the island will ever see (Fast Refresh, a re-keyed ring). One
+    // mark must survive the rehearsal, and none the real unmount.
+    const { unmount } = render(
+      <StrictMode>
+        <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />
+      </StrictMode>,
+    );
+    const first = screen.getByRole('region', { name: CATEGORIES[0].name });
+    expect(markedCards()).toEqual([first]);
+
+    unmount();
+
+    expect(first).not.toHaveAttribute(CURRENT);
+  });
+
+  it('keeps one mark when the ring is rebuilt around a card that stays', () => {
+    // The first two categories only: the id list changes, so the band's key
+    // remounts the island, while the first card — same key — keeps its node.
+    // The OLD island's cleanup and the NEW island's stamp therefore land on
+    // the SAME element, and the outcome pinned here is one mark on it, not
+    // none: every cleanup of a commit runs before any of its new effects.
+    const { rerender } = mount();
+    const first = screen.getByRole('region', { name: CATEGORIES[0].name });
+    expect(markedCards()).toEqual([first]);
+
+    rerender(
+      <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES.slice(0, 2)} />,
+    );
+
+    // The premise: the node persisted — the case this test exists for.
+    expect(screen.getByRole('region', { name: CATEGORIES[0].name })).toBe(
+      first,
+    );
+    expect(markedCards()).toEqual([first]);
+  });
+
+  it('marks the card the URL names, and the LAST card at the end of the page', async () => {
+    // (a) A link someone sent — /ro/services/#prosthetics in a WhatsApp
+    // message: the `#id` is in the URL before the page mounts, and start()'s
+    // own hash check pins it, so that card is the one marked card and its
+    // link the one marked link.
+    const third = CATEGORIES[2];
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${window.location.search}#${third.id}`,
+    );
+    mount();
+
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: third.name }),
+    ]);
+    expect(
+      menuLinks()
+        .filter((link) => link.getAttribute('aria-current') === 'location')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual([`#${third.id}`]);
+
+    // (b) THE PAGE'S END: the reading line BENDS near both ends of the page
+    // (lib/scroll-spy's THE READING LINE), so at the document's end the LAST
+    // card is current even when it is too short for its top ever to reach
+    // the middle of the clear area — the owner's "every card has its turn",
+    // at the bottom. Two premises make that bend the ONLY way the last card
+    // can win here. This deck's third card IS its last, so the URL's pin
+    // from (a) is dropped first, by the visitor's own input (a wheel), and
+    // the walk takes the page back — the first card, marked at the top. And
+    // the last card is left SHORT, so at the document's end its top is still
+    // BELOW the middle of the clear area while the one before it is above
+    // it: an unbent line would answer the second card.
+    stretchCards();
+    const [, second, last] = CATEGORIES.map(
+      (category) => document.getElementById(category.id) as HTMLElement,
+    );
+    last.style.minHeight = '';
+    await act(async () => {
+      window.dispatchEvent(new WheelEvent('wheel', { deltaY: 120 }));
+    });
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[0].name }),
+    ]);
+
+    await scrollToY(document.documentElement.scrollHeight);
+
+    const root = document.documentElement;
+    expect(window.scrollY).toBeGreaterThanOrEqual(
+      root.scrollHeight - window.innerHeight - 1,
+    );
+    expect(last.getBoundingClientRect().top).toBeGreaterThan(readingLine() + 1);
+    expect(second.getBoundingClientRect().top).toBeLessThanOrEqual(
+      readingLine() + 1,
+    );
+    expect(markedCards()).toEqual([last]);
+  });
+});
+
+describe('PriceList — where a click lands, and whose ring it is (owner 2026-09-29)', () => {
+  it('writes every card’s landing as its inline scroll-margin-top after mount, none in the server HTML, and takes them off when the island leaves', () => {
+    // "the go to card when you click on the meniu on an option should be more
+    // to the center of the screen": the browser lands a jump by the target's
+    // `scroll-margin-top`, so the reading spy writes each card's planned value
+    // there (PriceMenu.tsx's WHERE THE LINE IS, AND WHERE A CLICK LANDS).
+    // Where each one lands is lib/reading-line's arithmetic and its suite's;
+    // what is pinned HERE is the wiring — written after mount, absent from
+    // the server's bytes, gone with the island.
+    const html = renderToString(
+      <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />,
+    );
+    expect(html).not.toContain('scroll-margin');
+
+    const { unmount } = mount();
+    const cards = CATEGORIES.map((category) =>
+      screen.getByRole('region', { name: category.name }),
+    );
+    for (const card of cards) {
+      expect(card.style.getPropertyValue('scroll-margin-top')).toMatch(
+        /^-?\d+(\.\d+)?px$/,
+      );
+    }
+
+    unmount();
+
+    for (const card of cards) {
+      expect(card.style.getPropertyValue('scroll-margin-top')).toBe('');
+    }
+  });
+
+  it('writes the landings once more after Strict Mode’s rehearsal, and leaves none behind it', () => {
+    // Strict Mode mounts the spy's effect, cleans it up and mounts it again —
+    // start(), dispose(), start() — so the margins are written, taken off and
+    // written again; the real unmount must leave the stylesheet's own value.
+    const { unmount } = render(
+      <StrictMode>
+        <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />
+      </StrictMode>,
+    );
+    const cards = screen.getAllByRole('region');
+    for (const card of cards) {
+      expect(card.style.getPropertyValue('scroll-margin-top')).not.toBe('');
+    }
+
+    unmount();
+
+    for (const card of cards) {
+      expect(card.style.getPropertyValue('scroll-margin-top')).toBe('');
+    }
+  });
+
+  it('stamps the card a KEYBOARD click jumped to, and focus moving on takes the stamp off', async () => {
+    // "it also highlights it with a dark border … i want that removed" — for
+    // a pointer. A keyboard visitor keeps the ring, so the island stamps the
+    // card THEIR click jumped to (CategoryCard.tsx's THE RING IS THE
+    // KEYBOARD'S): Tab to the link, Enter — user-event's Enter on a link is a
+    // click whose `detail` is 0, as the keyboard's is in both engines.
+    mount();
+    const link = menuLinks()[1];
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+
+    await tabTo(link);
+    await userEvent.keyboard('{Enter}');
+
+    // The jump really happened — the URL, the focus — and the card it
+    // focused is the one stamped, and the only one.
+    expect(window.location.hash).toBe(`#${CATEGORIES[1].id}`);
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+    expect(stampedElements()).toEqual([card]);
+
+    // The keyboard moves on; the card loses focus and the stamp goes with it.
+    await userEvent.tab();
+    expect(card).not.toHaveFocus();
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    expect(stampedElements()).toEqual([]);
+  });
+
+  it('keeps the stamp through a blur that moves no focus — a window, a tab or the address bar taking it — however often it comes', async () => {
+    // G2 a11y F1: switching to another window, tab or the address bar
+    // delivers `blur` to the focused card although focus has not moved inside
+    // the document. The card is still the active element, still
+    // `:focus-visible` when the visitor returns — so it must keep its ring
+    // (SC 2.4.7), and with it the stamp that keeps the ring (PriceMenu.tsx's
+    // THE RING IS THE KEYBOARD'S). A dispatched `blur` on the focused card is
+    // exactly what such a switch delivers.
+    mount();
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+    await tabTo(menuLinks()[1]);
+    await userEvent.keyboard('{Enter}');
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+
+    card.dispatchEvent(new FocusEvent('blur'));
+
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+
+    // …and again: a second switch away keeps it too.
+    card.dispatchEvent(new FocusEvent('blur'));
+
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+    expect(stampedElements()).toEqual([card]);
+
+    // THE LISTENER IS NO ONE-SHOT (G2 react LOW): after those two blurs the
+    // real move is still HEARD — focus goes to another element in the page,
+    // and the stamp goes with it. With `once`, the first window blur would
+    // have consumed the listener and the stamp would outlive the focus.
+    menuLinks()[0].focus();
+
+    expect(card).not.toHaveFocus();
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    expect(stampedElements()).toEqual([]);
+  });
+
+  it('lifts the stamp when focus moves to something else in the page, and leaves no listener behind', async () => {
+    // Inside a blur that MOVES focus, the document's active element is no
+    // longer the card (the reviewers' measurement, both engines) — that is
+    // the blur that takes the stamp off. And the listener goes with it: the
+    // one `blur` listener the stamp added is the one the lift removed.
+    mount();
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+    const added = vi.spyOn(card, 'addEventListener');
+    const removed = vi.spyOn(card, 'removeEventListener');
+    await tabTo(menuLinks()[1]);
+    await userEvent.keyboard('{Enter}');
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+
+    // A real move: focus goes to another element in the page.
+    menuLinks()[0].focus();
+
+    expect(card).not.toHaveFocus();
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    const blurAdded = added.mock.calls.filter(([type]) => type === 'blur');
+    const blurRemoved = removed.mock.calls.filter(([type]) => type === 'blur');
+    expect(blurAdded).toHaveLength(1);
+    expect(blurRemoved.map(([, listener]) => listener)).toEqual([
+      blurAdded[0][1],
+    ]);
+
+    // A later blur changes nothing…
+    card.dispatchEvent(new FocusEvent('blur'));
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    // …and a later keyboard arrival on the same card stamps it afresh.
+    await tabTo(menuLinks()[1]);
+    await userEvent.keyboard('{Enter}');
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+    expect(stampedElements()).toEqual([card]);
+  });
+
+  it('takes the stamp off a card that still HOLDS focus when the island leaves — its listener with it', async () => {
+    // The listener is no one-shot any more, so the island's leaving is what
+    // must take it off a card that was never left: one removal, and no stamp.
+    const { unmount } = mount();
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+    const removed = vi.spyOn(card, 'removeEventListener');
+    await tabTo(menuLinks()[1]);
+    await userEvent.keyboard('{Enter}');
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+
+    unmount();
+
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    expect(removed.mock.calls.filter(([type]) => type === 'blur')).toHaveLength(
+      1,
+    );
+  });
+
+  it('stamps nothing for a POINTER click — and takes off a stamp that is still there', async () => {
+    // A mouse press or a tap is a click whose `detail` counts it: no stamp,
+    // so the quiet ring hides the outline WebKit would draw.
+    mount();
+    await userEvent.click(menuLinks()[2]);
+    expect(window.location.hash).toBe(`#${CATEGORIES[2].id}`);
+    expect(stampedElements()).toEqual([]);
+
+    // The last arrival decides. A keyboard arrival stamps the second card and
+    // leaves it focused; then a pointer's click on its link arrives with no
+    // press before it to move the focus first — a lone `click`, which is the
+    // island's own path (every real press in both engines moves focus off the
+    // card first, and the card's blur takes the stamp then; this pins the
+    // path that does not rely on it).
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+    await tabTo(menuLinks()[1]);
+    await userEvent.keyboard('{Enter}');
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+
+    fireEvent.click(menuLinks()[1], { detail: 1 });
+
+    expect(card).toHaveFocus();
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    expect(stampedElements()).toEqual([]);
+    // …and the click still pinned its card, as any plain left click does.
+    expect(markedCards()).toEqual([card]);
+  });
+
+  it('moves the stamp with a second keyboard arrival — never two cards at once', async () => {
+    // Every change to the stamp, in the order the DOM made it: an attribute
+    // record with no old value is the stamp arriving, one with an old value
+    // is it leaving. Replayed, the set of stamped cards must never hold two.
+    const { container } = mount();
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver((batch) => records.push(...batch));
+    observer.observe(bandOf(container), {
+      subtree: true,
+      attributes: true,
+      attributeFilter: [ARRIVAL],
+      attributeOldValue: true,
+    });
+    const first = screen.getByRole('region', { name: CATEGORIES[0].name });
+    const last = screen.getByRole('region', { name: CATEGORIES[2].name });
+
+    await tabTo(menuLinks()[0]);
+    await userEvent.keyboard('{Enter}');
+    expect(first).toHaveAttribute(ARRIVAL, KEYBOARD);
+    // Back into the menu from the card — Shift+Tab lands on its last link —
+    // and a second Enter.
+    await userEvent.tab({ shift: true });
+    expect(menuLinks()[2]).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+
+    // And the island's OWN hand-over, with no blur to help it: a keyboard's
+    // click on the first link while the last card still holds its focus and
+    // its stamp — stamping a second card takes the first one's off.
+    expect(last).toHaveFocus();
+    expect(last).toHaveAttribute(ARRIVAL, KEYBOARD);
+    fireEvent.click(menuLinks()[0], { detail: 0 });
+    // Whatever the observer has not delivered yet, BEFORE disconnect() — which
+    // would discard it.
+    records.push(...observer.takeRecords());
+    observer.disconnect();
+
+    expect(stampedElements()).toEqual([first]);
+    const stamped = new Set<string>();
+    let most = 0;
+    for (const record of records) {
+      const id = (record.target as HTMLElement).id;
+      if (record.oldValue === null) stamped.add(id);
+      else stamped.delete(id);
+      most = Math.max(most, stamped.size);
+    }
+    expect(records.length).toBeGreaterThanOrEqual(4);
+    expect(most).toBe(1);
+  });
+
+  it('takes a stamp that is still on off when the island leaves — under Strict Mode too', () => {
+    // The stamp is made WITHOUT the jump that would focus the card: a capture
+    // listener cancels the click's default action (the island still hears the
+    // click — React listens at the root), so the card is stamped but never
+    // focused, and no blur can ever take the stamp off. Only the island's own
+    // cleanup can — and it must, rehearsal and all.
+    const { unmount } = render(
+      <StrictMode>
+        <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />
+      </StrictMode>,
+    );
+    const link = menuLinks()[1];
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+    const cancel = (event: Event): void => event.preventDefault();
+    link.addEventListener('click', cancel, { capture: true });
+
+    fireEvent.click(link, { detail: 0 });
+
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+    expect(card).not.toHaveFocus();
+    expect(window.location.hash).toBe('');
+
+    unmount();
+    link.removeEventListener('click', cancel, { capture: true });
+
+    expect(card).not.toHaveAttribute(ARRIVAL);
+    expect(stampedElements()).toEqual([]);
+  });
+
+  it('neither pins nor stamps a MODIFIED click — Meta, Ctrl, Shift or Alt', () => {
+    // A modified click opens the link somewhere else (a new tab, a new
+    // window, a download) — this tab goes nowhere, so this tab marks nothing
+    // and stamps nothing (ONLY A PLAIN LEFT CLICK PINS). `detail` 0 is the
+    // keyboard's own spelling (Shift+Enter, say): the one a stamp would
+    // answer. The capture listener keeps the runner from acting on the
+    // modifier; the island still hears every click.
+    mount();
+    const link = menuLinks()[2];
+    const cancel = (event: Event): void => event.preventDefault();
+    link.addEventListener('click', cancel, { capture: true });
+
+    for (const modifier of [
+      'metaKey',
+      'ctrlKey',
+      'shiftKey',
+      'altKey',
+    ] as const) {
+      fireEvent.click(link, { detail: 0, [modifier]: true });
+
+      expect(link, modifier).not.toHaveAttribute('aria-current');
+      expect(menuLinks()[0], modifier).toHaveAttribute(
+        'aria-current',
+        'location',
+      );
+      expect(stampedElements(), modifier).toEqual([]);
+    }
+    link.removeEventListener('click', cancel, { capture: true });
   });
 });
 
@@ -903,5 +1557,33 @@ describe('PriceList — dumb by construction', () => {
     // travels down as a prop (PriceList.tsx, ONE ISLAND, THE MENU CARD).
     expect(CODE).toMatch(/id=\{PRICE_MENU_ID\}/);
     expect(MENU_CODE).not.toMatch(/PRICE_MENU_ID/);
+    // THE MARK ON THE CARD (owner 2026-09-29) is the island's alone: neither
+    // the band nor the card renders it — they stay inert HTML — and the
+    // island names the attribute through the atom's constant, IMPORTED and
+    // never retyped, so the stamp and ui/Card's variant can never drift.
+    expect(CARD_CODE).not.toMatch(/data-current/);
+    expect(CODE).not.toMatch(/data-current/);
+    expect(MENU_CODE).toMatch(/CARD_CURRENT_ATTRIBUTE/);
+    expect(MENU_CODE).not.toMatch(/['"]data-current['"]/);
+  });
+
+  it('keeps the keyboard’s stamp in a module on NEITHER side of the boundary', () => {
+    // ./arrival holds the attribute CategoryCard's class answers and the
+    // island writes (arrival.ts's WHY A FILE OF ITS OWN): no directive, no
+    // import, nothing but constants, so the server card and the client island
+    // read the same bytes and neither drags the other across the boundary.
+    // The card takes it for TYPES alone — its `satisfies` — and the island for
+    // the two values it writes, never retyping the attribute.
+    const directive = /^\s*['"]use client['"]\s*;?\s*(\/\/.*)?$/gm;
+
+    expect(ARRIVAL_CODE).not.toMatch(directive);
+    expect(ARRIVAL_CODE).not.toMatch(/\bimport\b/);
+    expect(ARRIVAL_CODE).toMatch(/export const ARRIVAL_ATTRIBUTE\b/);
+    expect(CARD_CODE).toMatch(/import type \{[^}]*\} from '\.\/arrival'/);
+    expect(MENU_CODE).toMatch(
+      /import \{[^}]*\bARRIVAL_ATTRIBUTE\b[^}]*\} from '\.\/arrival'/,
+    );
+    expect(MENU_CODE).not.toMatch(/['"]data-arrival['"]/);
+    expect(CODE).not.toMatch(/arrival/i);
   });
 });

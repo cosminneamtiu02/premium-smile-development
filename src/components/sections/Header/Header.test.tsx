@@ -486,7 +486,8 @@ describe('Header — every close path returns focus to the burger', () => {
     const scrim = sheet();
     expect(scrim).not.toBeNull();
     // Portaled to <body> (board §4b): inside the bar, `fixed` would resolve
-    // against the container-typed header and paint a 64px stripe.
+    // against the header — its glass makes it a containing block in every
+    // engine — and paint a stripe the height of the bar.
     expect(scrim?.parentElement).toBe(document.body);
     expect(scrim).toHaveAttribute('aria-hidden', 'true');
 

@@ -5,12 +5,18 @@ import { Button } from '../Button/Button';
 import { Container } from '../Container/Container';
 import { Heading } from '../Heading/Heading';
 import { Text } from '../Text/Text';
-import { Card, type CardProps, type CardTone } from './Card';
+import {
+  CARD_CURRENT_ATTRIBUTE,
+  Card,
+  type CardProps,
+  type CardTone,
+} from './Card';
 
-// SEVEN stories, and the count is the honest one: the four tones, the two
+// EIGHT stories, and the count is the honest one: the four tones, the two
 // elements a real consumer slots into (an <article>, a list of <li>), the glow,
-// the German stress width — and, since the tone crossfade shipped (owner D1b,
-// 2026-09-10), the one frame that is about a CHANGE rather than about a state.
+// the German stress width — and the two frames that are about a CHANGE rather
+// than about a state: the tone crossfade (owner D1b, 2026-09-10) and the glow
+// that follows a mark (owner 2026-09-29).
 // The export NAMES are load-bearing — each one names a baseline file
 // (`ui-card--default`, `ui-card--in-a-grid`, …), so renaming or adding an
 // export re-records pictures; this list IS the atom's contribution to the
@@ -102,7 +108,12 @@ const meta = {
     aura: {
       control: 'boolean',
       description:
-        'The lavender glow the Header pill and the corner discs wear (shadow-aura, mixed from --accent-decorative). A prop by owner decision (fb-378/381): it is chosen per card KIND in the section that composes it, never per instance and never by the atom',
+        'WHEN the card wears the lavender glow the Header pill and the corner discs wear (shadow-aura, mixed from --accent-decorative) — three answers: false = never · true = always, worn on the card itself and static · current = armed, shown only while the card’s element carries data-current and faded in and out on the 400ms --fade clock, the layer’s opacity travelling and never the shadow (owner 2026-09-29). The control offers the first two only: in these stories nothing ever sets the mark, so the armed answer would show nothing at all — see AuraOnCurrent for the third, where a button sets it. A prop by owner decision (fb-378/381): it is chosen per card KIND in the section that composes it, never per instance and never by the atom',
+    },
+    'data-current': {
+      // The typed mark (CardOwnProps' CARD_CURRENT_ATTRIBUTE row) is set by
+      // whoever marks the card, never by a control — no docs-table row.
+      table: { disable: true },
     },
     asChild: {
       control: false,
@@ -368,6 +379,9 @@ export const Tones: Story = {
  * a 22px blur at 40% opacity, which the visual net's own measurement showed
  * sits at or under Playwright's per-pixel threshold over warm paint, so
  * tests/unit/aura-token.test.ts is what actually guards this decision.
+ *
+ * This is the glow WORN; for the glow ARMED — shown only on the card that
+ * carries the mark, fading in and out — see AuraOnCurrent.
  */
 export const WithAura: Story = {
   args: { aura: true },
@@ -565,5 +579,141 @@ export const ToneMorph: Story = {
     const restored = insetOf();
     await expect(restored.inline).toBe(before.inline);
     await expect(restored.block).toBe(before.block);
+  },
+};
+
+/** A real stateful consumer in miniature — the shape `aura="current"` exists
+ *  for: ONE card whose MARK is set from the outside (the Services page's price
+ *  menu marking the category the visitor is at), never a card reacting to its
+ *  own hover. The control is a real <button> with a Romanian name: cards are
+ *  not interactive, so the thing you press is deliberately NOT the card. */
+function AuraOnCurrentDemo(args: CardProps): ReactElement {
+  const [current, setCurrent] = useState(false);
+  return (
+    <Band>
+      {/* A COLUMN THAT STRETCHES, for ToneMorphDemo's reason: the card applies
+          inline-size containment, so an `items-start` column would leave it
+          to size itself and it would shrink to its padding and border. The
+          default stretch hands the card the column; the BUTTON is the one
+          that opts out of it. */}
+      <div className="flex flex-col gap-6">
+        {/* The mark rides the native-prop spread onto the <article> — present
+            while current, absent otherwise, never "false". */}
+        <Card
+          {...args}
+          asChild
+          aura="current"
+          data-current={current ? '' : undefined}
+        >
+          <article aria-labelledby="card-marcaj-titlu">
+            <Heading size="title" asChild>
+              <h3 id="card-marcaj-titlu">Igienizare profesională</h3>
+            </Heading>
+            <Text tone="muted">
+              Detartraj cu ultrasunete, periaj profesional și air-flow, într-o
+              singură ședință.
+            </Text>
+            <Text bold>de la 250 lei</Text>
+          </article>
+        </Card>
+        <Button
+          variant="outline"
+          className="self-center"
+          aria-pressed={current}
+          onClick={() => setCurrent((on) => !on)}
+        >
+          Marchează cardul
+        </Button>
+      </div>
+    </Band>
+  );
+}
+
+/**
+ * THE frame for the glow that FOLLOWS A MARK (`aura="current"`, owner
+ * 2026-09-29): the card carries the lavender glow ARMED and shows it only
+ * while its element carries `data-current`. Press „Marchează cardul" and the
+ * glow fades in over 400ms on the system's shared `--fade` clock; press it
+ * again and it fades out on the same clock — BOTH directions ease, which is
+ * the owner's "smooth when selected … upon deselect again smooth".
+ *
+ * WHAT FADES IS A LAYER, NOT THE SHADOW: the glow is the same `shadow-aura` a
+ * worn card puts on its root (WithAura), painted onto the card's `::before`,
+ * and only that layer's opacity travels. The card's own paint, border and text
+ * do not change at any frame — the mark is an attribute, and the class string
+ * stays the same through the flip (Card.test.tsx pins both). Card.tsx's THE
+ * GLOW CAN FOLLOW A MARK paragraph carries the whole argument.
+ *
+ * WHO SETS THE MARK is the consumer's business, never the atom's: here a real
+ * `<button>` flips it through React state; on the Services page it is the
+ * price menu, marking the category the visitor is at. The button is a TOGGLE
+ * with `aria-pressed` bound to the same state as the mark, because the glow
+ * is decoration and "current" must also be said in ARIA by whoever marks the
+ * card (Card.tsx's own rule, §9). On a real page that ARIA belongs to whatever
+ * POINTS AT the card — the price menu's `aria-current` on its link —
+ * and `aria-pressed` is only this demo control's own state.
+ *
+ * Anyone browsing with `prefers-reduced-motion: reduce` sees the glow arrive
+ * and leave at once (§9): the mark still shows, only the fade is gone.
+ *
+ * THE PLAY FUNCTION ENDS WHERE IT STARTED — unmarked, no glow — for
+ * ToneMorph's reason: the play runs inside the preview iframe the screenshot
+ * is taken from, so a one-way flip would make the baseline depend on who got
+ * there first. Unmarking also buys the fade-out's assertions for free.
+ */
+export const AuraOnCurrent: Story = {
+  // The demo owns all three: the fixture is a fixed card, the glow is pinned
+  // to its armed value, and the mark is state — live controls would fight the
+  // frame's whole subject.
+  argTypes: {
+    children: { control: false },
+    tone: { control: false },
+    aura: { control: false },
+  },
+  render: (args) => <AuraOnCurrentDemo {...args} />,
+  play: async ({ canvas }) => {
+    const card = canvas.getByRole('article');
+    const button = canvas.getByRole('button', { name: 'Marchează cardul' });
+    // The pseudo-element's computed style is LIVE: one handle, read after
+    // every step.
+    const layer = getComputedStyle(card, '::before');
+
+    /** Leave the canvas at REST — ToneMorph's settle, with `subtree`, which
+     *  is what includes the pseudo-element's own transition. An empty list —
+     *  exactly what `prefers-reduced-motion: reduce` produces — resolves at
+     *  once; a running fade is awaited to the frame. */
+    const settle = async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+      await Promise.all(
+        card
+          .getAnimations({ subtree: true })
+          .map((animation) => animation.finished),
+      );
+    };
+
+    // At rest: no mark, the armed layer invisible, the toggle not pressed.
+    await expect(card).not.toHaveAttribute(CARD_CURRENT_ATTRIBUTE);
+    await expect(layer.opacity).toBe('0');
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+
+    // Marked: the attribute arrives on the SAME element — a fade needs a node
+    // with a previous value to interpolate from — the glow is shown, and the
+    // toggle SAYS so (the glow alone is decoration).
+    await userEvent.click(button);
+    await expect(card).toHaveAttribute(CARD_CURRENT_ATTRIBUTE);
+    await expect(canvas.getByRole('article')).toBe(card);
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await settle();
+    await expect(layer.opacity).toBe('1');
+
+    // …and unmarked again, which restores the baseline state AND proves the
+    // fade-out lands where the frame began.
+    await userEvent.click(button);
+    await expect(card).not.toHaveAttribute(CARD_CURRENT_ATTRIBUTE);
+    await settle();
+    await expect(layer.opacity).toBe('0');
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
   },
 };

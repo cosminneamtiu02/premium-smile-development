@@ -77,13 +77,24 @@ import { slotClone } from '../slot';
 // would be the BAND's column, so a card-level step would silently measure the
 // whole band — and container-gated styles then match at the wrong width or
 // never. No error, no console line: exactly the regression class the §13 nets
-// exist for. COSTS, stated here rather than discovered later: `container-type:
-// inline-size` opens a stacking context AND a positioning scope on every card
-// (benign — the app-shell z-map keeps scopes flat at body level, and an
-// absolutely-positioned badge inside a card now resolves against the card,
-// which is what a badge wants), and it applies INLINE-SIZE CONTAINMENT, so a
-// Card must always sit in a width-giving parent: a grid track, a `flex-1`
-// item, ordinary block flow. GRID TRACKS ARE SAFE even when they are implicit
+// exist for. COSTS, stated here rather than discovered later — and CORRECTED
+// on 2026-09-29, because what this sentence first recorded is true of only
+// some of the engines that read it. `container-type` used to imply LAYOUT
+// containment, which makes a box a stacking context and a positioning scope;
+// the CSS Working Group took that out in July 2024 — a query container now
+// forces style and size containment and an independent formatting context,
+// nothing more — and engines followed, Chrome from 129 and Safari from 18.4.
+// MEASURED on 2026-09-29 in Chromium 151 and WebKit 26.5: an absolutely
+// positioned child of a bare card resolves against the nearest POSITIONED
+// ancestor (702px wide around a 620px card), and a `z-index: -1` child sinks
+// under the card's own background. An iPhone on iOS 16 to 18.3 still does
+// the opposite. So a card's scope DEPENDS ON THE ENGINE, and nothing may rely
+// on it either way: whatever must be positioned against a card makes the
+// card say `relative` itself (THE GLOW CAN FOLLOW A MARK, below, does), and
+// nothing inside a card may count on a negative z-index. What the mark
+// applies in EVERY engine is INLINE-SIZE CONTAINMENT, so a Card must always
+// sit in a width-giving parent: a grid track, a `flex-1` item, ordinary
+// block flow. GRID TRACKS ARE SAFE even when they are implicit
 // and `auto`-sized — a grid's default `justify-content: normal` behaves as
 // stretch, so the track fills its container; the InAGrid story's 320 frame is
 // the proof (three full-width cards in one implicit auto column). The REAL
@@ -169,19 +180,22 @@ import { slotClone } from '../slot';
 // members.
 // NOT `transition-colors`: that shorthand also covers `outline-color`, and a
 // focus ring may never ride an animation clock — the Button/GlyphButton
-// lesson, inherited rather than re-learned (no card focuses today, but a
-// consumer's `asChild` element can, and this string travels onto it).
-// `box-shadow` stays off for its own reason: the `aura` below is chosen per
-// card KIND in the section that composes it and is NEVER toggled at runtime,
-// so it has nowhere to travel.
+// lesson, inherited rather than re-learned (a card's own root takes no focus,
+// but a consumer's `asChild` element can — the price band's category cards
+// are focus targets — and this string travels onto it).
+// `box-shadow` stays off for its own reason, and the reason changed on
+// 2026-09-29: the glow CAN now follow a mark at runtime (`aura="current"`,
+// THE GLOW CAN FOLLOW A MARK below), but what travels then is a LAYER'S
+// OPACITY, never the shadow itself — so there is still nothing of a
+// box-shadow's to put on a clock, and a painted property stays off this one.
 // KEEP IN SYNC with the system's other two spellings of this clock (fb-44):
 // ui/Button's `base` and ui/disc.ts's `discBase` (which serves GlyphButton and
 // SpeedDial). 400ms in three files, deliberately independent, so changing the
 // system's feel stays a conscious multi-file edit and can never drift; all
 // three carry the matching pointer back to THIS paragraph. What Card does not
 // copy from them is the property list — a card has no hover, no press and no
-// focus ring, so `active:duration-0` and their box-shadow channel would be
-// clocks for states that do not exist here.
+// focus style of its own, so `active:duration-0` and their box-shadow channel
+// would be clocks for states that do not exist here.
 // --fade is INTERNAL: className is merged last, so a caller could stretch the
 // clock with nondeterministic precedence (the className paragraph above).
 // Change the number HERE instead.
@@ -189,10 +203,12 @@ import { slotClone } from '../slot';
 // less motion (§9): the tone still changes — nothing this atom communicates is
 // carried by the animation — only the dissolve is gone.
 // AND WHAT CAN EVEN START IT: cards are not interactive (no hover state, no
-// focus ring — the last paragraph below), so the only thing that can move a
-// tone is a CONSUMER re-rendering the card with a different one. A
+// focus style of their own — the last paragraph below), so the only thing that
+// can move a tone is a CONSUMER re-rendering the card with a different one. A
 // rotation-driven selection is the case this was built for; a hover repaint is
-// not, and would be a card growing an interaction it does not have.
+// not, and would be a card growing an interaction it does not have. The GLOW
+// has its own trigger — an attribute on the card's element, set by whoever
+// composes the card — argued in THE GLOW CAN FOLLOW A MARK.
 //
 // ── `aura` IS A PROP BY OWNER DECISION (fb-378/381): the lavender glow the
 // Header pill and the fixed corner discs wear is chosen per card KIND in the
@@ -202,9 +218,100 @@ import { slotClone } from '../slot';
 // dial's className lands on a square wrapper around a round bulb, so a shadow
 // there would glow a rectangle, and the section feeds it a CSS variable
 // instead. A card's className lands on the card itself, so the utility is
-// simply worn. tests/unit/aura-token.test.ts's census counts this file as a
-// consumer wearing it exactly once — the lookup below is that one wear, and
-// prose (stripped before counting) may discuss it freely.
+// simply worn. tests/unit/aura-token.test.ts's census counts this file as
+// wearing it exactly TWICE in code — the worn glow's lookup and the armed
+// glow's layer — and prose (stripped before counting) may discuss it freely.
+//
+// ── THE GLOW CAN FOLLOW A MARK (`aura="current"`, owner 2026-09-29: "add aura
+// shadow just to currently selected/viewed price box … what category card is
+// not selected gets no aura … aura has to be smooth when selected, like not
+// sudden and upon deselect again smooth"). Until that day a glow was worn or
+// not worn for good. The third value ARMS it instead: the card carries the
+// glow at opacity 0 and shows it only while its element carries
+// `data-current` (CARD_CURRENT_ATTRIBUTE — present while current, absent
+// otherwise, sections/DoctorCourses/CourseTimeline's idiom), fading in and
+// out on this atom's own --fade clock.
+// WHO SETS THE ATTRIBUTE is the consumer's business, never this atom's: a
+// client component renders it as a prop (`data-current={isCurrent ? '' :
+// undefined}`, which rides the native-prop spread), or an island stamps it on
+// an inert, server-rendered card (sections/PriceList/PriceMenu, the first
+// consumer). Either way this file keeps no state and ships no JavaScript.
+// WHAT FADES IS A LAYER'S OPACITY, NOT THE SHADOW — and that is the decision.
+// A box-shadow is PAINTED: on a clock it makes the browser repaint the whole
+// card, every row of text in it, once per frame of the fade and on the main
+// thread. Opacity is COMPOSITED: the glow is painted into a layer of its own
+// and the compositor blends that layer in and out. MEASURED on 2026-09-29 on
+// the built services page (Chromium 151 under a fourfold CPU throttle, a
+// phone-sized screen at three times the pixel density, the tallest price card
+// on screen), ONE HAND-OVER — one card's glow fading out while the next
+// card's fades in: with the shadow on the clock the trace holds some 90 Paint
+// events, the whole interior of both cards each time, 23–26 ms of paint and
+// 20–21 ms of raster work, and the engine reports the animation as one it
+// could not composite (`unsupportedProperties: ["box-shadow"]`); with this
+// layer it holds 4, all of them where the fades START and where they END (the
+// layers being made and unmade), none in between, and about 3 ms of paint and
+// raster work together. It matters because of what the first consumer is:
+// four of the eleven price cards are over a thousand pixels tall on a phone
+// (the tallest 2112px at 390), the fade starts while the visitor is
+// scrolling, and §1's measure of success is an older patient on a phone that
+// is not always a new one.
+// So the glow lives on the card's `::before` — a PSEUDO-ELEMENT and not a
+// nested element, because `asChild` leaves no element of Card's own in the
+// DOM (ui/TextButton's underline, for the same reason) — and that layer wears
+// the SAME utility a worn glow does, so it is the same glow:
+//   · `before:absolute` + THE EDGE (`glowEdge`): the layer is stretched over
+//     the card's BORDER box. An absolutely positioned box is resolved against
+//     its containing block's PADDING box, so the layer reaches out by the
+//     tone's own border width — 1px on the flat rows, 3px on `framed`.
+//     KEEP-IN-SYNC with `toneClasses`: two lookups, one relation, and
+//     Card.test.tsx measures the pair on every tone;
+//   · `before:rounded-[inherit]`: the card's own radius, so the glow's
+//     corners are the card's;
+//   · `before:pointer-events-none`: a positioned box paints ABOVE the in-flow
+//     content, and although this one paints nothing inside its own box (a
+//     box-shadow is drawn outside the border edge only) it would otherwise be
+//     what a click or a text selection over the card lands on;
+//   · THE FOCUS RING IS NOT ON THIS CLOCK. The first consumer's card is a
+//     focus target (a fragment target with tabindex="-1"), and its ring is an
+//     OUTLINE on the root — the shell's `:focus-visible` rule. Only the
+//     layer's `opacity` rides the layer's clock, so the ring appears and
+//     leaves at once whatever the glow is doing; and the glow can at most
+//     tint it, never hide it (the a11y review's arithmetic, not a
+//     measurement: about 9:1 against the page even under the glow, 17:1
+//     without it);
+//   · NO NEGATIVE z-index, on purpose, and the reason is per engine (THE
+//     CONTAINER MARK's COSTS sentence has the split). Where the card is NOT
+//     a stacking context — every current engine — a `z-index: -1` layer
+//     sinks under the BAND's own background and the glow is simply not
+//     drawn: measured, 0 pixels changed against 47,272 for this layer. Where
+//     an older engine makes the card one, the layer would sit between the
+//     card's background and its text, a composited layer under the very text
+//     it belongs to (the painting-order rules, not a measurement). Above the
+//     content it is right in both;
+//   · `relative` on the root, and it is LOAD-BEARING: in every current
+//     engine a card is not a positioning scope (THE CONTAINER MARK's COSTS
+//     sentence), so without it the layer resolves against the nearest
+//     positioned ancestor and the glow wraps the wrong box — measured, 702px
+//     wide around a 620px card; Card.test.tsx pins it. Where an older engine
+//     makes the card a scope by itself the class is redundant, and free.
+//     CONSEQUENCE FOR PLACEMENT: a card in this mode is `relative`, so a
+//     caller className that sets `position` (`sticky`, `absolute`) would
+//     fight it by stylesheet order — such a card takes the WORN glow, or a
+//     wrapper;
+//   · THE CLOCK RIDES THE LAYER (`before:transition-opacity
+//     before:duration-(--fade) before:ease-in-out`), declared
+//     unconditionally, so BOTH directions ease — the mark's arrival and its
+//     removal. `motion-reduce:before:transition-none` is its §9 reset: the
+//     glow still moves from card to card, at once. The state variant sets the
+//     VALUE only (`data-current:before:opacity-100`), never a transition
+//     property: a two-class selector would outrank the reset.
+//   · A consumer's own `before:` utilities on an `asChild` element would
+//     land on the same pseudo-element and fight these — a card in this mode
+//     owns its `::before`.
+// The WORN glow (`aura`) is untouched: `shadow-aura` on the root, static.
+// What the glow still does NOT do is carry meaning (§9, SC 1.4.1): it is
+// decoration, and whatever "current" means is said in text or in ARIA by the
+// consumer that marks the card.
 //
 // ── `asChild` PUTS THE LOOK ON THE CONSUMER'S OWN ELEMENT (D2, the
 // Heading/Button precedent through ui/slot.ts): a team card IS an <article>
@@ -220,10 +327,12 @@ import { slotClone } from '../slot';
 // children arrive finished): composing a card must not cost a band its
 // zero-island contract, and Card.test.tsx's ?raw guard pins the directive's
 // absence mechanically because no runtime assertion can see it (§16). Cards
-// are not interactive — no hover state, no focus ring, nothing to focus. When
-// a whole card must be clickable, the consumer nests a real <a>/<button>
-// inside it (§9: semantic HTML first), which brings its own focus-visible
-// styling with it.
+// are not interactive — no hover state and no focus style of their own. A
+// consumer's `asChild` element may still TAKE focus (a fragment target with
+// tabindex="-1", the price band's category cards), and then it wears the
+// shell's outline ring, which nothing in this file touches. When a whole card
+// must be clickable, the consumer nests a real <a>/<button> inside it (§9:
+// semantic HTML first), which brings its own focus-visible styling with it.
 
 // ── ONE TINT, TWO ROWS (owner 2026-09-12, pack round 2: "the current card
 // the same shade as the border of the non-current card" — which is also the
@@ -259,6 +368,21 @@ import { slotClone } from '../slot';
 /** Named SITUATIONS — which look, never which CSS. */
 export type CardTone = 'surface' | 'tinted' | 'emphasized' | 'framed';
 
+/** WHEN a card wears the glow — a named situation, like `tone`:
+ *  `false` never · `true` always (worn, static) · `'current'` only while the
+ *  card's element carries CARD_CURRENT_ATTRIBUTE, faded in and out. */
+export type CardAura = boolean | 'current';
+
+/** The attribute `aura="current"` answers to: PRESENT while the card is the
+ *  current one, ABSENT otherwise. Exported so that whoever STAMPS the
+ *  attribute on the DOM imports the name instead of retyping it
+ *  (sections/PriceList/PriceMenu); a client component that renders it as a
+ *  prop spells the attribute in JSX, where the `CardOwnProps` row of the same
+ *  name checks its value; the variant in `glowLayer` below spells it as a
+ *  LITERAL, because Tailwind reads class names from source text, and a
+ *  `satisfies` ties the two at compile time. */
+export const CARD_CURRENT_ATTRIBUTE = 'data-current';
+
 type CardOwnProps = {
   /** Render the single child element AS the card (Heading/Button precedent, ui/slot.ts):
    *  the child keeps its element, attributes and classes and wears the card's classes.
@@ -270,9 +394,21 @@ type CardOwnProps = {
   asChild?: boolean;
   /** Which look this card sits in. @default 'surface' */
   tone?: CardTone;
-  /** The pill's / corner discs' lavender glow on this card — chosen per card KIND in its
-   *  section (owner fb-381). @default false */
-  aura?: boolean;
+  /** WHEN this card wears the pill's / corner discs' lavender glow — chosen per card KIND in
+   *  its section (owner fb-381): `false` never · `true` always, worn and static ·
+   *  `'current'` armed, shown only while the card's element carries CARD_CURRENT_ATTRIBUTE
+   *  and faded in and out on the card's own --fade clock (owner 2026-09-29).
+   *  @default false */
+  aura?: CardAura;
+  /** THE MARK `aura="current"` answers to, when a client component renders it
+   *  as a prop: the EMPTY STRING while the card is current, `undefined`
+   *  otherwise — `data-current={isCurrent ? '' : undefined}`. Every other
+   *  spelling is refused on purpose: the stylesheet's rule is a PRESENCE
+   *  selector and React prints `data-current="false"` for the boolean
+   *  `false`, so `data-current={isCurrent}` would leave the card glowing for
+   *  good. An island that stamps the attribute on the DOM never passes this
+   *  prop. */
+  [CARD_CURRENT_ATTRIBUTE]?: '';
 };
 
 export type CardProps = CardOwnProps &
@@ -307,6 +443,46 @@ const toneClasses: Record<CardTone, string> = {
   framed: 'border-[3px] border-(--card-tint) bg-surface p-[calc(1.5rem-2px)]',
 };
 
+// THE ARMED GLOW'S LAYER (`aura="current"`) — every utility in it is argued in
+// THE GLOW CAN FOLLOW A MARK above; Card.test.tsx byte-pins it as GLOW_LAYER.
+// Not exported.
+const glowLayer =
+  'relative ' +
+  'before:pointer-events-none before:absolute before:rounded-[inherit] ' +
+  "before:shadow-aura before:opacity-0 before:content-[''] " +
+  'before:transition-opacity before:duration-(--fade) before:ease-in-out ' +
+  'motion-reduce:before:transition-none ' +
+  ('data-current:before:opacity-100' satisfies `${typeof CARD_CURRENT_ATTRIBUTE}:before:opacity-100`);
+
+// THE EDGE: minus each tone's own border width, so the layer covers the card's
+// BORDER box. KEEP-IN-SYNC with `toneClasses` — two lookups, one relation,
+// measured on every tone in Card.test.tsx.
+const glowEdge: Record<CardTone, string> = {
+  surface: 'before:-inset-px',
+  tinted: 'before:-inset-px',
+  emphasized: 'before:-inset-px',
+  framed: 'before:-inset-[3px]',
+};
+
+// WHICH GLOW a card wears — ONE lookup, TOTAL over `CardAura`. The armed
+// answer is the layer AND the edge as TWO parts, so a tone that escaped the
+// types is dropped by `cx` instead of being printed as the class `undefined`;
+// the worn answer is the pill's utility on the root; `false` is nothing. The
+// `never` line stops a fourth answer compiling until it is classified here,
+// and at runtime a value that escaped the types wears NOTHING — the lookup
+// fails CLOSED, never into a glow worn for good. Not exported.
+function glowClasses(
+  aura: CardAura,
+  tone: CardTone,
+): ReadonlyArray<string | undefined> {
+  if (aura === 'current') return [glowLayer, glowEdge[tone]];
+  if (aura === true) return ['shadow-aura'];
+  if (aura === false) return [];
+  const unclassified: never = aura;
+  void unclassified;
+  return [];
+}
+
 export function Card({
   asChild = false,
   tone = 'surface',
@@ -323,7 +499,7 @@ export function Card({
   const own = cx(
     cardClasses,
     toneClasses[tone],
-    aura && 'shadow-aura',
+    ...glowClasses(aura, tone),
     className,
   );
 

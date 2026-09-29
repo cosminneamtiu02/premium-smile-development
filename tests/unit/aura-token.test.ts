@@ -100,9 +100,9 @@ const CONSUMERS = [
     3,
   ],
   [
-    'Card.tsx (the aura prop lookup — board card-atom D7, owner fb-378/381)',
+    'Card.tsx (the worn glow’s lookup — board card-atom D7, owner fb-378/381 — and the armed glow’s ::before layer — owner 2026-09-29)',
     '../../src/components/ui/Card/Card.tsx',
-    1,
+    2,
   ],
   // The „Ne găsești" band joined on the owner's 2026-09-09 "use current aura
   // shadow" (board D3): the map box wears it directly, and ONE className on the
@@ -177,7 +177,11 @@ describe('the aura token (header-aura board, fb-359)', () => {
     // in the section that composes it). The sections that pass `aura` carry no
     // `shadow-aura` string of their own — nothing for this census to count —
     // so their WEAR is guarded by their own tests, and what is guarded here is
-    // the atom's single spelling of the token.
+    // the atom's single spelling of the token. Since 2026-09-29 that spelling
+    // is TWO wears in one file — the worn glow's lookup and the armed glow's
+    // `::before` layer (`aura="current"`, owner 2026-09-29), hence the row's
+    // count of 2 — and a section passing `aura="current"` still carries no
+    // `shadow-aura` string of its own.
     const dial = code(read('../../src/components/ui/SpeedDial/SpeedDial.tsx'));
     expect(dial).toContain('var(--bulb-shadow');
     expect(dial).not.toContain(AURA_UTILITY);

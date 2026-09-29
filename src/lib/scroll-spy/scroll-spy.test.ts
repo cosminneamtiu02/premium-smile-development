@@ -1,4 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+} from 'vitest';
+import {
+  planReadingLine,
+  readingIndex,
+  type ReadingFrame,
+  type ReadingPlan,
+} from '../reading-line/reading-line.ts';
 import {
   createScrollSpy,
   DEFAULT_SETTLE_MS,
@@ -388,8 +402,9 @@ describe('createScrollSpy — topFallback: a long intro above the first target',
   const INTRO = 600;
 
   it('defaults to "first" — the price menu’s answer, unchanged', () => {
-    // PriceMenu passes no option; its first category must stay marked at the
-    // top of the page exactly as before the option existed, intro or not.
+    // PriceMenu passes no `topFallback`; its first category must stay marked
+    // at the top of the page exactly as before the option existed, intro or
+    // not.
     buildPage({ intro: INTRO });
     const spy = makeSpy();
     spy.start();
@@ -535,10 +550,12 @@ describe("createScrollSpy — line: 'middle', where the reader's eye is (D49)", 
     window.innerHeight / 2;
 
   it("the default is still the landing line — 'landing' spelled out answers the same", async () => {
-    // PriceMenu passes no `line`: its answer must be byte-identical to the
-    // days before the option. At the position below the third target's top
-    // sits ON the middle but far under its landing line (96 + 40px), so the
-    // two lines give two different answers at once.
+    // A spy built with no `line` must answer byte-identically to the days
+    // before the option — the landing line, the price menu's from 2026-09-14
+    // until round 5 (2026-09-29), when it moved to 'reading'. At the position
+    // below the third target's top sits ON the middle but far under its
+    // landing line (96 + 40px), so the two lines give two different answers
+    // at once.
     buildPage();
     const byDefault = makeSpy();
     const landing = makeSpy({ ids: IDS, line: 'landing' });
@@ -725,6 +742,632 @@ describe("createScrollSpy — line: 'middle', where the reader's eye is (D49)", 
 
     expect(spy.getServerSnapshot()).toEqual({ current: null });
     expect(spy.getSnapshot()).toBe(spy.getServerSnapshot());
+  });
+});
+
+describe("createScrollSpy — line: 'reading' (owner 2026-09-29)", () => {
+  // THE READING LINE (the header): the middle of the CLEAR area, bent near
+  // both ends of the page, with every target's landing planned to match and
+  // WRITTEN as its scroll-margin-top — "keeps the line lower for currently
+  // selected items and also selects top one … and also the go to card when
+  // you click on the meniu on an option should be more to the center of the
+  // screen" (owner, 2026-09-29). The arithmetic has its own suite
+  // (src/lib/reading-line) and is only USED here, to say what the spy should
+  // have done: every expectation below is planned from the fixture's own
+  // numbers and the live rects, never read back from the spy.
+  //
+  // ── THE FLOOR LIVES IN A STYLESHEET HERE, not inline as in buildPage. The
+  // reading line writes the inline `scroll-margin-top` itself and lifts it
+  // again to read the floor, so an inline floor would be the very value it
+  // writes over — which is also why a reading-line target on the site keeps
+  // its floor in a class (the price card's `scroll-mt-10`).
+
+  /** THE READING PAGE: two short cards at the very top — the second's top
+   *  already ABOVE the line at scroll 0 — then one that fits, one far too tall
+   *  to, two more that fit, and 400px of page under the last: too little for
+   *  the landing line ever to reach it. */
+  const READING_PAGE = {
+    heights: [150, 150, 400, 1_400, 300, 200],
+    outro: 400,
+  } as const;
+
+  let sheet: HTMLStyleElement | undefined;
+
+  afterEach(() => {
+    sheet?.remove();
+    sheet = undefined;
+  });
+
+  const spacer = (height: number): HTMLElement => {
+    const block = document.createElement('div');
+    block.style.height = `${height}px`;
+    return block;
+  };
+
+  /** Build a column of `reading-N` targets whose floor is a STYLESHEET rule. */
+  function buildReadingPage(
+    page: Readonly<{
+      heights: readonly number[];
+      intro?: number;
+      outro?: number;
+    }>,
+  ): readonly string[] {
+    const ids = page.heights.map((_, index) => `reading-${index}`);
+    document.documentElement.style.scrollPaddingTop = `${PADDING}px`;
+    sheet = document.createElement('style');
+    sheet.textContent = `.reading-target { scroll-margin-top: ${MARGIN}px; }`;
+    document.head.append(sheet);
+    host = document.createElement('div');
+    if (page.intro !== undefined) host.append(spacer(page.intro));
+    for (const [index, id] of ids.entries()) {
+      const section = document.createElement('section');
+      section.id = id;
+      section.className = 'reading-target';
+      section.style.height = `${page.heights[index]}px`;
+      host.append(section);
+    }
+    if (page.outro !== undefined) host.append(spacer(page.outro));
+    document.body.append(host);
+    return ids;
+  }
+
+  const target = (id: string): HTMLElement =>
+    document.getElementById(id) as HTMLElement;
+
+  /** What the spy has written on a target — '' when nothing. */
+  const writtenOn = (id: string): string =>
+    target(id).style.getPropertyValue('scroll-margin-top');
+
+  /** A margin as the spy spells it: CSS pixels to two decimals. */
+  const px = (margin: number): string => `${Math.round(margin * 100) / 100}px`;
+
+  /** A target's top edge in DOCUMENT coordinates. */
+  const documentTop = (id: string): number =>
+    target(id).getBoundingClientRect().top + window.scrollY;
+
+  const maxScrollY = (): number =>
+    document.documentElement.scrollHeight - window.innerHeight;
+
+  /**
+   * What the spy SHOULD be working to: the page as lib/reading-line reads it,
+   * built here from first principles — the fixture's own padding and floor,
+   * the live rects and the window — and planned.
+   */
+  function expected(
+    ids: readonly string[],
+    floor = MARGIN,
+  ): Readonly<{ frame: ReadingFrame; plan: ReadingPlan }> {
+    const frame: ReadingFrame = {
+      viewport: window.innerHeight,
+      maxScrollY: maxScrollY(),
+      padding: PADDING,
+      targets: ids.map((id) => ({
+        top: documentTop(id),
+        height: target(id).getBoundingClientRect().height,
+        floor,
+      })),
+    };
+    return { frame, plan: planReadingLine(frame) };
+  }
+
+  it('refuses an unknown line still, and now names all three', () => {
+    const line = 'top' as unknown as 'reading';
+
+    expect(() => createScrollSpy({ ids: [...IDS], line })).toThrow(
+      "createScrollSpy: line must be 'landing', 'middle' or 'reading' (received top)",
+    );
+    expect(() =>
+      createScrollSpy({ ids: [...IDS], line: 'reading' }),
+    ).not.toThrow();
+  });
+
+  it('writes each target’s planned scroll-margin-top at start(), and takes it off in dispose() — the stylesheet’s 40px returns', () => {
+    const ids = buildReadingPage(READING_PAGE);
+    for (const id of ids) expect(writtenOn(id)).toBe('');
+    const spy = makeSpy({ ids, line: 'reading' });
+
+    spy.start();
+
+    const { plan } = expected(ids);
+    ids.forEach((id, index) => {
+      expect(writtenOn(id)).toBe(px(plan.margins[index]));
+    });
+    // The premise that makes this a test: the plan moved the landings — the
+    // short first cards below the floor (negative, the first two), the tall
+    // one exactly ON it.
+    expect(plan.margins[0]).toBeLessThan(0);
+    expect(writtenOn(ids[3])).toBe(`${MARGIN}px`);
+
+    spy.dispose();
+
+    for (const id of ids) {
+      expect(writtenOn(id)).toBe('');
+      expect(getComputedStyle(target(id)).scrollMarginTop).toBe(`${MARGIN}px`);
+    }
+  });
+
+  it("writes nothing on 'landing' and 'middle' — no inline style on any target, ever", async () => {
+    // Everything that makes a reading-line spy write — start(), a scroll, a
+    // resize, a `#id`, a pin and its settle, dispose() — put through the two
+    // other lines, and every target's style attribute is the one the fixture
+    // gave it.
+    const ids = buildReadingPage(READING_PAGE);
+    const before = ids.map((id) => target(id).getAttribute('style'));
+    const spies = [
+      makeSpy({ ids }),
+      makeSpy({ ids, line: 'landing' }),
+      makeSpy({ ids, line: 'middle' }),
+    ];
+    for (const spy of spies) spy.start();
+
+    await scrollToY(600);
+    window.dispatchEvent(new Event('resize'));
+    window.history.replaceState(null, '', `#${ids[2]}`);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    spies[0].select(ids[4]);
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+    for (const spy of spies) spy.dispose();
+
+    expect(ids.map((id) => target(id).getAttribute('style'))).toEqual(before);
+  });
+
+  it('a target that fits becomes current as its top crosses the middle of the CLEAR area — with the walk’s pixel of grace, and not a pixel more', async () => {
+    // The fourth card fits and sits far from both ends, so nothing bends
+    // there: the line is exactly (padding + innerHeight) / 2. The half is
+    // FLOORED, as the middle line's tests do it, so an odd window's half pixel
+    // puts the top at most half a pixel ABOVE the line — inside it.
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    const line = (PADDING + window.innerHeight) / 2;
+    const onLine = Math.round(documentTop(ids[4])) - Math.floor(line);
+    const belowLine = (): number =>
+      target(ids[4]).getBoundingClientRect().top - line;
+    // The premise: it fits the clear area, so it is a CENTRED card.
+    expect(READING_PAGE.heights[4]).toBeLessThanOrEqual(
+      window.innerHeight - PADDING - 2 * MARGIN,
+    );
+
+    await scrollToY(onLine);
+    expect(Math.abs(belowLine())).toBeLessThanOrEqual(0.5);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    await scrollToY(onLine - 1);
+    expect(belowLine()).toBeLessThanOrEqual(1);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    await scrollToY(onLine - 2);
+    expect(belowLine()).toBeGreaterThan(1);
+    expect(spy.getSnapshot().current).toBe(ids[3]);
+  });
+
+  it('the first target is current at scroll 0 — on a page whose second target’s top is already ABOVE the line there', () => {
+    // "so smaller cars at top also get selection" (owner). A middle-line spy
+    // on the same page is the control: at scroll 0 — as high as the page goes
+    // — it already names the THIRD card, so the first two never have a turn.
+    const ids = buildReadingPage(READING_PAGE);
+    const reading = makeSpy({ ids, line: 'reading' });
+    const middle = makeSpy({ ids, line: 'middle' });
+    reading.start();
+    middle.start();
+
+    expect(window.scrollY).toBe(0);
+    expect(target(ids[1]).getBoundingClientRect().top).toBeLessThan(
+      (PADDING + window.innerHeight) / 2,
+    );
+    expect(middle.getSnapshot().current).toBe(ids[2]);
+    expect(reading.getSnapshot().current).toBe(ids[0]);
+  });
+
+  it('every target has its turn, in order, scrolling from 0 to the end — and the last is current at the page’s end with no bottom rule involved', async () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    const end = maxScrollY();
+    // The premise: the landing line could never reach the last card — its
+    // landing lies past the page's end — so on that line only the bottom rule
+    // ever marked it.
+    expect(documentTop(ids[5]) - PADDING - MARGIN).toBeGreaterThan(end);
+
+    // Every pixel from 0 to the end. The spy's own scroll listener runs at
+    // each one, synchronously; the browser's event would bring the same
+    // answer a frame later.
+    const turns: (string | null)[] = [];
+    for (let y = 0; y <= end; y += 1) {
+      window.scrollTo(0, y);
+      window.dispatchEvent(new Event('scroll'));
+      const { current } = spy.getSnapshot();
+      if (turns[turns.length - 1] !== current) turns.push(current);
+    }
+    expect(turns).toEqual(ids);
+
+    // The last card's turn begins at its OWN landing, well before the pixel
+    // at which the bottom rule would speak (`end − 1`), and lasts to the end.
+    const { plan } = expected(ids);
+    const lastLanding = plan.landings[ids.length - 1];
+    expect(lastLanding).toBeLessThan(end - 1);
+    await scrollToY(Math.round(lastLanding));
+    expect(spy.getSnapshot().current).toBe(ids[5]);
+    await scrollToY(end);
+    expect(spy.getSnapshot().current).toBe(ids[5]);
+  });
+
+  it('a real fragment jump lands where the plan says — a target that fits, CENTRED on the line', async () => {
+    // "the go to card when you click on the meniu on an option should be more
+    // to the center of the screen" (owner). The browser's own jump, driven by
+    // the margin the spy wrote.
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    const { plan } = expected(ids);
+
+    window.location.hash = ids[4];
+    await nextFrame();
+    await nextFrame();
+
+    expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(2);
+    const rect = target(ids[4]).getBoundingClientRect();
+    expect(
+      Math.abs(rect.top + rect.height / 2 - plan.line),
+    ).toBeLessThanOrEqual(2);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  it('a pin that has ARRIVED holds through a resize that moves the line — where the walk alone would name another card', async () => {
+    // At a landing a held pin and a dropped one publish the SAME id (property
+    // (2)), so arrival cannot be seen there. A resize is where it shows: the
+    // line moves, a fresh walk moves with it, and only a pin the settle found
+    // ARRIVED is still there to hold the card the visitor jumped to — the
+    // middle line's own resize test, ported (G2 typescript review: with
+    // arrival hard-wired to false the suite passed without this).
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    window.location.hash = ids[4];
+    await nextFrame();
+    await nextFrame();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(
+      window.innerHeight + 400,
+    );
+    window.dispatchEvent(new Event('resize'));
+
+    const { frame, plan } = expected(ids);
+    expect(readingIndex(frame, plan, window.scrollY)).not.toBe(4);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  it.each([
+    ['a short target', 1, 1_000],
+    ['a tall one', 3, 0],
+    ['the first', 0, 500],
+    ['the last', 5, 0],
+  ] as const)(
+    'THE AGREEMENT — %s: after its jump settles, a one-pixel hand scroll (which drops the pin) leaves the SAME target current',
+    async (_, index, from) => {
+      // Property (2) of lib/reading-line, end to end: the jump lands the
+      // target on its landing, the pin holds through the settle, and when the
+      // visitor's own pixel of scrolling hands the answer back to the walk,
+      // the walk names the target the click chose. (That a hand scroll drops
+      // a settled pin is 'drops the pin on the first hand scroll after the
+      // settle', above; here it is the answer afterwards that is the claim.)
+      const ids = buildReadingPage(READING_PAGE);
+      const spy = makeSpy({ ids, line: 'reading' });
+      await scrollToY(from);
+      spy.start();
+      const { frame, plan } = expected(ids);
+
+      window.location.hash = ids[index];
+      await nextFrame();
+      await nextFrame();
+      vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+      expect(
+        Math.abs(window.scrollY - plan.landings[index]),
+      ).toBeLessThanOrEqual(2);
+      expect(spy.getSnapshot().current).toBe(ids[index]);
+
+      // One pixel down — or up, where the page has no pixel left below.
+      const hand = window.scrollY < maxScrollY() ? 1 : -1;
+      await scrollToY(window.scrollY + hand);
+
+      expect(readingIndex(frame, plan, window.scrollY)).toBe(index);
+      expect(spy.getSnapshot().current).toBe(ids[index]);
+    },
+  );
+
+  it('re-reads the floor on a resize — and only then: the ceiling follows the stylesheet', async () => {
+    // The tall card rests ON its ceiling, so its margin IS the floor. Change
+    // the stylesheet: a scroll does not look (never on a scroll event), a
+    // resize does — with the spy's own write lifted first, so the stylesheet
+    // is what it reads.
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    expect(writtenOn(ids[3])).toBe(`${MARGIN}px`);
+
+    (sheet as HTMLStyleElement).textContent =
+      '.reading-target { scroll-margin-top: 60px; }';
+    await scrollToY(300);
+    expect(writtenOn(ids[3])).toBe(`${MARGIN}px`);
+
+    window.dispatchEvent(new Event('resize'));
+
+    expect(writtenOn(ids[3])).toBe('60px');
+    const { plan } = expected(ids, 60);
+    ids.forEach((id, index) => {
+      expect(writtenOn(id)).toBe(px(plan.margins[index]));
+    });
+  });
+
+  it('a target that grows re-measures through the ResizeObserver — no scroll, no resize', async () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    // Let the observer's first delivery (every observe() makes one) pass.
+    await nextFrame();
+    await nextFrame();
+    const before = writtenOn(ids[4]);
+
+    target(ids[4]).style.height = '500px';
+    // The observer delivers after layout, in the next rendering step.
+    await nextFrame();
+    await nextFrame();
+
+    const { plan } = expected(ids);
+    expect(writtenOn(ids[4])).toBe(px(plan.margins[4]));
+    expect(writtenOn(ids[4])).not.toBe(before);
+  });
+
+  it('the load-time hash: a page resting where the BROWSER’s jump put its target — on the stylesheet’s margin — is re-landed on the plan’s', async () => {
+    // The browser follows a link's `#id` at load, before any script runs, so
+    // it lands on the 40px stylesheet margin. start() finishes the jump.
+    const ids = buildReadingPage(READING_PAGE);
+    const stylesheetLanding = Math.round(
+      documentTop(ids[4]) - PADDING - MARGIN,
+    );
+    await scrollToY(stylesheetLanding);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    const { plan } = expected(ids);
+    expect(Math.abs(stylesheetLanding - plan.landings[4])).toBeGreaterThan(2);
+
+    spy.start();
+
+    // No stylesheet glide in this runner, so the jump is a teleport.
+    expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(2);
+    await nextFrame();
+    await nextFrame();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  it('the load-time hash: a short last card the stylesheet could only park at the page’s end is re-landed too', async () => {
+    // The stylesheet's landing for the last card lies past the page's end,
+    // so the browser's jump rests AT the end with the card below its line —
+    // "below that with the page at its end", the rule's second half.
+    const ids = buildReadingPage(READING_PAGE);
+    const end = maxScrollY();
+    expect(documentTop(ids[5]) - PADDING - MARGIN).toBeGreaterThan(end);
+    await scrollToY(end);
+    window.history.replaceState(null, '', `#${ids[5]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    const { plan } = expected(ids);
+
+    spy.start();
+
+    expect(Math.abs(window.scrollY - plan.landings[5])).toBeLessThanOrEqual(2);
+    expect(window.scrollY).toBeLessThan(end - 2);
+  });
+
+  it('the load-time hash: a page RESTORED anywhere else is not moved — its pin is handed to the walk after two windows', async () => {
+    // A reload or a Back restores the old position instead of jumping: that
+    // page is not where the browser's jump would have put the target, so the
+    // spy leaves it alone and the pin's own check does the rest (THE START
+    // GRACE: a page that never moved is judged at the second window).
+    const ids = buildReadingPage(READING_PAGE);
+    await scrollToY(1_000);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+
+    spy.start();
+
+    expect(window.scrollY).toBe(1_000);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+    const { frame, plan } = expected(ids);
+    expect(readingIndex(frame, plan, 1_000)).toBe(3);
+    expect(spy.getSnapshot().current).toBe(ids[3]);
+  });
+
+  // THE JUMP THAT DID NOT KNOW THE PLAN (the header's THE ONE SCROLL THIS
+  // MODULE MAKES; planner's amendment, 2026-09-29). Chromium GLIDES to the
+  // fragment at load, the island hydrates mid-glide, and the glide ends on
+  // the STYLESHEET's line — the browser fixed its destination before any
+  // margin was written. The settle is where the spy catches it.
+
+  /**
+   * That glide, replayed: `#reading-4` in the URL, the island hydrating while
+   * the page is still at 1000px — the glide in flight — then real scroll
+   * events carrying the page onto the fourth card's stylesheet line, where it
+   * comes to rest. No settle has fired yet when it hands back.
+   */
+  async function glideOntoTheStylesheetLine(): Promise<
+    Readonly<{
+      ids: readonly string[];
+      spy: ScrollSpy;
+      frame: ReadingFrame;
+      plan: ReadingPlan;
+      stylesheetLanding: number;
+      scrolls: MockInstance<Element['scrollIntoView']>;
+    }>
+  > {
+    const ids = buildReadingPage(READING_PAGE);
+    const scrolls = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const stylesheetLanding = Math.round(
+      documentTop(ids[4]) - PADDING - MARGIN,
+    );
+    await scrollToY(1_000);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    const { frame, plan } = expected(ids);
+    spy.start();
+    await scrollToY(1_500);
+    await scrollToY(stylesheetLanding);
+    return { ids, spy, frame, plan, stylesheetLanding, scrolls };
+  }
+
+  it('HYDRATION MID-GLIDE: a load-time glide that ends on the stylesheet’s line is finished at the settle — and the pin holds on its own card', async () => {
+    // The fourth card is SHORTER than line − ceiling, so where the glide ends
+    // the walk names its NEIGHBOUR: without the finish the URL would say one
+    // card and the mark would sit on the next.
+    const { ids, spy, frame, plan, stylesheetLanding, scrolls } =
+      await glideOntoTheStylesheetLine();
+    expect(readingIndex(frame, plan, stylesheetLanding)).toBe(5);
+    // start() found the page still moving and left it; the pin stands.
+    expect(scrolls).not.toHaveBeenCalled();
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+
+    expect(scrolls).toHaveBeenCalledTimes(1);
+    expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(2);
+    // The finishing scroll's own event re-arms, and the next settle finds
+    // the target arrived: the pin holds, with nothing left to wait for.
+    await nextFrame();
+    await nextFrame();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('ONCE PER PIN: a page carried back onto the stylesheet’s line after the spy’s own scroll is not scrolled again — the pin is dropped and the walk answers', async () => {
+    const { ids, spy, stylesheetLanding, scrolls } =
+      await glideOntoTheStylesheetLine();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(scrolls).toHaveBeenCalledTimes(1);
+
+    // Before the next settle, something that is not the visitor — no wheel,
+    // no touch, no key — carries the page back onto the stylesheet's line. A
+    // second scroll would only fight it.
+    await scrollToY(stylesheetLanding);
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+
+    expect(scrolls).toHaveBeenCalledTimes(1);
+    expect(window.scrollY).toBe(stylesheetLanding);
+    expect(spy.getSnapshot().current).toBe(ids[5]);
+  });
+
+  it('a select() renews it — a second pin may be finished once more', async () => {
+    const { ids, spy, plan, stylesheetLanding, scrolls } =
+      await glideOntoTheStylesheetLine();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    await scrollToY(stylesheetLanding);
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    // The first pin, finished once and then dropped.
+    expect(spy.getSnapshot().current).toBe(ids[5]);
+
+    spy.select(ids[4]);
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+
+    expect(scrolls).toHaveBeenCalledTimes(2);
+    expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(2);
+    await nextFrame();
+    await nextFrame();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  /** A page whose second and third cards already sit ABOVE their stylesheet
+   *  line at scroll 0 — the browser's own jump to either could only stop at
+   *  scroll 0, and the plan lands both lower. */
+  const CLAMPED_PAGE = {
+    heights: [60, 60, 400, 1_400, 300, 200],
+    outro: 400,
+  } as const;
+
+  it('the jump the browser CLAMPED at scroll 0 — a card above its stylesheet line with the page at its start — is finished too', async () => {
+    const ids = buildReadingPage(CLAMPED_PAGE);
+    window.history.replaceState(null, '', `#${ids[1]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    const { plan } = expected(ids);
+    expect(window.scrollY).toBe(0);
+    expect(target(ids[1]).getBoundingClientRect().top).toBeLessThan(
+      PADDING + MARGIN - 2,
+    );
+    expect(plan.landings[1]).toBeGreaterThan(2);
+
+    spy.start();
+
+    expect(Math.abs(window.scrollY - plan.landings[1])).toBeLessThanOrEqual(2);
+    await nextFrame();
+    await nextFrame();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[1]);
+  });
+
+  it('the landing and middle lines never call scrollIntoView, whatever the page rests on', async () => {
+    // The one scroll belongs to the reading line alone: the other two own no
+    // margin, so there is no plan for a jump to have missed.
+    const scrolls = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const ids = buildReadingPage(CLAMPED_PAGE);
+    const spies = [
+      makeSpy({ ids }),
+      makeSpy({ ids, line: 'landing' }),
+      makeSpy({ ids, line: 'middle' }),
+    ];
+
+    // Resting ON a card's stylesheet line, with that card in the URL…
+    await scrollToY(Math.round(documentTop(ids[4]) - PADDING - MARGIN));
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    for (const spy of spies) spy.start();
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+    // …and at the page's start, pinned to a card above its stylesheet line.
+    await scrollToY(0);
+    for (const spy of spies) spy.select(ids[1]);
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+    expect(scrolls).not.toHaveBeenCalled();
+  });
+
+  it("'none' above the first target answers null on this line too — and 'first' the first", async () => {
+    const page = { heights: [150, 150, 400], intro: 1_500, outro: 1_500 };
+    const ids = buildReadingPage(page);
+    const none = makeSpy({ ids, line: 'reading', topFallback: 'none' });
+    none.start();
+    const { plan } = expected(ids);
+
+    expect(window.scrollY).toBe(0);
+    expect(none.getSnapshot().current).toBeNull();
+    await scrollToY(Math.round(plan.landings[0]));
+    expect(none.getSnapshot().current).toBe(ids[0]);
+
+    // The default, on the same page — one reading spy at a time, since each
+    // owns its targets' margins.
+    none.dispose();
+    await scrollToY(0);
+    const first = makeSpy({ ids, line: 'reading' });
+    first.start();
+    expect(first.getSnapshot().current).toBe(ids[0]);
+  });
+
+  it('a window with no height keeps the answer it had instead of throwing from a listener', async () => {
+    // planReadingLine refuses a viewport of 0 — a collapsed frame has no clear
+    // area to find the middle of — so the evaluation stands still rather than
+    // throw inside a scroll or resize listener.
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    await scrollToY(Math.round(expected(ids).plan.landings[3]));
+    const before = spy.getSnapshot();
+    expect(before.current).toBe(ids[3]);
+
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(0);
+    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(spy.getSnapshot()).toBe(before);
   });
 });
 
@@ -979,6 +1622,111 @@ describe('createScrollSpy — the pin (both directions, safely)', () => {
     spy.select(IDS[1]);
     expect(told).toBe(1);
   });
+
+  // THE START GRACE (the header; owner 2026-09-29, "fix them for me"). The
+  // defect it fixes, measured by the planner on the built page: a main thread
+  // busy for 160ms or more right after a click fires the settle BEFORE the
+  // jump's first scroll event, finds the target not arrived and drops the pin
+  // — WebKit 12 of 12, Chromium in a scratch harness 19 of 40 — and both marks
+  // then walk through every card the glide passes. Every case below is
+  // judged in a single task, the way a busy thread would see it.
+
+  it('THE START GRACE: a pin whose page has not moved survives ONE settle window and is dropped at the second', async () => {
+    buildPage();
+    await scrollToY(landingOf(IDS[1]));
+    const spy = makeSpy();
+    spy.start();
+
+    spy.select(IDS[3]);
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    // A page that has not moved looks exactly like a jump that has not begun:
+    // one window more, and the pin still stands.
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    expect(vi.getTimerCount()).toBe(1);
+
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('THE START GRACE: a page that moved between two checks with no scroll event delivered is looked at again, not judged', async () => {
+    // The busy thread's whole story: the jump starts late — the first window
+    // passes with the page still, and the grace is spent on it — and then it
+    // moves while its scroll event is still queued behind the long task. The
+    // position is mid-glide, short of the target, with no grace left: only
+    // the "has the page moved since the pin last looked?" question keeps the
+    // pin (mutation-checked: without it this test goes red).
+    buildPage();
+    const spy = makeSpy();
+    spy.start();
+    spy.select(IDS[3]);
+
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+
+    // Moved and judged in the same task: no frame, so no scroll event yet.
+    window.scrollTo(0, landingOf(IDS[2]));
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    expect(vi.getTimerCount()).toBe(1);
+
+    // The glide goes on and lands; the next settle finds the target there.
+    await scrollToY(landingOf(IDS[3]));
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('THE START GRACE: a page that moved and then stopped short is judged at the next window — it DID move, so no grace', () => {
+    // The settle that saw the page move remembers it: when the page then rests
+    // short of the target, the pin is handed back after one more window, not
+    // two.
+    buildPage();
+    const spy = makeSpy();
+    spy.start();
+    spy.select(IDS[3]);
+
+    window.scrollTo(0, landingOf(IDS[2]));
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[2]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('THE START GRACE: a glide that stopped short after real scroll events is dropped after ONE window, as before', async () => {
+    // The scroll events prove the page moved, so there is nothing to wait
+    // for: today's timing, unchanged (the scroll-lock case above is the same
+    // claim from the other side).
+    buildPage();
+    const spy = makeSpy();
+    spy.start();
+
+    spy.select(IDS[3]);
+    await scrollToY(landingOf(IDS[1]));
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('THE START GRACE: a second select() renews it', async () => {
+    buildPage();
+    await scrollToY(landingOf(IDS[1]));
+    const spy = makeSpy();
+    spy.start();
+
+    spy.select(IDS[3]);
+    // The first pin's grace, spent — and then the visitor clicks again.
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    spy.select(IDS[2]);
+
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[2]);
+
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
 });
 
 describe('createScrollSpy — the URL’s own #id', () => {
@@ -1012,7 +1760,11 @@ describe('createScrollSpy — the URL’s own #id', () => {
     spy.start();
     expect(spy.getSnapshot().current).toBe(IDS[3]);
 
-    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    // TWO settle windows, not one (THE START GRACE, 2026-09-29): a restored
+    // page never MOVES after the pin, and a page that has not moved looks
+    // exactly like a jump that has not begun yet — so it gets one window
+    // more before it is judged.
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
     expect(spy.getSnapshot().current).toBe(IDS[1]);
   });
 

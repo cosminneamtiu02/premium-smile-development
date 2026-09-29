@@ -77,14 +77,27 @@ import { cx } from '@/lib/cx/cx';
 // single-column mobile layout at every width, with no error and no console
 // line: exactly the silent-regression class the §13 nets exist for. The
 // pairing deletes it by construction.
-// COST, stated honestly rather than discovered later: `container-type:
-// inline-size` opens a stacking context AND a positioning scope on every band
-// inner (the Header's own §4b consequence, known since NavMenu had to portal
-// its sheet). Benign here — the app-shell layer board keeps z-scopes flat at
-// body level (P1–P3), and a band's inner context only scopes its own
-// descendants — and usually WANTED, since absolutely-positioned children then
-// resolve against the column rather than the page. No opt-out prop ships until
-// a consumer proves the need.
+// COST, stated honestly rather than discovered later — and CORRECTED on
+// 2026-09-29 (the price-list lane's round 5, on the owner's word; ui/Card's
+// own COSTS sentence carries the dates and the first measurement). This
+// paragraph first said that `container-type: inline-size` opens a stacking
+// context AND a positioning scope on every band inner, "usually WANTED, since
+// absolutely-positioned children then resolve against the column". That is
+// true of only SOME of the engines that read it. The mark used to imply
+// LAYOUT containment; the CSS Working Group took that out in July 2024 and
+// engines followed — Chrome from 129, Safari from 18.4 — while an iPhone on
+// iOS 16 to 18.3 still does the opposite. MEASURED on the built services
+// page, Chromium 151 and WebKit 26.5, in a 1366×633 window: a `fixed inset-0`
+// box placed inside a band's Container measures the whole window. So a band
+// inner's scope DEPENDS ON THE ENGINE, and nothing may rely on it either way:
+// a band that positions something against its column says `relative` itself,
+// and one whose box must ESCAPE the column keeps that box outside the
+// Container (sections/Hero's picture). AUDITED the same day — every page
+// type, at 390 and at 1366, both engines: no painted box on this site
+// resolves differently under the two models (four 1px `sr-only` spans on the
+// doctor page are the only boxes that do). What the mark applies in EVERY
+// engine is inline-size containment and an independent formatting context.
+// No opt-out prop ships until a consumer proves the need.
 //
 // ── THE §6.4 NUANCE, argued so no reviewer flags it blind. `mx-[clamp…]`
 // LOOKS like the outer margin §6.4 bans, but the ban's intent is an atom

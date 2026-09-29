@@ -12,7 +12,14 @@ import { PriceMenu } from './PriceMenu';
 // owner's pack round of 2026-09-14 — the menu title, the single price column,
 // the glow on every card, the menu's new offset, the current-item marker and
 // the removal of the "back to categories" link; every paragraph that changed
-// says so.
+// says so. Reshaped once more on the owner's word of 2026-09-29 — the glow on
+// the menu card and on the ONE category card the visitor is at; THE GLOW
+// paragraph below — and again the same evening: the line that decides which
+// card is current moved down to the middle of the window's clear area, a
+// click now brings its card to that line (the `@3xl:top-34` and BARE `#id`
+// HREFS paragraphs, and PriceMenu.tsx's WHERE THE LINE IS, AND WHERE A CLICK
+// LANDS), and a card a pointer jumped to no longer wears the focus ring
+// (CategoryCard.tsx's THE RING IS THE KEYBOARD'S).
 //
 // ── IT IS A DUMB BAND (owner fb-459, board §2c.1) — and that is the whole
 // interface. It imports no data, calls no `t()`, holds no message key, formats
@@ -37,11 +44,12 @@ import { PriceMenu } from './PriceMenu';
 // page and stay inert. What the visitor downloads is ./PriceMenu — the menu
 // card: its <nav> landmark, its <h2> and the list of links — because TWO
 // things about it depend on this visitor: which category they are currently
-// looking at (one attribute on one link; lib/scroll-spy — scroll marks the
-// menu, a click marks it too, and the click's mark survives the scrolling the
-// jump itself causes, the pin) and, since 2026-09-18, where the card itself is
-// held when it is taller than their window (one attribute and one number on
-// the <nav>; lib/sticky-rail). PriceList.test.tsx pins the split from the
+// looking at (one attribute on one link and, since 2026-09-29, one on the card
+// that link points at; lib/scroll-spy — scroll marks the menu, a click marks
+// it too, and the click's mark survives the scrolling the jump itself causes,
+// the pin) and, since 2026-09-18, where the card itself is held when it is
+// taller than their window (one attribute and one number on the <nav>;
+// lib/sticky-rail). PriceList.test.tsx pins the split from the
 // source text of all three files, because no runtime assertion can see a
 // directive: this file and CategoryCard.tsx must carry none, PriceMenu.tsx
 // exactly one. PRICE_MENU_ID stays HERE and travels down as a prop: a value
@@ -99,8 +107,14 @@ import { PriceMenu } from './PriceMenu';
 // files, deliberately not this band's business.
 // THE SAME 2.5rem RIDES THE CARDS, which is the point of the pair: each
 // CategoryCard carries `scroll-mt-10` over the global `scroll-padding-top:
-// 6rem`, so a jumped-to card comes to rest with its top edge on the very line
-// the stuck menu's top edge sits on. Two numbers, one visual line.
+// 6rem`, so a jumped-to card too tall to be centred comes to rest with its
+// top edge on the very line the stuck menu's top edge sits on. Two numbers,
+// one visual line. A card that FITS the window's clear area rests centred in
+// it instead (owner 2026-09-29: "the go to card when you click on the meniu
+// on an option should be more to the center of the screen") — the island's
+// scroll-spy plans that landing from this same 2.5rem, its floor, and writes
+// it over the class (PriceMenu.tsx's WHERE THE LINE IS, AND WHERE A CLICK
+// LANDS).
 //
 // ── NO HEIGHT BELT — THE MENU IS NEVER A SCROLL CONTAINER (owner 2026-09-18,
 // reversing board §3.3's belt). The band shipped with the NavMenu precedent
@@ -148,7 +162,11 @@ import { PriceMenu } from './PriceMenu';
 // need no line here: `scroll-padding-top: 6rem` lands the target below the
 // pill, and `scroll-behavior: smooth` under `prefers-reduced-motion:
 // no-preference` glides for those who allow motion and teleports for those who
-// do not (§9).
+// do not (§9). With one exception, since 2026-09-29: WHERE below the pill each
+// card comes to rest is no longer the stylesheet's alone to say — the island's
+// scroll-spy writes each card's `scroll-margin-top` so the jump lands it on
+// the line that names it current (PriceMenu.tsx's WHERE THE LINE IS, AND WHERE
+// A CLICK LANDS). The href, the jump and the glide stay the browser's.
 //
 // ── THE MENU LINKS ARE ui/TextButton, COMPOSED — not its class string copied.
 // They are rendered by ./PriceMenu (the island), because the CURRENT one wears
@@ -169,15 +187,20 @@ import { PriceMenu } from './PriceMenu';
 // jump is NAVIGATION the browser performs itself (§9: semantic HTML first).
 //
 // ── THE GLOW IS A CARD KIND, AND IT COSTS THE COLUMN A GAP (owner
-// 2026-09-14: the aura on every card here). `aura` is ui/Card's own prop —
-// chosen per card KIND in the section that composes it (fb-378/381), which is
-// why this band passes it rather than naming a shadow utility of its own; the
-// atom holds the single spelling of `--shadow-aura` and
-// tests/unit/aura-token.test.ts's census counts it there. The consequence is
-// the cards' `gap-8`: the glow is `0 8px 22px`, i.e. roughly 22px of blur
-// around the box and ~30px below it, so the 24px of a `gap-6` column would
-// have let two neighbouring glows stack into a grey seam between cards. 32px
-// clears it.
+// 2026-09-14: the aura on every card here; owner 2026-09-29: on the menu
+// card, and on the ONE category card the visitor is at — "what category card
+// is not selected gets no aura"). `aura` is ui/Card's own prop — chosen per
+// card KIND in the section that composes it (fb-378/381), which is why this
+// band passes it rather than naming a shadow utility of its own; the atom
+// holds every spelling of `--shadow-aura` a card can wear and
+// tests/unit/aura-token.test.ts's census counts them there. The two kinds in
+// this band ask for two different values: the menu card WEARS the glow
+// (`aura`), the category cards are ARMED with it (`aura="current"`) and show
+// it while the island has marked them. The consequence for the layout is
+// unchanged, because ANY card can be the glowing one: the cards' `gap-8`.
+// The glow is `0 8px 22px`, i.e. roughly 22px of blur around the box and
+// ~30px below it, so the 24px of a `gap-6` column would let a glow run into
+// the next card's edge. 32px clears it.
 //
 // ── WHAT THE BAND DELIBERATELY DOES NOT NAME: itself. The root <section>
 // carries no `aria-labelledby` of its own, and the naming attributes stay OPEN
@@ -241,9 +264,9 @@ export function PriceList({
   // type-checks and then kills `next build` with a RangeError named three
   // levels below the API that was misused (G2 typescript, 2026-09-14). The
   // guard belongs HERE and not in the island: an early return there would sit
-  // above three hooks. It is also why the band, not the menu, owns the empty
-  // case — a header teaser printing one filtered category is the caller this
-  // is really for.
+  // above the island's hooks. It is also why the band, not the menu, owns
+  // the empty case — a header teaser printing one filtered category is the
+  // caller this is really for.
   if (categories.length === 0) return null;
 
   return (

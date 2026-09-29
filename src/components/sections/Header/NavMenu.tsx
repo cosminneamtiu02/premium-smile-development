@@ -31,10 +31,17 @@ import { useNavItems } from './useNavItems';
 //
 // ── Why the sheet has to leave, in two independent sentences (board §4b).
 // ① `fixed` does not always mean "the screen": it resolves against the nearest
-// ancestor that established a positioning scope, and `container-type` — the
-// very property that makes the breakpoint possible — establishes one. A
-// `fixed inset-0` sheet inside the bar pins itself to the BAR's four edges: a
-// 64px stripe, not a full-screen sheet.
+// ancestor that established a containing block for it, and the bar
+// establishes one TWICE OVER — its glass (`backdrop-filter`) in every engine,
+// and its `container-type`, the very property that makes the breakpoint
+// possible, in the engines that still read layout containment into that mark
+// (before Chrome 129 and Safari 18.4 — every iPhone on iOS 16 to 18.3).
+// CORRECTED 2026-09-29 (the price-list lane's round 5): this sentence first
+// named the container mark alone, which no current engine honours. A `fixed
+// inset-0` sheet inside the bar pins itself to the BAR's four edges —
+// MEASURED on the built page in a 1366×633 window, Chromium 151 and WebKit
+// 26.5: 1076×80 and 1091×80 — a stripe the height of the bar, not a
+// full-screen sheet.
 // ② z-index is hierarchical: `z-50` on the bar opens a stacking context, so a
 // sheet nested inside is "50-point-something" whatever number it claims — it
 // could never paint below the bar (and the lit bar is the point) nor slot
@@ -173,9 +180,10 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // to my container's, and put my top edge at my container's bottom — hang
 // directly below the bar, exactly as wide as it. A RELATIVE position, so there
 // is no portal, no viewport arithmetic and no magic number for the bar's
-// height: move the bar and the panel follows. (The bar is `sticky`, and its
-// container-type also makes it the containing block — both roads lead to the
-// same box.) Since the bar became a floating pill (owner, 2026-08-16 —
+// height: move the bar and the panel follows. (The bar is `sticky` — a
+// positioned box, so it is the panel's containing block in every engine; its
+// glass and, on the older engines, its container-type lead to the same
+// box.) Since the bar became a floating pill (owner, 2026-08-16 —
 // Header.tsx tells that story) the panel is a SECOND glass card: `mt-2` of
 // dimmed page between the two, and the same rounded-md + full border +
 // static-blur chrome the bar wears.

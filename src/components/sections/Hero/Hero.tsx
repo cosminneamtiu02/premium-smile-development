@@ -183,11 +183,17 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     POSITIONED ancestor: the slide and the slides container are
 //     deliberately unpositioned, so the photograph resolves against the
 //     stage (`relative`) and covers all four rows while the slide's own box
-//     is row 2 alone. It CANNOT sit inside ui/Container: `container-
-//     type: inline-size` applies layout containment, which makes the
-//     Container a containing block and would gut the photograph. So the
-//     picture is a SIBLING of the words' Container inside each slide (the
-//     band recipe's rule 1: full-bleed media is the outer's business).
+//     is row 2 alone. It stays OUTSIDE ui/Container — a SIBLING of the
+//     words' Container inside each slide (the band recipe's rule 1:
+//     full-bleed media is the outer's business) — and on an older engine it
+//     HAS to: `container-type: inline-size` used to imply layout
+//     containment, which makes the Container a containing block and would
+//     gut the photograph. CORRECTED 2026-09-29 (the price-list lane's round
+//     5; ui/Card's COSTS sentence has the dates and the measurement): this
+//     bullet first said "CANNOT", of every engine. Chrome from 129 and
+//     Safari from 18.4 no longer read containment into the mark; an iPhone
+//     on iOS 16 to 18.3 still does. Outside the Container the picture
+//     resolves against the stage in all of them.
 //   · TWO OPACITIES PER SLIDE, IN LOCKSTEP — the picture's wrapper and the
 //     words' Container each wear the 1 s crossfade (the old site's, ease-in-
 //     out, `motion-reduce:transition-none`); THE SLIDE ELEMENT ITSELF NEVER

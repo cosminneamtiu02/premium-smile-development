@@ -94,8 +94,9 @@ src/
     routes/routes.ts     # THE route list + matchesRoute/equivalentPath (one list, all consumers)
     hours/hours.ts       # schedule → printable rows (deterministic reference week)
     scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
-    scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic: landing-line walk (or, with `line: 'middle'`, the viewport's centre — the doctor page's timeline, round 2k) + bottom rule + top fallback (`topFallback: 'first' | 'none'` — the named trigger fired by the doctor page's timeline, 2026-09-26) + click pin (React-free; price-list pack round 2, 2026-09-14)
-    sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a focused link reveals its edge (React-free; price-menu-pin lane, 2026-09-18)
+    scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic, on ONE of three lines: the landing line (the default — where a fragment jump rests), the viewport's centre (`line: 'middle'` — the doctor page's timeline, round 2k) or THE READING LINE (`line: 'reading'` — the price menu, 2026-09-29: the middle of the CLEAR area, bent at both ends of the page so every target has a turn, every target's landing planned by lib/reading-line and WRITTEN as its `scroll-margin-top`, the module's one write) + bottom rule + top fallback (`topFallback: 'first' | 'none'` — the named trigger fired by the doctor page's timeline, 2026-09-26) + click pin, which judges only a page that has stopped (THE START GRACE, 2026-09-29) (React-free; price-list pack round 2, 2026-09-14)
+    reading-line/reading-line.ts  # THE arithmetic of the reading line: where a jump to each target comes to rest (centred when it fits the clear area, on its old ceiling when it does not), landings kept inside the page and apart by a share of each target's size, and the probe the walk measures — numbers in, numbers out, no DOM (price-list round 5, 2026-09-29)
+    sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a link the KEYBOARD focused reveals its edge — a pointer's focus is never answered, 2026-09-29 (React-free; price-menu-pin lane, 2026-09-18)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
     rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
@@ -395,7 +396,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Page | Sections | Namespace |
 |---|---|---|
 | Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — on the first five of `lib/reviews`' `demoReviews` (the Storybook "Five" story's rows, moved into shipped data on the owner's word, flagged) until the real list has a row, at which point the band drops them by itself — §15.19, §15.21) · CTABanner | `home` |
-| Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven aura'd category cards — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` in BOTH directions, scroll and click) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
+| Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven category cards, of which ONLY the one the visitor is at wears the aura, faded in and out over 400ms — round 4, 2026-09-29; every card wore it from 2026-09-14 until then; "at" is THE READING LINE since round 5, the same day: a card lights as its top crosses the middle of the clear part of the window, the first card at the top of the page, and a menu click brings a card that fits to that middle, with no focus ring for a pointer — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` on its link in BOTH directions, scroll and click, and — round 4 — by a `data-current` mark the island stamps on the card that link points at) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
 | Team | **TeamRoster** — the visible h1 over **PersonnelCard** doctor cards (the centred portrait column beside a justified, quoted about-text, sides alternating — and, since 2026-09-21, TWO LINKS in the Hero's button faces on row 2 of a 2×2 grid at the card's own `@3xl`: „Vezi serviciile” solid → `/services#<category>`, „Vezi profilul” outline → the doctor's page, level with the name + position, centred under the words) + the auxiliary-staff grid on `repeat(auto-fit, minmax(16rem, 1fr))` (owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier; owner 2026-09-21: „as simple as possible as it is now in team composition”) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step, an `align: start \| center \| end` axis for the words' seat beside the photo — the page passes `lowered`, the top seat dropped 7rem — 3rem on the owner's "push this a bit more down" of 2026-09-25, halved to 1.5rem on his "push it a little more upwards" of 2026-09-26, then 7rem (20 % of the figure's box at 1280) on his "push like 20% more down just the textual part" the same evening, round 2l, one token to dial; the band's own rhythm halved the same day (round 2j, "it starts height wise too low … also the image, so the whole thing") and the words track widened to ⅔ of the row for a BIGGER credo card, its quote on `text-xl`; then, in round 2k the same day, the picture ~30 % larger, the two columns content-sized and CENTRED in the row with the words capped at 28rem (a narrower, taller card — "70% as wide … and taller rather", "left and right they have same as much space"), and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred ("name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the deep violet `accent-strong` (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the roster card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Excelență confirmată în timp” centred over a lead sentence and four tiles: a light disc with a green line glyph, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the sr-only twin SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
@@ -916,6 +917,184 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     and are pixel-identical by construction. Darwin/linux re-records of those two frames are
     the owner's, on the owner's machine (no win32 set exists — §15.7).
 
+    **Round 4 (owner, 2026-09-29, verbatim: "i need you on current prices page to add aura
+    shadow jsut to currently selected/viewd price box. and on the menu of selecting the
+    category. so what category card is not selected gets no aura. and aura has to be smooth
+    when selected, like not sudden and upon deselect again smooth"; lane
+    `rework/price-list-current-aura`, run workspace
+    `.claude/section-runs/2026-09-29_price-current-aura/` — machine-local, gitignored):** THE
+    GLOW FOLLOWS THE VISITOR. Round 2's decision 4 (the aura on every card) is reversed for
+    the category cards: the MENU card keeps the glow it wears, permanently — the reading of
+    "and on the menu" this round was built on, flagged to the owner — and among the eleven
+    category cards ONLY the one the visitor is at wears it. "At" is `lib/scroll-spy`'s own
+    answer, the one the menu link already carries as `aria-current="location"`: the landing-line
+    walk, the click's pin, the bottom rule, a `#id` in the URL. One store, two marks that can
+    never disagree (measured: 30 photographed states and every click timeline, 0
+    disagreements). **How:** `ui/Card`'s `aura` gains a third answer — `CardAura = boolean |
+    'current'`: never · worn · ARMED — and the atom exports `CARD_CURRENT_ATTRIBUTE`
+    (`'data-current'`). An armed card carries the glow on its `::before` at opacity 0 and shows
+    it while its element carries the attribute; the fade is that LAYER'S OPACITY on the atom's
+    own `--fade` clock (400ms, ease-in-out), declared unconditionally so both directions ease,
+    with its own `motion-reduce` reset (the glow still moves from card to card, at once).
+    `cardClasses` is byte-identical, so no other card on the site changes by a byte. The mark
+    is typed (`data-current?: ''` in the atom's props — a boolean would print `"false"`, which
+    a presence selector matches) and the class assembly is total over `CardAura` and fails
+    closed. `CategoryCard` changes ONE prop and stays an inert server component; the island
+    `PriceMenu` gains ONE effect that STAMPS the attribute on the card its spy names and takes
+    it off in its cleanup — the one runtime DOM write on this site that lands outside an
+    island's own subtree (§16, amended). **Why opacity and not the shadow on a clock:** a
+    box-shadow is painted, opacity is composited. MEASURED on the built page (Chromium 151,
+    fourfold CPU throttle, a phone-sized screen at three times the density, the tallest card,
+    ONE hand-over): some 90 Paint events, 23–26 ms of paint and 20–21 ms of raster work with
+    the shadow animated, and the engine reporting it could not composite the animation; 4
+    events and about 3 ms with the layer, all where the fades start and end. Four of the eleven
+    cards are over 1000px tall on a phone (the tallest 2112px at 390). **Two alternatives
+    weighed and declined:** rendering the cards from the island — it would SHRINK the document
+    (184 KB → about 135 KB: the 102 rows are printed twice today, as markup and as the flight
+    payload's element tree) but would ship the cards' render code and run it for 102 rows at
+    every hydration, for markup that is identical for everyone; a client shell per card with a
+    context — eleven hydrated components and a provider for one attribute. **A CORRECTION THAT
+    OUTLIVES THIS LANE:** `container-type` makes a box NEITHER a positioning scope NOR a
+    stacking context in current engines. It used to imply layout containment; the CSS Working
+    Group removed that on 2024-07-24 and engines followed (Chrome from 129, Safari from 18.4;
+    an iPhone on iOS 16–18.3 still does the opposite). Measured in Chromium 151 and WebKit
+    26.5: an absolutely positioned child of a bare card resolves against the nearest
+    positioned ancestor (702px wide around a 620px card). So the armed card says `relative`
+    itself — load-bearing, test-pinned — and `ui/Card`'s header is corrected. THE SAME CLAIM
+    STOOD in `ui/Container`'s header, `sections/Hero/Hero.tsx`, `sections/Header/NavMenu.tsx`,
+    `sections/Header/Header.tsx`, §15.21 ("`ui/Container`'s `container-type` is a containing
+    block") and MIGRATION_INVENTORY's Container row; every one of them is corrected in round
+    5, below, on the owner's word. **Evidence at READY (round 4's own; round 5 has the lane's
+    final numbers):** tsc · eslint · prettier
+    clean; vitest 2660/2660 (123 files; develop stood at 2633); build-storybook and `next
+    build` green; e2e 36 passed (the new `tests/e2e/price-current-aura.spec.ts`: the server
+    HTML carries no mark and no Suspense boundary between `<main` and the band's end · the
+    first card glows at load, RO + DE · a scroll moves the glow with the menu's mark · a click
+    pins it at once · the fade is a real 400ms transition in both directions · reduced motion
+    moves it at once · the jumped-to card keeps its focus ring · the phone); G2 = three Fable
+    reviewers (react · typescript · a11y), 0 critical / 0 high in the diff, every medium and
+    low folded in ONE round. **Visual:** the pixel net CANNOT SEE this change — all 428
+    existing cells pass against pristine develop, because a 40 % lavender blur sits under
+    Playwright's per-pixel threshold (the aura-token test's own note, confirmed). The manifest
+    was therefore MEASURED at zero tolerance, before/after: exactly 24 cells move (12
+    Sections/PriceList + 12 Pages/Services, 6–16 % of their pixels, all inside the cards
+    column), the rest are byte-identical bar rendering noise, and that noise floor — measured
+    across three shoots of one build — is 54 pixels at 2/255 (two unrelated stories, the open
+    language dial and SpeedDial's focused disc, flicker by 6–9 pixels at 1/255 between runs). 25
+    darwin baselines are recorded (the 24 + the new `ui/card/aura-on-current`); 14 of the 24
+    were ALREADY STALE on develop before this lane — different heights since #107 enlarged
+    every `<h2>` — so their re-record absorbs that debt too. The linux set is CI's
+    (`visual-baseline.yml`), before the next promotion. **Found in this round, both
+    pre-existing (#102 and #101), both FIXED in round 5, below, on the owner's "fix them for
+    me":** (P2, the graver) `lib/sticky-rail` answered ANY `focusin`, so in Chromium, at a
+    window where the menu is taller than the screen, a mouse PRESS on a link near the bottom
+    edge re-pinned the menu 174px up at mouse-down and the mouse-up landed on the `<nav>` —
+    the click was swallowed and nothing navigated (measured with a raw pointer at 1366×633;
+    this round also recorded that Safari "focuses the nav instead and is unaffected", which
+    was WRONG — round 5 has the measurement). (P1) `lib/scroll-spy`'s settle judged arrival
+    150 ms after the pin whether or not the jump had begun, so under a starved main thread the
+    pin was dropped and both marks walked through the cards the glide passed (WebKit 12 of 12
+    on the built page under one 160 ms task; Chromium held there; on an idle main thread both
+    held); the glow made it visible, the link did it before. Also recorded for the owner: in forced-colors mode
+    `ui/TextButton`'s two marks are both dropped (pre-existing, the atom's); the e2e suite runs
+    Chromium only (a WebKit project is the owner's call); without JavaScript no card glows
+    (decoration — §16's neutral default); and the glow is FAINT BY DESIGN — about 1.45:1
+    against the page at its darkest pixel — so if an older patient is meant to NOTICE the
+    current box, the lever is the card's border colour, not the glow.
+
+    **Round 5 (owner, the same day, 2026-09-29, on the round-4 pack — verbatim: "when you click
+    on the menu om an item, it takes you to the item, but it also highlights it with a dark
+    border. not the shadow, but a dark border. i want that removed. second, when you scroll, it
+    turns on the shadow highlight too late, once it already passes the that point at which you
+    see the top of the card because it already passes below the top bar … i need a new scrolling
+    or selecting of current card that keeps the line lower for currently selected items and also
+    selects top one, like idk, maybe somehting based on size of card … so smaller cars at top
+    also get selection … and also the go to card when you click on the meniu on an option should
+    be more to the center of the screen"; and on round 4's open questions: the menu CARD keeps
+    its glow — "yes, that's what i meant" · the two defects — "fix them for me" · the stale
+    `container-type` claim — "decide for me", a ONE-TIME delegation · the linux set — "there
+    still is some way to go until then"; the same lane, still uncommitted):** (1) **THE RING IS
+    THE KEYBOARD'S.** The dark border was the shell's `:focus-visible` outline on the card,
+    which is focusable by script so that a jump is announced. Whether it is drawn is each
+    engine's guess, MEASURED on the built page: after a MOUSE click on a menu link it matches in
+    WebKit — the border the owner saw — and not in Chromium; after Tab + Enter in both. So the
+    band states the rule itself: `CategoryCard` wears
+    `not-data-[arrival=keyboard]:focus-visible:outline-hidden`, and the island stamps
+    `data-arrival="keyboard"` on the target card when the click's `detail` is 0 (the keyboard's;
+    1 for a mouse and a touch, both engines), lifting it when focus moves to something else in
+    the page — a window that loses focus takes nothing off. A pointer draws no ring in any
+    engine; the keyboard keeps the full ring in every engine; forced colours keep an outline
+    (the `focus-visible:` variant is load-bearing — without it that branch would outline every
+    card). The pair of constants lives in NEW `sections/PriceList/arrival.ts`, because the class
+    is a server component's and the write is the island's. **RECORDED AGAINST SC 2.4.7 AS A
+    RISK, THE OWNER'S CALL:** an arrival no click made — a pasted `#id`, Back, Forward — is
+    never stamped, so it draws no ring for a keyboard visitor either; the inverse default was
+    weighed and declined on a measurement (on a fresh load with a fragment BOTH engines focus
+    the card and BOTH match `:focus-visible`, so it would draw the border for every visitor who
+    follows a shared link, phones included); the lever, named and not built, is to stamp the
+    focused card at the first key pressed while it holds focus. (2) **THE READING LINE.** NEW
+    React-free `lib/reading-line` (pure arithmetic) and a THIRD line on `lib/scroll-spy`, `line:
+    'reading'`, which `PriceMenu` now passes — the landing line stays the default and has no
+    consumer. The line is the middle of the part of the window the page keeps CLEAR,
+    `(scroll-padding-top + innerHeight) / 2` — not the screen's middle, the timeline's D49,
+    which under the 96px pill sits 48px above the eye's. A card that fits lands CENTRED on it; a
+    taller one with its top on its old ceiling, 6rem + its own stylesheet `scroll-mt-10` =
+    136px, the menu's line. Near the page's two ends an ideal landing lies outside what the page
+    can scroll, so landings are kept inside the page and at least half the distance between two
+    tops apart (`READING_END_PACE = 2`, the owner's "based on size of card"), and the walk's
+    probe is the straight line through every (landing, anchor). Two properties follow and are
+    proven on the MEASURED page (twelve windows × RO/DE): every card has a turn, in order — the
+    first at scroll 0 however short — and at each card's landing the walk names that card, so a
+    click and a scroll cannot disagree. A card now lights when its top reaches 365px at
+    1366×633, 521px at 1920×945, 471px at 390×844 (137px before, under the pill). The jump stays
+    the BROWSER's — URL, focus, Back — because the spy only WRITES each card's planned
+    `scroll-margin-top` inline (its one write, off again at dispose; the floor re-read at every
+    resize with the write lifted); and it makes ONE scroll of its own, once per pin: a pinned
+    card resting on the STYLESHEET's line was landed by a jump that did not know the plan — a
+    pasted link, which the browser follows before any script runs and whose destination it fixes
+    at the start (measured, both engines) — and is finished with `scrollIntoView`. Declined: one
+    lower fixed line in CSS alone (cannot centre, skips the first card on a tall window);
+    scrolling by script (rebuilds the jump by hand); "the card with the most pixels" (a short
+    card between two tall ones never wins). Known and kept: at 1920×945 the SECOND card rests
+    94px above centre so that the first keeps its turn; a card taller than the window lands
+    where it always did. (3) **P2 FIXED** — `lib/sticky-rail` answers only a focus the KEYBOARD
+    made (`:focus-visible` at `focusin`, a try/catch for engines before it). Round 4's reading
+    of Safari was wrong, MEASURED: with the menu pinned by its bottom edge — every laptop once
+    the visitor has scrolled — a press in WebKit focuses the `<nav tabindex="-1">` itself, the
+    rail pinned 'top', the menu jumped 174px and the click landed on the `<ul>`; after the fix
+    it navigates in both engines, both states. (4) **P1 FIXED** — THE START GRACE: the settle
+    judges only a page that has stopped, and a pin whose page never moved gets one window more;
+    a 250ms task right after the pin no longer walks the mark, both engines. (5) **THE STALE
+    CLAIM, CORRECTED** (comment-only): `ui/Container`, `sections/Hero`,
+    `sections/Header/{Header,NavMenu}`, `Header.test.tsx`, §15.21 (annotated) and the
+    inventory's Container row. AUDITED, every page type at 390 and 1366, both engines: no
+    painted box resolves differently under the pre-2024 model (four 1px `sr-only` spans are the
+    only boxes that do). One assumption of the planner's own fell with it: NavMenu's sheet must
+    still leave the bar, but because the bar's `backdrop-filter` makes it a containing block in
+    every engine (a fixed box inside it measures 1076×80), not because of the container mark.
+    **Evidence at READY:** tsc · eslint · prettier clean; vitest 2761/2761 (124 files);
+    build-storybook and `next build` green; e2e 76 passed, 24 skipped (NEW
+    `tests/e2e/price-reading-line.spec.ts`; the ring's test became three; two pointer-press
+    tests in `price-menu-pin.spec.ts`); the planner's own verification on the BUILT page in
+    Chromium 151 AND WebKit 26.5, RO + DE, 1366×633 · 1920×945 · 390×844 — 140 checks, 0
+    failures; visual at zero tolerance against round 4's final shoot — 420 of 429 frames
+    byte-identical, 9 within the measured noise floor (5–54 px at ≤ 2/255), so round 4's 25
+    baselines stand; G2 = three Fable reviewers (react · typescript · a11y), all three APPROVE
+    WITH CHANGES, 0 critical / 0 high; the one medium all three raised — the keyboard's stamp
+    lifted by a WINDOW's blur, confirmed with a real tab switch — and two test gaps (no test
+    observed a reading-line pin's arrival; the probe's interpolation was unpinned) folded, each
+    new test proven to turn red under its mutation. Cost, measured by the React review: the
+    services page ships 162,084 B of JavaScript gzipped against develop's 160,311 (the island
+    chunk 3,400 → 5,175), and every doctor page's timeline chunk grows 9,661 → 10,980 because
+    `lib/scroll-spy` imports `lib/reading-line`. **Recorded, not built:** the floor on a
+    text-size change (no resize fires); the rail's gate as "a press in flight" rather than
+    `:focus-visible` (a focus an assistive technology sets after a mouse press is not answered
+    in Chromium — PLAUSIBLE, unverified); a second movement of the page after a pasted link
+    (122–278px back towards the middle); forced colours carrying no "current" mark at all (older
+    than the lane); Firefox, a real iPhone and screen readers NOT run — §9's page-tier
+    walkthrough is still owed; the e2e suite is Chromium-only (a WebKit project is the owner's
+    call).
+
 21. **Hero run — BUILT ON THE OWNER'S DISPATCH (2026-09-19, verbatim: "i want to bring onto the new
     project … the images auto scrolling section … use here from lib the auto iteration of images
     with no stop play etc, just the n number of beads … use image atom … keep gray filter …
@@ -938,7 +1117,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     collide (the old absolute text block's failure class deleted) · the picture escapes to
     the stage through an UNPOSITIONED slide (`ui/Image fill` resolves against the nearest
     positioned ancestor; `ui/Container`'s `container-type` is a containing block, so the
-    photograph can never sit inside it) · ONE `opacity` crossfades picture, scrim and words
+    photograph can never sit inside it — *annotated 2026-09-29, §15.20 round 5: true of the
+    engines before Chrome 129 / Safari 18.4 only, every iPhone on iOS 16–18.3 among them;
+    the sibling placement is right in all of them*) · ONE `opacity` crossfades picture, scrim and words
     (1 s, the old site's; `motion-reduce:transition-none`), the scrim INSIDE each slide ·
     the grey filter kept as `grayscale blur-xs` ON the picture (same pixels as the old
     `backdrop-filter`, one paint, no containing-block caveat; the wrapper overshoots 4px for
@@ -1625,7 +1806,15 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
   lane's pack round 2, owner 2026-09-14, widened from the `<ul>` to the `<nav>` in round 3,
   2026-09-18, §15.20: the nav, its title and the list of links — the current-category marker
   and, when the menu is taller than the window, where the card is held, as `data-rail` + an
-  inline `top` that the server HTML never carries; every category card stays inert), and the **Home Hero** (`sections/Hero` — the WHOLE band is the island, on `ui/use-rotation` over `lib/rotation`: which picture is opaque, which slogan readable and which bead current all depend on the active index, and its one static part, the two calls to action, hydrates anyway through ContactModalTrigger; the static HTML still carries every slide, both buttons and the beads at index 0 — hero lane, 2026-09-19, §15.21). **The Team page adds NO island; the doctor pages add TWO** (doctor-pages run, 2026-09-21, round 2 2026-09-25, rounds 2f–2g 2026-09-26, §15.23): TeamRoster, DoctorIntro (with its CredoCard), DoctorProfile (with its ScheduleCard), the DoctorCourses band's heading, TintedBand and the reworked PersonnelCard compile to inert HTML; `sections/DoctorStats/StatNumber` is the count-up under each „în cifre” tile, which prints the final value in the static HTML and only decides after mount whether to count (reduced motion: never), and `sections/DoctorCourses/CourseTimeline` is the timeline's rail on `lib/scroll-spy` — which year is CURRENT depends on the scroll position, so the static HTML carries every group grey and no `data-current` at all — plain `<a href>` links, CSS-only layout; the only script that rides with them is ui/Image's optimizer island under each portrait (PersonnelCard D11), which every page with a photograph already pays. Everything else stays inert HTML.
+  inline `top` that the server HTML never carries; every category card stays inert — and,
+  since round 4, 2026-09-29, the island WRITES OUTSIDE ITS OWN SUBTREE: after mount it stamps
+  one `data-current` attribute on the category card its spy names and takes it off again; the
+  card's static classes answer it with the glow, `ui/Card`'s `aura="current"`. Round 5, the
+  same day, adds TWO more writes on those same cards, and they are the only runtime DOM
+  writes on this site that land on markup no island renders: the spy's inline
+  `scroll-margin-top` on every card — where a jump to it comes to rest, `lib/scroll-spy`'s
+  reading line — and the island's `data-arrival="keyboard"` on the one card a keyboard jump
+  landed on, off again at its blur. The server HTML carries none of the three), and the **Home Hero** (`sections/Hero` — the WHOLE band is the island, on `ui/use-rotation` over `lib/rotation`: which picture is opaque, which slogan readable and which bead current all depend on the active index, and its one static part, the two calls to action, hydrates anyway through ContactModalTrigger; the static HTML still carries every slide, both buttons and the beads at index 0 — hero lane, 2026-09-19, §15.21). **The Team page adds NO island; the doctor pages add TWO** (doctor-pages run, 2026-09-21, round 2 2026-09-25, rounds 2f–2g 2026-09-26, §15.23): TeamRoster, DoctorIntro (with its CredoCard), DoctorProfile (with its ScheduleCard), the DoctorCourses band's heading, TintedBand and the reworked PersonnelCard compile to inert HTML; `sections/DoctorStats/StatNumber` is the count-up under each „în cifre” tile, which prints the final value in the static HTML and only decides after mount whether to count (reduced motion: never), and `sections/DoctorCourses/CourseTimeline` is the timeline's rail on `lib/scroll-spy` — which year is CURRENT depends on the scroll position, so the static HTML carries every group grey and no `data-current` at all — plain `<a href>` links, CSS-only layout; the only script that rides with them is ui/Image's optimizer island under each portrait (PersonnelCard D11), which every page with a photograph already pays. Everything else stays inert HTML.
 - **Navigation: none.** Every internal link is a plain `<a href>`; the browser loads the next
   HTML document. No client-side route transitions, no link prefetching (§15.13).
 - Visitor-dependent decisions: root redirect (cookie → `/ro`, §5), setting

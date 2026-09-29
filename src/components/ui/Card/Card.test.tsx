@@ -8,7 +8,12 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
 // house pattern (Modal, SpeedDial, LanguageSwitcher, LanguageBanner, shell).
 import '@/styles/globals.css';
-import { Card, type CardProps, type CardTone } from './Card';
+import {
+  CARD_CURRENT_ATTRIBUTE,
+  Card,
+  type CardProps,
+  type CardTone,
+} from './Card';
 import source from './Card.tsx?raw';
 
 // A <div> has no role, and that is the contract: this atom paints a surface,
@@ -94,6 +99,34 @@ const TONE_CLASSES: Record<CardTone, string> = {
   emphasized:
     'border border-(--card-tint) bg-surface supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint) p-6',
   framed: 'border-[3px] border-(--card-tint) bg-surface p-[calc(1.5rem-2px)]',
+};
+
+// THE ARMED GLOW (owner 2026-09-29 — Card.tsx's THE GLOW CAN FOLLOW A MARK
+// paragraph), spelled out independently like every pin above, so a silent
+// edit to `glowLayer` or `glowEdge` fails against these bytes instead of
+// re-defining what the tests compare against. The LAYER is the card's
+// `::before`: the same `shadow-aura` a worn glow puts on the root, parked at
+// opacity 0 on the card's own --fade clock and shown under `data-current`.
+// The atom emits it AFTER the tone row and BEFORE the caller's className —
+// the assembly order the byte-pins below hold it to.
+const GLOW_LAYER =
+  'relative ' +
+  'before:pointer-events-none before:absolute before:rounded-[inherit] ' +
+  "before:shadow-aura before:opacity-0 before:content-[''] " +
+  'before:transition-opacity before:duration-(--fade) before:ease-in-out ' +
+  'motion-reduce:before:transition-none ' +
+  'data-current:before:opacity-100';
+
+// THE EDGE, keyed by tone like TONE_CLASSES and for the same reason: a fifth
+// tone must not ship without one. Each value is minus the tone's own BORDER
+// WIDTH — the layer is positioned against the card's padding box, so it
+// reaches out by exactly the border to cover the border box — and the
+// per-tone test in the armed-glow describe measures that relation in pixels.
+const GLOW_EDGE: Record<CardTone, string> = {
+  surface: 'before:-inset-px',
+  tinted: 'before:-inset-px',
+  emphasized: 'before:-inset-px',
+  framed: 'before:-inset-[3px]',
 };
 
 const tokensOf = (element: Element) =>
@@ -467,7 +500,8 @@ describe('Card — the aura (owner fb-378/381)', () => {
     // The same lavender glow the Header pill and the corner discs wear —
     // named here, mixed from --accent-decorative in globals.css. The count is
     // load-bearing for tests/unit/aura-token.test.ts's census, which reads
-    // this atom's source expecting exactly one wear.
+    // this atom's source expecting exactly TWO wears in code (this lookup and
+    // the armed glow's layer).
     render(<Card aura>{RO_TITLE}</Card>);
     const tokens = tokensOf(screen.getByText(RO_TITLE));
     expect(tokens.filter((t) => t === 'shadow-aura')).toHaveLength(1);
@@ -480,6 +514,377 @@ describe('Card — the aura (owner fb-378/381)', () => {
   it('emits nothing for aura={false} (the explicit-false path)', () => {
     render(<Card aura={false}>{RO_TITLE}</Card>);
     expect(screen.getByText(RO_TITLE).className).toBe(DEFAULT_CARD);
+  });
+
+  it('keeps the WORN glow free of the armed layer — no `before:` token, no `relative`', () => {
+    // The third value (owner 2026-09-29, the describe below) ARMS a glow on a
+    // layer; the worn one stays exactly what it was — one static `shadow-aura`
+    // on the root, nothing armed and nothing positioned. That is also why a
+    // card that must set its own `position` takes this glow and not the
+    // armed one (Card.tsx's THE GLOW CAN FOLLOW A MARK paragraph).
+    render(<Card aura>{RO_TITLE}</Card>);
+    const tokens = tokensOf(screen.getByText(RO_TITLE));
+    expect(tokens.filter((token) => /(^|:)before:/.test(token))).toEqual([]);
+    expect(tokens).not.toContain('relative');
+  });
+});
+
+describe('Card — the glow that follows a mark (aura="current", owner 2026-09-29)', () => {
+  // The owner's sentence, in the atom's terms: among the price cards only the
+  // one the visitor is at wears the glow, and it arrives and leaves "smooth".
+  // So the third `aura` value ARMS the glow instead of wearing it — the card
+  // carries it on its `::before` at opacity 0 and shows it while its element
+  // carries `data-current` — and what travels is that LAYER'S OPACITY, never a
+  // box-shadow (Card.tsx's THE GLOW CAN FOLLOW A MARK paragraph argues why).
+  // Two layers of assertion, as in the crossfade describe above: the CLASS
+  // layer pins the decision as bytes and whole tokens; the ENGINE layer reads
+  // the pseudo-element back from Chromium against the real stylesheet, because
+  // every class assertion stays green for a utility Tailwind never emits.
+
+  const nextFrame = () =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
+  it.each(Object.keys(TONE_CLASSES) as CardTone[])(
+    'tone "%s": emits the geometry, the tone row, THEN the layer and its edge — byte for byte',
+    (tone) => {
+      // toBe, the file's rule: the ORDER is part of the contract (geometry,
+      // tone row, glow, then the caller's className), and only equality can
+      // prove nothing was smuggled in beside the glow. Over EVERY tone, so
+      // each GLOW_EDGE row is read against the edge its tone really emits.
+      render(
+        <Card tone={tone} aura="current">
+          {RO_TITLE}
+        </Card>,
+      );
+      expect(screen.getByText(RO_TITLE).className).toBe(
+        `${GEOMETRY} ${TONE_CLASSES[tone]} ${GLOW_LAYER} ${GLOW_EDGE[tone]}`,
+      );
+    },
+  );
+
+  it('casts no shadow from the root in this mode — the one shadow is the layer’s', () => {
+    // Whole tokens, never substrings: `shadow-aura` sits inside
+    // `before:shadow-aura`, so an `includes()` check would find a root wear
+    // in the layer's own spelling. A root that wore it as well would show the
+    // glow permanently, under the fade, and the mark would only darken it.
+    render(<Card aura="current">{RO_TITLE}</Card>);
+    const tokens = tokensOf(screen.getByText(RO_TITLE));
+    expect(tokens).not.toContain('shadow-aura');
+    expect(tokens.filter((token) => token.endsWith(':shadow-aura'))).toEqual([
+      'before:shadow-aura',
+    ]);
+  });
+
+  it('answers to the attribute it exports — the constant and the variant agree', () => {
+    // The atom spells the variant as a LITERAL (Tailwind reads class names
+    // from source text and cannot follow a constant), so the exported name is
+    // kept honest twice: this pair of pins is the RUNTIME half, and the
+    // `satisfies` on `glowLayer`'s last segment is the COMPILE-TIME half.
+    expect(CARD_CURRENT_ATTRIBUTE).toBe('data-current');
+    expect(GLOW_LAYER.split(' ')).toContain(
+      `${CARD_CURRENT_ATTRIBUTE}:before:opacity-100`,
+    );
+  });
+
+  it.each(Object.keys(TONE_CLASSES) as CardTone[])(
+    'tone "%s": the layer sits on the card’s BORDER box, corners included',
+    (tone) => {
+      // THE EDGE, measured rather than read: the layer is absolutely
+      // positioned against the card's PADDING box, so its four insets must be
+      // exactly minus the tone's own border width for the glow to start at
+      // the card's outer edge — 1px on the flat rows, 3px on `framed`. A
+      // drifted pair would glow 2px inside a framed card's frame, or 2px
+      // outside a flat one's edge.
+      render(
+        <Card tone={tone} aura="current">
+          {RO_TITLE}
+        </Card>,
+      );
+      const card = screen.getByText(RO_TITLE);
+      const box = getComputedStyle(card);
+      const layer = getComputedStyle(card, '::before');
+      const border = parseFloat(box.borderTopWidth);
+
+      expect(layer.position).toBe('absolute');
+      for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+        expect(layer[side], `${tone}: ${side}`).toBe(`${-border}px`);
+      }
+      for (const corner of [
+        'borderTopLeftRadius',
+        'borderTopRightRadius',
+        'borderBottomRightRadius',
+        'borderBottomLeftRadius',
+      ] as const) {
+        expect(layer[corner], `${tone}: ${corner}`).toBe(box[corner]);
+      }
+      // NEVER-VACUOUS: equal insets and equal corners would also hold with the
+      // stylesheet missing (0 against 0, four times). The width IS the claim,
+      // and so is a real corner.
+      expect(border).toBe(tone === 'framed' ? 3 : 1);
+      expect(box.borderTopLeftRadius).not.toBe('0px');
+    },
+  );
+
+  it('resolves the layer against the CARD, not a positioned ancestor — `relative` is load-bearing', () => {
+    // WHY THIS TEST EXISTS (Card.tsx's THE CONTAINER MARK COSTS sentence and
+    // the `relative` bullet of THE GLOW CAN FOLLOW A MARK): current engines do
+    // not make a query container a positioning scope, so deleting `relative`
+    // "because the card is a container anyway" would wrap the glow around the
+    // nearest POSITIONED ancestor instead — measured, 702px wide around a
+    // 620px card — and this is the test that catches it. The wrapper is that
+    // ancestor on purpose: positioned itself, and WIDER than the card.
+    render(
+      <div style={{ position: 'relative', padding: '40px' }} data-testid="band">
+        <Card aura="current">{RO_TITLE}</Card>
+      </div>,
+    );
+    const wrapper = screen.getByTestId('band');
+    const card = screen.getByText(RO_TITLE);
+    const layer = getComputedStyle(card, '::before');
+    const box = card.getBoundingClientRect();
+
+    // The layer IS the card's border box, within half a pixel.
+    expect(parseFloat(layer.width)).toBeCloseTo(box.width, 0);
+    expect(parseFloat(layer.height)).toBeCloseTo(box.height, 0);
+
+    // …and NOT the wrapper's: what the layer would measure against it — the
+    // wrapper's padding box plus the tone's edge on each side — is 80px away,
+    // so the two readings cannot be confused. NEVER-VACUOUS: a wrapper no
+    // wider than the card would let the pin above pass for the wrong reason.
+    const edge = 2 * parseFloat(getComputedStyle(card).borderTopWidth);
+    expect(parseFloat(layer.width)).not.toBeCloseTo(
+      wrapper.clientWidth + edge,
+      0,
+    );
+    expect(parseFloat(layer.height)).not.toBeCloseTo(
+      wrapper.clientHeight + edge,
+      0,
+    );
+  });
+
+  it('arms the layer at rest — invisible, inert, and already on the clock', () => {
+    render(<Card aura="current">{RO_TITLE}</Card>);
+    const card = screen.getByText(RO_TITLE);
+    const layer = getComputedStyle(card, '::before');
+
+    // Invisible and inert: nothing shows until the mark arrives, and a
+    // positioned box above the content must never be what a click or a text
+    // selection over the card lands on.
+    expect(layer.opacity).toBe('0');
+    expect(layer.pointerEvents).toBe('none');
+    // ARMED, not absent: the glow is already painted into the layer — the
+    // pill's own 22px blur — so the fade has something to show; `content` is
+    // what makes the pseudo-element exist at all.
+    expect(layer.boxShadow).not.toBe('none');
+    expect(layer.boxShadow).toContain('22px');
+    expect(layer.content).toBe('""');
+    // THE CLOCK RIDES THE LAYER: opacity alone, on the atom's own --fade,
+    // resolved through the variable the root declares.
+    expect(layer.transitionProperty).toBe('opacity');
+    expect(layer.transitionDuration).toBe('0.4s');
+    expect(layer.transitionTimingFunction).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+    // …and the root paints no shadow of its own in this mode.
+    expect(getComputedStyle(card).boxShadow).toBe('none');
+  });
+
+  it('shows the glow while the element carries the mark — on the layer, never the root', () => {
+    // Stamped straight onto the DOM, the way an island marks an inert,
+    // server-rendered card: the atom's CSS answers to the attribute however
+    // it arrived.
+    render(<Card aura="current">{RO_TITLE}</Card>);
+    const card = screen.getByText(RO_TITLE);
+    const layer = getComputedStyle(card, '::before');
+    expect(layer.opacity).toBe('0');
+
+    card.setAttribute(CARD_CURRENT_ATTRIBUTE, '');
+    // `subtree` is what includes the pseudo-element's own transitions.
+    for (const animation of card.getAnimations({ subtree: true })) {
+      animation.finish();
+    }
+
+    expect(layer.opacity).toBe('1');
+    expect(getComputedStyle(card).boxShadow).toBe('none');
+  });
+
+  // ── The stateful host — the ToneSwitcher shape above, for the mark instead
+  // of the tone: a CONSUMER re-renders the SAME card with the attribute on or
+  // off, and the attribute rides the native-prop spread.
+  function MarkSwitcher() {
+    const [current, setCurrent] = useState(false);
+    return (
+      <Card
+        aura="current"
+        data-current={current ? '' : undefined}
+        data-testid="card"
+      >
+        <p>{RO_TITLE}</p>
+        <button type="button" onClick={() => setCurrent((on) => !on)}>
+          marchează cardul
+        </button>
+      </Card>
+    );
+  }
+
+  /** Every CSS transition on the card AND its pseudo-elements (`subtree`). */
+  const transitionsOn = (card: Element): CSSTransition[] =>
+    card
+      .getAnimations({ subtree: true })
+      .filter(
+        (animation): animation is CSSTransition =>
+          animation instanceof CSSTransition,
+      );
+
+  /** THE fade: a transition of the `::before` layer's opacity. */
+  const layerFades = (card: Element): CSSTransition[] =>
+    transitionsOn(card).filter(
+      (fade) =>
+        fade.effect instanceof KeyframeEffect &&
+        fade.effect.pseudoElement === '::before' &&
+        fade.transitionProperty === 'opacity',
+    );
+
+  it('fades the glow IN and OUT on the layer’s opacity — "smooth" both ways', async () => {
+    render(<MarkSwitcher />);
+    const card = screen.getByTestId('card');
+    const layer = getComputedStyle(card, '::before');
+    // Read BEFORE the first click: a transition starts only from a style the
+    // engine has already computed.
+    expect(layer.opacity).toBe('0');
+
+    for (const [direction, end] of [
+      ['in', '1'],
+      ['out', '0'],
+    ] as const) {
+      fireEvent.click(screen.getByRole('button'));
+      // One frame, so the style change has been flushed and the fade exists.
+      await nextFrame();
+
+      // Nothing PAINTED rides the clock — no box-shadow transition anywhere,
+      // on the root or on the layer.
+      expect(
+        transitionsOn(card).filter(
+          (fade) => fade.transitionProperty === 'box-shadow',
+        ),
+        `fading ${direction}: a box-shadow on the clock`,
+      ).toEqual([]);
+
+      const fades = layerFades(card);
+      expect(fades, `fading ${direction}: exactly one fade`).toHaveLength(1);
+      const [fade] = fades;
+
+      // SCRUBBED, never waited for (the crossfade describe's rule): held at
+      // half the clock, the layer must sit strictly BETWEEN its two ends —
+      // proof that this direction fades rather than cuts.
+      fade.pause();
+      fade.currentTime = 200;
+      const halfway = Number(layer.opacity);
+      expect(halfway, `fading ${direction}: halfway`).toBeGreaterThan(0);
+      expect(halfway, `fading ${direction}: halfway`).toBeLessThan(1);
+
+      fade.finish();
+      expect(layer.opacity, `fading ${direction}: the end`).toBe(end);
+    }
+  });
+
+  it('keeps the flip on ONE element — and changes nothing on it but the mark', () => {
+    // The ToneSwitcher precedent: a re-created node has no previous value to
+    // fade from, so the fade would silently become a cut in production. And
+    // the class string must not move at all — the attribute is the whole
+    // signal, which is what lets an island stamp it without React.
+    render(<MarkSwitcher />);
+    const before = screen.getByTestId('card');
+    const classes = before.className;
+    expect(before).not.toHaveAttribute(CARD_CURRENT_ATTRIBUTE);
+
+    fireEvent.click(screen.getByRole('button'));
+
+    const after = screen.getByTestId('card');
+    expect(after).toBe(before);
+    expect(after).toHaveAttribute(CARD_CURRENT_ATTRIBUTE, '');
+    expect(after.className).toBe(classes);
+  });
+
+  it('travels onto the consumer’s own element through asChild — its className still LAST', () => {
+    // The price-list shape: a category card IS a <section> named by its own
+    // heading, and the layer's classes land on that element, with the child's
+    // placement class merged after them (slot.ts order).
+    render(
+      <Card asChild aura="current">
+        <section aria-labelledby="titlu-categorie" className="scroll-mt-10">
+          <h2 id="titlu-categorie">{RO_TITLE}</h2>
+        </section>
+      </Card>,
+    );
+    const section = screen.getByRole('region', { name: RO_TITLE });
+    expect(section.className).toBe(
+      `${GEOMETRY} ${TONE_CLASSES.surface} ${GLOW_LAYER} ${GLOW_EDGE.surface} scroll-mt-10`,
+    );
+  });
+
+  it('takes exactly three answers to "when does it glow?" — false, true, current', () => {
+    expectTypeOf<CardProps['aura']>().toEqualTypeOf<
+      boolean | 'current' | undefined
+    >();
+    // The negative half (the tone precedent below) fails at COMPILE time — and
+    // a value that escapes the types anyway (an `any`, a plain-JS caller)
+    // fails CLOSED at runtime: the atom's glow lookup is total over
+    // `CardAura`, so an unclassified answer wears NOTHING — never the worn
+    // glow for good, never the armed layer.
+    const always = (
+      // @ts-expect-error — 'always' is not a CardAura
+      <Card aura="always">{RO_TITLE}</Card>
+    );
+    render(always);
+    const card = screen.getByText(RO_TITLE);
+    const tokens = tokensOf(card);
+    expect(tokens).not.toContain('shadow-aura');
+    expect(tokens.filter((token) => /(^|:)before:/.test(token))).toEqual([]);
+    // …nothing at all, in fact: the bare surface, byte for byte.
+    expect(card.className).toBe(DEFAULT_CARD);
+  });
+
+  it('refuses every spelling of the mark but the two that work', () => {
+    // THE JSX PATH, typed (Card.tsx's `CardOwnProps` row keyed by
+    // CARD_CURRENT_ATTRIBUTE). The stylesheet's rule is a PRESENCE selector
+    // and React prints `data-current="false"` for the boolean `false`, so
+    // `data-current={isCurrent}` would compile, render, and leave the card
+    // glowing for good. These three spellings stop compiling instead:
+    const booleanTrue = (
+      // @ts-expect-error — the boolean `true` is not the mark's empty string
+      <Card aura="current" data-current={true} />
+    );
+    const booleanFalse = (
+      // @ts-expect-error — `false` would PRINT, and a printed mark is present
+      <Card aura="current" data-current={false} />
+    );
+    const stringTrue = (
+      // @ts-expect-error — "true" is present too; only the empty string marks
+      <Card aura="current" data-current="true" />
+    );
+    expect([booleanTrue, booleanFalse, stringTrue]).toHaveLength(3);
+
+    // …and the two that work compile AND print what the selector reads:
+    // the empty string while current, nothing at all otherwise.
+    const { unmount } = render(
+      <Card aura="current" data-current="">
+        {RO_TITLE}
+      </Card>,
+    );
+    expect(screen.getByText(RO_TITLE)).toHaveAttribute(
+      CARD_CURRENT_ATTRIBUTE,
+      '',
+    );
+    unmount();
+    render(
+      <Card aura="current" data-current={undefined}>
+        {RO_BODY}
+      </Card>,
+    );
+    expect(screen.getByText(RO_BODY)).not.toHaveAttribute(
+      CARD_CURRENT_ATTRIBUTE,
+    );
   });
 });
 
@@ -719,8 +1124,8 @@ describe('Card — the zero-island invariant (source guard)', () => {
   it("ships no 'use client' directive", () => {
     // Load-bearing, and invisible to any runtime assertion: a directive here
     // would hydrate every band that composes a card — on every route of the
-    // site — for a box that has no state, no handler and nothing to focus
-    // (§16). Tolerant of trailing line AND block comments (`'use client'; /* … */`
+    // site — for a box that has no state, no handler and no focus style of
+    // its own (§16). Tolerant of trailing line AND block comments (`'use client'; /* … */`
     // is a live directive — the prologue grammar keeps comment company legal;
     // G2 2026-09-04). RECORDED TOLERANCE, not a hole being denied: a leading
     // same-line comment or trailing code (`'use client';const x=1`) would

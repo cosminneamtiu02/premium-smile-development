@@ -3,6 +3,7 @@ import { SectionHeading } from '@/components/sections/SectionHeading/SectionHead
 import { Card } from '@/components/ui/Card/Card';
 import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
+import type { ARRIVAL_BY_KEYBOARD, ARRIVAL_KEY } from './arrival';
 
 // sections/PriceList/CategoryCard — ONE category of the tariff: the card the
 // menu jumps to, holding its own heading and a description list of
@@ -37,14 +38,83 @@ import { cx } from '@/lib/cx/cx';
 //     deliberately carries no tabindex (layout.tsx: a fragment jump moves the
 //     sequential-focus start point natively) — a skip target is left by one
 //     Tab, a category card is READ, so this tier wants the announcement the
-//     focus buys and accepts the ring it costs (G2 react L1).
+//     focus buys. (This sentence used to end "and accepts the ring it costs",
+//     G2 react L1. Since the owner's 2026-09-29 word the ring is the
+//     keyboard's alone: THE RING IS THE KEYBOARD'S, below, supersedes that
+//     half and keeps the announcement.)
 // ui/Card's `asChild` is what puts the surface, the inset and the @container
 // context ON that <section> (Card D2 / ui/slot.ts) instead of on a wrapper div
-// between the band's column and the thing being named. `aura` rides with it
-// (owner 2026-09-14, the pack round: the pill's lavender glow on every card in
-// this band) — it is the atom's own prop, chosen per card KIND in the section
-// that composes it (fb-378/381), so no shadow utility is ever spelled here;
-// what the band owes it is the `gap-8` between cards, argued in PriceList.tsx.
+// between the band's column and the thing being named. `aura="current"` rides
+// with it (owner 2026-09-29, superseding the 2026-09-14 pack round's glow on
+// EVERY card): the card is ARMED with the pill's lavender glow and wears it
+// only while it is the category the visitor is at. This file renders no mark
+// and ships no JavaScript for that — the band's island stamps `data-current`
+// on the card (PriceMenu.tsx's THE CARD THE VISITOR IS AT) and the atom's
+// static classes answer it, fade included (ui/Card's THE GLOW CAN FOLLOW A
+// MARK). A card rendered with no island around it is therefore never current
+// and never glows. It is still the atom's own prop, chosen per card KIND in
+// the section that composes it (fb-378/381), so no shadow utility is ever
+// spelled here; what the band owes it is the `gap-8` between cards, argued in
+// PriceList.tsx. One consequence to know: the mode makes the card `relative`
+// (the atom says why), so the `className` this file merges stays what it
+// always was — placement that sets no `position`.
+//
+// ── THE RING IS THE KEYBOARD'S (owner 2026-09-29: "when you click on the menu
+// om an item, it takes you to the item, but it also highlights it with a dark
+// border. not the shadow, but a dark border. i want that removed."). The dark
+// border is the shell's `:focus-visible` outline (globals.css's "Safety net
+// only" rule — 2px solid, 2px off the edge), drawn on the card because the
+// jump focuses it (THE CARD IS THE TARGET). Whether a jump's focus counts as
+// `:focus-visible` is each engine's own call, and the two disagree — measured
+// on the built page, 2026-09-29: after a MOUSE press on a menu link the card
+// is focused in both, and matches `:focus-visible` in WebKit (so Safari paints
+// the ring — what the owner saw) but not in Chromium; after Tab and Enter it
+// matches in both. So the rule is not left to the engine. The band's island
+// stamps a card the KEYBOARD jumped to — `data-arrival="keyboard"`, ./arrival's
+// constants; PriceMenu.tsx's paragraph of the same name is how it tells the
+// two arrivals apart — and QUIET_RING below hides the outline on every
+// `:focus-visible` card that does NOT carry the stamp. A pointer's arrival: no
+// ring, in either engine. A keyboard's: the ring, in both.
+//   · WHY THE KEYBOARD KEEPS IT. The ring is the only thing that tells a
+//     keyboard visitor where focus went (§9's visible focus, SC 2.4.7), and the
+//     glow cannot stand in for it: the glow is decoration that peaks near
+//     1.5:1 against the page (PriceMenu.tsx's THE MARK IS VISUAL EMPHASIS
+//     ONLY), and it follows the scroll, not the focus. A pointer needs neither —
+//     the visitor's hand is on the link that sent them, and the card they
+//     asked for glows. Only the PAINT is taken: focus still moves to the card,
+//     so a screen reader still announces the region by name.
+//   · THE GAP THAT IS THE OWNER'S CALL (G2 a11y F2). An arrival NO CLICK MADE
+//     — a pasted `#id` link, a link from another page, Back and Forward — is
+//     never stamped, so it draws no ring, for a keyboard visitor too. The line
+//     is drawn at the keyboard's CLICK because that is the one moment the
+//     keyboard is provably the visitor's hand. The other way round was
+//     weighed and measured (the planner's arrival probe, 2026-09-29, Chromium
+//     151 and WebKit 26.5): on a fresh load with a fragment BOTH engines focus
+//     the card and BOTH match `:focus-visible` on it — so hiding the ring only
+//     on proof of a pointer (the accessibility review's suggested inversion)
+//     would draw the dark border for every visitor who follows a shared link,
+//     phones included, which is the very border the owner asked to remove. It
+//     is kept as built and recorded against SC 2.4.7 as a RISK, not a failure:
+//     the card is a non-operable, script-only focus target outside the
+//     sequential order, and the keyboard's own click keeps a full ring. THE
+//     LEVER IS NAMED, NOT BUILT: stamp the focused card at the first key
+//     pressed while it holds focus. The owner decides.
+//   · WHAT FORCED COLOURS KEEP. The utility's own forced-colours branch
+//     (Tailwind's `outline-hidden`) is a 2px TRANSPARENT solid outline, which
+//     forced colours paint in the system's own colour — so there the hidden
+//     ring returns, for every `:focus-visible` card, stamp or no stamp. It
+//     has to: forced colours drop every box-shadow, the glow included, and the
+//     ring is then the only mark left. (Chromium does not count a pointer's
+//     arrival as `:focus-visible` in forced colours either — measured — so
+//     there it had no ring to hide in the first place.)
+//   · THE `focus-visible:` VARIANT IS LOAD-BEARING. Without it the rule would
+//     reach every card, focused or not, and its forced-colours branch would
+//     outline all eleven (the planner's compile probe, 2026-09-29).
+// The stamp is not this file's: it is the island's DOM write on this inert
+// server HTML — the same escape hatch as the glow's `data-current`, on the
+// same node, for the same reason (PriceMenu.tsx's WHY A DOM WRITE) — so this
+// file still renders no mark of any kind, and a card with no island around it
+// is never stamped.
 //
 // ── `scroll-mt-10` IS THE CARD'S OWN RIDER on the shell's global
 // `scroll-padding-top: 6rem` (src/styles/globals.css, the "the deepest thing a
@@ -60,6 +130,25 @@ import { cx } from '@/lib/cx/cx';
 // numbers are a pair — PriceList.tsx's `@3xl:top-34` paragraph carries the
 // measurement they share. It is `scroll-mt-*` — margin on the TARGET — not
 // more padding on the scroller, because only these elements want the extra gap.
+// SINCE 2026-09-29 IT IS A FLOOR, with a third job and a fourth (owner: "the go
+// to card when you click on the meniu on an option should be more to the
+// center of the screen"). A click no longer lands every card on this line: the
+// island's scroll-spy plans where each card's jump comes to rest — centred in
+// the clear part of the window when the card fits, on this line when it does
+// not — and WRITES that as the card's inline `scroll-margin-top`
+// (PriceMenu.tsx's WHERE THE LINE IS, AND WHERE A CLICK LANDS). This class is
+// what that plan starts from:
+//   · THE FLOOR the reading line reads (lib/scroll-spy's THE READING LINE). A
+//     card too tall to be centred rests with its top on 6rem + 2.5rem — the
+//     menu's own line, exactly as before — so "two numbers, one visual line"
+//     is still true of every card too tall to centre. The spy reads the floor
+//     from the STYLESHEET, never from an inline value (an inline one is the
+//     very property it writes over), which is why this rider must stay a
+//     class;
+//   · where a jump lands BEFORE the island has run — a pasted `#id` link, a
+//     page whose JavaScript has not arrived yet: the browser's own jump reads
+//     this class and nothing else, and the spy finishes the jump once it
+//     runs.
 //
 // ── THE HEAD IS sections/SectionHeading (board §2c.2, owner fb-453): eyebrow
 // over title, `level={2}`, the `id` on the heading element. The eyebrow is
@@ -164,6 +253,18 @@ export type CategoryCardProps = PriceCategoryProps &
     | 'tabIndex'
   >;
 
+/**
+ * THE RING IS THE KEYBOARD'S (the header): hide the shell's focus outline on a
+ * `:focus-visible` card the keyboard did NOT jump to — one without the
+ * island's `data-arrival="keyboard"` stamp. A LITERAL, because Tailwind reads
+ * class names from source text; the `satisfies` ties it to ./arrival's
+ * constants at compile time (ui/Card's idiom for CARD_CURRENT_ATTRIBUTE), so a
+ * renamed stamp fails the build instead of quietly putting the ring back on
+ * every keyboard arrival.
+ */
+const QUIET_RING =
+  'not-data-[arrival=keyboard]:focus-visible:outline-hidden' satisfies `not-data-[${typeof ARRIVAL_KEY}=${typeof ARRIVAL_BY_KEYBOARD}]:focus-visible:outline-hidden`;
+
 export function CategoryCard({
   id,
   name,
@@ -179,7 +280,7 @@ export function CategoryCard({
   const headingId = `${id}-title`;
 
   return (
-    <Card asChild aura>
+    <Card asChild aura="current">
       {/* The <section> IS the card: surface, inset and the @container context
           land on the element that is also the fragment target and the named
           region. `{...rest}` rides FIRST so a caller's stray attribute can
@@ -191,7 +292,7 @@ export function CategoryCard({
         id={id}
         aria-labelledby={headingId}
         tabIndex={-1}
-        className={cx('scroll-mt-10', className)}
+        className={cx('scroll-mt-10', QUIET_RING, className)}
       >
         <SectionHeading
           level={2}

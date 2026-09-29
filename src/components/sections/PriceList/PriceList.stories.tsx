@@ -44,9 +44,12 @@ import {
 // category the visitor is at, and both of its inputs — a click and a scroll —
 // MOVE THE PAGE, which would photograph a different frame than the one the
 // baselines hold. So the plays assert the load-time state only (the first
-// category marked, exactly once); the pin and the scroll walk are exercised in
-// PriceList.test.tsx and in src/lib/scroll-spy, where the runner owns the
-// scroll position.
+// category marked, exactly once — on its link AND on its card, which is
+// therefore the one card in the band that glows: the page is at it, and since
+// the owner's 2026-09-29 word the others wear no glow at all); the pin and the
+// scroll walk are exercised in PriceList.test.tsx and in src/lib/scroll-spy,
+// where the runner owns the scroll position, and the glow's fade in
+// tests/e2e/price-current-aura.spec.ts, against the built export.
 //
 // ── layout 'fullscreen' because the band is full-bleed and brings its own
 // gutter clamp (ui/Container): Storybook's default canvas padding would add a
@@ -399,6 +402,74 @@ const expectCurrentIsFirst = async (
   // baselines photograph.
 };
 
+/** The mark the band's island stamps on the category card the visitor is at —
+ *  the attribute ui/Card's `aura="current"` answers to. Spelled here and never
+ *  imported, PriceList.test.tsx's CURRENT for the same reason: a silent rename
+ *  must fail in the plays too. */
+const CURRENT = 'data-current';
+
+/**
+ * Leave the band at REST before a painted value is read — ui/Card's own
+ * settle (its ToneMorph and AuraOnCurrent plays), with `subtree`, which is
+ * what includes a pseudo-element's transition. One frame first, so the style
+ * change that starts a fade has been seen; then every animation in the band is
+ * awaited to its last frame. No timeout and no polling, because these plays
+ * run in TWO runners: Vitest's storybook project, where motion is allowed and
+ * the glow really fades, and the visual net, which sets
+ * `prefers-reduced-motion: reduce` — nothing animates there, the list is empty
+ * and this resolves at once.
+ */
+const settle = async (band: HTMLElement): Promise<void> => {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+  await Promise.all(
+    band
+      .getAnimations({ subtree: true })
+      .map((animation) => animation.finished),
+  );
+};
+
+/**
+ * THE GLOW, at load (owner 2026-09-29: "add aura shadow just to currently
+ * selected/viewed price box … what category card is not selected gets no
+ * aura"). The page is at the FIRST category, so the island has stamped the
+ * mark on exactly one card — the first — and ui/Card's `aura="current"` shows
+ * that card's glow layer and no other's. END STATES ONLY, after the settle:
+ * the plays run in two runners and only one of them lets anything move, so
+ * nothing here asserts that a fade exists (the fade is
+ * tests/e2e/price-current-aura.spec.ts's, on the built export). Unlike the
+ * link's paint (expectCurrentIsFirst's note), the glow IS read as a painted
+ * value here — the settle is what makes that honest. It lives on each card's
+ * `::before` layer, so no category card paints a shadow on its own box, while
+ * the MENU card wears its glow for good, on the <nav> itself, and is never
+ * marked.
+ */
+const expectGlowOnCurrentOnly = async (
+  band: HTMLElement,
+  categories: readonly PriceCategoryProps[],
+): Promise<void> => {
+  await settle(band);
+
+  const cards = categories.map(
+    (category) => band.ownerDocument.getElementById(category.id) as HTMLElement,
+  );
+  const marked = cards.filter((card) => card.hasAttribute(CURRENT));
+
+  await expect(marked).toHaveLength(1);
+  await expect(marked[0]).toBe(cards[0]);
+  for (const [index, card] of cards.entries()) {
+    await expect(getComputedStyle(card, '::before').opacity).toBe(
+      index === 0 ? '1' : '0',
+    );
+    await expect(getComputedStyle(card).boxShadow).toBe('none');
+  }
+
+  const menu = band.querySelector('nav') as HTMLElement;
+  await expect(getComputedStyle(menu).boxShadow).not.toBe('none');
+  await expect(menu).not.toHaveAttribute(CURRENT);
+};
+
 /** One <dt> and one <dd> per row, in the deck's order, plus the eyebrow rule:
  *  EVERY category has one since the owner's 2026-09-14 round, and it is the
  *  card's only <p>. */
@@ -537,6 +608,7 @@ const playDeck =
     await expectCardContents(band, deck.categories);
     await expectHeadingOutline(band, deck.categories);
     await expectCurrentIsFirst(band, deck.categories);
+    await expectGlowOnCurrentOnly(band, deck.categories);
     await expectArrangement(band, menu);
     await expectNoSidewaysScroll(band);
   };
@@ -558,7 +630,9 @@ const longestRowName = (categories: readonly PriceCategoryProps[]): number =>
  * against a 15rem card (PriceMenu.tsx's header) — with a rule under it, then
  * four links, each a 44px row — the first one green and underlined, because
  * that is where the page currently is; the cards on the right, each opening
- * with its own eyebrow and <h2>, each wearing the header pill's lavender glow;
+ * with its own eyebrow and <h2> — the first one wearing the header pill's
+ * lavender glow, because the page is at it, and the others none (owner
+ * 2026-09-29: the glow follows the menu's mark, fading in and out);
  * the price column right-aligned with tabular digits so „2.300 RON" and
  * „150 RON" line up, one column however wide the card gets. Click a menu entry
  * and the browser jumps — the jump itself is still the browser's, and the only

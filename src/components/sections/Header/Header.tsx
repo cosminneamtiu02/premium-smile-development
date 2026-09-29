@@ -135,8 +135,11 @@ import { NavMenu } from './NavMenu';
 // rest — a DOWNWARD move that updated `STEP` and the sources would leave
 // AtTheStep green and no longer AT the step, so its premise would die silently.
 //
-// KNOWN CONSEQUENCE, not a bug (board §4b): container-type establishes a
-// positioning scope AND the sticky z-50 opens a stacking context, which is
+// KNOWN CONSEQUENCE, not a bug (board §4b): the bar is the containing block
+// of anything `fixed` inside it — its glass (`backdrop-filter`) makes it one
+// in every engine, its container-type in the older ones (CORRECTED
+// 2026-09-29; NavMenu.tsx's "Why the sheet has to leave" has the
+// measurement) — AND the sticky z-50 opens a stacking context, which is
 // exactly why NavMenu portals its dimming sheet to <body>. See that file.
 //
 // ── THE MOUNT CONTRACT — TWO OBLIGATIONS THE SHELL OWES THIS SECTION, BOTH

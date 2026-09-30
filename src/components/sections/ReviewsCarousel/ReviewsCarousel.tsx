@@ -3,11 +3,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { Container } from '@/components/ui/Container/Container';
 import { defaultLocale, locales, type Locale } from '@/i18n/locales';
-import {
-  demoReviews,
-  reviews as siteReviews,
-  type Review,
-} from '@/lib/reviews/reviews';
+import { reviews as siteReviews, type Review } from '@/lib/reviews/reviews';
+import { formatTimeAgo } from '@/lib/time-ago/time-ago';
 import {
   ReviewsDeck,
   type ReviewSlide,
@@ -32,40 +29,45 @@ import {
 // precedent). ReviewsCarousel.test.tsx's ?raw guard pins the directive's
 // absence mechanically, because no runtime assertion can see one.
 //
-// ── AN EMPTY LIST RENDERS NOTHING (owner D15). lib/reviews ships EMPTY: the
-// twelve testimonials the old site displayed were fabricated demo copy and
-// never entered this repo, and the real ones are the owner's to supply, each
-// with the patient's written consent (a name plus a procedure is health data,
-// GDPR art. 9) and the CMSR testimonial check. A heading over an empty deck is
-// worse than no band, so `null` is the honest answer for an empty LIST — and
-// since 2026-09-20 (owner, the hero lane's round 4: the band "is missing. It
-// should be below the map"; round 5: "bring the 5 examples story from
-// storybook as demo on home page") the Home page mounts this band, so while
-// the site list is empty the DEFAULT is the first FIVE of lib/reviews'
-// `demoReviews` — the Storybook "Five" story's rows, fabricated demo copy
-// the owner chose to show (lib/reviews' header carries the D15 reversal and
-// the TODO): the band's place on the page is visible today, and the first
-// real row in lib/reviews retires the demo without touching this file or the
-// page. A caller that passes an empty list explicitly still gets `null` (the
-// tests' and stories' seam below).
+// ── THE DEFAULT IS THE SITE LIST, AND AN EMPTY LIST RENDERS NOTHING (owner
+// D15). The band reads lib/reviews — since 2026-09-30 the clinic's own Google
+// reviews, each under the owner's gates: the patient's consent to be named (a
+// name beside a dental review is health data, GDPR art. 9) and the CMSR check
+// of what the quote says. From 2026-09-20 to that day the site list was empty
+// and the default fell back to five fabricated demo rows, so that the band's
+// place on Home showed (owner, the hero lane's round 4: "it should be below
+// the map"); the first real review retired that fallback, and on 2026-10-01
+// the demo rows themselves were dropped from the stories and tests too (owner:
+// "all fabricated ones need to be dropped") — they render the real list now,
+// and ReviewsCarousel.fixtures.ts holds only their pinned clock, which no
+// runtime file imports (ReviewsCarousel.test.tsx's ?raw guard). A heading
+// over an empty deck is still worse than no band, so an empty list — the
+// site's, or one a caller passes — renders `null`.
 //
 // ── THE `reviews` PROP IS THE STORY/TEST SEAM (board D18), not a
-// configuration knob. It defaults to the site list, so the page mount will
-// read `<ReviewsCarousel />`; stories and tests pass fabricated rows instead of
-// putting demo copy into shipped data. That is the whole reason the review
-// WORDS live in the typed list rather than in `home.reviews.items.*` message
-// keys: a story cannot fabricate a message key without shipping it to five
-// locales, and the translation-parity test cannot tie an id's keys to the row
-// that needs them. Reviews are CONTENT (§15.17), the way blog posts are
-// content in MDX; this band's own chrome — the opener, the control names, the
-// slide and rating formats — stays in `home.reviews.*`, where UI strings live.
+// configuration knob. It defaults to the site list, so the page mount reads
+// `<ReviewsCarousel />`; stories and tests pass a slice of the real list —
+// or, for a shape the list cannot give, a placeholder row that says plainly
+// what it is — and never put copy into shipped data. That is the whole reason
+// the review WORDS live in the typed list rather than in
+// `home.reviews.items.*` message keys: a story cannot fabricate a message key
+// without shipping it to five locales, and the translation-parity test cannot
+// tie an id's keys to the row that needs them. Reviews are CONTENT (§15.17),
+// the way blog posts are content in MDX; this band's own chrome — the opener,
+// the control names, the slide and rating formats — stays in
+// `home.reviews.*`, where UI strings live. `now` is the same kind of seam for
+// the clock (its doc below).
 //
 // ── WHAT CROSSES THE BOUNDARY, AND WHAT CANNOT. Only serializable values:
 // strings, numbers, plain objects. The per-slide "{index} of {total}" names
 // are therefore PRE-RENDERED here (a formatter is a function), and so is the
 // rating's sentence — „4,5 din 5 stele" through `{rating, number}`, which is
-// what puts the comma in ro/de/fr/it and the point in en (§8.3). The card
-// never sees the number and this file never formats by hand.
+// what puts the comma in ro/de/fr/it and the point in en (§8.3) — and so is
+// the date line's phrase — „acum 2 ani" / "2 years ago" / „vor 2 Jahren"
+// through lib/time-ago's `formatTimeAgo`, i.e. Intl.RelativeTimeFormat
+// (§8.3 again), measured from `now`. The day itself crosses beside it as its
+// plain `YYYY-MM-DD` string, which the card prints as `<time dateTime>`. The
+// card never sees the number and this file never formats by hand.
 //
 // ── THE BAND SHELL is ui/Container's PAGE-BAND RECIPE, unchanged: a
 // full-bleed semantic <section> owning the paint, a Container owning the width
@@ -105,7 +107,7 @@ const HEADING_ID = 'reviews-heading';
  *
  * The reading-time rider lib/rotation's header makes every dossier answer: a
  * slide is not its body alone. A screen reader — and an eye — takes in the
- * review's title, the quoted body, the patient's name, the procedure line AND
+ * review's title, the quoted body, the patient's name, the date line AND
  * the star rating's sentence („4,5 din 5 stele"). The longest fixture this
  * deck was drawn around, the German stress row, totals 41 words that way,
  * i.e. 41 ÷ 150 × 60 ≈ 16.4 s at the ~150 words per minute an older audience
@@ -118,7 +120,15 @@ const HEADING_ID = 'reviews-heading';
  *
  * RECORDED TRIGGER: when the owner's REAL reviews land, count the whole card
  * again; anything past ~60 words re-opens this number rather than being
- * silently outrun.
+ * silently outrun. FIRED 2026-09-30, the day the clinic's own Google reviews
+ * landed, and counted again on the list the owner approved on 2026-10-01 —
+ * the same way: title, body, name, date line and the rating's sentence. The
+ * tallest card runs to about 65–72 words (72 in French), i.e. 26–29 s at
+ * 150 wpm (32–36 s at 120) against the 5.5 s it is shown for; the shortest
+ * runs to 18 words, 7.2 s. The number is NOT changed here: the deck's rhythm
+ * is the owner's call since the hero lane's round 6 (§15.21 — the SUPERSEDED
+ * paragraph below), and the decision is OPEN — the arithmetic goes back to
+ * the owner, recorded rather than silently outrun.
  *
  * SUPERSEDED 2026-09-20 (owner, the hero lane's round 6: "why … are the
  * reviews not autoscrolling like a circular list like … the slides with
@@ -137,15 +147,26 @@ export const REVIEWS_FIRST_DWELL_MS = 1_500;
 export type ReviewsCarouselProps = {
   /**
    * The reviews to show, newest first. Defaults to the site list in
-   * lib/reviews — the seam stories and tests use to render fabricated rows
-   * without putting demo copy into shipped data (board D18). An empty list
-   * renders NOTHING at all.
+   * lib/reviews, alone — the seam stories and tests use to render a slice of
+   * that list, or a placeholder row that says plainly what it is, without
+   * putting anything into shipped data (board D18). An empty list renders
+   * NOTHING at all.
    */
   reviews?: readonly Review[];
+  /**
+   * The moment "how long ago" is measured from. By default it is the render's
+   * own clock, which on the static site is `next build`: every rebuild
+   * refreshes the phrase, and nothing is recomputed in the browser. Stories
+   * and tests pin it (the fixtures' REVIEWS_NOW) so a baseline never ages.
+   * lib/time-ago's WHEN "NOW" IS paragraph has the reasoning; a review dated
+   * after `now` throws there, loudly, at build.
+   */
+  now?: Date;
 };
 
 export function ReviewsCarousel({
-  reviews = siteReviews.length > 0 ? siteReviews : demoReviews.slice(0, 5),
+  reviews = siteReviews,
+  now = new Date(),
 }: ReviewsCarouselProps): ReactElement | null {
   const t = useTranslations('home');
   const tc = useTranslations('common');
@@ -187,7 +208,10 @@ export function ReviewsCarousel({
       title: words.title,
       body: words.text,
       name: review.name,
-      procedure: words.procedure,
+      postedOn: review.postedOn,
+      // The date line's words, finished HERE for the rating sentence's reason
+      // (the header's WHAT CROSSES THE BOUNDARY): a formatter is a function.
+      postedAgo: formatTimeAgo(pageLocale, review.postedOn, now),
     };
   });
 

@@ -116,88 +116,115 @@ import type { ImagePath } from '../image-path/image-path';
 // reads as ten thousand and not as 10 and 000), and every language carries as
 // many numbers as the Romanian, so no translation quietly drops it. For
 // whoever edits a row: change `value` and that sentence in all five languages
-// together, or CI goes red. The owner's paste said „Peste 10000"; the demo
-// rows say their own `value` instead (3000, 2500), written unseparated the way
+// together, or CI goes red. The owner's paste said „Peste 10000"; every row
+// says its own `value` instead (3200, 2600, …), written unseparated the way
 // he wrote his, which all five languages allow at four digits. The tile's
 // number above the sentence prints the grouped form („3.000+" in ro); making
 // the two spellings identical is a text edit the test accepts either way.
 //
-// ── TODO(owner): THESE ARE DEMO PEOPLE, NOT THE CLINIC'S STAFF ──────────────
-// Both doctors and all three auxiliary members are INVENTED, exactly like
-// lib/reviews' `demoReviews` and unlike lib/prices' rows: the two Romanian
-// `philosophy` sentences are the PersonnelCard lane's own story fixtures
-// (2026-09-10, written to exercise the card); the names, positions, courses
-// and schedules were written for this run so the page could be built and
-// photographed at all; and the three `about` paragraphs per doctor — THE
-// ROMANIAN INCLUDED — were drafted by Claude in round 2 (2026-09-25). The text
-// the owner showed for that band was another clinic's, offered as an example,
-// and was NOT copied: the paragraphs follow the round-2 contract's shape only
-// (since when at the clinic and how a first visit goes · how the doctor keeps
-// learning, naming courses that really are in the rows, and how the doctor
-// works with colleagues · one personal line), with every fact in them
-// invented to agree with the rest of the row. The two course rows added in
-// round 2 (one per doctor) are drafts in every language as well.
+// ── TODO(owner): REAL DOCTORS, PLACEHOLDER DETAILS ─────────────────────────
+// Since 2026-09-30 the six doctors below are the clinic's REAL doctors, in
+// the owner's order, each name and specialty as he gave them: "these are non
+// fictopnal and need to make up the actual list of doctors from the clinic,
+// not dummy ones as so far". Two edits are Claude's and are flagged for his
+// confirmation: the Romanian diacritics added to Ivașcu, Cătălina, Opriș and
+// Horațiu (the list was typed with almost none — only „Sabău" carried its
+// own; a name spelled without them on the person's own papers loses them here
+// again), and ONE shape for every specialty, „Medic specialist în …" (his
+// first line read „medic specialist protetică dentară și specialist în
+// parodontologie"). His fourth line says „ortodonție și ortopedie facială",
+// kept as written; the specialty's official name is „ortodonție și ortopedie
+// dento-facială".
 //
-// The `stats` rows of round 2f (D32) are invented too. Their eight numbers
-// were first set by the run's contract rather than counted and disagreed with
-// their own rows; since round 2g (D39) they are RE-ALIGNED to what the page
-// prints — Elena's experience tile says 10+ beside her philosophy's „de peste
-// zece ani", and both `courses` tiles say 9 over the nine course rows each
-// doctor lists — and tests/unit/team-data.test.ts pins the rule (a `courses`
-// tile never claims fewer courses than the doctor's own rows list), so the
-// two cannot drift apart unnoticed again. Still invented: nobody here is
-// anybody. A real row's numbers are claims about a real person: each must be
-// countable from the clinic's own records and agree with everything else the
-// same page prints — the course rows, the years in the paragraphs, the
-// philosophy. The stats' WORDS are the owner's, pasted from his reference
-// site, and three of them were CMSR-SENSITIVE — „Intervenții reușite" and
+// EVERYTHING ELSE ABOUT THEM IS A RANDOM PLACEHOLDER, on his word of the same
+// day ("what you do not have info yet, generate random"): the pictures (the
+// demo silhouettes, handed out in list order), the weeks (each inside
+// lib/clinic's own week), the course rows and their years, the four „în
+// cifre" numbers, the `philosophy` quotes and the three `about` paragraphs,
+// in all five languages, the Romanian included. None of it is a claim about
+// the person it sits beside. So that none of it reads as one (the copy review
+// of 2026-09-30): the placeholders name no university, society or congress,
+// no year of joining the clinic and no hobby; a residency row carries no city,
+// because a residency plus a city names a university in effect; what a first
+// paragraph says a doctor does is on the clinic's own tariff (lib/prices), and
+// nothing the price list does not offer — no aligners, no removable
+// appliances, no ceramic veneers; and each doctor's third paragraph is
+// practical advice for patients. They still agree with their own rows, so the
+// page never contradicts itself while it waits: a `courses` tile counts the
+// rows exactly and every week lies inside the clinic's (tests/unit/
+// team-data.test.ts pins both), and — by how they were written, not by any
+// test — an experience tile never outruns the doctor's earliest row and the
+// courses a second paragraph names are rows of the list. Before launch every
+// one of them is replaced by what each doctor confirms, together with each
+// doctor's consent to being named, pictured and described (a name plus a face
+// plus a biography is personal data; the lib/reviews consent precedent).
+//
+// NOBODY IS GENDERED. The owner gave names and specialties, not pronouns, and
+// a name does not say how a person is referred to, so every text below is
+// written without it: no pronoun for a doctor in any of the five languages,
+// the honorific „Dr." in Italian as well, the German position as
+// „Fachrichtung …" rather than „Fachzahnärztin für …" or „Fachzahnarzt für …",
+// and the French and Italian positions as „Spécialiste en …" / „Specialista
+// in …" — epicene nouns, and the right ones: in France and Italy a dentist is
+// not a « médecin » or a „medico", so the Romanian „medic" is not carried
+// over (the copy review of 2026-09-30). Italian paragraphs open with a null
+// subject („Lavora in clinica …", under the band's „{name} in breve" title),
+// because Italian prose wants an article before a title and the article is
+// gendered. The gendered forms are one edit per row once the owner confirms
+// each doctor's. Where Romanian agrees a word with the noun „medic"
+// („specializat"), the agreement is the noun's, as in the owner's own second
+// line.
+//
+// The three auxiliary members are still INVENTED, exactly like lib/reviews'
+// `demoReviews`: names, positions and portraits written so the Team page's
+// grid could be built and photographed. They go the day the owner supplies
+// the real staff.
+//
+// The stats' WORDS are the owner's, pasted from his reference site in round
+// 2f (D32), and three of them were CMSR-SENSITIVE — „Intervenții reușite" and
 // „Rezultate predictibile și sigure, …" described OUTCOMES (a count of
 // successes, safety), „Recunoaștere pentru inovație, calitate și grijă
 // autentică." asserted a recognition somebody must actually have given.
-// Flagged for two rounds; REWRITTEN on 2026-09-27 (round 2s, the owner: "these
-// are very sensible. add a step for checking for illegal guarantees or things
-// aiming in that direction") to descriptive copy — „Intervenții", „Atenție la
-// detalii, tehnologii moderne și …", „Formare continuă în tehnici și
-// tehnologii moderne." — in all five languages (drafts, flagged like the
-// rest), and tests/unit/cmsr-scan.test.ts now REFUSES the old shapes: a
-// result promise, a success count, an undocumented award. A real award the
-// clinic can document goes into that file's ALLOWED list verbatim, with the
-// document named in the ledger.
-//
-// Before
-// launch the owner replaces every row with real people — real names, real
-// portraits (§11), real qualifications, real biographies, and each person's
-// consent to being named and pictured (a name plus a face plus a biography is
-// personal data; the lib/reviews consent precedent). Until then nothing here
-// is a claim about anybody.
+// REWRITTEN on 2026-09-27 (round 2s, the owner: "these are very sensible. add
+// a step for checking for illegal guarantees or things aiming in that
+// direction") to descriptive copy — „Intervenții", „Atenție la detalii,
+// tehnologii moderne și …", „Formare continuă în tehnici și tehnologii
+// moderne." — in all five languages, and tests/unit/cmsr-scan.test.ts now
+// REFUSES the old shapes: a result promise, a success count, an undocumented
+// award. A real award the clinic can document goes into that file's ALLOWED
+// list verbatim, with the document named in the ledger. Every doctor wears
+// the same four sentences, written out per doctor rather than shared: a real
+// doctor's tiles are that doctor's own, and an edit to one row must never
+// reach another. Only the numbers differ, and a real number is a claim about
+// a real person that must be countable from the clinic's own records.
 //
 // THE OTHER FOUR LANGUAGES ARE DRAFTS (§15.17). Every EN/DE/FR/IT string below
-// was written by Claude on this run's dispatch, translated faithfully from the
-// Romanian, and is FLAGGED FOR THE OWNER'S CONFIRMATION — the shape the
-// reviews, prices and hero lanes all ship in. That includes the stats' labels
-// and sentences of round 2f (D32), kept as close to the owner's Romanian as
-// each language allows, claims and all, so that he judges ONE text in five
+// was written by Claude, translated faithfully from the Romanian, and is
+// FLAGGED FOR THE OWNER'S CONFIRMATION — the shape the reviews, prices and
+// hero lanes all ship in — the six specialties included. That includes the
+// stats' labels and sentences of round 2f (D32), kept as close to the owner's
+// Romanian as each language allows, so that he judges ONE text in five
 // languages rather than five different texts. The honorific follows the
-// language rather than the person („Dr." in ro/de/en · „Dr" in fr, French
-// drops the point on a contraction that ends in its word's last letter ·
-// „Dott.ssa"/„Dott." in it, after the article Italian sets before a title in
-// running prose), and so do the quotation marks around a university name
-// (ro „…” · de „…“ · fr « … » · it «…»); English takes the institution's own
-// English form instead. City names are translated where the language has its
-// own („București" → Bucharest/Bukarest/Bucarest, „Milano" → Milan/Mailand),
-// and never where it does not (Cluj-Napoca, Timișoara, Iași). Years belong to
-// no language at all: each is its row's fact, stored once (the COURSES
-// paragraph above), so no translation can disagree about one.
+// language and never the person (NOBODY IS GENDERED, above): „Dr." in
+// ro/de/en/it, „Dr" in fr, French dropping the point on a contraction that
+// ends in its word's last letter. City names are translated where the
+// language has its own („București" → Bucharest/Bukarest/Bucarest), and never
+// where it does not (Cluj-Napoca, Sibiu, Timișoara, Iași). A course's year
+// belongs to no language at all: it is its row's fact, stored once (the
+// COURSES paragraph above), so no translation can disagree about one. A
+// number INSIDE an `about` paragraph is written five times, once per
+// language, and tests/unit/team-data.test.ts holds the five to the same
+// numbers.
 //
 // CMSR, the same rule lib/prices states: descriptive, never superlative, never
 // a promise, never a comparison. A `philosophy` says how a doctor works; an
 // `about` says since when, on what, how a first visit goes and how the doctor
 // keeps learning. Neither claims an outcome — no „cel mai", no „garantat", no
 // „fără durere", nor their equivalent in any of the other four languages. A
-// stat's `label` and `description` are the one place that does, in the
-// owner's own words, and the TODO(owner) block above flags each such claim
-// instead of rewriting it; beyond them the type has no field a testimonial or
-// a guarantee could hide in. CMSR is an AUTHORING RULE, the owner's — and,
+// stat's `label` and `description` were the one place that did, in the
+// owner's own words, until the rewrite of 2026-09-27 (the TODO(owner) block
+// above); beyond them the type has no field a testimonial or a guarantee
+// could hide in. CMSR is an AUTHORING RULE, the owner's — and,
 // since 2026-09-27 (round 2s), a SCANNED one: tests/unit/cmsr-scan.test.ts
 // walks every string this file ships (names excluded) and every `team.*`
 // message value in the five languages against one narrow pattern list per
@@ -232,9 +259,12 @@ import type { ImagePath } from '../image-path/image-path';
 // WHERE the week prints — into the white schedule card beside the `about`
 // paragraphs in the doctor page's lilac band (run ledger D14), because the
 // „Echipa mea" band it used to share with the assistants is gone (D13) — and
-// nothing about its shape. A doctor's week is HIS, not the clinic's — Elena's
-// late Tuesday and Andrei's Saturday are the reason this field exists at all
-// rather than the page reading `clinic.hours`.
+// nothing about its shape. A doctor's week is the doctor's own, not the
+// clinic's — four mornings for one, three afternoons and a morning for
+// another — which is the reason this field exists at all rather than the page
+// reading `clinic.hours`. Every week below sits inside lib/clinic's own week,
+// and tests/unit/team-data.test.ts holds it there: a doctor's hours outside
+// the clinic's would send a patient to a closed door.
 //
 // NO ASSISTANTS (run ledger D13, round 2). Round 1 paired every doctor with
 // exactly two auxiliary ids for the „Echipa mea" band; the owner dropped the
@@ -265,9 +295,9 @@ export type AuxiliaryWords = Readonly<{
 
 /** The translated part of one doctor — every locale, or it does not compile. */
 export type DoctorWords = Readonly<{
-  /** Name WITH the language's honorific („Dr. Elena Marin" · „Dott.ssa Elena Marin"). */
+  /** Name WITH the language's honorific („Dr. Toma Lucian" · „Dr Toma Lucian" in fr). */
   name: string;
-  /** The specialty, sentence case — ui/Eyebrow uppercases it („Medic specialist ortodonție"). */
+  /** The specialty, sentence case — ui/Eyebrow uppercases it („Medic specialist în parodontologie"). */
   position: string;
   /**
    * The doctor's own words, first person, with `<k>…</k>` around the one or
@@ -395,9 +425,10 @@ export type Doctor = Readonly<{
 
 // The committed demo pictures. The three portraits are the PersonnelCard
 // lane's fixtures (600 × 800, the one team ratio); the two cutouts were
-// generated for this run (900 × 1200, alpha, obviously placeholders). Two
-// people share a portrait on purpose — five demo faces do not exist, and the
-// data test must therefore never demand unique pictures.
+// generated for the doctor-pages run (900 × 1200, alpha, obviously
+// placeholders). People share pictures on purpose — nine people, three demo
+// portraits, two demo cutouts — so the data test must never demand unique
+// pictures.
 const PORTRAIT_1: TeamPicture = {
   src: '/images/demo/portrait-1.jpg',
   width: 600,
@@ -509,124 +540,1337 @@ export const auxiliaries: readonly AuxiliaryMember[] = [
  * sentence carries is that stat's own `value` (D32).
  */
 export const doctors: readonly Doctor[] = [
+  // The owner's six, in his order (2026-09-30). The NAME and the SPECIALTY of
+  // each are real; every other field is a random placeholder — the header's
+  // TODO(owner) block says what that covers and what replaces it.
   {
-    id: 'elena-marin',
+    id: 'malea-sabau-oana-bianca',
     portrait: PORTRAIT_1,
     cutout: CUTOUT_1,
-    // Long mornings three days a week, late shifts on the other two — the
-    // reason a doctor carries his own week instead of the clinic's.
     hours: [
       {
         days: ['Monday', 'Wednesday', 'Friday'],
         opens: '09:00',
-        closes: '17:00',
+        closes: '15:00',
       },
-      { days: ['Tuesday', 'Thursday'], opens: '12:00', closes: '20:00' },
+      { days: ['Tuesday'], opens: '13:00', closes: '19:00' },
     ],
-    servicesCategory: 'orthodontics',
-    // Round 1's four lines with their „, YEAR" tails lifted into `year` (D17),
-    // plus ONE row drafted in round 2 — the digital photography course — so
-    // the 2024 group shows two lines, the case the band has to lay out — and
-    // FOUR more drafted in round 2g (D39, the owner: "add more examples"), so
-    // the timeline has nine rows over eight years.
+    servicesCategory: 'prosthetics',
     courses: [
       {
         year: 2025,
         words: {
-          ro: 'Curs de ortodonție digitală și planificare 3D a tratamentului, Cluj-Napoca',
-          en: 'Digital orthodontics and 3D treatment planning course, Cluj-Napoca',
-          de: 'Kurs für digitale Kieferorthopädie und 3D-Behandlungsplanung, Cluj-Napoca',
-          fr: 'Formation en orthodontie numérique et planification 3D du traitement, Cluj-Napoca',
-          it: 'Corso di ortodonzia digitale e pianificazione 3D del trattamento, Cluj-Napoca',
-        },
-      },
-      {
-        year: 2024,
-        words: {
-          ro: 'Curs de aliniere dentară cu gutiere transparente, București',
-          en: 'Clear aligner therapy course, Bucharest',
-          de: 'Kurs für Zahnkorrektur mit transparenten Schienen, Bukarest',
-          fr: 'Formation à l’alignement dentaire par gouttières transparentes, Bucarest',
-          it: 'Corso di allineamento dentale con mascherine trasparenti, Bucarest',
-        },
-      },
-      {
-        year: 2024,
-        words: {
-          ro: 'Curs de fotografie dentară digitală, București',
-          en: 'Digital dental photography course, Bucharest',
-          de: 'Kurs für digitale Dentalfotografie, Bukarest',
-          fr: 'Formation en photographie dentaire numérique, Bucarest',
-          it: 'Corso di fotografia dentale digitale, Bucarest',
+          ro: 'Curs de reabilitare protetică pe implanturi, București',
+          en: 'Implant-supported prosthetic rehabilitation course, Bucharest',
+          de: 'Kurs für implantatgetragene prothetische Versorgung, Bukarest',
+          fr: 'Formation en réhabilitation prothétique sur implants, Bucarest',
+          it: 'Corso di riabilitazione protesica su impianti, Bucarest',
         },
       },
       {
         year: 2023,
         words: {
-          ro: 'Congresul Asociației Europene de Ortodonție, Viena',
-          en: 'European Orthodontic Society congress, Vienna',
-          de: 'Kongress der Europäischen Gesellschaft für Kieferorthopädie, Wien',
-          fr: 'Congrès de la Société européenne d’orthodontie, Vienne',
-          it: 'Congresso della Società Europea di Ortodonzia, Vienna',
+          ro: 'Curs de chirurgie plastică parodontală, Cluj-Napoca',
+          en: 'Periodontal plastic surgery course, Cluj-Napoca',
+          de: 'Kurs für plastische Parodontalchirurgie, Cluj-Napoca',
+          fr: 'Formation en chirurgie plastique parodontale, Cluj-Napoca',
+          it: 'Corso di chirurgia plastica parodontale, Cluj-Napoca',
+        },
+      },
+      // Two rows in ONE year on purpose — the case the courses band has to lay
+      // out (two lines under one year heading), kept from the demo rows.
+      {
+        year: 2023,
+        words: {
+          ro: 'Curs de restaurări protetice din zirconiu, Sibiu',
+          en: 'Course on zirconia prosthetic restorations, Sibiu',
+          de: 'Kurs für prothetische Versorgungen aus Zirkon, Sibiu',
+          fr: 'Formation aux restaurations prothétiques en zircone, Sibiu',
+          it: 'Corso di restauri protesici in zirconia, Sibiu',
+        },
+      },
+      {
+        year: 2019,
+        words: {
+          ro: 'Curs de tratament parodontal nechirurgical, Timișoara',
+          en: 'Non-surgical periodontal treatment course, Timișoara',
+          de: 'Kurs für nichtchirurgische Parodontalbehandlung, Timișoara',
+          fr: 'Formation au traitement parodontal non chirurgical, Timișoara',
+          it: 'Corso di trattamento parodontale non chirurgico, Timișoara',
+        },
+      },
+      {
+        year: 2017,
+        words: {
+          ro: 'Rezidențiat în parodontologie',
+          en: 'Residency in periodontics',
+          de: 'Fachzahnärztliche Weiterbildung in Parodontologie',
+          fr: 'Spécialisation en parodontologie',
+          it: 'Specializzazione in parodontologia',
+        },
+      },
+      {
+        year: 2012,
+        words: {
+          ro: 'Rezidențiat în protetică dentară',
+          en: 'Residency in prosthodontics',
+          de: 'Fachzahnärztliche Weiterbildung in Prothetik',
+          fr: 'Spécialisation en prothèse dentaire',
+          it: 'Specializzazione in protesi dentaria',
+        },
+      },
+    ],
+    stats: [
+      {
+        icon: 'experience',
+        value: 14,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Ani de experiență',
+            description:
+              'Punem grija, expertiza și empatia în fiecare detaliu.',
+          },
+          en: {
+            label: 'Years of experience',
+            description:
+              'We put care, expertise and empathy into every detail.',
+          },
+          de: {
+            label: 'Jahre Erfahrung',
+            description:
+              'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
+          },
+          fr: {
+            label: 'Années d’expérience',
+            description:
+              'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
+          },
+          it: {
+            label: 'Anni di esperienza',
+            description:
+              'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
+          },
+        },
+      },
+      {
+        icon: 'patients',
+        value: 3200,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Pacienți',
+            description:
+              'Peste 3200 de zâmbete îngrijite cu dedicare și profesionalism.',
+          },
+          en: {
+            label: 'Patients',
+            description:
+              'More than 3200 smiles cared for with dedication and professionalism.',
+          },
+          de: {
+            label: 'Patienten',
+            description:
+              'Über 3200 Lächeln, mit Hingabe und Professionalität betreut.',
+          },
+          fr: {
+            label: 'Patients',
+            description:
+              'Plus de 3200 sourires soignés avec dévouement et professionnalisme.',
+          },
+          it: {
+            label: 'Pazienti',
+            description:
+              'Oltre 3200 sorrisi curati con dedizione e professionalità.',
+          },
+        },
+      },
+      {
+        icon: 'courses',
+        value: 6,
+        words: {
+          ro: {
+            label: 'Cursuri',
+            description: 'Formare continuă în tehnici și tehnologii moderne.',
+          },
+          en: {
+            label: 'Courses',
+            description:
+              'Continuing training in modern techniques and technologies.',
+          },
+          de: {
+            label: 'Kurse',
+            description:
+              'Laufende Fortbildung in modernen Techniken und Technologien.',
+          },
+          fr: {
+            label: 'Formations',
+            description:
+              'Formation continue aux techniques et technologies modernes.',
+          },
+          it: {
+            label: 'Corsi',
+            description:
+              'Formazione continua in tecniche e tecnologie moderne.',
+          },
+        },
+      },
+      {
+        icon: 'interventions',
+        value: 2400,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Intervenții',
+            description:
+              'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
+          },
+          en: {
+            label: 'Procedures',
+            description:
+              'Attention to detail, modern technology and a personalised approach for every patient.',
+          },
+          de: {
+            label: 'Eingriffe',
+            description:
+              'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
+          },
+          fr: {
+            label: 'Interventions',
+            description:
+              'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
+          },
+          it: {
+            label: 'Interventi',
+            description:
+              'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
+          },
+        },
+      },
+    ],
+    words: {
+      ro: {
+        name: 'Dr. Malea (Sabău) Oana Bianca',
+        position: 'Medic specialist în protetică dentară și parodontologie',
+        philosophy:
+          'Înainte de orice lucrare protetică verific <k>sănătatea gingiei</k>, pentru că pe ea se sprijină tot restul. Planul îl stabilim împreună, iar fiecare etapă o <k>explic</k> înainte să începem.',
+        about: [
+          'Dr. Malea lucrează în clinică și se ocupă de lucrările protetice și de tratamentul bolilor gingiei: coroane, punți și proteze, dar și igienizări și tratamente parodontale. Prima vizită începe cu o discuție despre ce îl deranjează pe pacient, continuă cu examinarea dinților și a gingiilor, iar la final medicul explică variantele de tratament și ordinea etapelor.',
+          'Formarea continuă face parte din munca de zi cu zi: în ultimii ani, Dr. Malea a urmat cursuri de reabilitare protetică pe implanturi și de chirurgie plastică parodontală. Când un plan de tratament are nevoie și de alte specialități, se stabilește împreună cu colegii din chirurgie, endodonție și ortodonție, iar pacientul află de la început ce presupune fiecare etapă.',
+          'La prima programare este util ca pacientul să aducă radiografiile mai vechi și lista medicamentelor pe care le ia. Controalele de după finalizarea unei lucrări protetice se stabilesc de la început, pentru ca atât lucrarea, cât și sănătatea gingiei să fie urmărite în timp.',
+        ],
+      },
+      en: {
+        name: 'Dr. Malea (Sabău) Oana Bianca',
+        position: 'Specialist in prosthodontics and periodontics',
+        philosophy:
+          'Before any prosthetic work I check the <k>health of the gums</k>, because everything else rests on them. We draw up the plan together, and I <k>explain</k> each stage before we begin.',
+        about: [
+          'Dr. Malea works at the clinic, carrying out prosthetic work and treating gum disease: crowns, bridges and dentures, as well as professional cleaning and periodontal treatments. The first visit begins with a conversation about what troubles the patient, continues with an examination of the teeth and gums, and ends with the doctor explaining the treatment options and the order of the stages.',
+          'Continuing training is part of everyday work: in recent years, Dr. Malea has taken courses in implant-supported prosthetic rehabilitation and in periodontal plastic surgery. When a treatment plan also needs other specialties, it is drawn up together with colleagues in surgery, endodontics and orthodontics, and the patient learns from the start what each stage involves.',
+          'For the first appointment, it helps to bring any earlier X-rays and a list of current medication. Check-ups after a prosthetic treatment are scheduled from the start, so that both the restoration and the health of the gums are followed over time.',
+        ],
+      },
+      de: {
+        name: 'Dr. Malea (Sabău) Oana Bianca',
+        position: 'Fachrichtung Prothetik und Parodontologie',
+        philosophy:
+          'Vor jeder prothetischen Arbeit prüfe ich die <k>Gesundheit des Zahnfleischs</k>, denn darauf baut alles andere auf. Den Plan legen wir gemeinsam fest, und jeden Schritt <k>erkläre</k> ich, bevor wir beginnen.',
+        about: [
+          'Dr. Malea arbeitet in der Klinik und ist für prothetische Arbeiten und die Behandlung von Zahnfleischerkrankungen zuständig: Kronen, Brücken und Prothesen, aber auch professionelle Zahnreinigungen und Parodontalbehandlungen. Der erste Besuch beginnt mit einem Gespräch darüber, welche Beschwerden der Patient hat, geht mit der Untersuchung von Zähnen und Zahnfleisch weiter und endet mit der Erklärung der Behandlungsmöglichkeiten und der Reihenfolge der Schritte.',
+          'Fortbildung gehört zum Arbeitsalltag: In den letzten Jahren besuchte Dr. Malea Kurse zur implantatgetragenen prothetischen Versorgung und zur plastischen Parodontalchirurgie. Wenn ein Behandlungsplan auch andere Fachgebiete braucht, entsteht er gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie, Endodontie und Kieferorthopädie, und der Patient erfährt von Anfang an, was jeder Schritt umfasst.',
+          'Zum ersten Termin ist es hilfreich, frühere Röntgenbilder und eine Liste der eingenommenen Medikamente mitzubringen. Die Kontrollen nach einer prothetischen Behandlung werden von Anfang an vereinbart, damit die Versorgung und die Gesundheit des Zahnfleischs langfristig kontrolliert werden.',
+        ],
+      },
+      fr: {
+        name: 'Dr Malea (Sabău) Oana Bianca',
+        position: 'Spécialiste en prothèse dentaire et en parodontologie',
+        philosophy:
+          'Avant tout travail prothétique, je vérifie la <k>santé des gencives</k>, car tout le reste repose sur elles. Nous établissons le plan ensemble, et <k>j’explique</k> chaque étape avant de commencer.',
+        about: [
+          'Dr Malea exerce à la clinique et prend en charge les travaux prothétiques et le traitement des maladies des gencives : couronnes, bridges et prothèses amovibles, mais aussi nettoyages professionnels et traitements parodontaux. La première visite commence par un échange sur ce qui gêne le patient, se poursuit par l’examen des dents et des gencives et se termine par l’explication des options de traitement et de l’ordre des étapes.',
+          'La formation continue fait partie du travail quotidien. Dr Malea a suivi ces dernières années des formations en réhabilitation prothétique sur implants et en chirurgie plastique parodontale. Lorsqu’un plan de traitement fait appel à d’autres spécialités, il est établi avec les collègues de chirurgie, d’endodontie et d’orthodontie, et le patient sait dès le début ce que comprend chaque étape.',
+          'Pour le premier rendez-vous, il est utile d’apporter les anciennes radiographies et la liste des médicaments pris. Les contrôles après un traitement prothétique sont fixés dès le départ, afin de suivre dans le temps la prothèse comme la santé des gencives.',
+        ],
+      },
+      it: {
+        name: 'Dr. Malea (Sabău) Oana Bianca',
+        position: 'Specialista in protesi dentaria e parodontologia',
+        philosophy:
+          'Prima di ogni lavoro protesico controllo la <k>salute delle gengive</k>, perché tutto il resto poggia su di esse. Il piano lo stabiliamo insieme e <k>spiego</k> ogni fase prima di cominciare.',
+        about: [
+          'Lavora in clinica e si occupa di protesi e del trattamento delle malattie gengivali: corone, ponti e protesi mobili, ma anche igiene professionale e terapie parodontali. La prima visita inizia con un colloquio su ciò che disturba il paziente, prosegue con l’esame dei denti e delle gengive e si conclude con la spiegazione delle opzioni di trattamento e dell’ordine delle fasi.',
+          'La formazione continua fa parte del lavoro quotidiano: negli ultimi anni con corsi di riabilitazione protesica su impianti e di chirurgia plastica parodontale. Quando un piano di trattamento richiede anche altre specialità, viene definito insieme ai colleghi di chirurgia, endodonzia e ortodonzia, e il paziente sa fin dall’inizio che cosa comporta ogni fase.',
+          'Per il primo appuntamento è utile portare le radiografie precedenti e l’elenco dei farmaci che si assumono. I controlli dopo un trattamento protesico vengono fissati fin dall’inizio, per seguire nel tempo sia la protesi sia la salute delle gengive.',
+        ],
+      },
+    },
+  },
+  {
+    id: 'toma-lucian',
+    portrait: PORTRAIT_2,
+    cutout: CUTOUT_2,
+    hours: [
+      {
+        days: ['Monday', 'Tuesday', 'Thursday'],
+        opens: '12:00',
+        closes: '19:00',
+      },
+      { days: ['Friday'], opens: '09:00', closes: '14:00' },
+    ],
+    servicesCategory: 'endodontics',
+    courses: [
+      {
+        year: 2024,
+        words: {
+          ro: 'Curs de endodonție sub microscop, Cluj-Napoca',
+          en: 'Microscope-assisted endodontics course, Cluj-Napoca',
+          de: 'Kurs für Endodontie unter dem Mikroskop, Cluj-Napoca',
+          fr: 'Formation en endodontie sous microscope, Cluj-Napoca',
+          it: 'Corso di endodonzia al microscopio, Cluj-Napoca',
         },
       },
       {
         year: 2022,
         words: {
-          ro: 'Curs de management al pacientului adult în ortodonție, Timișoara',
-          en: 'Adult patient management in orthodontics course, Timișoara',
-          de: 'Kurs zur Betreuung erwachsener Patienten in der Kieferorthopädie, Timișoara',
-          fr: 'Formation à la prise en charge du patient adulte en orthodontie, Timișoara',
-          it: 'Corso di gestione del paziente adulto in ortodonzia, Timișoara',
+          ro: 'Curs de retratament endodontic, București',
+          en: 'Endodontic retreatment course, Bucharest',
+          de: 'Kurs für endodontische Revision, Bukarest',
+          fr: 'Formation au retraitement endodontique, Bucarest',
+          it: 'Corso di ritrattamento endodontico, Bucarest',
+        },
+      },
+      {
+        year: 2020,
+        words: {
+          ro: 'Curs de protetică digitală și amprentare optică, Timișoara',
+          en: 'Digital prosthodontics and optical impressions course, Timișoara',
+          de: 'Kurs für digitale Prothetik und optische Abformung, Timișoara',
+          fr: 'Formation en prothèse numérique et empreinte optique, Timișoara',
+          it: 'Corso di protesi digitale e impronta ottica, Timișoara',
+        },
+      },
+      {
+        year: 2018,
+        words: {
+          ro: 'Curs de restaurări adezive pe dinți tratați endodontic, Sibiu',
+          en: 'Course on adhesive restorations for root-treated teeth, Sibiu',
+          de: 'Kurs für adhäsive Restaurationen an wurzelbehandelten Zähnen, Sibiu',
+          fr: 'Formation aux restaurations adhésives sur dents dévitalisées, Sibiu',
+          it: 'Corso di restauri adesivi su denti trattati endodonticamente, Sibiu',
+        },
+      },
+      {
+        year: 2014,
+        words: {
+          ro: 'Rezidențiat în protetică dentară',
+          en: 'Residency in prosthodontics',
+          de: 'Fachzahnärztliche Weiterbildung in Prothetik',
+          fr: 'Spécialisation en prothèse dentaire',
+          it: 'Specializzazione in protesi dentaria',
+        },
+      },
+    ],
+    stats: [
+      {
+        icon: 'experience',
+        value: 12,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Ani de experiență',
+            description:
+              'Punem grija, expertiza și empatia în fiecare detaliu.',
+          },
+          en: {
+            label: 'Years of experience',
+            description:
+              'We put care, expertise and empathy into every detail.',
+          },
+          de: {
+            label: 'Jahre Erfahrung',
+            description:
+              'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
+          },
+          fr: {
+            label: 'Années d’expérience',
+            description:
+              'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
+          },
+          it: {
+            label: 'Anni di esperienza',
+            description:
+              'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
+          },
+        },
+      },
+      {
+        icon: 'patients',
+        value: 2600,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Pacienți',
+            description:
+              'Peste 2600 de zâmbete îngrijite cu dedicare și profesionalism.',
+          },
+          en: {
+            label: 'Patients',
+            description:
+              'More than 2600 smiles cared for with dedication and professionalism.',
+          },
+          de: {
+            label: 'Patienten',
+            description:
+              'Über 2600 Lächeln, mit Hingabe und Professionalität betreut.',
+          },
+          fr: {
+            label: 'Patients',
+            description:
+              'Plus de 2600 sourires soignés avec dévouement et professionnalisme.',
+          },
+          it: {
+            label: 'Pazienti',
+            description:
+              'Oltre 2600 sorrisi curati con dedizione e professionalità.',
+          },
+        },
+      },
+      {
+        icon: 'courses',
+        value: 5,
+        words: {
+          ro: {
+            label: 'Cursuri',
+            description: 'Formare continuă în tehnici și tehnologii moderne.',
+          },
+          en: {
+            label: 'Courses',
+            description:
+              'Continuing training in modern techniques and technologies.',
+          },
+          de: {
+            label: 'Kurse',
+            description:
+              'Laufende Fortbildung in modernen Techniken und Technologien.',
+          },
+          fr: {
+            label: 'Formations',
+            description:
+              'Formation continue aux techniques et technologies modernes.',
+          },
+          it: {
+            label: 'Corsi',
+            description:
+              'Formazione continua in tecniche e tecnologie moderne.',
+          },
+        },
+      },
+      {
+        icon: 'interventions',
+        value: 1900,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Intervenții',
+            description:
+              'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
+          },
+          en: {
+            label: 'Procedures',
+            description:
+              'Attention to detail, modern technology and a personalised approach for every patient.',
+          },
+          de: {
+            label: 'Eingriffe',
+            description:
+              'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
+          },
+          fr: {
+            label: 'Interventions',
+            description:
+              'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
+          },
+          it: {
+            label: 'Interventi',
+            description:
+              'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
+          },
+        },
+      },
+    ],
+    words: {
+      ro: {
+        name: 'Dr. Toma Lucian',
+        position:
+          'Medic specialist în protetică dentară, specializat în endodonție microscopică',
+        philosophy:
+          'Lucrez cu <k>microscopul</k> pentru că îmi arată detalii pe care ochiul liber nu le vede. Prefer să păstrez cât mai mult din <k>dintele natural</k> și să explic de ce aleg fiecare pas.',
+        about: [
+          'Dr. Toma lucrează în clinică și se ocupă de tratamentele de canal și de lucrările protetice: coroane, punți și restaurări pe dinți cu tratament de canal. Tratamentele de canal se fac la microscop, iar la prima vizită medicul analizează radiografia, examinează dintele și explică pe rând ce presupune tratamentul și câte ședințe sunt necesare.',
+          'Formarea continuă include cursuri de endodonție sub microscop și de retratament endodontic, dar și de protetică digitală. Când un dinte cu tratament de canal are nevoie apoi de o coroană sau de o lucrare mai amplă, planul se stabilește împreună cu colegii din chirurgie și parodontologie, iar ordinea pașilor îi este explicată pacientului de la început.',
+          'Un tratament de canal se face de obicei într-una sau două ședințe, în funcție de dinte. După tratament, pacientul primește recomandări pentru zilele următoare și o programare de control, la care dintele este verificat și se discută pasul următor.',
+        ],
+      },
+      en: {
+        name: 'Dr. Toma Lucian',
+        position:
+          'Specialist in prosthodontics with a focus on microscopic endodontics',
+        philosophy:
+          'I work with a <k>microscope</k> because it shows me details the naked eye cannot see. I prefer to keep as much of the <k>natural tooth</k> as possible and to explain why I choose each step.',
+        about: [
+          'Dr. Toma works at the clinic and carries out root canal treatments and prosthetic work: crowns, bridges and restorations on root-treated teeth. Root canal treatments are carried out under the microscope, and at the first visit the doctor reviews the X-ray, examines the tooth and explains step by step what the treatment involves and how many sessions are needed.',
+          'Continuing training includes courses in microscope-assisted endodontics and endodontic retreatment, as well as in digital prosthodontics. When a root-treated tooth then needs a crown or more extensive work, the plan is drawn up together with colleagues in surgery and periodontics, and the order of the steps is explained to the patient from the start.',
+          'A root canal treatment usually takes one or two sessions, depending on the tooth. Afterwards, the patient receives advice for the following days and a check-up appointment, at which the tooth is examined and the next step discussed.',
+        ],
+      },
+      de: {
+        name: 'Dr. Toma Lucian',
+        position:
+          'Fachrichtung Prothetik, Schwerpunkt mikroskopische Endodontie',
+        philosophy:
+          'Ich arbeite mit dem <k>Mikroskop</k>, weil es mir Details zeigt, die das bloße Auge nicht sieht. Ich möchte so viel wie möglich vom <k>natürlichen Zahn</k> erhalten und erklären, warum ich jeden Schritt wähle.',
+        about: [
+          'Dr. Toma arbeitet in der Klinik und ist für Wurzelkanalbehandlungen und prothetische Arbeiten zuständig: Kronen, Brücken und Restaurationen an wurzelbehandelten Zähnen. Wurzelkanalbehandlungen erfolgen unter dem Mikroskop, und beim ersten Besuch wertet Dr. Toma das Röntgenbild aus, untersucht den Zahn und erklärt Schritt für Schritt, was die Behandlung umfasst und wie viele Sitzungen nötig sind.',
+          'Zur Fortbildung gehören Kurse zur Endodontie unter dem Mikroskop und zur endodontischen Revision sowie zur digitalen Prothetik. Wenn ein wurzelbehandelter Zahn danach eine Krone oder eine größere Versorgung braucht, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Parodontologie, und dem Patienten wird die Reihenfolge der Schritte von Anfang an erklärt.',
+          'Eine Wurzelkanalbehandlung dauert je nach Zahn meist eine oder zwei Sitzungen. Danach erhält der Patient Hinweise für die folgenden Tage und einen Kontrolltermin, bei dem der Zahn untersucht und der nächste Schritt besprochen wird.',
+        ],
+      },
+      fr: {
+        name: 'Dr Toma Lucian',
+        position:
+          'Spécialiste en prothèse dentaire, pratique orientée vers l’endodontie microscopique',
+        philosophy:
+          'Je travaille au <k>microscope</k>, car il me montre des détails que l’œil nu ne voit pas. Je préfère conserver le plus possible la <k>dent naturelle</k> et expliquer pourquoi je choisis chaque étape.',
+        about: [
+          'Dr Toma exerce à la clinique et prend en charge les traitements canalaires et les travaux prothétiques : couronnes, bridges et restaurations sur dents dévitalisées. Les traitements canalaires sont réalisés sous microscope, et lors de la première visite la radiographie est analysée, la dent examinée, puis le traitement et le nombre de séances nécessaires sont expliqués point par point.',
+          'La formation continue comprend des cours d’endodontie sous microscope et de retraitement endodontique, ainsi que de prothèse numérique. Lorsqu’une dent dévitalisée a ensuite besoin d’une couronne ou d’un travail plus important, le plan est établi avec les collègues de chirurgie et de parodontologie, et l’ordre des étapes est expliqué au patient dès le début.',
+          'Un traitement canalaire se fait généralement en une ou deux séances, selon la dent. Ensuite, le patient reçoit des conseils pour les jours suivants et un rendez-vous de contrôle, lors duquel la dent est examinée et l’étape suivante discutée.',
+        ],
+      },
+      it: {
+        name: 'Dr. Toma Lucian',
+        position:
+          'Specialista in protesi dentaria, con attività dedicata all’endodonzia microscopica',
+        philosophy:
+          'Lavoro al <k>microscopio</k> perché mi mostra dettagli che l’occhio nudo non vede. Preferisco conservare il più possibile il <k>dente naturale</k> e spiegare perché scelgo ogni passaggio.',
+        about: [
+          'Lavora in clinica e si occupa di trattamenti canalari e di protesi: corone, ponti e restauri su denti devitalizzati. I trattamenti canalari vengono eseguiti al microscopio e alla prima visita il medico valuta la radiografia, esamina il dente e spiega passo per passo che cosa comporta il trattamento e quante sedute servono.',
+          'La formazione continua comprende corsi di endodonzia al microscopio e di ritrattamento endodontico, oltre che di protesi digitale. Quando un dente devitalizzato ha poi bisogno di una corona o di un lavoro più ampio, il piano viene definito insieme ai colleghi di chirurgia e parodontologia e l’ordine delle fasi viene spiegato al paziente fin dall’inizio.',
+          'Un trattamento canalare richiede di solito una o due sedute, a seconda del dente. Dopo il trattamento il paziente riceve indicazioni per i giorni successivi e un appuntamento di controllo, in cui si verifica il dente e si discute il passo successivo.',
+        ],
+      },
+    },
+  },
+  {
+    id: 'nicu-elena-alina',
+    portrait: PORTRAIT_3,
+    cutout: CUTOUT_1,
+    hours: [
+      { days: ['Tuesday', 'Thursday'], opens: '09:00', closes: '16:00' },
+      { days: ['Wednesday'], opens: '12:00', closes: '19:00' },
+    ],
+    servicesCategory: 'periodontology',
+    courses: [
+      {
+        year: 2025,
+        words: {
+          ro: 'Curs de terapie parodontală regenerativă, București',
+          en: 'Regenerative periodontal therapy course, Bucharest',
+          de: 'Kurs für regenerative Parodontaltherapie, Bukarest',
+          fr: 'Formation en thérapie parodontale régénératrice, Bucarest',
+          it: 'Corso di terapia parodontale rigenerativa, Bucarest',
+        },
+      },
+      {
+        year: 2023,
+        words: {
+          ro: 'Curs de chirurgie mucogingivală, Cluj-Napoca',
+          en: 'Mucogingival surgery course, Cluj-Napoca',
+          de: 'Kurs für mukogingivale Chirurgie, Cluj-Napoca',
+          fr: 'Formation en chirurgie muco-gingivale, Cluj-Napoca',
+          it: 'Corso di chirurgia mucogengivale, Cluj-Napoca',
         },
       },
       {
         year: 2021,
         words: {
+          ro: 'Curs de tratament parodontal nechirurgical, Sibiu',
+          en: 'Non-surgical periodontal treatment course, Sibiu',
+          de: 'Kurs für nichtchirurgische Parodontalbehandlung, Sibiu',
+          fr: 'Formation au traitement parodontal non chirurgical, Sibiu',
+          it: 'Corso di trattamento parodontale non chirurgico, Sibiu',
+        },
+      },
+      {
+        year: 2019,
+        words: {
+          ro: 'Curs de prevenție și igienă orală la adulți, Timișoara',
+          en: 'Course on prevention and oral hygiene in adults, Timișoara',
+          de: 'Kurs für Prävention und Mundhygiene bei Erwachsenen, Timișoara',
+          fr: 'Formation en prévention et hygiène bucco-dentaire chez l’adulte, Timișoara',
+          it: 'Corso di prevenzione e igiene orale nell’adulto, Timișoara',
+        },
+      },
+      {
+        year: 2015,
+        words: {
+          ro: 'Rezidențiat în parodontologie',
+          en: 'Residency in periodontics',
+          de: 'Fachzahnärztliche Weiterbildung in Parodontologie',
+          fr: 'Spécialisation en parodontologie',
+          it: 'Specializzazione in parodontologia',
+        },
+      },
+    ],
+    stats: [
+      {
+        icon: 'experience',
+        value: 11,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Ani de experiență',
+            description:
+              'Punem grija, expertiza și empatia în fiecare detaliu.',
+          },
+          en: {
+            label: 'Years of experience',
+            description:
+              'We put care, expertise and empathy into every detail.',
+          },
+          de: {
+            label: 'Jahre Erfahrung',
+            description:
+              'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
+          },
+          fr: {
+            label: 'Années d’expérience',
+            description:
+              'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
+          },
+          it: {
+            label: 'Anni di esperienza',
+            description:
+              'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
+          },
+        },
+      },
+      {
+        icon: 'patients',
+        value: 2100,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Pacienți',
+            description:
+              'Peste 2100 de zâmbete îngrijite cu dedicare și profesionalism.',
+          },
+          en: {
+            label: 'Patients',
+            description:
+              'More than 2100 smiles cared for with dedication and professionalism.',
+          },
+          de: {
+            label: 'Patienten',
+            description:
+              'Über 2100 Lächeln, mit Hingabe und Professionalität betreut.',
+          },
+          fr: {
+            label: 'Patients',
+            description:
+              'Plus de 2100 sourires soignés avec dévouement et professionnalisme.',
+          },
+          it: {
+            label: 'Pazienti',
+            description:
+              'Oltre 2100 sorrisi curati con dedizione e professionalità.',
+          },
+        },
+      },
+      {
+        icon: 'courses',
+        value: 5,
+        words: {
+          ro: {
+            label: 'Cursuri',
+            description: 'Formare continuă în tehnici și tehnologii moderne.',
+          },
+          en: {
+            label: 'Courses',
+            description:
+              'Continuing training in modern techniques and technologies.',
+          },
+          de: {
+            label: 'Kurse',
+            description:
+              'Laufende Fortbildung in modernen Techniken und Technologien.',
+          },
+          fr: {
+            label: 'Formations',
+            description:
+              'Formation continue aux techniques et technologies modernes.',
+          },
+          it: {
+            label: 'Corsi',
+            description:
+              'Formazione continua in tecniche e tecnologie moderne.',
+          },
+        },
+      },
+      {
+        icon: 'interventions',
+        value: 1600,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Intervenții',
+            description:
+              'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
+          },
+          en: {
+            label: 'Procedures',
+            description:
+              'Attention to detail, modern technology and a personalised approach for every patient.',
+          },
+          de: {
+            label: 'Eingriffe',
+            description:
+              'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
+          },
+          fr: {
+            label: 'Interventions',
+            description:
+              'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
+          },
+          it: {
+            label: 'Interventi',
+            description:
+              'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
+          },
+        },
+      },
+    ],
+    words: {
+      ro: {
+        name: 'Dr. Nicu Elena Alina',
+        position: 'Medic specialist în parodontologie',
+        philosophy:
+          'Încep mereu cu <k>prevenția</k>, pentru că o gingie sănătoasă ține dinții la locul lor. Le arăt pacienților cum să își îngrijească gingiile acasă, fiindcă <k>îngrijirea zilnică</k> contează la fel de mult ca tratamentul din cabinet.',
+        about: [
+          'Dr. Nicu lucrează în clinică și se ocupă de prevenția și tratamentul bolilor gingiei: igienizări profesionale, tratamente parodontale și controale periodice. La prima vizită, medicul evaluează starea gingiilor, analizează radiografiile și îi explică pacientului ce a găsit și ce etape urmează.',
+          'Formarea continuă include cursuri de terapie parodontală regenerativă și de chirurgie mucogingivală. Pentru pacienții care au nevoie și de implanturi sau de lucrări protetice, planul se stabilește împreună cu colegii din chirurgie și protetică, astfel încât gingia să fie pregătită înaintea fiecărei etape.',
+          'Tratamentul parodontal continuă și acasă, așa că fiecare pacient pleacă cu instrucțiuni de periaj și de folosire a aței dentare potrivite situației sale. Controalele periodice se programează de obicei la trei sau la șase luni, în funcție de cum evoluează gingia.',
+        ],
+      },
+      en: {
+        name: 'Dr. Nicu Elena Alina',
+        position: 'Specialist in periodontics',
+        philosophy:
+          'I always start with <k>prevention</k>, because healthy gums keep the teeth in place. I show patients how to care for their gums at home, since <k>daily care</k> matters as much as the treatment in the clinic.',
+        about: [
+          'Dr. Nicu works at the clinic and focuses on the prevention and treatment of gum disease: professional cleaning, periodontal treatments and regular check-ups. At the first visit, the doctor assesses the condition of the gums, reviews the X-rays and explains to the patient what was found and which stages come next.',
+          'Continuing training includes courses in regenerative periodontal therapy and mucogingival surgery. For patients who also need implants or prosthetic work, the plan is drawn up together with colleagues in surgery and prosthodontics, so that the gums are prepared before each stage.',
+          'Periodontal treatment continues at home, so every patient leaves with brushing and flossing instructions suited to their situation. Regular check-ups are usually scheduled every three or six months, depending on how the gums respond.',
+        ],
+      },
+      de: {
+        name: 'Dr. Nicu Elena Alina',
+        position: 'Fachrichtung Parodontologie',
+        philosophy:
+          'Ich beginne immer mit der <k>Vorbeugung</k>, denn gesundes Zahnfleisch hält die Zähne an ihrem Platz. Ich zeige den Patienten, wie sie ihr Zahnfleisch zu Hause pflegen, denn die <k>tägliche Pflege</k> zählt genauso viel wie die Behandlung in der Klinik.',
+        about: [
+          'Dr. Nicu arbeitet in der Klinik und ist für die Vorbeugung und Behandlung von Zahnfleischerkrankungen zuständig: professionelle Zahnreinigungen, Parodontalbehandlungen und regelmäßige Kontrollen. Beim ersten Besuch beurteilt Dr. Nicu den Zustand des Zahnfleischs, wertet die Röntgenbilder aus und erklärt dem Patienten, was festgestellt wurde und welche Schritte folgen.',
+          'Zur Fortbildung gehören Kurse zur regenerativen Parodontaltherapie und zur mukogingivalen Chirurgie. Für Patienten, die auch Implantate oder prothetische Arbeiten brauchen, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Prothetik, damit das Zahnfleisch vor jedem Schritt vorbereitet ist.',
+          'Die Parodontalbehandlung geht zu Hause weiter, deshalb erhält jeder Patient Anleitungen zum Zähneputzen und zur Anwendung von Zahnseide, die zu seiner Situation passen. Die regelmäßigen Kontrollen finden meist alle drei oder sechs Monate statt, je nachdem, wie sich das Zahnfleisch entwickelt.',
+        ],
+      },
+      fr: {
+        name: 'Dr Nicu Elena Alina',
+        position: 'Spécialiste en parodontologie',
+        philosophy:
+          'Je commence toujours par la <k>prévention</k>, car des gencives saines maintiennent les dents en place. Je montre aux patients comment prendre soin de leurs gencives à la maison, car les <k>soins quotidiens</k> comptent autant que le traitement au cabinet.',
+        about: [
+          'Dr Nicu exerce à la clinique et prend en charge la prévention et le traitement des maladies des gencives : nettoyages professionnels, traitements parodontaux et contrôles réguliers. Lors de la première visite, l’état des gencives est évalué, les radiographies sont analysées, puis le patient apprend ce qui a été constaté et quelles étapes vont suivre.',
+          'La formation continue comprend des cours de thérapie parodontale régénératrice et de chirurgie muco-gingivale. Pour les patients qui ont aussi besoin d’implants ou de prothèses, le plan est établi avec les collègues de chirurgie et de prothèse, afin que les gencives soient préparées avant chaque étape.',
+          'Le traitement parodontal continue à la maison : chaque patient repart avec des consignes de brossage et d’utilisation du fil dentaire adaptées à sa situation. Les contrôles réguliers sont généralement prévus tous les trois ou six mois, selon l’évolution des gencives.',
+        ],
+      },
+      it: {
+        name: 'Dr. Nicu Elena Alina',
+        position: 'Specialista in parodontologia',
+        philosophy:
+          'Comincio sempre dalla <k>prevenzione</k>, perché le gengive sane tengono i denti al loro posto. Mostro ai pazienti come curare le gengive a casa, perché la <k>cura quotidiana</k> conta quanto il trattamento in studio.',
+        about: [
+          'Lavora in clinica e si occupa della prevenzione e del trattamento delle malattie gengivali: igiene professionale, terapie parodontali e controlli periodici. Alla prima visita il medico valuta lo stato delle gengive, esamina le radiografie e spiega al paziente che cosa ha trovato e quali fasi seguiranno.',
+          'La formazione continua comprende corsi di terapia parodontale rigenerativa e di chirurgia mucogengivale. Per i pazienti che hanno bisogno anche di impianti o di protesi, il piano viene definito insieme ai colleghi di chirurgia e protesi, in modo che le gengive siano preparate prima di ogni fase.',
+          'La terapia parodontale continua a casa, per questo ogni paziente riceve istruzioni su spazzolino e filo interdentale adatte alla propria situazione. I controlli periodici si fissano di solito ogni tre o sei mesi, a seconda di come rispondono le gengive.',
+        ],
+      },
+    },
+  },
+  {
+    id: 'ivascu-zugravu-catalina',
+    portrait: PORTRAIT_1,
+    cutout: CUTOUT_2,
+    hours: [
+      { days: ['Monday', 'Wednesday'], opens: '13:00', closes: '19:00' },
+      { days: ['Thursday'], opens: '09:00', closes: '15:00' },
+    ],
+    servicesCategory: 'orthodontics',
+    courses: [
+      {
+        year: 2025,
+        words: {
+          ro: 'Curs de tratament ortodontic cu aparate fixe estetice, București',
+          en: 'Course on orthodontic treatment with aesthetic fixed appliances, Bucharest',
+          de: 'Kurs für kieferorthopädische Behandlung mit ästhetischen festsitzenden Apparaturen, Bukarest',
+          fr: 'Formation au traitement orthodontique par appareils fixes esthétiques, Bucarest',
+          it: 'Corso di trattamento ortodontico con apparecchi fissi estetici, Bucarest',
+        },
+      },
+      {
+        year: 2023,
+        words: {
           ro: 'Curs de ortodonție interceptivă la copii, Cluj-Napoca',
-          en: 'Interceptive orthodontics in children course, Cluj-Napoca',
+          en: 'Course on interceptive orthodontics in children, Cluj-Napoca',
           de: 'Kurs für interzeptive Kieferorthopädie bei Kindern, Cluj-Napoca',
           fr: 'Formation en orthodontie interceptive chez l’enfant, Cluj-Napoca',
           it: 'Corso di ortodonzia intercettiva in età pediatrica, Cluj-Napoca',
         },
       },
       {
-        year: 2019,
+        year: 2021,
         words: {
-          ro: 'Congresul Societății Române de Ortodonție, București',
-          en: 'Romanian Society of Orthodontics congress, Bucharest',
-          de: 'Kongress der Rumänischen Gesellschaft für Kieferorthopädie, Bukarest',
-          fr: 'Congrès de la Société roumaine d’orthodontie, Bucarest',
-          it: 'Congresso della Società Romena di Ortodonzia, Bucarest',
+          ro: 'Curs de planificare digitală a tratamentului ortodontic, Timișoara',
+          en: 'Digital orthodontic treatment planning course, Timișoara',
+          de: 'Kurs für digitale kieferorthopädische Behandlungsplanung, Timișoara',
+          fr: 'Formation à la planification numérique du traitement orthodontique, Timișoara',
+          it: 'Corso di pianificazione digitale del trattamento ortodontico, Timișoara',
         },
       },
       {
         year: 2018,
         words: {
           ro: 'Curs de biomecanică în tratamentul cu aparate fixe, Iași',
-          en: 'Biomechanics in fixed appliance treatment course, Iași',
+          en: 'Course on biomechanics in fixed appliance treatment, Iași',
           de: 'Kurs für Biomechanik in der Behandlung mit festsitzenden Apparaturen, Iași',
           fr: 'Formation en biomécanique du traitement par appareils fixes, Iași',
           it: 'Corso di biomeccanica nel trattamento con apparecchi fissi, Iași',
         },
       },
       {
-        year: 2016,
+        year: 2013,
         words: {
-          ro: 'Specializare în ortodonție și ortopedie dento-facială, UMF „Carol Davila”, București',
-          en: 'Specialisation in orthodontics and dentofacial orthopaedics, Carol Davila University of Medicine and Pharmacy, Bucharest',
-          de: 'Fachausbildung für Kieferorthopädie und dentofaziale Orthopädie, Universität für Medizin und Pharmazie „Carol Davila“, Bukarest',
-          fr: 'Spécialisation en orthodontie et orthopédie dento-faciale, Université de médecine et de pharmacie « Carol Davila », Bucarest',
-          it: 'Specializzazione in ortodonzia e ortopedia dento-facciale, Università di medicina e farmacia «Carol Davila», Bucarest',
+          ro: 'Rezidențiat în ortodonție și ortopedie facială',
+          en: 'Residency in orthodontics and facial orthopaedics',
+          de: 'Fachzahnärztliche Weiterbildung in Kieferorthopädie',
+          fr: 'Spécialisation en orthodontie et orthopédie faciale',
+          it: 'Specializzazione in ortodonzia e ortopedia facciale',
         },
       },
     ],
-    // DEMO numbers set by the round-2f contract (D32), not counted — the
-    // TODO(owner) block says where they disagree with the rest of this row.
-    // The Romanian words are the owner's paste, verbatim, the patients
-    // sentence's number aligned with its `value` (3000 for his 10000); the
-    // other four languages are drafts. The reference's order: experience ·
-    // patients · courses · interventions.
+    stats: [
+      {
+        icon: 'experience',
+        value: 13,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Ani de experiență',
+            description:
+              'Punem grija, expertiza și empatia în fiecare detaliu.',
+          },
+          en: {
+            label: 'Years of experience',
+            description:
+              'We put care, expertise and empathy into every detail.',
+          },
+          de: {
+            label: 'Jahre Erfahrung',
+            description:
+              'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
+          },
+          fr: {
+            label: 'Années d’expérience',
+            description:
+              'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
+          },
+          it: {
+            label: 'Anni di esperienza',
+            description:
+              'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
+          },
+        },
+      },
+      {
+        icon: 'patients',
+        value: 1800,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Pacienți',
+            description:
+              'Peste 1800 de zâmbete îngrijite cu dedicare și profesionalism.',
+          },
+          en: {
+            label: 'Patients',
+            description:
+              'More than 1800 smiles cared for with dedication and professionalism.',
+          },
+          de: {
+            label: 'Patienten',
+            description:
+              'Über 1800 Lächeln, mit Hingabe und Professionalität betreut.',
+          },
+          fr: {
+            label: 'Patients',
+            description:
+              'Plus de 1800 sourires soignés avec dévouement et professionnalisme.',
+          },
+          it: {
+            label: 'Pazienti',
+            description:
+              'Oltre 1800 sorrisi curati con dedizione e professionalità.',
+          },
+        },
+      },
+      {
+        icon: 'courses',
+        value: 5,
+        words: {
+          ro: {
+            label: 'Cursuri',
+            description: 'Formare continuă în tehnici și tehnologii moderne.',
+          },
+          en: {
+            label: 'Courses',
+            description:
+              'Continuing training in modern techniques and technologies.',
+          },
+          de: {
+            label: 'Kurse',
+            description:
+              'Laufende Fortbildung in modernen Techniken und Technologien.',
+          },
+          fr: {
+            label: 'Formations',
+            description:
+              'Formation continue aux techniques et technologies modernes.',
+          },
+          it: {
+            label: 'Corsi',
+            description:
+              'Formazione continua in tecniche e tecnologie moderne.',
+          },
+        },
+      },
+      {
+        icon: 'interventions',
+        value: 1200,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Intervenții',
+            description:
+              'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
+          },
+          en: {
+            label: 'Procedures',
+            description:
+              'Attention to detail, modern technology and a personalised approach for every patient.',
+          },
+          de: {
+            label: 'Eingriffe',
+            description:
+              'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
+          },
+          fr: {
+            label: 'Interventions',
+            description:
+              'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
+          },
+          it: {
+            label: 'Interventi',
+            description:
+              'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
+          },
+        },
+      },
+    ],
+    words: {
+      ro: {
+        name: 'Dr. Ivașcu-Zugravu Cătălina',
+        position: 'Medic specialist în ortodonție și ortopedie facială',
+        philosophy:
+          'Un tratament ortodontic durează, așa că vreau ca pacientul să cunoască de la început <k>fiecare etapă</k>. Lucrez cu copii și cu adulți, iar pentru fiecare caut <k>soluția potrivită</k> vârstei și nevoilor sale.',
+        about: [
+          'Dr. Ivașcu-Zugravu lucrează în clinică și se ocupă de ortodonția copiilor și a adulților, cu aparate dentare fixe, metalice sau ceramice. Prima vizită începe cu o discuție despre ce și-ar dori pacientul să schimbe, continuă cu examinarea, fotografiile și amprentele, iar la final medicul explică variantele de tratament și durata fiecăreia.',
+          'Formarea continuă include cursuri de ortodonție interceptivă la copii și de planificare digitală a tratamentului, dar și de tratament cu aparate fixe estetice. Când tratamentul ortodontic are nevoie și de alte specialități, planul se stabilește împreună cu colegii din chirurgie și protetică, iar ordinea etapelor este explicată de la început.',
+          'Pentru copii, un prim control ortodontic este util încă de la vârsta de șapte ani, când problemele de creștere ale maxilarelor se pot observa din timp. Pe parcursul tratamentului, controalele se programează de obicei o dată la patru până la șase săptămâni.',
+        ],
+      },
+      en: {
+        name: 'Dr. Ivașcu-Zugravu Cătălina',
+        position: 'Specialist in orthodontics and facial orthopaedics',
+        philosophy:
+          'Orthodontic treatment takes time, so I want patients to know <k>every stage</k> from the start. I work with children and adults, and for each one I look for the <k>right approach</k> for their age and needs.',
+        about: [
+          'Dr. Ivașcu-Zugravu works at the clinic and provides orthodontic care for children and adults, with fixed braces, metal or ceramic. The first visit begins with a conversation about what the patient would like to change, continues with the examination, photographs and impressions, and ends with the doctor explaining the treatment options and how long each one takes.',
+          'Continuing training includes courses in interceptive orthodontics for children and in digital treatment planning, as well as in treatment with aesthetic fixed appliances. When orthodontic treatment also needs other specialties, the plan is drawn up together with colleagues in surgery and prosthodontics, and the order of the stages is explained from the start.',
+          'For children, a first orthodontic check-up is useful from the age of seven, when problems with jaw growth can be spotted early. During treatment, check-ups are usually scheduled every four to six weeks.',
+        ],
+      },
+      de: {
+        name: 'Dr. Ivașcu-Zugravu Cătălina',
+        position: 'Fachrichtung Kieferorthopädie',
+        philosophy:
+          'Eine kieferorthopädische Behandlung braucht Zeit, deshalb möchte ich, dass Patienten <k>jeden Schritt</k> von Anfang an kennen. Ich arbeite mit Kindern und Erwachsenen und suche für jeden den <k>passenden Weg</k>, je nach Alter und Bedürfnissen.',
+        about: [
+          'Dr. Ivașcu-Zugravu arbeitet in der Klinik und behandelt Kinder und Erwachsene kieferorthopädisch, mit festsitzenden Zahnspangen aus Metall oder Keramik. Der erste Besuch beginnt mit einem Gespräch darüber, was der Patient verändern möchte, geht mit der Untersuchung, den Fotos und den Abdrücken weiter und endet mit der Erklärung der Behandlungsmöglichkeiten und deren Dauer.',
+          'Zur Fortbildung gehören Kurse zur interzeptiven Kieferorthopädie bei Kindern und zur digitalen Behandlungsplanung sowie zur Behandlung mit ästhetischen festsitzenden Apparaturen. Wenn eine kieferorthopädische Behandlung auch andere Fachgebiete braucht, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Prothetik, und die Reihenfolge der Schritte wird von Anfang an erklärt.',
+          'Bei Kindern ist eine erste kieferorthopädische Kontrolle schon ab dem Alter von sieben Jahren sinnvoll, weil sich Wachstumsprobleme der Kiefer dann früh erkennen lassen. Während der Behandlung finden die Kontrollen meist alle vier bis sechs Wochen statt.',
+        ],
+      },
+      fr: {
+        name: 'Dr Ivașcu-Zugravu Cătălina',
+        position: 'Spécialiste en orthodontie et orthopédie faciale',
+        philosophy:
+          'Un traitement orthodontique prend du temps, alors je tiens à ce que le patient connaisse <k>chaque étape</k> dès le début. Je travaille avec des enfants et des adultes, et pour chacun je cherche la <k>solution adaptée</k> à son âge et à ses besoins.',
+        about: [
+          'Dr Ivașcu-Zugravu exerce à la clinique et prend en charge l’orthodontie des enfants et des adultes, avec des appareils fixes, métalliques ou en céramique. La première visite commence par un échange sur ce que le patient souhaite changer, se poursuit par l’examen, les photographies et les empreintes et se termine par l’explication des options de traitement et de leur durée.',
+          'La formation continue comprend des cours d’orthodontie interceptive chez l’enfant et de planification numérique du traitement, ainsi que de traitement par appareils fixes esthétiques. Lorsqu’un traitement orthodontique fait appel à d’autres spécialités, le plan est établi avec les collègues de chirurgie et de prothèse, et l’ordre des étapes est expliqué dès le début.',
+          'Chez l’enfant, un premier contrôle orthodontique est utile dès l’âge de sept ans, quand les problèmes de croissance des mâchoires peuvent être repérés tôt. Pendant le traitement, les contrôles ont lieu en général toutes les quatre à six semaines.',
+        ],
+      },
+      it: {
+        name: 'Dr. Ivașcu-Zugravu Cătălina',
+        position: 'Specialista in ortodonzia e ortopedia facciale',
+        philosophy:
+          'Un trattamento ortodontico richiede tempo, quindi voglio che il paziente conosca <k>ogni fase</k> fin dall’inizio. Lavoro con bambini e adulti e per ognuno cerco la <k>soluzione adatta</k> all’età e alle esigenze.',
+        about: [
+          'Lavora in clinica e si occupa di ortodonzia per bambini e adulti, con apparecchi fissi, metallici o in ceramica. La prima visita inizia con un colloquio su ciò che il paziente vorrebbe cambiare, prosegue con l’esame, le fotografie e le impronte e si conclude con la spiegazione delle opzioni di trattamento e della loro durata.',
+          'La formazione continua comprende corsi di ortodonzia intercettiva in età pediatrica e di pianificazione digitale del trattamento, oltre che di trattamento con apparecchi fissi estetici. Quando un trattamento ortodontico richiede anche altre specialità, il piano viene definito insieme ai colleghi di chirurgia e protesi e l’ordine delle fasi viene spiegato fin dall’inizio.',
+          'Per i bambini una prima visita ortodontica è utile già a partire dai sette anni, quando i problemi di crescita dei mascellari si possono notare per tempo. Durante il trattamento i controlli si fissano di solito a intervalli compresi tra le quattro e le sei settimane.',
+        ],
+      },
+    },
+  },
+  {
+    id: 'opris-mircea',
+    portrait: PORTRAIT_2,
+    cutout: CUTOUT_1,
+    hours: [
+      {
+        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+        opens: '09:00',
+        closes: '15:00',
+      },
+    ],
+    servicesCategory: 'oral-surgery',
+    courses: [
+      {
+        year: 2024,
+        words: {
+          ro: 'Curs de implantologie ghidată digital, București',
+          en: 'Digitally guided implantology course, Bucharest',
+          de: 'Kurs für digital geführte Implantologie, Bukarest',
+          fr: 'Formation en implantologie guidée numériquement, Bucarest',
+          it: 'Corso di implantologia a guida digitale, Bucarest',
+        },
+      },
+      {
+        year: 2022,
+        words: {
+          ro: 'Curs de augmentare osoasă și regenerare tisulară ghidată, Sibiu',
+          en: 'Bone augmentation and guided tissue regeneration course, Sibiu',
+          de: 'Kurs für Knochenaugmentation und gesteuerte Geweberegeneration, Sibiu',
+          fr: 'Formation en augmentation osseuse et régénération tissulaire guidée, Sibiu',
+          it: 'Corso di aumento osseo e rigenerazione tissutale guidata, Sibiu',
+        },
+      },
+      {
+        year: 2020,
+        words: {
+          ro: 'Curs de extracție a molarilor de minte incluși, Cluj-Napoca',
+          en: 'Impacted wisdom tooth extraction course, Cluj-Napoca',
+          de: 'Kurs zur Entfernung retinierter Weisheitszähne, Cluj-Napoca',
+          fr: 'Formation à l’extraction des dents de sagesse incluses, Cluj-Napoca',
+          it: 'Corso di estrazione dei denti del giudizio inclusi, Cluj-Napoca',
+        },
+      },
+      {
+        year: 2016,
+        words: {
+          ro: 'Curs de chirurgie preprotetică, Timișoara',
+          en: 'Pre-prosthetic surgery course, Timișoara',
+          de: 'Kurs für präprothetische Chirurgie, Timișoara',
+          fr: 'Formation en chirurgie préprothétique, Timișoara',
+          it: 'Corso di chirurgia preprotesica, Timișoara',
+        },
+      },
+      {
+        year: 2010,
+        words: {
+          ro: 'Rezidențiat în chirurgie dento-alveolară',
+          en: 'Residency in dentoalveolar surgery',
+          de: 'Fachzahnärztliche Weiterbildung in dentoalveolärer Chirurgie',
+          fr: 'Spécialisation en chirurgie dento-alvéolaire',
+          it: 'Specializzazione in chirurgia dento-alveolare',
+        },
+      },
+    ],
+    stats: [
+      {
+        icon: 'experience',
+        value: 16,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Ani de experiență',
+            description:
+              'Punem grija, expertiza și empatia în fiecare detaliu.',
+          },
+          en: {
+            label: 'Years of experience',
+            description:
+              'We put care, expertise and empathy into every detail.',
+          },
+          de: {
+            label: 'Jahre Erfahrung',
+            description:
+              'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
+          },
+          fr: {
+            label: 'Années d’expérience',
+            description:
+              'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
+          },
+          it: {
+            label: 'Anni di esperienza',
+            description:
+              'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
+          },
+        },
+      },
+      {
+        icon: 'patients',
+        value: 4100,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Pacienți',
+            description:
+              'Peste 4100 de zâmbete îngrijite cu dedicare și profesionalism.',
+          },
+          en: {
+            label: 'Patients',
+            description:
+              'More than 4100 smiles cared for with dedication and professionalism.',
+          },
+          de: {
+            label: 'Patienten',
+            description:
+              'Über 4100 Lächeln, mit Hingabe und Professionalität betreut.',
+          },
+          fr: {
+            label: 'Patients',
+            description:
+              'Plus de 4100 sourires soignés avec dévouement et professionnalisme.',
+          },
+          it: {
+            label: 'Pazienti',
+            description:
+              'Oltre 4100 sorrisi curati con dedizione e professionalità.',
+          },
+        },
+      },
+      {
+        icon: 'courses',
+        value: 5,
+        words: {
+          ro: {
+            label: 'Cursuri',
+            description: 'Formare continuă în tehnici și tehnologii moderne.',
+          },
+          en: {
+            label: 'Courses',
+            description:
+              'Continuing training in modern techniques and technologies.',
+          },
+          de: {
+            label: 'Kurse',
+            description:
+              'Laufende Fortbildung in modernen Techniken und Technologien.',
+          },
+          fr: {
+            label: 'Formations',
+            description:
+              'Formation continue aux techniques et technologies modernes.',
+          },
+          it: {
+            label: 'Corsi',
+            description:
+              'Formazione continua in tecniche e tecnologie moderne.',
+          },
+        },
+      },
+      {
+        icon: 'interventions',
+        value: 3500,
+        suffix: '+',
+        words: {
+          ro: {
+            label: 'Intervenții',
+            description:
+              'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
+          },
+          en: {
+            label: 'Procedures',
+            description:
+              'Attention to detail, modern technology and a personalised approach for every patient.',
+          },
+          de: {
+            label: 'Eingriffe',
+            description:
+              'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
+          },
+          fr: {
+            label: 'Interventions',
+            description:
+              'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
+          },
+          it: {
+            label: 'Interventi',
+            description:
+              'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
+          },
+        },
+      },
+    ],
+    words: {
+      ro: {
+        name: 'Dr. Opriș Mircea',
+        position: 'Medic specialist în chirurgie dento-alveolară',
+        philosophy:
+          'Înaintea oricărei intervenții îi explic pacientului <k>fiecare pas</k>, ca să știe exact ce urmează. Lucrez fără grabă, iar la <k>controlul</k> de după verificăm împreună cum se vindecă zona.',
+        about: [
+          'Dr. Opriș lucrează în clinică și se ocupă de chirurgia dento-alveolară: extracții, inclusiv ale molarilor de minte, inserarea implanturilor și intervenții de augmentare osoasă. La prima vizită, medicul examinează zona, analizează radiografia sau tomografia și explică ce presupune intervenția, cât durează și cum decurge vindecarea.',
+          'Formarea continuă include cursuri de implantologie ghidată digital și de augmentare osoasă. Când o intervenție chirurgicală face parte dintr-un plan mai amplu, lucrul se coordonează cu colegii din protetică și parodontologie, iar etapele se stabilesc înainte de începerea tratamentului.',
+          'Înaintea unei intervenții, pacientul primește instrucțiuni despre alimentație și despre medicamentele pe care le ia. După intervenție, controlul se programează de obicei la o săptămână, când se verifică vindecarea și, dacă e cazul, se scot firele.',
+        ],
+      },
+      en: {
+        name: 'Dr. Opriș Mircea',
+        position: 'Specialist in dentoalveolar surgery',
+        philosophy:
+          'Before any procedure I explain <k>every step</k> to the patient, so that they know exactly what comes next. I work without rushing, and at the <k>follow-up</k> visit we check together how the area is healing.',
+        about: [
+          'Dr. Opriș works at the clinic and practises dentoalveolar surgery: extractions, wisdom teeth included, implant placement and bone augmentation procedures. At the first visit, the doctor examines the area, reviews the X-ray or CT scan and explains what the procedure involves, how long it takes and how healing progresses.',
+          'Continuing training includes courses in digitally guided implantology and bone augmentation. When a surgical procedure is part of a wider plan, the work is coordinated with colleagues in prosthodontics and periodontics, and the stages are set before treatment begins.',
+          'Before a procedure, the patient receives instructions about eating and about any medication they take. After the procedure, the check-up is usually booked for a week later, when the healing is checked and the stitches are removed if needed.',
+        ],
+      },
+      de: {
+        name: 'Dr. Opriș Mircea',
+        position: 'Fachrichtung dentoalveoläre Chirurgie',
+        philosophy:
+          'Vor jedem Eingriff erkläre ich dem Patienten <k>jeden Schritt</k>, damit genau klar ist, was als Nächstes kommt. Ich arbeite ohne Eile, und bei der <k>Nachkontrolle</k> prüfen wir gemeinsam, wie die Stelle heilt.',
+        about: [
+          'Dr. Opriș arbeitet in der Klinik und ist in der dentoalveolären Chirurgie tätig: Extraktionen, auch von Weisheitszähnen, das Setzen von Implantaten und Knochenaufbau. Beim ersten Besuch untersucht Dr. Opriș den betroffenen Bereich, wertet das Röntgenbild oder die dreidimensionale Aufnahme (DVT) aus und erklärt, was der Eingriff umfasst, wie lange er dauert und wie die Heilung verläuft.',
+          'Zur Fortbildung gehören Kurse zur digital geführten Implantologie und zur Knochenaugmentation. Wenn ein chirurgischer Eingriff Teil eines größeren Plans ist, wird die Arbeit mit den Kolleginnen und Kollegen aus Prothetik und Parodontologie abgestimmt, und die Schritte werden vor Beginn der Behandlung festgelegt.',
+          'Vor einem Eingriff erhält der Patient Hinweise zum Essen und zu den Medikamenten, die er einnimmt. Die Kontrolle nach dem Eingriff findet meist eine Woche später statt, dabei wird die Heilung geprüft, und falls nötig werden die Fäden entfernt.',
+        ],
+      },
+      fr: {
+        name: 'Dr Opriș Mircea',
+        position: 'Spécialiste en chirurgie dento-alvéolaire',
+        philosophy:
+          'Avant chaque intervention, j’explique <k>chaque étape</k> au patient, pour qu’il sache exactement ce qui va suivre. Je travaille sans précipitation, et lors du <k>contrôle</k> nous vérifions ensemble la cicatrisation.',
+        about: [
+          'Dr Opriș exerce à la clinique et se consacre à la chirurgie dento-alvéolaire : extractions, dents de sagesse comprises, pose d’implants et interventions d’augmentation osseuse. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est analysé, puis l’intervention, sa durée et le déroulement de la cicatrisation sont expliqués.',
+          'La formation continue comprend des cours d’implantologie guidée numériquement et d’augmentation osseuse. Lorsqu’une intervention chirurgicale fait partie d’un plan plus large, le travail est coordonné avec les collègues de prothèse et de parodontologie, et les étapes sont fixées avant le début du traitement.',
+          'Avant une intervention, le patient reçoit des consignes sur l’alimentation et sur les médicaments qu’il prend. Après l’intervention, le contrôle est généralement prévu une semaine plus tard, pour vérifier la cicatrisation et retirer les fils si nécessaire.',
+        ],
+      },
+      it: {
+        name: 'Dr. Opriș Mircea',
+        position: 'Specialista in chirurgia dento-alveolare',
+        philosophy:
+          'Prima di ogni intervento spiego al paziente <k>ogni passaggio</k>, perché sappia esattamente che cosa succederà. Lavoro senza fretta e al <k>controllo</k> successivo verifichiamo insieme come guarisce la zona.',
+        about: [
+          'Lavora in clinica e si occupa di chirurgia dento-alveolare: estrazioni, compresi i denti del giudizio, inserimento di impianti e interventi di aumento osseo. Alla prima visita il medico esamina la zona, valuta la radiografia o la TAC e spiega in che cosa consiste l’intervento, quanto dura e come procede la guarigione.',
+          'La formazione continua comprende corsi di implantologia a guida digitale e di aumento osseo. Quando un intervento chirurgico fa parte di un piano più ampio, il lavoro viene coordinato con i colleghi di protesi e parodontologia e le fasi vengono stabilite prima dell’inizio del trattamento.',
+          'Prima di un intervento il paziente riceve indicazioni sull’alimentazione e sui farmaci che assume. Dopo l’intervento il controllo si fissa di solito a una settimana, quando si verifica la guarigione e, se serve, si rimuovono i punti.',
+        ],
+      },
+    },
+  },
+  {
+    id: 'bozdog-horatiu',
+    portrait: PORTRAIT_3,
+    cutout: CUTOUT_2,
+    hours: [
+      { days: ['Monday'], opens: '09:00', closes: '13:00' },
+      {
+        days: ['Wednesday', 'Thursday', 'Friday'],
+        opens: '12:00',
+        closes: '19:00',
+      },
+    ],
+    servicesCategory: 'oral-surgery',
+    courses: [
+      {
+        year: 2025,
+        words: {
+          ro: 'Curs de chirurgie piezoelectrică în stomatologie, Cluj-Napoca',
+          en: 'Course on piezoelectric surgery in dentistry, Cluj-Napoca',
+          de: 'Kurs für piezoelektrische Chirurgie in der Zahnmedizin, Cluj-Napoca',
+          fr: 'Formation en chirurgie piézoélectrique en dentisterie, Cluj-Napoca',
+          it: 'Corso di chirurgia piezoelettrica in odontoiatria, Cluj-Napoca',
+        },
+      },
+      {
+        year: 2023,
+        words: {
+          ro: 'Curs de sinus lift și augmentare de creastă, București',
+          en: 'Sinus lift and ridge augmentation course, Bucharest',
+          de: 'Kurs für Sinuslift und Kieferkammaufbau, Bukarest',
+          fr: 'Formation au sinus lift et à l’augmentation de crête, Bucarest',
+          it: 'Corso di rialzo del seno mascellare e aumento di cresta, Bucarest',
+        },
+      },
+      {
+        year: 2021,
+        words: {
+          ro: 'Curs de interpretare a tomografiei dentare CBCT, Sibiu',
+          en: 'Dental CBCT interpretation course, Sibiu',
+          de: 'Kurs zur Auswertung der dentalen DVT, Sibiu',
+          fr: 'Formation à l’interprétation du CBCT dentaire, Sibiu',
+          it: 'Corso di interpretazione della CBCT dentale, Sibiu',
+        },
+      },
+      {
+        year: 2019,
+        words: {
+          ro: 'Workshop de suturi și vindecare a plăgilor orale, Timișoara',
+          en: 'Suturing and oral wound healing workshop, Timișoara',
+          de: 'Workshop zu Nahttechniken und oraler Wundheilung, Timișoara',
+          fr: 'Atelier sur les sutures et la cicatrisation des plaies buccales, Timișoara',
+          it: 'Workshop su suture e guarigione delle ferite orali, Timișoara',
+        },
+      },
+      {
+        year: 2016,
+        words: {
+          ro: 'Rezidențiat în chirurgie dento-alveolară',
+          en: 'Residency in dentoalveolar surgery',
+          de: 'Fachzahnärztliche Weiterbildung in dentoalveolärer Chirurgie',
+          fr: 'Spécialisation en chirurgie dento-alvéolaire',
+          it: 'Specializzazione in chirurgia dento-alveolare',
+        },
+      },
+    ],
     stats: [
       {
         icon: 'experience',
@@ -662,374 +1906,72 @@ export const doctors: readonly Doctor[] = [
       },
       {
         icon: 'patients',
-        value: 3000,
-        suffix: '+',
-        words: {
-          ro: {
-            label: 'Pacienți',
-            description:
-              'Peste 3000 de zâmbete îngrijite cu dedicare și profesionalism.',
-          },
-          en: {
-            label: 'Patients',
-            description:
-              'More than 3000 smiles cared for with dedication and professionalism.',
-          },
-          de: {
-            label: 'Patienten',
-            description:
-              'Über 3000 Lächeln, mit Hingabe und Professionalität betreut.',
-          },
-          fr: {
-            label: 'Patients',
-            description:
-              'Plus de 3000 sourires soignés avec dévouement et professionnalisme.',
-          },
-          it: {
-            label: 'Pazienti',
-            description:
-              'Oltre 3000 sorrisi curati con dedizione e professionalità.',
-          },
-        },
-      },
-      {
-        icon: 'courses',
-        value: 9,
-        words: {
-          ro: {
-            label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
-          },
-          en: {
-            label: 'Courses',
-            description:
-              'Continuing training in modern techniques and technologies.',
-          },
-          de: {
-            label: 'Kurse',
-            description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
-          },
-          fr: {
-            label: 'Formations',
-            description:
-              'Formation continue aux techniques et technologies modernes.',
-          },
-          it: {
-            label: 'Corsi',
-            description:
-              'Formazione continua in tecniche e tecnologie moderne.',
-          },
-        },
-      },
-      {
-        icon: 'interventions',
-        value: 1000,
-        suffix: '+',
-        words: {
-          ro: {
-            label: 'Intervenții',
-            description:
-              'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
-          },
-          en: {
-            label: 'Procedures',
-            description:
-              'Attention to detail, modern technology and a personalised approach for every patient.',
-          },
-          de: {
-            label: 'Eingriffe',
-            description:
-              'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
-          },
-          fr: {
-            label: 'Interventions',
-            description:
-              'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
-          },
-          it: {
-            label: 'Interventi',
-            description:
-              'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
-          },
-        },
-      },
-    ],
-    words: {
-      ro: {
-        name: 'Dr. Elena Marin',
-        position: 'Medic specialist ortodonție',
-        // VERBATIM the PersonnelCard story fixture (2026-09-10), with D9's
-        // `<k>` marks back in the source where D2 put them.
-        philosophy:
-          'Lucrez în <k>ortodonție</k> de peste zece ani și explic fiecare etapă a tratamentului. Consultația începe cu <k>ascultarea</k> pacientului, apoi construim împreună un plan potrivit.',
-        // DRAFT (round 2, D17), the Romanian too — the TODO(owner) block.
-        about: [
-          'Dr. Elena Marin lucrează în clinică din 2018 și se ocupă de ortodonția copiilor și a adulților, cu aparate dentare fixe și cu gutiere transparente. Prima vizită începe cu o discuție despre ce îl deranjează pe pacient, continuă cu examinarea clinică și cu fotografiile dentare, iar la final medicul explică variantele de tratament și etapele fiecăreia.',
-          'Își continuă formarea prin cursuri și congrese de specialitate: în 2023 a participat la Congresul Asociației Europene de Ortodonție de la Viena, iar în 2024 a urmat la București un curs despre gutierele transparente și unul de fotografie dentară digitală. Când un tratament ortodontic are nevoie și de alte specialități, stabilește planul împreună cu colegii din clinică, iar ordinea pașilor îi este explicată pacientului de la început.',
-          'În afara clinicii, Elena Marin fotografiază natura și face drumeții pe munte. Vorbește română, engleză și franceză, așa că pacienții veniți din străinătate pot discuta cu ea direct în una dintre aceste limbi.',
-        ],
-      },
-      en: {
-        name: 'Dr. Elena Marin',
-        position: 'Specialist in orthodontics',
-        philosophy:
-          'I have worked in <k>orthodontics</k> for over ten years and I explain every stage of the treatment. A consultation begins with <k>listening</k> to the patient, and then we build a suitable plan together.',
-        about: [
-          'Dr. Elena Marin has worked at the clinic since 2018 and provides orthodontic care for children and adults, with fixed braces and clear aligners. The first visit begins with a conversation about what troubles the patient, continues with a clinical examination and dental photographs, and ends with the doctor explaining the treatment options and the stages of each one.',
-          'She continues her training through specialist courses and congresses: in 2023 she attended the European Orthodontic Society congress in Vienna, and in 2024 she took a clear aligner course and a digital dental photography course in Bucharest. When orthodontic treatment also needs other specialties, she draws up the plan together with her colleagues at the clinic, and the order of the steps is explained to the patient from the start.',
-          'Outside the clinic, Elena Marin photographs nature and goes hiking in the mountains. She speaks Romanian, English and French, so patients who come from abroad can talk with her directly in one of these languages.',
-        ],
-      },
-      de: {
-        name: 'Dr. Elena Marin',
-        position: 'Fachzahnärztin für Kieferorthopädie',
-        philosophy:
-          'Ich arbeite seit über zehn Jahren in der <k>Kieferorthopädie</k> und erkläre jeden Schritt der Behandlung. Die Beratung beginnt mit dem <k>Zuhören</k>, danach erstellen wir gemeinsam einen passenden Plan.',
-        about: [
-          'Dr. Elena Marin arbeitet seit 2018 in der Klinik und behandelt Kinder und Erwachsene kieferorthopädisch, mit festen Zahnspangen und transparenten Schienen. Der erste Besuch beginnt mit einem Gespräch darüber, was den Patienten stört, geht mit der klinischen Untersuchung und den Zahnfotos weiter und endet damit, dass die Ärztin die Behandlungsmöglichkeiten und ihre einzelnen Schritte erklärt.',
-          'Sie bildet sich in Fachkursen und auf Kongressen weiter: 2023 nahm sie am Kongress der Europäischen Gesellschaft für Kieferorthopädie in Wien teil, 2024 besuchte sie in Bukarest einen Kurs über transparente Schienen und einen Kurs für digitale Dentalfotografie. Wenn eine kieferorthopädische Behandlung auch andere Fachgebiete braucht, erstellt sie den Plan gemeinsam mit ihren Kolleginnen und Kollegen in der Klinik, und dem Patienten wird die Reihenfolge der Schritte von Anfang an erklärt.',
-          'Außerhalb der Klinik fotografiert Elena Marin die Natur und wandert in den Bergen. Sie spricht Rumänisch, Englisch und Französisch, sodass Patienten aus dem Ausland direkt in einer dieser Sprachen mit ihr sprechen können.',
-        ],
-      },
-      fr: {
-        name: 'Dr Elena Marin',
-        position: 'Médecin spécialiste en orthodontie',
-        philosophy:
-          'Je travaille en <k>orthodontie</k> depuis plus de dix ans et j’explique chaque étape du traitement. La consultation commence par l’<k>écoute</k> du patient, puis nous construisons ensemble un plan adapté.',
-        about: [
-          'Dr Elena Marin exerce à la clinique depuis 2018 et prend en charge l’orthodontie des enfants et des adultes, avec des appareils fixes et des gouttières transparentes. La première visite commence par un échange sur ce qui gêne le patient, se poursuit par l’examen clinique et les photographies dentaires, puis la praticienne explique les options de traitement et les étapes de chacune.',
-          'Elle poursuit sa formation par des cours et des congrès spécialisés : en 2023, elle a participé au congrès de la Société européenne d’orthodontie à Vienne, et en 2024 elle a suivi à Bucarest une formation aux gouttières transparentes et une formation en photographie dentaire numérique. Lorsqu’un traitement orthodontique fait appel à d’autres spécialités, elle établit le plan avec ses collègues de la clinique, et l’ordre des étapes est expliqué au patient dès le début.',
-          'En dehors de la clinique, Elena Marin photographie la nature et fait de la randonnée en montagne. Elle parle roumain, anglais et français, ce qui permet aux patients venus de l’étranger d’échanger directement avec elle dans l’une de ces langues.',
-        ],
-      },
-      it: {
-        name: 'Dott.ssa Elena Marin',
-        position: 'Medico specialista in ortodonzia',
-        philosophy:
-          'Lavoro in <k>ortodonzia</k> da oltre dieci anni e spiego ogni fase del trattamento. La visita inizia <k>ascoltando</k> il paziente, poi costruiamo insieme un piano adatto.',
-        about: [
-          'La Dott.ssa Elena Marin lavora nella clinica dal 2018 e si occupa di ortodonzia per bambini e adulti, con apparecchi fissi e mascherine trasparenti. La prima visita inizia con un colloquio su ciò che disturba il paziente, prosegue con l’esame clinico e le fotografie dentali e si conclude con la spiegazione delle opzioni di trattamento e delle fasi di ciascuna.',
-          'Continua la sua formazione con corsi e congressi specialistici: nel 2023 ha partecipato al congresso della Società Europea di Ortodonzia a Vienna e nel 2024 ha seguito a Bucarest un corso sulle mascherine trasparenti e uno di fotografia dentale digitale. Quando un trattamento ortodontico richiede anche altre specialità, definisce il piano insieme ai colleghi della clinica e l’ordine delle fasi viene spiegato al paziente fin dall’inizio.',
-          'Fuori dalla clinica, Elena Marin fotografa la natura e fa escursioni in montagna. Parla rumeno, inglese e francese, così i pazienti che arrivano dall’estero possono parlare con lei direttamente in una di queste lingue.',
-        ],
-      },
-    },
-  },
-  {
-    id: 'andrei-serban',
-    portrait: PORTRAIT_3,
-    cutout: CUTOUT_2,
-    hours: [
-      {
-        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        opens: '10:00',
-        closes: '18:00',
-      },
-      { days: ['Saturday'], opens: '09:00', closes: '13:00' },
-    ],
-    servicesCategory: 'oral-surgery',
-    // Round 1's four lines with their „, YEAR" tails lifted into `year` (D17),
-    // plus ONE row drafted in round 2 — the suturing workshop — so the 2022
-    // group shows two lines — and FOUR more drafted in round 2g (D39), nine
-    // rows over eight years.
-    courses: [
-      {
-        year: 2025,
-        words: {
-          ro: 'Curs de implantologie ghidată digital, București',
-          en: 'Digitally guided implantology course, Bucharest',
-          de: 'Kurs für digital geführte Implantologie, Bukarest',
-          fr: 'Formation en implantologie guidée numériquement, Bucarest',
-          it: 'Corso di implantologia a guida digitale, Bucarest',
-        },
-      },
-      {
-        year: 2024,
-        words: {
-          ro: 'Curs de chirurgie ghidată și implantologie, Cluj-Napoca',
-          en: 'Guided surgery and implantology course, Cluj-Napoca',
-          de: 'Kurs für geführte Chirurgie und Implantologie, Cluj-Napoca',
-          fr: 'Formation en chirurgie guidée et implantologie, Cluj-Napoca',
-          it: 'Corso di chirurgia guidata e implantologia, Cluj-Napoca',
-        },
-      },
-      {
-        year: 2023,
-        words: {
-          ro: 'Congresul Societății Române de Chirurgie Orală, Cluj-Napoca',
-          en: 'Romanian Society of Oral Surgery congress, Cluj-Napoca',
-          de: 'Kongress der Rumänischen Gesellschaft für Oralchirurgie, Cluj-Napoca',
-          fr: 'Congrès de la Société roumaine de chirurgie orale, Cluj-Napoca',
-          it: 'Congresso della Società Romena di Chirurgia Orale, Cluj-Napoca',
-        },
-      },
-      {
-        year: 2022,
-        words: {
-          ro: 'Curs de extracții complexe și chirurgia molarilor de minte, Milano',
-          en: 'Complex extractions and wisdom tooth surgery course, Milan',
-          de: 'Kurs für komplexe Extraktionen und Weisheitszahnchirurgie, Mailand',
-          fr: 'Formation aux extractions complexes et à la chirurgie des dents de sagesse, Milan',
-          it: 'Corso di estrazioni complesse e chirurgia dei denti del giudizio, Milano',
-        },
-      },
-      {
-        year: 2022,
-        words: {
-          ro: 'Workshop de suturi și vindecare a plăgilor orale, Milano',
-          en: 'Suturing and oral wound healing workshop, Milan',
-          de: 'Workshop zu Nahttechniken und oraler Wundheilung, Mailand',
-          fr: 'Atelier sur les sutures et la cicatrisation des plaies buccales, Milan',
-          it: 'Workshop su suture e guarigione delle ferite orali, Milano',
-        },
-      },
-      {
-        year: 2021,
-        words: {
-          ro: 'Curs de regenerare osoasă și augmentare de creastă, Timișoara',
-          en: 'Bone regeneration and ridge augmentation course, Timișoara',
-          de: 'Kurs für Knochenregeneration und Kieferkammaufbau, Timișoara',
-          fr: 'Formation en régénération osseuse et augmentation de crête, Timișoara',
-          it: 'Corso di rigenerazione ossea e aumento di cresta, Timișoara',
-        },
-      },
-      {
-        year: 2020,
-        words: {
-          ro: 'Curs de sedare conștientă în stomatologie, Timișoara',
-          en: 'Conscious sedation in dentistry course, Timișoara',
-          de: 'Kurs für Sedierung bei Bewusstsein in der Zahnmedizin, Timișoara',
-          fr: 'Formation à la sédation consciente en dentisterie, Timișoara',
-          it: 'Corso di sedazione cosciente in odontoiatria, Timișoara',
-        },
-      },
-      {
-        year: 2019,
-        words: {
-          ro: 'Curs de extracție a molarilor de minte incluși, Iași',
-          en: 'Impacted wisdom tooth extraction course, Iași',
-          de: 'Kurs zur Entfernung retinierter Weisheitszähne, Iași',
-          fr: 'Formation à l’extraction des dents de sagesse incluses, Iași',
-          it: 'Corso di estrazione dei denti del giudizio inclusi, Iași',
-        },
-      },
-      {
-        year: 2018,
-        words: {
-          ro: 'Rezidențiat în chirurgie dento-alveolară, UMF „Grigore T. Popa”, Iași',
-          en: 'Residency in dentoalveolar surgery, Grigore T. Popa University of Medicine and Pharmacy, Iași',
-          de: 'Facharztweiterbildung für dentoalveoläre Chirurgie, Universität für Medizin und Pharmazie „Grigore T. Popa“, Iași',
-          fr: 'Internat en chirurgie dento-alvéolaire, Université de médecine et de pharmacie « Grigore T. Popa », Iași',
-          it: 'Specializzazione in chirurgia dento-alveolare, Università di medicina e farmacia «Grigore T. Popa», Iași',
-        },
-      },
-    ],
-    // DEMO numbers (D32), as Elena's: the owner's Romanian words once more,
-    // written out again rather than shared, because a real doctor's tiles are
-    // his own and an edit to one row must never reach the other — the
-    // patients sentence's number aligned with this row's 2500.
-    stats: [
-      {
-        icon: 'experience',
-        value: 8,
-        suffix: '+',
-        words: {
-          ro: {
-            label: 'Ani de experiență',
-            description:
-              'Punem grija, expertiza și empatia în fiecare detaliu.',
-          },
-          en: {
-            label: 'Years of experience',
-            description:
-              'We put care, expertise and empathy into every detail.',
-          },
-          de: {
-            label: 'Jahre Erfahrung',
-            description:
-              'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
-          },
-          fr: {
-            label: 'Années d’expérience',
-            description:
-              'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
-          },
-          it: {
-            label: 'Anni di esperienza',
-            description:
-              'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
-          },
-        },
-      },
-      {
-        icon: 'patients',
-        value: 2500,
-        suffix: '+',
-        words: {
-          ro: {
-            label: 'Pacienți',
-            description:
-              'Peste 2500 de zâmbete îngrijite cu dedicare și profesionalism.',
-          },
-          en: {
-            label: 'Patients',
-            description:
-              'More than 2500 smiles cared for with dedication and professionalism.',
-          },
-          de: {
-            label: 'Patienten',
-            description:
-              'Über 2500 Lächeln, mit Hingabe und Professionalität betreut.',
-          },
-          fr: {
-            label: 'Patients',
-            description:
-              'Plus de 2500 sourires soignés avec dévouement et professionnalisme.',
-          },
-          it: {
-            label: 'Pazienti',
-            description:
-              'Oltre 2500 sorrisi curati con dedizione e professionalità.',
-          },
-        },
-      },
-      {
-        icon: 'courses',
-        value: 9,
-        words: {
-          ro: {
-            label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
-          },
-          en: {
-            label: 'Courses',
-            description:
-              'Continuing training in modern techniques and technologies.',
-          },
-          de: {
-            label: 'Kurse',
-            description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
-          },
-          fr: {
-            label: 'Formations',
-            description:
-              'Formation continue aux techniques et technologies modernes.',
-          },
-          it: {
-            label: 'Corsi',
-            description:
-              'Formazione continua in tecniche e tecnologie moderne.',
-          },
-        },
-      },
-      {
-        icon: 'interventions',
         value: 1500,
         suffix: '+',
         words: {
           ro: {
+            label: 'Pacienți',
+            description:
+              'Peste 1500 de zâmbete îngrijite cu dedicare și profesionalism.',
+          },
+          en: {
+            label: 'Patients',
+            description:
+              'More than 1500 smiles cared for with dedication and professionalism.',
+          },
+          de: {
+            label: 'Patienten',
+            description:
+              'Über 1500 Lächeln, mit Hingabe und Professionalität betreut.',
+          },
+          fr: {
+            label: 'Patients',
+            description:
+              'Plus de 1500 sourires soignés avec dévouement et professionnalisme.',
+          },
+          it: {
+            label: 'Pazienti',
+            description:
+              'Oltre 1500 sorrisi curati con dedizione e professionalità.',
+          },
+        },
+      },
+      {
+        icon: 'courses',
+        value: 5,
+        words: {
+          ro: {
+            label: 'Cursuri',
+            description: 'Formare continuă în tehnici și tehnologii moderne.',
+          },
+          en: {
+            label: 'Courses',
+            description:
+              'Continuing training in modern techniques and technologies.',
+          },
+          de: {
+            label: 'Kurse',
+            description:
+              'Laufende Fortbildung in modernen Techniken und Technologien.',
+          },
+          fr: {
+            label: 'Formations',
+            description:
+              'Formation continue aux techniques et technologies modernes.',
+          },
+          it: {
+            label: 'Corsi',
+            description:
+              'Formazione continua in tecniche e tecnologie moderne.',
+          },
+        },
+      },
+      {
+        icon: 'interventions',
+        value: 1300,
+        suffix: '+',
+        words: {
+          ro: {
             label: 'Intervenții',
             description:
               'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
@@ -1059,60 +2001,58 @@ export const doctors: readonly Doctor[] = [
     ],
     words: {
       ro: {
-        name: 'Dr. Andrei Șerban',
-        position: 'Medic dentist, chirurgie orală',
-        // VERBATIM the PersonnelCard story fixture (2026-09-10).
+        name: 'Dr. Bozdog Horațiu',
+        position: 'Medic specialist în chirurgie dento-alveolară',
         philosophy:
-          'Mă ocup de <k>chirurgie orală</k>: extracții și mici intervenții. Înainte de fiecare procedură explic pașii și răspund la întrebări, iar <k>controlul</k> de după se programează la o săptămână.',
-        // DRAFT (round 2, D17), the Romanian too — the TODO(owner) block.
+          'Pentru mine, o intervenție bine pregătită începe cu o <k>radiografie</k> citită atent și cu o discuție deschisă. Vreau ca pacientul să plece din cabinet știind ce are de făcut acasă, de aceea dau mereu <k>recomandări</k> scrise.',
         about: [
-          'Dr. Andrei Șerban lucrează în clinică din 2019 și se ocupă de chirurgia orală: extracții, inclusiv ale molarilor de minte, și intervenții mici la nivelul gingiei și al osului. La prima vizită, medicul examinează zona, analizează radiografia și explică pe rând ce presupune intervenția, cât durează și ce urmează după ea.',
-          'Își completează formarea prin cursuri de specialitate: la Cluj-Napoca a urmat un curs de chirurgie ghidată și implantologie, iar la Milano un curs despre extracțiile complexe și un workshop despre suturi. Când o extracție face parte dintr-un plan care include și alte tratamente, lucrează împreună cu colegii din ortodonție și din protetică, iar etapele se stabilesc înainte de începerea tratamentului.',
-          'În timpul liber, Andrei Șerban aleargă și merge cu bicicleta. Vorbește română, engleză și italiană, o limbă pe care a exersat-o în timpul cursurilor de la Milano.',
+          'Dr. Bozdog lucrează în clinică și se ocupă de chirurgia dento-alveolară: extracții simple și chirurgicale, extracția molarilor de minte, inserarea implanturilor și intervenții la nivelul gingiei și al osului. La prima vizită, medicul examinează zona, citește radiografia sau tomografia și explică pe rând pașii intervenției și ce urmează după ea.',
+          'Formarea continuă include cursuri de chirurgie piezoelectrică și de augmentare a crestei osoase, dar și de interpretare a tomografiei dentare. Pentru tratamentele care includ și lucrări protetice, planul se stabilește împreună cu colegii din protetică, astfel încât fiecare etapă să o pregătească pe următoarea.',
+          'În ziua intervenției, pacientul primește recomandări scrise pentru îngrijirea de acasă și numărul clinicii, pentru orice întrebare. Controlul de după intervenție se programează de obicei la șapte până la zece zile, în funcție de tipul intervenției.',
         ],
       },
       en: {
-        name: 'Dr. Andrei Șerban',
-        position: 'Dentist, oral surgery',
+        name: 'Dr. Bozdog Horațiu',
+        position: 'Specialist in dentoalveolar surgery',
         philosophy:
-          'I work in <k>oral surgery</k>: extractions and minor procedures. Before each procedure I explain the steps and answer questions, and the <k>check-up</k> afterwards is booked for a week later.',
+          'For me, a well-prepared procedure starts with a carefully read <k>X-ray</k> and an open conversation. I want patients to leave knowing what to do at home, which is why I always give written <k>instructions</k>.',
         about: [
-          'Dr. Andrei Șerban has worked at the clinic since 2019 and practises oral surgery: extractions, wisdom teeth included, and minor procedures on the gums and the bone. At the first visit, the doctor examines the area, reviews the X-ray and explains one by one what the procedure involves, how long it takes and what follows afterwards.',
-          'He keeps up his training through specialist courses: in Cluj-Napoca he took a guided surgery and implantology course, and in Milan a course on complex extractions and a workshop on suturing. When an extraction is part of a plan that includes other treatments, he works together with his colleagues in orthodontics and prosthodontics, and the stages are set before the treatment begins.',
-          'In his free time, Andrei Șerban runs and cycles. He speaks Romanian, English and Italian, a language he practised during his courses in Milan.',
+          'Dr. Bozdog works at the clinic and practises dentoalveolar surgery: simple and surgical extractions, wisdom tooth removal, implant placement and procedures on the gums and bone. At the first visit, the doctor examines the area, reads the X-ray or CT scan and explains the steps of the procedure one by one, along with what follows afterwards.',
+          'Continuing training includes courses in piezoelectric surgery and alveolar ridge augmentation, as well as in reading dental CT scans. For treatments that also include prosthetic work, the plan is drawn up together with colleagues in prosthodontics, so that each stage prepares the next.',
+          'On the day of the procedure, the patient receives written instructions for care at home and the clinic’s number for any questions. The check-up after the procedure is usually booked seven to ten days later, depending on the type of procedure.',
         ],
       },
       de: {
-        name: 'Dr. Andrei Șerban',
-        position: 'Zahnarzt, Oralchirurgie',
+        name: 'Dr. Bozdog Horațiu',
+        position: 'Fachrichtung dentoalveoläre Chirurgie',
         philosophy:
-          'Ich arbeite in der <k>Oralchirurgie</k>: Extraktionen und kleine Eingriffe. Vor jedem Eingriff erkläre ich die Schritte und beantworte Fragen, und die <k>Nachkontrolle</k> wird für eine Woche später vereinbart.',
+          'Für mich beginnt ein gut vorbereiteter Eingriff mit einem sorgfältig ausgewerteten <k>Röntgenbild</k> und einem offenen Gespräch. Patienten sollen wissen, was zu Hause zu tun ist, deshalb gebe ich immer schriftliche <k>Hinweise</k> mit.',
         about: [
-          'Dr. Andrei Șerban arbeitet seit 2019 in der Klinik und ist in der Oralchirurgie tätig: Extraktionen, auch von Weisheitszähnen, und kleine Eingriffe an Zahnfleisch und Knochen. Beim ersten Besuch untersucht der Arzt den Bereich, wertet das Röntgenbild aus und erklärt nacheinander, was der Eingriff umfasst, wie lange er dauert und was danach folgt.',
-          'Er bildet sich in Fachkursen weiter: In Cluj-Napoca besuchte er einen Kurs für geführte Chirurgie und Implantologie, in Mailand einen Kurs über komplexe Extraktionen und einen Workshop zu Nahttechniken. Wenn eine Extraktion Teil eines Plans mit weiteren Behandlungen ist, arbeitet er mit den Kolleginnen und Kollegen aus Kieferorthopädie und Prothetik zusammen, und die Schritte werden vor Beginn der Behandlung festgelegt.',
-          'In seiner Freizeit läuft Andrei Șerban und fährt Rad. Er spricht Rumänisch, Englisch und Italienisch, eine Sprache, die er während seiner Kurse in Mailand geübt hat.',
+          'Dr. Bozdog arbeitet in der Klinik und ist in der dentoalveolären Chirurgie tätig: einfache und chirurgische Extraktionen, die Entfernung von Weisheitszähnen, das Setzen von Implantaten und Eingriffe an Zahnfleisch und Knochen. Beim ersten Besuch untersucht Dr. Bozdog den betroffenen Bereich, wertet das Röntgenbild oder die dreidimensionale Aufnahme (DVT) aus und erklärt nacheinander die Schritte des Eingriffs und das, was danach folgt.',
+          'Zur Fortbildung gehören Kurse zur piezoelektrischen Chirurgie und zum Kieferkammaufbau sowie zur Auswertung der dentalen DVT. Für Behandlungen, die auch prothetische Arbeiten umfassen, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus der Prothetik, damit jeder Schritt den nächsten vorbereitet.',
+          'Am Tag des Eingriffs erhält der Patient schriftliche Hinweise für die Nachsorge zu Hause und die Telefonnummer der Klinik für Rückfragen. Die Kontrolle nach dem Eingriff findet meist sieben bis zehn Tage später statt, je nach Art des Eingriffs.',
         ],
       },
       fr: {
-        name: 'Dr Andrei Șerban',
-        position: 'Chirurgien-dentiste, chirurgie orale',
+        name: 'Dr Bozdog Horațiu',
+        position: 'Spécialiste en chirurgie dento-alvéolaire',
         philosophy:
-          'Je m’occupe de <k>chirurgie orale</k> : extractions et petites interventions. Avant chaque intervention, j’explique les étapes et je réponds aux questions, et le <k>contrôle</k> qui suit est prévu une semaine plus tard.',
+          'Pour moi, une intervention bien préparée commence par une <k>radiographie</k> lue avec attention et une discussion ouverte. Je tiens à ce que le patient reparte en sachant quoi faire à la maison, c’est pourquoi je donne toujours des <k>consignes</k> écrites.',
         about: [
-          'Dr Andrei Șerban exerce à la clinique depuis 2019 et se consacre à la chirurgie orale : extractions, dents de sagesse comprises, et petites interventions sur la gencive et l’os. Lors de la première visite, le praticien examine la zone, analyse la radiographie et explique point par point en quoi consiste l’intervention, combien de temps elle dure et ce qui suit.',
-          'Il poursuit sa formation par des cours spécialisés : à Cluj-Napoca, il a suivi une formation en chirurgie guidée et implantologie, et à Milan une formation aux extractions complexes ainsi qu’un atelier sur les sutures. Lorsqu’une extraction fait partie d’un plan qui comprend d’autres traitements, il travaille avec ses collègues en orthodontie et en prothèse, et les étapes sont fixées avant le début du traitement.',
-          'Pendant son temps libre, Andrei Șerban court et fait du vélo. Il parle roumain, anglais et italien, une langue qu’il a pratiquée pendant ses formations à Milan.',
+          'Dr Bozdog exerce à la clinique et se consacre à la chirurgie dento-alvéolaire : extractions simples et chirurgicales, extraction des dents de sagesse, pose d’implants et interventions sur la gencive et l’os. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est lu, puis les étapes de l’intervention sont expliquées une à une, ainsi que ce qui se passe ensuite.',
+          'La formation continue comprend des cours de chirurgie piézoélectrique et d’augmentation de la crête osseuse, ainsi que de lecture du scanner dentaire. Pour les traitements qui comprennent aussi des prothèses, le plan est établi avec les collègues de prothèse, afin que chaque étape prépare la suivante.',
+          'Le jour de l’intervention, le patient reçoit des consignes écrites à suivre à la maison et le numéro de la clinique pour toute question. Le contrôle après l’intervention est généralement prévu sept à dix jours plus tard, selon le type d’intervention.',
         ],
       },
       it: {
-        name: 'Dott. Andrei Șerban',
-        position: 'Odontoiatra, chirurgia orale',
+        name: 'Dr. Bozdog Horațiu',
+        position: 'Specialista in chirurgia dento-alveolare',
         philosophy:
-          'Mi occupo di <k>chirurgia orale</k>: estrazioni e piccoli interventi. Prima di ogni procedura spiego i passaggi e rispondo alle domande, e il <k>controllo</k> successivo viene fissato a una settimana.',
+          'Per me un intervento ben preparato comincia da una <k>radiografia</k> letta con attenzione e da un colloquio aperto. Voglio che il paziente esca sapendo che cosa fare a casa, per questo do sempre <k>indicazioni</k> scritte.',
         about: [
-          'Il Dott. Andrei Șerban lavora nella clinica dal 2019 e si occupa di chirurgia orale: estrazioni, compresi i denti del giudizio, e piccoli interventi su gengiva e osso. Alla prima visita il medico esamina la zona, valuta la radiografia e spiega passo per passo in che cosa consiste l’intervento, quanto dura e che cosa succede dopo.',
-          'Continua la sua formazione con corsi specialistici: a Cluj-Napoca ha seguito un corso di chirurgia guidata e implantologia, a Milano un corso sulle estrazioni complesse e un workshop sulle suture. Quando un’estrazione fa parte di un piano che comprende altri trattamenti, lavora insieme ai colleghi di ortodonzia e di protesi e le fasi vengono stabilite prima dell’inizio del trattamento.',
-          'Nel tempo libero Andrei Șerban corre e va in bicicletta. Parla rumeno, inglese e italiano, una lingua che ha praticato durante i corsi a Milano.',
+          'Lavora in clinica e si occupa di chirurgia dento-alveolare: estrazioni semplici e chirurgiche, estrazione dei denti del giudizio, inserimento di impianti e interventi su gengiva e osso. Alla prima visita il medico esamina la zona, legge la radiografia o la TAC e spiega passo per passo le fasi dell’intervento e che cosa succede dopo.',
+          'La formazione continua comprende corsi di chirurgia piezoelettrica e di aumento della cresta ossea, oltre che di lettura della TAC dentale. Per i trattamenti che comprendono anche lavori protesici, il piano viene definito insieme ai colleghi di protesi, in modo che ogni fase prepari la successiva.',
+          'Il giorno dell’intervento il paziente riceve indicazioni scritte per le cure a casa e il numero della clinica per qualsiasi domanda. Il controllo dopo l’intervento si fissa di solito tra i sette e i dieci giorni successivi, a seconda del tipo di intervento.',
         ],
       },
     },
@@ -1124,7 +2064,7 @@ export const doctors: readonly Doctor[] = [
  * The page's WALK does not call it — `generateStaticParams` maps `doctors`
  * itself and the populator searches the list it was handed — so its callers
  * are the doctor route's `generateMetadata`, tools, stories and tests, for
- * which "the real Elena" is exactly the lookup they want. `undefined` means
+ * which "the real Dr. Nicu" is exactly the lookup they want. `undefined` means
  * nobody wears that id, which on the built site cannot happen:
  * `dynamicParams = false` means only the emitted slugs exist as files.
  */

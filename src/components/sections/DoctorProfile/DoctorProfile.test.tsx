@@ -375,6 +375,47 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     }
   });
 
+  it('opts the doctor’s name out of hyphenation — on the biography’s opener, never above the card’s title (§15.14)', () => {
+    const { container } = renderBand();
+
+    // The biography's title carries a PERSON'S NAME, and the body's site-wide
+    // `hyphens: auto` broke real doctors' names at a syllable on phones
+    // (DoctorProfile.tsx's THE NAME IS NEVER SPLIT comment). The opt-out
+    // rides SectionHeading's ROOT — the <h2>'s own wrapper, the region's
+    // first child — and reaches the heading because `hyphens` inherits. The
+    // CLASS is the pin: no stylesheet is loaded here, so a computed `hyphens`
+    // would read back the browser's default with or without it.
+    const about = screen.getByRole('region', { name: ABOUT_HEADING.title });
+    const opener = screen.getByRole('heading', {
+      level: 2,
+      name: ABOUT_HEADING.title,
+    }).parentElement as HTMLElement;
+    expect(opener).toBe(about.firstElementChild);
+    expect(tokensOf(opener)).toContain('hyphens-none');
+    // …and the card's title beside it keeps the inheritance: its words are
+    // ordinary words, wrapping between them (ScheduleCard's heading
+    // paragraph). Nothing from that <h2> up to the band's root may carry the
+    // class, so a refactor that hoists the opt-out to the grid, the ground or
+    // the whole band fails here, naming the element. The walk must reach the
+    // root, or it proved nothing.
+    const band = bandOf(container);
+    const path: HTMLElement[] = [];
+    for (
+      let element: HTMLElement | null = screen.getByRole('heading', {
+        level: 2,
+        name: SCHEDULE_TITLE,
+      });
+      element !== null && band.contains(element);
+      element = element.parentElement
+    ) {
+      path.push(element);
+    }
+    expect(path.at(-1)).toBe(band);
+    expect(
+      path.filter((element) => tokensOf(element).includes('hyphens-none')),
+    ).toEqual([]);
+  });
+
   it('draws no list and no divider — the card’s own edge separates', () => {
     const { container } = renderBand();
 
@@ -471,15 +512,19 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
       tokens.filter((token) => /self-(stretch|start)/.test(token)),
     ).toEqual([]);
     // The opener is the region's child, never a grid item, so the band hands
-    // it NO className at all: its row is a bare SectionHeading's, read off a
-    // live render rather than spelled here.
+    // it NO placement: its row is a bare SectionHeading's, read off a live
+    // render rather than spelled here, plus the ONE class the name in its
+    // title needs, `hyphens-none`, merged last (DoctorProfile.tsx's THE NAME
+    // IS NEVER SPLIT comment).
     const [about] = halvesOf(container);
     const { container: bare, unmount } = render(
       <SectionHeading level={2} eyebrow="x" title="y" />,
     );
     const bareRow = (bare.firstElementChild as HTMLElement).className;
     unmount();
-    expect((about.firstElementChild as HTMLElement).className).toBe(bareRow);
+    expect((about.firstElementChild as HTMLElement).className).toBe(
+      `${bareRow} hyphens-none`,
+    );
   });
 
   it('gives the card ONE width, 20rem — the track and the cap are one length (D53)', () => {

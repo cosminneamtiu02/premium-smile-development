@@ -173,9 +173,9 @@ import { ScheduleCard } from './ScheduleCard';
 // changes the picture is a card TALLER than the biography: the row then takes
 // the card's height, the card still sits on the band's middle (it IS the row),
 // and the biography, stretched to the row by default, keeps its words at its
-// top over a strip of tint. Recorded, not designed for: the demo doctors'
-// three paragraphs (~1 000 characters each doctor, lib/team D17) stand well
-// taller than the card, and the Default story's vacuity guard holds a fixture
+// top over a strip of tint. Recorded, not designed for: every shipped
+// doctor's three paragraphs (~900 characters a doctor, lib/team D17) stand
+// well taller than the card, and the Default story's vacuity guard holds a fixture
 // of that length to it. Below the step the one placement utility is
 // `@3xl:`-gated, so the card is an ordinary stacked item — its 20rem, centred
 // (D53) — 40px under the biography (`gap-10`): opener, prose, card, one column
@@ -354,7 +354,23 @@ export function DoctorProfile({
             cost the region its role. The opener over the paragraphs' block,
             24px apart, stacked and beside alike. */}
         <section aria-labelledby={aboutId} className="flex flex-col gap-6">
+          {/* THE NAME IS NEVER SPLIT (2026-09-30). This title carries a
+              PERSON'S NAME, and a name wraps between words or not at all —
+              the rule PersonnelCard, DoctorIntro and ReviewCard keep wherever
+              one is printed. Inheriting the body's `hyphens: auto` (§15.14),
+              it did not: MEASURED on the built export over the six real
+              doctors of lib/team (Range.getClientRects()), Chromium broke
+              „Sa-bău" at 390 (ro, de), „Ele-na" at 360 (ro) and 320–335 (de),
+              „Ali-na" and „Hora-țiu" at 320–335 (fr, it), „Cătă-lina" at
+              390–430 (fr, it). `hyphens-none` rides SectionHeading's ROOT, the
+              one element it merges a className onto, and reaches the <h2>
+              because `hyphens` is inherited (the one-word eyebrow takes it
+              too, harmlessly). It cannot push the column open:
+              tests/unit/team-data.test.ts holds every unbreakable token of a
+              name to NAME_CEILING, 16 characters measured for the larger
+              `hero` step, and the title's other words are short. */}
           <SectionHeading
+            className="hyphens-none"
             level={2}
             id={aboutId}
             eyebrow={about.eyebrow}

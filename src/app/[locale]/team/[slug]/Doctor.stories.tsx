@@ -41,7 +41,7 @@ import { toStatTiles } from './stat-tiles';
 // header points back at this one. Both must render the same five bands in the
 // same order (round 2's D18, extended by D33: DoctorIntro → DoctorProfile →
 // DoctorCourses → DoctorStats → ClinicLocation), fed by the same populator and
-// the same ./stat-tiles.tsx, with the same eleven `team.doctor.*` keys (D20,
+// the same ./stat-tiles.tsx, with the same twelve `team.doctor.*` keys (D20,
 // D32, D37) — the about title taking the doctor's name as its ICU argument on
 // both sides. The plays pin exactly that from the outside, so a change on
 // either side that the other does not follow turns this suite red instead of
@@ -86,13 +86,17 @@ import { toStatTiles } from './stat-tiles';
 // ../populate.test.ts, where it is a return value rather than a redirect.
 //
 // ── TWO STORIES, RO + DE — the §13 page tier, and German earns its baseline
-// here: „Fachzahnärztin für Kieferorthopädie" is the longest eyebrow on the
-// site over a 72px serif name; „Kurse und Spezialisierungen" and „Über Dr.
-// Elena Marin" are h2s that must not syllable-break (SectionHeading's titles
-// opt out of hyphenation) at 256px of column; the „Despre" paragraphs are
-// built out of compounds like „Kieferorthopädie" and „Behandlungsmöglichkeiten",
+// here: „Fachrichtung Prothetik und Parodontologie" sits over the site's
+// longest name, „Dr. Malea (Sabău) Oana Bianca", on Heading's fluid `hero`
+// step (32px on the phone this story is pinned to, 72px on a desktop);
+// „Über Dr. Malea (Sabău) Oana Bianca" is the h2 that must not break inside
+// the NAME — sections/DoctorProfile opts that one title out of the site-wide
+// `hyphens: auto` (2026-09-30; the other band titles inherit it and may break
+// at a syllable in a 256px column, „Über die Jahre bestätig-te Erfahrung",
+// which §15.14 allows); the „Despre" paragraphs are built out of
+// compounds like „Zahnfleischerkrankungen" and „Behandlungsmöglichkeiten",
 // which must break at syllable points instead of pushing the tint open; and
-// the course lines are the kind of 90-character sentence §8.4's expansion
+// the course lines are the kind of long German sentence §8.4's expansion
 // headroom was written for. Every story PINS ITS LOCALE with `globals`: the
 // locale toolbar is manager state and the visual runner opens each story by
 // URL with none of it, while the preview decorator supplies the messages AND
@@ -113,9 +117,10 @@ import { toStatTiles } from './stat-tiles';
 // rulers.
 
 /** The page shape's stand-in, the first row of lib/team — see ONE DOCTOR.
- *  `.at(0)` plus a named throw rather than `doctors[0]`: an emptied list (the
- *  day the owner's real people replace the demo ones is exactly when it could
- *  be briefly empty) would otherwise fail somewhere far from here with a bare
+ *  `.at(0)` plus a named throw rather than `doctors[0]`: an emptied list (an
+ *  edit that swaps the list's rows, like the day the owner's real doctors
+ *  replaced the demo ones, is exactly when it could be briefly empty) would
+ *  otherwise fail somewhere far from here with a bare
  *  "cannot read properties of undefined". It is a function because a
  *  module-scope guard does not narrow a `const` inside the components below —
  *  a return value does. */
@@ -228,19 +233,18 @@ const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 /**
- * The COLUMN an element's arrangement is decided by: the nearest ancestor
- * that is a size container — every band's ui/Container (`@container`), since
- * nothing between a band's grid and its Container is one. Found by the
- * computed `container-type` rather than by counting parents, so a wrapper a
- * band adds tomorrow does not silently move the measurement. The walk starts
- * ABOVE the element on purpose: the schedule card is a ui/Card, which is a
- * container of its own, and its arrangement is decided by the column it
- * stands in, not by itself.
- */
-/**
  * Fonts and pictures loaded before a single box is read. `decode()` rejects
  * on a broken image; that is not this play's question, so it is swallowed —
  * the alt/role pins elsewhere own it.
+ *
+ * SOUND ONLY WHILE THIS PAGE HAS NO LAZY PICTURE (Pages/Team's `settled`,
+ * 2026-09-30, has the measurements): `decode()` never settles on a lazy
+ * picture that lies beyond the browser's loading distance, and a play that
+ * awaits one hangs until the runner's timeout. This page's one <img> is the
+ * opener's cutout, which ui/Image loads eagerly (`preload`), so the wait
+ * below cannot hang today. The day a band with lazy pictures lands far down
+ * this page — the FUTURE SEAM's articles, say — take the Team twin's shape:
+ * ask for every picture first.
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;
@@ -251,6 +255,16 @@ const settled = async (root: HTMLElement): Promise<void> => {
   );
 };
 
+/**
+ * The COLUMN an element's arrangement is decided by: the nearest ancestor
+ * that is a size container — every band's ui/Container (`@container`), since
+ * nothing between a band's grid and its Container is one. Found by the
+ * computed `container-type` rather than by counting parents, so a wrapper a
+ * band adds tomorrow does not silently move the measurement. The walk starts
+ * ABOVE the element on purpose: the schedule card is a ui/Card, which is a
+ * container of its own, and its arrangement is decided by the column it
+ * stands in, not by itself.
+ */
 const columnOf = (element: Element): HTMLElement => {
   for (let node = element.parentElement; node; node = node.parentElement) {
     if (getComputedStyle(node).containerType !== 'normal') return node;
@@ -634,6 +648,14 @@ const playPage =
       level: 2,
       name: aboutTitle,
     });
+    // THE NAME IS NEVER SPLIT (sections/DoctorProfile, 2026-09-30): this is
+    // the one band title that carries a person's name, and under the
+    // site-wide `hyphens: auto` Chromium broke „(Sa-bău)" and „Ele-na" on
+    // phones (measured on the built pages). The opt-out rides the opener's
+    // root and inherits to the <h2>; read here as the COMPUTED value, which
+    // is what the browser breaks lines by — a class name alone could sit on
+    // the wrong element.
+    await expect(getComputedStyle(about).hyphens).toBe('none');
     await expect(canvas.getByText(words.about.eyebrow)).toBeVisible();
     const paragraphs = doctor.about.map((text) => canvas.getByText(text));
     for (const paragraph of paragraphs) await expect(paragraph).toBeVisible();
@@ -802,9 +824,9 @@ const playPage =
  * and the name beside it, seated 7rem under the column's top (the `lowered`
  * seat, D54), and under the name the framed „Filozofia mea" card — the reviews
  * deck's idle card, under the price cards' lavender glow since round 2r (D61)
- * — quoting her in Romanian marks („…”) with the key words at weight 650 in
+ * — quoting the doctor in Romanian marks („…”) with the key words at weight 650 in
  * the deep violet accent-strong (D60); the lavender band fading in and out of the page ground with
- * „Despre Dr. Elena Marin" and three paragraphs on the left and the „Când mă
+ * „Despre Dr. Malea (Sabău) Oana Bianca" and three paragraphs on the left and the „Când mă
  * găsiți la clinică" card on the right, centred on them (D37); the years in
  * one column down the timeline on the left (D34), newest first, all at rest
  * here — one year lights as it crosses the middle of the screen on scroll
@@ -830,10 +852,10 @@ export const Romanian: Story = {
 /**
  * GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
  * every arrangement is one column (D21): the name over the cutout, the cutout
- * over the credo card (D51c), the „Über Dr. Elena Marin" prose over the
- * „Wann Sie mich in der Praxis finden" card, the years one under the other,
- * and the tiles one per row. „Fachzahnärztin für Kieferorthopädie" over the
- * name, „Kurse und Spezialisierungen" as an h2 that must not break inside a
+ * over the credo card (D51c), the „Über Dr. Malea (Sabău) Oana Bianca" prose
+ * over the „Wann Sie mich in der Praxis finden" card, the years one under the
+ * other, and the tiles one per row. „Fachrichtung Prothetik und
+ * Parodontologie" over the name, „Kurse und Spezialisierungen" as an h2 that must not break inside a
  * word, and paragraphs and course lines that must break at syllable points,
  * which they only do under a declared `lang` — stamped by
  * the preview decorator exactly as the shell stamps it (§15.14).

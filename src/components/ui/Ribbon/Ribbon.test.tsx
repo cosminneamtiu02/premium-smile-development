@@ -843,8 +843,17 @@ describe('ui/Ribbon — text is never covered', () => {
   /** From the 320px window's column to the widest ui/Container gives — about 2 145px at a 2 560px window. */
   const NARROWEST = 241;
   const WIDEST = 2_145;
-  /** Each sweep measured 2.0 to 2.4 s on the development machine (239 widths × two cards); five times that for a slower runner. */
-  const SWEEP_TIMEOUT_MS = 12_000;
+  /** The 239 widths in FOUR BANDS of about sixty, each its own test: the
+   *  whole sweep ran in 2.0 to 2.4 s on the development machine and timed
+   *  out at 12 s on the GitHub runner (PR #113's first CI run) — a slower
+   *  machine is not a covered card, so the budget is per band and generous. */
+  const BANDS: ReadonlyArray<readonly [number, number]> = [
+    [241, 713],
+    [721, 1_193],
+    [1_201, 1_673],
+    [1_681, WIDEST],
+  ];
+  const BAND_TIMEOUT_MS = 60_000;
   let lang = '';
 
   beforeEach(() => {
@@ -861,12 +870,26 @@ describe('ui/Ribbon — text is never covered', () => {
     expect(LONG_QUOTE_DE.length).toBeGreaterThan(LONG_QUOTE_RO.length);
   });
 
-  it.each(VARIANTS)(
-    '%s, %s: fine penetration is 0 on every card, at every 8px of column from 241 to 2 145',
-    (language, _, doctors) => {
+  it('sweeps every 8px of column from 241 to 2 145 across its bands, with no gap and no overlap', () => {
+    expect(BANDS[0][0]).toBe(NARROWEST);
+    expect(BANDS[BANDS.length - 1][1]).toBe(WIDEST);
+    BANDS.forEach(([from, to], i) => {
+      expect((from - NARROWEST) % 8).toBe(0);
+      expect((to - NARROWEST) % 8).toBe(0);
+      if (i > 0) expect(from).toBe(BANDS[i - 1][1] + 8);
+    });
+  });
+
+  it.each(
+    VARIANTS.flatMap(([language, quotes, doctors]) =>
+      BANDS.map(([from, to]) => [language, quotes, from, to, doctors] as const),
+    ),
+  )(
+    '%s, %s: fine penetration is 0 on every card, at every 8px of column from %ipx to %ipx',
+    (language, _, from, to, doctors) => {
       document.documentElement.lang = language;
       const { container, unmount } = render(
-        <div style={{ width: `${NARROWEST}px` }}>
+        <div style={{ width: `${from}px` }}>
           <StandInColumn doctors={doctors} />
         </div>,
       );
@@ -874,7 +897,7 @@ describe('ui/Ribbon — text is never covered', () => {
       if (!(frame instanceof HTMLElement)) throw new Error('no frame');
       const root = rootOf(container);
       let cards = 0;
-      for (let width = NARROWEST; width <= WIDEST; width += 8) {
+      for (let width = from; width <= to; width += 8) {
         frame.style.width = `${width}px`;
         for (const placed of placeColumn(measureColumn(root))) {
           const model = buildCard(placed.input);
@@ -897,10 +920,10 @@ describe('ui/Ribbon — text is never covered', () => {
           cards++;
         }
       }
-      expect(cards).toBe(((WIDEST - NARROWEST) / 8 + 1) * doctors.length);
+      expect(cards).toBe(((to - from) / 8 + 1) * doctors.length);
       unmount();
     },
-    SWEEP_TIMEOUT_MS,
+    BAND_TIMEOUT_MS,
   );
 });
 

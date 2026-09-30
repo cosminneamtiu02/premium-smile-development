@@ -34,7 +34,7 @@ treats it differently.
 |---|---|---|---|---|---|---|---|
 | 1 | `NEXT_LOCALE` | First-party (ours) | LanguageSwitcher click · LanguageBanner accept/dismiss | Only on the visitor's explicit click | Remember the chosen language; root `/` and the 404 dispatcher read it to route | **Exempt-functional** — no consent needed, disclosure only | **LIVE** on develop |
 | 2 | `MAP_CONSENT` | First-party (ours) | The future consent mechanism (Accept/Reject) | Only on the visitor's explicit click | Remember whether the visitor allowed the Google-Maps embed (`granted` / `rejected`) | **Exempt** (a consent *record* is itself strictly necessary) | **NOT BUILT** — design documented in §6; implementation deleted 2026-09-07 on owner instruction |
-| 3 | Google's cookies (whatever Google decides — not under our control) | **Third-party** (google.com) | Google's page inside the maps-embed iframe | The moment the iframe loads — **IF Google sets any. Measured 2026-09-09: the embed endpoint set NONE** (positive control: 3 cookies on a top-level maps.google.com visit in the same browser — see §3) | Google's own purposes | The **storage** question (ePrivacy) did not fire in measurement; the **transfer** question (GDPR — every visitor's IP reaches Google on load) is the exposure that remains. **Consent DEFERRED** — accepted risk on the owner's word (§7) | **LIVE, UNGATED** on develop since the ClinicLocation lane (owner 2026-09-09) |
+| 3 | Google's cookies (whatever Google decides — not under our control) | **Third-party** (google.com) | Google's page inside the maps-embed iframe | The moment the iframe loads — **IF Google sets any. Measured 2026-09-09, and again on 2026-09-30 against the real Sibiu embed: it set NONE** (positive control: 3 cookies, then 4, on a top-level maps.google.com visit in the same browser — see §3) | Google's own purposes | The **storage** question (ePrivacy) did not fire in measurement; the **transfer** question (GDPR — every visitor's IP reaches Google on load) is the exposure that remains. **Consent DEFERRED** — accepted risk on the owner's word (§7) | **LIVE, UNGATED** on develop since the ClinicLocation lane (owner 2026-09-09) |
 
 That is the whole list. Nothing else on the site stores anything on the visitor's
 device: no analytics (banned by owner decision, §12), no sessionStorage/localStorage
@@ -81,18 +81,34 @@ profile with an empty cookie jar, an EU IP, a page embedding
 zero cookies stored.** The control that makes the result meaningful: the same browser,
 same session, visiting `maps.google.com` as a top-level page stored **three** (`SOCS`,
 `__Secure-ENID`, `OTZ`) — so the browser stores Google's cookies when Google sends them,
-and the embed endpoint simply did not send any. Two limits, stated plainly: (1) it is one
-measurement of one endpoint form — the `google.com/maps/embed?pb=…` form the section
-actually ships was not yet measured against the real Sibiu URL (**re-run the probe when
-that URL arrives**); (2) Google can change its endpoint's behaviour at any time and owes
-us no notice.
+and the embed endpoint simply did not send any. Two limits, stated plainly: (1) it was one
+measurement of one endpoint form, not the `google.com/maps/embed?pb=…` form the section
+actually ships — **closed on 2026-09-30, next paragraph**; (2) Google can change its
+endpoint's behaviour at any time and owes us no notice.
+
+**Re-measured on 2026-09-30, the day the real Sibiu map arrived** (`mapEmbedUrl` in
+`lib/clinic` is now the clinic's own listing, and each page shows it in its own
+language — `mapEmbedUrlFor` swaps the two language fields inside the URL, so there are
+five variants of it). Same tool (Playwright's Chromium, 151), a clean profile per page,
+an EU IP — this time the BUILT Home page itself in all five languages, the frame
+scrolled into view and left alone, nobody clicking anything. **Result, the same for all
+five: zero cookies in the jar; none of the 38–39 responses from Google's hosts carried
+a `Set-Cookie` header** — so the result does not lean on the browser's
+third-party-cookie policy — **and the frame's own `localStorage`, `sessionStorage` and
+IndexedDB were empty, with no service worker** (ePrivacy asks about storage on the
+device, not about cookies alone). The control, same browser and jar: a top-level visit
+to `maps.google.com`, which lands on Google's EU consent page, stored **four** (`AEC`,
+`SOCS`, `__Secure-ENID`, `OTZ`). Limit (2) stands: re-run the probe whenever that URL
+changes.
 
 **What the measurement does NOT retire.** Cookies are the ePrivacy question (storage on the
-device). The GDPR question is different and still stands: on every load of the Home page,
+device). The GDPR question is different and still stands: on every load of a page that
+carries the band (Home — and, since 2026-09-21, the Team page and every doctor page),
 the visitor's **IP address** — personal data — travels to seven Google hosts
 (`maps.google.com`, `www.google.com`, `maps.googleapis.com`, `maps.gstatic.com`,
 `places.googleapis.com`, `fonts.googleapis.com`, `fonts.gstatic.com`), with no consent
-asked. The Google-Fonts line of cases (LG München I, 2022) was decided on IP transfer
+asked — six of the seven with the real embed on 2026-09-30 (`maps.google.com` was not
+contacted). The Google-Fonts line of cases (LG München I, 2022) was decided on IP transfer
 alone, with no cookie involved, and produced a wave of German warning letters; this site's
 `de` locale targets exactly that market. The old site's `referrerPolicy` additionally sent
 Google the full page URL; the new band sends **none** (`no-referrer` — measured: the
@@ -229,7 +245,8 @@ about this is "compliant by measurement": the cookie limb measured clean (§3), 
 IP-transfer limb did not, and the owner chose to ship and revisit.
 
 **What ships today** (`src/components/sections/ClinicLocation/ClinicLocation.tsx`):
-- the `<iframe src={clinic.mapEmbedUrl}>`, rendered in the build HTML, live at page load;
+- the `<iframe>` whose `src` is `clinic.mapEmbedUrl` in the page's own language
+  (`mapEmbedUrlFor`, 2026-09-30), rendered in the build HTML, live at page load;
 - `referrerPolicy="no-referrer"` (Google learns the IP, never the page URL) · `allow=""`
   (no frame permissions) · `loading="lazy"`;
 - **no consent record, no banner, no `lib/consent`** — the site still stores exactly one
@@ -256,7 +273,7 @@ IP-transfer limb did not, and the owner chose to ship and revisit.
 6. **The band stops being zero-JS** (or its map part does): the section — or an extracted
    map island — becomes a client component. Update its header comment, its zero-islands
    test, and the story header; keep the rest of the band inert.
-7. **Tests to add:** absence without consent · presence with `src === clinic.mapEmbedUrl`
+7. **Tests to add:** absence without consent · presence with the locale's `src` (`mapEmbedUrlFor`)
    when granted · grant-affordance click → iframe appears, focus not lost · keyboard
    activation · per-story axe on BOTH branches. Stories for both branches (the no-consent
    branch is what the visual net photographs — the fence in `tests/visual/stories.spec.ts`
@@ -278,12 +295,12 @@ lane-local fix without changing decided geometry):**
   Google's own stops (place card, canvas, zoom, shortcuts, Terms) before reaching the
   address or the phone. Verified NOT a trap — Tab exits the cross-origin document at both
   ends — but on today's stub Home the first stop after the skip link is inside Google's
-  English document. Visual order bars a DOM reorder (map above the rows below the
+  document (English until 2026-09-30, the page's own language since). Visual order bars a DOM reorder (map above the rows below the
   side-by-side step).
 
 **Standing regardless of the lane:** keep `referrerPolicy="no-referrer"`; re-run the §3
-probe against the real Sibiu `pb=` URL the day it arrives; never load the iframe from a
-`display:none` box.
+probe whenever `mapEmbedUrl` changes (done for the real Sibiu URL on 2026-09-30 — §3);
+never load the iframe from a `display:none` box.
 
 ## 8 · The disclosure obligation that exists NO MATTER WHAT
 

@@ -244,8 +244,8 @@ export function Footer(): ReactElement {
             {/* The crawlable NAP (§10.5) — plain text lines, no message keys:
                 an address is data, and translating it would create a second
                 source that can disagree with the JSON-LD. The county line is
-                skipped when it repeats the city (the placeholder data has
-                București twice), because printing it twice reads as a mistake
+                skipped when it repeats the city (the clinic's data has
+                Sibiu twice), because printing it twice reads as a mistake
                 rather than as precision. */}
             <Text tone="muted">{address.street}</Text>
             <Text tone="muted">

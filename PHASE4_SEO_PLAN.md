@@ -162,7 +162,7 @@ These bind the copy regardless of who writes it:
 
 | Item | What it unblocks |
 | --- | --- |
-| `lib/clinic/clinic.ts` real NAP (name, phone, WhatsApp, address, geo, hours, **url**) | `url` gates real canonicals, hreflang and JSON-LD `url`; the rest fills the Dentist object, Footer and ContactModal in one move (§10.1) |
+| `lib/clinic/clinic.ts` real NAP — name, phone, address, geo and hours LANDED 2026-09-30 (CLAUDE.md §15.27); still owed: the WhatsApp number (the phone's for now) and **url** | `url` gates real canonicals, hreflang and JSON-LD `url`; the rest fills the Dentist object, Footer and ContactModal in one move (§10.1) |
 | §15.6 logo → vectorized SVG → **favicon** + OG share image | favicon is the ONLY Lighthouse deduction; OG image + JSON-LD `image` fields un-omit |
 | og:locale confirmation | `en_GB` vs `en_US` (D-S1-6) |
 

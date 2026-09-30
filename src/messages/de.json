@@ -34,7 +34,7 @@
       "ariaLabel": "{name}, Startseite"
     },
     "footer": {
-      "tagline": "Moderne Zahnmedizin. Ehrliche Betreuung.",
+      "tagline": "Alles für Ihr Lächeln",
       "contactLabel": "Kontaktieren Sie uns hier",
       "hoursTitle": "Öffnungszeiten",
       "closed": "Geschlossen",
@@ -122,7 +122,7 @@
   "contact": {
     "heading": "Erreichbar per Anruf oder WhatsApp.",
     "callHeading": "Rufen Sie uns an unter",
-    "callHours": "Mo.–Fr. {weekOpens}–{weekCloses}, Sa. {satOpens}–{satCloses}",
+    "callHours": "Mo.–Fr. {weekOpens}–{weekCloses}",
     "or": "oder",
     "whatsappHeading": "Schreiben Sie uns",
     "whatsapp": "Kontaktieren Sie uns über WhatsApp",

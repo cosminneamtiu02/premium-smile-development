@@ -87,7 +87,8 @@ import { toStatTiles } from './stat-tiles';
 //
 // ── TWO STORIES, RO + DE — the §13 page tier, and German earns its baseline
 // here: „Fachrichtung Prothetik und Parodontologie" sits over the site's
-// longest name, „Dr. Malea (Sabău) Oana Bianca", at a 72px serif;
+// longest name, „Dr. Malea (Sabău) Oana Bianca", on Heading's fluid `hero`
+// step (32px on the phone this story is pinned to, 72px on a desktop);
 // „Kurse und Spezialisierungen" and „Über Dr. Malea (Sabău) Oana Bianca" are
 // h2s that must not syllable-break (SectionHeading's titles opt out of
 // hyphenation) at 256px of column; the „Despre" paragraphs are built out of
@@ -243,6 +244,15 @@ const rem = (): number =>
  * Fonts and pictures loaded before a single box is read. `decode()` rejects
  * on a broken image; that is not this play's question, so it is swallowed —
  * the alt/role pins elsewhere own it.
+ *
+ * SOUND ONLY WHILE THIS PAGE HAS NO LAZY PICTURE (Pages/Team's `settled`,
+ * 2026-09-30, has the measurements): `decode()` never settles on a lazy
+ * picture that lies beyond the browser's loading distance, and a play that
+ * awaits one hangs until the runner's timeout. This page's one <img> is the
+ * opener's cutout, which ui/Image loads eagerly (`preload`), so the wait
+ * below cannot hang today. The day a band with lazy pictures lands far down
+ * this page — the FUTURE SEAM's articles, say — take the Team twin's shape:
+ * ask for every picture first.
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;

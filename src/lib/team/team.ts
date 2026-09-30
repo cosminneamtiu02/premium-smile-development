@@ -412,9 +412,10 @@ export type Doctor = Readonly<{
 
 // The committed demo pictures. The three portraits are the PersonnelCard
 // lane's fixtures (600 × 800, the one team ratio); the two cutouts were
-// generated for this run (900 × 1200, alpha, obviously placeholders). Two
-// people share a portrait on purpose — five demo faces do not exist, and the
-// data test must therefore never demand unique pictures.
+// generated for the doctor-pages run (900 × 1200, alpha, obviously
+// placeholders). People share pictures on purpose — nine people, three demo
+// portraits, two demo cutouts — so the data test must never demand unique
+// pictures.
 const PORTRAIT_1: TeamPicture = {
   src: '/images/demo/portrait-1.jpg',
   width: 600,
@@ -772,7 +773,7 @@ export const doctors: readonly Doctor[] = [
         name: 'Dr Malea (Sabău) Oana Bianca',
         position: 'Médecin spécialiste en prothèse dentaire et parodontologie',
         philosophy:
-          'Avant tout travail prothétique, je vérifie la <k>santé des gencives</k>, car tout le reste repose sur elles. Nous établissons le plan ensemble, et je vous <k>explique</k> chaque étape avant de commencer.',
+          'Avant tout travail prothétique, je vérifie la <k>santé des gencives</k>, car tout le reste repose sur elles. Nous établissons le plan ensemble, et j’<k>explique</k> chaque étape avant de commencer.',
         about: [
           'Dr Malea exerce à la clinique depuis 2016 et prend en charge les travaux prothétiques et le traitement des maladies des gencives : couronnes, bridges, facettes et prothèses, mais aussi détartrages et traitements parodontaux. La première visite commence par un échange sur ce qui gêne le patient, se poursuit par l’examen des dents et des gencives, puis les options de traitement et l’ordre des étapes lui sont expliqués.',
           'La formation continue fait partie du travail quotidien : ces dernières années, Dr Malea a suivi des formations en réhabilitation prothétique sur implants et en chirurgie plastique parodontale. Lorsqu’un plan de traitement fait appel à d’autres spécialités, il est établi avec les collègues de chirurgie, d’endodontie et d’orthodontie, et le patient sait dès le début ce que comprend chaque étape.',
@@ -1742,7 +1743,7 @@ export const doctors: readonly Doctor[] = [
           'Înaintea oricărei intervenții îi explic pacientului <k>fiecare pas</k>, ca să știe exact ce urmează. Lucrez fără grabă, iar la <k>controlul</k> de după verificăm împreună cum se vindecă zona.',
         about: [
           'Dr. Opriș lucrează în clinică din 2014 și se ocupă de chirurgia dento-alveolară: extracții, inclusiv ale molarilor de minte, inserarea implanturilor și intervenții de augmentare osoasă. La prima vizită, medicul examinează zona, analizează radiografia sau tomografia și explică ce presupune intervenția, cât durează și cum decurge vindecarea.',
-          'Formarea continuă prin cursuri de implantologie ghidată digital și de regenerare osoasă. Când o intervenție chirurgicală face parte dintr-un plan mai amplu, lucrul se coordonează cu colegii din protetică și parodontologie, iar etapele se stabilesc înainte de începerea tratamentului.',
+          'Formarea continuă prin cursuri de implantologie ghidată digital și de augmentare osoasă. Când o intervenție chirurgicală face parte dintr-un plan mai amplu, lucrul se coordonează cu colegii din protetică și parodontologie, iar etapele se stabilesc înainte de începerea tratamentului.',
           'Înaintea unei intervenții, pacientul primește instrucțiuni despre alimentație și despre medicamentele pe care le ia. După intervenție, controlul se programează de obicei la o săptămână, când se verifică vindecarea și, dacă e cazul, se scot firele.',
         ],
       },
@@ -1750,10 +1751,10 @@ export const doctors: readonly Doctor[] = [
         name: 'Dr. Opriș Mircea',
         position: 'Specialist in dentoalveolar surgery',
         philosophy:
-          'Before any procedure I explain <k>every step</k> to the patient, so that nothing that follows comes as a surprise. I work without rushing, and at the <k>follow-up</k> visit we check together how the area is healing.',
+          'Before any procedure I explain <k>every step</k> to the patient, so that they know exactly what comes next. I work without rushing, and at the <k>follow-up</k> visit we check together how the area is healing.',
         about: [
           'Dr. Opriș has worked at the clinic since 2014 and practises dentoalveolar surgery: extractions, wisdom teeth included, implant placement and bone augmentation procedures. At the first visit, the doctor examines the area, reviews the X-ray or CT scan and explains what the procedure involves, how long it takes and how healing goes.',
-          'Training continues through courses in digitally guided implantology and bone regeneration. When a surgical procedure is part of a wider plan, the work is coordinated with colleagues in prosthodontics and periodontology, and the stages are set before treatment begins.',
+          'Training continues through courses in digitally guided implantology and bone augmentation. When a surgical procedure is part of a wider plan, the work is coordinated with colleagues in prosthodontics and periodontology, and the stages are set before treatment begins.',
           'Before a procedure, the patient receives instructions about eating and about any medication they take. After the procedure, the check-up is usually booked for a week later, when the healing is checked and the stitches are removed if needed.',
         ],
       },
@@ -1764,7 +1765,7 @@ export const doctors: readonly Doctor[] = [
           'Vor jedem Eingriff erkläre ich <k>jeden Schritt</k>, damit klar ist, was als Nächstes kommt. Ich arbeite ohne Eile, und bei der <k>Nachkontrolle</k> prüfen wir gemeinsam, wie der Bereich heilt.',
         about: [
           'Dr. Opriș arbeitet seit 2014 in der Klinik und ist in der dentoalveolären Chirurgie tätig: Extraktionen, auch von Weisheitszähnen, das Setzen von Implantaten und Knochenaufbau. Beim ersten Besuch werden der Bereich untersucht, das Röntgenbild oder die DVT ausgewertet und erklärt, was der Eingriff umfasst, wie lange er dauert und wie die Heilung verläuft.',
-          'Die Fortbildung geht in Kursen zur digital geführten Implantologie und zur Knochenregeneration weiter. Wenn ein chirurgischer Eingriff Teil eines größeren Plans ist, wird die Arbeit mit den Kolleginnen und Kollegen aus Prothetik und Parodontologie abgestimmt, und die Schritte werden vor Beginn der Behandlung festgelegt.',
+          'Die Fortbildung geht in Kursen zur digital geführten Implantologie und zur Knochenaugmentation weiter. Wenn ein chirurgischer Eingriff Teil eines größeren Plans ist, wird die Arbeit mit den Kolleginnen und Kollegen aus Prothetik und Parodontologie abgestimmt, und die Schritte werden vor Beginn der Behandlung festgelegt.',
           'Vor einem Eingriff erhält der Patient Hinweise zum Essen und zu den Medikamenten, die er einnimmt. Die Kontrolle nach dem Eingriff findet meist eine Woche später statt, dabei werden die Heilung geprüft und, falls nötig, die Fäden entfernt.',
         ],
       },
@@ -1772,10 +1773,10 @@ export const doctors: readonly Doctor[] = [
         name: 'Dr Opriș Mircea',
         position: 'Médecin spécialiste en chirurgie dento-alvéolaire',
         philosophy:
-          'Avant chaque intervention, j’explique <k>chaque étape</k> au patient, pour que tout soit clair dès le départ. Je travaille sans précipitation, et lors du <k>contrôle</k> nous vérifions ensemble la cicatrisation.',
+          'Avant chaque intervention, j’explique <k>chaque étape</k> au patient, pour qu’il sache exactement ce qui va suivre. Je travaille sans précipitation, et lors du <k>contrôle</k> nous vérifions ensemble la cicatrisation.',
         about: [
           'Dr Opriș exerce à la clinique depuis 2014 et se consacre à la chirurgie dento-alvéolaire : extractions, dents de sagesse comprises, pose d’implants et interventions d’augmentation osseuse. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est analysé, puis l’intervention, sa durée et le déroulement de la cicatrisation sont expliqués.',
-          'La formation se poursuit par des cours d’implantologie guidée numériquement et de régénération osseuse. Lorsqu’une intervention chirurgicale fait partie d’un plan plus large, le travail est coordonné avec les collègues de prothèse et de parodontologie, et les étapes sont fixées avant le début du traitement.',
+          'La formation se poursuit par des cours d’implantologie guidée numériquement et d’augmentation osseuse. Lorsqu’une intervention chirurgicale fait partie d’un plan plus large, le travail est coordonné avec les collègues de prothèse et de parodontologie, et les étapes sont fixées avant le début du traitement.',
           'Avant une intervention, le patient reçoit des consignes sur l’alimentation et sur les médicaments qu’il prend. Après l’intervention, le contrôle est généralement prévu une semaine plus tard, pour vérifier la cicatrisation et retirer les fils si nécessaire.',
         ],
       },
@@ -1786,7 +1787,7 @@ export const doctors: readonly Doctor[] = [
           'Prima di ogni intervento spiego al paziente <k>ogni passaggio</k>, perché sappia esattamente che cosa succederà. Lavoro senza fretta e al <k>controllo</k> successivo verifichiamo insieme come guarisce la zona.',
         about: [
           'Dr. Opriș lavora nella clinica dal 2014 e si occupa di chirurgia dento-alveolare: estrazioni, compresi i denti del giudizio, inserimento di impianti e interventi di aumento osseo. Alla prima visita il medico esamina la zona, valuta la radiografia o la TAC e spiega in che cosa consiste l’intervento, quanto dura e come procede la guarigione.',
-          'La formazione prosegue con corsi di implantologia a guida digitale e di rigenerazione ossea. Quando un intervento chirurgico fa parte di un piano più ampio, il lavoro viene coordinato con i colleghi di protesi e parodontologia e le fasi vengono stabilite prima dell’inizio del trattamento.',
+          'La formazione prosegue con corsi di implantologia a guida digitale e di aumento osseo. Quando un intervento chirurgico fa parte di un piano più ampio, il lavoro viene coordinato con i colleghi di protesi e parodontologia e le fasi vengono stabilite prima dell’inizio del trattamento.',
           'Prima di un intervento il paziente riceve indicazioni sull’alimentazione e sui farmaci che assume. Dopo l’intervento il controllo si fissa di solito a una settimana, quando si verifica la guarigione e, se serve, si rimuovono i punti.',
         ],
       },

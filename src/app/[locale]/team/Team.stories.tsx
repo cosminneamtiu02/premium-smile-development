@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { TeamRoster } from '@/components/sections/TeamRoster/TeamRoster';
@@ -37,8 +37,9 @@ import { populateTeamRoster } from './populate';
 // plays pin exactly that from the outside.
 //
 // ── THE CONTENT IS THE REAL lib/team, not a fixture: this is the page, and its
-// people are the list the site ships (demo people until the owner's real staff
-// lands — lib/team's own TODO(owner)). The BAND's stories (Sections/TeamRoster)
+// people are the list the site ships (since 2026-09-30 the clinic's six real
+// doctors, under placeholder details, beside three demo auxiliary members —
+// lib/team's own TODO(owner)). The BAND's stories (Sections/TeamRoster)
 // are where invented rosters exercise the layout; that split is what „dumb"
 // buys, and it is why adding a doctor re-records these six pictures and none of
 // the band's.
@@ -47,8 +48,10 @@ import { populateTeamRoster } from './populate';
 // three times over: the two button labels may not syllable-break (§15.14) and
 // „Leistungen ansehen" is the longest of the pair; „Zahnmedizinische
 // Fachangestellte" is an unbroken 27-letter compound inside a 16rem tile (run
-// D9's floor); and the doctors' quotes run ~35 % longer than the Romanian in a
-// card whose two columns are already committed. Every story PINS ITS LOCALE
+// D9's floor); and the doctors' quotes run longer than the Romanian in a card
+// whose two columns are already committed (MEASURED on today's placeholder
+// texts: 1–12 % a quote, 8 % overall — §8.4's ~35 % is the headroom a real
+// text may use). Every story PINS ITS LOCALE
 // with `globals`: the locale toolbar is manager state and the visual runner
 // opens each story by URL with none of it, while the preview decorator
 // supplies the messages AND stamps `document.documentElement.lang` exactly as
@@ -230,26 +233,58 @@ const expectFirstCard = async (card: HTMLElement): Promise<Branch> => {
 };
 
 /**
+ * Fonts and pictures SETTLED before a single box is read: a grid track's
+ * min-content includes a loaded image's, so a box read before the pictures
+ * have settled can be a different layout from the one a visitor sees (the
+ * doctor twin's CI-only failure of 2026-09-27 hid behind exactly that window).
+ *
+ * EVERY PICTURE IS ASKED FOR FIRST (2026-09-30, the six real doctors). The
+ * portraits are lazy (ui/Image, §11), and a browser never starts a lazy
+ * picture that lies further below the window than its loading distance —
+ * MEASURED in Chromium: about 3000px. Such a picture's `decode()` stays
+ * pending for good, and this play with it, at its first line. With two
+ * doctors no picture on this page was that far down; with six the German
+ * phone page is 7087px tall and its last four portraits are, so the story
+ * timed out. It hid on a workstation and showed on CI for one reason:
+ * Romanian runs first in the same browser page and leaves the same picture
+ * URLs in the memory cache, which completes a lazy picture on the spot — but
+ * CI's Vitest step runs before any image optimizer (the Sections/DoctorIntro
+ * stories' own note), those URLs answer 404 there and nothing is cached. To
+ * see it without CI, run the German story ALONE.
+ *
+ * So each picture is flipped to `eager` before the wait — HTML's own "lazy
+ * load resumption", no scrolling and no timer — and what the play measures is
+ * the page of a visitor who has scrolled through it, which is the page the
+ * document-wide checks (the outline, the sideways scroll) are about. React
+ * never writes the attribute back: the prop it rendered is unchanged.
+ *
+ * SETTLED, NOT LOADED — the Sections/DoctorIntro helper's contract, kept:
+ * `decode()` resolved OR rejected, and then `complete`, polled (`waitFor`)
+ * because ui/Image answers a missing variant by swapping to the original
+ * file, and a picture caught between the two sources settles on a later
+ * poll. Nothing here asserts pixels. On CI a picture may be read while it is
+ * still between its two sources, and that is sound on THIS page: a portrait's
+ * box is its frame's (PersonnelCard's `aspect-3/4 w-48`), the same whether
+ * the picture arrived or broke.
+ */
+const settled = async (root: HTMLElement): Promise<void> => {
+  await document.fonts.ready;
+  const pictures = Array.from(root.querySelectorAll('img'));
+  for (const picture of pictures) picture.loading = 'eager';
+  await Promise.all(
+    pictures.map((picture) => picture.decode().catch(() => undefined)),
+  );
+  await waitFor(() => {
+    for (const picture of pictures) expect(picture.complete).toBe(true);
+  });
+};
+
+/**
  * Everything both stories check, against the language they were pinned to.
  * Written once because the page's contract does not change with the locale —
  * only the words do. `pinned` is the arrangement the story's viewport pin
  * must produce in the Vitest runner (see the header's viewport paragraph).
  */
-/**
- * Fonts and pictures loaded before a single box is read: a grid track's
- * min-content includes a loaded image's, so a box read before the portraits
- * arrive is a different layout from the one a visitor sees (the doctor twin's
- * CI-only failure of 2026-09-27 hid behind exactly that window).
- */
-const settled = async (root: HTMLElement): Promise<void> => {
-  await document.fonts.ready;
-  await Promise.all(
-    Array.from(root.querySelectorAll('img')).map((img) =>
-      img.decode().catch(() => undefined),
-    ),
-  );
-};
-
 const playPage =
   (
     words: {
@@ -423,8 +458,10 @@ export const Romanian: Story = {
 
 /** GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
  *  every card is one column (D21): the longest button pair, each button on a
- *  full-width line of its own, the 27-letter tile compound and the ~35 %
- *  longer quotes (see this file's header). */
+ *  full-width line of its own, the 27-letter tile compound and the longer
+ *  quotes (see this file's header). With six doctors this is also the page's
+ *  TALLEST frame — 7087px — the one whose last portraits lie beyond the
+ *  browser's lazy-loading distance (`settled` above). */
 export const German: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
   play: async (context) => {

@@ -86,13 +86,14 @@ import { toStatTiles } from './stat-tiles';
 // ../populate.test.ts, where it is a return value rather than a redirect.
 //
 // ── TWO STORIES, RO + DE — the §13 page tier, and German earns its baseline
-// here: „Fachzahnärztin für Kieferorthopädie" is the longest eyebrow on the
-// site over a 72px serif name; „Kurse und Spezialisierungen" and „Über Dr.
-// Elena Marin" are h2s that must not syllable-break (SectionHeading's titles
-// opt out of hyphenation) at 256px of column; the „Despre" paragraphs are
-// built out of compounds like „Kieferorthopädie" and „Behandlungsmöglichkeiten",
+// here: „Fachrichtung Prothetik und Parodontologie" sits over the site's
+// longest name, „Dr. Malea (Sabău) Oana Bianca", at a 72px serif;
+// „Kurse und Spezialisierungen" and „Über Dr. Malea (Sabău) Oana Bianca" are
+// h2s that must not syllable-break (SectionHeading's titles opt out of
+// hyphenation) at 256px of column; the „Despre" paragraphs are built out of
+// compounds like „Zahnfleischerkrankungen" and „Behandlungsmöglichkeiten",
 // which must break at syllable points instead of pushing the tint open; and
-// the course lines are the kind of 90-character sentence §8.4's expansion
+// the course lines are the kind of long German sentence §8.4's expansion
 // headroom was written for. Every story PINS ITS LOCALE with `globals`: the
 // locale toolbar is manager state and the visual runner opens each story by
 // URL with none of it, while the preview decorator supplies the messages AND
@@ -113,9 +114,10 @@ import { toStatTiles } from './stat-tiles';
 // rulers.
 
 /** The page shape's stand-in, the first row of lib/team — see ONE DOCTOR.
- *  `.at(0)` plus a named throw rather than `doctors[0]`: an emptied list (the
- *  day the owner's real people replace the demo ones is exactly when it could
- *  be briefly empty) would otherwise fail somewhere far from here with a bare
+ *  `.at(0)` plus a named throw rather than `doctors[0]`: an emptied list (an
+ *  edit that swaps the list's rows, like the day the owner's real doctors
+ *  replaced the demo ones, is exactly when it could be briefly empty) would
+ *  otherwise fail somewhere far from here with a bare
  *  "cannot read properties of undefined". It is a function because a
  *  module-scope guard does not narrow a `const` inside the components below —
  *  a return value does. */
@@ -802,9 +804,9 @@ const playPage =
  * and the name beside it, seated 7rem under the column's top (the `lowered`
  * seat, D54), and under the name the framed „Filozofia mea" card — the reviews
  * deck's idle card, under the price cards' lavender glow since round 2r (D61)
- * — quoting her in Romanian marks („…”) with the key words at weight 650 in
+ * — quoting the doctor in Romanian marks („…”) with the key words at weight 650 in
  * the deep violet accent-strong (D60); the lavender band fading in and out of the page ground with
- * „Despre Dr. Elena Marin" and three paragraphs on the left and the „Când mă
+ * „Despre Dr. Malea (Sabău) Oana Bianca" and three paragraphs on the left and the „Când mă
  * găsiți la clinică" card on the right, centred on them (D37); the years in
  * one column down the timeline on the left (D34), newest first, all at rest
  * here — one year lights as it crosses the middle of the screen on scroll
@@ -830,10 +832,10 @@ export const Romanian: Story = {
 /**
  * GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
  * every arrangement is one column (D21): the name over the cutout, the cutout
- * over the credo card (D51c), the „Über Dr. Elena Marin" prose over the
- * „Wann Sie mich in der Praxis finden" card, the years one under the other,
- * and the tiles one per row. „Fachzahnärztin für Kieferorthopädie" over the
- * name, „Kurse und Spezialisierungen" as an h2 that must not break inside a
+ * over the credo card (D51c), the „Über Dr. Malea (Sabău) Oana Bianca" prose
+ * over the „Wann Sie mich in der Praxis finden" card, the years one under the
+ * other, and the tiles one per row. „Fachrichtung Prothetik und
+ * Parodontologie" over the name, „Kurse und Spezialisierungen" as an h2 that must not break inside a
  * word, and paragraphs and course lines that must break at syllable points,
  * which they only do under a declared `lang` — stamped by
  * the preview decorator exactly as the shell stamps it (§15.14).

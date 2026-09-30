@@ -65,8 +65,8 @@ import { toStatTiles } from './stat-tiles';
 // runs a CHILD segment's `generateStaticParams` once per combination its
 // PARENT produced, and merges the two: the [locale] layout emits five locales
 // (routing.locales), this segment emits one entry per doctor, and the export
-// therefore writes five × `doctors.length` pages — /ro/team/elena-marin/,
-// /de/team/elena-marin/, … . That is why the function below returns `slug`
+// therefore writes five × `doctors.length` pages — /ro/team/toma-lucian/,
+// /de/team/toma-lucian/, … . That is why the function below returns `slug`
 // ALONE and never mentions the locale: naming it here would be a second
 // spelling of the manifest, free to drift from the layout's.
 //

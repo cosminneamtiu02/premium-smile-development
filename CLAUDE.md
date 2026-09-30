@@ -113,7 +113,7 @@ src/
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
     hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row (RO/EN the old site's own; DE/FR/IT, the short names and every `text` line DRAFTED, flagged; demo pictures until the owner's photographs); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
-    team/team.ts         # THE clinic's people — doctors (portrait + transparent cutout, own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles, an optional lib/prices category) and auxiliaries, five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); DEMO people + DRAFTED words (EN/DE/FR/IT, and the RO paragraphs) until the owner's real team (doctor-pages run, 2026-09-21; round 2 2026-09-25, §15.23)
+    team/team.ts         # THE clinic's people — doctors (portrait + transparent cutout, own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles, an optional lib/prices category) and auxiliaries, five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside three still-DEMO auxiliaries (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30, §15.23)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -1745,6 +1745,29 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     (8) The credo card's h2 at 30 px beside the picture (tier-1 react F1), ACCEPTED ("idk i feel like it
     looks good now"): the rule is recorded in §15.24 — a title INSIDE A CARD reads one step under a band
     title, because the `band` step answers to the card's own `@container`.
+
+    **Round 3 — THE REAL DOCTORS (owner, 2026-09-30, verbatim: "these are non fictopnal and need to make
+    up the actual list of doctors from the clinic, not dummy ones as so far" · "so i need pages for each and
+    to have them as doctor cards" · "what you do not have info yet, generate random"; lane
+    `feat/real-doctors`):** `lib/team`'s two demo doctors are replaced by the clinic's SIX, in the owner's
+    order — Malea (Sabău) Oana Bianca (protetică dentară și parodontologie), Toma Lucian (protetică dentară,
+    specializat în endodonție microscopică), Nicu Elena Alina (parodontologie), Ivașcu-Zugravu Cătălina
+    (ortodonție și ortopedie facială, his words; the specialty's official name „… dento-facială" is
+    flagged), Opriș Mircea and Bozdog Horațiu (chirurgie dento-alveolară) — so the Team page prints six cards
+    and the export writes thirty doctor pages, with no code change (`generateStaticParams` maps the list).
+    The NAMES and SPECIALTIES are the owner's; the diacritics added to Ivașcu, Cătălina, Opriș and Horațiu
+    are Claude's and flagged. EVERYTHING ELSE is a random placeholder on his word — the pictures (the demo
+    silhouettes, in list order), the weeks (inside the clinic's real Monday to Friday, 09:00 to 19:00), the
+    courses, the stats, the quotes and the biographies in all five languages — written to read as nobody's
+    facts: no university, society, congress or hobby is named, each third paragraph is practical advice for
+    patients, and every number agrees with its own rows. NOBODY IS GENDERED (the owner gave no pronouns):
+    no pronoun for a doctor in any language, „Dr." in Italian too, German positions as „Fachrichtung …" —
+    the gendered forms wait for the owner's word per doctor. The URL ids are the names in the owner's order,
+    ASCII (`malea-sabau-oana-bianca`, `toma-lucian`, `nicu-elena-alina`, `ivascu-zugravu-catalina`,
+    `opris-mircea`, `bozdog-horatiu`), free to change until launch (§5's redirect rule after). The three
+    auxiliaries stay demo. lib/team's header TODO(owner) block is the detailed record. Combined with the
+    doctor-showcase lane's mount, six doctors fire §15.26's WAIT trigger (six stretches due at once draw
+    for ≈ 5.96 s, over SC 2.2.2's 5 s); that lane records it as ARMED.
 
 24. **Heading scale, app-wide — DECIDED 2026-09-26 (owner, verbatim: "i need all headings and
     eyebrows app wide to be made the same size as they are on the

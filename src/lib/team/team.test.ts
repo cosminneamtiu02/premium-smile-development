@@ -50,27 +50,32 @@ const shipped = (id: string): Doctor => {
   return doctor;
 };
 
-describe('splitKeywords — the two doctors’ own sentences (run ledger D2, D17)', () => {
-  const elena = findDoctor('elena-marin');
-  const andrei = findDoctor('andrei-serban');
+describe('splitKeywords — two shipped doctors’ own sentences (run ledger D2, D17)', () => {
+  // The first two doctors of the owner's list (2026-09-30). Their quotes are
+  // PLACEHOLDERS (lib/team's TODO(owner) block): replacing one with the
+  // doctor's own words means updating the pin below in the same edit.
+  const malea = shipped('malea-sabau-oana-bianca');
+  const toma = shipped('toma-lucian');
 
-  it('splits Elena’s Romanian into text · key word · text · key word · text', () => {
-    const philosophy = elena?.words.ro.philosophy ?? '';
+  it('splits Dr. Malea’s Romanian into text · key word · text · key word · text', () => {
+    const philosophy = malea.words.ro.philosophy;
     const segments = splitKeywords(philosophy);
 
     expect(flagsOf(segments)).toEqual([false, true, false, true, false]);
-    expect(keywordsOf(segments)).toEqual(['ortodonție', 'ascultarea']);
-    expect(segments[0].text).toBe('Lucrez în ');
+    expect(keywordsOf(segments)).toEqual(['sănătatea gingiei', 'explic']);
+    expect(segments[0].text).toBe(
+      'Înainte de orice lucrare protetică verific ',
+    );
     expect(readingOf(segments)).toBe(philosophy.replaceAll(/<\/?k>/g, ''));
   });
 
-  it('splits Andrei’s Romanian the same way', () => {
-    const philosophy = andrei?.words.ro.philosophy ?? '';
+  it('splits Dr. Toma’s Romanian the same way', () => {
+    const philosophy = toma.words.ro.philosophy;
     const segments = splitKeywords(philosophy);
 
     expect(flagsOf(segments)).toEqual([false, true, false, true, false]);
-    expect(keywordsOf(segments)).toEqual(['chirurgie orală', 'controlul']);
-    expect(segments[0].text).toBe('Mă ocup de ');
+    expect(keywordsOf(segments)).toEqual(['microscopul', 'dintele natural']);
+    expect(segments[0].text).toBe('Lucrez cu ');
     expect(readingOf(segments)).toBe(philosophy.replaceAll(/<\/?k>/g, ''));
   });
 
@@ -173,7 +178,7 @@ const row = (year: number, line: string): Course => ({
 
 /** A shipped doctor wearing other course rows — the one field under test. */
 const withCourses = (courses: readonly Course[]): Doctor => ({
-  ...shipped('elena-marin'),
+  ...shipped('malea-sabau-oana-bianca'),
   id: 'medic-proba',
   courses,
 });
@@ -191,19 +196,20 @@ const SHUFFLED: readonly Course[] = [
 ];
 
 describe('coursesByYear — the courses band’s groups (run ledger D15, D17)', () => {
-  it('groups Elena’s Romanian as 2025 · 2024 ×2 · 2023 · 2022 · 2021 · 2019 · 2018 · 2016, the two 2024 lines in file order', () => {
-    // Nine rows over eight years since round 2g (D39: "add more examples").
-    const groups = coursesByYear(shipped('elena-marin'), 'ro');
+  it('groups Dr. Malea’s Romanian as 2025 · 2023 ×2 · 2019 · 2017 · 2012, the two 2023 lines in file order', () => {
+    // Six placeholder rows over five years (lib/team's TODO(owner) block) —
+    // the one shipped doctor with two courses in one year, kept on purpose.
+    const groups = coursesByYear(shipped('malea-sabau-oana-bianca'), 'ro');
 
     expect(groups.map((group) => group.year)).toEqual([
-      2025, 2024, 2023, 2022, 2021, 2019, 2018, 2016,
+      2025, 2023, 2019, 2017, 2012,
     ]);
     expect(groups.map((group) => group.courses.length)).toEqual([
-      1, 2, 1, 1, 1, 1, 1, 1,
+      1, 2, 1, 1, 1,
     ]);
     expect(groups[1].courses).toEqual([
-      'Curs de aliniere dentară cu gutiere transparente, București',
-      'Curs de fotografie dentară digitală, București',
+      'Curs de chirurgie plastică parodontală, Cluj-Napoca',
+      'Curs de fațete ceramice și preparații minim invazive, Sibiu',
     ]);
   });
 
@@ -271,10 +277,12 @@ describe('coursesByYear — the courses band’s groups (run ledger D15, D17)', 
 // builds a page: `generateStaticParams` maps `doctors` itself and the
 // populator searches the `list` it was handed (team.ts's ARRAYS paragraph).
 describe('findDoctor / findAuxiliary — the lookups metadata and tests use', () => {
-  it('finds a doctor by his URL segment (run ledger D3)', () => {
-    expect(findDoctor('elena-marin')?.words.ro.name).toBe('Dr. Elena Marin');
-    expect(findDoctor('andrei-serban')?.words.ro.name).toBe(
-      'Dr. Andrei Șerban',
+  it('finds a doctor by the URL segment (run ledger D3)', () => {
+    expect(findDoctor('malea-sabau-oana-bianca')?.words.ro.name).toBe(
+      'Dr. Malea (Sabău) Oana Bianca',
+    );
+    expect(findDoctor('bozdog-horatiu')?.words.ro.name).toBe(
+      'Dr. Bozdog Horațiu',
     );
   });
 
@@ -282,8 +290,8 @@ describe('findDoctor / findAuxiliary — the lookups metadata and tests use', ()
     expect(findDoctor('nimeni')).toBeUndefined();
     expect(findDoctor('')).toBeUndefined();
     // Not a prefix match and not a case-insensitive one: the URL is exact.
-    expect(findDoctor('elena')).toBeUndefined();
-    expect(findDoctor('Elena-Marin')).toBeUndefined();
+    expect(findDoctor('nicu')).toBeUndefined();
+    expect(findDoctor('Nicu-Elena-Alina')).toBeUndefined();
   });
 
   it('finds an auxiliary member by id', () => {
@@ -295,6 +303,7 @@ describe('findDoctor / findAuxiliary — the lookups metadata and tests use', ()
 
   it('returns undefined for an id no member owns', () => {
     expect(findAuxiliary('ioana')).toBeUndefined();
-    expect(findAuxiliary('elena-marin')).toBeUndefined();
+    // A doctor's id names no auxiliary member: the two lists are apart.
+    expect(findAuxiliary('toma-lucian')).toBeUndefined();
   });
 });

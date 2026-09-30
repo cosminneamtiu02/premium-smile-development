@@ -25,10 +25,11 @@ import { populateHero } from './populate';
 // file always said they would) — the „Ne găsești" band late on the page
 // (ClinicLocation board D3, owner 2026-09-09) — and the reviews deck BELOW
 // the map (owner, 2026-09-20, the hero lane's round 4: "it should be below
-// the map"; the old site's order too). The deck reads lib/reviews itself and,
-// while that list is empty, shows the first five of lib/reviews' demo rows —
-// the Storybook "Five" story, on the owner's round-5 word (ReviewsCarousel.tsx,
-// AN EMPTY LIST) — this page passes it nothing.
+// the map"; the old site's order too). The deck reads lib/reviews itself —
+// the clinic's own Google reviews since 2026-09-30, which retired the demo
+// rows that held the band's place from 2026-09-20 (ReviewsCarousel.tsx, AN
+// EMPTY LIST) — and measures "how long ago" from the build's own clock, so
+// this page passes it nothing.
 // ServicesTeaser and CTABanner still slot around them in their own lanes
 // (§14).
 //

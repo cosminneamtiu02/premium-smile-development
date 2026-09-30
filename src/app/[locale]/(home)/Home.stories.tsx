@@ -8,8 +8,9 @@ import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowc
 import { Header } from '@/components/sections/Header/Header';
 import { Hero } from '@/components/sections/Hero/Hero';
 import { ReviewsCarousel } from '@/components/sections/ReviewsCarousel/ReviewsCarousel';
+import { REVIEWS_NOW } from '@/components/sections/ReviewsCarousel/ReviewsCarousel.fixtures';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
-import { demoReviews } from '@/lib/reviews/reviews';
+import { reviews } from '@/lib/reviews/reviews';
 import { doctors } from '@/lib/team/team';
 import { localeHref } from '@/i18n/href';
 import { isLocale } from '@/i18n/locales';
@@ -142,7 +143,11 @@ function HomePageBand(): ReactElement {
         doctors={cards}
       />
       <ClinicLocation />
-      <ReviewsCarousel />
+      {/* The page passes nothing and measures "how long ago" from the build;
+          the twin pins the REAL list's story clock instead, so this baseline
+          never ages (tests/unit/reviews-data.test.ts holds every real review
+          at or before it). */}
+      <ReviewsCarousel now={REVIEWS_NOW} />
     </>
   );
 }
@@ -221,15 +226,14 @@ export const Romanian: Story = {
     await expect(
       showcase.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    // The reviews deck below the map, on the five demo rows today.
+    // The reviews deck below the map, over the clinic's own Google reviews
+    // (lib/reviews, since 2026-09-30) — every one of them, since the deck lays
+    // out every slide.
     await expect(
       canvas.getByRole('region', { name: ro.home.reviews.region }),
     ).toBeInTheDocument();
-    await expect(canvas.getByText(demoReviews[0].name)).toBeInTheDocument();
-    await expect(canvas.getByText(demoReviews[4].name)).toBeInTheDocument();
-    await expect(
-      canvas.queryByText(demoReviews[5].name),
-    ).not.toBeInTheDocument();
+    for (const review of reviews)
+      await expect(canvas.getByText(review.name)).toBeInTheDocument();
   },
 };
 

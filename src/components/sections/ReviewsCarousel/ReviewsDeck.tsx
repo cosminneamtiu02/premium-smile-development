@@ -12,6 +12,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 import type { Initials } from '@/lib/initials/initials';
 import type { Rating } from '@/lib/rating/rating';
 import { liveRegion, wrapIndex } from '@/lib/rotation/rotation';
+import type { IsoDate } from '@/lib/time-ago/time-ago';
 
 // sections/ReviewsCarousel/ReviewsDeck — THE ISLAND: the fanned deck of review
 // cards and the two controls under it. The site's FIRST rotator on
@@ -122,21 +123,47 @@ import { liveRegion, wrapIndex } from '@/lib/rotation/rotation';
 //     `overflow-x-clip` (ReviewsCarousel.tsx) swallows the overshoot before
 //     it can become a sideways page scroll (§7).
 //   · The card had a fixed cap (`max-w-[22rem]`) and no relation to the
-//     screen. Now `--deck-card` is `clamp(14rem, 66%, 8% + 20rem)` OF THE
+//     screen. Now `--deck-card` is `clamp(14rem, 80%, 8% + 20rem)` OF THE
 //     STAGE — percentages, resolved by the slide against the stage's box, so
-//     no JavaScript measures anything (D10's rule survives): two-thirds of a
-//     phone (257px at 390, with a 14rem floor so 320px still gets a readable
-//     224px column), half a tablet (381px at 768), and from ~552px up a gentle
+//     no JavaScript measures anything (D10's rule survives): four-fifths of a
+//     phone (312px at 390, 256px at 320 — the 14rem floor binds only under a
+//     280px stage), half a tablet (381px at 768), and from ~444px up a gentle
 //     line that keeps growing with the screen (422 at 1280 · 443 at 1536 ·
 //     474 at 1920) instead of freezing. What that buys, with the neighbours
 //     tucked 13% under the centre (`--fan-step: 87%`, the old deck's WIDE
 //     spacing at every width now — the card width carries the responsiveness
-//     the three fan steps used to): at 390 each neighbour shows ~66px past the
-//     centre card (the old site's ~65px), at 768 half of itself, at 1280 the
-//     whole of itself plus a sliver of the card behind, at 1536 and up the old
-//     five-card spread. The band's stories measure all of this in a real
-//     browser (centred, the width formula, both neighbours peeking, both
-//     edges cut) at whatever width the runner opens them.
+//     the three fan steps used to): at 390 each neighbour shows 39px past the
+//     centre card ((390 − 312) / 2 — the stage's edge cuts it there), at 768
+//     half of itself, at 1280 the whole of itself plus a sliver of the card
+//     behind, at 1536 and up the old five-card spread. The band's stories
+//     measure all of this in a real browser (centred, the width formula, both
+//     neighbours peeking, both edges cut) at whatever width the runner opens
+//     them.
+//   · FOUR-FIFTHS, NOT TWO-THIRDS, SINCE THE REAL REVIEWS (owner 2026-09-30:
+//     "adapt review card to longest review"). The 2026-09-12 spelling gave a
+//     phone two-thirds of its stage (66%: 257px at 390, ~66px of each
+//     neighbour showing — the old site's ~65px), which fitted the demo rows.
+//     The clinic's own Google reviews are longer, and because the tallest
+//     card sets the stage's height (the ONE HEIGHT paragraph below) the
+//     longest of them sets every card's. The share went to 80% on a
+//     measurement, and its history is one sentence: on the 390×844 phone the
+//     tallest card fell from 785px to 637px in German with the first four
+//     reviews, stood 674px with nine, and then two of the longest were taken
+//     out on the owner's word (2026-10-01). With the seven the owner approved
+//     that day, measured on the built export (/ro/, /de/, /fr/), each card's
+//     natural height with `h-full` lifted: on the 390×844 phone the tallest
+//     card stands 526px (62% of the screen) in Romanian, 550px (65%) in
+//     German and 578px (68%) in French, with the 39px peek; at 1280×800,
+//     418px (52%), 459px (57%) and 459px (57%); on the 320×568 stress screen
+//     624 / 672 / 672px, taller than that screen by nature. The 80% share
+//     STAYS, for the reason it was chosen: the longest review fits a phone
+//     screen with room, and a wider card would cut the peek under ~30px for a
+//     few percent of height. Wider stages barely move, then not at all: 80%
+//     undercuts the cap only below ~444px of stage (66% did below ~552px), so
+//     between the two the card simply meets the cap sooner, and from ~552px
+//     up both spellings resolve to the same `8% + 20rem` — 768 and every
+//     wider sampled width are byte-identical, and the desktop keeps the look
+//     the owner approved on 2026-09-12.
 // The vertical numbers are the old deck's: `--fan-drop` 2.5rem on phones and
 // 3.75rem from the `@md` container step (ui/Container's box ≥ 28rem, i.e.
 // viewports from ~560px — the step is queried against the Container, which
@@ -243,8 +270,20 @@ export type ReviewSlide = Readonly<{
   body: string;
   /** The patient's name, as they consented to have it shown. */
   name: string;
-  /** The procedure label, sentence case — ui/Eyebrow uppercases in CSS. */
-  procedure: string;
+  /**
+   * The day the review appeared on Google, `YYYY-MM-DD` — the date line's
+   * machine-readable half, which the card prints as `<time dateTime>`.
+   */
+  postedOn: IsoDate;
+  /**
+   * How long ago that was, finished in the page's language — „acum 2 ani",
+   * "2 years ago" — the date line's visible words. Pre-rendered by the band
+   * through lib/time-ago against the BUILD's clock, for the `label` below's
+   * reason (a formatter is a function, and functions cannot cross a
+   * server→client boundary) and one of its own: a phrase computed here, in
+   * the browser, would re-render every card after hydration (§16's rule 2).
+   */
+  postedAgo: string;
   /**
    * This slide's own accessible name: the finished "{index} of {total}"
    * string, e.g. „Recenzia 1 din 6". It lives ON the slide rather than in a
@@ -361,8 +400,10 @@ function sameOffsets(a: readonly number[], b: readonly number[]): boolean {
 //
 // ── THE DIALS, all of them percentages of a box the browser measures:
 //   · `--deck-card` — the card's width as a share of the stage:
-//     clamp(14rem, 66%, 8% + 20rem). Two-thirds of a phone with a 14rem
-//     floor, half a tablet, then a slow line that keeps growing.
+//     clamp(14rem, 80%, 8% + 20rem). Four-fifths of a phone with a 14rem
+//     floor — the width the longest real review needs (the header's STAGE
+//     paragraph, 2026-09-30) — half a tablet, then a slow line that keeps
+//     growing.
 //   · `--fan-step` — how far a neighbour sits from the centre, as a share of
 //     the CARD's own width (a translate percentage resolves against the
 //     element itself): 87% = the old deck's wide spacing, i.e. 13% tucked
@@ -375,7 +416,7 @@ function sameOffsets(a: readonly number[], b: readonly number[]): boolean {
 // did without ever making the PAGE scroll sideways (§7).
 const stageClasses = cx(
   'row-start-1 grid overflow-x-clip mx-[calc(50%_-_50vw)]',
-  '[--deck-card:clamp(14rem,66%,8%_+_20rem)]',
+  '[--deck-card:clamp(14rem,80%,8%_+_20rem)]',
   '[--fan-step:87%] [--fan-drop:2.5rem] [--fan-stagger:0.9rem] [--fan-tilt:2.5deg]',
   '@md:[--fan-drop:3.75rem]',
   'pt-2',
@@ -585,7 +626,8 @@ export function ReviewsDeck({
                 title={slide.title}
                 body={slide.body}
                 name={slide.name}
-                procedure={slide.procedure}
+                postedOn={slide.postedOn}
+                postedAgo={slide.postedAgo}
                 tone={offset === 0 ? 'emphasized' : 'framed'}
                 className="h-full"
               />

@@ -1,33 +1,39 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { createTranslator } from 'next-intl';
 import { expect, fireEvent, waitFor } from 'storybook/test';
-import { demoReviews as DEMO } from '@/lib/reviews/reviews';
+import { reviews as REAL } from '@/lib/reviews/reviews';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { ReviewsCarousel } from './ReviewsCarousel';
+import { REVIEWS_NOW } from './ReviewsCarousel.fixtures';
 
 // The „Părerea ta contează" band's SIX stories: the everyday picture, the
-// language that stresses it, the deck after a hand navigation has stopped it,
-// the one-review case that has nothing to rotate, and the two small counts
-// where the wrap-around shows. The export NAMES are
+// language that stresses it, the deck after a hand navigation has picked a
+// card (the ring goes on from there — nothing stops it for good since
+// 2026-09-20), the one-review case that has nothing to rotate, and the two
+// small counts where the wrap-around shows. The export NAMES are
 // load-bearing — each names a baseline file (`sections-reviewscarousel--
 // default`, …) — so this list IS this section's contribution to the lane's
 // visual manifest. `Sections/*` routes every one of them to 390 + 1536 (§13,
 // tests/visual/stories.spec.ts).
 //
-// ── EVERY REVIEW HERE IS DEMO COPY, AND THAT IS A DECISION, NOT A
-// PLACEHOLDER (board D15, owner fb-446). The Romanian and English words are
-// the OLD SITE's own fabricated testimonials; the German, French and Italian
-// ones are demo drafts written for this file. THE ROWS MOVED to lib/reviews
-// as `demoReviews` on 2026-09-20 (owner, the hero lane's round 5: "bring the
-// 5 examples story from storybook as demo on home page") — the Home band
-// shows the first five of them until the owner's real list has a row, and
-// these stories import the same six so the workbench and the page can never
-// drift apart. D15's "never into lib/reviews" is therefore REVERSED for the
-// demo rows by the owner's word (lib/reviews' header carries the record and
-// the TODO): the real reviews remain the owner's to supply, each with the
-// patient's written consent (a name plus a procedure is health data, GDPR
-// art. 9) and the CMSR testimonial check (in force since 2025-07-01). The
-// `reviews` prop (board D18) is still how a story picks its rows.
+// ── EVERY REVIEW HERE IS REAL (owner, 2026-10-01: "all fabricated ones need
+// to be dropped"). The stories render the clinic's own Google reviews —
+// lib/reviews' `reviews`, the list the Home page shows — chosen by POSITION
+// (`slice`) or by PROPERTY (the longest German body), never by id, so an edit
+// to the list moves the stories with it instead of breaking them. The six
+// fabricated demo rows the band was built around — the old site's
+// testimonials with their DE/FR/IT drafts, and three demo portraits — were
+// dropped that day (ReviewsCarousel.fixtures.ts' header has the history). The
+// `reviews` prop (board D18) is still how a story picks its rows; the consent
+// and CMSR gates on the real ones are the owner's (lib/reviews' header).
+//
+// ── EVERY STORY PINS ITS CLOCK — `now: REVIEWS_NOW` in the meta's args, the
+// clock Pages/Home and the tests pin too (ReviewsCarousel.fixtures.ts). Each
+// card says how long ago its review was posted (lib/time-ago), and measured
+// from the real clock that phrase — and with it every baseline — would drift
+// with the calendar. When a newer real review lands the pin moves with it,
+// and these frames change, which they would anyway, since a card appears.
 //
 // ── EVERY STORY PINS ITS OWN LANGUAGE with per-story `globals`. The locale
 // toolbar is preview-level state in the Storybook manager; the visual runner
@@ -38,7 +44,7 @@ import { ReviewsCarousel } from './ReviewsCarousel';
 // language, and the preview decorator is what stamps `<html lang>`.
 //
 // ── EVERY STORY PINS ITS OWN VIEWPORT, because width is what the deck is made
-// of: the card is a SHARE of the stage (`--deck-card` — two-thirds of a phone,
+// of: the card is a SHARE of the stage (`--deck-card` — four-fifths of a phone,
 // half a tablet, a slow line above; ReviewsDeck.tsx's STAGE paragraph), the
 // stage runs edge to edge, and `--fan-drop` steps on ui/Container's `@md`, so
 // a manager canvas narrowed by the sidebar is simply another width — and the
@@ -80,11 +86,20 @@ const meta = {
   title: 'Sections/ReviewsCarousel',
   component: ReviewsCarousel,
   parameters: { layout: 'fullscreen' },
-  args: { reviews: DEMO },
+  args: { reviews: REAL, now: REVIEWS_NOW },
+  // No control: the inferred one edits JSON, and lib/time-ago needs a Date.
+  argTypes: { now: { control: false } },
 } satisfies Meta<typeof ReviewsCarousel>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** The band's own `home.reviews.*` sentences, through the REAL messages. */
+const tReviews = createTranslator({
+  locale: 'ro',
+  messages: ro,
+  namespace: 'home.reviews',
+});
 
 /** ICU interpolation, done the way the message file declares it. */
 const fill = (message: string, values: Record<string, string>): string =>
@@ -131,7 +146,7 @@ const slidesOf = (root: HTMLElement): HTMLElement[] => [
  *   · the stage runs edge to edge (its box is the viewport's width — the
  *     full-bleed idiom, ReviewsDeck.tsx's STAGE paragraph);
  *   · the selected card sits in the middle of it, at the share `--deck-card`
- *     promises: clamp(14rem, 66%, 8% + 20rem) of the stage (16px root);
+ *     promises: clamp(14rem, 80%, 8% + 20rem) of the stage (16px root);
  *   · both neighbours are pushed out either side, hang LOWER, and PEEK — part
  *     of each is inside the stage past the centre card's edge, so there is
  *     visibly "a card left and right" (owner 2026-09-12);
@@ -173,7 +188,7 @@ const expectFannedStage = async (root: HTMLElement): Promise<void> => {
     Math.abs((centre.left + centre.right) / 2 - (box.left + box.right) / 2),
   ).toBeLessThanOrEqual(1);
   const expected = Math.min(
-    Math.max(224, 0.66 * box.width),
+    Math.max(224, 0.8 * box.width),
     0.08 * box.width + 320,
   );
   await expect(Math.abs(centre.width - expected)).toBeLessThanOrEqual(1);
@@ -190,8 +205,8 @@ const expectFannedStage = async (root: HTMLElement): Promise<void> => {
   const boxes = slides.map((slide) => slide.getBoundingClientRect());
   await expect(boxes.some((rect) => rect.right > box.right + 1)).toBe(true);
   await expect(boxes.some((rect) => rect.left < box.left - 1)).toBe(true);
-  // …and the FAR slide is off-stage, not merely tucked: with six reviews the
-  // +3 card starts past the right edge at every sampled width (ReviewsDeck.tsx's
+  // …and the FAR slide is off-stage, not merely tucked: from six reviews up
+  // the +3 card starts past the right edge at every sampled width (ReviewsDeck.tsx's
   // ONE HEIGHT paragraph makes that claim; this is where it is measured).
   const far = slides.find(
     (slide) => Number(slide.style.getPropertyValue('--offset')) === 3,
@@ -209,15 +224,19 @@ const expectFannedStage = async (root: HTMLElement): Promise<void> => {
 };
 
 /**
- * The everyday picture: Romanian, six reviews, on the laptop width the §13
- * matrix samples.
+ * The everyday picture: Romanian, the whole real list, on the laptop width the
+ * §13 matrix samples.
  *
  * This is the story that shows the DECK — the selected review raised and
  * tinted in the middle (the idle frame's own colour as its ground), its
- * neighbours framed, tilted, peeking and running off both edges, the discs
- * alternating photograph / letters, and the two controls in one row
- * underneath. The rotation is running (the live region is `off`); nothing
- * moves inside the screenshot window, because the first dwell is 34 seconds.
+ * neighbours framed, tilted, peeking and running off both edges, each disc a
+ * reviewer's photograph where they have one and two letters where they do
+ * not, and the two controls in one row underneath. In the workbench the
+ * rotation is running (the live region is `off`): the first move comes after
+ * 1.5 s and one every 5.5 s after that — the Hero's rhythm since 2026-09-20.
+ * The pixel net photographs it still for another reason: its projects run
+ * with reduced motion, under which lib/clock never starts the ring (the
+ * header's ENVIRONMENT paragraph).
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -243,14 +262,18 @@ export const Default: Story = {
     const slides = slidesOf(canvasElement);
     await expect(slides[0]).toHaveAttribute(
       'aria-label',
-      fill(ro.home.reviews.slide, { index: '1', total: '6' }),
+      fill(ro.home.reviews.slide, { index: '1', total: String(REAL.length) }),
     );
     await expect(slides[0]).not.toHaveAttribute('inert');
     await expect(slides[1]).toHaveAttribute('inert');
-    // …and the stars say their rating in words, through ICU (§8.3).
+    // …and the stars say their rating in words, through ICU (§8.3) — the
+    // first review's OWN rating, never a copied literal.
     await expect(
-      canvas.getByRole('img', { name: '3,5 din 5 stele', hidden: true }),
-    ).toBeInTheDocument();
+      canvas.getAllByRole('img', {
+        name: tReviews('rating', { rating: REAL[0].rating }),
+        hidden: true,
+      }),
+    ).not.toHaveLength(0);
 
     await expectFannedStage(canvasElement);
     await expectNoSidewaysScroll(band);
@@ -263,14 +286,16 @@ export const Default: Story = {
  * German is the longest language this site speaks (§8.4) and 390 is the
  * narrowest sampled width, so this frame is where the two pressures meet:
  * „Weitere Stimmen unserer Patienten" over the wide-tracked uppercase mono
- * eyebrow, the longest review body in the deck (Bogdan's, with its two
- * compounds), and a stage that runs edge to edge (390px) under a card
- * two-thirds of it wide (257px) with ~66px of each neighbour showing past the
- * centre. The things to look at: no card may clip its own text, the tallest
- * card sets the height for all of them (they share one grid cell, and nothing
- * is ever hidden — so the height is the same at every position of the ring),
- * and the thin rule with the name and the procedure sits at the same height
- * on every card.
+ * eyebrow, the real list's longest German review — the card that sets this
+ * stage's height, found by LENGTH in the play and never by id, so it is
+ * whichever review that is today — and a stage that runs edge to edge
+ * (390px) under a card four-fifths of it wide (312px) with 39px of each
+ * neighbour showing past the centre (two-thirds and ~66px until the real
+ * reviews needed the width, 2026-09-30 — ReviewsDeck.tsx's STAGE paragraph).
+ * The things to look at: no card may clip its own text, the tallest card sets
+ * the height for all of them (they share one grid cell, and nothing is ever
+ * hidden — so the height is the same at every position of the ring), and the
+ * thin rule with the name and the date sits at the same height on every card.
  */
 export const GermanStress: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
@@ -282,11 +307,16 @@ export const GermanStress: Story = {
       canvas.getByRole('region', { name: de.home.reviews.region }),
     ).toHaveAttribute('aria-roledescription', de.common.carousel.role);
     // The German words, not the Romanian ones: the band picks each review's
-    // words by the PAGE locale (board D18).
-    await expect(band).toHaveTextContent(DEMO[0].words.de.title);
-    await expect(band).not.toHaveTextContent(DEMO[0].words.ro.title);
+    // words by the PAGE locale (board D18) — checked on the longest German
+    // body, found by LENGTH so a later edit to the list moves the check with
+    // it; the negative reads its Romanian BODY, which no German text contains.
+    const longest = REAL.reduce((kept, review) =>
+      review.words.de.text.length > kept.words.de.text.length ? review : kept,
+    );
+    await expect(band).toHaveTextContent(longest.words.de.title);
+    await expect(band).not.toHaveTextContent(longest.words.ro.text);
     // …while the reviewer's name, a proper noun, reads the same in all five.
-    await expect(band).toHaveTextContent(DEMO[0].name);
+    await expect(band).toHaveTextContent(longest.name);
 
     await expectFannedStage(canvasElement);
     await expectNoSidewaysScroll(band);
@@ -331,7 +361,7 @@ export const Picked: Story = {
  * selected card: centred, raised, emphasized.
  */
 export const Single: Story = {
-  args: { reviews: DEMO.slice(0, 1) },
+  args: { reviews: REAL.slice(0, 1) },
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   play: async ({ canvas, canvasElement }) => {
     const band = canvas.getByRole('region', { name: ro.home.reviews.title });
@@ -344,7 +374,7 @@ export const Single: Story = {
     // …and the one review is still there, wearing the selected card's dress.
     await expect(canvas.getByRole('article')).toBeInTheDocument();
     await expect(canvas.getByRole('heading', { level: 3 })).toHaveTextContent(
-      DEMO[0].words.ro.title,
+      REAL[0].words.ro.title,
     );
 
     await expectNoSidewaysScroll(band);
@@ -365,7 +395,7 @@ export const Single: Story = {
  * show a transition that did not happen.
  */
 export const Three: Story = {
-  args: { reviews: DEMO.slice(0, 3) },
+  args: { reviews: REAL.slice(0, 3) },
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   play: async ({ canvas, canvasElement }) => {
     fireEvent.click(canvas.getByRole('button', { name: ro.home.reviews.next }));
@@ -392,7 +422,7 @@ export const Three: Story = {
  * at −2 becomes +2 — four steps — and must land rather than travel.
  */
 export const Five: Story = {
-  args: { reviews: DEMO.slice(0, 5) },
+  args: { reviews: REAL.slice(0, 5) },
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   play: async ({ canvas, canvasElement }) => {
     fireEvent.click(canvas.getByRole('button', { name: ro.home.reviews.next }));

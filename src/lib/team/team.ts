@@ -183,26 +183,28 @@ import type { ImagePath } from '../image-path/image-path';
 // are just the 3 standard personell cards. one of them is Stan
 // Ioana-Ecaterina as registrator medical, Gurgu Aurelia as assistant so
 // instead of Mihaela Crăciun and Cândea Angelica instead of Ana-Maria Dobre".
-// The three NAMES are the owner's, surname first as typed (the doctors'
-// order, the diacritics the owner's own), and so are two POSITIONS,
-// „Registrator medical" and the assistant's. Each person took the card the
-// owner named, so the grid keeps the demo's order: Stan Ioana-Ecaterina on
-// Ioana Țepeș's card (the one left), Gurgu Aurelia on Mihaela Crăciun's,
-// Cândea Angelica on Ana-Maria Dobre's. Cândea Angelica's role was NOT given,
-// so that card keeps the reception wording it carried („Recepție, programări
-// și comunicarea cu pacienții"): FLAGGED, one line per language the day the
-// owner names it. The portraits are still the demo silhouettes, and the
-// consent the doctors owe (above) is owed for the staff as well.
+// Each person took the card the owner named, so the grid keeps the demo's
+// order: Stan Ioana Ecaterina on Ioana Țepeș's card (the one left), Gurgu
+// Aurelia on Mihaela Crăciun's, Cândea Angelica on Ana-Maria Dobre's, whose
+// reception wording the owner confirmed the same day ("role is good already
+// to what was before. receptionist, schedulings, etc"). The NAMES are the
+// owner's, surname first as typed (the doctors' order, the diacritics the
+// owner's own), the first one WITHOUT the hyphen the first message carried,
+// on the owner's second word ("for ioana use just stan ioana ecaterina"): as
+// „Ioana-Ecaterina" it broke into „Stan Ioana-" / „Ecaterina" at every width.
+// The portraits are still the demo silhouettes, and the consent the doctors
+// owe (above) is owed for the staff as well.
 //
-// NOBODY IS GENDERED holds for the staff too: „Asistent medical" where the
-// demo read „Asistentă medicală" (the generic the owner's own „Registrator
-// medical" is written in), and a FUNCTION noun wherever a language's person
-// noun is gendered: German „Zahnmedizinische Assistenz" (a bare
-// „Zahnmedizinische Fachangestellte" reads feminine) and „Patientenanmeldung",
-// French „Assistance dentaire" (not „Assistante dentaire") and „Secrétariat
-// médical", Italian „Segreteria medica". English nouns are epicene, so is the
-// Italian „assistente", and the reception card's wording was a function in
-// every language already.
+// THE STAFF'S TITLES ARE FEMININE, on the owner's word of the same day ("use
+// feminine … and you translate job titels"): the confirmation NOBODY IS
+// GENDERED above waits for, given for the staff, while every doctor still
+// waits for it. „Registratoare medicală" and „Asistentă medicală", and in the
+// other four languages the feminine JOB TITLES, translated by Claude on that
+// word: German „Medizinische Rezeptionistin" and „Zahnmedizinische
+// Fachangestellte", French „Secrétaire médicale" and „Assistante dentaire",
+// Italian „Segretaria medica" and „Assistente di studio odontoiatrico" (an
+// epicene noun, like both English titles). The reception card's wording
+// names a role, not a person, and reads the same in every language.
 //
 // The stats' WORDS are the owner's, pasted from his reference site in round
 // 2f (D32), and three of them were CMSR-SENSITIVE — „Intervenții reușite" and
@@ -497,28 +499,34 @@ const CUTOUT_2: TeamPicture = {
  */
 export const auxiliaries: readonly AuxiliaryMember[] = [
   // The clinic's three, each on the card the owner named (2026-10-01). The
-  // NAMES are real and so are the first two POSITIONS; the third card keeps
-  // its reception wording, and the portraits are the demo silhouettes — the
-  // header's THE AUXILIARY STAFF ARE REAL paragraph says why.
+  // NAMES and the ROLES are the owner's, the titles feminine on the owner's
+  // word; the portraits are the demo silhouettes — the header's THE AUXILIARY
+  // STAFF ARE REAL and THE STAFF'S TITLES ARE FEMININE paragraphs.
   {
     id: 'stan-ioana-ecaterina',
     portrait: PORTRAIT_2,
     words: {
-      ro: { name: 'Stan Ioana-Ecaterina', position: 'Registrator medical' },
-      en: { name: 'Stan Ioana-Ecaterina', position: 'Medical receptionist' },
-      de: { name: 'Stan Ioana-Ecaterina', position: 'Patientenanmeldung' },
-      fr: { name: 'Stan Ioana-Ecaterina', position: 'Secrétariat médical' },
-      it: { name: 'Stan Ioana-Ecaterina', position: 'Segreteria medica' },
+      ro: { name: 'Stan Ioana Ecaterina', position: 'Registratoare medicală' },
+      en: { name: 'Stan Ioana Ecaterina', position: 'Medical receptionist' },
+      de: {
+        name: 'Stan Ioana Ecaterina',
+        position: 'Medizinische Rezeptionistin',
+      },
+      fr: { name: 'Stan Ioana Ecaterina', position: 'Secrétaire médicale' },
+      it: { name: 'Stan Ioana Ecaterina', position: 'Segretaria medica' },
     },
   },
   {
     id: 'gurgu-aurelia',
     portrait: PORTRAIT_1,
     words: {
-      ro: { name: 'Gurgu Aurelia', position: 'Asistent medical' },
+      ro: { name: 'Gurgu Aurelia', position: 'Asistentă medicală' },
       en: { name: 'Gurgu Aurelia', position: 'Dental nurse' },
-      de: { name: 'Gurgu Aurelia', position: 'Zahnmedizinische Assistenz' },
-      fr: { name: 'Gurgu Aurelia', position: 'Assistance dentaire' },
+      de: {
+        name: 'Gurgu Aurelia',
+        position: 'Zahnmedizinische Fachangestellte',
+      },
+      fr: { name: 'Gurgu Aurelia', position: 'Assistante dentaire' },
       it: {
         name: 'Gurgu Aurelia',
         position: 'Assistente di studio odontoiatrico',

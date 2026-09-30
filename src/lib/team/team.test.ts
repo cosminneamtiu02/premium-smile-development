@@ -297,10 +297,10 @@ describe('findDoctor / findAuxiliary — the lookups metadata and tests use', ()
 
   it('finds an auxiliary member by id', () => {
     expect(findAuxiliary('stan-ioana-ecaterina')?.words.ro.name).toBe(
-      'Stan Ioana-Ecaterina',
+      'Stan Ioana Ecaterina',
     );
     expect(findAuxiliary('gurgu-aurelia')?.words.ro.position).toBe(
-      'Asistent medical',
+      'Asistentă medicală',
     );
   });
 

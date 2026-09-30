@@ -113,7 +113,7 @@ src/
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
     hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row (RO/EN the old site's own; DE/FR/IT, the short names and every `text` line DRAFTED, flagged; demo pictures until the owner's photographs); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
-    team/team.ts         # THE clinic's people — doctors (ONE picture, the transparent waist-up cutout — the framed portrait and the optional lib/prices category left with the card's services link, 2026-09-30, §15.25 — own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles) and auxiliaries (a 3:4 portrait), five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside the clinic's three REAL auxiliary staff since 2026-10-01 (names the owner's, two positions the owner's and the third card's reception wording kept, flagged; portraits still the demo silhouettes) (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30; round 4 2026-10-01, §15.23)
+    team/team.ts         # THE clinic's people — doctors (ONE picture, the transparent waist-up cutout — the framed portrait and the optional lib/prices category left with the card's services link, 2026-09-30, §15.25 — own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles) and auxiliaries (a 3:4 portrait), five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside the clinic's three REAL auxiliary staff since 2026-10-01 (names and roles the owner's, the titles FEMININE on the owner's word and translated by Claude; portraits still the demo silhouettes) (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30; round 4 2026-10-01, §15.23)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -1823,19 +1823,21 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
     **Round 4 — THE REAL STAFF (owner, 2026-10-01, verbatim: "these are just the 3 standard personell cards.
     one of them is Stan Ioana-Ecaterina as registrator medical, Gurgu Aurelia as assistant so instead of
-    Mihaela Crăciun and Cândea Angelica instead of Ana-Maria Dobre and create pr"; lane `feat/real-staff`):**
-    `lib/team`'s three demo auxiliaries are replaced by the clinic's staff, each on the card the owner named,
-    so the Team page's staff grid keeps its order: Stan Ioana-Ecaterina (registrator medical) on Ioana Țepeș's
-    card, Gurgu Aurelia (asistent medical) on Mihaela Crăciun's, Cândea Angelica on Ana-Maria Dobre's. The
-    NAMES are the owner's, surname first and with the diacritics as typed; two POSITIONS are the owner's.
-    Cândea Angelica's role was NOT given, so that card keeps its reception wording („Recepție, programări și
-    comunicarea cu pacienții") in all five languages — FLAGGED, one line per language the day the owner names
-    it. Nobody is gendered (round 3's rule): „Asistent medical" for the demo's „Asistentă medicală", and a
-    FUNCTION noun wherever a language's person noun is gendered — DE „Zahnmedizinische Assistenz" (a bare
-    „Zahnmedizinische Fachangestellte" reads feminine) · „Patientenanmeldung", FR „Assistance dentaire" ·
-    „Secrétariat médical", IT „Segreteria medica"; EN/DE/FR/IT are Claude's DRAFTS (§15.17). The ids are the
-    names in ASCII (`stan-ioana-ecaterina`, `gurgu-aurelia`, `candea-angelica`) and are React keys only, never
-    a URL. The portraits stay the demo silhouettes until the owner's photographs, and the consent owed for
+    Mihaela Crăciun and Cândea Angelica instead of Ana-Maria Dobre and create pr"; then, on the PR: "role is
+    good already to what was before. receptionist, schedulings, etc" · "use feminine for ioana use just stan
+    ioana ecaterina and you translate job titels"; lane `feat/real-staff`, PR #118):** `lib/team`'s three demo
+    auxiliaries are replaced by the clinic's staff, each on the card the owner named, so the Team page's staff
+    grid keeps its order: Stan Ioana Ecaterina (registratoare medicală) on Ioana Țepeș's card, Gurgu Aurelia
+    (asistentă medicală) on Mihaela Crăciun's, Cândea Angelica on Ana-Maria Dobre's, whose reception wording
+    („Recepție, programări și comunicarea cu pacienții") the owner confirmed. The NAMES are the owner's,
+    surname first; the first WITHOUT the hyphen the first message carried, on the owner's word (as
+    „Ioana-Ecaterina" it broke into „Stan Ioana-" / „Ecaterina" at every width). THE STAFF'S TITLES ARE
+    FEMININE on the owner's word: the confirmation round 3's NOBODY IS GENDERED waits for, given for the staff,
+    while every doctor still waits for it. The feminine JOB TITLES are translated by Claude on that word — DE
+    „Medizinische Rezeptionistin" · „Zahnmedizinische Fachangestellte", FR „Secrétaire médicale" · „Assistante
+    dentaire", IT „Segretaria medica" · „Assistente di studio odontoiatrico", EN „Medical receptionist" ·
+    „Dental nurse". The ids are the names in ASCII (`stan-ioana-ecaterina`, `gurgu-aurelia`,
+    `candea-angelica`) and are React keys only, never a URL. The portraits stay the demo silhouettes until the owner's photographs, and the consent owed for
     the doctors is owed for the staff. The TeamRoster and PersonnelCard stories and tests keep their own
     invented people: fixtures, not site data. **Visual:** only the Pages/Team frames change (the three tiles'
     names and eyebrows), already stale since #117; the darwin record is the owner's (§15.7).

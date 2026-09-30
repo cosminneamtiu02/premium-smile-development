@@ -49,6 +49,13 @@ const WEARERS: Readonly<Record<string, { count: number; ground: string }>> = {
     count: 1,
     ground: 'bg-surface',
   },
+  // ui/Ribbon's stand-in doctor card — the roster card's <blockquote>, stood
+  // in for the stories and tests on the same white `bg-surface` (§15.26), so
+  // the owner judges the card's own picture under the ribbon.
+  'components/ui/Ribbon/Ribbon.fixtures.tsx': {
+    count: 1,
+    ground: 'bg-surface',
+  },
 };
 
 /** Line and block comments out; strings and code stay. */
@@ -68,7 +75,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--ink-faint` ink has exactly its named wearers in src/ (G2-R2 a11y F1)', () => {
-  it('is worn by the two doctor quotes, each once, on a white ground', () => {
+  it('is worn by the two doctor quotes and the ribbon’s stand-in, each once, on a white ground', () => {
     for (const [file, wearer] of Object.entries(WEARERS)) {
       const source = stripComments(readFileSync(join(SRC_DIR, file), 'utf8'));
       expect(count(source, UTILITY), file).toBe(wearer.count);

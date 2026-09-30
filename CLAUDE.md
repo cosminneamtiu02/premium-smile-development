@@ -97,6 +97,10 @@ src/
     scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic, on ONE of three lines: the landing line (the default — where a fragment jump rests), the viewport's centre (`line: 'middle'` — the doctor page's timeline, round 2k) or THE READING LINE (`line: 'reading'` — the price menu, 2026-09-29: the middle of the CLEAR area, bent at both ends of the page so every target has a turn, every target's landing planned by lib/reading-line and WRITTEN as its `scroll-margin-top`, the module's one write) + bottom rule + top fallback (`topFallback: 'first' | 'none'` — the named trigger fired by the doctor page's timeline, 2026-09-26) + click pin, which judges only a page that has stopped (THE START GRACE, 2026-09-29) (React-free; price-list pack round 2, 2026-09-14)
     reading-line/reading-line.ts  # THE arithmetic of the reading line: where a jump to each target comes to rest (centred when it fits the clear area, on its old ceiling when it does not), landings kept inside the page and apart by a share of each target's size, and the probe the walk measures — numbers in, numbers out, no DOM (price-list round 5, 2026-09-29)
     sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a link the KEYBOARD focused reveals its edge — a pointer's focus is never answered, 2026-09-29 (React-free; price-menu-pin lane, 2026-09-18)
+    ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; six frozen reference cards beside it (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
+    ribbon-layout/ribbon-layout.ts  # the page → the model's numbers: stations and their keep-out blocks found by `data-ribbon-keepout` MARKERS, never by their place in the markup; a keep-out is WHAT IS PAINTED (the element's box and its contents'), a marker that paints nothing is skipped; the portrait's inset; every second card mirrored (§15.26)
+    ribbon-paint/ribbon-paint.ts  # numbers → pixels on the ordinary 2D canvas: the strip, the light, additive blending, the plane cut at the card's front face — what is deeper is not painted (§15.26)
+    ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's centre-line rule and its two additions, the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
     rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
@@ -1778,6 +1782,147 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the rule; the arithmetic lives in Heading.tsx's `'band' JOINED` paragraph. Visual: Pages/Team, Sections/TeamRoster (the
     cards at level 2), Pages/NotFound and Sections/ContactModal's open frames change; Sections/
     PersonnelCard's own stories (default level 3) do not; the darwin re-record is the owner's (§15.7).
+
+26. **Floss-ribbon run — DECIDED (owner, consult board `.claude/plans/ribbon-3d.plan.md`, five rounds on
+    2026-09-29, fb-489 … fb-513; contract board `.claude/plans/ribbon-floss.plan.md`, approved in the chat
+    on 2026-09-30, verbatim: "you run the reviewers now. if you useless, discard. i want no dead code. a the
+    ribbon alone and i approve everything else"; item 25 is the doctor-card lane's, in flight):** a
+    DECORATIVE ribbon that wraps a column of cards — down into each card's top corner, round its edge, along
+    the top lane as a calm wave, behind the card, back round the opposite edge, down the side lane to the next
+    card, which it wraps mirrored — painted on ordinary 2D canvases and DRAWN LIVE, card by card, as the visitor
+    scrolls. It began as the owner's own design package (a verified mathematical model, pasted 2026-09-29) and
+    REPLACES the straight connector of 2026-09-25 (lane `feat/ui-ribbon`, never committed), of which it keeps
+    the two colours and the two component names.
+    **The look, each decision in the owner's words:** the thickness is a RATIO of the card ("absolutely
+    perfect … exact thickness and prominence … the same on every device as ratio", fb-489) and the ribbon has
+    NO LOOPS (the same annotation) · the hook sits lower ("place it lower a bit. like 100% lower", fb-492) ·
+    the entry sways ("must also be superficially waive, so not a straight line, make it a little wayvy",
+    fb-494) · the phone is BOLDER ("b all day here, looks way better", fb-501) · the tail "ends in the air all
+    day" (fb-504; the planner's tucked tail was rejected) · ONE look ("looks perfect now, I do not need
+    alternatives or rebuilds", fb-505) · NO DOT on the ribbon (fb-475, the connector's board) · colours
+    `--ribbon-light` `#8377a3` and `--ribbon-dark` `#2d263c`, both from the old site's palette, raw tokens
+    with NO utility name (nothing paints with a class; the painter reads them).
+    **The motion (fb-502, fb-503, fb-507):** "drawn while scrolling but remains drawn" — a card's stretch is
+    drawn when "the fixxed center line of the screen" reaches "the center line of the card", in order, and it
+    stays drawn: no undoing on the way up, no pinning, the page's scroll never touched (source-fenced by
+    `tests/unit/ribbon-never-moves-the-page.test.ts`, the listener `passive`); "it's a core feature, it's
+    crucial it works" on "absolutely every browser from phone to desktop"; reduced motion paints the whole
+    ribbon at once, also when it is switched on mid-visit. One stretch takes two seconds. Two additions of the
+    planner's, agreed (fb-509): a card taller than about THREE QUARTERS of the screen (76 % — the planner's
+    words to the owner were "taller than the screen", which was imprecise) starts when its top is 12 % under
+    the screen's top; and at the page's END every card still waiting becomes due, in order — on a page that
+    cannot scroll, at load. Two behaviours came with the prototype the owner approved by feel (fb-511, "moves
+    good"): the pen HURRIES when cards wait (1.25 s a card with one waiting, 0.91 s with two), and a card
+    already above the screen at load is simply there. **SC 2.2.2 (Level A), by arithmetic and pinned:** one
+    stretch never repeats and nothing moves afterwards; n cards due at once draw for 2 s × Σ 1/(1 + 0.6 j) —
+    3.25 s for two (the roster today), 4.87 s for four, 5.46 s for FIVE.
+    **The painter (fb-496 → fb-508 "ok"):** the ordinary 2D canvas. The consult's first two candidates were
+    WebGL (hand-written, and three.js at 149.6 kB gzip); the owner's every-browser condition reopened the
+    question, and without loops the ribbon never crosses itself on screen and hides only behind a box, so
+    "behind" is a plane test, not a depth buffer. **No dependency is added; §3 is unchanged.** Neighbouring
+    quads join by ADDITIVE blending (`'lighter'`), which is what removes the hairlines a 2D canvas otherwise
+    leaves between anti-aliased neighbours. MEASURED on the built component against the approved prototype
+    (the 1009 px column, both painted at once): ink 59,818 px against 59,825 (0.012 % apart), colour within
+    one level in 255 for 97.8 % of pixels and within two for 99.96 %.
+    **The gauge (fb-510 "agree"):** `k = max(0.0793 W, 0.192 + 0.0602 W)` in card units (1 unit = 100 CSS px,
+    `W` the card's width) — the desktop's approved ratio above the knee, one straight line down to the bolder
+    phone below it, no breakpoint; what follows from it: thickness `T = 0.5 k`, wavelength
+    `l = 2.3 (0.8 / k)^0.6`, and the LANES the ribbon runs in — top `max(24, 62 k + 8)` px, side
+    `max(24, 60 k + 12, 83 k + 1)` px, the gap between cards `100 k + 60` px. The rule was MEASURED DURING
+    THE CONSULT on the prototype over the doctor-card lane's real card (164 layouts, 320 … 1920, RO + DE,
+    short and long quotes; every pixel of card width 900 … 1600) — not a test of this repository. THE
+    REPOSITORY'S PIN is the stand-in column swept from 241 to 2145 px (the widest `ui/Container` gives, at a
+    2560 window), every 8 px, RO + DE, short and long quotes. The lanes are px and `cqw` ON PURPOSE, an
+    exception to §7's "all sizing in rem": the ribbon follows the COLUMN's width, not the text's size; only
+    their `1.5rem` floor follows the font.
+    **No Python, anywhere (fb-506, fb-507):** "I do not want any python in this project. I want it to be just
+    js/ts etc". The package's Python was for modelling; it never enters the repository, in any folder.
+    **No dead code (the approval's own sentence):** nothing the approved design does not use is ported — not
+    the package's unused wave drifts and their phases, not the loop-era segments, not the tail option — and
+    the earlier connector's nine uncommitted paths were DISCARDED on the same word (2026-09-30: seven tracked
+    files restored, two folders removed, in the main checkout). The reviews applied the same rule to the
+    build itself: a clip for what is behind the card (never visible), a refusal that could not fire, the
+    ring's construct / start / restart shape (no caller), an unread attribute on the root, two registrations
+    that changed nothing, a baseline that repeated another's pixels.
+    **Order (fb-500) and scope ("a the ribbon alone"):** the RIBBON FIRST, the doctor card's rework after it —
+    the reverse of the planner's recommendation. This lane ships the ribbon as machinery with its own stories
+    over a stand-in column (`Ribbon.fixtures.tsx` — a story fixture, the first of its kind beside an atom) and
+    MOUNTS IT NOWHERE; the Team page gains it in the card's lane. §14 and §16 are therefore unchanged: §16's
+    island list gains `ui/Ribbon` in the lane that mounts it.
+    **The machinery — five pieces:** `lib/ribbon-model` (the mathematics: the path as a chain of segments by
+    arc length, the gauge rule, the lanes, the clearance measure; SIX FROZEN REFERENCE CARDS written out by
+    the approved prototype, reproduced to 1e-9) · `lib/ribbon-layout` (the page → numbers, blocks found by
+    MARKERS, never by their place in the markup) · `lib/ribbon-paint` (numbers → pixels) · `lib/ribbon-draw`
+    (when: the owner's rule, the queue, the pen, reduced motion, a new geometry; `startRibbonDraw(layer)` →
+    `{ dispose, getSnapshot }` — one call starts it, one function stops it, and NOT the ring's construct /
+    start / dispose protocol: nothing is built before the effect and nothing renders from it) · `ui/Ribbon`
+    (`Ribbon` + `RibbonStation`, `'use client'`, NO props beyond children, the native ones and `asChild` on
+    the station). The port is closures, never classes, and every segment carries a plain `kind`: the
+    prototype's one serious defect was recognising a segment by its class's NAME, which a minifier renames —
+    the first minified page drew every wave as a straight bar (source-fenced by
+    `tests/unit/ribbon-no-names.test.ts`).
+    **The seam to a card** — all a card and the ribbon share: the card marks four blocks with the LITERAL
+    attributes `data-ribbon-keepout` (quote, name block, buttons row) and `data-ribbon-keepout="portrait"`
+    (the portrait's cell; its keep-out is the central 60 % × 70 %), and spells its padding
+    `max(1.5rem, var(--ribbon-lane-top, 1.5rem))` — the same for `--ribbon-lane-side` — so it is exactly
+    today's card outside a ribbon, on an engine without `@property`, and at any root font size. The two lanes
+    are REGISTERED (`@property`, two rules in globals.css) — measured in Chromium and WebKit: unregistered,
+    `cqw` inside them is resolved against the CARD wherever a box inside the card reads them (ui/Card is a
+    container), and the lanes come out up to 13.4 px too narrow; registered, they match the rule to 0.001 px.
+    The gauge and the gap between stations are the ribbon's own variables and are NOT registered: tried both
+    ways, nothing depends on it. **A KEEP-OUT IS WHAT IS PAINTED**, not only the marked element's box: the
+    union of the element's box and its contents' (text that overflows, the children of a `display: contents`
+    marker); a marker that paints nothing is skipped — measured as its all-zero rectangle it became a dot at
+    the WINDOW's corner that pushed a wave 347 px off course with the guard silent.
+    **One canvas per card**, not one for the page (a column of doctors on a tablet passes the 16.7 million
+    pixels iOS gives one canvas), and EVERY JOINT BETWEEN TWO CANVASES LIES BEHIND A CARD, where nothing is
+    painted: a card's canvas also holds the NEXT card's entry (its drop-in and its hook). The first build
+    joined its canvases on the visible run between two cards and measured a band 3 to 5 levels darker at
+    every joint — the later canvas's shadow falling on the earlier one's ribbon; a joint nobody can see has
+    neither a hairline nor a shadow to explain. **What is deeper than the card's front face is simply not
+    painted:** by the model's own bound it stays within 0.056 k of the card's outline, so it was never seen
+    — the first build's clip for it changed 0 to 4 pixels per card and was removed as dead code.
+    **The guard:** a ribbon whose strip would enter a keep-out is NOT painted — the whole column, never one
+    card — and development builds warn, saying what happened. A ribbon over a doctor's words is worse than no
+    ribbon. **A DECORATION NEVER TAKES THE PAGE DOWN:** every entry from the browser (the start, each frame,
+    the observer, the listeners) runs behind one barrier — on any throw the ribbon removes itself and the
+    error is reported, never handed to React, which without a barrier replaces the page. **NO REBUILD WITHOUT
+    A NEW GEOMETRY:** a phone fires `resize` when its address bar collapses mid-scroll; the ribbon depends on
+    the column's width, so an unchanged column touches no canvas.
+    **Layers and the static page:** the root is `relative isolate` and takes no number from the closed
+    stacking order (30 / 40 / 45 / 50); the canvases are `aria-hidden`, unfocusable, click-through (pinned by
+    `elementFromPoint` on every control of the stand-in), hidden in forced colours and in print (pinned by
+    the class only, in this lane); the server's HTML carries no canvas and no state, so §16's rule 2 holds by
+    construction. **A LIST STAYS A LIST (SC 1.3.1):** the header names the two routes a consumer has — its own
+    `<ul>` with each `<li>` the station (`asChild`), or `role="list"` on the ribbon with `role="listitem"` on
+    wrapper stations; the stand-in uses the second, pinned by role.
+    **Reviews (G2, on the owner's word "you run the reviewers now" — the first ribbon board's "I'll run the
+    reviews when done", fb-483/484, is superseded for this lane):** react-reviewer, typescript-reviewer and
+    a11y-architect on Fable, each APPROVE WITH CHANGES, no critical and no high finding; six medium and
+    twenty-three low, folded in two rounds, plus one round of the planner's own before them.
+    **Evidence at READY:** see the lane's PR. **Visual:** EIGHT new cells (`ui/ribbon/`, seven stories at
+    1280 and `narrowest` at 320) and no existing one, proven by a before-and-after comparison against a
+    fresh build of develop (429 existing cells unchanged); `ReducedMotion` and `Drawing` are `no-visual` —
+    the net already runs with reduced motion, so the first would repeat `Desktop`'s pixels, and the second
+    moves by design. The darwin record is the owner's, on the owner's machine (§15.7). **Shadow on the
+    ground under a doctor's words, measured:** at most 3 levels in 255, at one corner pixel of the quote's
+    box on a 1521 px column — the faint ink still 4.82:1 there; none on phones and tablets.
+    **NOT tested, recorded:** Firefox (not installed on the workstation), a real phone, more than three
+    doctors. **The owner's to decide, recorded and not built** (the accessibility review's D1–D5): the line
+    at the reading position or half a screen earlier · the hurry, or "finish at once a queued card that is
+    off screen when its turn comes" · the ribbon's prominence beside the faintest text on the site (4 px of
+    air guaranteed) · the empty lanes in print · the portrait's inset once real photographs arrive.
+    **OWED AT THE MOUNT (the card's lane):** how the real card takes the lanes (`ui/Card` fixes `p-6` and
+    forbids `className` as a padding API: a Card mechanism, or an inset on the card's inner column) · the
+    list route · a probe of `asChild` across the server-to-client boundary (`slotClone` and a keyed root) ·
+    forced colours and print as an e2e check · `tests/unit/team-data.test.ts`'s 21-character ceiling
+    re-derived for the narrower column the lanes leave · a census that every text of a card lies inside a
+    keep-out. **WAIT triggers** (do not build early): two canvases per card (a top band and a side band — a
+    third of the memory) when a column of more than six doctors or a measured memory complaint arrives · a
+    bound on SC 2.2.2 by construction when the roster reaches FIVE doctors · the painted-pixel loop has three
+    spellings in this lane's tests and stories — the repo-wide test-helper promotion lane takes it · the
+    ribbon's line moved from the screen's centre to the CLEAR part's centre (`lib/reading-line`) only on the
+    owner's word — the rule is the owner's own sentence.
 
 ## 16. Build-time vs runtime contract
 

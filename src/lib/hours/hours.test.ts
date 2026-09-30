@@ -44,7 +44,7 @@ describe('lib/hours — the shipped clinic schedule, one row per day', () => {
       { label: 'Miercuri', value: '09:00 – 19:00', closed: false },
       { label: 'Joi', value: '09:00 – 19:00', closed: false },
       { label: 'Vineri', value: '09:00 – 19:00', closed: false },
-      { label: 'Sâmbătă', value: '09:00 – 14:00', closed: false },
+      { label: 'Sâmbătă', value: CLOSED_RO, closed: true },
       { label: 'Duminică', value: CLOSED_RO, closed: true },
     ]);
   });

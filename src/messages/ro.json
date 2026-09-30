@@ -34,7 +34,7 @@
       "ariaLabel": "{name}, acasă"
     },
     "footer": {
-      "tagline": "Stomatologie modernă. Îngrijire onestă.",
+      "tagline": "Totul pentru zâmbetul tău",
       "contactLabel": "Contactează-ne aici",
       "hoursTitle": "Program de lucru",
       "closed": "Închis",
@@ -123,7 +123,7 @@
   "contact": {
     "heading": "Ne găsiți la telefon sau pe WhatsApp.",
     "callHeading": "Sunați-ne la",
-    "callHours": "Lun–Vin {weekOpens}–{weekCloses}, Sâm {satOpens}–{satCloses}",
+    "callHours": "Lun–Vin {weekOpens}–{weekCloses}",
     "or": "sau",
     "whatsappHeading": "Scrieți-ne",
     "whatsapp": "Contactați-ne pe WhatsApp",

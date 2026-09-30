@@ -1,11 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { Container } from '@/components/ui/Container/Container';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Phone } from '@/assets/glyphs/Phone';
 import { Pin } from '@/assets/glyphs/Pin';
-import { clinic } from '@/lib/clinic/clinic';
+import { isLocale } from '@/i18n/locales';
+import { clinic, mapEmbedUrlFor } from '@/lib/clinic/clinic';
 import { cx } from '@/lib/cx/cx';
 
 // sections/ClinicLocation — the „Ne găsești" band: the opener, the live Google
@@ -23,11 +24,11 @@ import { cx } from '@/lib/cx/cx';
 // inside the <iframe> (our document implements none of it); the whole-row
 // hover below is a CSS rule, not code that runs per frame; and both rows are
 // plain <a href>s, so every click is a full document load or a protocol
-// handoff (§15.13). It still calls t() with no directive — next-intl's
-// useTranslations is ISOMORPHIC: it resolves against the request-scoped config
-// while this Server Component is pre-rendered, and reads
-// NextIntlClientProvider in Storybook and Vitest. §8.1 holds either way, since
-// the atoms below only ever see finished text.
+// handoff (§15.13). It still calls t() with no directive, and useLocale() for
+// the map's language — next-intl's hooks are ISOMORPHIC: they resolve against
+// the request-scoped config while this Server Component is pre-rendered, and
+// read NextIntlClientProvider in Storybook and Vitest. §8.1 holds either way,
+// since the atoms below only ever see finished text.
 //
 // ── THE CONSENT SEAM lives at ONE marked element (board D1, owner option A:
 // "bypass cookies consent for the moment"). The embed renders UNGATED, at page
@@ -148,7 +149,7 @@ const ROW_HOVER =
  *
  * `hyphens-none` (G2 a11y, 2026-09-09): the body's site-wide `hyphens: auto`
  * (§15.14) is inherited by the address span, and at 320/390 the address wraps
- * — so "Bucu-/rești" is possible wherever the engine holds a dictionary for
+ * — so „Gheor-/ghe" is possible wherever the engine holds a dictionary for
  * the page's `lang` (a de/fr/it page would syllable-split a Romanian proper
  * noun with a foreign dictionary). The owner's §15.14 rider — "text on buttons
  * in general is never allowed to be split" — covers this control row the same
@@ -203,6 +204,16 @@ export function ClinicLocation(): ReactElement {
   // prints the same two fields. Translating it would create a second source
   // that can disagree with the JSON-LD.
   const address = `${clinic.address.street}, ${clinic.address.city}`;
+  // THE MAP SPEAKS THE PAGE'S LANGUAGE (G2 a11y, 2026-09-30). Google's controls
+  // and its place card take their language from the url and from nothing else,
+  // so each locale's frame is lib/clinic's ONE url with its two language
+  // fields swapped (`mapEmbedUrlFor`, where the measurement lives). useLocale
+  // answers a plain string: a value outside the five — the workbench's
+  // pseudo-locale — keeps the url as pasted rather than inventing a language.
+  const locale = useLocale();
+  const mapSrc = isLocale(locale)
+    ? mapEmbedUrlFor(clinic.mapEmbedUrl, locale)
+    : clinic.mapEmbedUrl;
 
   return (
     // Full-bleed band, per Container's PAGE-BAND RECIPE: the semantic outer
@@ -254,7 +265,7 @@ export function ClinicLocation(): ReactElement {
                   permission list — no fullscreen, no microphone, no payment —
                   which is a different thing from omitting the attribute. */}
               <iframe
-                src={clinic.mapEmbedUrl}
+                src={mapSrc}
                 title={t('location.mapAlt', { name: clinic.name })}
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -276,7 +287,9 @@ export function ClinicLocation(): ReactElement {
                 (box < 512px) keeps the stacked, flush-start column. The rows'
                 widths are data-driven and locale-invariant (address + phone),
                 so the line never needs German headroom; at the 512px floor
-                the two rows total ~460px and still fit with room to spare.
+                the two rows total ~473px and still fit, 19px beyond their
+                20px gap (re-measured 2026-09-30 with the clinic's real
+                address; the placeholder's was ~460px).
                 HOVER STAYS PER ROW by construction: each <a> is its own
                 `group`, this column carries none, and on one line the two
                 `-m-3` hit areas do not even touch — the test pins both facts

@@ -34,7 +34,7 @@
       "ariaLabel": "{name}, home"
     },
     "footer": {
-      "tagline": "Odontoiatria moderna. Cure oneste.",
+      "tagline": "Tutto per il tuo sorriso",
       "contactLabel": "Contattaci qui",
       "hoursTitle": "Orari di apertura",
       "closed": "Chiuso",
@@ -123,7 +123,7 @@
   "contact": {
     "heading": "Raggiungibili per telefono o WhatsApp.",
     "callHeading": "Chiamateci al",
-    "callHours": "Lun–ven {weekOpens}–{weekCloses}, sab {satOpens}–{satCloses}",
+    "callHours": "Lun–ven {weekOpens}–{weekCloses}",
     "or": "oppure",
     "whatsappHeading": "Scriveteci",
     "whatsapp": "Contattaci su WhatsApp",

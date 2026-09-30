@@ -34,7 +34,7 @@
       "ariaLabel": "{name}, accueil"
     },
     "footer": {
-      "tagline": "Dentisterie moderne. Des soins honnêtes.",
+      "tagline": "Tout pour votre sourire",
       "contactLabel": "Contactez-nous ici",
       "hoursTitle": "Horaires d'ouverture",
       "closed": "Fermé",
@@ -123,7 +123,7 @@
   "contact": {
     "heading": "Joignables par téléphone ou WhatsApp.",
     "callHeading": "Appelez-nous au",
-    "callHours": "Lun.–ven. {weekOpens}–{weekCloses}, sam. {satOpens}–{satCloses}",
+    "callHours": "Lun.–ven. {weekOpens}–{weekCloses}",
     "or": "ou",
     "whatsappHeading": "Écrivez-nous",
     "whatsapp": "Contactez-nous sur WhatsApp",

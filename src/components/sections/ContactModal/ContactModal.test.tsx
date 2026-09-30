@@ -581,26 +581,25 @@ describe('ContactModal — the dialog’s content', () => {
     // rows are read BY DAY here exactly as the section reads them, so a
     // reordered lib/clinic/clinic.ts moves both together.
     const weekday = clinic.hours.find((row) => row.days.includes('Monday'));
-    const saturday = clinic.hours.find((row) => row.days.includes('Saturday'));
     const { dialog } = mount({ defaultOpen: true });
     const text = dialog().textContent ?? '';
 
     expect(weekday).toBeDefined();
-    expect(saturday).toBeDefined();
-    for (const value of [
-      weekday?.opens,
-      weekday?.closes,
-      saturday?.opens,
-      saturday?.closes,
-    ]) {
+    for (const value of [weekday?.opens, weekday?.closes]) {
       expect(value).toBeTruthy();
       expect(text).toContain(value);
     }
-    // …and the ICU placeholders are really gone, not printed as themselves.
-    expect(text).not.toMatch(/\{(week|sat)(Opens|Closes)\}/);
+    // A BELT, not the pin. use-intl never prints a placeholder as itself: a
+    // missing argument is a formatting error, answered with the key's path
+    // („contact.callHours" — checked 2026-09-30), so a stale `{satOpens}` in
+    // this file fails on the `toContain` above and on the key-leak case, and
+    // one in another language on tests/unit/translation-parity.test.ts. This
+    // line only holds the day that fallback is configured to print the raw
+    // message instead.
+    expect(text).not.toMatch(/\{[A-Za-z]+\}/);
   });
 
-  it('rests on ONE weekday row in lib/clinic/clinic.ts, Monday through Friday', () => {
+  it('rests on ONE weekday row in lib/clinic/clinic.ts, Monday through Friday — and nothing beside it', () => {
     // G2 react MEDIUM fold — the hole this closes: the caption prints a SPAN
     // („Lun–Vin 09:00–19:00"), so it is only true while one entry really covers
     // all five weekdays. Split that entry (Mon–Thu one row, Fri another with a
@@ -612,17 +611,31 @@ describe('ContactModal — the dialog’s content', () => {
     // an outside-in pin rather than a second copy of the same code.
     const byMonday = clinic.hours.find((row) => row.days.includes('Monday'));
     const byFriday = clinic.hours.find((row) => row.days.includes('Friday'));
-    const bySaturday = clinic.hours.find((row) =>
-      row.days.includes('Saturday'),
-    );
 
     expect(byMonday).toBeDefined();
     // Object IDENTITY, not equal times: two rows that happen to share hours
     // today are still two rows, and the copy would be wrong the day one moves.
     expect(byFriday).toBe(byMonday);
-    // …and Saturday is its own row, or the caption prints the same span twice.
-    expect(bySaturday).toBeDefined();
-    expect(bySaturday).not.toBe(byMonday);
+    // …and that row is the WHOLE week (owner, 2026-09-30: Saturday and Sunday
+    // closed). The caption names only „Lun–Vin", so a weekend day in that row,
+    // or a second row beside it, would be a day the Footer prints and the
+    // panel leaves out.
+    expect(clinic.hours).toEqual([byMonday]);
+    for (const day of ['Saturday', 'Sunday'] as const) {
+      expect(byMonday?.days).not.toContain(day);
+    }
+    // ALL FIVE weekdays, not just the two ends of the span: a row of
+    // ['Monday', 'Friday'] would satisfy everything above and still make
+    // „Lun–Vin" a claim about three days the clinic keeps shut.
+    for (const day of [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+    ] as const) {
+      expect(byMonday?.days).toContain(day);
+    }
   });
 
   it('names the dialog with the ONE <h2>, above two <h3> group titles', () => {
@@ -673,7 +686,7 @@ describe('ContactModal — the dialog’s content', () => {
   it('reads title → control → caption, twice, in DOM order', () => {
     // The shape of the answer (board v4): each group is a heading, the control
     // it names, and the caption that qualifies it — so a screen reader walking
-    // the panel linearly hears "Sunați-ne la / 0700 000 000 / Lun–Vin …" and
+    // the panel linearly hears "Sunați-ne la / 0770 162 765 / Lun–Vin …" and
     // then the same three beats for WhatsApp. A caption that drifted above its
     // button would still LOOK right at one width and read wrong at every one.
     const weekday = clinic.hours.find((row) => row.days.includes('Monday'));
@@ -705,7 +718,7 @@ describe('ContactModal — the dialog’s content', () => {
     expect(nodes[2]).toHaveTextContent(weekday.opens);
     // The Or-word sits BETWEEN the groups in the reading order too, which is
     // the whole reason it is a real text node rather than a drawn rule: linear
-    // reading gets "…, Sâm 09:00–14:00 / SAU / Scrieți-ne / …".
+    // reading gets "…, Lun–Vin 09:00–19:00 / SAU / Scrieți-ne / …".
     expect(nodes[3]).toHaveTextContent(messages.or);
     expect(nodes[4]).toHaveTextContent(messages.whatsappHeading);
     expect(nodes[5]).toHaveAttribute(
@@ -816,14 +829,17 @@ describe('useContactModal — used outside its provider', () => {
 // added air to the four MACRO seams (bar→rail, both sides of the divider, and
 // below the second group). MEASURED with the real subset loaded, RO / DE —
 // re-measured 2026-09-26 at 30px, when the title took Heading's `section`
-// step (§15.24) and the rail's height-query gap went to 0 (G2-R2 tier 2):
-//   320×568   494 / 506  (+42 / +30)   ← the worst upright case in the product
+// step (§15.24) and the rail's height-query gap went to 0 (G2-R2 tier 2) —
+// and the two 320-wide rows again on 2026-09-30, when the hours caption lost
+// its Saturday half and its second line there (ContactModal.tsx's note under
+// its own table has the engine, and why Romanian is the taller one now):
+//   320×568   506 / 482  (+30 / +54)   ← the worst upright case in the product
 //   390×844   518 / 518  (+294 / +294)
 //   768×1024 · 1280×800 · 1536×864 · 1920×1080   502 / 502, hundreds to spare
 //   844×390   354 / 354  (+4)          ← sideways, tight rhythm, divider hidden
 //   844×536   354 / 354  (+150)        ← the height query's last row
 //   844×537   502 / 502  (+3)          ← the first row above it, airy again
-//   320×500   454 / 466  (+14 / +2)    ← BOTH queries, a 200%-zoom window
+//   320×500   466 / 442  (+2 / +26)    ← BOTH queries, a 200%-zoom window
 // The two states MEET at 536/537 with no gap between them, which is the whole
 // claim: there is no viewport height at which this dialog scrolls.
 // SIDEWAYS IS WHERE IT IS PAID FOR, and it is paid ONLY there: the seams
@@ -831,7 +847,7 @@ describe('useContactModal — used outside its provider', () => {
 // upright §7 viewport is ever in that state — the 2026-09-05 live review is
 // what keeps it out of them. The 320px stress width has its OWN lever,
 // `@media (max-width: 21.25rem)`: collapsed seams WITH the divider still at
-// full size, which is what keeps German at 506px against that phone's 536px
+// full size, which is what keeps the box at 506px against that phone's 536px
 // budget.
 //
 // The matrix has two axes, because the panel's height is content × typography:
@@ -839,10 +855,12 @@ describe('useContactModal — used outside its provider', () => {
 // accessibility stress width (§7) — and the LANGUAGE, where German is the
 // longest this site speaks (§8.4, ≈ +30–35%): its title fills the bar and its
 // WhatsApp label is the string the shared rail is sized by, in every locale
-// (the 24.5rem floor). DE at 320 is therefore the worst case in the whole
-// product, and it is in here. The sideways phone follows in BOTH languages,
-// because that is where the box has the least room and the panel only fits
-// while the title and both captions hold one line each.
+// (the 24.5rem floor). DE at 320 was therefore the worst case in the whole
+// product when this matrix was drawn, and it is in here — as is RO at 320,
+// which one engine has made the taller of the two since 2026-09-30 (its
+// title breaks onto a fifth line there). The sideways phone follows in BOTH
+// languages, because that is where the box has the least room and the panel
+// only fits while the title and both captions hold one line each.
 //
 // The `role`/`tabindex` check is the atom's own signal, not a guess: ui/Modal
 // grants its body a region and a tab stop ONLY in the scrollable mode and only
@@ -1116,7 +1134,8 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
       // layer scrolling. The rail's combined-regime rule (G2-R2 tier 2,
       // 2026-09-26; ContactModal.tsx's rail note has the class and why its
       // operand order matters) closes the gap there: 454 / 466px, +14 / +2,
-      // measured 2026-09-26 at 30px. The sideways case's STRONG property,
+      // measured 2026-09-26 at 30px (466 / 442 since the hours caption lost
+      // its second line, 2026-09-30). The sideways case's STRONG property,
       // restated for this window: not one box scrolls, and the panel sits
       // fully inside the viewport.
       // GERMAN IS NOT IN THIS PIN, deliberately. Its +2 is read in Storybook
@@ -1126,7 +1145,10 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
       // mounts without the shell's `lang`, so the German panel lays out 273px
       // wide and unhyphenated, 482px tall, and the layer overflows by 14 (514
       // against 500) — measured 2026-09-26 at 30px, the rail's gap at 0 there
-      // too. Whether German joins this pin is open (G2-R2 tier 2).
+      // too. Since 2026-09-30 the hours caption is one line there, which by
+      // this record's own arithmetic leaves the German panel 458px tall —
+      // 490 against 500, inside the window. That is NOT re-measured in this
+      // harness, so whether German joins this pin stays open (G2-R2 tier 2).
       await page.viewport(320, 500);
       const { dialog } = mount({ locale, defaultOpen: true });
       await document.fonts.ready;

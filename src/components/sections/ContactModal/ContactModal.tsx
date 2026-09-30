@@ -116,40 +116,54 @@ import { useContactModal } from './useContactModal';
 //     `hidden` — sit on the same number, because a mixed band is the other way
 //     this goes wrong.)
 //   · `max-width: 21.25rem` (340px) — the 320px accessibility stress width,
-//     where the panel is only 288px wide, the captions wrap (all but German's
-//     second), the title runs to four lines (five in German) and the German
-//     box would otherwise reach 614px against that phone's 536px budget. The
-//     same collapse lands it at 506 (30px of slack), WITH the divider still at
-//     full size (all measured 2026-09-26 at 30px) — the owner's lever order for
-//     an upright overflow (2026-09-05). Probed at 340/341; 390 and up are never
-//     affected.
+//     where the panel is only 288px wide and the title runs to five lines.
+//     Uncollapsed, the box would reach 614px in Romanian and 590 in German
+//     against that phone's 536px budget; the same collapse lands them at 506
+//     and 482 (30 and 54px of slack), WITH the divider still at full size —
+//     the owner's lever order for an upright overflow (2026-09-05). Probed at
+//     340/341; 390 and up are never affected. (Measured 2026-09-30, after the
+//     hours caption lost its Saturday half and its second line here; the
+//     note under the table has the engine and the 2026-09-26 numbers.)
 // MEASURED 2026-09-26 AT 30px, the rail's height-query gap at 0 (Chromium,
 // overlay scrollbars — a phone's), RO / DE, box height (slack against the
-// layer's budget):
+// layer's budget) — the two 320-wide rows RE-MEASURED 2026-09-30, see below:
 //   844×390  tight, no divider  354 / 354  (+4)   ← the case the height query is for
 //   844×536  tight, no divider  354 / 354  (+150) ← its last row
 //   844×537  airy               502 / 502  (+3)   ← the first row above it
-//   320×568  collapsed seams, divider  494 / 506  (+42 / +30) ← worst upright
+//   320×568  collapsed seams, divider  506 / 482  (+30 / +54) ← worst upright
 //   390×844  airy               518 / 518  (+294 / +294)
 //   768×1024 · 1280×800 · 1536×864 · 1920×1080  airy  502 / 502 everywhere
-//   320×500  both queries, no divider  454 / 466  (+14 / +2) ← the combined rule
+//   320×500  both queries, no divider  466 / 442  (+2 / +26) ← the combined rule
+// THE 320-WIDE ROWS, 2026-09-30 (Chromium 151 on macOS, phone emulation —
+// overlay scrollbars; every other row re-read the same day, unchanged).
+// `contact.callHours` lost its Saturday half, so at this width the hours
+// caption holds ONE line in both languages where it took two, and each box is
+// 24px lower than the day before: 530 / 506 → 506 / 482, and 490 / 466 →
+// 466 / 442. The GERMAN halves of the old pair are the 2026-09-26 table
+// exactly (506, 466); the ROMANIAN ones are not — that table had 494 / 454, a
+// four-line title, where this engine breaks „WhatsApp." inside the word and
+// gives Romanian five lines like German. So Romanian is the taller language
+// at this width here, and before the caption changed its 320×500 box stood
+// 22px OVER the budget on this engine — the one window where this dialog
+// scrolled. It clears it by 2 now.
 // KNOWN BOUNDARY, recorded rather than smoothed: at the 320px width the panel
-// needs 538px of viewport height in German (measured 2026-09-26 at 30px),
+// needs 538px of viewport height in its taller language (506 plus the layer's
+// 32 — Romanian on the engine of the 2026-09-30 rows, German until then),
 // which the §7 stress phone (568) has and a 200%-zoom window of 320×500 does
 // not — but there both queries hold, the divider hides and the rail's
-// combined-regime rule closes its gap, so the German box is 466px against a
-// 468px budget and even that window does not scroll (measured 2026-09-26 at
-// 30px). Below it — under 498px of height at that width in German, the 466
-// plus the layer's 32 — the LAYER scrolls, which is ui/Modal's designed answer
-// for content that cannot fit (D17/D18) and the §9 reflow regime rather than
-// a device. Hiding the divider upright to buy those pixels is NOT this lane's
-// call (owner, 2026-09-05). The same regime covers a desktop engine with
-// CLASSIC scrollbars at that width: globals' `scrollbar-gutter: stable` on
-// <html> takes 15px off the layer, so the German panel is 273px wide, its
-// title runs to six lines and the layer scrolls 58px at 320×568 — and 86px
-// at 320×500, the combined-regime rule notwithstanding (both measured
-// 2026-09-26 at 30px, Chromium on Windows) — which is why the table above is
-// read with overlay scrollbars.
+// combined-regime rule closes its gap, so the box is 466px against a 468px
+// budget and even that window does not scroll. Below it — under 498px of
+// height at that width, the 466 plus the layer's 32 — the LAYER scrolls, which
+// is ui/Modal's designed answer for content that cannot fit (D17/D18) and the
+// §9 reflow regime rather than a device. Hiding the divider upright to buy
+// those pixels is NOT this lane's call (owner, 2026-09-05). The same regime
+// covers a desktop engine with CLASSIC scrollbars at that width: globals'
+// `scrollbar-gutter: stable` on <html> takes 15px off the layer, so the German
+// panel is 273px wide, its title runs to six lines and the layer scrolls 34px
+// at 320×568 — and 62px at 320×500, the combined-regime rule notwithstanding
+// (both measured 2026-09-30; 58 and 86 while the caption took two lines,
+// measured 2026-09-26 on Windows and reproduced on develop here) — which is
+// why the table above is read with overlay scrollbars.
 // §6.5 ON THE MEDIA QUERIES, which an atom would not be allowed: media queries
 // are the section/page tier's tool, and this section is the one place they are
 // unavoidable — a container query cannot see what this needs, because the
@@ -208,6 +222,9 @@ import { useContactModal } from './useContactModal';
 // past it, which is what keeps §8.4 true rather than freezing a German number
 // into the layout. RE-MEASURE TRIGGER: any edit to `contact.whatsapp` or
 // `contact.callHours` in de.json — those two strings are what 392 measures.
+// Re-measured 2026-09-30, when `callHours` lost its Saturday half: the German
+// rail is still 391.88px at 1280, before and after — the WhatsApp label sets
+// it, so the floor stands unchanged.
 // The `min(…, 100%)` guard is load-bearing, not defensive: at 390 the panel's
 // inner width is 309px and at 320 it is 239px, so a bare `min-w-[24.5rem]`
 // would push the rail past the box and out of the dialog. With the guard the
@@ -238,14 +255,17 @@ import { useContactModal } from './useContactModal';
 
 /**
  * The schedule row covering `day`, found BY DAY NAME rather than by index
- * (§10.1): lib/clinic/clinic.ts is free to REORDER its entries and this keeps
- * printing the right times, where a blind `hours[0]`/`hours[1]` would start
- * printing Saturday's as the weekday's the moment it does.
+ * (§10.1). Today the week is ONE entry and the guards below keep it so, which
+ * makes `hours[0]` the same row — but the day the clinic's week gains a second
+ * entry and the caption is re-authored for it, a lookup by name keeps
+ * printing the right times where a blind index would print whichever entry
+ * came first.
  *
- * Loud on a miss, in lib/hours/hours.ts's idiom: a caption that reads „Sâm –" sends a
- * visitor to a locked door, so a schedule this copy no longer fits fails the
- * build instead of shipping. The `callHours` message names both rows in all
- * five languages, so the copy and the data move together or not at all.
+ * Loud on a miss, in lib/hours/hours.ts's idiom: a caption that reads „Lun–Vin –"
+ * sends a visitor to a locked door, so a schedule this copy no longer fits
+ * fails the build instead of shipping. The `callHours` message names the one
+ * weekday row in all five languages, so the copy and the data move together
+ * or not at all.
  *
  * `Readonly<…>` because the row IS the singleton's own object (G2 ts fold):
  * handing out a mutable reference would let a future consumer edit the clinic's
@@ -255,7 +275,7 @@ function hoursCovering(day: SchemaDay): Readonly<OpeningHours> {
   const row = clinic.hours.find((entry) => entry.days.includes(day));
   if (!row) {
     throw new Error(
-      `sections/ContactModal: lib/clinic.ts has no opening-hours entry ` +
+      `sections/ContactModal: lib/clinic/clinic.ts has no opening-hours entry ` +
         `covering ${day}, which the contact.callHours message prints.`,
     );
   }
@@ -263,7 +283,16 @@ function hoursCovering(day: SchemaDay): Readonly<OpeningHours> {
 }
 
 const weekdayHours = hoursCovering('Monday');
-const saturdayHours = hoursCovering('Saturday');
+
+/**
+ * What a reshaped week costs, said once for both refusals below — and said
+ * WHOLE (G2 typescript, 2026-09-30): the message files alone would leave the
+ * build throwing the same error, because these guards hard-code the shape
+ * and t() passes the caption exactly two arguments.
+ */
+const RESHAPE_REMEDY =
+  `Re-author callHours in all five message files for the new shape, and ` +
+  `with it the arguments t() passes that key and the guards in this file.`;
 
 // …AND THE SHAPE THE COPY ASSUMES, not just the days it names (G2 react MEDIUM
 // fold). The caption prints a SPAN — „Lun–Vin {weekOpens}–{weekCloses}" and its
@@ -288,18 +317,34 @@ const uncoveredWeekdays = WEEKDAY_SPAN.filter(
 );
 if (uncoveredWeekdays.length > 0) {
   throw new Error(
-    `sections/ContactModal: lib/clinic.ts no longer covers ` +
+    `sections/ContactModal: lib/clinic/clinic.ts no longer covers ` +
       `${uncoveredWeekdays.join(', ')} in the same entry as Monday, so the ` +
       `contact.callHours span (Mon–Fri, one pair of times) would print ` +
       `Monday's hours for days the clinic now keeps different ones. ` +
-      `Re-author callHours in all five message files for the new shape.`,
+      RESHAPE_REMEDY,
   );
 }
-if (weekdayHours === saturdayHours) {
+// …AND NOTHING BESIDE IT. Since 2026-09-30 the clinic's week IS that one entry
+// — Saturday and Sunday closed — and the caption names only „Lun–Vin", so any
+// other opening would be a day the Footer prints and this panel silently
+// leaves out: a weekend day added to that entry, or a second entry (a
+// re-opened Saturday, a split day). Checked here for the reason the span is:
+// either change fails the build with the copy edit it requires spelled out.
+// ContactModal.test.tsx pins the same facts outside-in.
+const WEEKEND = ['Saturday', 'Sunday'] as const satisfies readonly SchemaDay[];
+
+const openWeekend = WEEKEND.filter((day) =>
+  clinic.hours.some((entry) => entry.days.includes(day)),
+);
+if (openWeekend.length > 0 || clinic.hours.length !== 1) {
   throw new Error(
-    `sections/ContactModal: lib/clinic.ts covers Saturday in the SAME entry ` +
-      `as the weekdays, so the contact.callHours caption would print one ` +
-      `pair of times twice. Re-author callHours in all five message files.`,
+    `sections/ContactModal: the contact.callHours caption prints ONE Mon–Fri ` +
+      `pair of times and nothing for the weekend, but lib/clinic/clinic.ts ` +
+      (openWeekend.length > 0
+        ? `opens on ${openWeekend.join(', ')}`
+        : `splits the week into ${clinic.hours.length} entries`) +
+      `. ` +
+      RESHAPE_REMEDY,
   );
 }
 
@@ -479,8 +524,6 @@ export function ContactModal(): ReactElement {
           caption={t('callHours', {
             weekOpens: weekdayHours.opens,
             weekCloses: weekdayHours.closes,
-            satOpens: saturdayHours.opens,
-            satCloses: saturdayHours.closes,
           })}
         >
           {/* THE CONVERSION CONTROL. An <a href="tel:"> wearing Button's

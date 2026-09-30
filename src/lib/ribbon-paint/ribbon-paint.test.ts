@@ -13,29 +13,28 @@ import {
   paintStretch,
   samplesOf,
   shade,
-  type Faces,
   type Rgb,
   type Shade,
   type Stretch,
   type StripSample,
 } from './ribbon-paint.ts';
 
-// lib/ribbon-paint — the strip and its light equal the prototype's record,
-// the painter paints only what is in front of the card's face, and it joins
-// its pieces without a seam: inside one canvas (the additive blend) and
+// lib/ribbon-paint — the strip and its light equal the record beside this
+// file, the painter paints only what is in front of the card's face, and it
+// joins its pieces without a seam: inside one canvas (the additive blend) and
 // across a frame (whole samples). Where two CANVASES meet is lib/ribbon-draw's
 // (behind the card, where nothing is painted) and is pinned on the stand-in
 // column in ui/Ribbon/Ribbon.test.tsx. Real Chromium, real 2D canvases, no
 // stylesheet: every assertion reads pixels back with getImageData.
 
-/** The two faces the record was written with — the old site's palette,
- *  globals.css's --ribbon-dark / --ribbon-light. */
 const hex = (value: number): Rgb => [
   ((value >> 16) & 255) / 255,
   ((value >> 8) & 255) / 255,
   (value & 255) / 255,
 ];
-const FACES: Faces = { dark: hex(0x2d263c), light: hex(0x8377a3) };
+/** The colour the record was written with — the ribbon's one colour, the old
+ *  site's palette, globals.css's --ribbon. */
+const COLOUR: Rgb = hex(0x8377a3);
 const NINE = 1e-9;
 const FOUR = 1e-4;
 
@@ -54,7 +53,7 @@ describe('lib/ribbon-paint — the strip, as recorded (GOLDEN_STRIPS)', () => {
 
   describe.each(GOLDEN_STRIPS)('$name', (golden) => {
     const model = modelOf(golden.name);
-    const strip = buildStrip(model, golden.mirror, FACES);
+    const strip = buildStrip(model, golden.mirror, COLOUR);
 
     it('cuts every segment by what it IS — a bend finely, a straight coarsely', () => {
       expect(
@@ -101,7 +100,7 @@ describe('lib/ribbon-paint — the strip, as recorded (GOLDEN_STRIPS)', () => {
     // points: a step with both ends behind the front face costs 0.35 of its
     // length in px, every other step its whole length.
     const model = modelOf('desktop');
-    const strip = buildStrip(model, false, FACES);
+    const strip = buildStrip(model, false, COLOUR);
     const frontY = -model.T / 2;
     const middle = (sample: StripSample): Vec3 => [
       (sample.l[0] + sample.r[0]) / 2,
@@ -122,13 +121,39 @@ describe('lib/ribbon-paint — the strip, as recorded (GOLDEN_STRIPS)', () => {
     }
     expect(hidden).toBeGreaterThan(0);
   });
+
+  it('is one colour on both sides', () => {
+    // The desktop card's first sample looks at the viewer squarely, normal
+    // (0, −1, 0): built unmirrored it shows the ribbon's front side, built
+    // mirrored its back. Until 2026-09-30 the two sides wore two colours —
+    // the unmirrored one the dark mauve's 41.624769 / 37.525312 / 48.2412.
+    const model = modelOf('desktop');
+    const squarely = shade(COLOUR, [0, -1, 0]);
+    for (const mirror of [false, true]) {
+      const { colour } = buildStrip(model, mirror, COLOUR)[0];
+      colour.forEach((value, i) =>
+        expect(
+          Math.abs(value - squarely[i]),
+          `mirrored: ${mirror}`,
+        ).toBeLessThan(NINE),
+      );
+    }
+    // The record's `light` row for that normal.
+    [97.527363, 86.953778, 113.604757].forEach((value, i) =>
+      expect(Math.abs(squarely[i] - value)).toBeLessThan(FOUR),
+    );
+  });
 });
 
 describe('lib/ribbon-paint — the light, as recorded (GOLDEN_LIGHT)', () => {
   it('shades each face by the direction its surface looks in', () => {
+    // The record's `face` column names the two base colours the light was
+    // recorded on: the ribbon's own, and the dark mauve it wore on its other
+    // side until 2026-09-30. `shade` takes any colour, so both stay pinned.
+    const bases = { dark: hex(0x2d263c), light: hex(0x8377a3) };
     expect(GOLDEN_LIGHT.length).toBeGreaterThan(0);
     for (const [face, nx, ny, nz, red, green, blue] of GOLDEN_LIGHT) {
-      const colour = shade(face === 'dark' ? FACES.dark : FACES.light, [
+      const colour = shade(face === 'dark' ? bases.dark : bases.light, [
         nx,
         ny,
         nz,
@@ -168,7 +193,7 @@ function stretchOf(
   cy: number,
 ): Stretch {
   return {
-    strip: buildStrip(model, mirror, FACES),
+    strip: buildStrip(model, mirror, COLOUR),
     place: placeAt(cx, cy),
     frontY: -model.T / 2,
   };

@@ -681,10 +681,10 @@ describe('ui/Ribbon — two canvases meet where nobody sees: behind the card', (
 
       // Card i's hand-over joins canvas i − 1 (its head) to canvas i (its
       // body); the first card's head and body share canvas 0.
-      const faces = { dark: [0.2, 0.2, 0.2], light: [0.6, 0.6, 0.6] } as const;
+      const colour = [0.6, 0.6, 0.6] as const;
       for (const placed of placeColumn(measureColumn(root)).slice(1)) {
         const model = buildCard(placed.input);
-        const strip = buildStrip(model, placed.mirror, faces);
+        const strip = buildStrip(model, placed.mirror, colour);
         const { u0, u1 } = model.atoms.wrapEntry;
         const split = handOver(strip, (u0 + u1) / 2);
         expect(split).toBeGreaterThan(0);

@@ -19,7 +19,6 @@ import {
 import {
   buildStrip,
   paintStretch,
-  type Faces,
   type Rgb,
   type Stretch,
   type StripSample,
@@ -168,11 +167,12 @@ import {
 // column hidden at mount does not spend the one warning. A ribbon over a
 // doctor's words is worse than no ribbon.
 //
-// ── THE COLOURS are read from the root's computed `--ribbon-dark` /
-// `--ribbon-light` (globals.css, fb-475) and normalised by a canvas of their
-// own: a CSS colour assigned to a 2D context's `fillStyle` reads back as
-// `#rrggbb`. A missing or unreadable token, or a translucent one: nothing is
-// painted. The canvases' shadow is the prototype's, in the dark face's own
+// ── THE COLOURS — the ribbon's ONE colour and its shadow's — are read from
+// the root's computed `--ribbon` and `--ribbon-shadow` (globals.css; one
+// colour since 2026-09-30, on the owner's word) and normalised by a canvas of
+// their own: a CSS colour assigned to a 2D context's `fillStyle` reads back
+// as `#rrggbb`. A missing or unreadable token, or a translucent one: nothing
+// is painted. The canvases' shadow is the prototype's, in the shadow token's
 // colour — drop-shadow(0 max(1px, 3k px) max(1.5px, 4k px)) at 0.38.
 //
 // ── TILES: ONE CANVAS PER CARD, JOINED WHERE NOBODY SEES — BEHIND THE CARD.
@@ -479,17 +479,16 @@ export function startRibbonDraw(
   function plan(
     column: readonly PlacedCard[],
     tokens: readonly [string, string],
-  ): Readonly<{ faces: Faces; planned: readonly Planned[] }> | string {
+  ): Readonly<{ shadow: Rgb; planned: readonly Planned[] }> | string {
     probe ??= document.createElement('canvas').getContext('2d');
     if (probe === null) {
       return 'the browser gave no 2D canvas context to read the colour tokens with';
     }
-    const dark = opaque(probe, tokens[0]);
-    const light = opaque(probe, tokens[1]);
-    if (dark === null || light === null) {
-      return "the colour tokens --ribbon-dark and --ribbon-light are missing, unreadable or translucent on the ribbon's root";
+    const colour = opaque(probe, tokens[0]);
+    const shadow = opaque(probe, tokens[1]);
+    if (colour === null || shadow === null) {
+      return "the colour tokens --ribbon and --ribbon-shadow are missing, unreadable or translucent on the ribbon's root";
     }
-    const faces: Faces = { dark, light };
     const planned: Planned[] = [];
     for (const placed of column) {
       let model: CardModel;
@@ -501,7 +500,7 @@ export function startRibbonDraw(
       const frontY = -model.T / 2;
       // The painter's own samples — both edges and the centre — against the
       // card's keep-outs, mirrored into the strip's frame.
-      const strip = buildStrip(model, placed.mirror, faces);
+      const strip = buildStrip(model, placed.mirror, colour);
       const points = strip.flatMap(({ l, r }): Vec3[] => [
         l,
         r,
@@ -518,13 +517,13 @@ export function startRibbonDraw(
       const cut = handOver(strip, (wrap.u0 + wrap.u1) / 2);
       planned.push({ placed, strip, cut, frontY });
     }
-    return { faces, planned };
+    return { shadow, planned };
   }
 
   /** TILES (the header): the canvases laid and sized, each card handed its two halves — or which canvas the browser refused. */
   function lay(
     planned: readonly Planned[],
-    faces: Faces,
+    shadow: Rgb,
     ratio: number,
   ): readonly Built[] | string {
     // Card i's head goes on canvas i − 1 (card 0's on its own), its body on
@@ -544,7 +543,7 @@ export function startRibbonDraw(
         { tile: i, cx, cy, frontY, samples: strip.slice(cut) },
       ];
     });
-    const shadow = faces.dark.map((c) => Math.round(c * 255)).join(' ');
+    const channels = shadow.map((c) => Math.round(c * 255)).join(' ');
     const tiles: Readonly<{
       ctx: CanvasRenderingContext2D;
       left: number;
@@ -595,7 +594,7 @@ export function startRibbonDraw(
         top: `${top}px`,
         width: `${width}px`,
         height: `${height}px`,
-        filter: `drop-shadow(0 ${Math.max(1, 3 * k)}px ${Math.max(1.5, 4 * k)}px rgb(${shadow} / 0.38))`,
+        filter: `drop-shadow(0 ${Math.max(1, 3 * k)}px ${Math.max(1.5, 4 * k)}px rgb(${channels} / 0.38))`,
       });
       tiles.push({ ctx, left, top });
     }
@@ -637,8 +636,8 @@ export function startRibbonDraw(
     const view = !reduced && status.includes('waiting') ? viewOf(root) : null;
     const style = getComputedStyle(root);
     const tokens = [
-      style.getPropertyValue('--ribbon-dark'),
-      style.getPropertyValue('--ribbon-light'),
+      style.getPropertyValue('--ribbon'),
+      style.getPropertyValue('--ribbon-shadow'),
     ] as const;
     const ratio = window.devicePixelRatio;
     const key = JSON.stringify([column, ratio, tokens]);
@@ -653,7 +652,7 @@ export function startRibbonDraw(
       const laid =
         typeof outcome === 'string'
           ? outcome
-          : lay(outcome.planned, outcome.faces, ratio);
+          : lay(outcome.planned, outcome.shadow, ratio);
       if (typeof laid === 'string') {
         refuse(laid);
         return;

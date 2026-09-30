@@ -197,9 +197,9 @@
 
 /* Semantic color roles — exactly 19: §15.1's 17 (`success` dropped) +
    accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) — plus
-   the one additional accent-decorative role, and the floss ribbon's two
-   faces, --ribbon-light and --ribbon-dark (§15.26): raw values read by
-   lib/ribbon-draw for its canvases, so they get NO utility name in the
+   the one additional accent-decorative role, and the floss ribbon's colour
+   and its shadow's, --ribbon and --ribbon-shadow (§15.26): raw values read
+   by lib/ribbon-draw for its canvases, so they get NO utility name in the
    `@theme inline` block below — nothing paints with a class.
 
    `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
@@ -281,9 +281,11 @@
   --accent-strong: #4b3a86;
   /* additional role outside the 19 (§15.1 amendment) */
   --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
-  /* the ribbon's two faces (owner fb-475, 2026-09-25; §15.26) — the old site's OWN palette, never invented: */
-  --ribbon-light: #8377a3; /* old `--accent` rgb(131 119 163) — its primary lavender, the light face */
-  --ribbon-dark: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness, the dark face */
+  /* the ribbon's colour and its shadow's (§15.26) — the old site's OWN palette, never invented. ONE colour
+     since 2026-09-30 (owner: "drop the dark mauve,/ black one and use the mov"); the dark mauve that was its
+     second face stays as the colour of the shadow it casts: */
+  --ribbon: #8377a3; /* old `--accent` rgb(131 119 163) — its primary lavender */
+  --ribbon-shadow: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness */
 }
 
 /* THE RIBBON'S LANES, REGISTERED (§15.26). ui/Ribbon DECLARES these on the box

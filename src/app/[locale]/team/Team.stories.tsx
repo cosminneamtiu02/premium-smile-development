@@ -256,27 +256,41 @@ const expectFirstCard = async (card: HTMLElement): Promise<Branch> => {
  * load resumption", no scrolling and no timer — and what the play measures is
  * the page of a visitor who has scrolled through it, which is the page the
  * document-wide checks (the outline, the sideways scroll) are about. React
- * never writes the attribute back: the prop it rendered is unchanged.
+ * never writes the attribute back: the prop it rendered is unchanged, and
+ * React DOM writes only props that changed (the G2 typescript read of
+ * 2026-09-30 checked `updateProperties` in react-dom 19.2).
  *
- * SETTLED, NOT LOADED — the Sections/DoctorIntro helper's contract, kept:
- * `decode()` resolved OR rejected, and then `complete`, polled (`waitFor`)
- * because ui/Image answers a missing variant by swapping to the original
- * file, and a picture caught between the two sources settles on a later
- * poll. Nothing here asserts pixels. On CI a picture may be read while it is
- * still between its two sources, and that is sound on THIS page: a portrait's
- * box is its frame's (PersonnelCard's `aspect-3/4 w-48`), the same whether
- * the picture arrived or broke.
+ * THE WAIT IS BOUNDED AND NAMED: `complete`, polled (`waitFor`) under a
+ * timeout well inside the runner's 15 s, so a picture that never settles
+ * fails this play by NAME — its `currentSrc` — instead of timing the whole
+ * test out. No `decode()`: it settles at the same moment `complete` turns
+ * true and adds nothing to a layout read (the Sections/DoctorIntro helper
+ * keeps it for its own reasons). SETTLED MEANS LOADED OR BROKEN: on CI, where
+ * the optimizer's variants do not exist, a picture errors and ui/Image swaps
+ * it to the original file — a picture read in that instant, complete but not
+ * yet swapped, is sound on THIS page, because a portrait's box is its frame's
+ * (PersonnelCard's `aspect-3/4 w-48`), the same whether the picture arrived
+ * or broke. Nothing here asserts pixels.
+ *
+ * THE VISUAL NET LEANS ON THE FLIP: tests/visual/stories.spec.ts waits for
+ * fonts only before its full-page screenshot, so on this page — taller than
+ * the loading distance at the phone widths — the far portraits are in the
+ * baseline because this play asked for them (measured 2026-09-30: without the
+ * flip the last four are unrequested at the screenshot and stay so). Look for
+ * them when those baselines are recorded.
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;
   const pictures = Array.from(root.querySelectorAll('img'));
   for (const picture of pictures) picture.loading = 'eager';
-  await Promise.all(
-    pictures.map((picture) => picture.decode().catch(() => undefined)),
+  await waitFor(
+    () => {
+      for (const picture of pictures) {
+        expect(picture.complete, picture.currentSrc).toBe(true);
+      }
+    },
+    { timeout: 5_000 },
   );
-  await waitFor(() => {
-    for (const picture of pictures) expect(picture.complete).toBe(true);
-  });
 };
 
 /**
@@ -298,6 +312,12 @@ const playPage =
   ): NonNullable<Story['play']> =>
   async ({ canvas, canvasElement }) => {
     await settled(canvasElement);
+    // ONE PICTURE PER PERSON, so the settle above is never vacuous: a page
+    // that stopped rendering <img>s (portraits as CSS backgrounds, say) would
+    // let it pass over nothing.
+    await expect(canvasElement.querySelectorAll('img')).toHaveLength(
+      doctors.length + auxiliaries.length,
+    );
     // ONE <h1>, VISIBLE, and it is the BAND's (page.tsx, THE <h1> IS THE
     // BAND'S) — queried by role and by its real message, so a renamed key or a
     // heading that stopped being an <h1> fails here (§9, §13).

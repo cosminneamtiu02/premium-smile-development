@@ -68,13 +68,17 @@ import type { HoursRow } from '@/lib/hours/hours';
 // half's eyebrow beside it is the only one left in the band.
 // Round 1's `hyphens-none` on the title does not survive the move, and on
 // purpose: SectionHeading owns the heading element and exposes no class seam
-// to it, so the title inherits the site-wide `hyphens: auto` (§15.14) exactly
-// like every other band's h2. The title is a short sentence now („Când mă
+// to it, so the title inherits the site-wide `hyphens: auto` (§15.14) —
+// deliberately, as its words are ordinary words; the biography's title beside
+// it opts out because it carries a person's name (DoctorProfile's THE NAME IS
+// NEVER SPLIT comment). The title is a short sentence now („Când mă
 // găsiți la clinică", „Wann Sie mich in der Praxis finden"), and it WRAPS
 // between words in the card's content box — the card's ONE width, 20rem (the
 // band's D53), less 2 × 25px of frame and inset, 270px — to two lines at the
-// section step, and narrower only on a phone, whose column is under 20rem
-// (206px at 320); no word in it is long enough to need a syllable break there.
+// `band` step (30px in this card), and narrower only on a phone, whose column
+// is under 20rem (206px at 320), where the Romanian title does break once at a
+// syllable („gă-siți", measured 2026-09-30) — ordinary words, which §15.14
+// allows; only a person's name is never split, and there is none here.
 // The id comes from React's useId(), which is server-safe and
 // hydration-stable, so two schedules on one page can never collide; it rides
 // SectionHeading's `id` prop, which lands it on the HEADING and never on the

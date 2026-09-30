@@ -1769,6 +1769,58 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     doctor-showcase lane's mount, six doctors fire §15.26's WAIT trigger (six stretches due at once draw
     for ≈ 5.96 s, over SC 2.2.2's 5 s); that lane records it as ARMED.
 
+    **Round 3's red check and the re-review (the same day; the owner: "checks are failing. i reset fable, go
+    forward with fable and rereview work here with fablke" — `/debug-deep`, then three Fable reviewers:
+    typescript · a11y · a five-language copy read):** CI failed on ONE test, Pages/Team › German, timed out at
+    15 s. ROOT CAUSE, proven by experiment: the twin's `settled` awaited `img.decode()` on every picture; the
+    portraits are lazy, and with six doctors the German phone frame is 7087px tall, so four portraits lie
+    beyond Chromium's lazy-loading distance (MEASURED ≈ 3000px), are never requested, and their `decode()`
+    never settles. It hid on the workstation because Romanian runs first in the same browser page and warms
+    the memory cache with the same picture URLs; CI's Vitest step runs before the image optimizer, so those
+    URLs answer 404 there and nothing is cached — run the German story ALONE and it hangs locally too. FIXED
+    at the helper: every picture is flipped to `eager` first (HTML's lazy-load resumption — no scroll, no
+    timer; React never writes the attribute back), then `complete` is polled under a 5 s timeout that names
+    the stuck picture; no unbounded `decode()`. The Doctor twin's copy carries a pointer (its one picture is
+    eager), and the three copies of the settle helper (Pages/Team · Pages/Doctor · Sections/DoctorIntro) join
+    the §15.19 round-3 helper-promotion census. THE REHEARSAL every lane owes before a seal: hide
+    `public/images/**/nextImageExportOptimizer/` and run the full Vitest — CI's exact condition (the
+    six-doctor showcase lane, PR #117, met the same hang and took the same shape). RECORDED, not built:
+    `tests/visual/stories.spec.ts` waits for fonts only before its full-page screenshot, so on a page taller
+    than the lazy distance a far picture is photographed unrequested — invisible with today's shared demo
+    files (a nearer card's copy paints it), a blur placeholder the day each doctor has an own photograph; the
+    twin's flip covers Pages/Team, a spec-level "ask for every picture" step is the owner's call.
+    **The reviews' folds:** (1) THE NAME IS NEVER SPLIT — the biography band's „Despre {name}" `<h2>`
+    inherited the site-wide `hyphens: auto` and broke real names at a syllable on phones („Despre Dr. Malea
+    (Sa-bău) Oana Bianca" at 390 ro/de, „Ele-na" at 360, „Hora-țiu" / „Cătă-lina" in fr/it — measured with
+    `Range.getClientRects` on the built pages): `sections/DoctorProfile` passes `hyphens-none` to that one
+    SectionHeading (the property inherits to the h2; the schedule title beside it keeps `auto` on purpose), a
+    test pins the class and its scope, the Doctor twin pins the COMPUTED value. The other band titles still
+    hyphenate ordinary words („confir-mată", „un-sere", „gă-siți" at 320–430) — §15.14 as written; turning it
+    off for headings site-wide is the owner's call. (2) THE COPY — 3 high / 17 medium / 16 low, folded: no
+    year of joining the clinic (a checkable employment fact about a real person), no city on a residency row
+    (a residency plus a city names a university), nothing a first paragraph offers that lib/prices does not
+    (aligners, removable appliances and ceramic veneers are NOT on the tariff — fixed braces and zirconia
+    restorations are), fr/it positions „Spécialiste en …" / „Specialista in …" (a dentist is not a
+    « médecin » / „medico" there; epicene too, so the one gendered participle is gone), Italian paragraphs on
+    a null subject, German gapped passives made active with „Dr. X" as subject, the German „faziale
+    Orthopädie" struck (Kieferorthopädie IS the specialty), „Formarea continuă include …" (the garden path),
+    an inverted causality in Bozdog's quote, „DVT" glossed, English „periodontics" as the tariff says, the
+    one foreign course city gone. (3) THE DATA TEST gains two rules: every doctor's week inside
+    `clinic.hours` (never a patient at a closed door), and the numbers of every `about` paragraph equal
+    across the five languages — the second refused the German „3D-Aufnahme" gloss before it shipped.
+    **Visual:** every Pages/Team and Pages/Doctor frame changes (six cards, thirty pages);
+    Sections/DoctorProfile's `pseudo-locale` at 390 by one line break; the darwin record is the owner's
+    (§15.7). **THE OWNER'S CALLS, recorded and not built:** the invented WEEKLY HOURS and numbers under real
+    names (all three reviewers: a patient could act on „Thursday: closed" — recommended: the clinic's own
+    week for all six until each doctor's is known, one line per doctor or `hours: clinic.hours`); a release
+    gate for placeholders (the repository is public, and a develop → main promotion would publish invented
+    quotes and CVs under real names on the interim host — nothing mechanical stops it; a test that refuses a
+    production build while lib/team is flagged placeholder is the shape); the specialty eyebrow's lead-in
+    („Medic specialist în" is a full line at 320 — Toma's takes five); „Închis" for a doctor's day off (reads
+    as the clinic shut); heading hyphenation site-wide; name order abroad; „Dr." in German implying a
+    doctorate; French typography (a no-break space before « : », site-wide, fr.json included); the clinic
+    routines the third paragraphs state (written aftercare instructions, check-ups booked from the start).
+
 24. **Heading scale, app-wide — DECIDED 2026-09-26 (owner, verbatim: "i need all headings and
     eyebrows app wide to be made the same size as they are on the
     http://localhost:3000/ro/team/elena-marin/ page"):** ONE size per outline level, the doctor

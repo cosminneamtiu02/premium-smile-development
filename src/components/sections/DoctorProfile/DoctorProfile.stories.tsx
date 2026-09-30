@@ -511,9 +511,12 @@ export const StackedTablet: Story = {
  * Card/Heading/PersonnelCard precedent) and inherits to every child, which is
  * the whole mechanism: the body's site-wide `hyphens: auto` (§15.14) picks the
  * GERMAN dictionary, so a compound in a 256px column breaks at a syllable
- * instead of pushing the layout open. Nothing in this band opts out of it —
- * every string here is prose or a heading, and the §15.14 rider's "never split
- * a control label" covers no element in the frame.
+ * instead of pushing the layout open. ONE element in this band opts out of it:
+ * the biography's title, because it carries a person's name (DoctorProfile's
+ * THE NAME IS NEVER SPLIT, 2026-09-30) — so this story's „Über Dr. Elena Marin"
+ * wraps between words and never as „Ma-rin". Everything else here is prose or
+ * a heading that may break at a syllable, and the §15.14 rider's "never split a
+ * control label" covers no element in the frame.
  */
 export const GermanLongest: Story = {
   tags: ['stress-320'],

@@ -151,7 +151,8 @@ describe('splitKeywords — the shapes a sentence can take', () => {
     // patient.
     expect(() => splitKeywords(philosophy)).toThrow(/unbalanced <k>/);
     // …and the message carries the sentence itself, which is the only way a
-    // reader of a red CI log knows WHICH of ten `philosophy` fields to open.
+    // reader of a red CI log knows WHICH `philosophy` field (one per doctor per
+    // language) to open.
     expect(() => splitKeywords(philosophy)).toThrow(philosophy);
   });
 
@@ -209,7 +210,7 @@ describe('coursesByYear — the courses band’s groups (run ledger D15, D17)', 
     ]);
     expect(groups[1].courses).toEqual([
       'Curs de chirurgie plastică parodontală, Cluj-Napoca',
-      'Curs de fațete ceramice și preparații minim invazive, Sibiu',
+      'Curs de restaurări protetice din zirconiu, Sibiu',
     ]);
   });
 

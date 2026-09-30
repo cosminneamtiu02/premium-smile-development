@@ -245,7 +245,7 @@ type DoctorStatsOwnProps = Readonly<{
   title: string;
   /** One sentence under the title, centred. */
   lead: string;
-  /** The tiles, 1..n, in the page's order (four on the demo doctors). */
+  /** The tiles, 1..n, in the page's order (four on every shipped doctor). */
   tiles: readonly DoctorStatTile[];
   /**
    * Turns a number into the visitor's digits — `Intl.NumberFormat(locale)

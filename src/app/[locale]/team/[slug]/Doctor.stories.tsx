@@ -41,7 +41,7 @@ import { toStatTiles } from './stat-tiles';
 // header points back at this one. Both must render the same five bands in the
 // same order (round 2's D18, extended by D33: DoctorIntro → DoctorProfile →
 // DoctorCourses → DoctorStats → ClinicLocation), fed by the same populator and
-// the same ./stat-tiles.tsx, with the same eleven `team.doctor.*` keys (D20,
+// the same ./stat-tiles.tsx, with the same twelve `team.doctor.*` keys (D20,
 // D32, D37) — the about title taking the doctor's name as its ICU argument on
 // both sides. The plays pin exactly that from the outside, so a change on
 // either side that the other does not follow turns this suite red instead of
@@ -89,9 +89,11 @@ import { toStatTiles } from './stat-tiles';
 // here: „Fachrichtung Prothetik und Parodontologie" sits over the site's
 // longest name, „Dr. Malea (Sabău) Oana Bianca", on Heading's fluid `hero`
 // step (32px on the phone this story is pinned to, 72px on a desktop);
-// „Kurse und Spezialisierungen" and „Über Dr. Malea (Sabău) Oana Bianca" are
-// h2s that must not syllable-break (SectionHeading's titles opt out of
-// hyphenation) at 256px of column; the „Despre" paragraphs are built out of
+// „Über Dr. Malea (Sabău) Oana Bianca" is the h2 that must not break inside
+// the NAME — sections/DoctorProfile opts that one title out of the site-wide
+// `hyphens: auto` (2026-09-30; the other band titles inherit it and may break
+// at a syllable in a 256px column, „Über die Jahre bestätig-te Erfahrung",
+// which §15.14 allows); the „Despre" paragraphs are built out of
 // compounds like „Zahnfleischerkrankungen" and „Behandlungsmöglichkeiten",
 // which must break at syllable points instead of pushing the tint open; and
 // the course lines are the kind of long German sentence §8.4's expansion
@@ -231,16 +233,6 @@ const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 /**
- * The COLUMN an element's arrangement is decided by: the nearest ancestor
- * that is a size container — every band's ui/Container (`@container`), since
- * nothing between a band's grid and its Container is one. Found by the
- * computed `container-type` rather than by counting parents, so a wrapper a
- * band adds tomorrow does not silently move the measurement. The walk starts
- * ABOVE the element on purpose: the schedule card is a ui/Card, which is a
- * container of its own, and its arrangement is decided by the column it
- * stands in, not by itself.
- */
-/**
  * Fonts and pictures loaded before a single box is read. `decode()` rejects
  * on a broken image; that is not this play's question, so it is swallowed —
  * the alt/role pins elsewhere own it.
@@ -263,6 +255,16 @@ const settled = async (root: HTMLElement): Promise<void> => {
   );
 };
 
+/**
+ * The COLUMN an element's arrangement is decided by: the nearest ancestor
+ * that is a size container — every band's ui/Container (`@container`), since
+ * nothing between a band's grid and its Container is one. Found by the
+ * computed `container-type` rather than by counting parents, so a wrapper a
+ * band adds tomorrow does not silently move the measurement. The walk starts
+ * ABOVE the element on purpose: the schedule card is a ui/Card, which is a
+ * container of its own, and its arrangement is decided by the column it
+ * stands in, not by itself.
+ */
 const columnOf = (element: Element): HTMLElement => {
   for (let node = element.parentElement; node; node = node.parentElement) {
     if (getComputedStyle(node).containerType !== 'normal') return node;
@@ -646,6 +648,14 @@ const playPage =
       level: 2,
       name: aboutTitle,
     });
+    // THE NAME IS NEVER SPLIT (sections/DoctorProfile, 2026-09-30): this is
+    // the one band title that carries a person's name, and under the
+    // site-wide `hyphens: auto` Chromium broke „(Sa-bău)" and „Ele-na" on
+    // phones (measured on the built pages). The opt-out rides the opener's
+    // root and inherits to the <h2>; read here as the COMPUTED value, which
+    // is what the browser breaks lines by — a class name alone could sit on
+    // the wrong element.
+    await expect(getComputedStyle(about).hyphens).toBe('none');
     await expect(canvas.getByText(words.about.eyebrow)).toBeVisible();
     const paragraphs = doctor.about.map((text) => canvas.getByText(text));
     for (const paragraph of paragraphs) await expect(paragraph).toBeVisible();

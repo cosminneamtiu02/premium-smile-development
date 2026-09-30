@@ -34,7 +34,7 @@
       "ariaLabel": "{name}, home"
     },
     "footer": {
-      "tagline": "Modern dentistry. Honest care.",
+      "tagline": "Everything for your smile",
       "contactLabel": "Contact us here",
       "hoursTitle": "Working hours",
       "closed": "Closed",
@@ -122,7 +122,7 @@
   "contact": {
     "heading": "Reach us by phone or on WhatsApp.",
     "callHeading": "Call us at",
-    "callHours": "Mon–Fri {weekOpens}–{weekCloses}, Sat {satOpens}–{satCloses}",
+    "callHours": "Mon–Fri {weekOpens}–{weekCloses}",
     "or": "or",
     "whatsappHeading": "Write to us",
     "whatsapp": "Contact us on WhatsApp",

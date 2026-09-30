@@ -215,7 +215,7 @@ describe('Footer — row 2, the contact column', () => {
     const phone = screen.getByRole('link', { name: clinic.phoneDisplay });
 
     expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
-    expect(phone).toHaveAttribute('href', 'tel:+40700000000');
+    expect(phone).toHaveAttribute('href', 'tel:+40770162765');
     expect(phone).toHaveTextContent(clinic.phoneDisplay);
     // Two different strings on purpose: a tel: href needs E.164, a reader
     // needs spacing. Collapsing them would break one of the two.
@@ -247,7 +247,7 @@ describe('Footer — row 2, the contact column', () => {
   });
 
   it('prints the county line only when it differs from the city', () => {
-    // Placeholder data has București twice (city = county); printing it twice
+    // The clinic's data has Sibiu twice (city = county); printing it twice
     // reads as a mistake, and §10.1 says one source decides.
     const { footer } = mount();
     const county = clinic.address.county;
@@ -391,8 +391,8 @@ describe('Footer — row 2, the opening hours', () => {
     expect(terms).toEqual(expected.map((row) => row.label));
     expect(values).toEqual(expected.map((row) => row.value));
     // The shipped fixture, ONE ROW PER DAY (owner 2026-08-18): five identical
-    // weekday rows, the short Saturday, Sunday closed — calendar order, no
-    // grouped ranges.
+    // weekday rows, then Saturday and Sunday closed (owner 2026-09-30) —
+    // calendar order, no grouped ranges.
     expect(terms).toEqual([
       'Luni',
       'Marți',
@@ -409,25 +409,37 @@ describe('Footer — row 2, the opening hours', () => {
     expect(footer().textContent).toContain(messages.footer.hoursTitle);
   });
 
-  it('dims the closed row with a COLOR token, never opacity', () => {
+  it('dims every closed row with a COLOR token, never opacity', () => {
     // opacity-60 dims the row below the contrast the token guarantees;
     // text-ink-muted is a measured 7.35:1 on the surface ground (§9). Since
     // the fb-186 rewire the token rides ON each dt/dd — ui/Text emits its ink
     // explicitly (no inherit tone, its D4) — while the row wrapper carries
     // layout only, so the elements are checked for the token and the whole
     // row for the absence of the opacity trick.
+    // EVERY closed row, counted from the data: since 2026-09-30 the week has
+    // two (Sâmbătă and Duminică), and a single-row query would pick one and
+    // leave the other unchecked.
     const { footer, messages } = mount();
-    const closedValue = within(footer()).getByText(messages.footer.closed);
-    const closedRow = closedValue.closest('div') as HTMLElement;
-    const closedTerm = closedRow.querySelector('dt') as HTMLElement;
+    const closedValues = within(footer()).getAllByText(messages.footer.closed);
+    const closedDays = formatHoursRows(
+      clinic.hours,
+      'ro',
+      messages.footer.closed,
+    ).filter((row) => row.closed);
 
-    expect(classesOf(closedTerm)).toContain('text-ink-muted');
-    expect(classesOf(closedValue)).toContain('text-ink-muted');
+    expect(closedValues).toHaveLength(closedDays.length);
+    for (const closedValue of closedValues) {
+      const closedRow = closedValue.closest('div') as HTMLElement;
+      const closedTerm = closedRow.querySelector('dt') as HTMLElement;
+
+      expect(classesOf(closedTerm)).toContain('text-ink-muted');
+      expect(classesOf(closedValue)).toContain('text-ink-muted');
+      for (const el of [closedRow, closedTerm, closedValue]) {
+        expect(el.className).not.toMatch(/opacity-/);
+      }
+    }
     // …and an OPEN row keeps the solid ink — the ternary's other side.
     expect(classesOf(within(footer()).getByText('Luni'))).toContain('text-ink');
-    for (const el of [closedRow, closedTerm, closedValue]) {
-      expect(el.className).not.toMatch(/opacity-/);
-    }
   });
 
   it('translates the closed label per locale, never a hardcoded word', () => {
@@ -524,7 +536,7 @@ describe('Footer — row 3, the legal strip', () => {
     });
 
     expect(disc).toHaveAttribute('href', `tel:${clinic.phone}`);
-    expect(disc).toHaveAttribute('href', 'tel:+40700000000');
+    expect(disc).toHaveAttribute('href', 'tel:+40770162765');
     // NO target/rel: tel: hands the number to a protocol handler (the dialler),
     // it does not navigate a browsing context — _blank would open and orphan a
     // blank tab on desktop.
@@ -547,7 +559,7 @@ describe('Footer — row 3, the legal strip', () => {
     });
 
     expect(disc).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
-    expect(disc).toHaveAttribute('href', 'https://wa.me/40700000000');
+    expect(disc).toHaveAttribute('href', 'https://wa.me/40770162765');
     // The field's own format contract, mechanized like clinic.phone's '+'
     // guard in row 2: wa.me wants digits only, no plus (lib/clinic/clinic.ts
     // whatsapp doc) — a pasted E.164 value must fail HERE, not ship.

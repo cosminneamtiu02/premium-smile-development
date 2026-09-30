@@ -271,7 +271,7 @@ export function FloatingActions(): ReactElement {
           anchor, not a button — it navigates (tel:), so asChild hands the <a>
           the circle's clothes and the accessible name. size="lg" = 3.5rem, the
           §9 primary-CTA target. The number comes from lib/clinic/clinic.ts, the single
-          source of NAP (§10.1), where it is still a TODO(owner) placeholder.
+          source of NAP (§10.1) — the clinic's real line since 2026-09-30.
           <Phone /> stays UNLABELLED: a labelled glyph inside an asChild anchor
           double-announces (see the `children` prop doc in ui/GlyphButton). */}
       <GlyphButton

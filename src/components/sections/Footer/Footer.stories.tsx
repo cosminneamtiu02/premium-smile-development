@@ -130,7 +130,7 @@ const expectLockupChain = async (
  *
  * This is the story that shows the FOUR-COLUMN row: contact with the phone
  * link · the site map (three links — Blog hidden for now, owner 2026-09-20) · the ANPC/SAL badge · the
- * opening hours with Sunday dimmed. Above it the centred brand line, below it
+ * opening hours with the closed weekend dimmed. Above it the centred brand line, below it
  * the three-part legal strip — copyright left, back-to-top centred, the
  * four-disc contact row right (Instagram · TikTok · WhatsApp · phone, the
  * owner's fb-334 order).

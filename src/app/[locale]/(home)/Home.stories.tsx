@@ -81,18 +81,23 @@ import { populateHero } from './populate';
  * cutouts would be left out of the picture (G2 react, measured: Chromium's
  * lazy distance is 3 000px). Flipping `loading` to eager is HTML's own
  * resumption of a deferred load. Whatever a play asserts about how a picture
- * SHIPS must therefore be read before this runs.
+ * SHIPS must therefore be read before this runs. The wait is bounded and
+ * named, the Team twin's shape: a picture that never settles fails by its
+ * `currentSrc` instead of timing the whole test out (no `decode()` — it is
+ * unbounded, and `complete` turns true at the same moment).
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;
   const pictures = Array.from(root.querySelectorAll('img'));
   for (const picture of pictures) picture.loading = 'eager';
-  await Promise.all(
-    pictures.map((picture) => picture.decode().catch(() => undefined)),
+  await waitFor(
+    () => {
+      for (const picture of pictures) {
+        expect(picture.complete, picture.currentSrc).toBe(true);
+      }
+    },
+    { timeout: 5_000 },
   );
-  await waitFor(() => {
-    for (const picture of pictures) expect(picture.complete).toBe(true);
-  });
 };
 
 /** KEEP-IN-SYNC twin of ./page.tsx — the bands and the doctors band's props

@@ -235,23 +235,28 @@ const rem = (): number =>
  * EVERY PICTURE IS ASKED FOR FIRST (2026-09-30 — `SixDoctors` timed out in a
  * rehearsal of CI): the cards' pictures ship `loading="lazy"`, and a lazy
  * picture far below the window is never STARTED by the browser, so its
- * `decode()` waits forever. Six cards are taller than that distance. It stays
+ * load never finishes. Six cards are taller than that distance. It stays
  * invisible on a workstation, where an earlier story has left the same file
  * in the memory cache; on CI the optimized variants do not exist yet when the
  * tests run, so nothing is cached. Flipping `loading` to eager is HTML's own
  * resumption of a deferred load — no scroll, no timer — and it also makes the
- * pixel net photograph every card WITH its picture.
+ * pixel net photograph every card WITH its picture. The wait is bounded and
+ * named, the Team twin's shape: a picture that never settles fails by its
+ * `currentSrc` instead of timing the whole test out (no `decode()` — it is
+ * unbounded, and `complete` turns true at the same moment).
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;
   const pictures = Array.from(root.querySelectorAll('img'));
   for (const picture of pictures) picture.loading = 'eager';
-  await Promise.all(
-    pictures.map((picture) => picture.decode().catch(() => undefined)),
+  await waitFor(
+    () => {
+      for (const picture of pictures) {
+        expect(picture.complete, picture.currentSrc).toBe(true);
+      }
+    },
+    { timeout: 5_000 },
   );
-  await waitFor(() => {
-    for (const picture of pictures) expect(picture.complete).toBe(true);
-  });
 };
 
 /** The nearest size container above an element — the box its `@3xl` reads

@@ -88,11 +88,15 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   40 → 143px, band 635 → 738, the feet at 98 + 143 + 555 = 796px of the
 //   800px window (the pill's flow box above, D51a) — and at 1536 (692 beside
 //   673: figure top 58px, band 772); at 1920 it fits (700 beside 768). Among
-//   the SHIPPED pages one does it: „Dott. Andrei Șerban" (Italian, two lines
-//   at 1280) makes 582 beside 555 — figure top 67px, band 662 — and
-//   „Dott.ssa Elena Marin" sits 1px inside (554); every other doctor ×
-//   language fits at all three widths. The plays measure the row from the
-//   grid's content box, so they hold either way.
+//   the SHIPPED pages (the clinic's six real doctors, measured 2026-09-30 on
+//   the built export) MOST do it at 1280: 19 of the 30 doctor × language
+//   pages, by 19px (ro „Dr. Malea (Sabău) Oana Bianca", 574 beside 555) to
+//   75px (fr „Dr Ivașcu-Zugravu Cătălina", a two-line name over the credo card,
+//   630 beside 555 — figure top 115px); at 1536 nine do, by 11 to 67px (the
+//   three-line names of Malea and Ivașcu-Zugravu); at 1920 none, the closest
+//   20px inside. Recorded for the owner, not changed: the levers are the
+//   `lowered` seat's 7rem and the words column's 28rem cap. The plays measure
+//   the row from the grid's content box, so they hold either way.
 //   HISTORY: 3rem (`pt-12`) in round 2e; HALVED to 1.5rem (`pt-6`) in round
 //   2g, 2026-09-26, the owner: "push it a little more upwards … but not too
 //   much so that at rest it is not covered by the top bar" — the pill is IN

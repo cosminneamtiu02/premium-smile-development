@@ -38,8 +38,12 @@ import { populateDoctorShowcase, populateTeamRoster } from './populate';
 // what was measured.
 //
 // No `parameters.nextjs` and no mock messages: the preview decorator provides
-// the real five message files, and the people are lib/team's own (DEMO people
-// until the owner's real team, §15.23).
+// the real five message files, and the people are lib/team's own — since
+// 2026-09-30 the clinic's six real doctors, under placeholder details, beside
+// three demo auxiliary members (lib/team's TODO(owner)). The BAND's stories
+// (Sections/DoctorShowcase, Sections/TeamRoster) are where invented rosters
+// exercise the layout; that split is what „dumb" buys, and it is why adding a
+// doctor re-records this page's frames and none of the bands'.
 
 function TeamPageBands(): ReactElement {
   const t = useTranslations('team');
@@ -116,23 +120,38 @@ const sitsBeside = (element: Element): boolean => {
  * EVERY PICTURE IS ASKED FOR FIRST (2026-09-30 — found on the real-doctors
  * lane's CI and reproduced here): the cards' pictures ship `loading="lazy"`,
  * and a lazy picture far below the window is never STARTED by the browser, so
- * its `decode()` waits forever and the play times out. It stays invisible on a
+ * its load never finishes and a wait on it times out. It stays invisible on a
  * workstation, where an earlier story has left the same file in the memory
  * cache; on CI the optimized variants do not exist yet when the tests run, so
  * nothing is cached. Flipping `loading` to eager is HTML's own resumption of
  * a deferred load — no scroll, no timer. Whatever a play asserts about how a
  * picture SHIPS must therefore be read before this runs.
+ *
+ * THE WAIT IS BOUNDED AND NAMED (the real-doctors lane's shape, taken at the
+ * merge of 2026-09-30): `complete`, polled under a timeout well inside the
+ * runner's 15 s, so a picture that never settles fails this play by NAME —
+ * its `currentSrc` — instead of timing the whole test out; no `decode()`,
+ * which is unbounded and adds nothing to a layout read. SETTLED MEANS LOADED
+ * OR BROKEN: on CI the optimizer's variants do not exist, a picture errors and
+ * ui/Image swaps it to the original file — sound on this page, because every
+ * picture's box is reserved from its `width`/`height` (§11), the same whether
+ * it arrived or broke; nothing here asserts pixels. And the visual net leans
+ * on the flip: its full-page screenshot waits for fonts only, so on this page,
+ * taller than the lazy-loading distance at the phone widths, the far pictures
+ * are in the baseline because this play asked for them.
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;
   const pictures = Array.from(root.querySelectorAll('img'));
   for (const picture of pictures) picture.loading = 'eager';
-  await Promise.all(
-    pictures.map((picture) => picture.decode().catch(() => undefined)),
+  await waitFor(
+    () => {
+      for (const picture of pictures) {
+        expect(picture.complete, picture.currentSrc).toBe(true);
+      }
+    },
+    { timeout: 5_000 },
   );
-  await waitFor(() => {
-    for (const picture of pictures) expect(picture.complete).toBe(true);
-  });
 };
 
 const cardName = (card: HTMLElement): string | null =>
@@ -177,6 +196,11 @@ const expectFirstCard = async (card: HTMLElement): Promise<void> => {
   await expect(words.bottom).toBeLessThanOrEqual(button.top);
 };
 
+/**
+ * Everything both stories check, against the language they were pinned to.
+ * Written once because the page's contract does not change with the locale —
+ * only the words do.
+ */
 const playPage =
   (
     words: {
@@ -206,6 +230,12 @@ const playPage =
       await expect(picture).toHaveAttribute('loading', 'lazy');
 
     await settled(canvasElement);
+    // ONE PICTURE PER PERSON — a doctor's cutout, a staff member's portrait —
+    // so the settle above is never vacuous: a page that stopped rendering
+    // <img>s (pictures as CSS backgrounds, say) would let it pass over nothing.
+    await expect(canvasElement.querySelectorAll('img')).toHaveLength(
+      doctors.length + auxiliaries.length,
+    );
 
     // THE OUTLINE ROOT: one <h1>, the page's own — sr-only, outside every band.
     const title = canvas.getByRole('heading', { level: 1, name: words.title });
@@ -317,6 +347,11 @@ export const Romanian: Story = {
   ),
 };
 
+/** GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
+ *  every card is one column (D21): the longest button label, the 27-letter
+ *  tile compound and the longer quotes (see this file's header). With six
+ *  doctors this is also the page's TALLEST frame — the one whose last pictures
+ *  lie beyond the browser's lazy-loading distance (`settled` above). */
 export const German: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
   play: async (context) => {

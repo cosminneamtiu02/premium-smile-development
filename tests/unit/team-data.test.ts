@@ -17,7 +17,7 @@ import {
   type StatIcon,
   type TeamPicture,
 } from '../../src/lib/team/team';
-import type { SchemaDay } from '../../src/lib/clinic/clinic';
+import { clinic, type SchemaDay } from '../../src/lib/clinic/clinic';
 import type { ImagePath } from '../../src/lib/image-path/image-path';
 import { locales, type Locale } from '../../src/i18n/locales';
 
@@ -68,6 +68,13 @@ import { locales, type Locale } from '../../src/i18n/locales';
 // module the page and its story twin share; the band takes a finished
 // ReactNode) is exhaustive over — `StatIcon`, exactly the four — and refuses
 // a fifth.
+//
+// SINCE 2026-09-30 (the clinic's six real doctors, review folds): every
+// doctor's week lies INSIDE the clinic's own (`clinic.hours`, lib/clinic —
+// never a week typed here, so the check follows the real week when it lands
+// and re-judges every doctor the day it changes), and every number an `about`
+// paragraph carries is the same in all five languages, as the stat sentences'
+// numbers already are.
 //
 // In the node `unit` project rather than beside the module: pure data, no DOM,
 // and the existence checks read the file system. The FUNCTIONS
@@ -506,6 +513,25 @@ describe('lib/team — the words, in all five languages', () => {
       }
     },
   );
+
+  it.each(locales)(
+    'carries the same numbers in every `about` paragraph as the Romanian, for "%s"',
+    (locale: Locale) => {
+      // A number inside a paragraph — a year, a count — is written once per
+      // language: five copies, free to disagree, which is the very thing
+      // storing a course's year ONCE stopped (lib/team's COURSES paragraph).
+      // The placeholders carry none today; the owner's real biographies will
+      // („din 2016"), and that is exactly when one language can drift.
+      for (const doctor of doctors) {
+        for (const [index, paragraph] of doctor.words[locale].about.entries()) {
+          expect(
+            numbersIn(paragraph),
+            `${doctor.id}.${locale}.about[${index}]`,
+          ).toEqual(numbersIn(doctor.words.ro.about[index]));
+        }
+      }
+    },
+  );
 });
 
 describe('lib/team — the course rows (run ledger D17)', () => {
@@ -718,6 +744,42 @@ describe('lib/team — the weeks lib/hours prints', () => {
         expect(entry.closes, where).toMatch(CLOCK);
         // Zero-padded "HH:MM" compares correctly as text.
         expect(entry.opens < entry.closes, where).toBe(true);
+      }
+    }
+  });
+
+  it('keeps every doctor’s week inside the clinic’s own (lib/clinic) — never a patient at a closed door', () => {
+    // A doctor's week is the doctor's own (lib/team's HOURS paragraph), but it
+    // can only be a PART of the clinic's: a day the clinic is closed, or an
+    // hour before it opens or after it closes, would send a patient to a
+    // locked door. Judged against `clinic.hours` rather than a week typed
+    // here, so the check follows the clinic's real week the day it lands and
+    // re-judges every doctor whenever it changes. Like lib/hours, a later
+    // clinic entry for the same day wins.
+    const open = new Map<SchemaDay, { opens: string; closes: string }>();
+    for (const entry of clinic.hours) {
+      for (const day of entry.days) {
+        open.set(day, { opens: entry.opens, closes: entry.closes });
+      }
+    }
+    for (const doctor of doctors) {
+      for (const entry of doctor.hours) {
+        for (const day of entry.days) {
+          const clinicDay = open.get(day);
+          expect(
+            clinicDay,
+            `${doctor.id}: ${day}, the clinic is closed`,
+          ).toBeDefined();
+          if (!clinicDay) continue;
+          expect(
+            entry.opens >= clinicDay.opens,
+            `${doctor.id}: ${day} opens ${entry.opens}, the clinic at ${clinicDay.opens}`,
+          ).toBe(true);
+          expect(
+            entry.closes <= clinicDay.closes,
+            `${doctor.id}: ${day} closes ${entry.closes}, the clinic at ${clinicDay.closes}`,
+          ).toBe(true);
+        }
       }
     }
   });

@@ -7,9 +7,10 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // .claude/section-runs/2026-08-05_22-04_top-bar/atoms/TextButton.md, contract
 // fb-125). It absorbs the *pattern* of the old `ui/link` nav variant and the
 // old top bar's inline nav anchors; neither shipped as a component here.
-// Today's caller is the Header nav (desktop row + panel list) via asChild
-// with a plain <a href> child (§15.13); the atom stays a plain quiet button
-// for any later use (fb-111). It is NOT part of an emphasis family (fb-126
+// Today's callers all go through asChild with a plain <a href> child
+// (§15.13): the Header nav (desktop row + panel list, via NavItem), the
+// Footer's links and the price menu's categories; the atom stays a plain
+// quiet button for any later use (fb-111). It is NOT part of an emphasis family (fb-126
 // guardrail): Button keeps its name, and a future bordered look would be a
 // new variant on THIS atom, never a rename anywhere.
 // The atom NEVER owns navigation. The absorbed old anchors hijacked clicks
@@ -22,10 +23,12 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 type TextButtonOwnProps = {
   /**
    * The current page/selection. Adds `aria-current="page"`, colors the label
-   * the underline's own green and shows the underline STATICALLY at full
+   * the underline's own lavender and shows the underline STATICALLY at full
    * width — state is announced, colored and drawn, never conveyed by the
-   * animation (§9). Label + underline share ONE green, exactly like the old
-   * top bar's single `accent` (owner, canvas loop 2026-08-06).
+   * animation (§9). Label + underline share ONE colour, exactly like the old
+   * top bar's single `accent` (owner, canvas loop 2026-08-06) — and since
+   * 2026-10-01 that accent's own lavender, not green (the colour invariant
+   * below).
    */
   active?: boolean;
   /**
@@ -52,23 +55,38 @@ export type TextButtonProps = TextButtonOwnProps &
 // text control has no ground or border to fade: the underline IS its
 // affordance. Do NOT "harmonise" this to --fade — TextButton.test.tsx fails
 // on the system clock's tokens on purpose.
-//   · label color  ink → cta-hover, 200ms ease-out
+//   · label color  ink → accent, 200ms ease-out
 //   · underline    scale-x 0 → 1 from origin-left, 300ms ease-out
 // Two properties, two durations, both ease-out, both switched off under
 // motion-reduce (§9) — with the transitions gone every state is still fully
 // legible, because each one is a discrete value (a color, a full-width rule).
 //
-// COLOR INVARIANT — this atom paints with exactly ONE green: cta-hover, for
-// the hover label, the active label AND the 2px underline. The old top bar
-// used a single `accent` token for all three (top-bar.tsx:128-130) and the
-// owner confirmed that unity on the 2026-08-06 canvas loop; the hover and
-// active label states are ones a user can hold (or that simply ARE the rest
-// state), so they owe SC 1.4.3 the full 4.5:1 — and cta #008854 measures
-// 4.29:1 on --page #faf9f7 (FAIL), 4.52:1 on --surface. cta-hover #006b42 =
-// 6.27:1 and 6.60:1, passing everywhere; as the underline (non-text,
-// SC 1.4.11's 3:1) it clears with even more room than cta did. This is the
-// one deviation from fb-125's letter ("ink → cta", "bg-cta underline") and
-// it preserves fb-125's actual intent: label and rule in one shared green.
+// COLOR INVARIANT — this atom paints with exactly ONE colour: `accent`, the
+// lavender, for the hover label, the active label AND the 2px underline. The
+// old top bar used a single `accent` token for all three (top-bar.tsx:128-130)
+// and the owner confirmed that unity on the 2026-08-06 canvas loop; the hover
+// and active label states are ones a user can hold (or that simply ARE the
+// rest state), so they owe SC 1.4.3 the full 4.5:1.
+// THE ONE COLOUR WAS GREEN until 2026-10-01: cta-hover #006b42 (6.27:1 on
+// --page, 6.60:1 on --surface), because fb-125's letter, cta #008854,
+// measures 4.29:1 on --page #faf9f7 (FAIL) and 4.52:1 on --surface. Then the
+// owner (2026-10-01): "i need them not to be that green. i want them to be
+// same color as in old website on the same top bar buttons". The old
+// `accent` is the lavender #8377a3 — 4.09:1 on white, 3.89:1 on --page, both
+// under the bar, and axe would fail every story that shows a current item —
+// so the atom wears the `accent` ROLE instead: that lavender's hue and
+// chroma, its lightness lowered to the lightest step that passes on THE
+// GLASS FLOOR. Every ground the atom sits on today is white or nearly — the
+// Footer and the price menu's card on bg-surface, the pill and the phone
+// panel at bg-surface/95 — but "nearly" is 95% white over whatever is
+// behind the glass, and with the menu open that is the scrim-dimmed page:
+// axe measured the panel at #f8f8f8, and over a dark photograph it goes
+// down to 95% white over black, #f2f2f2. So #746894 = 4.52:1 on #f2f2f2,
+// 4.76:1 on #f8f8f8, 4.81:1 on --page, 5.06:1 on --surface; as the underline
+// (non-text, SC 1.4.11's 3:1) it clears with room. Never on the 30% lilac
+// tint, where the role reads 3.32:1 (its charter in globals.css;
+// tests/unit/accent-census.test.ts names every wearer with its ground and
+// measures the value on each).
 //
 // The underline is a PSEUDO-ELEMENT, not a nested <span>, because asChild
 // leaves no element of TextButton's own in the DOM — the whole look has to
@@ -100,22 +118,22 @@ const base =
   'px-2 py-2 text-lg font-medium hyphens-none ' +
   'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +
-  'transition-[color] duration-200 ease-out hover:text-cta-hover ' +
+  'transition-[color] duration-200 ease-out hover:text-accent ' +
   'motion-reduce:transition-none ' +
   'after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 ' +
-  "after:h-0.5 after:origin-left after:bg-cta-hover after:content-[''] " +
+  "after:h-0.5 after:origin-left after:bg-accent after:content-[''] " +
   'after:transition-transform after:duration-300 after:ease-out ' +
   'hover:after:scale-x-100 motion-reduce:after:transition-none';
 
 // Kept out of `base` as an either/or so two same-property utilities never sit
 // in one class list fighting over cascade order — for the underline's scale
-// AND for the label color: hover:text-cta-hover / hover:after:scale-x-100
+// AND for the label color: hover:text-accent / hover:after:scale-x-100
 // outrank both rest values on specificity (a :hover pseudo-class), which is a
 // rule of CSS — the ordering of two same-specificity utilities in the
 // generated sheet is not.
 const stateClasses = {
   resting: 'text-ink after:scale-x-0',
-  active: 'text-cta-hover after:scale-x-100',
+  active: 'text-accent after:scale-x-100',
 } as const;
 
 export function TextButton({

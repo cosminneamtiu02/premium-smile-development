@@ -960,6 +960,30 @@ describe('Header — the brand and the two Contact links', () => {
     expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
   });
 
+  it('keeps BOTH Contact buttons on the green solid face, never the menu lavender (owner, 2026-10-01)', async () => {
+    // The owner, the day the menu links turned lavender (ui/TextButton's
+    // `accent` role): "contact button MUST STAY GREEN AS IT MUST JUMP INTO
+    // YOUR EYES". The site's one conversion goal is a call (§1), so the CTA
+    // keeps the green family (§15.1) while the quiet menu controls around it
+    // wear the lavender — the difference between the two IS the point, and
+    // this pin is what stops a later "make the bar match" edit from erasing it.
+    const user = userEvent.setup();
+    const { burger, panel, barCta, messages } = mount();
+    const bar = barCta();
+
+    await user.click(burger());
+    const panelCta = within(panel() as HTMLElement).getByRole('button', {
+      name: messages.actions.contact,
+    });
+
+    for (const cta of [bar, panelCta]) {
+      expect(classesOf(cta)).toEqual(
+        expect.arrayContaining(['bg-cta', 'text-ink-inverse']),
+      );
+      expect(classesOf(cta).filter((c) => c.includes('accent'))).toEqual([]);
+    }
+  });
+
   it('never puts a display utility in the CTA atom own class list', () => {
     // The regression this file exists for, measured on 2026-08-13: ui/Button's
     // base sets `inline-flex`, so a caller's `hidden` lands in the same class

@@ -299,7 +299,7 @@ import type { PriceCategoryProps } from './CategoryCard';
 // which is exactly what a table of contents marks. The atom documents the
 // precedence this relies on: "an explicitly passed aria-current still wins".
 // `active` still rides along for the LOOK — the atom's own rest-state variant,
-// the label in cta-hover green with the underline drawn at full width and no
+// the label in the `accent` lavender with the underline drawn at full width and no
 // animation to wait for, which is the hover END state the owner asked the
 // current item to wear. Colour is never the only signal (§9, SC 1.4.1): the
 // attribute is the announcement, the underline is the shape.

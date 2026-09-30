@@ -179,10 +179,30 @@ import type { ImagePath } from '../image-path/image-path';
 // („specializat"), the agreement is the noun's, as in the owner's own second
 // line.
 //
-// The three auxiliary members are still INVENTED, exactly like lib/reviews'
-// `demoReviews`: names, positions and portraits written so the Team page's
-// grid could be built and photographed. They go the day the owner supplies
-// the real staff.
+// THE AUXILIARY STAFF ARE REAL since 2026-10-01, on the owner's word: "these
+// are just the 3 standard personell cards. one of them is Stan
+// Ioana-Ecaterina as registrator medical, Gurgu Aurelia as assistant so
+// instead of Mihaela Crăciun and Cândea Angelica instead of Ana-Maria Dobre".
+// The three NAMES are the owner's, surname first as typed (the doctors'
+// order, the diacritics the owner's own), and so are two POSITIONS,
+// „Registrator medical" and the assistant's. Each person took the card the
+// owner named, so the grid keeps the demo's order: Stan Ioana-Ecaterina on
+// Ioana Țepeș's card (the one left), Gurgu Aurelia on Mihaela Crăciun's,
+// Cândea Angelica on Ana-Maria Dobre's. Cândea Angelica's role was NOT given,
+// so that card keeps the reception wording it carried („Recepție, programări
+// și comunicarea cu pacienții"): FLAGGED, one line per language the day the
+// owner names it. The portraits are still the demo silhouettes, and the
+// consent the doctors owe (above) is owed for the staff as well.
+//
+// NOBODY IS GENDERED holds for the staff too: „Asistent medical" where the
+// demo read „Asistentă medicală" (the generic the owner's own „Registrator
+// medical" is written in), and a FUNCTION noun wherever a language's person
+// noun is gendered: German „Zahnmedizinische Assistenz" (a bare
+// „Zahnmedizinische Fachangestellte" reads feminine) and „Patientenanmeldung",
+// French „Assistance dentaire" (not „Assistante dentaire") and „Secrétariat
+// médical", Italian „Segreteria medica". English nouns are epicene, so is the
+// Italian „assistente", and the reception card's wording was a function in
+// every language already.
 //
 // The stats' WORDS are the owner's, pasted from his reference site in round
 // 2f (D32), and three of them were CMSR-SENSITIVE — „Intervenții reușite" and
@@ -476,54 +496,49 @@ const CUTOUT_2: TeamPicture = {
  * duplicate id, a portrait that does not exist on disk).
  */
 export const auxiliaries: readonly AuxiliaryMember[] = [
+  // The clinic's three, each on the card the owner named (2026-10-01). The
+  // NAMES are real and so are the first two POSITIONS; the third card keeps
+  // its reception wording, and the portraits are the demo silhouettes — the
+  // header's THE AUXILIARY STAFF ARE REAL paragraph says why.
   {
-    id: 'ioana-tepes',
+    id: 'stan-ioana-ecaterina',
     portrait: PORTRAIT_2,
     words: {
-      ro: { name: 'Ioana Țepeș', position: 'Asistentă medicală' },
-      en: { name: 'Ioana Țepeș', position: 'Dental nurse' },
-      de: {
-        name: 'Ioana Țepeș',
-        position: 'Zahnmedizinische Fachangestellte',
-      },
-      fr: { name: 'Ioana Țepeș', position: 'Assistante dentaire' },
-      it: {
-        name: 'Ioana Țepeș',
-        position: 'Assistente di studio odontoiatrico',
-      },
+      ro: { name: 'Stan Ioana-Ecaterina', position: 'Registrator medical' },
+      en: { name: 'Stan Ioana-Ecaterina', position: 'Medical receptionist' },
+      de: { name: 'Stan Ioana-Ecaterina', position: 'Patientenanmeldung' },
+      fr: { name: 'Stan Ioana-Ecaterina', position: 'Secrétariat médical' },
+      it: { name: 'Stan Ioana-Ecaterina', position: 'Segreteria medica' },
     },
   },
   {
-    id: 'mihaela-craciun',
+    id: 'gurgu-aurelia',
     portrait: PORTRAIT_1,
     words: {
-      ro: { name: 'Mihaela Crăciun', position: 'Asistentă medicală' },
-      en: { name: 'Mihaela Crăciun', position: 'Dental nurse' },
-      de: {
-        name: 'Mihaela Crăciun',
-        position: 'Zahnmedizinische Fachangestellte',
-      },
-      fr: { name: 'Mihaela Crăciun', position: 'Assistante dentaire' },
+      ro: { name: 'Gurgu Aurelia', position: 'Asistent medical' },
+      en: { name: 'Gurgu Aurelia', position: 'Dental nurse' },
+      de: { name: 'Gurgu Aurelia', position: 'Zahnmedizinische Assistenz' },
+      fr: { name: 'Gurgu Aurelia', position: 'Assistance dentaire' },
       it: {
-        name: 'Mihaela Crăciun',
+        name: 'Gurgu Aurelia',
         position: 'Assistente di studio odontoiatrico',
       },
     },
   },
   {
-    id: 'ana-maria-dobre',
+    id: 'candea-angelica',
     portrait: PORTRAIT_3,
     words: {
       ro: {
-        name: 'Ana-Maria Dobre',
+        name: 'Cândea Angelica',
         position: 'Recepție, programări și comunicarea cu pacienții',
       },
       en: {
-        name: 'Ana-Maria Dobre',
+        name: 'Cândea Angelica',
         position: 'Reception, appointments and patient communication',
       },
       de: {
-        name: 'Ana-Maria Dobre',
+        name: 'Cândea Angelica',
         // „Patientenbetreuung" (18) rather than „Patientenkommunikation" (22):
         // the mono eyebrow never hyphenates (PersonnelCard D5), and that word
         // broke the 21-character ceiling tests/unit/team-data.test.ts now
@@ -531,11 +546,11 @@ export const auxiliaries: readonly AuxiliaryMember[] = [
         position: 'Empfang, Terminvergabe und Patientenbetreuung',
       },
       fr: {
-        name: 'Ana-Maria Dobre',
+        name: 'Cândea Angelica',
         position: 'Accueil, rendez-vous et communication avec les patients',
       },
       it: {
-        name: 'Ana-Maria Dobre',
+        name: 'Cândea Angelica',
         position: 'Accoglienza, appuntamenti e comunicazione con i pazienti',
       },
     },

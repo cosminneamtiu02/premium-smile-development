@@ -105,7 +105,7 @@ import { cx } from '@/lib/cx/cx';
 // ── `id` IS THE REACT KEY, and deliberately nothing else: the tiles are
 // spelled prop by prop, so no id reaches the DOM. TRIGGER, recorded so the
 // next lane can tell "not decided" from "decided no": the first consumer that
-// wants `/{locale}/team/#ioana-tepes` spreads the id onto the card through
+// wants `/{locale}/team/#gurgu-aurelia` spreads the id onto the card through
 // PersonnelCard's native spread (its D10).
 //
 // ── ISLANDS (§16). No 'use client' in this file: no state, no handler, not

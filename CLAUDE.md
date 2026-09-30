@@ -415,7 +415,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    fonts **Source Serif 4** (display + body) + **JetBrains Mono** (eyebrows), Publio only
    inside the vectorized logo; body base **1.125rem**; default radius **6px**; star
    `#B29126` → **`#D4AF37` (amended 2026-09-12, owner — the rider at the end of this item)**; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
-   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter). Amendments from contradiction
+   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter; 20 since 2026-10-01 — `--accent` #746894, the menu buttons' lavender, the rider at the end of this item). Amendments from contradiction
    review: font tokens are named `--font-display` / `--font-body` / `--font-mono` (never
    `--font-sans`); one additional role `--color-accent-decorative: #7A6D9C` for large
    display text (≥ 3:1 contexts) and graphics only — the a11y addon polices misuse.
@@ -464,6 +464,33 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    sections/ReviewCard ships `text-justify` ON THE ELEMENT (§15.15 b once more) — the one line the
    2026-09-10 build deliberately did NOT port from the old card. Scope: that body paragraph, in every
    locale; the site-wide `hyphens: auto` keeps rivers out of the 312px phone card.
+   **Menu-button lavender — the 20th role (2026-10-01, owner, verbatim: "refactor on all menu
+   buttons. i need them not to be that green. i want them to be same color as in old website
+   on the same top bar buttons"; lane `rework/text-button-lavender`):** `--accent` = `#746894`,
+   a NEW semantic role worn by `ui/TextButton` alone — its hover label, current-page label and
+   2px underline, still ONE colour (the old top bar's single-`accent` unity, 2026-08-06) — so
+   every menu button turns lavender at once: the Header's row and burger panel, the Footer's
+   links, the price menu's categories. **The Contact button stays GREEN** (the owner, the same
+   day, after a lavender Contact was tried on the preview and reverted: "contact button MUST STAY
+   GREEN AS IT MUST JUMP INTO YOUR EYES") — the CTA keeps the green family while the quiet menu
+   controls around it wear the lavender, and `Header.test.tsx` pins both of the Header's Contact
+   buttons to ui/Button's solid green face. The old top bar's own `--accent` is `#8377a3`
+   (top-bar.tsx: `text-accent`, `after:bg-accent`); MEASURED, it reads 4.09:1 on white and
+   3.89:1 on `--page` — under the 4.5:1 an 18px medium label owes SC 1.4.3, and the
+   current-page label is a resting state, so axe would fail every story that shows one. The
+   value is that accent with its OKLCH hue and chroma kept and its lightness lowered to the
+   lightest step that passes on THE GLASS FLOOR (L 0.597 → 0.546): the pill and the phone's
+   menu panel are `bg-surface/95`, see-through, and with the menu open the scrim dims the page
+   behind the panel — axe measured it at #f8f8f8 and failed a first pick, #786c98, there at
+   4.49:1 (the Menu Open story) — so the value must pass on 95 % white over black, #f2f2f2:
+   4.52:1 there, 4.76:1 on #f8f8f8, 4.81:1 on `--page`, 5.06:1 on white, 3.32:1 on the 30 %
+   lilac tint (barred there, like `--ink-faint`). The green it
+   replaces, `cta-hover` #006b42, is untouched as a token — ui/Button, GlyphButton, SpeedDial
+   and the language banner's accept link keep it. `tests/unit/accent-census.test.ts` names
+   every wearer and renderer with its ground and MEASURES the value from globals.css, so the
+   old site's exact `#8377a3` fails there with its number. **The owner's lever:** the exact
+   old value is one line in globals.css plus an exception in that test — an AA failure on the
+   site's navigation, to be recorded here as the owner's call if taken.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer

@@ -195,8 +195,9 @@
   }
 }
 
-/* Semantic color roles — exactly 19: §15.1's 17 (`success` dropped) +
-   accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) — plus
+/* Semantic color roles — exactly 20: §15.1's 17 (`success` dropped) +
+   accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) + accent
+   (the menu buttons' lavender, owner 2026-10-01) — plus
    the one additional accent-decorative role, and the floss ribbon's colour
    and its shadow's, --ribbon and --ribbon-shadow (§15.26): raw values read
    by lib/ribbon-draw for its canvases, so they get NO utility name in the
@@ -279,7 +280,44 @@
      A literal, not a mix: the day §15.1's hue confirm moves
      --accent-decorative, this value is re-derived by hand. */
   --accent-strong: #4b3a86;
-  /* additional role outside the 19 (§15.1 amendment) */
+  /* accent — the 20th semantic role (owner 2026-10-01: "i need them not to be
+     that green. i want them to be same color as in old website on the same top
+     bar buttons"). THE CHARTER: the lavender a QUIET control turns — the one
+     colour of ui/TextButton's hover label, current-page label and underline
+     (the Header's menu row and panel, the Footer's links, the price menu's
+     categories). NEVER the Contact button beside them, which stays the green
+     CTA (owner, the same day: "contact button MUST STAY GREEN AS IT MUST JUMP
+     INTO YOUR EYES" — Header.test.tsx pins both of the Header's). The old top
+     bar painted all three with its own `--accent`,
+     rgb(131 119 163) = #8377a3 (top-bar.tsx: `text-accent`, `after:bg-accent`)
+     — which reads 4.09:1 on white and 3.89:1 on --page, under the 4.5:1 an
+     18px medium label owes SC 1.4.3: the current page's label is a RESTING
+     state, so the bar binds, and axe fails it in every story that shows one.
+     THE VALUE is that accent with its hue and chroma kept (OKLCH H 296.6°,
+     C 0.069) and its lightness lowered to the lightest step that passes on
+     THE GLASS FLOOR: the Header pill and the phone's menu panel are
+     bg-surface/95 — 95% white, see-through — so the darkest ground they can
+     make is 95% white over black, #f2f2f2. It is not hypothetical: the open
+     menu dims the page behind the panel with the scrim, axe measured the
+     panel at #f8f8f8 there, and a dark photograph under the scrim goes lower.
+     L 0.597 → 0.546. The first pick, #786c98 (the page ground's pass line),
+     read 4.49:1 on that #f8f8f8 and failed the Menu Open story's axe run.
+     Measured (WCAG 2.2 relative luminance, sRGB): 4.52:1 on the glass floor
+     #f2f2f2 · 4.76:1 on the open panel's #f8f8f8 · 4.81:1 on --page · 5.06:1
+     on --surface white · the same as the 2px underline, whose SC 1.4.11 bar
+     is 3:1 · 2.93:1 against --ink, the resting label it takes over from on
+     hover (the green it replaces read 2.24:1 there).
+     NOT FOR THE TINT: 3.32:1 on sections/TintedBand's 30% lilac ground.
+     Dark grounds are outside the charter.
+     Beside its siblings: --accent-decorative (#7a6d9c) is the display and
+     graphics lavender and reads 4.44:1 on --page, under the bar — this role is
+     the TEXT grade of the same lavender; --accent-strong (#4b3a86) is the deep
+     violet of the keywords. A literal, not a mix: the day §15.1's hue confirm
+     moves --accent-decorative, this value is re-derived by hand, like
+     --accent-strong — tests/unit/accent-census.test.ts measures it on every
+     ground named here. */
+  --accent: #746894;
+  /* additional role outside the 20 (§15.1 amendment) */
   --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
   /* the ribbon's colour and its shadow's (§15.26) — the old site's OWN palette, never invented. ONE colour
      since 2026-09-30 (owner: "drop the dark mauve,/ black one and use the mov"); the dark mauve that was its
@@ -338,6 +376,7 @@
   --color-star: var(--star);
   --color-scrim: var(--scrim);
   --color-error: var(--error);
+  --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-decorative: var(--accent-decorative);
 }

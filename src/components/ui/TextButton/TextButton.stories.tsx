@@ -142,7 +142,7 @@ export const PseudoLocale: Story = {
  * Hover END state, pinned as real pixels: the 'pin-hover' tag makes the visual
  * spec perform a true mouse hover before the (animation-disabled) screenshot —
  * synthetic play() events cannot activate CSS :hover. What lands is the end of
- * both clocks at once: the cta-hover label and the fully swept underline.
+ * both clocks at once: the lavender `accent` label and the fully swept underline.
  */
 export const HoverEnd: Story = {
   tags: ['pin-hover'],

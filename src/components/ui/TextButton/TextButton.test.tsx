@@ -141,7 +141,7 @@ describe('TextButton — asChild (shared ui/slot engine)', () => {
     // …and wears TextButton's clothes, underline pseudo-element included —
     // with asChild there is no wrapper element, which is exactly why the
     // underline is a pseudo-element and not a nested <span>.
-    expect(link.className).toContain('after:bg-cta-hover');
+    expect(link.className).toContain('after:bg-accent');
   });
 
   it('rides the computed aria-current through to the child anchor', () => {
@@ -252,10 +252,14 @@ describe('TextButton — the D5 motion exception (owner-approved)', () => {
     expect(tokens).toContain('transition-[color]');
     expect(tokens).toContain('duration-200');
     expect(tokens).toContain('ease-out');
-    // cta-hover (#006b42), not cta (#008854): the hover END state is one a
-    // user can hold, so it owes SC 1.4.3 the full 4.5:1 — and cta measures
-    // 4.29:1 on --page (#faf9f7). See the invariant block in TextButton.tsx.
-    expect(tokens).toContain('hover:text-cta-hover');
+    // The `accent` role (#746894) — the old top bar's lavender at the pass
+    // line (owner 2026-10-01): the hover END state is one a user can hold, so
+    // it owes SC 1.4.3 the full 4.5:1, and the old site's exact #8377a3 reads
+    // 4.09:1 on white. See the invariant block in TextButton.tsx.
+    expect(tokens).toContain('hover:text-accent');
+    // …and the green it replaced is gone from the atom (owner: "i need them
+    // not to be that green").
+    expect(tokens.filter((t) => t.includes('cta'))).toEqual([]);
   });
 
   it('is NOT harmonised to the system --fade clock (Button/RoundButton)', () => {
@@ -277,7 +281,7 @@ describe('TextButton — the D5 motion exception (owner-approved)', () => {
     expect(tokens).toContain('after:inset-x-0');
     expect(tokens).toContain('after:bottom-0');
     expect(tokens).toContain('after:h-0.5');
-    expect(tokens).toContain('after:bg-cta-hover');
+    expect(tokens).toContain('after:bg-accent');
     expect(tokens).toContain("after:content-['']");
   });
 
@@ -291,17 +295,19 @@ describe('TextButton — the D5 motion exception (owner-approved)', () => {
     expect(tokens).toContain('after:ease-out');
   });
 
-  it('never animates the active state in — the current page starts underlined AND green', () => {
+  it('never animates the active state in — the current page starts underlined AND lavender', () => {
     // State is never animation-conveyed (§9): active is a static full-width
     // rule that is already there on first paint, in reduced motion too — and
-    // the label wears the underline's own green at rest, the old top bar's
-    // one-accent pattern (owner, canvas loop 2026-08-06). cta-hover, never
-    // cta: a rest-state label owes SC 1.4.3 the full 4.5:1.
+    // the label wears the underline's own colour at rest, the old top bar's
+    // one-accent pattern (owner, canvas loop 2026-08-06), in that accent's
+    // lavender since 2026-10-01. The `accent` role, never the old site's exact
+    // #8377a3: a rest-state label owes SC 1.4.3 the full 4.5:1.
     const { tokens } = tokensOf({ active: true });
     expect(tokens).toContain('after:scale-x-100');
     expect(tokens).not.toContain('after:scale-x-0');
-    expect(tokens).toContain('text-cta-hover');
+    expect(tokens).toContain('text-accent');
     expect(tokens).not.toContain('text-ink');
+    expect(tokens.filter((t) => t.includes('cta'))).toEqual([]);
   });
 
   it('disables BOTH transitions under prefers-reduced-motion', () => {
@@ -310,7 +316,7 @@ describe('TextButton — the D5 motion exception (owner-approved)', () => {
     expect(tokens).toContain('motion-reduce:after:transition-none');
     // …and every state stays fully legible without them: the colors and the
     // active underline are discrete values, only their easing is removed.
-    expect(tokens).toContain('hover:text-cta-hover');
+    expect(tokens).toContain('hover:text-accent');
     expect(tokensOf({ active: true }).tokens).toContain('after:scale-x-100');
   });
 

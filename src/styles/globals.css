@@ -197,7 +197,10 @@
 
 /* Semantic color roles — exactly 19: §15.1's 17 (`success` dropped) +
    accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) — plus
-   the one additional accent-decorative role.
+   the one additional accent-decorative role, and the floss ribbon's two
+   faces, --ribbon-light and --ribbon-dark (§15.26): raw values read by
+   lib/ribbon-draw for its canvases, so they get NO utility name in the
+   `@theme inline` block below — nothing paints with a class.
 
    `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
    modal's scrim IS the backdrop pseudo-element, `backdrop:bg-scrim` compiles to
@@ -228,8 +231,10 @@
      (sections/PersonnelCard D8) given an ink of its own, lighter than
      --ink-muted, so the --accent-strong keywords inside it stand further
      off. Consumers: the two doctor quotes ONLY — PersonnelCard's
-     <blockquote> and sections/DoctorIntro's CredoCard <p>; every other quiet
-     text keeps --ink-muted.
+     <blockquote> and sections/DoctorIntro's CredoCard <p> — and the
+     STAND-IN of the first in ui/Ribbon's stories (Ribbon.fixtures.tsx,
+     §15.26): a stand-in judged beside the ribbon must wear the card's own
+     ink, on the same white ground. Every other quiet text keeps --ink-muted.
      Measured (WCAG 2.2 relative luminance, sRGB): 4.94:1 on --surface white ·
      4.70:1 on --page — the ground that binds: #79726c, three units lighter
      per channel, already reads 4.499:1 there · 1.89:1 against --accent-strong,
@@ -276,6 +281,40 @@
   --accent-strong: #4b3a86;
   /* additional role outside the 19 (§15.1 amendment) */
   --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
+  /* the ribbon's two faces (owner fb-475, 2026-09-25; §15.26) — the old site's OWN palette, never invented: */
+  --ribbon-light: #8377a3; /* old `--accent` rgb(131 119 163) — its primary lavender, the light face */
+  --ribbon-dark: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness, the dark face */
+}
+
+/* THE RIBBON'S LANES, REGISTERED (§15.26). ui/Ribbon DECLARES these on the box
+   that lays its cards out — the gauge from the column's width in container
+   units, the lanes from the gauge — and a card READS the two lanes as its
+   padding (24px outside a ribbon: the initial values). Registered, because an
+   UNREGISTERED custom property is pasted as text where it is used, so `cqw`
+   inside it is measured against the NEAREST container of the box that reads
+   it — and a card is a container of its own (ui/Card's `@container`): the
+   lanes came out up to 13.4px too narrow on the card and inside it. A
+   `<length>` registration computes the value where it is declared and
+   inherits a plain length: the rule to 0.001px, on the card and inside it
+   (measured in Chromium and WebKit at nine widths, the ribbon consult's
+   lanes probe). The GAUGE (`--ribbon-k`) and the GAP (`--ribbon-gap`) are
+   NOT registered — tried both ways, measured (fold round 2): each is read on
+   the column that declares it, where its `cqw` meets the ribbon's root
+   whether registered or not — the lanes above are computed there from it,
+   and the column's own gap and head room read it there. A reader BELOW the
+   column resolves them at itself: a consumer's list spaced by
+   `--ribbon-gap` (ui/Ribbon's route A) sits directly in the column for that
+   reason. KEEP IN SYNC: the numbers are lib/ribbon-model's gaugeRule() and
+   lanes(), spelled in CSS in ui/Ribbon's `COLUMN`. */
+@property --ribbon-lane-top {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 24px;
+}
+@property --ribbon-lane-side {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 24px;
 }
 
 @theme inline {

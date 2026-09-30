@@ -112,7 +112,7 @@ src/
     reviews/reviews.ts   # THE review list (facts + five-language words per row; ships EMPTY until the owner's real reviews — D2/D15/D18; beside it `demoReviews`, the stories' six fabricated rows, of which the Home band shows five until then — owner 2026-09-20, flagged)
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
-    hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row (RO/EN the old site's own; DE/FR/IT, the short names and every `text` line DRAFTED, flagged; demo pictures until the owner's photographs); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
+    hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row: the clinic's OWN three photographs since 2026-10-01 (lobby · treatment room · handpieces, `public/images/hero/`, 1920 × 1280, EXIF stripped) under slogans and alts DRAFTED by Claude in all five languages on the owner's word, flagged (§15.21 round 11); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
     team/team.ts         # THE clinic's people — doctors (ONE picture, the transparent waist-up cutout — the framed portrait and the optional lib/prices category left with the card's services link, 2026-09-30, §15.25 — own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles) and auxiliaries (a 3:4 portrait), five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside three still-DEMO auxiliaries (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30, §15.23)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
@@ -380,7 +380,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   predictable/constant/safe/guaranteed, recognition and awards, a success count — and fails CI on a
   hit; an owner-maintained `ALLOWED` list carries documented exceptions verbatim. Widening it to
   other data lists and namespaces is one more `SOURCES` row, a deliberate act (the older copy must be
-  read first).
+  read first; `lib/hero-slides` joined on 2026-10-01, the day its copy was rewritten — §15.21
+  round 11).
 - **Link check:** linkinator crawls the built export for broken internal links and hreflang
   targets on every CI run.
 - **CI lanes (decided, see GITHUB_SETUP.md):** branches `main` (production) + `develop`
@@ -1344,6 +1345,64 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     defaults to `'plain'`, the page passes nothing, the `'alternate'` comparison mode is gone;
     `'stroked'` and `'outlined'` stay as values (Hero tests, StrokedSlogan / OutlinedSlogan
     stories, the atom's tones). NO commit, NO PR — the owner’s word; the lane stayed at READY until the owner’s seal, “create pr”, later on 2026-09-21: one squashed commit, one PR into develop.
+    **Round 11 (owner, 2026-10-01 — THE CLINIC'S PHOTOGRAPHS; lane `feat/hero-clinic-photos`;
+    verbatim: "refactor on images in the auto scrolling component on main page. i need you to use
+    the following they are in downloads under POZE CLINICA: _DSF3109-HDR.jpg - this is a photo of
+    the lobby of the clinic … _DSF2784-HDR.jpg - this is a photo with a dental chair …
+    _DSF2694-HDR.jpg - this is a photo with a dental chair. paired text wise, idk, you decide on
+    the text. these sound kind of pretentious, make them sound friendlier. discard dead code and
+    photos" — and on the third, mid-lane: "it's some of those tools used by dentists"):** the demo
+    pictures are gone and the band shows the clinic. (1) THE PICTURES:
+    `public/images/hero/{lobby,treatment-room,instruments}.jpg`, the three photographs in the
+    owner's order (the third is `_DSF2694.jpg` in his folder — no `-HDR` copy of it exists),
+    re-encoded by the lane and never committed raw: 1920 × 1280 — the largest `deviceSizes` width
+    in next.config, and the optimizer never makes a wider variant, so a 6000px source would buy
+    nothing but repository bytes — progressive JPEG at quality 82, the EXIF orientation baked in
+    and every other tag dropped (the originals carried the camera model and timestamps), 74–202 KB
+    each; the band's `grayscale blur-xs` at 80 % is untouched, so the grey look stays the band's
+    and the files stay in colour. `lib/hero-slides` rows `lobby → treatment-room → instruments`;
+    the data test now ENFORCES `/images/hero/` (the convention the module promised "the day a
+    non-demo path appears"), a source at least 1920 wide and landscape (read off the JPEG header —
+    the team-data reader's second copy, filed with the helper-promotion census), a 16-character
+    ceiling on a slogan's unbreakable word (lib/team's `hero`-step arithmetic), D-DASH on every
+    word, and an alt that never repeats its slogan. (2) THE WORDS, FRIENDLIER: every slogan and
+    alt is a Claude DRAFT in all five languages, flagged (§15.17) — RO „Bine ai venit! Te
+    așteptăm cu drag." on the lobby, „Ne facem timp să îți explicăm fiecare pas." on the
+    treatment room, „Instrumente moderne, mâini blânde." on the handpieces — each paired to its
+    picture; the old site's three slogans („… ca într-un studio de lux") left with the demo
+    pictures on the owner's word; the register is each message file's (tu · you · Sie · vous ·
+    tu); the French „!" carries U+202F, the language's own no-break space. The CMSR scan (§13)
+    gains its FIRST widening — `lib/hero-slides` is a `SOURCES` row — and every row passes it.
+    (3) DEAD CODE AND PHOTOS: `public/images/demo/hero-team.jpg` and `hero-result.jpg` deleted
+    (no other reader); `hero-calm.jpg` STAYS as the Image atom's demo photograph (ui/Image,
+    ui/Avatar and ReviewCard read it, five files — a rename is a separate lane); the old site's
+    alts parked in `TODO(owner)` rows went with the scenes they described; `home.hero.subtitle`
+    ×5 STRUCK (unused since round 1, "stays until the owner strikes it" — this dispatch's
+    "discard dead code" is that word); Hero.test.tsx reads its Romanian rows from the module
+    instead of a copy. (5) ONE UTILITY ON THE BAND: the slogan's `<p>` wears `hyphens-none` —
+    measured at 390 on the built page, the site-wide `hyphens: auto` (§15.14) split „Te aș-teptăm"
+    at a syllable on the clinic's own copy; the DoctorProfile name precedent (§15.15 b, one utility
+    on the element, test-pinned), safe by the data test's 16-character ceiling. FOUND, NOT FIXED,
+    OLDER THAN THE LANE (measured on develop's own build too, `e0e1158`): in Chromium a bead that
+    RECEIVES KEYBOARD FOCUS scrolls the page by about 44 % of the viewport — 350px at 1280×800, 476
+    at 1920×1080, 360 at 390×844 — although the bead is fully in view; `focus()` and
+    `scrollIntoView({block:'nearest'})` both move it, `focus({preventScroll:true})` does not, a
+    mouse or touch press never scrolls, and WebKit does not scroll on focus; the band's own
+    `overflow-clip` `<section>` is the one clipping ancestor and the likely cause — the owner's
+    call, the lever is the band's clip. (6) VISUAL, measured at ZERO tolerance against a pristine build of develop
+    `e0e1158` (441 cells, a private-port differential): exactly the 25 hero cells move — Pages/Home
+    RO + DE at all six widths (the Romanian 320 frame 40px SHORTER: the shorter slogan wraps to
+    fewer lines where the stage outgrows the screen) and Sections/Hero's six stories at 390 + 1536
+    with German Stress at 320 — by 80 to 93 % of their pixels, the photographs; on two shoots of
+    the lane, 7 and then 6 OTHER cells differed (the language dial, the price list's glow, the
+    reviews deck, SpeedDial's disc — a different set each time), each by 5 to 79 px at ≤ 5/255, and
+    four of them failed against their OWN reference on a re-shoot of the same build — the harness's
+    known flicker, not this lane's. NO darwin baseline is committed: the
+    re-record is the owner's, on the owner's machine (§15.7; pages/home's six Romanian baselines
+    were stale since #117 already, sections/hero has never had one). Gates at READY: prettier ·
+    eslint · tsc clean; vitest 3143/3143 (136 files), the same 3143 with the optimizer variants
+    hidden (the CI rehearsal, §15.23 round 3); build-storybook and `next build` green; e2e 118
+    passed, 36 skipped. No reviewer round was run and nothing is committed — both the owner's word.
 
 22. **Header brand-to-nav gap — DECIDED (owner, 2026-09-26, verbatim: "small refactor on top
     bar. it should maintain at least a little space between 'premium smile' and first button of

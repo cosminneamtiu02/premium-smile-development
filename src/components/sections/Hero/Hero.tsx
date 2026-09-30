@@ -680,6 +680,15 @@ export function Hero({
                             ? 'inverse-outlined'
                             : 'inverse'
                       }
+                      // A SLOGAN IS NEVER SPLIT AT A SYLLABLE: the site-wide
+                      // `hyphens: auto` (§15.14) broke „Te aș-teptăm" across
+                      // two lines at 390 on the clinic's own copy (measured
+                      // 2026-10-01, the hero-photos lane) — the DoctorProfile
+                      // name precedent, one utility on the element (§15.15 b).
+                      // Safe by data: lib/hero-slides' test holds every slogan
+                      // word under the 320px column, so wrapping between
+                      // words always has room.
+                      className="hyphens-none"
                     >
                       {slide.title}
                     </Heading>

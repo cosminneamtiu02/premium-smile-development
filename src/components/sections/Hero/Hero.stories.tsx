@@ -19,13 +19,13 @@ import { Hero, type HeroLabels, type HeroSlide } from './Hero';
 // + 1536 (§13, tests/visual/stories.spec.ts); GermanStress adds the 320px
 // stress width through its tag.
 //
-// ── THE WORDS ARE lib/hero-slides' OWN. The band is dumb, so a story has to
-// populate it exactly as the page does — one language picked per row, the
-// „{index} din {total}" sentence filled from the message file — and the
-// shipped list is the honest fixture: the old site's three slogans in RO/EN,
-// Claude's drafts in DE/FR/IT (flagged in that file's header), the two
-// synthetic demo pictures beside the Image lane's committed photograph. No
-// story invents copy the site does not have.
+// ── THE WORDS AND THE PICTURES ARE lib/hero-slides' OWN. The band is dumb,
+// so a story has to populate it exactly as the page does — one language
+// picked per row, the „{index} din {total}" sentence filled from the message
+// file — and the shipped list is the honest fixture: the clinic's three
+// photographs (the lobby, a treatment room, the handpieces — owner,
+// 2026-10-01) under Claude's drafted slogans in all five languages (flagged
+// in that file's header). No story invents copy the site does not have.
 //
 // ── EVERY STORY PINS ITS LANGUAGE AND ITS VIEWPORT (the ReviewsCarousel
 // precedent): the visual runner opens a story by URL with no toolbar state,

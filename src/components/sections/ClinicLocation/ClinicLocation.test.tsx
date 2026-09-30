@@ -6,7 +6,7 @@ import { containerClasses } from '@/components/ui/Container/Container';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Phone } from '@/assets/glyphs/Phone';
 import { locales, type Locale } from '@/i18n/locales';
-import { clinic } from '@/lib/clinic/clinic';
+import { clinic, mapEmbedUrlFor } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
@@ -134,10 +134,37 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
     const frames = band().querySelectorAll('iframe');
 
     expect(frames).toHaveLength(1);
-    expect(frames[0]).toHaveAttribute('src', clinic.mapEmbedUrl);
+    // lib/clinic's ONE url, in this mount's language (Romanian) — the case
+    // below has all five.
+    expect(frames[0]).toHaveAttribute(
+      'src',
+      mapEmbedUrlFor(clinic.mapEmbedUrl, 'ro'),
+    );
     // The `pb=` form is the only one Google renders inside a frame — pinned so
     // a hand-written maps URL (which shows nothing) cannot ship silently.
     expect(clinic.mapEmbedUrl).toContain('google.com/maps/embed?pb=');
+  });
+
+  it("shows the map in the page's own language — five locales, one place", () => {
+    // Google's controls and its place card read their language from two
+    // fields inside the url and from nothing else (`mapEmbedUrlFor` in
+    // lib/clinic has the measurement), so the one pasted url reaches each
+    // page with those fields swapped. Pinned on the RENDERED attribute in
+    // every locale, because no other gate can see it: an English card on
+    // the Romanian page passes axe, and the visual net fences the frame.
+    const sources = new Set<string>();
+    for (const locale of locales) {
+      const { band, unmount } = mount(locale);
+      const src = band().querySelector('iframe')?.getAttribute('src') ?? '';
+
+      expect(src, locale).toBe(mapEmbedUrlFor(clinic.mapEmbedUrl, locale));
+      expect(src, locale).toContain(`!3m2!1s${locale}!2s`);
+      expect(src, locale).toContain(`!5m2!1s${locale}!2s`);
+      sources.add(src);
+      unmount();
+    }
+    // Five pages, five urls: the language really travels.
+    expect(sources.size).toBe(locales.length);
   });
 
   it('names the frame per locale, with the clinic name filled from lib/clinic', () => {
@@ -223,7 +250,7 @@ describe('ClinicLocation — the two contact rows', () => {
     });
 
     expect(row).toHaveAttribute('href', `tel:${clinic.phone}`);
-    expect(row).toHaveAttribute('href', 'tel:+40700000000');
+    expect(row).toHaveAttribute('href', 'tel:+40770162765');
     // NO target/rel: tel: hands the number to a protocol handler (the dialler),
     // it does not navigate a browsing context — _blank would open and orphan a
     // blank tab on desktop. The Footer's phone disc holds the same line.

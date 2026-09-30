@@ -156,11 +156,12 @@ const expectNoVerticalScroll = async (layer: HTMLElement): Promise<void> => {
  * overflowing (§7).
  *
  * The net shoots it at 390 and 1536, and the 'stress-320' tag adds 320 (§13's
- * opt-in), where the panel collapses to 288px wide and every caption wraps: the
- * box is UNCAPPED by `scrollable={false}` (ui/Modal D16), so it can never
- * scroll inside itself, and at 494px (506px in German, its worst case
- * anywhere — both measured 2026-09-26 at 30px) it still clears that stress
- * phone's 568px — the four-line title at that width (five in German) included.
+ * opt-in), where the panel collapses to 288px wide and the WhatsApp caption
+ * wraps: the box is UNCAPPED by `scrollable={false}` (ui/Modal D16), so it can
+ * never scroll inside itself, and at 506px (482px in German — measured
+ * 2026-09-30, the engine in ContactModal.tsx's note under its table) it still
+ * clears that stress phone's 568px — the five-line title at that width
+ * included.
  *
  * EVERY PICTURE IN THIS FILE HAS THE DIVIDER AND THE AIRY SEAMS — mt-3 under
  * the bar, gap-7 on both sides of the word, mb-4 below the second group, with

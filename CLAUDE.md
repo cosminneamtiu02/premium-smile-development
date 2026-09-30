@@ -1962,6 +1962,68 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     **Visual:** no existing cell moves — the ribbon is mounted nowhere on develop; all eight `ui/ribbon/*` cells
     change (they still have no darwin baseline: the owner's). **Evidence at READY:** see the lane's PR.
 
+27. **The clinic's real data — ON THE OWNER'S WORD (2026-09-30, verbatim: "find everywhere in the page where
+    the page has data about the clininc ,that is not photos and add those ones … tell me if i skipped any" ·
+    "the slogan of the clinic is "Totul pentru zambetul tau", not Stomatologie modernă. Îngrijire onestă." ·
+    then the pin, the listing's share link and the two profiles, with "for the moment leave same number, i'll
+    modify that" · "i'll update domain later. add those and create pr"; lane `feat/real-clinic-data`):**
+    `lib/clinic` stops being placeholders for everything the owner supplied, each value as the clinic's
+    Google listing carries it: the phone `+40770162765` („0770 162 765"), the address „Strada Gheorghe Dima
+    nr 3A, 550409 Sibiu" (the listing's own spelling, no dot after „nr", so the site and the listing carry ONE
+    address — §10.1), the pin `45.7765271, 24.1439856`, the two profiles
+    (`instagram.com/premium.smile.sibiu`, `tiktok.com/@premium.smile.sibiu`), the name as the listing spells
+    it, and THE WEEK: Monday to Friday 09:00–19:00, Saturday AND Sunday closed. **Still placeholders, the
+    owner's:** the WhatsApp number (the phone's for now, on his word) and the production domain (`url`).
+    **The week changed a sentence, not only a row.** The Footer prints one row per day from the data, so
+    „Sâmbătă" turned „Închis" by itself; the contact dialog's one-line caption `contact.callHours` NAMED a
+    Saturday in all five languages, so it lost that half ×5 („Lun–Vin {weekOpens}–{weekCloses}") and
+    `sections/ContactModal`'s build-time guards were reshaped with it — the week must be exactly ONE entry
+    covering Monday to Friday and no weekend day, or the build fails naming everything a reshaped week costs:
+    the key ×5, the arguments t() passes it, the guards themselves (they used to REQUIRE a separate Saturday
+    entry). The caption holds one line at the 320px width now where it took two, so the dialog's recorded
+    heights there were RE-MEASURED (`ContactModal.tsx`, the note under its table): 506 / 482px at 320×568 and
+    466 / 442 at 320×500, RO / DE. On the engine that measured them (Chromium on macOS) Romanian is the
+    taller language at that width — its title breaks „WhatsApp." onto a fifth line — which had left the
+    Romanian 320×500 box 22px OVER its budget before this lane; it clears it by 2 now. The German rail is
+    391.88px before and after: the WhatsApp label sets it.
+    **The slogan** is `common.footer.tagline`, the Footer its one consumer: „Totul pentru zâmbetul tău" — the
+    owner's words, written with the diacritics every Romanian string on the site carries (he typed it
+    without); EN/DE/FR/IT are Claude's DRAFTS, flagged (§15.17): "Everything for your smile" · „Alles für Ihr
+    Lächeln" · « Tout pour votre sourire » · «Tutto per il tuo sorriso».
+    **The map is the listing itself, in the page's language.** The owner's share link (`maps.app.goo.gl/…`)
+    renders nothing in a frame, so `mapEmbedUrl` is the embed form BUILT around the place that link resolves
+    to and checked in a browser: Google's own card („Premium Smile", the address, the rating) and the pin on
+    Strada Gheorghe Dima at laptop widths, the card collapsing to a chip on phones. Google's controls and card
+    take their language from two fields INSIDE that URL and from nothing else (measured: `ro` there gives
+    Romanian, `de` German; an appended `&hl=` is ignored), so NEW `mapEmbedUrlFor(url, locale)` swaps them
+    and `sections/ClinicLocation` reads `useLocale()` — five pages, five frames, ONE pasted URL, and a URL of
+    another shape fails the build. That closes the English-controls-everywhere finding of 2026-09-09 (G2 a11y
+    LOW-4), as that lane's own note asked for the day the real URL arrived. `clinic.test.ts` also ties the
+    blob's centre to `geo` — the two placeholders had sat a kilometre apart with nothing to notice — and the
+    shown phone to the dialled one. **COOKIES.md's standing item is discharged:** the probe re-run on the
+    built page in all five languages — zero cookies, no `Set-Cookie` on any of Google's 38–39 responses,
+    nothing in the frame's other storage; the IP limb and §12's deferred consent are unchanged.
+    **Reviews (G2):** react-reviewer, typescript-reviewer and a11y-architect on Fable, each APPROVE WITH
+    CHANGES, no critical and no high finding; the one medium (the stale 320px record) and the lows folded in
+    ONE round, the per-locale map among them.
+    **Recorded, not built — the owner's:** the demo doctors' weeks contradict the clinic's (`lib/team`:
+    `andrei-serban`'s Saturday morning prints on his page above a Footer that says „Sâmbătă — Închis", and
+    `elena-marin`'s two evenings run to 20:00 — demo people, replaced with the real team; all three reviewers
+    flagged it); the dialog's caption could spell its days out („Luni–Vineri" — it fits now) and could say
+    the weekend is closed; „nr" without its dot; the phone in its national format on the four foreign pages;
+    Google's card shows the listing's RATING inside the frame — a CMSR question, not a markup one;
+    `home.hero.subtitle` ×5 is still unused (§15.21); the site shows no e-mail address and no legal identity
+    (company name, CUI, trade-register number) — the §12 policy page's lane; `ui/` story fixtures keep their
+    generic „Strada Exemplu" copy on purpose (atoms hold no site data, §4).
+    **Visual:** measured by a before/after differential against a pristine build of develop `198709a` (437
+    cells, a private port, the darwin set's classic-scrollbar mode): exactly 55 cells move — every
+    Sections/Footer story, Sections/ClinicLocation's three, the open Sections/ContactModal's two, and
+    Pages/Home · Team · Doctor in both languages — and 382 are identical; the map's language moves none (the
+    net fences the frame). The 19 `sections/*` cells among them are re-recorded in the darwin set (7 were in
+    sync before the lane, 12 already stale); the 36 `pages/*` cells stay as develop has them — 12 stale, 24
+    never recorded — because lanes in flight change those pages again and own their record. **Evidence at
+    READY:** see the lane's PR.
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —

@@ -80,10 +80,13 @@ describe('translation parity (ro is the reference)', () => {
     (locale, messages) => {
       // The key set can match perfectly while a VALUE's arguments do not, and
       // next-intl does not throw for that either: a message asking for
-      // {weekOpen} when the section passes weekOpens renders the literal braces
-      // to that locale's visitors, and only to them. `contact.callHours` is the
-      // repo's first multi-argument message (four times in one line), which is
-      // exactly where a retranslation drops or renames one (G2 ts fold).
+      // {weekOpen} when the section passes weekOpens is a formatting error it
+      // answers with the key's PATH — „contact.callHours", printed to that
+      // locale's visitors and only to them (checked 2026-09-30; never the
+      // literal braces). `contact.callHours` is the repo's first
+      // multi-argument message (two in one line — four until its Saturday
+      // half went, 2026-09-30), which is exactly where a retranslation drops
+      // or renames one (G2 ts fold).
       const entries = flattenEntries(messages);
       for (const [path, value] of referenceEntries) {
         expect(

@@ -296,14 +296,16 @@ describe('findDoctor / findAuxiliary — the lookups metadata and tests use', ()
   });
 
   it('finds an auxiliary member by id', () => {
-    expect(findAuxiliary('ioana-tepes')?.words.ro.name).toBe('Ioana Țepeș');
-    expect(findAuxiliary('ana-maria-dobre')?.words.ro.position).toBe(
-      'Recepție, programări și comunicarea cu pacienții',
+    expect(findAuxiliary('stan-ioana-ecaterina')?.words.ro.name).toBe(
+      'Stan Ioana Ecaterina',
+    );
+    expect(findAuxiliary('gurgu-aurelia')?.words.ro.position).toBe(
+      'Asistentă medicală',
     );
   });
 
   it('returns undefined for an id no member owns', () => {
-    expect(findAuxiliary('ioana')).toBeUndefined();
+    expect(findAuxiliary('stan')).toBeUndefined();
     // A doctor's id names no auxiliary member: the two lists are apart.
     expect(findAuxiliary('toma-lucian')).toBeUndefined();
   });

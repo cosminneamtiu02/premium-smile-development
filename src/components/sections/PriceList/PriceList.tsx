@@ -170,7 +170,7 @@ import { PriceMenu } from './PriceMenu';
 //
 // ── THE MENU LINKS ARE ui/TextButton, COMPOSED — not its class string copied.
 // They are rendered by ./PriceMenu (the island), because the CURRENT one wears
-// the atom's own `active` variant: the label in cta-hover green with the
+// the atom's own `active` variant: the label in the `accent` lavender with the
 // underline drawn at full width, statically — the END state of the hover
 // animation, which is precisely what the owner asked the current item to look
 // like. The Footer's nav list is otherwise the same object (a vertical column

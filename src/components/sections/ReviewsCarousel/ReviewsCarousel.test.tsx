@@ -3,7 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import { locales, type Locale } from '@/i18n/locales';
-import type { Review } from '@/lib/reviews/reviews';
+import {
+  reviews as siteReviews,
+  type Review,
+  type ReviewWords,
+} from '@/lib/reviews/reviews';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
@@ -14,20 +18,31 @@ import {
   REVIEWS_FIRST_DWELL_MS,
   REVIEWS_INTERVAL_MS,
 } from './ReviewsCarousel';
-import { demoReviews } from '@/lib/reviews/reviews';
+import { REVIEWS_NOW } from './ReviewsCarousel.fixtures';
 import source from './ReviewsCarousel.tsx?raw';
+import deckSource from './ReviewsDeck.tsx?raw';
 
 // sections/ReviewsCarousel — the BAND's suite: the half of this section that
 // runs on the server. What it has to prove is the seam — that every string the
-// island needs arrives FINISHED and correct for the page's language, that the
-// list decides whether the band exists at all, and that no client directive
-// ever creeps into this file. The island's own manners live in
-// ReviewsDeck.test.tsx.
+// island needs arrives FINISHED and correct for the page's language (the
+// "how long ago" phrase included, measured from the band's `now`), that the
+// list decides whether the band exists at all, that the story clock stays in
+// the workbench, and that no client directive ever creeps into this file. The
+// island's own manners live in ReviewsDeck.test.tsx.
 //
-// Role-based queries (§9, §13), Romanian diacritics in the fixtures (§15.7),
-// and every user-facing string read from the REAL message files — a renamed or
-// dropped key fails HERE as well as in the translation-parity gate, instead of
-// silently rendering the dotted key path (which is what next-intl does).
+// Role-based queries (§9, §13), the clinic's own Romanian reviews with their
+// diacritics (§15.7), and every user-facing string read from the REAL message
+// files — a renamed or dropped key fails HERE as well as in the
+// translation-parity gate, instead of silently rendering the dotted key path
+// (which is what next-intl does).
+//
+// ── THE REAL LIST, AND PLACEHOLDERS THAT ARE PLAINLY NOT REVIEWS (owner,
+// 2026-10-01: "all fabricated ones need to be dropped"). Where a test asserts
+// what the band does with CONTENT it renders lib/reviews' own rows, chosen by
+// POSITION or by PROPERTY — never by id — and compares against each row's own
+// fields rather than a copied literal, so an edit to the list cannot break it.
+// Where a test needs a shape the real list cannot give — a controlled day, a
+// half-star rating — it builds a `placeholder` whose words say what it is.
 //
 // Styles are NOT loaded in this project (tests/setup/components.ts imports no
 // stylesheet), so the utility TOKENS are the contract here — the convention
@@ -36,132 +51,69 @@ import source from './ReviewsCarousel.tsx?raw';
 const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 
 /**
- * DEMO reviews — fabricated copy in the shape lib/reviews declares, and never
- * the site's data (board D15: the real list ships EMPTY until the owner
- * supplies reviews with consent and the CMSR check). The `reviews` prop is the
- * story/test seam D18 opened precisely so no test has to reach into the
- * shipped data — or, worse, put demo copy into it.
+ * The REAL list by POSITION: the whole of it, or its first `count` rows — with
+ * a clear failure, never a quietly shorter band, when lib/reviews holds fewer
+ * than the test needs (the whole list needs two: a deck).
  */
-const DEMO: readonly Review[] = [
-  {
-    id: 'ana-petrescu',
-    name: 'Ana Petrescu',
-    initials: 'AP',
-    rating: 4.5,
-    picture: { src: '/images/reviews/ana-petrescu.jpg' },
-    words: {
-      ro: {
-        title: 'Copiii îmi cer să mergem',
-        text: 'Doi copii, zero crize. Camera pediatrică face fiecare vizită o aventură.',
-        procedure: 'Pacient familie',
-      },
-      en: {
-        title: 'My kids actually ask to go',
-        text: 'Two children, zero tantrums. The pediatric room makes every visit an adventure.',
-        procedure: 'Family patient',
-      },
-      de: {
-        title: 'Meine Kinder wollen sogar hin',
-        text: 'Zwei Kinder, kein Theater. Das Kinderzimmer macht jeden Besuch zum Abenteuer.',
-        procedure: 'Familienbehandlung',
-      },
-      fr: {
-        title: 'Mes enfants demandent à y aller',
-        text: 'Deux enfants, aucune crise. La salle pédiatrique fait de chaque visite une aventure.',
-        procedure: 'Patient famille',
-      },
-      it: {
-        title: 'I bambini chiedono di andarci',
-        text: 'Due bambini, zero capricci. La sala pediatrica rende ogni visita un’avventura.',
-        procedure: 'Paziente famiglia',
-      },
-    },
+const real = (count?: number): readonly Review[] => {
+  const needed = count ?? 2;
+  if (siteReviews.length < needed)
+    throw new Error(
+      `This test needs ${needed} real reviews; lib/reviews holds ${siteReviews.length}.`,
+    );
+  return siteReviews.slice(0, count);
+};
+
+/** Words that say what they are, in all five languages. */
+const PLACEHOLDER_WORDS: ReviewWords = {
+  title: 'Titlu test',
+  text: 'Text test.',
+};
+
+/**
+ * A row that is plainly NOT a review — for the shapes the real list cannot
+ * give. Only the id varies unless a test says otherwise, because the deck keys
+ * its slides by id.
+ */
+const placeholder = (id: string, row: Partial<Review> = {}): Review => ({
+  id,
+  name: 'Nume test',
+  initials: 'NT',
+  rating: 5,
+  postedOn: '2024-09-30',
+  words: {
+    ro: PLACEHOLDER_WORDS,
+    en: PLACEHOLDER_WORDS,
+    de: PLACEHOLDER_WORDS,
+    fr: PLACEHOLDER_WORDS,
+    it: PLACEHOLDER_WORDS,
   },
-  {
-    id: 'cristian-voicu',
-    name: 'Cristian Voicu',
-    initials: 'CV',
-    rating: 5,
-    words: {
-      ro: {
-        title: 'Au văzut imaginea de ansamblu',
-        text: 'Alte clinici mi-au dat un preț. Premium Smile mi-a dat un plan.',
-        procedure: 'Plan complet',
-      },
-      en: {
-        title: 'They saw the whole picture',
-        text: 'Other clinics gave me a price. Premium Smile gave me a plan.',
-        procedure: 'Full mouth plan',
-      },
-      de: {
-        title: 'Sie haben das Ganze gesehen',
-        text: 'Andere Praxen nannten mir einen Preis. Premium Smile gab mir einen Plan.',
-        procedure: 'Gesamtbehandlungsplan',
-      },
-      fr: {
-        title: 'Ils ont vu l’ensemble',
-        text: 'D’autres cliniques m’ont donné un prix. Premium Smile m’a donné un plan.',
-        procedure: 'Plan complet',
-      },
-      it: {
-        title: 'Hanno visto tutto l’insieme',
-        text: 'Altre cliniche mi hanno dato un prezzo. Premium Smile mi ha dato un piano.',
-        procedure: 'Piano completo',
-      },
-    },
-  },
-  {
-    id: 'stefan-radu',
-    name: 'Ștefan Radu',
-    initials: 'ȘR',
-    rating: 3.5,
-    words: {
-      ro: {
-        title: 'Rapid, lin, prietenos',
-        text: 'Toate cele patru măsele de minte într-o dimineață, cu instrucțiuni clare.',
-        procedure: 'Măsele de minte',
-      },
-      en: {
-        title: 'Smooth, swift, friendly',
-        text: 'All four wisdom teeth in one morning, with clear instructions.',
-        procedure: 'Wisdom teeth',
-      },
-      de: {
-        title: 'Schnell, ruhig, freundlich',
-        text: 'Alle vier Weisheitszähne an einem Vormittag, mit klaren Anweisungen.',
-        procedure: 'Weisheitszähne',
-      },
-      fr: {
-        title: 'Rapide, calme, aimable',
-        text: 'Les quatre dents de sagesse en une matinée, avec des consignes claires.',
-        procedure: 'Dents de sagesse',
-      },
-      it: {
-        title: 'Rapido, calmo, gentile',
-        text: 'Tutti e quattro i denti del giudizio in una mattina, con istruzioni chiare.',
-        procedure: 'Denti del giudizio',
-      },
-    },
-  },
-];
+  ...row,
+});
 
 /** The provider the band gets in production (app/[locale]/layout.tsx wraps the
  *  whole tree) and in Storybook (.storybook/preview.tsx decorator), so the
  *  tests mount it the same way. ReviewsCarousel is NOT a client component;
- *  useTranslations and useLocale are isomorphic and read this context. */
+ *  useTranslations and useLocale are isomorphic and read this context. The
+ *  clock is PINNED to the folder's REVIEWS_NOW unless a test says otherwise —
+ *  the stories' rule, so no assertion here drifts with the calendar, and
+ *  tests/unit/reviews-data.test.ts holds every real day at or before it, so a
+ *  real row can never make the pinned clock throw. */
 const Mounted = ({
   locale,
   reviews,
+  now = REVIEWS_NOW,
 }: {
   locale: Locale;
   reviews?: readonly Review[];
+  now?: Date;
 }): ReactElement => (
   <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
-    <ReviewsCarousel reviews={reviews} />
+    <ReviewsCarousel reviews={reviews} now={now} />
   </NextIntlClientProvider>
 );
 
-const mount = (locale: Locale = 'ro', reviews: readonly Review[] = DEMO) => {
+const mount = (locale: Locale = 'ro', reviews: readonly Review[] = real()) => {
   const utils = render(<Mounted locale={locale} reviews={reviews} />);
   const messages = MESSAGES[locale].home.reviews;
   return {
@@ -194,31 +146,117 @@ const CODE = stripComments(source);
 
 describe('ReviewsCarousel — no reviews, no band', () => {
   it('renders NOTHING for an empty list (owner D15)', () => {
-    // A heading over an empty deck is worse than no band at all — and the
-    // shipped list IS empty today, which is why this is the default answer
-    // rather than an edge case.
+    // A heading over an empty deck is worse than no band at all — whether the
+    // empty list is one a caller passes or the site's own.
     const { container } = render(<Mounted locale="ro" reviews={[]} />);
 
     expect(container).toBeEmptyDOMElement();
     expect(screen.queryByRole('region')).toBeNull();
   });
 
-  it('defaults to the site list — and while that ships empty, to the first FIVE demo rows (owner, 2026-09-20)', () => {
-    // No `reviews` prop: the band reads lib/reviews; empty today, so the
-    // Storybook "Five" rows stand in. The day the list has rows, the demo is
-    // gone and this test states what the band does with the real ones.
-    render(
+  it('defaults to the site list ALONE — exactly lib/reviews, and nothing while it is empty', () => {
+    // No `reviews` and no `now`: the page mount's own shape
+    // (app/[locale]/(home)/page.tsx), so "how long ago" is measured from the
+    // real clock — the one test here that leaves REVIEWS_NOW out, because the
+    // default `now` is what it is about (tests/unit/reviews-data.test.ts holds
+    // every real day at or before REVIEWS_NOW, so today can never be earlier
+    // than a real review). Written to hold in BOTH states of the list: the
+    // 2026-09-20 demo fallback is retired (2026-09-30), so an empty site list
+    // means no band at all, and a full one means ITS rows — every title, in
+    // the list's own order, and nothing else.
+    const { container } = render(
       <NextIntlClientProvider locale="ro" messages={ro}>
         <ReviewsCarousel />
       </NextIntlClientProvider>,
     );
 
+    if (siteReviews.length === 0) {
+      expect(container).toBeEmptyDOMElement();
+      return;
+    }
+    const band = screen.getByRole('region', { name: ro.home.reviews.title });
     expect(
-      screen.getByRole('region', { name: ro.home.reviews.region }),
-    ).toBeInTheDocument();
-    for (const row of demoReviews.slice(0, 5))
-      expect(screen.getByText(row.name)).toBeInTheDocument();
-    expect(screen.queryByText(demoReviews[5].name)).not.toBeInTheDocument();
+      [...band.querySelectorAll('article h3')].map(
+        (title) => title.textContent,
+      ),
+    ).toEqual(siteReviews.map((review) => review.words.ro.title));
+    for (const review of siteReviews)
+      expect(within(band).getAllByText(review.name).length).toBeGreaterThan(0);
+  });
+});
+
+describe('ReviewsCarousel — how long ago, measured from `now` (lib/time-ago)', () => {
+  it('prints „acum 2 ani" for a review posted on 2024-09-30, with the day as the machine-readable half', () => {
+    // The band pre-renders the phrase (a formatter is a function and cannot
+    // cross into the island); the card prints it inside `<time dateTime>`.
+    const { band } = mount('ro', [
+      placeholder('test-doi-ani', { postedOn: '2024-09-30' }),
+    ]);
+    const day = band().querySelector('time[datetime="2024-09-30"]');
+
+    expect(day).not.toBeNull();
+    expect(day).toHaveTextContent('acum 2 ani');
+  });
+
+  it('says it in the PAGE language — „vor 2 Jahren" under `de`', () => {
+    const { band } = mount('de', [
+      placeholder('test-doi-ani', { postedOn: '2024-09-30' }),
+    ]);
+
+    expect(
+      band().querySelector('time[datetime="2024-09-30"]'),
+    ).toHaveTextContent('vor 2 Jahren');
+  });
+
+  it('measures every review on its OWN day — one phrase per card, in the list’s order', () => {
+    // Three placeholders three days, three months and two years before
+    // REVIEWS_NOW: three different units, so a phrase computed once and
+    // handed to every card, or handed to the wrong card, fails here.
+    const rows = [
+      placeholder('test-zile', { postedOn: '2026-09-27' }),
+      placeholder('test-luni', { postedOn: '2026-06-14' }),
+      placeholder('test-ani', { postedOn: '2024-09-30' }),
+    ];
+    const { band } = mount('ro', rows);
+    const days = [...band().querySelectorAll('time')];
+
+    expect(days.map((day) => day.getAttribute('datetime'))).toEqual(
+      rows.map((review) => review.postedOn),
+    );
+    expect(days.map((day) => day.textContent)).toEqual([
+      'acum 3 zile',
+      'acum 3 luni',
+      'acum 2 ani',
+    ]);
+  });
+
+  it('measures from `now` and not from the machine’s clock: a year later the same row reads „acum 3 ani"', () => {
+    // REVIEWS_NOW is a day this lane was built on, so the tests above could
+    // not tell a pinned clock from the real one; a moved `now` can.
+    render(
+      <Mounted
+        locale="ro"
+        reviews={[placeholder('test-doi-ani', { postedOn: '2024-09-30' })]}
+        now={new Date('2027-09-30T12:00:00Z')}
+      />,
+    );
+
+    expect(
+      document.querySelector('time[datetime="2024-09-30"]'),
+    ).toHaveTextContent('acum 3 ani');
+  });
+});
+
+describe('ReviewsCarousel — the story clock stays in the workbench', () => {
+  it('neither runtime file imports a fixtures module, nor names the story clock (§15.19 round 3)', () => {
+    // ReviewsCarousel.fixtures.ts is the stories' and the tests' pinned clock;
+    // an import from the band or from its island would freeze "how long ago"
+    // on the live site. Read through Vite's ?raw with the prose stripped, so
+    // the headers may name the file while the CODE may not.
+    for (const code of [CODE, stripComments(deckSource)]) {
+      expect(code).not.toMatch(/\.fixtures\b/);
+      expect(code).not.toMatch(/\bREVIEWS_NOW\b/);
+    }
   });
 });
 
@@ -301,16 +339,17 @@ describe('ReviewsCarousel — the band shell', () => {
 
 describe('ReviewsCarousel — the strings the island is handed', () => {
   it('hands one finished slide per review, named by the ICU index string', () => {
-    const { deck } = mount();
+    const rows = real(3);
+    const { deck } = mount('ro', rows);
     const names = [...deck().querySelectorAll('[role="group"]')].map((slide) =>
       slide.getAttribute('aria-label'),
     );
 
     expect(names).toEqual(
-      DEMO.map((_, index) =>
+      rows.map((_, index) =>
         fill(ro.home.reviews.slide, {
           index: String(index + 1),
-          total: String(DEMO.length),
+          total: String(rows.length),
         }),
       ),
     );
@@ -322,7 +361,11 @@ describe('ReviewsCarousel — the strings the island is handed', () => {
   it('formats the rating through ICU, comma decimal and all (§8.3)', () => {
     // `{rating, number}` is what turns 4.5 into „4,5" in ro and "4.5" in en.
     // The section never formats by hand, and the card never sees the number.
-    mount();
+    // Placeholders, because every real review so far gives five whole stars.
+    mount('ro', [
+      placeholder('test-patru-si-jumatate', { rating: 4.5 }),
+      placeholder('test-trei-si-jumatate', { rating: 3.5 }),
+    ]);
 
     expect(
       screen.getByRole('img', { name: '4,5 din 5 stele', hidden: true }),
@@ -333,7 +376,7 @@ describe('ReviewsCarousel — the strings the island is handed', () => {
   });
 
   it('formats the same rating the English way under `en`', () => {
-    mount('en');
+    mount('en', [placeholder('test-patru-si-jumatate', { rating: 4.5 })]);
 
     expect(
       screen.getByRole('img', { name: '4.5 out of 5 stars', hidden: true }),
@@ -341,20 +384,21 @@ describe('ReviewsCarousel — the strings the island is handed', () => {
   });
 
   it('picks the review’s words for the PAGE locale, never the default', () => {
-    const german = DEMO[0].words.de;
+    // The first real review, by position; the negative check reads its
+    // Romanian BODY, a sentence no German text of the list can contain.
+    const [first] = real(1);
     const { band } = mount('de');
 
-    expect(band().textContent).toContain(german.title);
-    expect(band().textContent).toContain(german.text);
-    expect(band().textContent).toContain(german.procedure);
-    expect(band().textContent).not.toContain(DEMO[0].words.ro.title);
+    expect(band().textContent).toContain(first.words.de.title);
+    expect(band().textContent).toContain(first.words.de.text);
+    expect(band().textContent).not.toContain(first.words.ro.text);
     // …while the name, a proper noun, is locale-invariant.
-    expect(band().textContent).toContain(DEMO[0].name);
+    expect(band().textContent).toContain(first.name);
   });
 
   it('translates its own chrome per locale, in all five languages', () => {
     for (const locale of locales) {
-      const { unmount } = render(<Mounted locale={locale} reviews={DEMO} />);
+      const { unmount } = render(<Mounted locale={locale} reviews={real()} />);
       const messages = MESSAGES[locale].home.reviews;
 
       expect(
@@ -371,12 +415,21 @@ describe('ReviewsCarousel — the strings the island is handed', () => {
   });
 
   it('passes a DECORATIVE picture — alt is empty, the name is printed', () => {
-    // Read synchronously, before the (inevitable, in this project) 404 lets
-    // ui/Avatar swap to its letters face: no width variants exist under
-    // `npm run test`, so the <img> is only in the DOM for this instant. The
-    // alt is the assertion — a named portrait would announce the reviewer
-    // twice, since the card prints the name two lines below.
-    const { container } = render(<Mounted locale="ro" reviews={DEMO} />);
+    // The first real review that carries a portrait, found by PROPERTY — a
+    // placeholder with a picture path only if the list ever holds none, so a
+    // content change cannot break this test. Read synchronously: where the
+    // optimizer's width variants are missing the <img> is in the DOM only
+    // until ui/Avatar swaps to its letters face. The alt is the assertion — a
+    // named portrait would announce the reviewer twice, since the card prints
+    // the name two lines below.
+    const withPicture =
+      siteReviews.find((review) => review.picture) ??
+      placeholder('test-portret', {
+        picture: { src: '/images/reviews/test.jpg' },
+      });
+    const { container } = render(
+      <Mounted locale="ro" reviews={[withPicture]} />,
+    );
     const picture = container.querySelector('img');
 
     expect(picture).not.toBeNull();

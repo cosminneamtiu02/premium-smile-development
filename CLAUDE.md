@@ -109,11 +109,12 @@ src/
     cx/cx.ts             # THE class-join helper — every tier imports it (fb-307 → PR #64)
     rating/rating.ts     # THE star-rating value type (eleven half-steps) + guards — atoms AND the data list import it (reviews run D17, 2026-09-10)
     initials/initials.ts # THE two-capital monogram type + guards — the twin of lib/rating (D17)
-    reviews/reviews.ts   # THE review list (facts + five-language words per row; ships EMPTY until the owner's real reviews — D2/D15/D18; beside it `demoReviews`, the stories' six fabricated rows, of which the Home band shows five until then — owner 2026-09-20, flagged)
+    reviews/reviews.ts   # THE review list — the clinic's own Google reviews since 2026-09-30 (facts + five-language words per row, NEWEST FIRST; `postedOn` the day Google shows, the card says how long ago through lib/time-ago; quotes spelling-corrected with CMSR-banned phrases cut „[…]", EN/DE/FR/IT DRAFTED, flagged; one characteristic per title, no two alike — §15.19 round 4). No invented review exists anywhere: the six fabricated demo rows were deleted and the stories render this list (owner 2026-10-01: "all fabricated ones need to be dropped")
+    time-ago/time-ago.ts # "how long ago" the way Google's review list says it: a `YYYY-MM-DD` day + a `now` → one unit rounded down (year · month · week · day) → Intl.RelativeTimeFormat's words in five languages („acum 2 ani", "vor 2 Jahren"); computed at BUILD by the reviews band (React-free, real-reviews lane 2026-09-30)
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
     hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row: the clinic's OWN three photographs since 2026-10-01 (lobby · treatment room · handpieces, `public/images/hero/`, 1920 × 1280, EXIF stripped) under slogans and alts DRAFTED by Claude in all five languages on the owner's word, flagged (§15.21 round 11); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
-    team/team.ts         # THE clinic's people — doctors (ONE picture, the transparent waist-up cutout — the framed portrait and the optional lib/prices category left with the card's services link, 2026-09-30, §15.25 — own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles) and auxiliaries (a 3:4 portrait), five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside three still-DEMO auxiliaries (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30, §15.23)
+    team/team.ts         # THE clinic's people — doctors (ONE picture, the transparent waist-up cutout — the framed portrait and the optional lib/prices category left with the card's services link, 2026-09-30, §15.25 — own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles) and auxiliaries (a 3:4 portrait), five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside the clinic's three REAL auxiliary staff since 2026-10-01 (names and roles the owner's, the titles FEMININE on the owner's word and translated by Claude; portraits still the demo silhouettes) (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30; round 4 2026-10-01, §15.23)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
     seo/seo.ts           # JSON-LD builder, metadata helpers, sitemap/hreflang generation
   i18n/
@@ -380,8 +381,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   predictable/constant/safe/guaranteed, recognition and awards, a success count — and fails CI on a
   hit; an owner-maintained `ALLOWED` list carries documented exceptions verbatim. Widening it to
   other data lists and namespaces is one more `SOURCES` row, a deliberate act (the older copy must be
-  read first; `lib/hero-slides` joined on 2026-10-01, the day its copy was rewritten — §15.21
-  round 11).
+  read first; `lib/reviews` joined 2026-09-30 with the real reviews, `lib/hero-slides` on
+  2026-10-01, the day its copy was rewritten — §15.21 round 11).
 - **Link check:** linkinator crawls the built export for broken internal links and hreflang
   targets on every CI run.
 - **CI lanes (decided, see GITHUB_SETUP.md):** branches `main` (production) + `develop`
@@ -400,7 +401,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorShowcase** (the doctors band, right under the Hero since 2026-09-30 — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys; its place on this page is the planner's pick, a lever — §15.25) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — on the first five of `lib/reviews`' `demoReviews` (the Storybook "Five" story's rows, moved into shipped data on the owner's word, flagged) until the real list has a row, at which point the band drops them by itself — §15.19, §15.21) · CTABanner | `home` |
+| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorShowcase** (the doctors band, right under the Hero since 2026-09-30 — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys; its place on this page is the planner's pick, a lever — §15.25) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner | `home` |
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven category cards, of which ONLY the one the visitor is at wears the aura, faded in and out over 400ms — round 4, 2026-09-29; every card wore it from 2026-09-14 until then; "at" is THE READING LINE since round 5, the same day: a card lights as its top crosses the middle of the clear part of the window, the first card at the top of the page, and a menu click brings a card that fits to that middle, with no focus ring for a pointer — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` on its link in BOTH directions, scroll and click, and — round 4 — by a `data-current` mark the island stamps on the card that link points at) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
 | Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button; the FIRST card's picture preloads on this page, its LCP element. The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30 — `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))`; until then it also held the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step, an `align: start \| center \| end` axis for the words' seat beside the photo — the page passes `lowered`, the top seat dropped 7rem — 3rem on the owner's "push this a bit more down" of 2026-09-25, halved to 1.5rem on his "push it a little more upwards" of 2026-09-26, then 7rem (20 % of the figure's box at 1280) on his "push like 20% more down just the textual part" the same evening, round 2l, one token to dial; the band's own rhythm halved the same day (round 2j, "it starts height wise too low … also the image, so the whole thing") and the words track widened to ⅔ of the row for a BIGGER credo card, its quote on `text-xl`; then, in round 2k the same day, the picture ~30 % larger, the two columns content-sized and CENTRED in the row with the words capped at 28rem (a narrower, taller card — "70% as wide … and taller rather", "left and right they have same as much space"), and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred ("name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the deep violet `accent-strong` (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Excelență confirmată în timp” centred over a lead sentence and four tiles: a light disc with a green line glyph, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the sr-only twin SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
@@ -415,7 +416,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    fonts **Source Serif 4** (display + body) + **JetBrains Mono** (eyebrows), Publio only
    inside the vectorized logo; body base **1.125rem**; default radius **6px**; star
    `#B29126` → **`#D4AF37` (amended 2026-09-12, owner — the rider at the end of this item)**; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
-   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter). Amendments from contradiction
+   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter; 20 since 2026-10-01 — `--accent` #746894, the menu buttons' lavender, the rider at the end of this item). Amendments from contradiction
    review: font tokens are named `--font-display` / `--font-body` / `--font-mono` (never
    `--font-sans`); one additional role `--color-accent-decorative: #7A6D9C` for large
    display text (≥ 3:1 contexts) and graphics only — the a11y addon polices misuse.
@@ -459,6 +460,38 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    THE ELEMENT (§15.15 b once more). Both were built start-aligned first, because this
    exception's scope was "that one element", and flipped on the owner's sentences. Scope:
    those paragraphs, in every locale; every other prose on the site stays start-aligned.
+   **Fourth per-element exception — the review card's quote (2026-10-01, owner, the real-reviews
+   lane: "make review text in justify" · "they look perfect now"):** the quoted body of
+   sections/ReviewCard ships `text-justify` ON THE ELEMENT (§15.15 b once more) — the one line the
+   2026-09-10 build deliberately did NOT port from the old card. Scope: that body paragraph, in every
+   locale; the site-wide `hyphens: auto` keeps rivers out of the 312px phone card.
+   **Menu-button lavender — the 20th role (2026-10-01, owner, verbatim: "refactor on all menu
+   buttons. i need them not to be that green. i want them to be same color as in old website
+   on the same top bar buttons"; lane `rework/text-button-lavender`):** `--accent` = `#746894`,
+   a NEW semantic role worn by `ui/TextButton` alone — its hover label, current-page label and
+   2px underline, still ONE colour (the old top bar's single-`accent` unity, 2026-08-06) — so
+   every menu button turns lavender at once: the Header's row and burger panel, the Footer's
+   links, the price menu's categories. **The Contact button stays GREEN** (the owner, the same
+   day, after a lavender Contact was tried on the preview and reverted: "contact button MUST STAY
+   GREEN AS IT MUST JUMP INTO YOUR EYES") — the CTA keeps the green family while the quiet menu
+   controls around it wear the lavender, and `Header.test.tsx` pins both of the Header's Contact
+   buttons to ui/Button's solid green face. The old top bar's own `--accent` is `#8377a3`
+   (top-bar.tsx: `text-accent`, `after:bg-accent`); MEASURED, it reads 4.09:1 on white and
+   3.89:1 on `--page` — under the 4.5:1 an 18px medium label owes SC 1.4.3, and the
+   current-page label is a resting state, so axe would fail every story that shows one. The
+   value is that accent with its OKLCH hue and chroma kept and its lightness lowered to the
+   lightest step that passes on THE GLASS FLOOR (L 0.597 → 0.546): the pill and the phone's
+   menu panel are `bg-surface/95`, see-through, and with the menu open the scrim dims the page
+   behind the panel — axe measured it at #f8f8f8 and failed a first pick, #786c98, there at
+   4.49:1 (the Menu Open story) — so the value must pass on 95 % white over black, #f2f2f2:
+   4.52:1 there, 4.76:1 on #f8f8f8, 4.81:1 on `--page`, 5.06:1 on white, 3.32:1 on the 30 %
+   lilac tint (barred there, like `--ink-faint`). The green it
+   replaces, `cta-hover` #006b42, is untouched as a token — ui/Button, GlyphButton, SpeedDial
+   and the language banner's accept link keep it. `tests/unit/accent-census.test.ts` names
+   every wearer and renderer with its ground and MEASURES the value from globals.css, so the
+   old site's exact `#8377a3` fails there with its number. **The owner's lever:** the exact
+   old value is one line in globals.css plus an exception in that test — an AA failure on the
+   site's navigation, to be recorded here as the owner's call if taken.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer
@@ -796,6 +829,78 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `quietEnv` ×3 — all already ≥ 3 before this lane) · `parkPointer()` at the Hero-frame lane · the
     20% tint as a §15.1 token at its second consumer · a type-only `lib/image-path` at the next lane
     that types an image path · `isLocale()` at the next `Record<Locale, …>` band.
+    **Round 4 — the REAL reviews (owner, 2026-09-30, verbatim: "i want to start filling the page with
+    custom data … reviews … scrape the following few ones with picture and everything … take number
+    of starts, internationalise them and correct spelling obviously … for title … make a summary of
+    what is the most important thing, like features … i do not want any repetitions … if review too
+    short … just drop … take image from google review and place here and optimise them and instead of
+    the procedure … „PLAN COMPLET" just say how long ago it took place like it says in the google
+    reviews" · "obviously adapt review card to longest review"; lane `feat/real-reviews`):** an Opus
+    agent read the clinic's Google Maps listing HEADLESS (never the owner's browser): signed out, Maps
+    shows a handful of reviews and answered the rest with a CAPTCHA, so FOUR landed from the listing;
+    the rest came from links the owner sent the next day (a contributor's page filtered to the clinic,
+    one headless request each — the signed-in-Safari route by AppleScript was tried and stopped on the
+    owner's word after two page loads, its window closed, nothing of the login read). Of the owner's
+    ten, one — a single line whose only characteristic was a superlative, by a different reviewer than
+    the owner remembered — was DROPPED by the owner's own rule and one was swapped on the owner's word
+    for another: NINE rows were read, all 5★, every date Google's own timestamp — and SEVEN ship: after a
+    preview the owner took out the two longest (2026-10-01: "remove too long reviws … jsut to see how it
+    looks without them" → "they look perfect now"). No reviewer's name is written anywhere but the data rows themselves (G2 typescript: the
+    repo is public and consent is still owed). Decisions: (1) THE TEXT is
+    the patient's, spelling and diacritics corrected, and — the owner's choice between "trim" and
+    "word for word", asked with the evidence — every phrase the CMSR's advertising guide bans CUT and
+    marked „[…]": Decizia 4/2CN/2025 (in force 2025-07-01) lets a clinic show its own patients'
+    testimonials and makes it ANSWERABLE for their content, and lists „cea mai bună", „optim",
+    „top", „premium" among the banned wording; a cut takes the smallest span that leaves the sentence
+    grammatical; EN/DE/FR/IT drafted by Claude, flagged; (2) THE TITLE names the ONE characteristic a
+    review is about, in the clinic's words, CMSR-clean — so NOT the owner's two examples, „echipă
+    profesionistă" and „materiale de calitate", which sit on the guide's list („servicii profesionale /
+    calitative") — no two alike in any language (tests/unit/reviews-data.test.ts) and read by the CMSR
+    scan (its first new SOURCES row — the titles AND the cut quotes, 0 hits in five languages, so the
+    next review's missed superlative fails CI); a long review yields its unique characteristic to a
+    short one that has no other; the scan's ALLOWED list stays EMPTY (the one quote that needed it left
+    with the two longest); (3) THE DATE LINE replaces
+    the procedure eyebrow (§6.6: `procedure` → `postedOn` + `postedAgo` on ReviewCard and the deck's
+    slide): `Review.postedOn` is a `YYYY-MM-DD` fact and NEW React-free `lib/time-ago` turns it into
+    Google's own wording at BUILD — one unit, rounded down, Intl.RelativeTimeFormat with a digit
+    („acum 2 ani", "vor 2 Jahren", « il y a 2 ans ») — printed as `<time dateTime>`; the band takes a
+    `now` (default the build's clock, so each rebuild refreshes the phrase) and every story pins it;
+    (4) THE DEMO ROWS ARE GONE (owner, 2026-10-01: "all fabricated ones need to be dropped"): the
+    six invented testimonials first left shipped data for a stories-only fixture (this item's
+    round-3 trigger "a demo-fixture module at the Home mount"), then were deleted outright — the
+    band's and the card's stories and tests render the REAL list (the card's half-star story went:
+    no real review has half stars, and ui/StarRating's own stories cover them; mechanics tests use
+    plainly-labelled placeholders, never invented patient prose); `ReviewsCarousel.fixtures.ts` keeps
+    only `REVIEWS_NOW`, the clock every story pins, held by the data test at or after the newest
+    review; NEW tests/unit/fixtures-fence.test.ts keeps every runtime file in src/ off any
+    `*.fixtures` module; (5) AVATARS: the reviewers'
+    own Google photographs (three) are cropped square at 256px — the largest width the 3rem disc
+    can use at 3× among §11's baked sizes — under public/images/reviews/; the four Google letter
+    avatars became ui/Avatar's own two letters; (6) THE CARD, ADAPTED TO THE LONGEST REVIEW: the deck
+    already stretches every card to the tallest, so the lever was the WIDTH — `--deck-card`
+    `clamp(14rem, 66%, 8% + 20rem)` → `clamp(14rem, 80%, 8% + 20rem)`, which moves only stages under
+    ~552px: MEASURED, with the first four reviews the tallest card on the 390×844 phone went 785 → 637px
+    in DE (93% → 75% of the screen); with all NINE (the built export, /ro/ /de/ /fr/) the tallest is
+    674px DE (80%; RO 626, FR 650) and 559px at 1280×800; with the SEVEN that ship, 550px DE (65%; RO 526,
+    FR 578) and 459px at 1280×800 — the longest review fits one phone screen in every language, each neighbour still peeking 39px (was ~66); 768px and wider pixel-identical; the
+    320×568 stress screen stays taller than one card by nature (~790px), reflowing without sideways
+    scroll; (7) THE QUOTE IS JUSTIFIED — §15.1's fourth per-element exception (owner, 2026-10-01). G2 (three Fable reviewers — react ·
+    typescript · a11y): 0 critical; react and typescript APPROVE WITH CHANGES, every medium and low
+    folded — the story clocks above; an Invalid Date `now` refused by name before it reaches Intl;
+    `IsoDate` tightened so „2025-6-14" and „14-06-2025" fail to compile; the card's import of
+    lib/time-ago pinned TYPE-ONLY (no clock in the browser); a sentence a patient wrote in another
+    language is given in the page's language (SC 3.1.2 — a rule lib/reviews' header keeps; its one case
+    left with the two longest rows) and a sentence break restored after an emoji; „[…]" is silent at screen readers' default punctuation,
+    and every cut sentence still reads whole. THE a11y HIGH IS THE OWNER'S, RECORDED NOT CHANGED —
+    §15.21 round 6's SC 2.2.2 record, re-measured with the real text: the rhythm's reading-time
+    trigger FIRED and NO card is readable in one 5.5 s dwell (the shortest, 18 words, needs 7.2 s at
+    150 wpm; with the seven that ship the longest is ~70–78 words, 28–31 s), and a THIRD group has no hold
+    beside mouse and touch: a screen reader's READING CURSOR (NVDA browse mode, VoiceOver swipe) is
+    not DOM focus, so the card it is reading is swapped out every 5.5 s, silently (`aria-live` off
+    while running). The owner's options, each keeping "it always moves on": a per-card dwell from its
+    own word count (one per-beat delay seam in lib/clock), a hold while a pointer rests on the CENTRE
+    card only, or the struck rotation control. THE OWNER'S GATE STANDS: the patients' consent to show
+    their names and pictures (GDPR art. 9 — a name beside a dental review).
 
 20. **Price-list run — DECIDED (owner, consultation board `.claude/plans/price-list.plan.md`,
     fb-449 – fb-466, 2026-09-13; build dispatched the same day, epic #99, lane `feat/price-list`,
@@ -1372,7 +1477,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     picture; the old site's three slogans („… ca într-un studio de lux") left with the demo
     pictures on the owner's word; the register is each message file's (tu · you · Sie · vous ·
     tu); the French „!" carries U+202F, the language's own no-break space. The CMSR scan (§13)
-    gains its FIRST widening — `lib/hero-slides` is a `SOURCES` row — and every row passes it.
+    gains its SECOND widening (the first was `lib/reviews`, 2026-09-30) — `lib/hero-slides` is a
+    `SOURCES` row — and every row passes it.
     (3) DEAD CODE AND PHOTOS: `public/images/demo/hero-team.jpg` and `hero-result.jpg` deleted
     (no other reader); `hero-calm.jpg` STAYS as the Image atom's demo photograph (ui/Image,
     ui/Avatar and ReviewCard read it, five files — a rename is a separate lane); the old site's
@@ -1879,6 +1985,27 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     as the clinic shut); heading hyphenation site-wide; name order abroad; „Dr." in German implying a
     doctorate; French typography (a no-break space before « : », site-wide, fr.json included); the clinic
     routines the third paragraphs state (written aftercare instructions, check-ups booked from the start).
+
+    **Round 4 — THE REAL STAFF (owner, 2026-10-01, verbatim: "these are just the 3 standard personell cards.
+    one of them is Stan Ioana-Ecaterina as registrator medical, Gurgu Aurelia as assistant so instead of
+    Mihaela Crăciun and Cândea Angelica instead of Ana-Maria Dobre and create pr"; then, on the PR: "role is
+    good already to what was before. receptionist, schedulings, etc" · "use feminine for ioana use just stan
+    ioana ecaterina and you translate job titels"; lane `feat/real-staff`, PR #118):** `lib/team`'s three demo
+    auxiliaries are replaced by the clinic's staff, each on the card the owner named, so the Team page's staff
+    grid keeps its order: Stan Ioana Ecaterina (registratoare medicală) on Ioana Țepeș's card, Gurgu Aurelia
+    (asistentă medicală) on Mihaela Crăciun's, Cândea Angelica on Ana-Maria Dobre's, whose reception wording
+    („Recepție, programări și comunicarea cu pacienții") the owner confirmed. The NAMES are the owner's,
+    surname first; the first WITHOUT the hyphen the first message carried, on the owner's word (as
+    „Ioana-Ecaterina" it broke into „Stan Ioana-" / „Ecaterina" at every width). THE STAFF'S TITLES ARE
+    FEMININE on the owner's word: the confirmation round 3's NOBODY IS GENDERED waits for, given for the staff,
+    while every doctor still waits for it. The feminine JOB TITLES are translated by Claude on that word — DE
+    „Medizinische Rezeptionistin" · „Zahnmedizinische Fachangestellte", FR „Secrétaire médicale" · „Assistante
+    dentaire", IT „Segretaria medica" · „Assistente di studio odontoiatrico", EN „Medical receptionist" ·
+    „Dental nurse". The ids are the names in ASCII (`stan-ioana-ecaterina`, `gurgu-aurelia`,
+    `candea-angelica`) and are React keys only, never a URL. The portraits stay the demo silhouettes until the owner's photographs, and the consent owed for
+    the doctors is owed for the staff. The TeamRoster and PersonnelCard stories and tests keep their own
+    invented people: fixtures, not site data. **Visual:** only the Pages/Team frames change (the three tiles'
+    names and eyebrows), already stale since #117; the darwin record is the owner's (§15.7).
 
 24. **Heading scale, app-wide — DECIDED 2026-09-26 (owner, verbatim: "i need all headings and
     eyebrows app wide to be made the same size as they are on the

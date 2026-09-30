@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { heroSlides } from '../../src/lib/hero-slides/hero-slides';
+import { reviews } from '../../src/lib/reviews/reviews';
 import { auxiliaries, doctors } from '../../src/lib/team/team';
 import { locales, type Locale } from '../../src/i18n/locales';
 import de from '../../src/messages/de.json';
@@ -25,13 +26,17 @@ import ro from '../../src/messages/ro.json';
 // WHAT IT SCANS: every string a language ships for the team — lib/team's
 // positions, philosophy, biography paragraphs, course lines and stat words
 // (never the NAMES, which are proper nouns) — and every value under the `team`
-// namespace of the five message files — and, since 2026-10-01, every slogan
-// and alt lib/hero-slides ships (the hero-photos lane: the scan's first
-// widening, taken the day the opener's copy was rewritten, so the new drafts
-// were gated before they shipped). WHY THAT SCOPE: the doctor pages and the
-// opener are where a clinic talks about itself. Widening it to lib/prices and
-// the other namespaces is one more entry in SOURCES below — a deliberate act,
-// because older copy must be read first, not machine-red overnight.
+// namespace of the five message files — and, since two lanes a day apart, two
+// more lists. The real Google reviews (2026-09-30): their TITLES are written
+// by the clinic, and their QUOTES are the patients' words with every banned
+// phrase cut on the owner's choice — so both are read like every other clinic
+// string. And every slogan and alt lib/hero-slides ships (2026-10-01, the
+// hero-photos lane: the scan widened the day the opener's copy was rewritten,
+// so the new drafts were gated before they shipped). WHY THAT SCOPE: the
+// doctor pages, the reviews and the opener are where a clinic talks about
+// itself. Widening it to lib/prices and the other namespaces is one more entry
+// in SOURCES below — a deliberate act, because older copy must be read first,
+// not machine-red overnight.
 //
 // WHAT COUNTS: one pattern list per language, HARD — a hit fails the suite.
 // The lists are deliberately narrow (a wound-healing course is not a cure
@@ -171,6 +176,22 @@ function heroStrings(locale: Locale): readonly [string, string][] {
   ]);
 }
 
+/**
+ * The Google reviews — the TITLE (the clinic's own words: the one
+ * characteristic a review is about) AND the quoted TEXT. The CMSR guide
+ * (Decizia 4/2CN/2025, in force 2025-07-01) lets a clinic show its patients'
+ * testimonials and makes it answerable for their content, and the owner chose
+ * to CUT the banned phrases from the quotes, each cut marked „[…]"
+ * (2026-09-30), so the quotes are held to the same scan: a superlative left
+ * in the next review fails here instead of shipping (lib/reviews' header).
+ */
+function reviewStrings(locale: Locale): readonly [string, string][] {
+  return reviews.flatMap((review): [string, string][] => [
+    [`${review.id}.title`, review.words[locale].title],
+    [`${review.id}.text`, review.words[locale].text],
+  ]);
+}
+
 /** The sources the scan walks today; a new lane ADDS a row, never edits one. */
 const SOURCES: readonly [
   string,
@@ -178,6 +199,7 @@ const SOURCES: readonly [
 ][] = [
   ['lib/team', teamStrings],
   ['messages team.*', messageStrings],
+  ['lib/reviews', reviewStrings],
   ['lib/hero-slides', heroStrings],
 ];
 
@@ -186,7 +208,7 @@ function hits(locale: Locale, text: string): readonly string[] {
   return PATTERNS[locale].filter((p) => p.test(text)).map(String);
 }
 
-describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages and the opener say', () => {
+describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages, the reviews and the opener say', () => {
   it.each(locales)('%s: every shipped string passes the scan', (locale) => {
     const offenders: string[] = [];
     for (const [source, read] of SOURCES) {
@@ -205,6 +227,7 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
     for (const locale of locales) {
       expect(teamStrings(locale).length).toBeGreaterThan(20);
       expect(messageStrings(locale).length).toBeGreaterThan(10);
+      expect(reviewStrings(locale).length).toBe(reviews.length * 2);
       expect(heroStrings(locale).length).toBe(heroSlides.length * 2);
     }
   });

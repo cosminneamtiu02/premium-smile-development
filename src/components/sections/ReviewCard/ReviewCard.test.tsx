@@ -1,7 +1,9 @@
 import { createRef } from 'react';
-import { render, screen } from '@testing-library/react';
+import { getDefaultNormalizer, render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { Rating } from '@/lib/rating/rating';
+import { reviews, type Review } from '@/lib/reviews/reviews';
+import type { IsoDate } from '@/lib/time-ago/time-ago';
 import {
   ReviewCard,
   type ReviewCardProps,
@@ -25,11 +27,18 @@ import source from './ReviewCard.tsx?raw';
 // ── HARNESS NOTE — there is NO NextIntlClientProvider in this file, and that
 // absence is itself an assertion (the Wordmark/SectionHeading precedent).
 // next-intl's hooks throw without one, so a green render proves what the
-// contract states: this section calls no t() and owns zero message keys. Every
-// string below is a FIXTURE the band would have translated — Romanian with
-// diacritics (§15.7), factual, no superlatives or result guarantees (CMSR, in
-// force since 2025-07-01). RO_ALL carries all seven Romanian marks, so a
-// broken encoding path fails here rather than in front of a patient.
+// contract states: this section calls no t() and owns zero message keys.
+//
+// ── THE FIXTURES: REAL ROWS, OR PLAINLY NOT REVIEWS (owner 2026-10-01: "all
+// fabricated ones need to be dropped"). Where a test renders a review's
+// content, it renders a REAL row of lib/reviews and asserts against that
+// row's own fields. The rows are chosen by PROPERTY — the first with a
+// picture, the first without — never by id, so the list can gain, lose or
+// reorder reviews without breaking this file; a list that loses a property
+// altogether fails at `pick`, naming it. Where a test needs a value it
+// controls (a half-star rating, all seven Romanian marks in one line, a text
+// with no quote mark in it), it uses PLACEHOLDER, whose every word says it is
+// a test: no invented name, no invented patient prose, anywhere in this file.
 //
 // ── WHAT THE PICTURE FACE DOES IN THIS RUNNER, and why every picture
 // assertion below is SYNCHRONOUS (the rule ui/Avatar.test.tsx records in
@@ -42,30 +51,96 @@ import source from './ReviewCard.tsx?raw';
 // ── STYLES ARE NOT LOADED in this project (tests/setup/components.ts imports
 // no stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
-// this repo follows. Two things therefore live one tier up, in
+// this repo follows. Three things therefore live one tier up, in
 // ReviewCard.stories.tsx, where the real sheet is present: the generated quote
-// marks (`content: open-quote` resolving per the document's language) and the
-// wrapping/hyphenation of a German review inside the card's padding.
+// marks (`content: open-quote` resolving per the document's language), the
+// justified body's computed alignment, and the wrapping/hyphenation of a
+// German review inside the card's padding.
 
-const REVIEW = {
-  id: 'andreea-popescu',
-  initials: 'AP',
+/** The first real row with `what` — by PROPERTY, never by id (the header). */
+function pick(what: string, test: (review: Review) => boolean): Review {
+  const review = reviews.find(test);
+  if (review === undefined) {
+    throw new Error(`ReviewCard.test: lib/reviews has no review ${what}.`);
+  }
+  return review;
+}
+
+/**
+ * The date line's phrase — the ONE value this suite controls even on a real
+ * row: the card prints whatever finished phrase the band hands it (§8.1),
+ * lib/time-ago's own suite owns the grammar, and the stories are where real
+ * phrases are computed. A stand-in that says it is one, so nobody reads it as
+ * the time a patient wrote.
+ */
+const PHRASE = 'Timp test';
+
+/**
+ * A REAL row as the band hands it to the card, in Romanian: the row's own id,
+ * letters, picture (alt empty, as the deck passes it — ui/Avatar's D-A1),
+ * stars, title, text, name and day. The star sentence is the band's
+ * `home.reviews.rating`, „{rating, number} din 5 stele", the number through
+ * Intl as ICU prints it. A row without a picture yields no `picture` key.
+ */
+function fromRow(review: Review): Omit<ReviewCardProps, 'tone'> {
+  const { title, text } = review.words.ro;
+  return {
+    id: review.id,
+    initials: review.initials,
+    ...(review.picture
+      ? { picture: { src: review.picture.src, alt: '' } }
+      : {}),
+    rating: review.rating,
+    ratingLabel: `${new Intl.NumberFormat('ro').format(review.rating)} din 5 stele`,
+    title,
+    body: text,
+    name: review.name,
+    postedOn: review.postedOn,
+    postedAgo: PHRASE,
+  };
+}
+
+/** A real review WITH a photograph — the first in the list that has one. */
+const PICTURED = fromRow(
+  pick('with a picture', (review) => review.picture !== undefined),
+);
+
+/** A real review WITHOUT one — the first that shows its two letters. */
+const LETTERED = fromRow(
+  pick('without a picture', (review) => review.picture === undefined),
+);
+
+/**
+ * The CONTROLLED card, every word of which says it is a test: a half-star
+ * rating (the label must arrive with its comma), no picture, and not one
+ * quote mark in any string — so whatever the DOM holds beyond these words is
+ * the card's own doing.
+ */
+const PLACEHOLDER = {
+  id: 'test',
+  initials: 'NT',
   rating: 4.5,
   ratingLabel: '4,5 din 5 stele',
-  title: 'Explicații pe îndelete',
-  body: 'Am venit pentru o consultație și mi s-au explicat pașii tratamentului. Ședințele au început la ora programată.',
-  name: 'Andreea Popescu',
-  procedure: 'Consultație',
-} as const;
+  title: 'Titlu test',
+  body: 'Text test.',
+  name: 'Nume test',
+  postedOn: '2000-01-01',
+  postedAgo: PHRASE,
+} as const satisfies Omit<ReviewCardProps, 'tone'>;
 
-/** All seven Romanian marks — Ș ș Ț ț ă â î — in one line of body copy. */
-const RO_ALL = 'Ședințe în Târgoviște — găsiți Țepeș';
+/** All seven Romanian marks — Ș ș Ț ț ă â î — in one line that says it is a test. */
+const RO_ALL = 'Test diacritice: Ș ș Ț ț ă â î';
 
-// The committed demo photograph, reused rather than a reviewer's face: real
-// reviewer pictures are the owner's to supply (§11). `alt: ''` is what the
-// deck passes and is a decision, not a hole — the disc repeats a name the
-// caption already prints (ui/Avatar's D-A1).
-const PICTURE = { src: '/images/demo/hero-calm.jpg', alt: '' } as const;
+/**
+ * A text query that compares a node's words with a real row's BYTE FOR BYTE.
+ * The default normalizer trims and collapses whitespace on the node's side
+ * only, so a review that ever carried a double space would stop matching its
+ * own row — a content change breaking a test, which this file promises not to
+ * let happen.
+ */
+const EXACT = {
+  normalizer: getDefaultNormalizer({ trim: false, collapseWhitespace: false }),
+};
 
 // THE two tone rows and the two atom recipes, written OUT rather than imported
 // (the ui/Eyebrow RECIPE convention): a silent edit to ui/Card's lookup or to
@@ -93,11 +168,14 @@ const RADIUS = 'rounded-md';
 const TITLE_STEP = ['font-display', 'text-xl', 'text-ink-strong'];
 const EYEBROW_RECIPE =
   'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase';
+// ui/Text's muted step, then the section's three: the quote marks' two (D6)
+// and the owner's justify (2026-10-01), all ON the <p> itself.
 const BODY_RECIPE = [
   'text-base',
   'text-ink-muted',
   'before:content-[open-quote]',
   'after:content-[close-quote]',
+  'text-justify',
 ];
 const FIGCAPTION = 'flex flex-col gap-0.5 border-t border-line-subtle pt-3';
 // THE COMPENSATION SPACE (owner 2026-09-12): the figure takes the card's
@@ -133,11 +211,9 @@ describe('ReviewCard — THE MORPH: tone changes, the card does not (D1a)', () =
     // Fully synchronous by design (see the header): the picture is read
     // before the runner's 404 can fire ui/Avatar's fallback, so what is
     // compared is the same <img> element the deck would keep in production.
-    const { rerender } = render(
-      <ReviewCard {...REVIEW} picture={PICTURE} tone="framed" />,
-    );
+    const { rerender } = render(<ReviewCard {...PICTURED} tone="framed" />);
 
-    const article = screen.getByRole('article', { name: REVIEW.title });
+    const article = screen.getByRole('article', { name: PICTURED.title });
     const picture = article.querySelector('img') as HTMLImageElement;
     const words = article.textContent;
     expect(picture.getAttribute('src')).toBeTruthy();
@@ -145,12 +221,12 @@ describe('ReviewCard — THE MORPH: tone changes, the card does not (D1a)', () =
       expect(tokensOf(article)).toContain(token);
     }
 
-    rerender(<ReviewCard {...REVIEW} picture={PICTURE} tone="emphasized" />);
+    rerender(<ReviewCard {...PICTURED} tone="emphasized" />);
 
     // ONE element through the whole swap. A re-created node would keep every
     // class assertion green while the deck's crossfade had nothing to
     // interpolate from — and would drop a focused element inside it.
-    expect(screen.getByRole('article', { name: REVIEW.title })).toBe(article);
+    expect(screen.getByRole('article', { name: PICTURED.title })).toBe(article);
     expect(article.querySelector('img')).toBe(picture);
     expect(article.textContent).toBe(words);
     for (const token of [...EMPHASIZED, RADIUS]) {
@@ -165,9 +241,9 @@ describe('ReviewCard — THE MORPH: tone changes, the card does not (D1a)', () =
       'supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint)',
     );
 
-    rerender(<ReviewCard {...REVIEW} picture={PICTURE} tone="framed" />);
+    rerender(<ReviewCard {...PICTURED} tone="framed" />);
 
-    expect(screen.getByRole('article', { name: REVIEW.title })).toBe(article);
+    expect(screen.getByRole('article', { name: PICTURED.title })).toBe(article);
     expect(article.querySelector('img')).toBe(picture);
     expect(article.textContent).toBe(words);
     for (const token of FRAMED) expect(tokensOf(article)).toContain(token);
@@ -180,20 +256,20 @@ describe('ReviewCard — THE MORPH: tone changes, the card does not (D1a)', () =
   it('holds the same invariant on the letters face — no picture, same node', () => {
     // The other half of the deck's population, and the one that cannot be
     // disturbed by an image event at all.
-    const { rerender } = render(<ReviewCard {...REVIEW} tone="emphasized" />);
+    const { rerender } = render(<ReviewCard {...LETTERED} tone="emphasized" />);
 
-    const article = screen.getByRole('article', { name: REVIEW.title });
-    const letters = screen.getByText(REVIEW.initials);
+    const article = screen.getByRole('article', { name: LETTERED.title });
+    const letters = screen.getByText(LETTERED.initials);
 
-    rerender(<ReviewCard {...REVIEW} tone="framed" />);
+    rerender(<ReviewCard {...LETTERED} tone="framed" />);
 
-    expect(screen.getByRole('article', { name: REVIEW.title })).toBe(article);
-    expect(screen.getByText(REVIEW.initials)).toBe(letters);
+    expect(screen.getByRole('article', { name: LETTERED.title })).toBe(article);
+    expect(screen.getByText(LETTERED.initials)).toBe(letters);
     expect(article.querySelector('img')).toBeNull();
   });
 
   it('dresses each tone in ui/Card’s row and nothing else', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    render(<ReviewCard {...LETTERED} tone="framed" />);
 
     const tokens = tokensOf(screen.getByRole('article'));
     expect(tokens).toContain(RADIUS);
@@ -208,17 +284,17 @@ describe('ReviewCard — THE MORPH: tone changes, the card does not (D1a)', () =
 
 describe('ReviewCard — the card is an <article> named by its own title', () => {
   it('pairs the article with the <h3> through a derived id', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    render(<ReviewCard {...LETTERED} tone="framed" />);
 
-    const article = screen.getByRole('article', { name: REVIEW.title });
+    const article = screen.getByRole('article', { name: LETTERED.title });
     const heading = screen.getByRole('heading', {
       level: 3,
-      name: REVIEW.title,
+      name: LETTERED.title,
     });
 
     expect(article.tagName).toBe('ARTICLE');
     expect(heading.tagName).toBe('H3');
-    expect(heading).toHaveAttribute('id', 'review-andreea-popescu-title');
+    expect(heading).toHaveAttribute('id', `review-${LETTERED.id}-title`);
     expect(article).toHaveAttribute('aria-labelledby', heading.id);
     expect(article).toContainElement(heading);
     // `id` names a REVIEW here, not an element (it is Omitted from the native
@@ -227,7 +303,7 @@ describe('ReviewCard — the card is an <article> named by its own title', () =>
   });
 
   it('dresses the h3 in ui/Heading’s `title` step and opens ONE outline slot', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    render(<ReviewCard {...LETTERED} tone="framed" />);
 
     const heading = screen.getByRole('heading', { level: 3 });
     expect(tokensOf(heading)).toEqual(TITLE_STEP);
@@ -239,12 +315,12 @@ describe('ReviewCard — the card is an <article> named by its own title', () =>
   it('keeps every string intact, Ș ș Ț ț ă â î and all', () => {
     render(
       <ReviewCard
-        {...REVIEW}
+        {...PLACEHOLDER}
         tone="framed"
         title={RO_ALL}
         body={RO_ALL}
         name={RO_ALL}
-        procedure={RO_ALL}
+        postedAgo={RO_ALL}
       />,
     );
 
@@ -255,9 +331,9 @@ describe('ReviewCard — the card is an <article> named by its own title', () =>
 
 describe('ReviewCard — the header row: the disc and the stars', () => {
   it('names the star row with the band’s finished ICU sentence', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    render(<ReviewCard {...PLACEHOLDER} tone="framed" />);
 
-    const stars = screen.getByRole('img', { name: REVIEW.ratingLabel });
+    const stars = screen.getByRole('img', { name: PLACEHOLDER.ratingLabel });
     expect(stars).toBeInTheDocument();
     // The section never formats a number: the comma in "4,5" arrived with the
     // string (§8.1). Nothing here may print the raw value.
@@ -265,33 +341,33 @@ describe('ReviewCard — the header row: the disc and the stars', () => {
   });
 
   it('hides the letters face from assistive tech — the caption prints the name', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    render(<ReviewCard {...LETTERED} tone="framed" />);
 
-    const letters = screen.getByText(REVIEW.initials);
+    const letters = screen.getByText(LETTERED.initials);
     expect(letters).toHaveAttribute('aria-hidden', 'true');
     // …so the name is announced exactly once, by the caption.
     expect(
-      screen.getByRole('article', { name: REVIEW.title }).textContent,
-    ).toContain(REVIEW.name);
+      screen.getByRole('article', { name: LETTERED.title }).textContent,
+    ).toContain(LETTERED.name);
   });
 
   it('renders the photograph inside the disc when the review carries one', () => {
     // Synchronous, before the runner's 404 swaps the face (see the header).
-    render(<ReviewCard {...REVIEW} picture={PICTURE} tone="framed" />);
+    render(<ReviewCard {...PICTURED} tone="framed" />);
 
     const article = screen.getByRole('article');
     const picture = article.querySelector('img');
     expect(picture).not.toBeNull();
     expect(picture?.getAttribute('alt')).toBe('');
-    expect(screen.queryByText(REVIEW.initials)).toBeNull();
+    expect(screen.queryByText(PICTURED.initials)).toBeNull();
   });
 });
 
 describe('ReviewCard — the quoted body and its credential', () => {
   it('wraps the body in <blockquote> inside the <figure>', () => {
-    const { container } = render(<ReviewCard {...REVIEW} tone="framed" />);
+    const { container } = render(<ReviewCard {...LETTERED} tone="framed" />);
 
-    const body = screen.getByText(REVIEW.body);
+    const body = screen.getByText(LETTERED.body, EXACT);
     expect(body.tagName).toBe('P');
     expect(body.parentElement?.tagName).toBe('BLOCKQUOTE');
     expect(body.closest('figure')).toBe(container.querySelector('figure'));
@@ -301,9 +377,11 @@ describe('ReviewCard — the quoted body and its credential', () => {
   });
 
   it('carries the two quote utilities — and NO quote mark in the string (D6)', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    // PLACEHOLDER carries no mark in any string, so a mark anywhere in the DOM
+    // could only be one the card typed itself.
+    render(<ReviewCard {...PLACEHOLDER} tone="framed" />);
 
-    const body = screen.getByText(REVIEW.body);
+    const body = screen.getByText(PLACEHOLDER.body);
     expect(tokensOf(body)).toEqual(BODY_RECIPE);
     // The marks are GENERATED: they come from `quotes: auto` against the
     // document's language, so the rendered text — everything the DOM actually
@@ -312,35 +390,91 @@ describe('ReviewCard — the quoted body and its credential', () => {
     expect(screen.getByRole('article').textContent).not.toMatch(/["'„”“«»]/);
   });
 
-  it('puts the name and the procedure in the <figcaption>, under the thin rule', () => {
-    const { container } = render(<ReviewCard {...REVIEW} tone="framed" />);
+  it('justifies the quoted body ON THE ELEMENT — beside the two quote utilities, never instead of them', () => {
+    // Owner 2026-10-01: "make review text in justify". §15.15 b's canon: the
+    // alignment rides ui/Text's className merge onto the <p> itself, so the
+    // blockquote, the figure, the article and everything else in the card
+    // stay start-aligned — nothing else inherits it.
+    const { container } = render(<ReviewCard {...LETTERED} tone="framed" />);
+
+    const body = screen.getByText(LETTERED.body, EXACT);
+    const tokens = tokensOf(body);
+    expect(tokens).toContain('text-justify');
+    expect(tokens).toContain('before:content-[open-quote]');
+    expect(tokens).toContain('after:content-[close-quote]');
+    const justified = container.querySelectorAll('.text-justify');
+    expect(justified).toHaveLength(1);
+    expect(justified[0]).toBe(body);
+  });
+
+  it('puts the name and the date line in the <figcaption>, under the thin rule', () => {
+    const { container } = render(<ReviewCard {...LETTERED} tone="framed" />);
 
     const caption = container.querySelector('figcaption') as HTMLElement;
     expect(caption.className).toBe(FIGCAPTION);
-    expect(caption).toContainElement(screen.getByText(REVIEW.name));
-    expect(caption).toContainElement(screen.getByText(REVIEW.procedure));
+    expect(caption).toContainElement(screen.getByText(LETTERED.name, EXACT));
+    expect(caption).toContainElement(screen.getByRole('time'));
+  });
+
+  it('prints the date line AFTER the name — two lines, the date in the second, no wrapper', () => {
+    const { container } = render(<ReviewCard {...LETTERED} tone="framed" />);
+
+    const caption = container.querySelector('figcaption') as HTMLElement;
+    const name = screen.getByText(LETTERED.name, EXACT);
+    const posted = screen.getByRole('time');
+    // Identity, not likeness: the caption's first child IS the name and its
+    // second IS the eyebrow holding the <time> — a third line, or a wrapper
+    // slipped between the caption and either of them, fails here.
+    expect(caption.children).toHaveLength(2);
+    expect(caption.children[0]).toBe(name);
+    expect(caption.children[1]).toBe(posted.parentElement);
+    expect(
+      name.compareDocumentPosition(posted) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('renders the date line as a <time>: the day in its dateTime, the phrase as its words', () => {
+    render(<ReviewCard {...LETTERED} tone="framed" />);
+
+    // Found by what it is — the ARIA `time` role (html-aam) — so no phrase has
+    // to be known in advance; the text query below must land on the same node.
+    const posted = screen.getByRole('time');
+    expect(posted.tagName).toBe('TIME');
+    // The machine half: the row's own day, as the attribute React prints for
+    // `dateTime` and as the element's own IDL property reads it back.
+    expect(posted).toHaveAttribute('datetime', LETTERED.postedOn);
+    expect((posted as HTMLTimeElement).dateTime).toBe(LETTERED.postedOn);
+    // The human half: the phrase it was handed, byte for byte.
+    expect(posted.textContent).toBe(LETTERED.postedAgo);
+    expect(screen.getByText(LETTERED.postedAgo)).toBe(posted);
+    // A bare element — the day and nothing else: no class (the look is the
+    // eyebrow's, inherited), no second attribute riding along.
+    expect(posted.getAttributeNames()).toEqual(['datetime']);
+  });
+
+  it('wears the date line through ui/Eyebrow — uppercase in CSS, never in the string', () => {
+    render(<ReviewCard {...LETTERED} tone="framed" />);
+
+    const posted = screen.getByRole('time');
+    const eyebrow = posted.parentElement as HTMLElement;
+    expect(eyebrow.tagName).toBe('P');
+    expect(eyebrow.className).toBe(EYEBROW_RECIPE);
+    // The <time> is the eyebrow's ONLY child — no loose text beside it.
+    expect(eyebrow.childNodes).toHaveLength(1);
+    // Sentence case as given: the browser owns Ș/Ț case mapping, which is why
+    // no toUpperCase() may ever appear on this path.
+    expect(eyebrow.textContent).toBe(LETTERED.postedAgo);
   });
 
   it('renders the name as a <p> wearing the title step — never a heading (D7)', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
+    render(<ReviewCard {...LETTERED} tone="framed" />);
 
-    const name = screen.getByText(REVIEW.name);
+    const name = screen.getByText(LETTERED.name, EXACT);
     expect(name.tagName).toBe('P');
     // Heading's title recipe plus the ONE deliberate extra: `hyphens-none` — a proper
     // noun never breaks at a foreign dictionary's syllables (G2 a11y NIT, §15.14's spirit).
     expect(tokensOf(name)).toEqual([...TITLE_STEP, 'hyphens-none']);
-    expect(screen.queryByRole('heading', { name: REVIEW.name })).toBeNull();
-  });
-
-  it('renders the procedure through ui/Eyebrow — uppercase in CSS, never in the string', () => {
-    render(<ReviewCard {...REVIEW} tone="framed" />);
-
-    const procedure = screen.getByText(REVIEW.procedure);
-    expect(procedure.tagName).toBe('P');
-    expect(procedure.className).toBe(EYEBROW_RECIPE);
-    // Sentence case as given: the browser owns Ș/Ț case mapping, which is why
-    // no toUpperCase() may ever appear on this path.
-    expect(procedure.textContent).toBe(REVIEW.procedure);
+    expect(screen.queryByRole('heading', { name: LETTERED.name })).toBeNull();
   });
 });
 
@@ -348,7 +482,7 @@ describe('ReviewCard — §6 fidelity: placement in, no styling out', () => {
   it('merges the caller className LAST, onto the article itself', () => {
     // `h-full` is the real thing the deck passes: every card in a row equals
     // the tallest, which is placement (§6.8), not the card's own geometry.
-    render(<ReviewCard {...REVIEW} tone="framed" className="h-full" />);
+    render(<ReviewCard {...LETTERED} tone="framed" className="h-full" />);
 
     const tokens = tokensOf(screen.getByRole('article'));
     expect(tokens.at(-1)).toBe('h-full');
@@ -361,7 +495,7 @@ describe('ReviewCard — §6 fidelity: placement in, no styling out', () => {
     // `quotes: auto` picks the quote marks from the same attribute (D6).
     render(
       <ReviewCard
-        {...REVIEW}
+        {...LETTERED}
         tone="framed"
         lang="de"
         data-slot="review-card"
@@ -376,9 +510,24 @@ describe('ReviewCard — §6 fidelity: placement in, no styling out', () => {
     );
   });
 
+  it('keeps `postedOn` and `postedAgo` off the <article> — both are the date line’s', () => {
+    // The destructuring is what keeps `rest` purely native: an own prop left
+    // out of it would ride the spread onto the root, where React prints it as
+    // a made-up attribute (`postedon="YYYY-MM-DD"`) — the day then sitting on
+    // the article as well as on the <time>, and not as HTML meant it.
+    render(<ReviewCard {...LETTERED} tone="framed" />);
+
+    const article = screen.getByRole('article', { name: LETTERED.title });
+    const names = article.getAttributeNames();
+    expect(names.filter((name) => /posted/i.test(name))).toEqual([]);
+    const values = names.map((name) => article.getAttribute(name));
+    expect(values).not.toContain(LETTERED.postedOn);
+    expect(values).not.toContain(LETTERED.postedAgo);
+  });
+
   it('accepts ref as a regular prop (React 19) — it is the <article>', () => {
     const root = createRef<HTMLElement>();
-    render(<ReviewCard {...REVIEW} tone="framed" ref={root} />);
+    render(<ReviewCard {...LETTERED} tone="framed" ref={root} />);
 
     expect(root.current?.tagName).toBe('ARTICLE');
     expect(root.current).toContainElement(
@@ -387,7 +536,7 @@ describe('ReviewCard — §6 fidelity: placement in, no styling out', () => {
   });
 
   it('owns no outer margin anywhere — the deck’s track owns spacing (§6.4)', () => {
-    const { container } = render(<ReviewCard {...REVIEW} tone="framed" />);
+    const { container } = render(<ReviewCard {...LETTERED} tone="framed" />);
 
     for (const element of container.querySelectorAll('*')) {
       for (const token of tokensOf(element)) {
@@ -400,7 +549,7 @@ describe('ReviewCard — §6 fidelity: placement in, no styling out', () => {
     // The old card scaled its own padding (`p-5 sm:p-7`); ui/Card's single
     // inset replaced it, and this is the guard that keeps the axis closed.
     const { container } = render(
-      <ReviewCard {...REVIEW} picture={PICTURE} tone="emphasized" />,
+      <ReviewCard {...PICTURED} tone="emphasized" />,
     );
 
     for (const element of container.querySelectorAll('*')) {
@@ -427,7 +576,7 @@ describe('ReviewCard — zero islands of its own, zero message keys', () => {
     expect(CODE).not.toMatch(/\bt\(/);
   });
 
-  it('imports EXACTLY the six atoms it composes plus the three value types', () => {
+  it('imports EXACTLY the six atoms it composes plus the four value types — lib/time-ago’s TYPE-ONLY, zero bytes of the clock in the card', () => {
     // The import surface is the guard that sees what a regex cannot. One of
     // these SIX carries a client directive of its own — ui/Avatar, for its
     // picture→letters fallback — so the card costs the page that atom's island
@@ -437,7 +586,11 @@ describe('ReviewCard — zero islands of its own, zero message keys', () => {
     // 2026-09-19 — asked and answered: a type-only import, zero islands, zero
     // bytes) arrive as TYPES only, which is also why no lib DATA (lib/reviews)
     // is reachable from this tier: the band binds the list, the card takes
-    // props.
+    // props. lib/time-ago joined on 2026-09-30 (the real-reviews lane) — asked
+    // and answered the same way: `IsoDate` alone, a type-only import, zero
+    // bytes (pinned at the end of this test); the module's two functions stay
+    // the band's, which builds the phrase at `next build` and hands this card
+    // finished words.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -454,16 +607,33 @@ describe('ReviewCard — zero islands of its own, zero message keys', () => {
       '@/lib/image-path/image-path',
       '@/lib/initials/initials',
       '@/lib/rating/rating',
+      '@/lib/time-ago/time-ago',
       'react',
     ]);
     // Side-effect (`import './x'`) and re-export (`export … from './x'`) forms
     // add a dependency the matcher above would not see.
     expect(CODE).not.toMatch(/^import\s*['"]/m);
     expect(CODE).not.toMatch(/^export\s[^=]*\sfrom\s/m);
+    // TYPE-ONLY, not merely present (G2 ts, round 2). The list above proves
+    // the specifier is there, never what it carries: `import { formatTimeAgo }`
+    // would pass it just the same, and that is the card computing its own
+    // phrase in the browser — a clock in the client graph, the build-time rule
+    // broken (ReviewCard.tsx's CREDENTIAL BLOCK, the date-line rider). So the
+    // ONE line is the `import type` statement every compiler erases whole,
+    // and with it taken away the module is named nowhere else: no value
+    // import, no inline `{ type IsoDate, … }` mix, no namespace, no dynamic
+    // import(), in any spelling of the path. Zero bytes of the clock in the
+    // card.
+    const TIME_AGO_TYPE_ONLY =
+      /^import type \{ IsoDate \} from '@\/lib\/time-ago\/time-ago';$/m;
+    expect(CODE).toMatch(TIME_AGO_TYPE_ONLY);
+    expect(CODE.replace(TIME_AGO_TYPE_ONLY, '')).not.toMatch(
+      /time-ago\/time-ago/,
+    );
   });
 
   it('renders nothing interactive: a card is read, never pressed', () => {
-    render(<ReviewCard {...REVIEW} picture={PICTURE} tone="framed" />);
+    render(<ReviewCard {...PICTURED} tone="framed" />);
 
     expect(screen.queryAllByRole('button')).toHaveLength(0);
     expect(screen.queryAllByRole('link')).toHaveLength(0);
@@ -471,11 +641,14 @@ describe('ReviewCard — zero islands of its own, zero message keys', () => {
 
   it('never renders a message key path — every string is a prop (§8.1)', () => {
     // next-intl prints the dotted key on a miss; there is no t() here at all,
-    // and this is the assertion that keeps it that way.
-    const { container } = render(<ReviewCard {...REVIEW} tone="framed" />);
+    // and this is the assertion that keeps it that way. PLACEHOLDER, so the
+    // words are known to the byte and no review's own punctuation can trip it.
+    const { container } = render(<ReviewCard {...PLACEHOLDER} tone="framed" />);
 
+    // Also the proof that the DAY never prints: `postedOn` lives in the
+    // <time>'s attribute alone, and the words are the phrase it was handed.
     expect(container.textContent).toBe(
-      `${REVIEW.initials}${REVIEW.title}${REVIEW.body}${REVIEW.name}${REVIEW.procedure}`,
+      `${PLACEHOLDER.initials}${PLACEHOLDER.title}${PLACEHOLDER.body}${PLACEHOLDER.name}${PLACEHOLDER.postedAgo}`,
     );
     expect(container.textContent).not.toMatch(/\b[a-z]+\.[a-zA-Z]+\.[a-zA-Z]+/);
   });
@@ -501,6 +674,18 @@ describe('ReviewCard — type-level pins', () => {
     expectTypeOf<ReviewCardProps>()
       .toHaveProperty('rating')
       .toEqualTypeOf<Rating>();
+    // The date line (owner 2026-09-30): the day as lib/time-ago's checked
+    // `YYYY-MM-DD` template and the phrase as finished text — BOTH REQUIRED
+    // (the Pick keeps the `?` modifier, so an optional one fails here), and
+    // the procedure GONE rather than kept beside them: a prop whose meaning
+    // changed takes a new name (§6.6), never a second life under the old one.
+    expectTypeOf<
+      Pick<ReviewCardProps, 'postedOn' | 'postedAgo'>
+    >().toEqualTypeOf<{
+      postedOn: IsoDate;
+      postedAgo: string;
+    }>();
+    expectTypeOf<ReviewCardProps>().not.toHaveProperty('procedure');
     // `children` is Omitted: content arrives as named props, and without the
     // Omit a caller could nest something, type-check, and watch it vanish
     // (JSX children always beat spread ones — the SectionHeading precedent).

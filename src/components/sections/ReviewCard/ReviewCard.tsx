@@ -8,12 +8,15 @@ import { Text } from '@/components/ui/Text/Text';
 import type { ImagePath } from '@/lib/image-path/image-path';
 import type { Initials } from '@/lib/initials/initials';
 import type { Rating } from '@/lib/rating/rating';
+import type { IsoDate } from '@/lib/time-ago/time-ago';
 
 // sections/ReviewCard — ONE review as a card: the reviewer's disc and their
 // stars on one row, the review's own title, the quoted body, a thin rule, and
-// underneath it the patient's name over the procedure they came for. Built to
-// the owner-approved N2 composition contract (master board fb-432…448,
-// dossier .claude/section-runs/2026-09-10_17-01_reviews-carousel/sections/
+// underneath it the patient's name over how long ago the review was posted —
+// „acum 2 ani", the way Google's own list says it (THE DATE LINE, owner
+// 2026-09-30: THE CREDENTIAL BLOCK below). Built to the owner-approved N2
+// composition contract (master board fb-432…448, dossier
+// .claude/section-runs/2026-09-10_17-01_reviews-carousel/sections/
 // ReviewCard.md, approved 2026-09-10) out of the old site's
 // composite/review-card, whose brief was one sentence: "follow the exact
 // pattern the old card looks like, aspect wise".
@@ -22,9 +25,11 @@ import type { Rating } from '@/lib/rating/rating';
 // row. It composes atoms, binds no site data, and calls NO t() — every string
 // arrives FINISHED from the band that owns the message keys (§8.1), the
 // rating's sentence included (`ratingLabel`, "4,5 din 5 stele", already
-// through ICU and already carrying the comma its locale uses). One consumer
-// today, sections/ReviewsCarousel; reuse never promotes a composite to `ui/`
-// (§4's corrected promotion rule), so a second consumer would only schedule it
+// through ICU and already carrying the comma its locale uses), and so does the
+// date line's phrase (`postedAgo`, „acum 2 ani", already through lib/time-ago's
+// Intl.RelativeTimeFormat at build). One consumer today,
+// sections/ReviewsCarousel; reuse never promotes a composite to `ui/` (§4's
+// corrected promotion rule), so a second consumer would only schedule it
 // earlier, never move it.
 //
 // ── THE MORPH IS THE WHOLE POINT (ledger D1a, the owner's pitfall). The deck
@@ -64,7 +69,7 @@ import type { Rating } from '@/lib/rating/rating';
 //
 // ── THE CREDENTIAL BLOCK. `<figure>` + `<blockquote>` + `<figcaption>` is
 // HTML's own testimonial shape — the quoted voice and the attribution of that
-// voice, related by the element rather than by proximity. Two riders:
+// voice, related by the element rather than by proximity. Three riders:
 //   · `flex-1` TWICE, and both are load-bearing (owner 2026-09-12, pack round
 //     2: "the name of the patient and the operation sticky to the bottom of
 //     the card, and the compensation space to come from the text of the
@@ -73,10 +78,10 @@ import type { Rating } from '@/lib/rating/rating';
 //     `flex-1` takes the figure's slack, so the room opens up BELOW the
 //     quoted text and the caption is pushed to the figure's end. The first
 //     spelling had only the first: the caption sat right under the quote and
-//     the slack collected under the caption, so the rule, the name and the
-//     procedure landed at a different height on every card. With both, every
+//     the slack collected under the caption, so the rule and the two lines
+//     under it landed at a different height on every card. With both, every
 //     card of a deck whose cards share one height (the deck's stage — the
-//     tallest card sets it) puts the thin rule, the name and the procedure at
+//     tallest card sets it) puts the thin rule, the name and the date line at
 //     the SAME distance from its bottom edge. ReviewCard.test.tsx pins both
 //     utilities. The card's HEIGHT stays the deck's business (`h-full`
 //     through className, §6.8) — ui/Card refuses a height prop for the same
@@ -85,6 +90,16 @@ import type { Rating } from '@/lib/rating/rating';
 //   · the "thin horizontal line" of the old card is the caption's own
 //     `border-t`, not a separator element: it belongs to the credential, so it
 //     travels with it and no <hr> has to be kept in position.
+//   · THE DATE LINE under the name says how long ago the review was posted
+//     (owner 2026-09-30: "instead of the procedure taken place at placeholder
+//     "PLAN COMPLET" just say how long ago it took place like it says in the
+//     google reviews, like, 2 years ago"). It is a `<time>` inside ui/Eyebrow's
+//     `<p>` — phrasing content, valid inside a paragraph — with `postedOn` as
+//     its `dateTime`: the `<time>` element gives the date to machines (search
+//     engines, assistive tech that exposes it), while the visible words stay
+//     the finished phrase. The band builds that phrase at `next build`
+//     (lib/time-ago's WHEN "NOW" IS), so this card reads no clock and renders
+//     the same words on the server and in the browser (§16's rule 2).
 //
 // ── THE NAME IS NOT A HEADING (ledger D7, owner). It WEARS ui/Heading's
 // `title` step — 20px display type, the same treatment the review's own title
@@ -96,8 +111,8 @@ import type { Rating } from '@/lib/rating/rating';
 // up; §9's "logical heading order" is about the outline, never about size.
 //
 // ── THE `<h3>` AND THE ARTICLE'S NAME. `aria-labelledby` points at the
-// review's own title, so the card announces itself as "Au văzut imaginea de
-// ansamblu, article" instead of as a nameless box in a list of nameless
+// review's own title, so the card announces itself by that title — "<title>,
+// article" — instead of as a nameless box in a list of nameless
 // boxes. The id is derived, never passed: `review-${id}-title` — unique
 // because review ids are unique (lib/reviews' `id` field, the deck's React key
 // as well), which is also why the native `id` attribute is Omitted from the
@@ -106,10 +121,15 @@ import type { Rating } from '@/lib/rating/rating';
 // ── WHAT THIS SECTION DOES NOT OWN. No outer margin and no width (§6.4/§6.8 —
 // the deck's slide track measures the card); no `sm:`/`lg:` self-scaling (the
 // old card's `p-5 sm:p-7` became ui/Card's single inset); no text alignment of
-// its own — the body is start-aligned by the globals' prose fence (§15.1; the
-// old `text-justify` is deliberately NOT ported), and `hyphens: auto` is
-// inherited from the body tier (§15.14), which is what lets a German compound
-// break inside the card instead of pushing its border.
+// its own but ONE, the quoted body's, JUSTIFIED on the owner's word
+// (2026-10-01: "make review text in justify") — the old card's
+// `text-justify`, not ported at first and ported now: a per-element exception
+// to §15.1's start-aligned prose, §15.15 b's canon (the utility ON the <p>,
+// through ui/Text's className merge), like PersonnelCard's quote and the
+// doctor pages' prose. Everything else in the card stays start-aligned by the
+// globals' prose fence, and `hyphens: auto`, inherited from the body tier
+// (§15.14), is what keeps rivers out of the justified lines and lets a German
+// compound break inside the card instead of pushing its border.
 //
 // ── ZERO ISLANDS OF ITS OWN (§16): no 'use client', no hook, no handler, no
 // state — ReviewCard.test.tsx's ?raw guard pins the directive's absence
@@ -155,8 +175,16 @@ export type ReviewCardProps = {
   body: string;
   /** The patient's name, as they consented to have it shown. */
   name: string;
-  /** The procedure label, sentence case — ui/Eyebrow uppercases in CSS. */
-  procedure: string;
+  /**
+   * The day the review appeared on Google, `YYYY-MM-DD`: the machine-readable
+   * half, printed as the `dateTime` of a `<time>` element.
+   */
+  postedOn: IsoDate;
+  /**
+   * How long ago, FINISHED text in the page's language, e.g. „acum 2 ani"
+   * (§8.1: never a date, never a number); ui/Eyebrow uppercases it in CSS.
+   */
+  postedAgo: string;
   // `title` is the ONE own name that also exists natively (HTMLAttributes'
   // tooltip string — `name` is not on this element's attributes at all,
   // checked); it is Omitted from the native half so the shadowing is SPELLED
@@ -182,7 +210,8 @@ export function ReviewCard({
   title,
   body,
   name,
-  procedure,
+  postedOn,
+  postedAgo,
   className,
   ...rest
 }: ReviewCardProps): ReactElement {
@@ -237,19 +266,22 @@ export function ReviewCard({
               (the CREDENTIAL BLOCK rider in the header) — the caption below
               it therefore sits at the bottom of every card in a deck. */}
           <blockquote className="flex-1">
-            {/* The two utilities are the section's own PUNCTUATION, not a
-                restyling of ui/Text's internals (§6.8): they add generated
+            {/* The two quote utilities are the section's own PUNCTUATION, not
+                a restyling of ui/Text's internals (§6.8): they add generated
                 content around the atom's host element and touch none of its
-                ink, size or leading. */}
+                ink, size or leading. `text-justify` is the owner's alignment
+                (2026-10-01 — WHAT THIS SECTION DOES NOT OWN, in the header):
+                §15.15 b's per-element override, which for an atom rides the
+                className merge onto the host element itself. */}
             <Text
               tone="muted"
-              className="before:content-[open-quote] after:content-[close-quote]"
+              className="before:content-[open-quote] after:content-[close-quote] text-justify"
             >
               {body}
             </Text>
           </blockquote>
           {/* THE THIN RULE — the old card's separator, owned by the credential
-              it separates. `gap-0.5` is the tight name/procedure pair, tighter
+              it separates. `gap-0.5` is the tight name/date pair, tighter
               than the card's own rhythm on purpose: those two lines are one
               block of information. */}
           <figcaption className="flex flex-col gap-0.5 border-t border-line-subtle pt-3">
@@ -259,7 +291,13 @@ export function ReviewCard({
             <Heading size="title" className="hyphens-none">
               {name}
             </Heading>
-            <Eyebrow>{procedure}</Eyebrow>
+            {/* THE DATE LINE (the CREDENTIAL BLOCK's third rider, header): the
+                day in `dateTime`, the band's phrase as the words. No class
+                and no wrapper — the <time> inherits the eyebrow's mono, ink
+                and uppercase, so the line wears exactly the eyebrow's look. */}
+            <Eyebrow>
+              <time dateTime={postedOn}>{postedAgo}</time>
+            </Eyebrow>
           </figcaption>
         </figure>
       </article>

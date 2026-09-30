@@ -628,7 +628,7 @@ const longestRowName = (categories: readonly PriceCategoryProps[]): number =>
  * What to look at: the menu card on the left, its „Categorii" title one step
  * under the card titles beside it — 30px to their 36px, the `band` step read
  * against a 15rem card (PriceMenu.tsx's header) — with a rule under it, then
- * four links, each a 44px row — the first one green and underlined, because
+ * four links, each a 44px row — the first one lavender and underlined, because
  * that is where the page currently is; the cards on the right, each opening
  * with its own eyebrow and <h2> — the first one wearing the header pill's
  * lavender glow, because the page is at it, and the others none (owner

@@ -12,11 +12,13 @@ import { Image } from '../Image/Image';
 import { Ribbon, RibbonStation } from './Ribbon';
 
 // ui/Ribbon's STAND-IN COLUMN — for the stories and the tests, never shipped.
-// The ribbon was approved wrapping the doctor-card lane's TWO-SECTION card
-// (sections/PersonnelCard's D16 rework: the content — portrait and name
-// beside the quote — over the buttons row), which is not on develop. This
-// file imitates that card with this repo's atoms, reading — never
-// importing — the lane's rows: CONTENT, BLOCK, PAIR, PLACE, QUOTE and
+// The ribbon was approved wrapping a parked lane's TWO-SECTION doctor card
+// (sections/PersonnelCard's "D16" rework of 2026-09-29: the content —
+// portrait and name beside the quote — over a buttons row), which never
+// merged: the card that SHIPPED is D17 — one link, the cutout (CLAUDE.md
+// §15.25). This file still imitates the approved picture with this repo's
+// atoms — an atom's fixture cannot import a section (§4) — reading, never
+// importing, that lane's rows: CONTENT, BLOCK, PAIR, PLACE, QUOTE and
 // ACTIONS_ROW below are its strings, and `side` alternates by index as the
 // Team page alternates it — the quote's washed `ink-faint` included, so the
 // owner judges the card's own picture (a named wearer in
@@ -33,14 +35,16 @@ import { Ribbon, RibbonStation } from './Ribbon';
 // a ribbon's card takes the two LANES as its padding, spelled as ui/Ribbon's
 // TWO BOXES paragraph asks — `max(1.5rem, var(--ribbon-lane-top, 1.5rem))`
 // on top, the same with `--ribbon-lane-side` either side, the card's own
-// 1.5rem below. How the REAL card takes the lanes is the doctor-card lane's
-// decision, not this one's. The surface is ui/Card's `surface` row and its
+// 1.5rem below. The REAL card cannot spell its padding — it composes ui/Card
+// — so it takes the lanes through an INSET on its inner column instead
+// (sections/PersonnelCard D17). The surface is ui/Card's `surface` row and its
 // corner and container mark, without the card's inner flex column (this
 // card's one child is a column of its own).
 //
-// ── THE SEAM (§15.26), exactly what the real card will carry: the LITERAL
+// ── THE SEAM (§15.26), the real card's own (PersonnelCard D17): the LITERAL
 // attribute `data-ribbon-keepout` on the quote, the name block and the
-// buttons row, and `data-ribbon-keepout="portrait"` on the portrait's cell.
+// buttons row — the real card's ONE link — and
+// `data-ribbon-keepout="portrait"` on the portrait's cell.
 //
 // ── A LIST, BY ROUTE B (ui/Ribbon's THE COLUMN AS A LIST): the root is
 // `role="list"` and each card sits in a WRAPPER station of

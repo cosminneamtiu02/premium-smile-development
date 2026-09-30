@@ -121,8 +121,15 @@ export type ButtonProps = ButtonOwnProps &
 // fits. KEEP-IN-SYNC with ui/TextButton, which carries the same class for the
 // same rule; GlyphButton and SpeedDial are deliberately exempt — they render
 // glyphs and 2–3 letter codes, which cannot hyphenate.
+// `text-center` — A LABEL THAT WRAPS STAYS CENTRED (2026-09-30). The flex
+// container centres the label's BOX, not its LINES, so a two-line label was
+// laid out start-aligned inside a centred box. First asked for by the
+// ContactModal's WhatsApp label (owner, 2026-09-05), which carried the class
+// at its call site; promoted here at the SECOND consumer, the doctor card's
+// „Mai multe despre mine" on a 390px phone (sections/PersonnelCard D17). A
+// single-line label is pixel-identical.
 const base =
-  'inline-flex items-center justify-center gap-2 ' +
+  'inline-flex items-center justify-center gap-2 text-center ' +
   'rounded-md font-medium hyphens-none outline-offset-2 ' +
   'focus-visible:outline-2 focus-visible:outline-focus ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +

@@ -39,7 +39,9 @@ const UTILITY = 'text-ink-faint';
  * (4.5:1 for body text) before the row goes in.
  */
 const WEARERS: Readonly<Record<string, { count: number; ground: string }>> = {
-  // The roster card's <blockquote> — ui/Card `surface`, white (PersonnelCard D8 + round 2o).
+  // The doctor card's <blockquote> — ui/Card `framed` since 2026-09-30 (the
+  // owner: "the border of the non current review"), `surface` before it; white
+  // either way (PersonnelCard D8, D17 + round 2o).
   'components/sections/PersonnelCard/PersonnelCard.tsx': {
     count: 1,
     ground: 'bg-surface',
@@ -49,7 +51,7 @@ const WEARERS: Readonly<Record<string, { count: number; ground: string }>> = {
     count: 1,
     ground: 'bg-surface',
   },
-  // ui/Ribbon's stand-in doctor card — the roster card's <blockquote>, stood
+  // ui/Ribbon's stand-in doctor card — the doctor card's <blockquote>, stood
   // in for the stories and tests on the same white `bg-surface` (§15.26), so
   // the owner judges the card's own picture under the ribbon.
   'components/ui/Ribbon/Ribbon.fixtures.tsx': {

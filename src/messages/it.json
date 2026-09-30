@@ -87,9 +87,10 @@
   },
   "team": {
     "title": "Il nostro team",
-    "roster": {
-      "services": "Vedi i servizi",
-      "profile": "Vedi il profilo"
+    "showcase": {
+      "eyebrow": "La famiglia Premium Smile",
+      "title": "Gli specialisti di cui siamo orgogliosi",
+      "profile": "Scopri di più su di me"
     },
     "doctor": {
       "philosophy": {

@@ -3,112 +3,70 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
+import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { TeamRoster } from '@/components/sections/TeamRoster/TeamRoster';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale, type Locale } from '@/i18n/locales';
 import { auxiliaries, doctors } from '@/lib/team/team';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
-import { populateTeamRoster } from './populate';
+import { populateDoctorShowcase, populateTeamRoster } from './populate';
 
-// Pages/Team — the real page as it ships: „Echipa noastră" over the doctor
-// cards and the auxiliary tiles, with the map last, at the six page-tier
-// widths (§13: Pages/* → 320 · 390 · 768 · 1280 · 1536 · 1920,
-// tests/visual/stories.spec.ts). It replaces the stub's single story, whose
-// one heading reused the nav label and whose own comment promised exactly this
-// („the DE variant arrives WITH the real page lane").
+// Pages/Team — THE TEAM PAGE'S STORY TWIN. ./page.tsx is an async Server
+// Component (getTranslations/getLocale from next-intl/server), which no
+// browser runner can execute — the shell.test.tsx / Pages/Services precedent —
+// so this file renders the SAME markup through the isomorphic
+// `useTranslations` + `useLocale` and the SAME ./populate.ts, and its play
+// pins what THIS TWIN renders. KEEP IN SYNC: ../page-twins.test.ts reads
+// page.tsx and this file as source and holds their bands, in order, and the
+// doctors band's props equal — change the JSX in one and that test names it.
 //
-// ── WHY A STORY-LOCAL TWIN AND NOT THE PAGE ITSELF. ./page.tsx is an async
-// Server Component: it awaits `getTranslations` and `getLocale` from
-// next-intl/server, which no browser runner can execute — the same reason
-// src/app/[locale]/shell.test.tsx composes the shell's shape instead of
-// importing layout.tsx, and the same shape as Pages/Home and Pages/Services.
-// So `TeamPageBands` below renders the SAME markup through the isomorphic
-// `useTranslations` + `useLocale`.
-// What is NOT twinned is the mapping: both sides call the one
-// `populateTeamRoster` from ./populate.ts with the real people, so the thing
-// most likely to drift — which language, which links, which rows — cannot,
-// because there is only one copy of it.
+// ── THE PAGE SINCE 2026-09-30 (the owner's dispatch, quoted in page.tsx): an
+// `sr-only` <h1> in the page's own markup, then the DOCTORS band
+// (sections/DoctorShowcase — eyebrow, <h2>, every doctor as a card under the
+// ribbon), then the staff tiles (sections/TeamRoster), then the map.
 //
-// ── THIS IS A KEEP-IN-SYNC PAIR (§4's sharing table), written down rather than
-// assumed: the twin lives here, the original in ./page.tsx, and that file's
-// header points back at this one. Both must render ONE `<TeamRoster>` fed by
-// `populateTeamRoster`, followed by `<ClinicLocation>` and nothing else. The
-// plays pin exactly that from the outside.
+// ── TWO STORIES, the `Pages/*` tier's RO + DE (§13): Romanian pinned at the
+// Laptop window, where the doctor card sits in two columns; German at the
+// Smartphone, where it stacks — the longest language at the narrowest named
+// width. Playwright ignores the pin (it sets its own page size per project),
+// which is why every geometry assertion below asks the PAGE which branch it
+// is in instead of assuming the pinned width.
 //
-// ── THE CONTENT IS THE REAL lib/team, not a fixture: this is the page, and its
-// people are the list the site ships (since 2026-09-30 the clinic's six real
-// doctors, under placeholder details, beside three demo auxiliary members —
-// lib/team's own TODO(owner)). The BAND's stories (Sections/TeamRoster)
-// are where invented rosters exercise the layout; that split is what „dumb"
-// buys, and it is why adding a doctor re-records these six pictures and none of
-// the band's.
+// ── THE PLAY MEASURES A SETTLED PAGE (the 2026-09-27 lesson, #110): fonts and
+// pictures first, then boxes — a picture that loads after a measurement moves
+// what was measured.
 //
-// ── TWO STORIES, RO + DE — the §13 page tier. German earns its baseline here
-// three times over: the two button labels may not syllable-break (§15.14) and
-// „Leistungen ansehen" is the longest of the pair; „Zahnmedizinische
-// Fachangestellte" is an unbroken 27-letter compound inside a 16rem tile (run
-// D9's floor); and the doctors' quotes run longer than the Romanian in a card
-// whose two columns are already committed (MEASURED on today's placeholder
-// texts: 1–12 % a quote, 8 % overall — §8.4's ~35 % is the headroom a real
-// text may use). Every story PINS ITS LOCALE
-// with `globals`: the locale toolbar is manager state and the visual runner
-// opens each story by URL with none of it, while the preview decorator
-// supplies the messages AND stamps `document.documentElement.lang` exactly as
-// the shell does — which is what makes hyphenation behave here the way it
-// behaves on the built page.
-//
-// …AND ITS VIEWPORT (G2-R2 tier 3, a11y F1), the Pages/Doctor shape. Without
-// a pin the Vitest runner renders both stories at the addon's default
-// 1200×900, so the German stress was never PLAYED at a phone width — only
-// photographed there, by a visual net that does not run on this machine
-// (§15.7). German is pinned to the SMARTPHONE (390): the stress width, where
-// the longest words, the stacked cards and the page's sideways-scroll check
-// meet. Romanian is pinned to the LAPTOP (1536): the beside branch, the card's
-// portrait next to its quote. Together they make the D21 check below
-// non-vacuous in both branches.
-//
-// ── THE OWNER'S ADAPTABILITY RULE ON THIS PAGE (round 2's D21: "sections that
-// are next to each other when in phone mode … must come one above the other").
-// A doctor card's portrait sits beside its quote from the CARD's own `@3xl`
-// step (it is its own size container — ui/Card) and above it below that; the
-// play derives the branch from the first card's measured content box, never
-// from the pinned width (the visual runner ignores the pin and plays this at
-// all six widths), asserts the geometry of whichever branch it found, and then
-// asserts that the pin produced the branch it was chosen for.
-//
-// ── NO HEADER AND NO ContactModalProvider decorator, unlike Pages/Home:
-// nothing here slides under the pill (the Services precedent) and no band on
-// this page mounts a ContactModalTrigger — the doctor cards' two buttons are
-// plain links (§15.13), one to the price list and one to the doctor's page.
-//
-// layout 'fullscreen' because both bands are full-bleed and Container owns the
-// gutter: Storybook's default canvas padding would add a second inset on top of
-// the clamp and put the story's ground and the bands' margins on two rulers.
+// No `parameters.nextjs` and no mock messages: the preview decorator provides
+// the real five message files, and the people are lib/team's own — since
+// 2026-09-30 the clinic's six real doctors, under placeholder details, beside
+// three demo auxiliary members (lib/team's TODO(owner)). The BAND's stories
+// (Sections/DoctorShowcase, Sections/TeamRoster) are where invented rosters
+// exercise the layout; that split is what „dumb" buys, and it is why adding a
+// doctor re-records this page's frames and none of the bands'.
 
-/** KEEP-IN-SYNC twin of ./page.tsx — see this file's header. Every comment
- *  justifying this markup lives in that file (why the <h1> is the band's, the
- *  `isLocale` narrowing, why the page is the one populator); duplicating the
- *  arguments here would give them two homes and no owner. */
 function TeamPageBands(): ReactElement {
   const t = useTranslations('team');
   const locale = useLocale();
   if (!isLocale(locale))
     throw new Error(`team story: unknown locale "${locale}"`);
 
-  const roster = populateTeamRoster(
+  const cards = populateDoctorShowcase(
     locale,
-    { services: t('roster.services'), profile: t('roster.profile') },
+    t('showcase.profile'),
     (segments) => <Keywords segments={segments} />,
   );
 
   return (
     <>
-      <TeamRoster
-        title={t('title')}
-        doctors={roster.doctors}
-        members={roster.members}
+      <h1 className="sr-only">{t('title')}</h1>
+      <DoctorShowcase
+        firstScreen
+        eyebrow={t('showcase.eyebrow')}
+        title={t('showcase.title')}
+        doctors={cards}
       />
+      <TeamRoster members={populateTeamRoster(locale)} />
       <ClinicLocation />
     </>
   );
@@ -125,27 +83,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** True when `first` really does come before `second` in the document — the
- *  DOM's own answer, which no class name or bounding box can fake. */
+/** Does `first` come before `second` in the document? */
 const precedes = (first: Element, second: Element): boolean =>
   Boolean(
     first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING,
   );
 
-/** Which way a doctor card went at the width it was rendered at (D21). */
-type Branch = 'beside' | 'stacked';
-
-/** One rem at whatever the root font-size is, never a baked-in 16. */
 const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-/**
- * THE COLUMN a card's arrangement is decided by: the nearest size container
- * ABOVE the element — for anything inside a doctor card, the card itself
- * (ui/Card carries `@container`, Card D10). Found by the computed
- * `container-type`, never by counting parents: Pages/Doctor's `columnOf`,
- * the same walk.
- */
+/** The nearest size container above an element — the box its `@3xl` reads. */
 const columnOf = (element: Element): HTMLElement => {
   for (let node = element.parentElement; node; node = node.parentElement) {
     if (getComputedStyle(node).containerType !== 'normal') return node;
@@ -153,11 +100,7 @@ const columnOf = (element: Element): HTMLElement => {
   throw new Error('team story: no size container above the element');
 };
 
-/**
- * WHERE A CARD SPLITS, derived rather than assumed (Pages/Doctor's
- * `sitsBeside`, the same arithmetic): `@3xl` is 48rem of the column's CONTENT
- * box, so padding and border come off the FRACTIONAL border-box width.
- */
+/** Is the card in its two-column branch? Asked of the container, never of the window. */
 const sitsBeside = (element: Element): boolean => {
   const column = columnOf(element);
   const { paddingLeft, paddingRight, borderLeftWidth, borderRightWidth } =
@@ -172,112 +115,30 @@ const sitsBeside = (element: Element): boolean => {
 };
 
 /**
- * THE FIRST DOCTOR CARD'S ARRANGEMENT (D21), in the branch its own column
- * puts it in. Every box is reached by role or by the one element a card has
- * of its kind — the heading, the blockquote, the portrait's <img>, the two
- * links — never by walking the card's layout divs.
+ * Fonts and pictures first, then boxes (#110).
  *
- * Beside: the portrait left of the quote (the first card faces 'start' —
- * TeamRoster alternates from index 0), and the name left of the links. Stacked:
- * one column in the card's DOM order — portrait, name, quote, links — and the
- * two links either sharing one line or, when the row is narrower than their
- * two `flex-basis` widths and the gap, each on a line of its own spanning the
- * row: the phone's two full-width buttons (§9's 44px targets, one per line).
- * Which of the two is read off the row's COMPUTED styles, so the check holds
- * at every width the visual runner plays it at, and at 390 it proves the
- * full-width lines.
- */
-const expectFirstCard = async (card: HTMLElement): Promise<Branch> => {
-  const quote = within(card).getByRole('blockquote');
-  const name = within(card).getByRole('heading').getBoundingClientRect();
-  const image = card.querySelector('img');
-  if (!image) throw new Error('team story: the first card lost its portrait');
-  const links = within(card).getAllByRole('link');
-  const [services, profile] = links.map((link) => link.getBoundingClientRect());
-  const portrait = image.getBoundingClientRect();
-  const words = quote.getBoundingClientRect();
-  // A collapsed box would satisfy every comparison below by accident.
-  for (const box of [portrait, name, words, services, profile])
-    await expect(box.height).toBeGreaterThan(0);
-
-  if (sitsBeside(quote)) {
-    await expect(portrait.right).toBeLessThanOrEqual(words.left);
-    await expect(name.right).toBeLessThanOrEqual(
-      Math.min(services.left, profile.left),
-    );
-    return 'beside';
-  }
-
-  await expect(portrait.bottom).toBeLessThanOrEqual(name.top);
-  await expect(name.bottom).toBeLessThanOrEqual(words.top);
-  await expect(words.bottom).toBeLessThanOrEqual(services.top);
-
-  const row = links[0].parentElement;
-  if (!row) throw new Error('team story: the first card lost its links row');
-  const rowStyle = getComputedStyle(row);
-  const basis = (link: Element): number =>
-    parseFloat(getComputedStyle(link).flexBasis);
-  const fitsOneLine =
-    basis(links[0]) + parseFloat(rowStyle.columnGap) + basis(links[1]) <=
-    row.getBoundingClientRect().width;
-  if (fitsOneLine) {
-    await expect(Math.abs(services.top - profile.top)).toBeLessThanOrEqual(1);
-    await expect(services.right).toBeLessThanOrEqual(profile.left);
-  } else {
-    const width = row.getBoundingClientRect().width;
-    await expect(profile.top).toBeGreaterThanOrEqual(services.bottom);
-    await expect(Math.abs(services.width - width)).toBeLessThanOrEqual(1);
-    await expect(Math.abs(profile.width - width)).toBeLessThanOrEqual(1);
-  }
-  return 'stacked';
-};
-
-/**
- * Fonts and pictures SETTLED before a single box is read: a grid track's
- * min-content includes a loaded image's, so a box read before the pictures
- * have settled can be a different layout from the one a visitor sees (the
- * doctor twin's CI-only failure of 2026-09-27 hid behind exactly that window).
+ * EVERY PICTURE IS ASKED FOR FIRST (2026-09-30 — found on the real-doctors
+ * lane's CI and reproduced here): the cards' pictures ship `loading="lazy"`,
+ * and a lazy picture far below the window is never STARTED by the browser, so
+ * its load never finishes and a wait on it times out. It stays invisible on a
+ * workstation, where an earlier story has left the same file in the memory
+ * cache; on CI the optimized variants do not exist yet when the tests run, so
+ * nothing is cached. Flipping `loading` to eager is HTML's own resumption of
+ * a deferred load — no scroll, no timer. Whatever a play asserts about how a
+ * picture SHIPS must therefore be read before this runs.
  *
- * EVERY PICTURE IS ASKED FOR FIRST (2026-09-30, the six real doctors). The
- * portraits are lazy (ui/Image, §11), and a browser never starts a lazy
- * picture that lies further below the window than its loading distance —
- * MEASURED in Chromium: about 3000px. Such a picture's `decode()` stays
- * pending for good, and this play with it, at its first line. With two
- * doctors no picture on this page was that far down; with six the German
- * phone page is 7087px tall and its last four portraits are, so the story
- * timed out. It hid on a workstation and showed on CI for one reason:
- * Romanian runs first in the same browser page and leaves the same picture
- * URLs in the memory cache, which completes a lazy picture on the spot — but
- * CI's Vitest step runs before any image optimizer (the Sections/DoctorIntro
- * stories' own note), those URLs answer 404 there and nothing is cached. To
- * see it without CI, run the German story ALONE.
- *
- * So each picture is flipped to `eager` before the wait — HTML's own "lazy
- * load resumption", no scrolling and no timer — and what the play measures is
- * the page of a visitor who has scrolled through it, which is the page the
- * document-wide checks (the outline, the sideways scroll) are about. React
- * never writes the attribute back: the prop it rendered is unchanged, and
- * React DOM writes only props that changed (the G2 typescript read of
- * 2026-09-30 checked `updateProperties` in react-dom 19.2).
- *
- * THE WAIT IS BOUNDED AND NAMED: `complete`, polled (`waitFor`) under a
- * timeout well inside the runner's 15 s, so a picture that never settles
- * fails this play by NAME — its `currentSrc` — instead of timing the whole
- * test out. No `decode()`: it settles at the same moment `complete` turns
- * true and adds nothing to a layout read (the Sections/DoctorIntro helper
- * keeps it for its own reasons). SETTLED MEANS LOADED OR BROKEN: on CI, where
- * the optimizer's variants do not exist, a picture errors and ui/Image swaps
- * it to the original file — a picture read in that instant, complete but not
- * yet swapped, is sound on THIS page, because a portrait's box is its frame's
- * (PersonnelCard's `aspect-3/4 w-48`), the same whether the picture arrived
- * or broke. Nothing here asserts pixels.
- *
- * THE VISUAL NET LEANS ON THE FLIP: tests/visual/stories.spec.ts waits for
- * fonts only before its full-page screenshot, so on this page — taller than
- * the loading distance at the phone widths — the far portraits are in the
- * baseline because this play asked for them (measured 2026-09-30: without the
- * flip the last four are unrequested at the screenshot and stay so). Look for
- * them when those baselines are recorded.
+ * THE WAIT IS BOUNDED AND NAMED (the real-doctors lane's shape, taken at the
+ * merge of 2026-09-30): `complete`, polled under a timeout well inside the
+ * runner's 15 s, so a picture that never settles fails this play by NAME —
+ * its `currentSrc` — instead of timing the whole test out; no `decode()`,
+ * which is unbounded and adds nothing to a layout read. SETTLED MEANS LOADED
+ * OR BROKEN: on CI the optimizer's variants do not exist, a picture errors and
+ * ui/Image swaps it to the original file — sound on this page, because every
+ * picture's box is reserved from its `width`/`height` (§11), the same whether
+ * it arrived or broke; nothing here asserts pixels. And the visual net leans
+ * on the flip: its full-page screenshot waits for fonts only, so on this page,
+ * taller than the lazy-loading distance at the phone widths, the far pictures
+ * are in the baseline because this play asked for them.
  */
 const settled = async (root: HTMLElement): Promise<void> => {
   await document.fonts.ready;
@@ -293,208 +154,219 @@ const settled = async (root: HTMLElement): Promise<void> => {
   );
 };
 
+const cardName = (card: HTMLElement): string | null =>
+  within(card).getByRole('heading').textContent;
+
+/**
+ * The first doctor card, coarsely: the picture beside the text and the name
+ * level with the button when the card has two columns; specialty → name →
+ * picture → text → button when it stacks. The fine numbers are
+ * sections/PersonnelCard's own stories' business.
+ */
+const expectFirstCard = async (card: HTMLElement): Promise<void> => {
+  const quote = within(card).getByRole('blockquote');
+  const heading = within(card).getByRole('heading');
+  const position = heading.parentElement?.querySelector('p');
+  const image = card.querySelector('img');
+  const link = within(card).getByRole('link');
+  if (!image || !position)
+    throw new Error('team story: the first card lost its picture or position');
+
+  const picture = image.getBoundingClientRect();
+  const name = heading.getBoundingClientRect();
+  const specialty = position.getBoundingClientRect();
+  const words = quote.getBoundingClientRect();
+  const button = link.getBoundingClientRect();
+  for (const box of [picture, name, specialty, words, button])
+    await expect(box.height).toBeGreaterThan(0);
+
+  if (sitsBeside(quote)) {
+    // Row 1: the picture ‖ the text. Row 2: the name ‖ the button.
+    await expect(picture.right).toBeLessThanOrEqual(words.left);
+    await expect(name.top).toBeGreaterThanOrEqual(picture.bottom);
+    await expect(button.top).toBeGreaterThanOrEqual(words.bottom);
+    await expect(name.right).toBeLessThanOrEqual(button.left);
+    await expect(name.top).toBeLessThan(button.bottom);
+    await expect(button.top).toBeLessThan(specialty.bottom);
+    return;
+  }
+  await expect(specialty.bottom).toBeLessThanOrEqual(name.top);
+  await expect(name.bottom).toBeLessThanOrEqual(picture.top);
+  await expect(picture.bottom).toBeLessThanOrEqual(words.top);
+  await expect(words.bottom).toBeLessThanOrEqual(button.top);
+};
+
 /**
  * Everything both stories check, against the language they were pinned to.
  * Written once because the page's contract does not change with the locale —
- * only the words do. `pinned` is the arrangement the story's viewport pin
- * must produce in the Vitest runner (see the header's viewport paragraph).
+ * only the words do.
  */
 const playPage =
   (
     words: {
       title: string;
-      services: string;
+      eyebrow: string;
+      showcase: string;
       profile: string;
       location: string;
     },
     locale: Locale,
-    pinned: Branch,
   ): NonNullable<Story['play']> =>
   async ({ canvas, canvasElement }) => {
+    // HOW EVERY PICTURE SHIPS — read BEFORE `settled` asks for them all. The
+    // page's first picture is the first doctor's, and it PRELOADS: the band
+    // opens the first screen here and that picture is its largest paint (the
+    // band's D9, the page's `firstScreen`). Every later one — the other
+    // doctors', the staff tiles' — is lazy.
+    const [firstPicture, ...laterPictures] = Array.from(
+      canvasElement.querySelectorAll('img'),
+    );
+    await expect(firstPicture?.closest('[data-ribbon-station]')).toBeInstanceOf(
+      HTMLElement,
+    );
+    await expect(firstPicture).toHaveAttribute('fetchpriority', 'high');
+    await expect(firstPicture).not.toHaveAttribute('loading', 'lazy');
+    for (const picture of laterPictures)
+      await expect(picture).toHaveAttribute('loading', 'lazy');
+
     await settled(canvasElement);
-    // ONE PICTURE PER PERSON, so the settle above is never vacuous: a page
-    // that stopped rendering <img>s (portraits as CSS backgrounds, say) would
-    // let it pass over nothing.
+    // ONE PICTURE PER PERSON — a doctor's cutout, a staff member's portrait —
+    // so the settle above is never vacuous: a page that stopped rendering
+    // <img>s (pictures as CSS backgrounds, say) would let it pass over nothing.
     await expect(canvasElement.querySelectorAll('img')).toHaveLength(
       doctors.length + auxiliaries.length,
     );
-    // ONE <h1>, VISIBLE, and it is the BAND's (page.tsx, THE <h1> IS THE
-    // BAND'S) — queried by role and by its real message, so a renamed key or a
-    // heading that stopped being an <h1> fails here (§9, §13).
-    const heading = canvas.getByRole('heading', {
-      level: 1,
-      name: words.title,
-    });
-    await expect(heading.tagName).toBe('H1');
+
+    // THE OUTLINE ROOT: one <h1>, the page's own — sr-only, outside every band.
+    const title = canvas.getByRole('heading', { level: 1, name: words.title });
     await expect(canvas.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    await expect(title).toHaveClass('sr-only');
+    await expect(title.closest('section')).toBeNull();
 
-    // …and the band around it is NOT a landmark: a region named by the page's
-    // own title would duplicate <main> for a screen-reader user (the services
-    // page's G2 a11y verdict).
-    const band = heading.closest('section');
-    if (band === null) throw new Error('the roster band lost its <section>');
-    await expect(
-      canvas.queryByRole('region', { name: words.title }),
-    ).toBeNull();
-
-    // TWO LISTS, in order: the doctors' column and the auxiliary grid. Both
-    // carry an explicit role="list" (WebKit drops the implicit one when the
-    // bullets are styled away), and scoping the counts to each list is what
-    // makes „N doctors then M members" an assertion rather than a total.
-    const [doctorList, memberList] = within(band).getAllByRole('list');
-    await expect(within(band).getAllByRole('list')).toHaveLength(2);
-
-    // ONE CARD PER PERSON, in lib/team's own order, each named by the name in
-    // THIS language — the walk's output read back off the page. The heading is
-    // queried BY ROLE and without a level: which level a card's name wears is
-    // the band's outline decision (PersonnelCard D4's recorded `headingLevel`
-    // trigger), and this page's contract is only that every person has a card
-    // and every card is named after him.
-    const cardName = (card: HTMLElement): string | null =>
-      within(card).getByRole('heading').textContent;
-
-    const doctorCards = within(doctorList).getAllByRole('article');
-    await expect(doctorCards).toHaveLength(doctors.length);
+    // THE DOCTORS BAND: a region named by its own <h2>, its eyebrow above.
+    const band = canvas.getByRole('region', { name: words.showcase });
+    await expect(within(band).getByText(words.eyebrow)).toBeVisible();
+    const list = within(band).getByRole('list');
+    await expect(within(list).getAllByRole('listitem')).toHaveLength(
+      doctors.length,
+    );
+    const doctorCards = within(list).getAllByRole('article');
     await expect(doctorCards.map(cardName)).toEqual(
       doctors.map((doctor) => doctor.words[locale].name),
     );
 
-    const memberCards = within(memberList).getAllByRole('article');
-    await expect(memberCards).toHaveLength(auxiliaries.length);
-    await expect(memberCards.map(cardName)).toEqual(
-      auxiliaries.map((member) => member.words[locale].name),
-    );
-
-    // TWO LINKS PER DOCTOR, left then right (run D4): the work he does, then
-    // his own page. The hrefs are derived from lib/team rather than retyped,
-    // so a renamed id or a doctor who loses his `servicesCategory` shows up
-    // here as a mismatch instead of a stale literal — and the '#category'
-    // stays English in every language (owner fb-461).
+    // ONE link per card — to that doctor's own page, named with the person.
     for (const [index, card] of doctorCards.entries()) {
       const doctor = doctors[index];
       const links = within(card).getAllByRole('link');
-      await expect(links).toHaveLength(2);
-      await expect(links.map((link) => link.getAttribute('href'))).toEqual([
-        doctor.servicesCategory
-          ? `/${locale}/services/#${doctor.servicesCategory}`
-          : `/${locale}/services/`,
+      await expect(links).toHaveLength(1);
+      await expect(links[0]).toHaveAttribute(
+        'href',
         `/${locale}/team/${doctor.id}/`,
-      ]);
-      await expect(links.map((link) => link.textContent)).toEqual([
-        words.services,
-        words.profile,
-      ]);
+      );
+      await expect(links[0].textContent).toBe(words.profile);
+      await expect(links[0]).toHaveAccessibleName(
+        `${words.profile} ${doctor.words[locale].name}`,
+      );
     }
 
-    // D21 ON THE FIRST CARD — the branch its own column puts it in, then the
-    // proof that the pin produced the branch it was chosen for. Below 48rem
-    // of window the card is narrower still, so stacked is the only
-    // possibility. From 80rem of window up — the window less two gutters of at
-    // most 10vw each, a classic scrollbar and the card's own inset of ~25px a
-    // side — the card's content box is at least ~60rem, clear of the step, so
-    // beside is the only possibility. (Pages/Doctor can use 64rem because its
-    // arrangements measure the bare Container column; a card is narrower by
-    // its inset, and at 64rem it can land under the step.) Between the two
-    // the derived branch stands alone; the visual runner samples 768 there.
     const [firstCard] = doctorCards;
     if (!firstCard) throw new Error('lib/team has no doctor to story');
-    const branch = await expectFirstCard(firstCard);
-    if (pinned === 'stacked' && window.innerWidth < 48 * rem())
-      await expect(branch).toBe('stacked');
-    if (pinned === 'beside' && window.innerWidth >= 80 * rem())
-      await expect(branch).toBe('beside');
+    await expectFirstCard(firstCard);
 
-    // The doctors' words carry keyword fragments, which means the page cut the
-    // <k> marks and ui/Keyword rendered the pieces — a tag visible anywhere on
-    // this page would mean one of those two stopped happening.
+    // THE RIBBON IS MOUNTED: one canvas per doctor in its decorative layer,
+    // each sized — its guard zeroes them all when the strip would touch a
+    // name, a text or a button.
+    const layer = list.lastElementChild;
+    if (!(layer instanceof HTMLElement))
+      throw new Error('team story: the ribbon lost its layer');
+    await expect(layer).toHaveAttribute('aria-hidden', 'true');
+    // 3 s, the band stories' own allowance: the canvases arrive after mount.
+    await waitFor(
+      () =>
+        expect(layer.querySelectorAll('canvas')).toHaveLength(doctors.length),
+      { timeout: 3_000 },
+    );
+    for (const canvasNode of layer.querySelectorAll('canvas'))
+      await waitFor(() => expect(canvasNode.width).toBeGreaterThan(0), {
+        timeout: 3_000,
+      });
+
+    // THE STAFF TILES: the next band, one list, every auxiliary member.
+    const staff = band.nextElementSibling;
+    if (!(staff instanceof HTMLElement) || staff.tagName !== 'SECTION')
+      throw new Error('team story: no staff band after the doctors band');
+    const tiles = within(within(staff).getByRole('list')).getAllByRole(
+      'article',
+    );
+    await expect(tiles.map(cardName)).toEqual(
+      auxiliaries.map((member) => member.words[locale].name),
+    );
+    await expect(within(staff).queryAllByRole('link')).toHaveLength(0);
+
+    // No `<k>` survives the walk, and the keywords really are fragments.
     await expect(canvasElement.textContent).not.toContain('<k>');
     await expect(
       canvasElement.querySelectorAll('article b').length,
     ).toBeGreaterThan(0);
 
-    // THE MAP CLOSES THE PAGE (the owner's „add at the end the map"), named by
-    // its own <h2> and standing AFTER the roster.
+    // THE MAP IS LAST.
     const map = canvas.getByRole('region', { name: words.location });
-    await expect(precedes(band, map)).toBe(true);
-    // NOTHING FOLLOWS IT. The map region IS ClinicLocation's own <section>, so
-    // its next sibling is what a third band would be — and there is none. The
-    // old spelling asked whether the canvas's last child CONTAINED the map,
-    // which any wrapper satisfies and a band appended after it would satisfy
-    // too (G2 react, 2026-09-21: the assertion was vacuous).
+    await expect(precedes(band, staff)).toBe(true);
+    await expect(precedes(staff, map)).toBe(true);
     await expect(map.nextElementSibling).toBeNull();
 
-    // THE OUTLINE, WHOLE (G2-R2 tier 3, a11y F2): every heading on the page,
-    // by LEVEL, in document order — the h1, one h2 per person (the doctors,
-    // then the auxiliary members: TeamRoster passes `headingLevel={2}` to
-    // both lists, D10), and the map's h2. The card queries above read each
-    // card's heading WITHOUT a level on purpose; this is where the level is
-    // pinned, page-wide, so a card or a band arriving at the wrong level
-    // fails here even when its own suite is green. Built from lib/team's own
-    // lengths, never typed by hand. The canvas holds the page's two bands and
-    // nothing else (no Header, no Footer — see NO HEADER above), so this is
-    // the page's own outline.
+    // THE OUTLINE, whole: no level is skipped anywhere on the page.
     await expect(
       canvas
         .getAllByRole('heading')
         .map((element) => Number(element.tagName[1])),
     ).toEqual([
-      1, // „Echipa noastră" (TeamRoster)
-      ...doctors.map(() => 2), // one per doctor card
-      ...auxiliaries.map(() => 2), // one per auxiliary tile
+      1, // the page's own, sr-only
+      2, // the doctors band
+      ...doctors.map(() => 3), // one per doctor card
+      ...auxiliaries.map(() => 2), // one per staff tile
       2, // the map
     ]);
 
-    // §7: nothing on this page may make the DOCUMENT scroll sideways, at any
-    // width — the 320px stress is a page-tier baseline, and a single unbroken
-    // German compound pushing a tile past the gutter would show up here first.
     const root = canvasElement.ownerDocument.documentElement;
     await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
   };
 
-/**
- * ROMANIAN — the default locale and the §15.7 story default (diacritics-bearing
- * copy, so a font or shaping regression has somewhere to show), pinned to the
- * LAPTOP width, where every doctor card is on its beside branch (D21).
- *
- * What to look at: „Echipa noastră" at the hero step (§15.24); the doctor
- * cards alternating sides from ~960px, each with its quote, its name and its
- * two buttons on one line — „Vezi serviciile" filled green, „Vezi profilul"
- * outlined; the three auxiliary tiles on one row from 1280 and never narrower
- * than 16rem (run D9); the map last.
- */
 export const Romanian: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   play: playPage(
     {
       title: ro.team.title,
-      services: ro.team.roster.services,
-      profile: ro.team.roster.profile,
+      eyebrow: ro.team.showcase.eyebrow,
+      showcase: ro.team.showcase.title,
+      profile: ro.team.showcase.profile,
       location: ro.home.location.title,
     },
     'ro',
-    'beside',
   ),
 };
 
 /** GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
- *  every card is one column (D21): the longest button pair, each button on a
- *  full-width line of its own, the 27-letter tile compound and the longer
- *  quotes (see this file's header). With six doctors this is also the page's
- *  TALLEST frame — 7087px — the one whose last portraits lie beyond the
- *  browser's lazy-loading distance (`settled` above). */
+ *  every card is one column (D21): the longest button label, the 27-letter
+ *  tile compound and the longer quotes (see this file's header). With six
+ *  doctors this is also the page's TALLEST frame — the one whose last pictures
+ *  lie beyond the browser's lazy-loading distance (`settled` above). */
 export const German: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
   play: async (context) => {
     await playPage(
       {
         title: de.team.title,
-        services: de.team.roster.services,
-        profile: de.team.roster.profile,
+        eyebrow: de.team.showcase.eyebrow,
+        showcase: de.team.showcase.title,
+        profile: de.team.showcase.profile,
         location: de.home.location.title,
       },
       'de',
-      'stacked',
     )(context);
+    // The preview decorator stamps the language the quotes and the hyphens
+    // read (§8.10, §15.14).
     await expect(document.documentElement.lang).toBe('de');
   },
 };

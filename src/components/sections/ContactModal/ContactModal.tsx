@@ -536,19 +536,11 @@ export function ContactModal(): ReactElement {
               construction. E.164 in the href, the human format on screen: two
               fields of lib/clinic/clinic.ts on purpose (§10.1). `size="lg"` is a
               3.5rem target, well past §9's 44px aim for the primary action, and
-              `w-full` takes the rail's width so both controls match.
-              `text-center` is the WhatsApp control's fix, carried here for
-              SYMMETRY (owner, 2026-09-05 — see that button's note). This number
-              never wraps at any width the site serves, so the class changes
-              nothing today; the pair sharing one spelling is what stops a
-              future long display format from ragging left beside a centred
-              neighbour. */}
-          <Button
-            asChild
-            variant="solid"
-            size="lg"
-            className="w-full text-center"
-          >
+              `w-full` takes the rail's width so both controls match. A label
+              that wraps stays centred by the ATOM (ui/Button's `text-center`,
+              since 2026-09-30 — the WhatsApp control's note below has the
+              history); this number never wraps at any width the site serves. */}
+          <Button asChild variant="solid" size="lg" className="w-full">
             <a href={`tel:${clinic.phone}`}>
               <Phone />
               {clinic.phoneDisplay}
@@ -622,22 +614,17 @@ export function ContactModal(): ReactElement {
               v4 picture is two equal green blocks, not a primary and a
               runner-up. The glyph stays UNLABELLED so the link's accessible
               name is exactly the visible label (SC 2.5.3).
-              `text-center` (owner, 2026-09-05: "on Kontaktieren Sie uns über
-              WhatsApp i want the text centered when it goes on 2 lines"). The
-              atom centres the ROW — `justify-center` on a flex line — which
-              places the glyph-plus-label group in the middle of the button but
-              says nothing about the LINES inside a label that wraps: German's
-              runs to two at phone widths, and the second one was ragging left
-              under the first. `text-center` on the control governs those lines.
-              A parent utility on the atom's root, not a restyle of its
-              internals (§6.8): the class merges last and the atom's own
-              typography is untouched. */}
-          <Button
-            asChild
-            variant="solid"
-            size="lg"
-            className="w-full text-center"
-          >
+              A LABEL THAT WRAPS STAYS CENTRED (owner, 2026-09-05: "on
+              Kontaktieren Sie uns über WhatsApp i want the text centered when
+              it goes on 2 lines"). `justify-center` on the atom's flex line
+              centres the ROW — the glyph-plus-label group — and says nothing
+              about the LINES inside a label that wraps: German's runs to two
+              at phone widths, and the second one was ragging left under the
+              first. This section carried the fix as a `text-center` of its own
+              until 2026-09-30, when the doctor card's label wrapped too and
+              the class moved INTO ui/Button's base row — the atom's now, for
+              every button. */}
+          <Button asChild variant="solid" size="lg" className="w-full">
             <a
               href={`https://wa.me/${clinic.whatsapp}`}
               target="_blank"

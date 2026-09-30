@@ -2,14 +2,15 @@ import { createRef, type Ref } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button, type ButtonVariant } from '@/components/ui/Button/Button';
+import { Image } from '@/components/ui/Image/Image';
 import { Keyword } from '@/components/ui/Keyword/Keyword';
 import type { ImagePath } from '@/lib/image-path/image-path';
 import {
   PersonnelCard,
-  type PersonnelActions,
   type PersonnelCardProps,
   type PersonnelHeadingLevel,
   type PersonnelKind,
+  type PersonnelLink,
   type PersonnelPhoto,
   type PersonnelSide,
 } from './PersonnelCard';
@@ -33,9 +34,10 @@ import source from './PersonnelCard.tsx?raw';
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
 // this repo follows. What needs real CSS — the justified quote, the faint ink,
-// the lilac keywords, the language's own quotation marks and the two
-// arrangements of the doctor row — is asserted one tier up, in
-// PersonnelCard.stories.tsx's play functions.
+// the lilac keywords, the language's own quotation marks, the doctor card's 3px
+// frame and the 25px it still keeps to its content, the inset that adds
+// nothing outside a ribbon and the two arrangements of the doctor card — is
+// asserted one tier up, in PersonnelCard.stories.tsx's play functions.
 //
 // ── HARNESS NOTE — why a `process` shim, copied verbatim from Image.test.tsx
 // with its reason. The `components` vitest project is bare Vite in a real
@@ -69,13 +71,21 @@ vi.hoisted(() => {
 // wearing the atom's two utilities — which is why the fixture imports the real
 // component rather than a stand-in.
 //
-// ── FIXTURES. One committed demo portrait (600×800, the 3:4 headshot ratio of
-// D3 — synthetic silhouettes, no real people, nothing to license) and the two
-// people the story file uses, so a failure here reads like the picture there.
+// ── FIXTURES. One committed demo portrait for the auxiliary (600×800, the 3:4
+// headshot ratio of D3) and one committed demo CUTOUT for the doctor (900×1200,
+// the same ratio, transparent — D17) — synthetic figures, no real people,
+// nothing to license — and the two people the story file uses, so a failure
+// here reads like the picture there.
 const PHOTO: PersonnelPhoto = {
   src: '/images/demo/portrait-1.jpg',
   width: 600,
   height: 800,
+};
+
+const CUTOUT: PersonnelPhoto = {
+  src: '/images/demo/cutout-1.png',
+  width: 900,
+  height: 1200,
 };
 
 const DOCTOR_NAME = 'Dr. Elena Marin';
@@ -109,14 +119,12 @@ const ABOUT = (
   </>
 );
 
-// The doctor's two calls to action (D15) — finished hrefs, already
-// locale-prefixed by the band that built them, and finished labels which are
-// also the links' accessible names (§8.1, §9). The services link points into
-// the price list's own category anchor, the profile link at the doctor's page:
-// the two real shapes the Team lane will hand over.
-const ACTIONS: PersonnelActions = {
-  services: { href: '/ro/services/#orthodontics', label: 'Vezi serviciile' },
-  profile: { href: '/ro/team/elena-marin/', label: 'Vezi profilul' },
+// The doctor's ONE link (D17) — a finished href, already locale-prefixed by the
+// band that built it, pointing at the doctor's own page, and a finished label in
+// the doctor's own voice, which also leads the link's accessible name (§8.1, §9).
+const PROFILE: PersonnelLink = {
+  href: '/ro/team/elena-marin/',
+  label: 'Mai multe despre mine',
 };
 
 /**
@@ -133,13 +141,15 @@ const linkName = (label: string, name = DOCTOR_NAME): string =>
 // silent edit to an atom's constant, which an import would follow (the
 // ui/Eyebrow RECIPE convention).
 //
-// ui/Card's surface row is assembled from TOKENS on purpose, and the reason is
+// ui/Card's rows are assembled from TOKENS on purpose, and the reason is
 // mechanical rather than stylistic: tests/unit/card-single-spelling.test.ts
 // fences src/ against any file outside ui/Card carrying the surface's
 // contiguous geometry string, so spelling it here — even inside a test — would
 // turn that src-wide fence red. Joining the tokens produces the same expected
 // value while this file never contains the fenced spelling.
-const CARD_SURFACE = [
+/** ui/Card's `cardClasses` — the geometry, the tone clock, the one tint —
+ *  which every tone row follows. */
+const CARD_BASE = [
   '@container',
   'flex',
   'flex-col',
@@ -158,27 +168,42 @@ const CARD_SURFACE = [
   // read only by the `framed`/`emphasized` rows. Part of `cardClasses` too.
   '[--card-tint:var(--color-accent-decorative)]',
   'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]',
-  'border',
-  'border-line-subtle',
+];
+
+/** ui/Card's `surface` row (its toneClasses table) — the auxiliary tile's. */
+const SURFACE_ROW = ['border', 'border-line-subtle', 'bg-surface', 'p-6'];
+
+/** ui/Card's `framed` row — the doctor card's since D17's THE FRAME: the
+ *  reviews deck's idle card, 3px of border over 1.5rem − 2px of padding. */
+const FRAMED_ROW = [
+  'border-[3px]',
+  'border-(--card-tint)',
   'bg-surface',
-  'p-6',
-].join(' ');
+  'p-[calc(1.5rem-2px)]',
+];
+
+const CARD_SURFACE = [...CARD_BASE, ...SURFACE_ROW].join(' ');
+const CARD_FRAMED = [...CARD_BASE, ...FRAMED_ROW].join(' ');
 
 /** ui/Heading's `title` step (its sizeClasses table). */
 const TITLE_STEP = 'font-display text-xl text-ink-strong';
+/** ui/Heading's `band` step (its sizeClasses table, run D48). */
+const BAND_STEP = 'font-display text-3xl @md:text-4xl text-ink-strong';
 /** ui/Eyebrow's RECIPE constant. */
 const EYEBROW_RECIPE =
   'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase';
 /** ui/Image's `framed` row (its variantClasses table). */
 const FRAMED_RECIPE = 'h-full w-full rounded-xl object-cover';
+/** ui/Image's `artwork` row (its variantClasses table). */
+const ARTWORK_RECIPE = 'h-auto max-w-full object-contain';
 
 /**
  * ui/Button's own face, read off a rendered button rather than retyped: the
- * two links wear the HERO's pair prop for prop (D15, the owner's "identical as
- * aspect"), so the pin has to FOLLOW the atom — an outline variant re-tuned in
- * ui/Button must move this card's profile link with it, and a card that
- * quietly stopped composing the atom must fail here. Rendered and unmounted
- * inside the helper so nothing of it survives into the assertion's DOM.
+ * link wears the old services button's solid `lg` face (D17), so the pin has
+ * to FOLLOW the atom — a solid variant re-tuned in ui/Button must move this
+ * card's link with it, and a card that quietly stopped composing the atom must
+ * fail here. Rendered and unmounted inside the helper so nothing of it
+ * survives into the assertion's DOM.
  */
 const buttonFace = (variant: ButtonVariant): string => {
   const { container, unmount } = render(
@@ -191,36 +216,47 @@ const buttonFace = (variant: ButtonVariant): string => {
   return face;
 };
 
-/** The block, its name/position pair, the grid they take at the wide step, the
- *  four cells' placement, the quote's dress and the actions row — this
- *  section's class strings, byte for byte (D6, D7, D8, D15). */
+/** The auxiliary's block and its name/position pair — this section's class
+ *  strings, byte for byte (D6). */
 const BLOCK = 'flex flex-col items-center gap-3 text-center';
-const BLOCK_DISSOLVES = '@3xl:contents';
 const NAME_PAIR = 'flex flex-col items-center gap-3';
-const GRID_START =
-  '@3xl:grid @3xl:grid-cols-[16rem_minmax(0,1fr)] @3xl:gap-x-8 @3xl:gap-y-3';
-const GRID_END =
-  '@3xl:grid @3xl:grid-cols-[minmax(0,1fr)_16rem] @3xl:gap-x-8 @3xl:gap-y-3';
-const PLACE = {
-  start: {
-    portrait:
-      '@3xl:col-start-1 @3xl:row-start-1 @3xl:self-center @3xl:justify-self-center',
-    name: '@3xl:col-start-1 @3xl:row-start-2 @3xl:self-center',
-    quote: '@3xl:col-start-2 @3xl:row-start-1 @3xl:self-center',
-    actions: '@3xl:col-start-2 @3xl:row-start-2 @3xl:self-center',
-  },
-  end: {
-    portrait:
-      '@3xl:col-start-2 @3xl:row-start-1 @3xl:self-center @3xl:justify-self-center',
-    name: '@3xl:col-start-2 @3xl:row-start-2 @3xl:self-center',
-    quote: '@3xl:col-start-1 @3xl:row-start-1 @3xl:self-center',
-    actions: '@3xl:col-start-1 @3xl:row-start-2 @3xl:self-center',
-  },
-} satisfies Record<PersonnelSide, Record<string, string>>;
+
+/** The doctor's rows (D17): the inset, the grid, which column each half takes,
+ *  the block and the pair turned upward below the step, the cutout's cell, the
+ *  three row placements, the quote's dress and the link's width — byte for
+ *  byte. */
+const INSET =
+  '@container pt-[max(0px,calc(var(--ribbon-lane-top,1.5rem)_-_1.5rem))] px-[max(0px,calc(var(--ribbon-lane-side,1.5rem)_-_1.5rem))]';
+const GRID = {
+  start:
+    'flex flex-col gap-6 @3xl:grid @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:gap-x-8 @3xl:gap-y-3',
+  end: 'flex flex-col gap-6 @3xl:grid @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:gap-x-8 @3xl:gap-y-3',
+} satisfies Record<PersonnelSide, string>;
+const COLUMN = {
+  start: { block: '@3xl:col-start-1', words: '@3xl:col-start-2' },
+  end: { block: '@3xl:col-start-2', words: '@3xl:col-start-1' },
+} satisfies Record<PersonnelSide, Record<'block' | 'words', string>>;
+const DOCTOR_BLOCK =
+  'flex flex-col-reverse items-center gap-3 text-center @3xl:contents';
+const DOCTOR_PAIR =
+  'flex flex-col-reverse items-center gap-3 @3xl:flex-col @3xl:justify-self-center';
+const PICTURE = 'w-72 max-w-full';
+const PHOTO_CELL = '@3xl:row-start-1 @3xl:self-end @3xl:justify-self-center';
+const TEXT_CELL = '@3xl:row-start-1 @3xl:self-center';
+const BOTTOM = '@3xl:row-start-2 @3xl:self-center';
 const QUOTE =
   'min-w-0 text-lg text-ink-faint text-justify before:content-[open-quote] after:content-[close-quote]';
-const ACTIONS_ROW =
-  'mx-auto flex w-full max-w-3xl flex-wrap gap-3 *:grow *:basis-64';
+const ACTION = 'mx-auto w-full max-w-md';
+
+/** Every cell's full class string for one side — what the card must render. */
+const doctorRows = (side: PersonnelSide) => ({
+  grid: GRID[side],
+  block: DOCTOR_BLOCK,
+  picture: `${PICTURE} ${COLUMN[side].block} ${PHOTO_CELL}`,
+  pair: `${DOCTOR_PAIR} ${COLUMN[side].block} ${BOTTOM}`,
+  quote: `${QUOTE} ${COLUMN[side].words} ${TEXT_CELL}`,
+  link: `${buttonFace('solid')} ${ACTION} ${COLUMN[side].words} ${BOTTOM}`,
+});
 
 const tokensOf = (element: Element) =>
   element.className.split(/\s+/).filter(Boolean);
@@ -245,9 +281,10 @@ const CODE = stripComments(source);
 const cardOf = (container: HTMLElement): HTMLElement =>
   container.firstElementChild as HTMLElement;
 
-/** The layout <div> the Card's single child is, the portrait block inside it,
- *  and that block's two boxes — the portrait cell and the name/position pair
- *  (D6, D7). Reached by structure because none of them carries a role. */
+/** The auxiliary's layout <div> — the Card's single child — the portrait block
+ *  inside it, and that block's two boxes, the portrait cell and the
+ *  name/position pair (D6). Reached by structure because none of them carries
+ *  a role. */
 const layoutOf = (container: HTMLElement): HTMLElement =>
   cardOf(container).firstElementChild as HTMLElement;
 const blockOf = (container: HTMLElement): HTMLElement =>
@@ -257,12 +294,22 @@ const portraitCellOf = (container: HTMLElement): HTMLElement =>
 const namePairOf = (container: HTMLElement): HTMLElement =>
   blockOf(container).children[1] as HTMLElement;
 
-/** The actions row (D15) — the two links' shared parent, found through a link
- *  rather than by index, so the assertion survives a re-ordering of the
- *  layout's children exactly as far as it should. */
-const actionsRowOf = (): HTMLElement =>
-  screen.getByRole('link', { name: linkName(ACTIONS.services.label) })
-    .parentElement as HTMLElement;
+/** A doctor card's boxes (D7, D17), by structure for the same reason: the
+ *  INSET is the article's one child, the GRID the inset's, and the grid holds
+ *  the block, the quote and the link — the block holding the cutout's cell and
+ *  the name/position pair. */
+const doctorPartsOf = (container: HTMLElement) => {
+  const inset = cardOf(container).firstElementChild as HTMLElement;
+  const grid = inset.firstElementChild as HTMLElement;
+  const block = grid.children[0] as HTMLElement;
+  return {
+    inset,
+    grid,
+    block,
+    picture: block.children[0] as HTMLElement,
+    pair: block.children[1] as HTMLElement,
+  };
+};
 
 /** The two placement props the helpers below need to vary. A hyphenated
  *  attribute (`data-slot`) is exempt from excess-property checking in JSX but
@@ -287,12 +334,16 @@ const renderDoctor = (side?: PersonnelSide) =>
       kind="doctor"
       name={DOCTOR_NAME}
       position={DOCTOR_ROLE}
-      photo={PHOTO}
+      photo={CUTOUT}
       about={ABOUT}
-      actions={ACTIONS}
+      profile={PROFILE}
       {...(side ? { side } : {})}
     />,
   );
+
+/** The doctor's one link, found the way a screen reader lists it (D15). */
+const theLink = (): HTMLElement =>
+  screen.getByRole('link', { name: linkName(PROFILE.label) });
 
 describe('PersonnelCard — an article named by the person (D4)', () => {
   it('names the card with the heading text alone, through aria-labelledby', () => {
@@ -365,16 +416,80 @@ describe('PersonnelCard — an article named by the person (D4)', () => {
     expect(card).toHaveAttribute('aria-labelledby', heading.id);
     expect(heading.id).not.toBe('echipa-ioana');
   });
+
+  it('keeps the heading as the name when a caller WRITES `aria-labelledby` in JSX — the spread rides first (D10)', () => {
+    // TypeScript exempts a hyphenated JSX attribute from its excess-property
+    // check, so the attribute below COMPILES despite the Omit. The card's own
+    // pair rides AFTER `{...rest}`, so the caller's loses — move the spread
+    // below `aria-labelledby` and this test goes red (G2 react).
+    const { container } = render(
+      <PersonnelCard
+        kind="auxiliary"
+        name={AUX_NAME}
+        position={AUX_ROLE}
+        photo={PHOTO}
+        aria-labelledby="nowhere"
+      />,
+    );
+
+    const heading = screen.getByRole('heading', { level: 3, name: AUX_NAME });
+    expect(cardOf(container)).toHaveAttribute('aria-labelledby', heading.id);
+  });
+
+  it('names a DOCTOR card by its heading alone too', () => {
+    // The link's own name borrows the heading (D15); the article's does not
+    // borrow the link — its name is the person, nothing else.
+    const { container } = renderDoctor();
+
+    expect(screen.getByRole('article', { name: DOCTOR_NAME })).toBe(
+      cardOf(container),
+    );
+  });
 });
 
-describe('PersonnelCard — ui/Card wears the surface, the article IS the card (D10)', () => {
-  it('dresses the article in the surface tone byte-exactly', () => {
+describe('PersonnelCard — ui/Card dresses the article, the article IS the card (D10, D17)', () => {
+  it('dresses an AUXILIARY tile in the surface tone byte-exactly — untouched by THE FRAME', () => {
     // Byte exactness is the contract: an extra utility here would mean the
     // section had started restyling an atom's internals (§6.8), and a missing
     // one would mean the card had stopped composing ui/Card at all.
     const { container } = renderAuxiliary();
 
     expect(cardOf(container).className).toBe(CARD_SURFACE);
+  });
+
+  it('dresses a DOCTOR card in the FRAMED tone — the reviews deck’s idle card (D17’s THE FRAME)', () => {
+    // "i want to use for this card the border of the non current review from
+    // the review carrousel": ui/Card's `framed` row, byte for byte, and none
+    // of the flat row's border or padding — a second border width or `p-*`
+    // would leave the stylesheet's order to pick one. The ribbon's lanes still
+    // ride the INSET, never the card: ui/Card refuses className as a padding
+    // API, and `framed` spends the same 1.5rem + 1px per side on border and
+    // padding as `surface` does (the Doctor stories measure it).
+    const { container } = renderDoctor();
+
+    const card = cardOf(container);
+    expect(card.className).toBe(CARD_FRAMED);
+    for (const flat of ['border', 'border-line-subtle', 'p-6']) {
+      expect(tokensOf(card)).not.toContain(flat);
+    }
+  });
+
+  it('frames the doctor card whichever way it faces and at either level (D17’s THE FRAME)', () => {
+    // The tone is the KIND's, never the side's or the outline's.
+    const { container } = render(
+      <PersonnelCard
+        kind="doctor"
+        name={DOCTOR_NAME}
+        position={DOCTOR_ROLE}
+        photo={CUTOUT}
+        about={ABOUT}
+        profile={PROFILE}
+        side="end"
+        headingLevel={2}
+      />,
+    );
+
+    expect(cardOf(container).className).toBe(CARD_FRAMED);
   });
 
   it('merges the caller className LAST, keeping the atom’s classes first', () => {
@@ -464,8 +579,9 @@ describe('PersonnelCard — the portrait, decorative by construction (D3)', () =
   });
 
   it('loads lazily — a team grid sits below the fold (§11)', () => {
-    // Never `preload`: that is the hero's LCP privilege (§10.6), and a page of
-    // portraits fetched eagerly would compete with it.
+    // Never `preload`: that is the LCP element's privilege (§10.6), and a page
+    // of portraits fetched eagerly would compete with it — since D18 the types
+    // refuse it on this kind outright.
     const { container } = renderAuxiliary();
 
     expect(within(container).getByRole('presentation')).toHaveAttribute(
@@ -575,9 +691,351 @@ describe('PersonnelCard — auxiliary is the column alone (D2)', () => {
     }
     expect(layoutOf(container).className).toBe('flex flex-col gap-6');
   });
+
+  it('carries no inset and no ribbon marker — it is never wrapped (D17)', () => {
+    // The lanes and the keep-outs are the doctor's seam to ui/Ribbon; a tile
+    // in the auxiliary grid is never a station, so it reads neither.
+    const { container } = renderAuxiliary();
+
+    expect(container.querySelectorAll('[data-ribbon-keepout]')).toHaveLength(0);
+    for (const element of container.querySelectorAll('*')) {
+      expect(element.className).not.toContain('--ribbon-lane');
+    }
+  });
 });
 
-describe('PersonnelCard — doctor: the block, then the words (D7, D8)', () => {
+describe('PersonnelCard — doctor: the inset the ribbon reads (D17)', () => {
+  it('wraps the whole doctor card in ONE inset — the lanes less Card’s 1.5rem, a container of its own', () => {
+    // ui/Card's `p-6` stays; the inset pads the DIFFERENCE, never below 0, so
+    // outside a ribbon it adds nothing (the stories measure that) and inside
+    // one the card's inset is the lane. Its own `@container` is what makes
+    // `@3xl` and the name's `band` measure the box the grid really has.
+    const { container } = renderDoctor();
+
+    const card = cardOf(container);
+    expect(card.children).toHaveLength(1);
+    const { inset } = doctorPartsOf(container);
+    expect(inset.className).toBe(INSET);
+    expect(tokensOf(inset)[0]).toBe('@container');
+    // Top and the two sides only: below, the card's own 1.5rem already IS
+    // the lane (§15.26 — `max(1.5rem, lane)` on top and either side).
+    const paddings = tokensOf(inset)
+      .filter((t) => /^p[trblxy]?-/.test(t))
+      .map((t) => t.slice(0, t.indexOf('-')));
+    expect(paddings).toEqual(['pt', 'px']);
+  });
+});
+
+describe('PersonnelCard — doctor: the block, the words, the link (D7, D17)', () => {
+  it('runs block → quote → link in the DOM — for both sides (D7)', () => {
+    // Reading order is "who, then what they say, then what you can do"
+    // whichever way the wide grid faces; `side` moves COLUMNS, not children,
+    // so the DOM never reorders.
+    for (const side of ['start', 'end'] as const) {
+      const { container, unmount } = renderDoctor(side);
+
+      const { grid, block } = doctorPartsOf(container);
+      expect(grid.children).toHaveLength(3);
+      expect(grid.children[0]).toBe(block);
+      expect(grid.children[1]).toBe(screen.getByRole('blockquote'));
+      expect(grid.children[2]).toBe(theLink());
+      // …and inside the block, the picture before the pair, the name before
+      // the specialty — the phone's upward order is paint, never markup.
+      const { picture, pair } = doctorPartsOf(container);
+      expect(picture).toContainElement(
+        within(container).getByRole('presentation'),
+      );
+      expect(pair.children[0]).toBe(
+        screen.getByRole('heading', { level: 3, name: DOCTOR_NAME }),
+      );
+      expect(pair.children[1]).toBe(screen.getByText(DOCTOR_ROLE));
+      unmount();
+    }
+  });
+
+  it('lays out `start` by default — every cell byte for byte, and never the mirror', () => {
+    const { container } = renderDoctor();
+
+    const rows = doctorRows('start');
+    const { grid, block, picture, pair } = doctorPartsOf(container);
+    expect(grid.className).toBe(rows.grid);
+    expect(tokensOf(grid)).not.toContain(
+      '@3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]',
+    );
+    // The block DISSOLVES at the step so its two boxes become grid items of
+    // their own (D15); below the step it paints upward (D17's phone order).
+    expect(block.className).toBe(rows.block);
+    expect(picture.className).toBe(rows.picture);
+    expect(pair.className).toBe(rows.pair);
+    expect(screen.getByRole('blockquote').className).toBe(rows.quote);
+    expect(theLink().className).toBe(rows.link);
+  });
+
+  it('mirrors the columns for side="end" — the same grid, reversed', () => {
+    // Every cell swaps column and nothing else: the rows, the alignments and
+    // the DOM stay exactly as they are for `start` (D7's visual-only mirror).
+    const { container } = renderDoctor('end');
+
+    const rows = doctorRows('end');
+    const { grid, block, picture, pair } = doctorPartsOf(container);
+    expect(grid.className).toBe(rows.grid);
+    expect(tokensOf(grid)).not.toContain(
+      '@3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]',
+    );
+    expect(block.className).toBe(rows.block);
+    expect(picture.className).toBe(rows.picture);
+    expect(pair.className).toBe(rows.pair);
+    expect(screen.getByRole('blockquote').className).toBe(rows.quote);
+    expect(theLink().className).toBe(rows.link);
+  });
+
+  it('takes the start columns for an explicit side={undefined} too (the ?? path)', () => {
+    // A consumer computing `side` from an index may hand over undefined on
+    // purpose; that is the default arrangement, not a third state (G2 react).
+    const { container } = render(
+      <PersonnelCard
+        kind="doctor"
+        name={DOCTOR_NAME}
+        position={DOCTOR_ROLE}
+        photo={CUTOUT}
+        about={ABOUT}
+        profile={PROFILE}
+        side={undefined}
+      />,
+    );
+
+    const rows = doctorRows('start');
+    expect(doctorPartsOf(container).grid.className).toBe(rows.grid);
+    expect(doctorPartsOf(container).picture.className).toBe(rows.picture);
+    expect(theLink().className).toBe(rows.link);
+  });
+
+  it('makes the name’s pair HUG its words at the step — a keep-out is what is painted (D17)', () => {
+    // Stretched across its column, the pair's box marked empty space as a
+    // keep-out and the ribbon cornered against it; `justify-self-center`
+    // shrinks the box to its words. The stories measure the hug.
+    const { container } = renderDoctor();
+
+    expect(tokensOf(doctorPartsOf(container).pair)).toContain(
+      '@3xl:justify-self-center',
+    );
+  });
+});
+
+describe('PersonnelCard — doctor: the cutout (D3, D17)', () => {
+  it('renders exactly one picture, decorative, with an EMPTY alt', () => {
+    const { container } = renderDoctor();
+
+    expect(container.querySelectorAll('img')).toHaveLength(1);
+    expect(screen.queryByRole('img')).toBeNull();
+    const cutout = within(container).getByRole('presentation');
+    expect(cutout.tagName).toBe('IMG');
+    expect(cutout).toHaveAttribute('alt', '');
+  });
+
+  it('draws the whole cutout — ui/Image’s artwork recipe, never the framed crop', () => {
+    // The doctor from the waist up, no background: cropping it into a 3:4
+    // frame would cut the figure, and `artwork` draws the whole image.
+    const { container } = renderDoctor();
+
+    const cutout = within(container).getByRole('presentation');
+    expect(cutout.className).toBe(ARTWORK_RECIPE);
+    expect(cutout.parentElement).toBe(doctorPartsOf(container).picture);
+  });
+
+  it('keeps the cutout’s intrinsic size, declares an 18rem box and loads lazily (§11)', () => {
+    const { container } = renderDoctor();
+
+    const cutout = within(container).getByRole('presentation');
+    expect(cutout).toHaveAttribute('width', String(CUTOUT.width));
+    expect(cutout).toHaveAttribute('height', String(CUTOUT.height));
+    expect(cutout.getAttribute('src')).toContain('cutout-1');
+    expect(cutout.getAttribute('srcset')).toContain('nextImageExportOptimizer');
+    // The cell is 18rem (`w-72`); `sizes` says so, or the browser assumes
+    // 100vw and fetches a file five times too wide.
+    expect(cutout).toHaveAttribute('sizes', '18rem');
+    // Lazy unless a band asks otherwise (D18, the block below).
+    expect(cutout).toHaveAttribute('loading', 'lazy');
+  });
+});
+
+/** Every attribute of an element, name → value — an <img> compared attribute
+ *  for attribute (D18). Read synchronously after render: ExportedImage swaps
+ *  its src for the fallback only on the error event, a macrotask later (the
+ *  ui/Image suite's own note). */
+const attributesOf = (element: Element): Record<string, string | null> =>
+  Object.fromEntries(
+    element
+      .getAttributeNames()
+      .map((name): [string, string | null] => [
+        name,
+        element.getAttribute(name),
+      ]),
+  );
+
+/** The one picture inside a rendered card — decorative, so `presentation`. */
+const cutoutOf = (container: HTMLElement): HTMLElement =>
+  within(container).getByRole('presentation');
+
+/**
+ * The cutout as this card rendered it BEFORE D18 — ui/Image with the card's
+ * own six props and nothing else — mounted and unmounted inside the helper, so
+ * "attribute for attribute what it is today" is a comparison, never a belief.
+ */
+const bareCutout = (): Record<string, string | null> => {
+  const { container, unmount } = render(
+    <Image
+      variant="artwork"
+      src={CUTOUT.src}
+      width={CUTOUT.width}
+      height={CUTOUT.height}
+      alt=""
+      sizes="18rem"
+    />,
+  );
+  const attributes = attributesOf(cutoutOf(container));
+  unmount();
+  return attributes;
+};
+
+/** A doctor card with `preload` SPELLED OUT — `true`, or one of the two ways
+ *  to write "not asked", `false` and `undefined` (D18). */
+const renderDoctorPreload = (preload: boolean | undefined) =>
+  render(
+    <PersonnelCard
+      kind="doctor"
+      name={DOCTOR_NAME}
+      position={DOCTOR_ROLE}
+      photo={CUTOUT}
+      about={ABOUT}
+      profile={PROFILE}
+      preload={preload}
+    />,
+  );
+
+describe('PersonnelCard — doctor: eager only when the band asks (D18)', () => {
+  it('loads LAZILY when not asked — and carries no `fetchpriority`', () => {
+    // Home's case: the band sits under the Hero, whose picture is the LCP, so
+    // every cutout waits for the scroll (§11).
+    const cutout = cutoutOf(renderDoctor().container);
+
+    expect(cutout).toHaveAttribute('loading', 'lazy');
+    expect(cutout).not.toHaveAttribute('fetchpriority');
+  });
+
+  it('renders, when not asked, the very <img> it rendered before D18 — attribute for attribute', () => {
+    // "Not asked" has three spellings — the prop left out, `false` and
+    // `undefined` — and none may leave a trace on the picture. next/image
+    // happens to default its own `preload` to false, but that is its code,
+    // not this card's promise, so the promise is COMPARED with ui/Image
+    // rendered with the card's own props and nothing else.
+    const before = bareCutout();
+    // Never vacuous: the reference really is the lazy picture.
+    expect(before.loading).toBe('lazy');
+    expect(before).not.toHaveProperty('fetchpriority');
+
+    for (const mount of [
+      () => renderDoctor(),
+      () => renderDoctorPreload(false),
+      () => renderDoctorPreload(undefined),
+    ]) {
+      const { container, unmount } = mount();
+      expect(attributesOf(cutoutOf(container))).toEqual(before);
+      unmount();
+    }
+  });
+
+  it('preloads at high priority when the band asks — the page’s LCP element (§10.6)', () => {
+    // sections/DoctorIntro's pair, one band over. `preload` reaches next/image
+    // only through ExportedImage's `...rest` (the Hero suite's note), so the
+    // ABSENCE of lazy is what proves the optimizer did not swallow it.
+    const cutout = cutoutOf(renderDoctorPreload(true).container);
+
+    expect(cutout).toHaveAttribute('fetchpriority', 'high');
+    expect(cutout).not.toHaveAttribute('loading', 'lazy');
+    // …and the pair's third effect: a preload link in the head for the SAME
+    // srcset and `sizes`, so the browser fetches the variant this <img> will
+    // pick before any layout exists. Asserted PRESENT only: React keeps one
+    // link per srcset for the document's life, so an absence elsewhere in
+    // this file would hang on test order — a lazy <img> is the order-free
+    // proof that nothing asked for one (next/image links only from `preload`,
+    // and `preload` is what turns lazy off).
+    const link = [
+      ...document.head.querySelectorAll('link[rel="preload"][as="image"]'),
+    ].find(
+      (element) =>
+        element.getAttribute('imagesrcset') === cutout.getAttribute('srcset'),
+    );
+    expect(link).toBeInstanceOf(HTMLLinkElement);
+    expect(link).toHaveAttribute('imagesizes', '18rem');
+    expect(link).toHaveAttribute('fetchpriority', 'high');
+  });
+
+  it('changes exactly those two attributes — the same file, box and dress', () => {
+    // The eager card is still the card: the same srcset and sizes (so the
+    // preload fetches the variant the <img> uses), the same intrinsic size,
+    // the artwork recipe, the empty alt. `loading` goes, `fetchpriority`
+    // arrives, and nothing else moves.
+    const { loading, ...lazy } = attributesOf(
+      cutoutOf(renderDoctor().container),
+    );
+    const { fetchpriority, ...eager } = attributesOf(
+      cutoutOf(renderDoctorPreload(true).container),
+    );
+
+    expect(loading).toBe('lazy');
+    expect(fetchpriority).toBe('high');
+    expect(eager).toEqual(lazy);
+  });
+});
+
+describe('PersonnelCard — doctor: the name wears `band` at both levels (D4, D17)', () => {
+  it('renders an <h3> by default, on the `band` step, unhyphenatable', () => {
+    renderDoctor();
+
+    const heading = screen.getByRole('heading', {
+      level: 3,
+      name: DOCTOR_NAME,
+    });
+    expect(heading.tagName).toBe('H3');
+    expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
+  });
+
+  it('renders an <h2> for headingLevel={2} — the element follows the level, the step does not', () => {
+    const { container } = render(
+      <PersonnelCard
+        kind="doctor"
+        name={DOCTOR_NAME}
+        position={DOCTOR_ROLE}
+        photo={CUTOUT}
+        about={ABOUT}
+        profile={PROFILE}
+        headingLevel={2}
+      />,
+    );
+
+    const heading = screen.getByRole('heading', {
+      level: 2,
+      name: DOCTOR_NAME,
+    });
+    expect(heading.tagName).toBe('H2');
+    expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
+    expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
+    expect(cardOf(container)).toHaveAttribute('aria-labelledby', heading.id);
+  });
+
+  it('dresses the specialty exactly as an auxiliary’s position (D5)', () => {
+    renderDoctor();
+
+    const position = screen.getByText(DOCTOR_ROLE);
+    expect(position.tagName).toBe('P');
+    expect(position.className).toBe(
+      `${EYEBROW_RECIPE} hyphens-none text-center`,
+    );
+  });
+});
+
+describe('PersonnelCard — doctor: the quote (D8, D9)', () => {
   it('renders the quote as a <blockquote> carrying the about node', () => {
     // The element is the semantics: these are the doctor's OWN words (ARIA
     // role `blockquote`), which is why the owner authors them in first person.
@@ -587,8 +1045,8 @@ describe('PersonnelCard — doctor: the block, then the words (D7, D8)', () => {
     expect(quote.tagName).toBe('BLOCKQUOTE');
     expect(quote).toBe(container.querySelector('blockquote'));
     // Its own dress plus the cell it takes at the step (the default side's) —
-    // the two arrangements are pinned in full below.
-    expect(quote.className).toBe(`${QUOTE} ${PLACE.start.quote}`);
+    // the two arrangements are pinned in full above.
+    expect(quote.className).toBe(`${QUOTE} ${COLUMN.start.words} ${TEXT_CELL}`);
     // Both keyword fragments arrive as real <b> elements inside the quote.
     expect(within(quote).getAllByText(ABOUT_PARTS.first)[0].tagName).toBe('B');
     expect(quote.querySelectorAll('b')).toHaveLength(2);
@@ -603,107 +1061,15 @@ describe('PersonnelCard — doctor: the block, then the words (D7, D8)', () => {
         kind="doctor"
         name={DOCTOR_NAME}
         position={DOCTOR_ROLE}
-        photo={PHOTO}
+        photo={CUTOUT}
         about={ABOUT_TEXT}
-        actions={ACTIONS}
+        profile={PROFILE}
       />,
     );
 
     const quote = screen.getByRole('blockquote');
     expect(quote.textContent).toBe(ABOUT_TEXT);
     expect(quote.textContent).not.toMatch(/[„”“«»"]/);
-  });
-
-  it('runs block → quote → actions in the DOM — for both sides (D7, D15)', () => {
-    // Reading order is "who, then what they say, then what you can do"
-    // whichever way the wide grid faces; `side` moves COLUMNS, not children,
-    // so the DOM never reorders.
-    for (const side of ['start', 'end'] as const) {
-      const { container, unmount } = renderDoctor(side);
-
-      const layout = layoutOf(container);
-      expect(layout.children).toHaveLength(3);
-      expect(layout.children[0]).toBe(blockOf(container));
-      expect(layout.children[1]).toBe(screen.getByRole('blockquote'));
-      expect(layout.children[2]).toBe(actionsRowOf());
-      unmount();
-    }
-  });
-
-  it('takes the wide-step grid for `start` by default, and never both', () => {
-    const { container } = renderDoctor();
-
-    expect(layoutOf(container).className).toBe(
-      `flex flex-col gap-6 ${GRID_START}`,
-    );
-    expect(tokensOf(layoutOf(container))).not.toContain(
-      '@3xl:grid-cols-[minmax(0,1fr)_16rem]',
-    );
-    // The block DISSOLVES at the step so its two boxes become grid items of
-    // their own (D15); the portrait takes the 16rem track's row 1, the
-    // name/position pair the row below it.
-    expect(blockOf(container).className).toBe(`${BLOCK} ${BLOCK_DISSOLVES}`);
-    expect(portraitCellOf(container).className).toBe(
-      `aspect-3/4 w-48 max-w-full ${PLACE.start.portrait}`,
-    );
-    expect(namePairOf(container).className).toBe(
-      `${NAME_PAIR} ${PLACE.start.name}`,
-    );
-    expect(screen.getByRole('blockquote').className).toBe(
-      `${QUOTE} ${PLACE.start.quote}`,
-    );
-    expect(actionsRowOf().className).toBe(
-      `${ACTIONS_ROW} ${PLACE.start.actions}`,
-    );
-  });
-
-  it('mirrors the columns for side="end" — the same grid, reversed', () => {
-    // Every cell swaps column and nothing else: the rows, the alignments and
-    // the DOM stay exactly as they are for `start` (D7's visual-only mirror).
-    const { container } = renderDoctor('end');
-
-    expect(layoutOf(container).className).toBe(
-      `flex flex-col gap-6 ${GRID_END}`,
-    );
-    expect(tokensOf(layoutOf(container))).not.toContain(
-      '@3xl:grid-cols-[16rem_minmax(0,1fr)]',
-    );
-    expect(blockOf(container).className).toBe(`${BLOCK} ${BLOCK_DISSOLVES}`);
-    expect(portraitCellOf(container).className).toBe(
-      `aspect-3/4 w-48 max-w-full ${PLACE.end.portrait}`,
-    );
-    expect(namePairOf(container).className).toBe(
-      `${NAME_PAIR} ${PLACE.end.name}`,
-    );
-    expect(screen.getByRole('blockquote').className).toBe(
-      `${QUOTE} ${PLACE.end.quote}`,
-    );
-    expect(actionsRowOf().className).toBe(
-      `${ACTIONS_ROW} ${PLACE.end.actions}`,
-    );
-  });
-
-  it('takes the start columns for an explicit side={undefined} too (the ?? path)', () => {
-    // A consumer computing `side` from an index may hand over undefined on
-    // purpose; that is the default arrangement, not a third state (G2 react).
-    const { container } = render(
-      <PersonnelCard
-        kind="doctor"
-        name={DOCTOR_NAME}
-        position={DOCTOR_ROLE}
-        photo={PHOTO}
-        about={ABOUT}
-        actions={ACTIONS}
-        side={undefined}
-      />,
-    );
-
-    expect(layoutOf(container).className).toBe(
-      `flex flex-col gap-6 ${GRID_START}`,
-    );
-    expect(actionsRowOf().className).toBe(
-      `${ACTIONS_ROW} ${PLACE.start.actions}`,
-    );
   });
 
   it('keeps every keyword dressed inside the quote (ui/Keyword, D9 + D56 + D59 + D60)', () => {
@@ -726,131 +1092,177 @@ describe('PersonnelCard — doctor: the block, then the words (D7, D8)', () => {
   });
 });
 
-describe('PersonnelCard — the doctor’s two calls to action (D15)', () => {
-  it('renders exactly two LINKS, services then profile, each named with the person', () => {
-    // Links, never buttons: one goes to the work he does, the other to his
-    // page (§15.13 — a plain <a href>, no router). The accessible NAME is the
-    // label AND the doctor, computed by the browser out of the anchor's own
-    // text plus the card's heading (D15) — so a rotor full of „Vezi profilul"
-    // becomes a rotor of people.
+describe('PersonnelCard — the doctor’s ONE link (D15, D17)', () => {
+  it('renders exactly ONE link, to his own page, named with the person', () => {
+    // A link, never a button: it goes to a page (§15.13 — a plain <a href>,
+    // no router). The accessible NAME is the label AND the doctor, computed
+    // by the browser out of the anchor's own text plus the card's heading
+    // (D15) — so a rotor full of „Mai multe despre mine" becomes a rotor of
+    // people.
     renderDoctor();
 
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(2);
-    expect(links[0]).toBe(
-      screen.getByRole('link', { name: linkName(ACTIONS.services.label) }),
-    );
-    expect(links[1]).toBe(
-      screen.getByRole('link', { name: linkName(ACTIONS.profile.label) }),
-    );
+    expect(links).toHaveLength(1);
+    expect(links[0]).toBe(theLink());
     // The VISIBLE words are still the label alone — SC 2.5.3's leading
-    // substring, so „click Vezi profilul" still matches (D15).
-    expect(links[0].textContent).toBe(ACTIONS.services.label);
-    expect(links[1].textContent).toBe(ACTIONS.profile.label);
-    expect(links[0]).toHaveAttribute('href', ACTIONS.services.href);
-    expect(links[1]).toHaveAttribute('href', ACTIONS.profile.href);
-    expect(links.map((link) => link.tagName)).toEqual(['A', 'A']);
+    // substring, so „click Mai multe despre mine" still matches (D15).
+    expect(links[0].textContent).toBe(PROFILE.label);
+    expect(links[0]).toHaveAttribute('href', PROFILE.href);
+    expect(links[0].tagName).toBe('A');
     // No <button> anywhere: ui/Button's asChild renders no button of its own.
     expect(screen.queryAllByRole('button')).toHaveLength(0);
   });
 
-  it('wears the Hero’s pair byte for byte — solid lg left, outline lg right', () => {
-    // "identical as aspect to the ones in the hero section", read literally
-    // (D15). The expected strings are DERIVED from a rendered ui/Button, so a
-    // variant re-tuned in the atom moves this card with it instead of turning
-    // a stale copy red.
+  it('wears the old services button’s solid `lg` face, then its width and its cell', () => {
+    // "i want the button that was befroe vezi servicii" (D17). The face is
+    // DERIVED from a rendered ui/Button, so a variant re-tuned in the atom
+    // moves this card with it instead of turning a stale copy red; the card's
+    // own four utilities ride after it (ui/slot.ts merges the child's last).
     renderDoctor();
 
-    expect(
-      screen.getByRole('link', { name: linkName(ACTIONS.services.label) })
-        .className,
-    ).toBe(buttonFace('solid'));
-    expect(
-      screen.getByRole('link', { name: linkName(ACTIONS.profile.label) })
-        .className,
-    ).toBe(buttonFace('outline'));
+    const tokens = tokensOf(theLink());
+    expect(theLink().className.startsWith(buttonFace('solid'))).toBe(true);
+    expect(tokens).not.toContain('border-cta');
+    // As wide as the words up to 28rem, centred under them (the stories
+    // measure it) — and a label that wraps stays centred (ui/Button).
+    for (const token of ['mx-auto', 'w-full', 'max-w-md', 'text-center']) {
+      expect(tokens).toContain(token);
+    }
   });
 
-  it('puts both links in ONE wrapping row that shares the width equally', () => {
-    // The Hero's own row plus this card's cap and centring: two 16rem bases
-    // side by side wherever the column allows, each its own full-width row
-    // where it does not.
-    renderDoctor();
-
-    const row = actionsRowOf();
-    expect(row).toContainElement(
-      screen.getByRole('link', { name: linkName(ACTIONS.profile.label) }),
-    );
-    expect(row.children).toHaveLength(2);
-
-    const tokens = tokensOf(row);
-    // The Hero's four (the row's behaviour) plus this card's two (its cap and
-    // its centring) — named one by one, so a dropped utility reads as itself.
-    expect(tokens).toContain('flex-wrap');
-    expect(tokens).toContain('*:grow');
-    expect(tokens).toContain('*:basis-64');
-    expect(tokens).toContain('gap-3');
-    expect(tokens).toContain('max-w-3xl');
-    expect(tokens).toContain('mx-auto');
-  });
-
-  it('wires each anchor to ITSELF and then the heading (D15, the repeated-names fix)', () => {
+  it('wires the anchor to ITSELF and then the heading (D15, the repeated-names fix)', () => {
     // The mechanism, read off the DOM rather than inferred from the computed
     // name: `aria-labelledby` lists the anchor's OWN id first — whose
     // name-from-content is the visible label — and the card's <h3> second. A
-    // pair written the other way round would read "Dr. Elena Marin Vezi
-    // profilul" and break SC 2.5.3's leading substring.
+    // pair written the other way round would read "Dr. Elena Marin Mai multe
+    // despre mine" and break SC 2.5.3's leading substring.
     const { container } = renderDoctor();
 
     const headingId = screen.getByRole('heading', {
       level: 3,
       name: DOCTOR_NAME,
     }).id;
-
-    for (const [index, label] of [
-      ACTIONS.services.label,
-      ACTIONS.profile.label,
-    ].entries()) {
-      const anchor = screen.getAllByRole('link')[index];
-      const id = anchor.getAttribute('id') as string;
-      expect(id).toBeTruthy();
-      expect(container.querySelectorAll(`#${CSS.escape(id)}`)).toHaveLength(1);
-      expect(anchor).toHaveAttribute('aria-labelledby', `${id} ${headingId}`);
-      // …and the COMPUTED name, which is the assertion that would catch a
-      // self-reference an engine refused to resolve — plus SC 2.5.3 itself:
-      // the name begins with the words a visitor can see and say.
-      expect(anchor).toHaveAccessibleName(linkName(label));
-      expect(
-        (anchor.getAttribute('aria-labelledby') as string).startsWith(id),
-      ).toBe(true);
-      expect(linkName(label).startsWith(anchor.textContent as string)).toBe(
-        true,
-      );
-      expect(anchor.getAttribute('aria-label')).toBeNull();
-    }
-    // Two links, two DIFFERENT ids — and neither is the heading's.
-    const [services, profile] = screen.getAllByRole('link');
-    expect(services.id).not.toBe(profile.id);
-    expect(services.id).not.toBe(headingId);
+    const anchor = theLink();
+    const id = anchor.getAttribute('id') as string;
+    expect(id).toBeTruthy();
+    expect(id).not.toBe(headingId);
+    expect(container.querySelectorAll(`#${CSS.escape(id)}`)).toHaveLength(1);
+    expect(anchor).toHaveAttribute('aria-labelledby', `${id} ${headingId}`);
+    // …and the COMPUTED name, which is the assertion that would catch a
+    // self-reference an engine refused to resolve — plus SC 2.5.3 itself:
+    // the name begins with the words a visitor can see and say.
+    expect(anchor).toHaveAccessibleName(linkName(PROFILE.label));
+    expect(
+      linkName(PROFILE.label).startsWith(anchor.textContent as string),
+    ).toBe(true);
+    expect(anchor.getAttribute('aria-label')).toBeNull();
   });
 
-  it('places the links AFTER the words (D15 reading order)', () => {
+  it('places the link AFTER the words (D15 reading order)', () => {
     renderDoctor();
 
     const quote = screen.getByRole('blockquote');
-    const row = actionsRowOf();
     expect(
-      quote.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING,
+      quote.compareDocumentPosition(theLink()) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
+  it('gives two doctor cards on one page two different link ids', () => {
+    // A roster renders several; each link must name ITS person.
+    render(
+      <>
+        <PersonnelCard
+          kind="doctor"
+          name={DOCTOR_NAME}
+          position={DOCTOR_ROLE}
+          photo={CUTOUT}
+          about={ABOUT_TEXT}
+          profile={PROFILE}
+        />
+        <PersonnelCard
+          kind="doctor"
+          name="Dr. Andrei Șerban"
+          position="Medic dentist, chirurgie orală"
+          photo={CUTOUT}
+          about={ABOUT_TEXT}
+          profile={{ href: '/ro/team/andrei-serban/', label: PROFILE.label }}
+          side="end"
+        />
+      </>,
+    );
+
+    const first = theLink();
+    const second = screen.getByRole('link', {
+      name: linkName(PROFILE.label, 'Dr. Andrei Șerban'),
+    });
+    expect(first.id).not.toBe(second.id);
+    expect(second).toHaveAttribute('href', '/ro/team/andrei-serban/');
+  });
+
   it('renders NO link at all on an auxiliary card', () => {
-    // `actions` is typed `never` on that branch (D2) — this is the runtime
-    // shadow of the type error a real call site would get.
+    // `profile` is typed `never` on that branch (D2, D17) — this is the
+    // runtime shadow of the type error a real call site would get.
     renderAuxiliary();
 
     expect(screen.queryAllByRole('link')).toHaveLength(0);
     expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+});
+
+describe('PersonnelCard — the ribbon’s seam: four literal keep-outs (§15.26, D17)', () => {
+  it('marks the cutout’s cell, the name’s pair, the words and the link — nothing else', () => {
+    const { container } = renderDoctor();
+
+    const { picture, pair } = doctorPartsOf(container);
+    const expected = [picture, pair, screen.getByRole('blockquote'), theLink()];
+    const marked = [...container.querySelectorAll('[data-ribbon-keepout]')];
+    // Identity, in document order — not merely four look-alikes.
+    expect(marked).toHaveLength(expected.length);
+    for (const [index, block] of marked.entries()) {
+      expect(block).toBe(expected[index]);
+    }
+    expect(picture).toHaveAttribute('data-ribbon-keepout', 'portrait');
+    for (const block of marked.slice(1)) {
+      expect(block).toHaveAttribute('data-ribbon-keepout', '');
+    }
+  });
+
+  it('keeps EVERY word of a doctor card inside a keep-out — the census the mount owes (§15.26)', () => {
+    // The ribbon keeps out of what is MARKED; a word outside every marker is a
+    // word the ribbon may paint over. Walked over the text nodes themselves,
+    // so a new label, a badge or a caption added later cannot slip in unseen.
+    const { container } = renderDoctor();
+
+    const card = cardOf(container);
+    const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+    const words: Text[] = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if ((node.textContent ?? '').trim() !== '') words.push(node as Text);
+    }
+    // Never vacuous: the name, the specialty, the quote's five pieces and the
+    // label — and together they ARE the card's whole text.
+    expect(words.length).toBeGreaterThanOrEqual(8);
+    expect(words.map((word) => word.textContent).join('')).toBe(
+      card.textContent,
+    );
+    for (const word of words) {
+      const keepout = word.parentElement?.closest('[data-ribbon-keepout]');
+      expect(keepout, word.textContent ?? '').toBeInstanceOf(HTMLElement);
+      expect(card).toContainElement(keepout as HTMLElement);
+      // …and never the picture's: its keep-out is inset to the central
+      // 60 % × 70 % of the cell (lib/ribbon-layout), which no word may need.
+      expect(keepout).not.toHaveAttribute('data-ribbon-keepout', 'portrait');
+    }
+  });
+
+  it('spells the four markers as LITERAL attributes in the source — no imported constant', () => {
+    // The seam is the attribute's name, written where the card is written
+    // (ui/Ribbon's THE SEAM TO A CARD); the import pin below proves no lib
+    // constant stands in for it.
+    expect(CODE.match(/data-ribbon-keepout="portrait"/g)).toHaveLength(1);
+    expect(CODE.match(/data-ribbon-keepout=""/g)).toHaveLength(3);
+    expect(CODE.match(/data-ribbon-keepout/g)).toHaveLength(4);
   });
 });
 
@@ -884,12 +1296,12 @@ describe('PersonnelCard — container steps only, zero islands (D7, D11)', () =>
   });
 
   it('calls ONE KIND of hook, and it is the server-safe useId (D11)', () => {
-    // Three calls since 2026-09-21 — the heading's id and one per link (D15) —
-    // but still only useId: what the guard is for is a STATEFUL hook arriving,
-    // which would make this card an island on every page that renders it.
+    // Two calls since D17 — the heading's id and the link's (D15) — but still
+    // only useId: what the guard is for is a STATEFUL hook arriving, which
+    // would make this card an island on every page that renders it.
     const hooks = [...CODE.matchAll(/\buse[A-Z]\w*\(/g)].map((m) => m[0]);
     expect([...new Set(hooks)]).toEqual(['useId(']);
-    expect(hooks).toHaveLength(3);
+    expect(hooks).toHaveLength(2);
   });
 
   it('imports EXACTLY the five atoms it composes, plus lib/cx, a lib TYPE and react', () => {
@@ -898,9 +1310,10 @@ describe('PersonnelCard — container steps only, zero islands (D7, D11)', () =>
     // card without tripping a single directive check. ui/Image is the one
     // island already accepted here (D11) and it is named on this list, so the
     // question gets asked out loud the day a sixth import arrives.
-    // ui/Button joined with D15's two links and is server-safe; ui/Keyword is
+    // ui/Button joined with D15's links and is server-safe; ui/Keyword is
     // deliberately ABSENT even though D9 points at it — a consumer's fragments
-    // are already rendered by the time `about` reaches this file.
+    // are already rendered by the time `about` reaches this file — and so is
+    // lib/ribbon-layout: the keep-out markers are literal attributes (D17).
     // lib/image-path joined on 2026-09-21 and is a TYPE-ONLY module (D3): it
     // erases at build time and carries no runtime at all, which is what lets a
     // section reach into §4's foundation ring for it.
@@ -930,16 +1343,16 @@ describe('PersonnelCard — container steps only, zero islands (D7, D11)', () =>
     expect(CODE).not.toMatch(/^export\s[^=]*\sfrom\s/m);
   });
 
-  it('renders no message key path, and nothing interactive but the two links (§8.1)', () => {
+  it('renders no message key path, and nothing interactive but the one link (§8.1)', () => {
     // next-intl prints the dotted key on a miss; there is no t() here at all,
-    // and these are the assertions that keep it that way. The links' labels
-    // are FIXTURES the band would have translated — they are the only text in
-    // the card beyond the person's own (D15).
+    // and these are the assertions that keep it that way. The link's label is
+    // a FIXTURE the band would have translated — the only text in the card
+    // beyond the person's own (D17).
     const { container } = renderDoctor();
 
     expect(screen.queryAllByRole('button')).toHaveLength(0);
     expect(container.textContent).toBe(
-      `${DOCTOR_NAME}${DOCTOR_ROLE}${ABOUT_TEXT}${ACTIONS.services.label}${ACTIONS.profile.label}`,
+      `${DOCTOR_NAME}${DOCTOR_ROLE}${ABOUT_TEXT}${PROFILE.label}`,
     );
     expect(container.textContent).not.toMatch(/\b[a-z]+\.[a-zA-Z]+\.[a-zA-Z]+/);
   });
@@ -962,7 +1375,7 @@ type DoctorCard = Extract<PersonnelCardProps, { kind: 'doctor' }>;
 
 describe('PersonnelCard — type-level pins (D2)', () => {
   it('pins the two unions so a refactor cannot quietly widen them', () => {
-    // The LAYOUT Record already gates widening at the source — these pins
+    // The Record tables already gate widening at the source — these pins
     // close the other direction: a refactor that rebuilt the props type onto a
     // plain intersection would compile, keep every render test green, and
     // silently reopen both the swallowed-children hole and the
@@ -980,31 +1393,36 @@ describe('PersonnelCard — type-level pins (D2)', () => {
     expectTypeOf<DoctorCard>().not.toHaveProperty('aria-label');
   });
 
-  it('pins `actions` as the doctor’s, REQUIRED there and refused elsewhere (D15)', () => {
-    // Required, not optional: a doctor card without its two links would be a
-    // different card (the run ledger's D5), and `toEqualTypeOf` over the
-    // branch's own property is what distinguishes required from
-    // `PersonnelActions | undefined`.
-    expectTypeOf<DoctorCard>().toHaveProperty('actions');
-    expectTypeOf<DoctorCard['actions']>().toEqualTypeOf<PersonnelActions>();
-    expectTypeOf<PersonnelActions>().toEqualTypeOf<
-      Readonly<{
-        services: Readonly<{ href: string; label: string }>;
-        profile: Readonly<{ href: string; label: string }>;
-      }>
+  it('pins `profile` as the doctor’s, REQUIRED there and refused elsewhere (D17)', () => {
+    // Required, not optional: a doctor card without its link would be a
+    // different card, and `toEqualTypeOf` over the branch's own property is
+    // what distinguishes required from `PersonnelLink | undefined`.
+    expectTypeOf<DoctorCard>().toHaveProperty('profile');
+    expectTypeOf<DoctorCard['profile']>().toEqualTypeOf<PersonnelLink>();
+    expectTypeOf<PersonnelLink>().toEqualTypeOf<
+      Readonly<{ href: string; label: string }>
     >();
     // On the auxiliary branch the key exists ONLY as `never` (the D2 shape:
     // an optional `never` is what makes a wrong call site fail at the
     // property rather than at the whole object).
-    expectTypeOf<AuxiliaryCard['actions']>().toEqualTypeOf<undefined>();
+    expectTypeOf<AuxiliaryCard['profile']>().toEqualTypeOf<undefined>();
   });
 
-  it('pins `photo` as a Readonly triple, like the two link shapes beside it (D3)', () => {
-    // Readonly like PersonnelLink and PersonnelActions (G2-R2 typescript F4):
-    // a prop is the caller's value, never this card's to write. `toEqualTypeOf`
-    // compares readonly modifiers too, so the negative pin is not vacuous. And
-    // exactly three fields: D3's RE-OPEN TRIGGER (`photo.alt`, additive) is
-    // the day this pin moves, on purpose.
+  it('pins `preload` as the doctor’s, OPTIONAL there and refused elsewhere (D18)', () => {
+    // Optional with a false default: a card on Home, and every card after the
+    // first on the Team page, simply leaves it out — `renderDoctor()` above
+    // does, so its compiling IS the optional half of the pin.
+    expectTypeOf<DoctorCard['preload']>().toEqualTypeOf<boolean | undefined>();
+    // On the auxiliary branch the key exists ONLY as `never` (the D2 shape).
+    expectTypeOf<AuxiliaryCard['preload']>().toEqualTypeOf<undefined>();
+  });
+
+  it('pins `photo` as a Readonly triple, like the link shape beside it (D3)', () => {
+    // Readonly like PersonnelLink (G2-R2 typescript F4): a prop is the
+    // caller's value, never this card's to write. `toEqualTypeOf` compares
+    // readonly modifiers too, so the negative pin is not vacuous. And exactly
+    // three fields: D3's RE-OPEN TRIGGER (`photo.alt`, additive) is the day
+    // this pin moves, on purpose.
     expectTypeOf<PersonnelPhoto>().toEqualTypeOf<
       Readonly<{ src: ImagePath; width: number; height: number }>
     >();
@@ -1037,17 +1455,23 @@ describe('PersonnelCard — type-level pins (D2)', () => {
       position: AUX_ROLE,
       photo: PHOTO,
     } satisfies PersonnelCardProps;
-    const PERSON = { name: DOCTOR_NAME, position: DOCTOR_ROLE, photo: PHOTO };
+    const PERSON = { name: DOCTOR_NAME, position: DOCTOR_ROLE, photo: CUTOUT };
 
     // @ts-expect-error — an auxiliary card has no words to quote (D2)
     const quotedNurse: PersonnelCardProps = { ...AUX, about: ABOUT_TEXT };
     // @ts-expect-error — nothing to mirror without a quote (D2)
     const mirroredNurse: PersonnelCardProps = { ...AUX, side: 'end' };
-    // @ts-expect-error — the two links are a doctor's own (D2, D15)
-    const linkedNurse: PersonnelCardProps = { ...AUX, actions: ACTIONS };
+    // @ts-expect-error — a page of one's own is a doctor's (D2, D17)
+    const linkedNurse: PersonnelCardProps = { ...AUX, profile: PROFILE };
+    // @ts-expect-error — no page opens on a staff tile: no eager path (D2, D18)
+    const eagerNurse: PersonnelCardProps = { ...AUX, preload: true };
     // @ts-expect-error — a doctor without the doctor's own words (D2)
-    const silentDoctor: PersonnelCardProps = { ...PERSON, kind: 'doctor' };
-    // @ts-expect-error — a doctor card always carries its two links (D5, D15)
+    const silentDoctor: PersonnelCardProps = {
+      ...PERSON,
+      kind: 'doctor',
+      profile: PROFILE,
+    };
+    // @ts-expect-error — a doctor card always carries its link (D17)
     const linklessDoctor: PersonnelCardProps = {
       ...PERSON,
       kind: 'doctor',
@@ -1055,8 +1479,11 @@ describe('PersonnelCard — type-level pins (D2)', () => {
     };
     // @ts-expect-error — 'receptionist' is not a PersonnelKind (D2)
     const thirdKind: PersonnelCardProps = { ...PERSON, kind: 'receptionist' };
+    // A WELL-FORMED path with no size: the refusal below is then about the
+    // missing `width` / `height` alone, never about the path (G2 typescript).
+    const SIZELESS = { src: '/images/x.jpg' } as const;
     // @ts-expect-error — the intrinsic size is the reserved box (§11, D3)
-    const flatPhoto: PersonnelCardProps = { ...AUX, photo: { src: 'x' } };
+    const flatPhoto: PersonnelCardProps = { ...AUX, photo: SIZELESS };
     // @ts-expect-error — the article's name is the heading's alone (D4)
     const renamed: PersonnelCardProps = { ...AUX, 'aria-label': 'x' };
     // @ts-expect-error — a caller's pair would replace the component's (D4)
@@ -1066,13 +1493,14 @@ describe('PersonnelCard — type-level pins (D2)', () => {
       quotedNurse,
       mirroredNurse,
       linkedNurse,
+      eagerNurse,
       silentDoctor,
       linklessDoctor,
       thirdKind,
       flatPhoto,
       renamed,
       repaired,
-    ]).toHaveLength(9);
+    ]).toHaveLength(10);
   });
 });
 

@@ -70,13 +70,13 @@ const CREDO: DoctorIntroCredo = {
 };
 
 /** The quote's dress, byte for byte — the section's OWN utilities (D12): the
- *  roster card's ink one size up — `text-ink-faint`, the ink the two doctor
+ *  doctor card's ink one size up — `text-ink-faint`, the ink the two doctor
  *  quotes share since D58 (the owner's "what if you make the faint text
  *  lighter", 2026-09-26; it was PersonnelCard D8's `ink-muted`), and
  *  `text-xl`, the owner's "put a bigger card for filozofia mea" (2026-09-26,
- *  D43b; the roster card keeps `text-lg`) — plus ReviewCard's generated
+ *  D43b; the doctor card keeps `text-lg`) — plus ReviewCard's generated
  *  marks, and `text-justify` — the owner's word of 2026-09-25, §15.1's third
- *  per-element exception (the roster card's quote is the first). */
+ *  per-element exception (the doctor card's quote is the first). */
 const QUOTE =
   'text-xl text-ink-faint text-justify before:content-[open-quote] after:content-[close-quote]';
 
@@ -285,11 +285,11 @@ describe('CredoCard — the doctor’s own words (D12)', () => {
     ).toBeTruthy();
   });
 
-  it('dresses the paragraph like the roster card’s quote — justified like it', () => {
-    // text-xl + text-ink-faint = the roster card's ink one size up (D58: the
+  it('dresses the paragraph like the doctor card’s quote — justified like it', () => {
+    // text-xl + text-ink-faint = the doctor card's ink one size up (D58: the
     // two doctor quotes share --ink-faint, everything else keeps ink-muted;
     // D43b: the same words, a step larger on the doctor's own page — the
-    // roster card keeps text-lg). The two generated-content utilities are
+    // doctor card keeps text-lg). The two generated-content utilities are
     // ReviewCard's recipe. `text-justify` is PRESENT on the owner's word
     // (2026-09-25, the round-2 pack: "these texts do not feel like justify") —
     // §15.1's third per-element exception, the card's quote being the first.

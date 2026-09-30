@@ -1,21 +1,28 @@
 import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
+import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { Header } from '@/components/sections/Header/Header';
 import { Hero } from '@/components/sections/Hero/Hero';
 import { ReviewsCarousel } from '@/components/sections/ReviewsCarousel/ReviewsCarousel';
+import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { demoReviews } from '@/lib/reviews/reviews';
+import { doctors } from '@/lib/team/team';
 import { localeHref } from '@/i18n/href';
 import { isLocale } from '@/i18n/locales';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
+import { populateDoctorShowcase } from '../team/populate';
 import { populateHero } from './populate';
 
 // Pages/Home — the page as it actually ships: the Hero opener (the site's
-// second rotator, owner dispatch 2026-09-19, epic #103) over the „Ne găsești"
+// second rotator, owner dispatch 2026-09-19, epic #103) over the DOCTORS band
+// (sections/DoctorShowcase, owner dispatch 2026-09-30 — the band the Team page
+// opens with, populated by the Team page's own walk, ../team/populate.ts)
+// over the „Ne găsești"
 // band (owner 2026-09-09, board D3) over the reviews deck (mounted
 // 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — on the first
 // five of lib/reviews' demo rows until the real rows land), in the old
@@ -64,16 +71,54 @@ import { populateHero } from './populate';
 // gutters through ui/Container; Storybook's default padding would photograph
 // an inset the site does not have.
 
-/** KEEP-IN-SYNC twin of ./page.tsx. */
+/**
+ * Every picture ASKED FOR, then waited on — the Team twin's `settled`, for the
+ * same reason (2026-09-30): most pictures on this page ship `loading="lazy"`,
+ * and a lazy picture far below the window is never STARTED by the browser.
+ * This page is the longest on the site and the pixel net photographs all of
+ * it: with two doctors every card is within the browser's reach, but the
+ * clinic's real roster is six, and from the fourth or fifth card on the
+ * cutouts would be left out of the picture (G2 react, measured: Chromium's
+ * lazy distance is 3 000px). Flipping `loading` to eager is HTML's own
+ * resumption of a deferred load. Whatever a play asserts about how a picture
+ * SHIPS must therefore be read before this runs. The wait is bounded and
+ * named, the Team twin's shape: a picture that never settles fails by its
+ * `currentSrc` instead of timing the whole test out (no `decode()` — it is
+ * unbounded, and `complete` turns true at the same moment).
+ */
+const settled = async (root: HTMLElement): Promise<void> => {
+  await document.fonts.ready;
+  const pictures = Array.from(root.querySelectorAll('img'));
+  for (const picture of pictures) picture.loading = 'eager';
+  await waitFor(
+    () => {
+      for (const picture of pictures) {
+        expect(picture.complete, picture.currentSrc).toBe(true);
+      }
+    },
+    { timeout: 5_000 },
+  );
+};
+
+/** KEEP-IN-SYNC twin of ./page.tsx — the bands and the doctors band's props
+ *  are held equal to the page's by ../page-twins.test.ts, read off both
+ *  sources; the plays below pin what this twin renders. */
 function HomePageBand(): ReactElement {
   const t = useTranslations('home');
   const tc = useTranslations('common');
+  const tt = useTranslations('team');
   const locale = useLocale();
   if (!isLocale(locale))
     throw new Error(`home story: unknown locale "${locale}"`);
 
   const slides = populateHero(locale, (index, total) =>
     t('hero.slide', { index, total }),
+  );
+  // The doctors band — the Team page's own walk and words, as in page.tsx.
+  const cards = populateDoctorShowcase(
+    locale,
+    tt('showcase.profile'),
+    (segments) => <Keywords segments={segments} />,
   );
 
   return (
@@ -90,6 +135,11 @@ function HomePageBand(): ReactElement {
           services: t('hero.services'),
         }}
         servicesHref={localeHref(locale, '/services')}
+      />
+      <DoctorShowcase
+        eyebrow={tt('showcase.eyebrow')}
+        title={tt('showcase.title')}
+        doctors={cards}
       />
       <ClinicLocation />
       <ReviewsCarousel />
@@ -116,7 +166,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Romanian: Story = {
   globals: { locale: 'ro' },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
+    // THE DOCTORS BAND (owner, 2026-09-30) — and HOW ITS PICTURES SHIP, read
+    // BEFORE `settled` asks for every picture on the page: under the hero
+    // they are all LAZY. This page's largest paint is the hero's photograph;
+    // only the Team page, which the band opens, preloads its first
+    // (`firstScreen`, the band's D9).
+    const showcase = canvas.getByRole('region', {
+      name: ro.team.showcase.title,
+    });
+    for (const picture of showcase.querySelectorAll('img'))
+      await expect(picture).toHaveAttribute('loading', 'lazy');
+    await settled(canvasElement);
+
     // The outline root: one h1, the page's, read and never seen.
     const heading = canvas.getByRole('heading', {
       level: 1,
@@ -141,11 +203,25 @@ export const Romanian: Story = {
     await expect(
       canvas.getByRole('link', { name: ro.home.hero.services }),
     ).toHaveAttribute('href', '/ro/services/');
-    // The second real band, named by its own h2 — the twin must mount it too.
+    // The doctors band sits right under the hero, before the map: every
+    // lib/team doctor as a card with the ONE link to his own page.
     await expect(
-      canvas.getByRole('region', { name: ro.home.location.title }),
-    ).toBeInTheDocument();
-    // The third: the reviews deck below the map, on the five demo rows today.
+      within(showcase).getByText(ro.team.showcase.eyebrow),
+    ).toBeVisible();
+    await expect(
+      within(showcase)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(doctors.map((doctor) => `/ro/team/${doctor.id}/`));
+    // The map, named by its own h2 — after the doctors, as on the page.
+    const map = canvas.getByRole('region', { name: ro.home.location.title });
+    await expect(
+      hero.compareDocumentPosition(showcase) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(
+      showcase.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // The reviews deck below the map, on the five demo rows today.
     await expect(
       canvas.getByRole('region', { name: ro.home.reviews.region }),
     ).toBeInTheDocument();
@@ -160,7 +236,8 @@ export const Romanian: Story = {
 /** DE, the longest language (§8.4): the page tier's second pinned language. */
 export const German: Story = {
   globals: { locale: 'de' },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
+    await settled(canvasElement);
     await expect(
       canvas.getByRole('heading', { level: 1, name: de.home.hero.title }),
     ).toBeInTheDocument();
@@ -172,6 +249,9 @@ export const German: Story = {
     await expect(
       canvas.getByRole('link', { name: de.home.hero.services }),
     ).toHaveAttribute('href', '/de/services/');
+    await expect(
+      canvas.getByRole('region', { name: de.team.showcase.title }),
+    ).toBeInTheDocument();
     await expect(
       canvas.getByRole('region', { name: de.home.location.title }),
     ).toBeInTheDocument();

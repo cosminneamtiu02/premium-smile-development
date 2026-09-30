@@ -107,8 +107,8 @@ import { toStatTiles } from './stat-tiles';
 // ── NO HEADER AND NO ContactModalProvider decorator, unlike Pages/Home.
 // Nothing on this page slides under the pill (the Services precedent: the
 // opener is an ordinary band with its own `py`), and no band here mounts a
-// ContactModalTrigger — the two calls to action live on the Team page's cards,
-// not on a doctor's own page. A provider nobody asks for would only put a
+// ContactModalTrigger — a doctor's own page carries no call to action (the
+// doctor card's one link leads HERE). A provider nobody asks for would only put a
 // context in the picture that the page does not have.
 //
 // layout 'fullscreen' because all five bands are full-bleed and Container owns

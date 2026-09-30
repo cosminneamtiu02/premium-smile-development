@@ -3,10 +3,8 @@ import type {
   DoctorIntroCredo,
   DoctorIntroPhoto,
 } from '@/components/sections/DoctorIntro/DoctorIntro';
-import type {
-  TeamRosterDoctor,
-  TeamRosterMember,
-} from '@/components/sections/TeamRoster/TeamRoster';
+import type { DoctorShowcaseDoctor } from '@/components/sections/DoctorShowcase/DoctorShowcase';
+import type { TeamRosterMember } from '@/components/sections/TeamRoster/TeamRoster';
 import { localeHref } from '@/i18n/href';
 import type { Locale } from '@/i18n/locales';
 import { formatHoursRows, type HoursRow } from '@/lib/hours/hours';
@@ -22,10 +20,12 @@ import {
 } from '@/lib/team/team';
 
 // app/[locale]/team/populate — THE walk from lib/team's people to the finished
-// props of the two team pages, in ONE language. Pure: a locale, a couple of
-// callbacks and (for tests) a list go in, plain objects come out. JSX-free and
+// props of the pages that show them — the Team page, every doctor page and,
+// since 2026-09-30, the Home page's doctors band — in ONE language. Pure: a
+// locale, a couple of callbacks and (for tests) a list go in, plain objects
+// come out. JSX-free and
 // next-intl-free, no DOM — React reaches it only through the sections' prop
-// types it already imports (`TeamRosterDoctor['about']`,
+// types it already imports (`DoctorShowcaseDoctor['about']`,
 // `DoctorIntroCredo['body']`); the `react` specifier itself is gone (G2-R2
 // tier 3, react F3 — by tests/unit/lib-react-free.test.ts' definition a
 // type-only `react` import is still a React import, and nothing here needs
@@ -33,16 +33,17 @@ import {
 // ./../(home)/populate.ts), copied for the same three reasons those files
 // argue:
 //
-//   · THE BANDS ARE DUMB (run ledger D1). sections/TeamRoster, DoctorIntro,
-//     DoctorProfile, DoctorCourses and DoctorStats hold zero message keys and
-//     import no data; none of them knows what a `Locale` is. Somebody still
-//     has to pick the visitor's words, build the two hrefs, cut the `<k>`
+//   · THE BANDS ARE DUMB (run ledger D1). sections/DoctorShowcase, TeamRoster,
+//     DoctorIntro, DoctorProfile, DoctorCourses and DoctorStats hold zero
+//     message keys and import no data; none of them knows what a `Locale` is.
+//     Somebody still has to pick the visitor's words, build the link to a
+//     doctor's page, cut the `<k>`
 //     marks out of a doctor's philosophy, print his week, group his courses by
 //     year and pick his numbers' words — and the PAGE is that somebody. This
 //     file is the page's arithmetic, lifted out of the JSX.
 //
 //   · IT CANNOT LIVE IN lib/team, whose return type would then have to name
-//     `sections/` types (`TeamRosterDoctor`, DoctorCourses' `CourseGroup`) —
+//     `sections/` types (`DoctorShowcaseDoctor`, DoctorCourses' `CourseGroup`) —
 //     the one arrow §4's dependency direction forbids, since the foundation
 //     ring is importable BY every tier and imports none of them. Restating
 //     those prop shapes inside lib/ instead would give a contract that
@@ -51,8 +52,9 @@ import {
 //     imports only its `coursesByYear`, never that type: the name below is
 //     the band's, the year a finished string.)
 //
-//   · IT CANNOT BE INLINE IN THE TWO page.tsx FILES. Each has a KEEP-IN-SYNC
-//     story twin beside it (./Team.stories.tsx, ./[slug]/Doctor.stories.tsx)
+//   · IT CANNOT BE INLINE IN THE page.tsx FILES. Each has a KEEP-IN-SYNC
+//     story twin beside it (./Team.stories.tsx, ./[slug]/Doctor.stories.tsx,
+//     ../(home)/Home.stories.tsx)
 //     that must perform the SAME mapping and cannot import an async Server
 //     Component (those modules await next-intl/server, which no browser runner
 //     executes). A module both import is what keeps each walk written ONCE
@@ -70,7 +72,7 @@ import {
 //     caller's `<Keywords>` (ui/Keyword). That is what keeps this file JSX-free
 //     while the `<k>` marks still become <b> fragments on the page. It renders
 //     ONE text in both walks: a doctor's `philosophy` (round 2's D17), which
-//     the roster card quotes and the doctor page's credo card quotes again
+//     the showcase's card quotes and the doctor page's credo card quotes again
 //     (D12) — hence the name; round 1 spelled it `renderAbout` while the
 //     quoted field was still called `about`.
 //   · `closedLabel` is finished text for lib/hours, which has refused message
@@ -79,17 +81,17 @@ import {
 // the server, `useTranslations` in the story twin — so a callback is the seam
 // both satisfy, and this module needs neither a provider nor a mock to test.
 //
-// ── NO `TEAM_TITLE_ID` HERE, unlike the services populator. That page owns its
-// <h1> as a bare `sr-only` element and its twin needs a handle to grab it by;
-// on the Team page the <h1> is the BAND's (TeamRoster renders `title` through
-// ui/Heading), and on a doctor page it is DoctorIntro's. Neither twin has an
-// element of the page's own to pin, so both find the heading by role and name —
-// which is the stronger assertion anyway (§9, §13).
+// ── NO `TEAM_TITLE_ID` HERE, unlike the services populator. Since 2026-09-30
+// the Team page owns its <h1> the way that page does — a bare `sr-only`
+// element in the page's markup, the visible opener being the doctors band's
+// own <h2> — and on a doctor page the <h1> is DoctorIntro's. Both twins find
+// the heading by role and name, which needs no handle and is the stronger
+// assertion anyway (§9, §13).
 //
 // ── THE LIST IS AN ARGUMENT, and lib/team's `findDoctor` is therefore NOT
 // called here. It searches the SHIPPED array; the one lookup below searches the
 // list it was HANDED, because that argument is this module's test seam — it is
-// how ./populate.test.ts hands the walks a doctor with no `servicesCategory`,
+// how ./populate.test.ts hands the walks
 // course rows written out of year order, or no courses at all: shapes the real
 // data need not hold on the day the suite runs. On the default list the two
 // are the same search. Calling the lib helper here would make the `list`
@@ -105,18 +107,10 @@ import {
 // each surfacing HERE UNCHANGED, never caught or reworded: ./populate.test.ts
 // feeds both shapes through the `list` seam and pins the libraries' own
 // messages (its „lets lib/team’s unbalanced-<k> error surface unchanged",
-// once for the roster walk and once for the doctor walk, and „lets lib/hours’
+// once for the showcase walk and once for the doctor walk, and „lets lib/hours’
 // unknown-day error surface unchanged"; G2-R2 tier 3, typescript F4). A
 // try/catch that quietly printed the raw text instead would turn those three
 // red.
-
-/**
- * The two labels a doctor's card wears on its buttons — finished, already
- * translated text (§8.1), from `team.roster.*`. Named rather than positional,
- * so neither face can be handed the other's word by a miscounted index (the
- * `PersonnelActions` reasoning, one tier up).
- */
-export type RosterLabels = Readonly<{ services: string; profile: string }>;
 
 /**
  * The two lists a walk reads. Defaulted to the real people, so every shipping
@@ -129,12 +123,6 @@ export type TeamList = Readonly<{
 }>;
 
 const SITE_LIST: TeamList = { doctors, auxiliaries };
-
-/** Everything sections/TeamRoster needs for one language. */
-export type TeamRosterContent = Readonly<{
-  doctors: readonly TeamRosterDoctor[];
-  members: readonly TeamRosterMember[];
-}>;
 
 /**
  * Everything a `/{locale}/team/{id}/` page's four content bands need, in one
@@ -182,82 +170,81 @@ export type DoctorStatContent = Readonly<{
 }>;
 
 /**
- * The Team page's whole content for ONE language: every doctor as a card with
- * his two links, every auxiliary member as a tile.
+ * The doctors band's cards for ONE language — sections/DoctorShowcase's
+ * `doctors`, on the Home page and on the Team page alike (owner, 2026-09-30):
+ * every doctor with his cutout, his quoted philosophy and the ONE link to his
+ * own page.
  *
- * Order passes through UNCHANGED, from both lists — display order is designed
- * in lib/team (its header says so), and the band alternates the doctors' sides
- * from the index it receives. Alternation is NOT this function's business: it
- * is a visual mirror the band owns (PersonnelCard D7), and nothing here tells
- * a card which way to face.
+ * Order passes through UNCHANGED — display order is designed in lib/team (its
+ * header says so), and the band alternates the cards' sides from the index it
+ * receives. Alternation is NOT this function's business: it is a visual mirror
+ * the band owns (PersonnelCard D7), and nothing here tells a card which way to
+ * face.
  *
  * @param locale the visitor's language, already narrowed by `isLocale` — the
  *   page receives a route `string`, and indexing a `Record<Locale, …>` with an
  *   unchecked string is a cast that type-checks a typo just as happily as a
  *   locale (§15.19's recorded trigger, the services page's precedent).
- * @param labels the two button words, finished text from `team.roster.*`.
+ * @param profileLabel the button's words, finished text from
+ *   `team.showcase.profile`.
  * @param renderQuote one doctor's cut-up philosophy → the node the card
- *   quotes (the card's prop is still called `about` — PersonnelCard's API,
- *   which round 2 left alone). The page hands over ui/Keyword's
- *   `<Keywords segments={…} />`; this module never builds an element (run
- *   ledger D1).
+ *   quotes (the card's prop is still called `about` — PersonnelCard's API).
+ *   The page hands over ui/Keyword's `<Keywords segments={…} />`; this module
+ *   never builds an element (run ledger D1).
+ * @param list the people to walk. Defaults to lib/team's own.
+ */
+export function populateDoctorShowcase(
+  locale: Locale,
+  profileLabel: string,
+  renderQuote: (
+    segments: readonly AboutSegment[],
+  ) => DoctorShowcaseDoctor['about'],
+  list: TeamList = SITE_LIST,
+): readonly DoctorShowcaseDoctor[] {
+  return list.doctors.map((doctor) => {
+    const words = doctor.words[locale];
+    return {
+      id: doctor.id,
+      name: words.name,
+      position: words.position,
+      // THE CUTOUT — a doctor's one picture (lib/team): the card shows the
+      // doctor from the waist up with no background, the file the doctor
+      // page's opener shows too (owner, 2026-09-30; PersonnelCard D17).
+      photo: doctor.cutout,
+      about: renderQuote(splitKeywords(words.philosophy)),
+      // THE PROFILE LINK is the route `generateStaticParams` emits for this
+      // doctor — `/{locale}/team/{id}/`, run ledger D3 — spelled through the
+      // one URL rule (§15.13: prefix, trailing slash, interim base path)
+      // rather than concatenated here. It is the card's ONLY link, and the
+      // only link to a doctor's page anywhere on the site.
+      profile: {
+        href: localeHref(locale, `/team/${doctor.id}`),
+        label: profileLabel,
+      },
+    };
+  });
+}
+
+/**
+ * The Team page's auxiliary personnel for ONE language — sections/TeamRoster's
+ * tiles, in lib/team's own order.
+ *
+ * @param locale the visitor's language, already narrowed by `isLocale`.
  * @param list the people to walk. Defaults to lib/team's own.
  */
 export function populateTeamRoster(
   locale: Locale,
-  labels: RosterLabels,
-  renderQuote: (segments: readonly AboutSegment[]) => TeamRosterDoctor['about'],
   list: TeamList = SITE_LIST,
-): TeamRosterContent {
-  return {
-    doctors: list.doctors.map((doctor) => {
-      const words = doctor.words[locale];
-      return {
-        id: doctor.id,
-        name: words.name,
-        position: words.position,
-        photo: doctor.portrait,
-        about: renderQuote(splitKeywords(words.philosophy)),
-        actions: {
-          // THE SERVICES LINK lands on the work, not on the top of the price
-          // list: a doctor who has a `servicesCategory` gets the fragment of
-          // that category's card, which the price band made a focusable target
-          // on purpose (`<section id tabIndex={-1}>`, §15.20). A doctor whose
-          // work no single category covers links to the page itself — the
-          // field is optional in lib/team for exactly that person.
-          // The fragment ids are ENGLISH in every language (owner fb-461): a
-          // URL is not copy, and `localeHref` carries the '#…' through
-          // untouched, after the trailing slash where a URL keeps it.
-          services: {
-            href: localeHref(
-              locale,
-              doctor.servicesCategory
-                ? `/services#${doctor.servicesCategory}`
-                : '/services',
-            ),
-            label: labels.services,
-          },
-          // THE PROFILE LINK is the route `generateStaticParams` emits for this
-          // doctor — `/{locale}/team/{id}/`, run ledger D3 — spelled through
-          // the one URL rule (§15.13: prefix, trailing slash, interim base
-          // path) rather than concatenated here.
-          profile: {
-            href: localeHref(locale, `/team/${doctor.id}`),
-            label: labels.profile,
-          },
-        },
-      };
-    }),
-    members: list.auxiliaries.map((member) => {
-      const words = member.words[locale];
-      return {
-        id: member.id,
-        name: words.name,
-        position: words.position,
-        photo: member.portrait,
-      };
-    }),
-  };
+): readonly TeamRosterMember[] {
+  return list.auxiliaries.map((member) => {
+    const words = member.words[locale];
+    return {
+      id: member.id,
+      name: words.name,
+      position: words.position,
+      photo: member.portrait,
+    };
+  });
 }
 
 /**
@@ -266,7 +253,7 @@ export function populateTeamRoster(
  * export never builds an unknown segment, so `undefined` only ever reaches a
  * caller that invented an id (a story, a test, a hand-typed URL in `next dev`).
  *
- * @param locale the visitor's language, already narrowed (see the roster walk).
+ * @param locale the visitor's language, already narrowed (see the showcase walk).
  * @param slug the `[slug]` segment — a doctor's `id` in lib/team, which IS the
  *   URL (run ledger D3).
  * @param options `renderQuote` cuts nothing and renders everything (see the
@@ -294,11 +281,11 @@ export function populateDoctorPage(
     intro: {
       name: words.name,
       position: words.position,
-      // The CUTOUT, not the portrait: the opener stands the subject on the
-      // page ground with no card behind him (run ledger D6), while the card
-      // photograph is the roster's 3:4 crop.
+      // The CUTOUT: the opener stands the subject on the page ground with no
+      // card behind him (run ledger D6) — the same file the doctors band's
+      // card shows (PersonnelCard D17).
       photo: doctor.cutout,
-      // THE CREDO CARD's quote (D12): the SAME philosophy the roster card
+      // THE CREDO CARD's quote (D12): the SAME philosophy the doctor card
       // quotes, cut here and rendered by the caller, so the two pages can
       // never quote the doctor differently.
       credo: options.renderQuote(splitKeywords(words.philosophy)),

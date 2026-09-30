@@ -110,6 +110,38 @@ describe('Button — content is a slot (§6.2)', () => {
   });
 });
 
+describe('Button — a label that wraps stays centred (2026-09-30)', () => {
+  // The flex container centres the label's BOX; once §8.4 lets a label wrap,
+  // only `text-center` centres its LINES — the doctor card's „Mai multe
+  // despre mine" on a phone was laid out start-aligned inside a centred box
+  // (sections/PersonnelCard D17). Pinned on every variant, and on the asChild
+  // path the card takes, because the class rides the shared `base`.
+  const variants = Object.keys({
+    solid: true,
+    outline: true,
+    ghost: true,
+  } satisfies Record<ButtonVariant, true>) as ButtonVariant[];
+
+  it.each(variants)('variant %s centres its lines, not only its box', (v) => {
+    render(<Button variant={v}>Mai multe despre mine</Button>);
+    const tokens = screen.getByRole('button').className.split(/\s+/);
+    expect(tokens).toContain('justify-center');
+    expect(tokens).toContain('text-center');
+  });
+
+  it('carries it onto an asChild link', () => {
+    render(
+      <Button asChild size="lg">
+        <a href="/ro/team/elena-marin/">Mai multe despre mine</a>
+      </Button>,
+    );
+    const tokens = screen
+      .getByRole('link', { name: 'Mai multe despre mine' })
+      .className.split(/\s+/);
+    expect(tokens).toContain('text-center');
+  });
+});
+
 describe('Button — asChild (approved option A)', () => {
   it('renders ONLY the child element — no <button> exists in the DOM', () => {
     render(

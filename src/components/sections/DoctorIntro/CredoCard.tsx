@@ -111,13 +111,13 @@ import { Card } from '@/components/ui/Card/Card';
 //                    paragraph, a lone mark on a line of its own. On the <p>
 //                    the opening mark sits on the first line, the closing mark
 //                    on the last, and ui/Keyword's <b>s sit INSIDE the pair.
-//   text-xl          20px on a 28px line — ONE STEP ABOVE the roster card's
+//   text-xl          20px on a 28px line — ONE STEP ABOVE the doctor card's
 //                    quote, on the owner's word (2026-09-26, round 2j: "put a
 //                    bigger card for filozofia mea" — D43b in round 2's
 //                    ledger). Built at `text-lg`, 18px = the §15.1 body base
 //                    and PersonnelCard D8's size, so the same words printed at
 //                    the same size on both surfaces; the doctor's own page now
-//                    gives them the larger voice, and the roster card keeps
+//                    gives them the larger voice, and the doctor card keeps
 //                    its 18px. (A plain <p> and not ui/Text either way: that
 //                    atom's steps stop at 16px.) MEASURED at 1280 / 1536 /
 //                    1920 in Chromium: five lines at all three — the card
@@ -154,9 +154,9 @@ import { Card } from '@/components/ui/Card/Card';
 //                    words; a person's name is DoctorIntro's h1).
 //   text-justify     THE OWNER'S WORD, 2026-09-25, on the round-2 pack: "these
 //                    texts do not feel like justify" — so the credo is justified
-//                    exactly like the roster card's quote it repeats. Built
+//                    exactly like the doctor card's quote it repeats. Built
 //                    START-aligned first (D12 as written: §15.1's justify
-//                    exception was scoped to the roster card's ONE element and
+//                    exception was scoped to the doctor card's ONE element and
 //                    was not extended silently), then flipped the same day on
 //                    that sentence — the lever D12 had recorded: one utility on
 //                    THIS <p> (§15.15 b, per element), and §15.1 now names this
@@ -275,7 +275,7 @@ export function CredoCard({
         <blockquote>
           {/* The marks ride the PARAGRAPH (see the header's THE QUOTE): they
               open on the first line and close on the last, around the key
-              words. JUSTIFIED like the roster card's quote — the owner's word,
+              words. JUSTIFIED like the doctor card's quote — the owner's word,
               2026-09-25 (the header's text-justify row; §15.1's third exception). */}
           <p className="text-xl text-ink-faint text-justify before:content-[open-quote] after:content-[close-quote]">
             {body}

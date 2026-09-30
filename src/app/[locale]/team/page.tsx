@@ -1,43 +1,47 @@
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
+import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { TeamRoster } from '@/components/sections/TeamRoster/TeamRoster';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale } from '@/i18n/locales';
-import { populateTeamRoster } from './populate';
+import { populateDoctorShowcase, populateTeamRoster } from './populate';
 
-// THE TEAM PAGE — „Echipa noastră": every doctor as a card with his quote and
-// his two buttons, the auxiliary staff as a grid of tiles, the map last. It
-// replaces the interim stub that existed only so the shell's nav had a
-// resolvable target (PR #69, the link check) — that file's one heading reused
-// the nav label and shipped no keys of its own.
+// THE TEAM PAGE — „Echipa noastră": the doctors band first (its eyebrow and
+// title, every doctor as a card under the ribbon), the auxiliary staff as a
+// grid of tiles, the map last. It replaced the interim stub that existed only
+// so the shell's nav had a resolvable target (PR #69, the link check).
 //
-// ── AS SIMPLE AS THE OWNER ASKED (run ledger D10, his words: „build personnel
-// page as simple as possible as it is now in team composition and add at the
-// end the map"). One <h1>, the doctor cards, the tiles, the map. No intro
-// paragraph, no sub-headings over the two groups, no gallery — §14's TeamIntro
-// and ClinicGallery rows are not what this lane built, and adding either
-// without his word would be improvising content (§15.17: the owner authors it).
+// ── THE DOCTORS ARE A BAND OF THEIR OWN since 2026-09-30 (owner, verbatim:
+// "make this the official dr card under personell card … integrate it in the
+// page and crete it as a section in the home page and in the personell page
+// with heading and eyebrow smth in the direction of specialistii cu care ne
+// mandrim familia premium smile"). sections/DoctorShowcase is that section —
+// the SAME band the Home page mounts — and sections/TeamRoster, which used to
+// hold the title, the doctors and the staff, keeps the staff tiles alone. No
+// intro paragraph and no gallery: §14's TeamIntro and ClinicGallery rows are
+// still nobody's, and adding either without the owner's word would be
+// improvising content (§15.17).
 //
 // ── THIS FILE IS THE ONE POPULATOR (run ledger D1, the services and home
-// pages' precedent). sections/TeamRoster is a DUMB band: it holds no message
-// key, imports no data, formats nothing and does not know what a `Locale` is —
-// it receives finished people and lays them out, alternating the doctors'
-// sides from their index. So everything that has to KNOW happens here — the
-// language, the two button words, the URLs — and ../team/populate.ts does the
-// walk (its header argues why it is neither in lib/team nor inline here).
-// ClinicLocation is the exception that proves the rule: it is a page BAND
-// wired to site data (lib/clinic, §10.1) and takes nothing from this file.
+// pages' precedent). Both bands are DUMB: they hold no message key, import no
+// data, format nothing and do not know what a `Locale` is — they receive
+// finished people and lay them out. So everything that has to KNOW happens
+// here — the language, the band's eyebrow and title, the button's words, the
+// URLs — and ./populate.ts does the walks (its header argues why it is neither
+// in lib/team nor inline here). ClinicLocation is the exception that proves
+// the rule: it is a page BAND wired to site data (lib/clinic, §10.1) and takes
+// nothing from this file.
 //
-// ── THE <h1> IS THE BAND'S, not the page's. On Home and Services the page
-// owns a bare `sr-only` heading because neither band carries a page title;
-// here „Echipa noastră" is the visible opener the owner asked for, so the
-// element lives where it is painted (TeamRoster renders `title` through
-// ui/Heading's `hero` step, §15.24's one size per level) and this file simply
-// supplies the words. §9's one outline root is satisfied by that heading, and
-// the band around it stays UNNAMED — a region named by the page's own title
-// would duplicate <main> for a screen-reader user (the services page's G2 a11y
-// verdict, same shape).
+// ── THE <h1> IS THE PAGE'S, AND `sr-only` — the Services page's shape, since
+// 2026-09-30. Until then „Echipa noastră" was the visible opener, painted by
+// TeamRoster; now the visible opener is the doctors band's own eyebrow and
+// <h2> („Familia Premium Smile" / „Specialiștii cu care ne mândrim"), two
+// stacked titles would say the same thing twice, and the band must read the
+// same on Home, where it cannot be an <h1>. §9's one outline root and the SEO
+// lane's outline still need the element, so it stays, in the page's markup,
+// with the words the tab title shows: h1 (the page) → h2 (the band) → h3 (each
+// doctor) → h2 (each staff tile) → h2 (the map).
 //
 // ── `isLocale` IS THE NARROWING, not a guard against reality: next-intl hands
 // back a plain `string`, and `words[locale]` on a `Record<Locale, …>` refuses
@@ -58,24 +62,23 @@ import { populateTeamRoster } from './populate';
 // full §10.3 treatment — description, OG, hreflang, the `Dentist` JSON-LD — is
 // still the SEO lane's (PHASE4_SEO_PLAN.md), and this is deliberately not it.
 // What could not wait is SC 2.4.2 Page Titled, a LEVEL A criterion sitting
-// inside this site's AA bar (§9): until this lane, every route inherited the
-// layout's bare „Premium Smile", and this run added two more — so a visitor
-// with five tabs open, or anyone reading a history list, had nothing to tell
-// the Team page from the Home page from a doctor's page. The title is the
-// 404 page's own idiom, `title — siteName` on the ` — ` join, and it is built
-// from the SAME `team.title` key the band prints, so the tab and the <h1> can
-// never disagree. Zero hardcoded user-facing strings live in this file
-// (§17.4) — `team.title` and `team.roster.*` are the owner's, in
-// src/messages/*.json, and every name, position and sentence is a fact from
-// lib/team.
+// inside this site's AA bar (§9). The title is the 404 page's own idiom,
+// `title — siteName` on the ` — ` join, and it is built from the SAME
+// `team.title` key the <h1> prints, so the tab and the outline root can never
+// disagree. Zero hardcoded user-facing strings live in this file (§17.4) —
+// `team.title` and `team.showcase.*` are the owner's, in src/messages/*.json,
+// and every name, position and sentence is a fact from lib/team.
 //
 // ── KEEP-IN-SYNC with ./Team.stories.tsx: this page is an async Server
 // Component (getTranslations/getLocale from next-intl/server), which no browser
 // runner can execute — the shell.test.tsx / Pages/Services precedent — so the
 // twin beside it renders the same markup through the isomorphic
 // `useTranslations` + `useLocale` and the SAME ./populate.ts, and its play
-// functions pin it from the outside. Change the JSX here and that suite must
-// follow, or it goes red naming what drifted.
+// functions pin what the TWIN renders. What holds the two together is
+// ../page-twins.test.ts, which reads this file and the twin as source and
+// compares the bands, in order, and the doctors band's props (G2 react,
+// 2026-09-30: until then nothing a gate runs noticed this page losing
+// `firstScreen`).
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -96,9 +99,9 @@ export default async function TeamPage() {
   if (!isLocale(locale))
     throw new Error(`team page: unknown locale "${locale}"`);
 
-  const roster = populateTeamRoster(
+  const doctors = populateDoctorShowcase(
     locale,
-    { services: t('roster.services'), profile: t('roster.profile') },
+    t('showcase.profile'),
     // ui/Keyword's `Keywords` turns lib/team's cut-up sentence into text and
     // <b> fragments. The populator does the cutting and never builds an
     // element; the page does the rendering and never sees a `<k>` (run D1/D2).
@@ -107,11 +110,18 @@ export default async function TeamPage() {
 
   return (
     <>
-      <TeamRoster
-        title={t('title')}
-        doctors={roster.doctors}
-        members={roster.members}
+      <h1 className="sr-only">{t('title')}</h1>
+      {/* `firstScreen`: on THIS page the band opens the first screen, and the
+          first doctor's picture is its largest paint (measured — the band's
+          D9), so that one picture preloads. Home mounts the same band under
+          the Hero and leaves the prop off. */}
+      <DoctorShowcase
+        firstScreen
+        eyebrow={t('showcase.eyebrow')}
+        title={t('showcase.title')}
+        doctors={doctors}
       />
+      <TeamRoster members={populateTeamRoster(locale)} />
       {/* The map closes every page of this run — the owner's „add at the end
           the map so i can test how it goes back and forth on the page". It
           reads lib/clinic itself and takes nothing from here. */}

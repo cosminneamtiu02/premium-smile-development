@@ -988,10 +988,10 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
 
   it('centres a WhatsApp label that wraps, in the language that wraps it', async () => {
     // Owner, 2026-09-05: "on Kontaktieren Sie uns über WhatsApp i want the text
-    // centered when it goes on 2 lines". ui/Button centres the flex ROW, which
-    // places glyph+label as a group but leaves the label's own lines ragging
-    // left; `text-center` from this section governs those lines (§6.8: a parent
-    // utility on the atom's root, not a restyle of its internals).
+    // centered when it goes on 2 lines". `justify-center` on ui/Button's flex
+    // line places glyph+label as a group; the label's own LINES are centred by
+    // the atom's `text-center` — this section's own class until 2026-09-30,
+    // when the doctor card's label wrapped too and the fix moved into the atom.
     // 320 + German is the case that HAS the wrap — the assertion checks both
     // halves, because a centring class on a label that never wraps proves
     // nothing.

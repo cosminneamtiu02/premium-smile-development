@@ -7,10 +7,11 @@ import type { ImagePath } from '../image-path/image-path';
 // all five languages. Site DATA in §4's foundation ring (the lib/clinic, lib/prices,
 // lib/reviews and lib/hero-slides precedents): one file every consumer reads,
 // nothing fetched, nothing mutated, React-free (fenced by
-// tests/unit/lib-react-free.test.ts). The Team page and the per-doctor page
-// are DUMB bands (run ledger D1): app/[locale]/team/populate.ts imports this
-// list, picks the visitor's language and hands finished strings over; no band
-// ever sees this file.
+// tests/unit/lib-react-free.test.ts). The Team page, the per-doctor page and —
+// since 2026-09-30 — the Home page's doctors band are built from DUMB bands
+// (run ledger D1): app/[locale]/team/populate.ts imports this list, picks the
+// visitor's language and hands finished strings over; no band ever sees this
+// file.
 //
 // WHY A TYPESCRIPT MODULE AND NOT MESSAGE KEYS (run ledger D2 — the lib/prices
 // argument, word for word). A doctor's biography is CONTENT, the way a price
@@ -20,7 +21,8 @@ import type { ImagePath } from '../image-path/image-path';
 // of a leaked Romanian one — the guarantee tests/unit/translation-parity.test.ts
 // could never have given, because it checks the five message files against
 // EACH OTHER and knows nothing about which person needs which key. The `team`
-// namespace keeps only what is NOT a fact about a person: the two card labels,
+// namespace keeps only what is NOT a fact about a person: the doctors band's
+// eyebrow and title and its card's one label (`team.showcase.*`, 2026-09-30),
 // the doctor page's three eyebrow/title pairs — philosophy · about · courses
 // (run ledger D20) — plus the schedule's title alone (its eyebrow struck in
 // round 2g, D37), the „în cifre" band's eyebrow, title and lead
@@ -29,8 +31,9 @@ import type { ImagePath } from '../image-path/image-path';
 // about band's title is „Despre {name}", and the name comes from here.
 //
 // ARRAYS, NOT OBJECTS KEYED BY ID (the lib/prices reasoning). Display order is
-// designed here — the Team page walks `doctors` top to bottom and alternates
-// the sides — so reordering the page means moving lines in this file.
+// designed here — the doctors band (sections/DoctorShowcase, on Home and on
+// the Team page) walks `doctors` top to bottom and alternates the sides — so
+// reordering the band means moving lines in this file.
 // `findDoctor` and `findAuxiliary` below are the lookups TOOLS, TESTS and the
 // doctor route's `generateMetadata` use — never the walk that builds a page:
 // `generateStaticParams` maps `doctors` itself, and app/[locale]/team/
@@ -45,9 +48,10 @@ import type { ImagePath } from '../image-path/image-path';
 // TWO TEXTS PER DOCTOR, IN TWO VOICES (run ledger D17 — round 2, the owner's
 // pack feedback of 2026-09-25). `philosophy` is the doctor speaking: first
 // person, one or two sentences, `<k>…</k>` around the words a page dresses in
-// bold. It is ONE string with TWO readers — the Team page's roster card quotes
-// it, and the doctor page's „Filozofia mea" card beside the opener's
-// photograph quotes it again (D12) — so it is written once, here, and
+// bold. It is ONE string with TWO readers — the doctor card quotes it
+// (sections/PersonnelCard, in the doctors band), and the doctor page's
+// „Filozofia mea" card beside the opener's photograph quotes it again (D12) —
+// so it is written once, here, and
 // `splitKeywords` below cuts it for both. Round 1 called it `about`; the
 // rename freed that word for what the doctor page's lilac band now holds.
 // `about` is the clinic speaking ABOUT the doctor: third person, plain prose,
@@ -216,9 +220,11 @@ import type { ImagePath } from '../image-path/image-path';
 // (§11) — and carry their INTRINSIC pixel size, because ui/Image reserves the
 // box from it (§11's zero-layout-shift rule); tests/unit/team-data.test.ts
 // reads every file's own header (PNG IHDR, JPEG SOF) and refuses a row whose
-// `width`/`height` are not the pixels on disk (G2-R2 tier 1, typescript F3). Two per doctor and one per
-// auxiliary member: `portrait` is the 3:4 card photograph (PersonnelCard D3),
-// `cutout` is the opener's transparent PNG, the subject with no background.
+// `width`/`height` are not the pixels on disk (G2-R2 tier 1, typescript F3).
+// ONE per person: an auxiliary member's `portrait` is the 3:4 card photograph
+// (PersonnelCard D3); a doctor's `cutout` is a transparent PNG, the subject
+// from the waist up with no background — the doctor page's opener and, since
+// 2026-09-30, the doctor card too (PersonnelCard D17).
 // The demo files sit in public/images/demo/; the clinic's own go in
 // public/images/team/ BY CONVENTION, which tests/unit/team-data.test.ts pins
 // today as "every shipped path is a demo path" and will tighten to the team
@@ -242,6 +248,17 @@ import type { ImagePath } from '../image-path/image-path';
 // reads — a field nothing prints still has to be kept true by somebody, and
 // nobody would notice the day it stopped being. The auxiliary staff
 // themselves stay: they are the Team page's grid.
+//
+// NO PORTRAIT AND NO SERVICES CATEGORY ON A DOCTOR (owner dispatch 2026-09-30,
+// PersonnelCard D17) — D13's reason once more. Until that day a doctor carried
+// a framed `portrait` for the Team page's card and an optional
+// `servicesCategory`, the lib/prices category the card's „Vezi serviciile"
+// link landed on. The card now wears the `cutout` and keeps ONE link, to the
+// doctor's own page, so both fields lost their only reader and left with it
+// (the owner's standing word: "i want no dead code"). The day a link to a
+// doctor's prices returns — on his own page, say — `servicesCategory` returns
+// with it, together with the data test's check that it names a category
+// lib/prices really has.
 
 /**
  * A picture under public/images/ with its INTRINSIC pixel size (§11 — what
@@ -271,7 +288,7 @@ export type DoctorWords = Readonly<{
   position: string;
   /**
    * The doctor's own words, first person, with `<k>…</k>` around the one or
-   * two words a page dresses (run ledger D2) — the roster card's quote AND the
+   * two words a page dresses (run ledger D2) — the doctor card's quote AND the
    * doctor page's „Filozofia mea" card (D12), one string for both (D17; round
    * 1 called it `about`). The marks are the PersonnelCard lane's D9
    * convention kept; what changed is WHERE they are authored — here, beside
@@ -367,15 +384,12 @@ export type AuxiliaryMember = Readonly<{
 export type Doctor = Readonly<{
   /** THE URL segment (run ledger D3) — stable, English, kebab-case, dot-free. */
   id: string;
-  /** The 3:4 card photograph, the Team page's. */
-  portrait: TeamPicture;
-  /** The opener's transparent PNG — the subject with no background (run ledger D6). */
+  /** The transparent PNG — the doctor from the waist up, no background: the
+   *  doctor page's opener (run ledger D6) and the doctor card (PersonnelCard
+   *  D17). A doctor's ONE picture. */
   cutout: TeamPicture;
   /** The doctor's OWN week, in lib/clinic's shape — lib/hours turns it into rows. */
   hours: readonly OpeningHours[];
-  /** A lib/prices category id — the card's services link lands on `#id`. Absent
-   *  when no single category covers the doctor's work. */
-  servicesCategory?: string;
   /**
    * The courses, newest first (run ledger D17) — `coursesByYear` groups them
    * for one language. The TYPE allows none (a doctor without courses gets no
@@ -394,10 +408,10 @@ export type Doctor = Readonly<{
 }>;
 
 // The committed demo pictures. The three portraits are the PersonnelCard
-// lane's fixtures (600 × 800, the one team ratio); the two cutouts were
-// generated for this run (900 × 1200, alpha, obviously placeholders). Two
-// people share a portrait on purpose — five demo faces do not exist, and the
-// data test must therefore never demand unique pictures.
+// lane's fixtures (600 × 800, the one team ratio) — one per auxiliary member
+// today; the two cutouts were generated for the doctor-pages run (900 × 1200,
+// alpha, obviously placeholders) — one per doctor. Demo faces are scarce, so
+// the data test never demands unique pictures: two rows may share a file.
 const PORTRAIT_1: TeamPicture = {
   src: '/images/demo/portrait-1.jpg',
   width: 600,
@@ -498,20 +512,19 @@ export const auxiliaries: readonly AuxiliaryMember[] = [
 ];
 
 /**
- * The doctors, in the order the Team page prints them (the sides alternate
- * from this order) and the order `generateStaticParams` emits their pages in.
+ * The doctors, in the order the doctors band prints them on Home and on the
+ * Team page (the sides alternate from this order) and the order
+ * `generateStaticParams` emits their pages in.
  * Add rows HERE — the type refuses a missing language and a course without
  * all five of its lines, and tests/unit/team-data.test.ts checks what only the
- * file system, the other lists and the words themselves know: that the
- * pictures exist, that `servicesCategory` names a category lib/prices actually
- * has, that every language carries as many `about` paragraphs as the Romanian,
+ * file system and the words themselves know: that the pictures exist, that
+ * every language carries as many `about` paragraphs as the Romanian,
  * that the course rows run newest → oldest, and that every number a stat's
  * sentence carries is that stat's own `value` (D32).
  */
 export const doctors: readonly Doctor[] = [
   {
     id: 'elena-marin',
-    portrait: PORTRAIT_1,
     cutout: CUTOUT_1,
     // Long mornings three days a week, late shifts on the other two — the
     // reason a doctor carries his own week instead of the clinic's.
@@ -523,7 +536,6 @@ export const doctors: readonly Doctor[] = [
       },
       { days: ['Tuesday', 'Thursday'], opens: '12:00', closes: '20:00' },
     ],
-    servicesCategory: 'orthodontics',
     // Round 1's four lines with their „, YEAR" tails lifted into `year` (D17),
     // plus ONE row drafted in round 2 — the digital photography course — so
     // the 2024 group shows two lines, the case the band has to lay out — and
@@ -818,7 +830,6 @@ export const doctors: readonly Doctor[] = [
   },
   {
     id: 'andrei-serban',
-    portrait: PORTRAIT_3,
     cutout: CUTOUT_2,
     hours: [
       {
@@ -828,7 +839,6 @@ export const doctors: readonly Doctor[] = [
       },
       { days: ['Saturday'], opens: '09:00', closes: '13:00' },
     ],
-    servicesCategory: 'oral-surgery',
     // Round 1's four lines with their „, YEAR" tails lifted into `year` (D17),
     // plus ONE row drafted in round 2 — the suturing workshop — so the 2022
     // group shows two lines — and FOUR more drafted in round 2g (D39), nine
@@ -1227,7 +1237,7 @@ const STRAY_TAG = /<\/?k>/i;
  * `Keywords` turns into text and `<b>` fragments (run ledger D2: the marks are
  * authored beside the person now, and split HERE instead of by next-intl's
  * `t.rich`). Its input is a doctor's `philosophy` (D17), the one field that
- * carries marks, split for the roster card's quote and for the doctor page's
+ * carries marks, split for the doctor card's quote and for the doctor page's
  * credo card (D12) alike.
  *
  * A piece with no text is dropped — the empty lead of a sentence that opens on

@@ -131,7 +131,7 @@ the owner's explicit instruction (brief §15.7).**
 ## Phase 3 — `sections/` compositions
 
 **Order (shell first):** `Header` (+ `LanguageSwitcher`) → `ContactModal` → `Footer` →
-`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `PersonnelCard` *(was TeamMemberCard — owner 2026-09-10, new design; reworked 2026-09-21 with the two links)* → `TeamRoster` *(was TeamSection — the Team page's band, 2026-09-21)* → the doctor-page bands `DoctorIntro` (+ its `CredoCard`) → `DoctorProfile` (+ its `ScheduleCard`) → `DoctorCourses` (+ its `CourseTimeline` island, round 2g) → `TintedBand` (extracted) → `DoctorStats` (+ its `StatNumber` island) *(2026-09-21; rounds 2–2g 2026-09-25/26 — `DoctorTeam` dropped, §15.23)* → *[future: the doctor's blog-articles band, above the map]* →
+`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `PersonnelCard` *(was TeamMemberCard — owner 2026-09-10, new design; reworked 2026-09-21 with the two links; reworked again 2026-09-30, §15.25: ONE link, the cutout, the reviews deck's idle frame, the ribbon's seam)* → `TeamRoster` *(was TeamSection — the Team page's band, 2026-09-21; the staff tiles alone since 2026-09-30)* → `DoctorShowcase` *(the doctors band on Home and on the Team page, the floss ribbon's first mount — 2026-09-30, §15.25)* → the doctor-page bands `DoctorIntro` (+ its `CredoCard`) → `DoctorProfile` (+ its `ScheduleCard`) → `DoctorCourses` (+ its `CourseTimeline` island, round 2g) → `TintedBand` (extracted) → `DoctorStats` (+ its `StatNumber` island) *(2026-09-21; rounds 2–2g 2026-09-25/26 — `DoctorTeam` dropped, §15.23)* → *[future: the doctor's blog-articles band, above the map]* →
 `CTABanner` → `FAQAccordion` (if kept) → `PostCard`.
 
 ### Per-section checklist

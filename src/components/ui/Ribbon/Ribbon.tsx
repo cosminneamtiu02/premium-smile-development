@@ -98,8 +98,8 @@ import { slotClone } from '../slot';
 // boxes and the stations. The drawing starts after mount: it creates the
 // canvases inside the empty box React never renders into, and nothing React
 // renders reads its snapshot, so hydration has nothing to disagree about.
-// §16's island list gains this atom in the lane that mounts it (§15.26:
-// this lane mounts it nowhere).
+// §16's island list gained this atom at its first mount — sections/
+// DoctorShowcase, on Home and on the Team page (2026-09-30, §15.25).
 //
 // ── 'use client' because it is inherently stateful: an effect starts the
 // drawing and a context tells a station it stands in a ribbon. §6.8: the

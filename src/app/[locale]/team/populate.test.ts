@@ -12,12 +12,14 @@ import {
 } from '@/lib/team/team';
 import {
   populateDoctorPage,
+  populateDoctorShowcase,
   populateTeamRoster,
   type DoctorPageContent,
   type TeamList,
 } from './populate';
 
-// populate — both team walks, tested without rendering anything. The module is
+// populate — the team walks (the doctors band's cards, the auxiliary tiles, a
+// doctor's page), tested without rendering anything. The module is
 // pure, JSX-free and next-intl-free by design, and names no `react` specifier
 // (see its header), so this suite needs no provider, no DOM and no mock beyond
 // a spy standing in for the page's quote callback.
@@ -25,7 +27,7 @@ import {
 // TWO HALVES per walk, the services populator's shape
 // (../services/populate.test.ts) for the same two reasons:
 //   · against a FIXTURE — does the mapping do what it says? The right
-//     language, both hrefs, the philosophy's segments handed over, the
+//     language, the profile href, the philosophy's segments handed over, the
 //     paragraphs untouched, the week printed, and the course rows grouped by
 //     year with the year turned into a LABEL — including the shapes the real
 //     data may never happen to hold: rows written out of year order, a doctor
@@ -56,8 +58,7 @@ import {
  * missing locale, and are deliberately distinct so a walk that picked the
  * wrong record cannot pass by accident.
  *
- * The SHAPES that matter: the first doctor has a `servicesCategory` and the
- * second has none (the two href branches); the first doctor's course rows are
+ * The SHAPES that matter: the first doctor's course rows are
  * written OUT of year order, with two rows in one year — so "newest first" and
  * "the file's order inside a year" are real assertions rather than a
  * coincidence of the fixture; the second doctor has NO course (D15: no group,
@@ -67,16 +68,10 @@ const FIXTURE = {
   doctors: [
     {
       id: 'ana-ardelean',
-      portrait: {
-        src: '/images/demo/portrait-1.jpg',
-        width: 600,
-        height: 800,
-      },
       cutout: { src: '/images/demo/cutout-1.png', width: 900, height: 1200 },
       hours: [
         { days: ['Monday', 'Wednesday'], opens: '09:00', closes: '17:00' },
       ],
-      servicesCategory: 'orthodontics',
       // Two tiles, one with a suffix and one without (round 2f, D32).
       stats: [
         {
@@ -189,15 +184,9 @@ const FIXTURE = {
     },
     {
       id: 'vlad-oprea',
-      portrait: {
-        src: '/images/demo/portrait-2.jpg',
-        width: 600,
-        height: 800,
-      },
       cutout: { src: '/images/demo/cutout-2.png', width: 900, height: 1200 },
       hours: [{ days: ['Saturday'], opens: '09:00', closes: '13:00' }],
-      // NO `servicesCategory`: the page-level link branch. NO course: the
-      // empty-band branch (D15).
+      // NO course: the empty-band branch (D15).
       stats: [],
       courses: [],
       words: {
@@ -275,7 +264,7 @@ const FIXTURE = {
  * The fixture list with its first doctor, Ana, ALONE and changed — the shapes
  * tests/unit/team-data.test.ts refuses in the shipped data, which the walks
  * must still answer for without a word of their own (the module header's "NO
- * THROW OF ITS OWN"). The second doctor is left out on purpose: the roster
+ * THROW OF ITS OWN"). The second doctor is left out on purpose: the showcase
  * walk visits every doctor, and a throw must be HIS, not a neighbour's.
  */
 const withAna = (ana: Doctor): TeamList => ({ ...FIXTURE, doctors: [ana] });
@@ -315,7 +304,8 @@ const spyRenderQuote = () =>
       .join(''),
   );
 
-const LABELS = { services: 'Vezi serviciile', profile: 'Vezi profilul' };
+/** The card's one button — finished text, as the page reads it from `team.showcase.profile`. */
+const PROFILE_LABEL = 'Mai multe despre mine';
 
 /** A year label is the plain digits of a calendar year — never „2.024", which
  *  is what `Intl.NumberFormat` would print for ro and de. */
@@ -346,90 +336,97 @@ describe('populate — the shapes pinned where both sides are importable', () =>
   });
 });
 
-describe('populateTeamRoster — the mapping, against a fixture', () => {
-  it('keeps every person, in the lists’ own order (the band walks these arrays)', () => {
-    const roster = populateTeamRoster('ro', LABELS, spyRenderQuote(), FIXTURE);
+describe('populateDoctorShowcase — the mapping, against a fixture', () => {
+  it('keeps every doctor, in the list’s own order (the band walks this array)', () => {
+    const cards = populateDoctorShowcase(
+      'ro',
+      PROFILE_LABEL,
+      spyRenderQuote(),
+      FIXTURE,
+    );
 
-    expect(roster.doctors.map((doctor) => doctor.id)).toEqual([
+    expect(cards.map((doctor) => doctor.id)).toEqual([
       'ana-ardelean',
       'vlad-oprea',
-    ]);
-    expect(roster.members.map((member) => member.id)).toEqual([
-      'dana-fixture',
-      'radu-fixture',
     ]);
   });
 
   it('picks the words of the locale it was given — Romanian', () => {
-    const [ana] = populateTeamRoster(
+    const [ana] = populateDoctorShowcase(
       'ro',
-      LABELS,
+      PROFILE_LABEL,
       spyRenderQuote(),
       FIXTURE,
-    ).doctors;
+    );
 
     expect(ana.name).toBe('Dr. Ana Ardelean');
     expect(ana.position).toBe('Medic ortodont');
   });
 
   it('picks the words of the locale it was given — German (same people, other words)', () => {
-    const roster = populateTeamRoster('de', LABELS, spyRenderQuote(), FIXTURE);
+    const cards = populateDoctorShowcase(
+      'de',
+      PROFILE_LABEL,
+      spyRenderQuote(),
+      FIXTURE,
+    );
 
-    expect(roster.doctors.map((doctor) => doctor.position)).toEqual([
+    expect(cards.map((doctor) => doctor.position)).toEqual([
       'Kieferorthopädin',
       'Zahnarzt',
     ]);
-    expect(roster.members.map((member) => member.position)).toEqual([
-      'Zahnmedizinische Fachangestellte',
-      'Empfang und Terminvergabe',
-    ]);
   });
 
-  it('hands the doctor’s card the PORTRAIT, never the opener’s cutout', () => {
-    const [ana] = populateTeamRoster(
+  it('hands the doctor’s card the CUTOUT — a doctor’s one picture (PersonnelCard D17)', () => {
+    // The card shows the doctor from the waist up with no background — the
+    // file the doctor page's opener shows too (owner, 2026-09-30). Until that
+    // day this walk handed over a framed PORTRAIT, a field a doctor no longer
+    // carries (lib/team's NO PORTRAIT AND NO SERVICES CATEGORY).
+    const [ana] = populateDoctorShowcase(
       'ro',
-      LABELS,
+      PROFILE_LABEL,
       spyRenderQuote(),
       FIXTURE,
-    ).doctors;
-
-    expect(ana.photo).toEqual(FIXTURE.doctors[0].portrait);
-  });
-
-  it('builds the services link on the doctor’s category — and on the page itself when he has none', () => {
-    const roster = populateTeamRoster('ro', LABELS, spyRenderQuote(), FIXTURE);
-
-    // The fragment rides AFTER the trailing slash, where a URL keeps it, and
-    // the id stays English in every language (owner fb-461).
-    expect(roster.doctors[0].actions.services.href).toBe(
-      '/ro/services/#orthodontics',
     );
-    expect(roster.doctors[1].actions.services.href).toBe('/ro/services/');
+
+    expect(ana.photo).toEqual(FIXTURE.doctors[0].cutout);
   });
 
   it('builds the profile link as the route generateStaticParams emits (run D3)', () => {
-    const roster = populateTeamRoster('de', LABELS, spyRenderQuote(), FIXTURE);
-
-    expect(roster.doctors.map((doctor) => doctor.actions.profile.href)).toEqual(
-      ['/de/team/ana-ardelean/', '/de/team/vlad-oprea/'],
-    );
-  });
-
-  it('puts the page’s two labels on the two faces, never the other way round', () => {
-    const [ana] = populateTeamRoster(
-      'ro',
-      LABELS,
+    const cards = populateDoctorShowcase(
+      'de',
+      PROFILE_LABEL,
       spyRenderQuote(),
       FIXTURE,
-    ).doctors;
+    );
 
-    expect(ana.actions.services.label).toBe('Vezi serviciile');
-    expect(ana.actions.profile.label).toBe('Vezi profilul');
+    expect(cards.map((doctor) => doctor.profile.href)).toEqual([
+      '/de/team/ana-ardelean/',
+      '/de/team/vlad-oprea/',
+    ]);
+  });
+
+  it('puts the page’s label on every card’s one link', () => {
+    const cards = populateDoctorShowcase(
+      'ro',
+      PROFILE_LABEL,
+      spyRenderQuote(),
+      FIXTURE,
+    );
+
+    for (const doctor of cards) {
+      expect(doctor.profile.label).toBe('Mai multe despre mine');
+    }
   });
 
   it('cuts the philosophy’s <k> marks itself and hands the caller SEGMENTS, once per doctor', () => {
     const renderQuote = spyRenderQuote();
-    const roster = populateTeamRoster('ro', LABELS, renderQuote, FIXTURE);
+    const cards = populateDoctorShowcase(
+      'ro',
+      PROFILE_LABEL,
+      renderQuote,
+      FIXTURE,
+    );
 
     expect(renderQuote).toHaveBeenCalledTimes(2);
     expect(renderQuote.mock.calls[0][0]).toEqual([
@@ -441,30 +438,92 @@ describe('populateTeamRoster — the mapping, against a fixture', () => {
     // card's `about` prop, whose name PersonnelCard kept (round 2 renamed the
     // DATA field, not the card's API). No markup survives the walk: a `<k>` in
     // the output would mean the page printed the tag instead of a keyword.
-    expect(roster.doctors[0].about).toBe('Lucrez în [ortodonție] de zece ani.');
-    for (const doctor of roster.doctors)
+    expect(cards[0].about).toBe('Lucrez în [ortodonție] de zece ani.');
+    for (const doctor of cards)
       expect(String(doctor.about)).not.toContain('<k>');
   });
 
-  it('lets lib/team’s unbalanced-<k> error surface unchanged — the roster walk', () => {
+  it('lets lib/team’s unbalanced-<k> error surface unchanged — the showcase walk', () => {
     // The walk cuts every doctor's philosophy for his card, so a stray mark
     // must stop it in lib/team's own words, not print as a visible `<k>`.
     const renderQuote = spyRenderQuote();
     expect(() =>
-      populateTeamRoster('ro', LABELS, renderQuote, withPhilosophy(UNBALANCED)),
+      populateDoctorShowcase(
+        'ro',
+        PROFILE_LABEL,
+        renderQuote,
+        withPhilosophy(UNBALANCED),
+      ),
     ).toThrow(UNBALANCED_ERROR);
     // …and the refusal comes BEFORE the caller renders anything.
     expect(renderQuote).not.toHaveBeenCalled();
   });
 
   it('says nothing about which way a card faces — alternation is the band’s (PersonnelCard D7)', () => {
-    const roster = populateTeamRoster('ro', LABELS, spyRenderQuote(), FIXTURE);
+    const cards = populateDoctorShowcase(
+      'ro',
+      PROFILE_LABEL,
+      spyRenderQuote(),
+      FIXTURE,
+    );
 
-    for (const doctor of roster.doctors) {
-      expect(Object.hasOwn(doctor, 'side')).toBe(false);
+    for (const doctor of cards) {
       expect(Object.keys(doctor).toSorted()).toEqual([
         'about',
-        'actions',
+        'id',
+        'name',
+        'photo',
+        'position',
+        'profile',
+      ]);
+    }
+  });
+});
+
+describe('populateDoctorShowcase — the real doctors, walked whole', () => {
+  it('prints every doctor of lib/team', () => {
+    const cards = populateDoctorShowcase('ro', PROFILE_LABEL, spyRenderQuote());
+
+    expect(cards.map((doctor) => doctor.id)).toEqual(
+      doctors.map((doctor) => doctor.id),
+    );
+  });
+
+  it('gives every shipped doctor the link to his own page and his cutout, in every language', () => {
+    for (const locale of locales) {
+      const cards = populateDoctorShowcase(
+        locale,
+        PROFILE_LABEL,
+        spyRenderQuote(),
+      );
+      for (const [index, doctor] of cards.entries()) {
+        expect(doctor.profile.href).toBe(`/${locale}/team/${doctor.id}/`);
+        expect(doctor.photo).toEqual(doctors[index].cutout);
+      }
+    }
+  });
+});
+
+describe('populateTeamRoster — the auxiliary tiles', () => {
+  it('keeps every member, in the list’s own order (the band walks this array)', () => {
+    expect(
+      populateTeamRoster('ro', FIXTURE).map((member) => member.id),
+    ).toEqual(['dana-fixture', 'radu-fixture']);
+  });
+
+  it('picks the words of the locale it was given', () => {
+    expect(
+      populateTeamRoster('de', FIXTURE).map((member) => member.position),
+    ).toEqual([
+      'Zahnmedizinische Fachangestellte',
+      'Empfang und Terminvergabe',
+    ]);
+  });
+
+  it('hands every tile the member’s own portrait and nothing a doctor’s card has', () => {
+    for (const [index, member] of populateTeamRoster('ro', FIXTURE).entries()) {
+      expect(member.photo).toEqual(FIXTURE.auxiliaries[index].portrait);
+      expect(Object.keys(member).toSorted()).toEqual([
         'id',
         'name',
         'photo',
@@ -472,32 +531,11 @@ describe('populateTeamRoster — the mapping, against a fixture', () => {
       ]);
     }
   });
-});
 
-describe('populateTeamRoster — the real people, walked whole', () => {
-  it('prints every doctor and every auxiliary member of lib/team', () => {
-    const roster = populateTeamRoster('ro', LABELS, spyRenderQuote());
-
-    expect(roster.doctors.map((doctor) => doctor.id)).toEqual(
-      doctors.map((doctor) => doctor.id),
-    );
-    expect(roster.members.map((member) => member.id)).toEqual(
+  it('prints every auxiliary member of lib/team', () => {
+    expect(populateTeamRoster('ro').map((member) => member.id)).toEqual(
       auxiliaries.map((member) => member.id),
     );
-  });
-
-  it('gives every shipped doctor both links, in every language', () => {
-    for (const locale of locales) {
-      const roster = populateTeamRoster(locale, LABELS, spyRenderQuote());
-      for (const doctor of roster.doctors) {
-        expect(doctor.actions.profile.href).toBe(
-          `/${locale}/team/${doctor.id}/`,
-        );
-        expect(doctor.actions.services.href).toMatch(
-          new RegExp(`^/${locale}/services/(#[a-z-]+)?$`),
-        );
-      }
-    }
   });
 });
 

@@ -17,7 +17,7 @@ import { cx } from '@/lib/cx/cx';
 // "the second section that wants keyword fragments moves this to ui/Keyword —
 // a composite never promotes, but this one is a primitive living here until it
 // has a second consumer". The doctor page is that second consumer (the
-// opener's CredoCard, round 2 — the same quote the roster card shows, D12),
+// opener's CredoCard, round 2 — the same quote the doctor card shows, D12),
 // so the trigger fired and the file moved. The <b> was BYTE-IDENTICAL to the
 // one PersonnelCard shipped when it moved — a promotion moves a primitive, it
 // does not redesign it — and PersonnelCard.tsx's D9 is now a pointer at this

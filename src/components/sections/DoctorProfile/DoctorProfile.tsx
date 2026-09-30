@@ -223,7 +223,7 @@ import { ScheduleCard } from './ScheduleCard';
 // ── THE PARAGRAPHS ARE JUSTIFIED — the owner's word, 2026-09-25, round 2c:
 // "this text just isn't justified" (the credo card's quote had been justified
 // on the same day's earlier sentence). Built start-aligned first, because
-// §15.1's justify exception was scoped to the roster card's one <blockquote>;
+// §15.1's justify exception was scoped to the doctor card's one <blockquote>;
 // now that exception names the doctor page's prose — the credo <p> and each
 // <p> here — as its third per-element case. The utility rides EACH <p>
 // (§15.15 b: on the element, never a wrapper-level blanket), and nothing else

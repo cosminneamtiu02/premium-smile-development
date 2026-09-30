@@ -19,24 +19,24 @@ import {
 } from '../../src/lib/team/team';
 import type { SchemaDay } from '../../src/lib/clinic/clinic';
 import type { ImagePath } from '../../src/lib/image-path/image-path';
-import { priceCategories } from '../../src/lib/prices/prices';
 import { locales, type Locale } from '../../src/i18n/locales';
 
 // lib/team INTEGRITY — the checks the compiler cannot make (the hero-slides,
 // reviews and prices precedents). `tsc` proves every row HAS five languages
 // and every field each of them needs; only a test can see that one of them is
-// an empty string, that two people share an id, that a portrait points at
-// nothing on disk, that a doctor's `servicesCategory` names a category
-// lib/prices does not have, that a language is one `about` paragraph short,
-// or that a course row is dated outside any plausible career or filed out of
-// order. The one that matters most is the cross-list one: a wrong category id
-// would send the card's services button to a fragment that is not on the
-// Services page, and nothing else would notice.
+// an empty string, that two people share an id, that a picture points at
+// nothing on disk, that a language is one `about` paragraph short, or that a
+// course row is dated outside any plausible career or filed out of order.
+// (Until 2026-09-30 a doctor also carried a `servicesCategory`, held here to
+// the categories lib/prices really has; the field left with the card's
+// services link — lib/team's NO PORTRAIT AND NO SERVICES CATEGORY — and the
+// check returns with it.)
 //
 // SINCE 2026-09-21 (the G2 fold) it also holds the checks a LAYOUT needs from
 // its data, which no component can make about words it has not been given
-// yet: the two 320px ceilings on the unbreakable part of a name and of a
-// position (both lines opt out of hyphenation), the `<k>` marks staying inside
+// yet: the 320px ceilings on the unbreakable part of a name and of a position
+// — a doctor's position has a tighter one of its own since the ribbon's mount,
+// 2026-09-30 — (both lines opt out of hyphenation), the `<k>` marks staying inside
 // `philosophy` where `splitKeywords` is the only thing that cuts them, and the
 // lines a band keys its rows by being distinct — sections/DoctorProfile keys
 // each `about` paragraph by its text (run ledger D14) and sections/
@@ -99,8 +99,6 @@ const WEEK = [
   'Sunday',
 ] as const satisfies readonly SchemaDay[];
 
-const CATEGORY_IDS = new Set(priceCategories.map((category) => category.id));
-
 /** The doctor's single-string fields — `about` is a LIST and has its own test. */
 const DOCTOR_WORD_KEYS = ['name', 'position', 'philosophy'] as const;
 
@@ -153,6 +151,33 @@ const NAME_CEILING = 16;
 const POSITION_CEILING = 21;
 
 /**
+ * A DOCTOR'S POSITION HAS A TIGHTER CEILING SINCE THE RIBBON'S MOUNT
+ * (2026-09-30 — CLAUDE.md §15.26's "owed at the mount", re-derived for the
+ * narrower line the lanes leave). The doctor card now sits inside ui/Ribbon,
+ * whose two side lanes inset it (PersonnelCard D17's INSET), so at the 320px
+ * stress window — a 241px column once the classic scrollbar gutter is
+ * reserved — the name block's line is 174.5px where the plain card had 206px.
+ * MEASURED on the built Team page (Chromium): the mono eyebrow advances 9.8px
+ * a character (8.4px of glyph + 1.4px of tracking), so 17 characters are
+ * 166.6px and fit, 18 are 176.4px and do not.
+ *
+ * WHAT A LONGER WORD COSTS, measured the same day rather than assumed: the
+ * name block grows past its line, the ribbon's guard finds words in its lane
+ * and WITHHOLDS THE WHOLE RIBBON at that window (every canvas 0 × 0) — a 22-
+ * character word does it at 320 and at 360 alike. The page does not scroll
+ * sideways and no word is lost; the decoration is. An auxiliary tile sits in
+ * no ribbon and keeps the 21 above.
+ *
+ * A NAME is deliberately NOT given a card ceiling: a person cannot be renamed.
+ * Measured on the same page at the `band` step's 30px: a 12-letter surname
+ * („Alexandrescu", 178px) still leaves the ribbon drawn at 320, a 14-letter
+ * one („Constantinescu", 202px) withholds it under a ~345px window and draws
+ * from 360. The lever for a longer real surname is the card's — the name's
+ * step on a narrow card (PersonnelCard's NAME_STEP) — never this file's.
+ */
+const DOCTOR_POSITION_CEILING = 17;
+
+/**
  * A STAT LABEL'S CEILING — the position's 21, as run ledger D32's contract
  * sets it. The label is the tile's `<h3>`, one tile to a row at 320px (D21),
  * and it inherits the number the eyebrow was MEASURED at rather than being
@@ -197,9 +222,9 @@ const pictures: [string, TeamPicture][] = [
     `${member.id}.portrait`,
     member.portrait,
   ]),
-  ...doctors.flatMap((doctor): [string, TeamPicture][] => [
-    [`${doctor.id}.portrait`, doctor.portrait],
-    [`${doctor.id}.cutout`, doctor.cutout],
+  ...doctors.map((doctor): [string, TeamPicture] => [
+    `${doctor.id}.cutout`,
+    doctor.cutout,
   ]),
 ];
 
@@ -213,18 +238,6 @@ describe('lib/team — the people are well-formed', () => {
     const ids = [...doctors, ...auxiliaries].map((person) => person.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(KEBAB_CASE);
-  });
-
-  it('points every services link at a category lib/prices actually has', () => {
-    for (const doctor of doctors) {
-      if (doctor.servicesCategory === undefined) continue;
-      // The card's button lands on `#id` on the Services page — an id that is
-      // not there is a link to nowhere, and nothing else would notice.
-      expect(
-        CATEGORY_IDS.has(doctor.servicesCategory),
-        `${doctor.id} → #${doctor.servicesCategory}`,
-      ).toBe(true);
-    }
   });
 });
 
@@ -297,23 +310,18 @@ describe('lib/team — the pictures', () => {
     },
   );
 
-  it('keeps every portrait at the ONE team ratio, 3:4 (§11, PersonnelCard D3)', () => {
-    // Uniform team photos are §11's rule and the card's own (D3). A portrait
-    // that arrives at another ratio is cropped by the CARD, so the data is
-    // where the disagreement has to surface.
-    for (const member of auxiliaries) {
-      expect(member.portrait.width * 4, member.id).toBe(
-        member.portrait.height * 3,
-      );
-    }
-    for (const doctor of doctors) {
-      expect(doctor.portrait.width * 4, doctor.id).toBe(
-        doctor.portrait.height * 3,
-      );
+  it('keeps every team picture at the ONE ratio, 3:4 — portraits and cutouts alike (§11, PersonnelCard D3, D17)', () => {
+    // Uniform team photos are §11's rule and the card's own. An auxiliary's
+    // portrait that arrives at another ratio is CROPPED by its tile (D3); a
+    // doctor's cutout is drawn WHOLE (D17), so another ratio would make one
+    // doctor card taller than the next. Either way the data is where the
+    // disagreement has to surface.
+    for (const [label, picture] of pictures) {
+      expect(picture.width * 4, label).toBe(picture.height * 3);
     }
   });
 
-  it('keeps every cutout a PNG — the opener needs the alpha channel (D6)', () => {
+  it('keeps every cutout a PNG — the opener and the card need the alpha channel (D6, PersonnelCard D17)', () => {
     for (const doctor of doctors) {
       expect(doctor.cutout.src.endsWith('.png'), doctor.id).toBe(true);
     }
@@ -370,10 +378,11 @@ describe('lib/team — the words, in all five languages', () => {
           longestUnbreakable(words.name).length,
           `${doctor.id}.${locale}.name`,
         ).toBeLessThanOrEqual(NAME_CEILING);
+        // The doctor card's line inside the ribbon's lanes — the tighter one.
         expect(
           longestUnbreakable(words.position).length,
           `${doctor.id}.${locale}.position`,
-        ).toBeLessThanOrEqual(POSITION_CEILING);
+        ).toBeLessThanOrEqual(DOCTOR_POSITION_CEILING);
         // The tile's `<h3>` (run ledger D32 — the contract's ceiling).
         for (const stat of doctor.stats) {
           expect(
@@ -731,7 +740,6 @@ describe('lib/team — what the types guarantee (run ledger D2)', () => {
     };
     const fourLanguages: Doctor = {
       id: 'proba',
-      portrait: { src: '/images/demo/portrait-1.jpg', width: 600, height: 800 },
       cutout: { src: '/images/demo/cutout-1.png', width: 900, height: 1200 },
       hours: [],
       courses: [],

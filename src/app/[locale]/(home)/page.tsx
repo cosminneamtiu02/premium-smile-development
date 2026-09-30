@@ -1,13 +1,23 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
+import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { Hero } from '@/components/sections/Hero/Hero';
 import { ReviewsCarousel } from '@/components/sections/ReviewsCarousel/ReviewsCarousel';
+import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { localeHref } from '@/i18n/href';
 import { isLocale } from '@/i18n/locales';
+import { populateDoctorShowcase } from '../team/populate';
 import { populateHero } from './populate';
 
 // Home lives at /{locale} itself — never /{locale}/home (brief §5).
-// Three real bands so far, in the old site's order: the Hero FIRST — the
+// FOUR real bands so far. Second since 2026-09-30, right under the Hero: the
+// DOCTORS band (sections/DoctorShowcase — owner, verbatim: "crete it as a
+// section in the home page and in the personell page with heading and
+// eyebrow smth in the direction of specialistii cu care ne mandrim familia
+// premium smile"), the same band the Team page opens with, populated by the
+// Team page's own walk (../team/populate.ts) and the Team page's own words
+// (`team.showcase.*`) — its place on this page is the planner's pick, a lever.
+// The other three, in the old site's order: the Hero FIRST — the
 // opener, the whole first screen UNDER the Header pill (owner dispatch
 // 2026-09-19, epic #103; pack round 2, 2026-09-20: the band pulls itself up
 // by the pill's flow box on its own, Hero.tsx's STAGE paragraph — this page
@@ -41,18 +51,28 @@ import { populateHero } from './populate';
 // root param (src/i18n/request.ts, §15.16) — `getLocale` reads it.
 // KEEP-IN-SYNC with ./Home.stories.tsx: this file is an async Server Component
 // and cannot render in the browser runner, so the story twins its markup
-// through `useTranslations`/`useLocale` and the same ./populate.ts, and pins
-// it (owner, 2026-09-06).
+// through `useTranslations`/`useLocale` and the same ./populate.ts (owner,
+// 2026-09-06). The twin's plays pin the TWIN; ../page-twins.test.ts holds the
+// two files' bands, in order, and the doctors band's props equal.
 
 export default async function HomePage() {
   const t = await getTranslations('home');
   const tc = await getTranslations('common');
+  const tt = await getTranslations('team');
   const locale = await getLocale();
   if (!isLocale(locale))
     throw new Error(`home page: unknown locale "${locale}"`);
 
   const slides = populateHero(locale, (index, total) =>
     t('hero.slide', { index, total }),
+  );
+
+  // The doctors band's cards — the Team page's own walk and the Team page's
+  // own words (`team.showcase.*`), so the band reads the same on both pages.
+  const doctors = populateDoctorShowcase(
+    locale,
+    tt('showcase.profile'),
+    (segments) => <Keywords segments={segments} />,
   );
 
   return (
@@ -69,6 +89,11 @@ export default async function HomePage() {
           services: t('hero.services'),
         }}
         servicesHref={localeHref(locale, '/services')}
+      />
+      <DoctorShowcase
+        eyebrow={tt('showcase.eyebrow')}
+        title={tt('showcase.title')}
+        doctors={doctors}
       />
       <ClinicLocation />
       <ReviewsCarousel />

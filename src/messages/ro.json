@@ -87,9 +87,10 @@
   },
   "team": {
     "title": "Echipa noastră",
-    "roster": {
-      "services": "Vezi serviciile",
-      "profile": "Vezi profilul"
+    "showcase": {
+      "eyebrow": "Familia Premium Smile",
+      "title": "Specialiștii cu care ne mândrim",
+      "profile": "Mai multe despre mine"
     },
     "doctor": {
       "philosophy": {

@@ -5,28 +5,30 @@ import { Container } from '@/components/ui/Container/Container';
 import { Keyword } from '@/components/ui/Keyword/Keyword';
 import {
   PersonnelCard,
-  type PersonnelActions,
-  type PersonnelKind,
+  type PersonnelLink,
   type PersonnelPhoto,
   type PersonnelSide,
 } from './PersonnelCard';
 
-// SEVEN stories, and the count is the honest one: the everyday tile, the grid
-// it lives in, the two doctor arrangements, the page shape both kinds compose
-// into, and the two expansion stresses. The export NAMES are load-bearing —
+// SIX stories, and the count is the honest one: the everyday tile, the grid it
+// lives in, the two doctor arrangements and the two expansion stresses. (A
+// seventh, `TeamComposition` — two doctors over the staff grid — left on
+// 2026-09-30: no band stacks that shape since the doctors moved to
+// sections/DoctorShowcase, whose own stories and the Pages/Team twin show the
+// page as it ships.) The export NAMES are load-bearing —
 // each one names a baseline file (`sections-personnelcard--default`,
 // `sections-personnelcard--doctor-mirrored`, …), so renaming or adding an
 // export re-records pictures; this list IS the section's contribution to the
 // lane's visual manifest. The `Sections/*` title prefix routes every one of
 // them to 390 + 1536 (tests/visual/stories.spec.ts, §13); the 'stress-320' tag
 // adds the accessibility width to the four whose layout has something to say
-// there (a 256px column around a 192px portrait, a justified quote in a 206px
-// measure, a German compound, a 40%-expanded name).
+// there (a 256px column around a 192px portrait, a justified quote and a
+// full-width link in a 206px measure, a German compound, a 40%-expanded name).
 //
 // ── EVERY STORY PINS ITS OWN LANGUAGE AND ITS OWN VIEWPORT with per-story
 // `globals`, and both halves are load-bearing:
 //   · the locale pin, even though this section reads no message file (its
-//     strings are props, §8.1 — the Team band owns the keys): the preview
+//     strings are props, §8.1 — the pages own the keys): the preview
 //     decorator stamps `<html lang>` from that global, and both `hyphens: auto`
 //     (§15.14) and the `quotes` property (D8) pick their behaviour from the
 //     declared language. Flip the toolbar to Pseudo over any story here and
@@ -34,13 +36,14 @@ import {
 //     pseudo stress below is typed out as a fixture instead of produced by the
 //     toolbar (the SectionHeading precedent);
 //   · the viewport pin, because this card CHANGES SHAPE with the box it is
-//     handed: the doctor card becomes a 2×2 grid at `@3xl` = 768px of CARD
-//     width (D7, D15), and is one column below it. A
-//     manager canvas narrowed by the sidebar sits in the middle of that band,
-//     so an unpinned story would photograph an accident. Playwright ignores the
-//     pin — it sets its own page size per project — which is exactly why every
-//     geometry assertion below DERIVES its expectation from the measured card
-//     instead of assuming the pinned width.
+//     handed: the doctor card becomes the 40 / 60 grid at `@3xl` = 768px of
+//     its INSET's width — outside a ribbon, the card's content width (D7,
+//     D17) — and is one column below it. A manager canvas narrowed by the
+//     sidebar sits in the middle of that band, so an unpinned story would
+//     photograph an accident. Playwright ignores the pin — it sets its own
+//     page size per project — which is exactly why every geometry assertion
+//     below DERIVES its expectation from the measured card instead of assuming
+//     the pinned width.
 //
 // ── THE DECORATOR IS THE PAGE-BAND RECIPE (the standing law in
 // Container.tsx's header): a semantic full-bleed <section> that PAINTS, and a
@@ -50,27 +53,44 @@ import {
 // canvas would show a box sized by a rule this card does not use.
 // `layout: 'fullscreen'` is load-bearing for the same reason as in
 // Card.stories: Storybook's default canvas padding would falsify the band.
+// No story here stands in a ui/Ribbon: the card is photographed as a card,
+// where its inset adds nothing (the Doctor play proves it) — the ribbon's
+// frames belong to the band that mounts it.
 //
 // ── NO PROPS-DRIVEN LOCALE, NO MOCK MESSAGES, NO `parameters.nextjs`: this
-// card reads no message file, links nowhere and hydrates nothing of its own
-// (D11) — the only island in the frame is the one ui/Image brings with the
-// portrait, which is also why the demo photographs are committed fixtures
-// rather than a design-time placeholder.
+// card reads no message file, links nowhere by itself and hydrates nothing of
+// its own (D11) — the only island in the frame is the one ui/Image brings
+// with the picture, which is also why the demo pictures are committed
+// fixtures rather than a design-time placeholder.
 //
-// Demo people are INVENTED and the portraits are synthetic silhouettes
-// (public/images/demo/portrait-1…3.jpg, 600×800, D12): no real patient or
-// employee, nothing to license, obviously placeholders. Copy is Romanian with
-// diacritics (§15.7), first-person and factual — no superlatives, no promises,
-// no result guarantees (CMSR advertising rules for dental practices, in force
-// since 2025-07-01). The real people, in five languages, are the owner's to
-// author (§15.17).
+// Demo people are INVENTED and the pictures are synthetic: the auxiliaries'
+// silhouettes (public/images/demo/portrait-1…3.jpg, 600×800, D12) and the
+// doctors' transparent waist-up cutouts (public/images/demo/cutout-1…2.png,
+// 900×1200, D17) — no real patient or employee, nothing to license, obviously
+// placeholders. Copy is Romanian with diacritics (§15.7), first-person and
+// factual — no superlatives, no promises, no result guarantees (CMSR
+// advertising rules for dental practices, in force since 2025-07-01). The real
+// people, in five languages, are the owner's to author (§15.17).
 //
 // ── THE FOUR DOCTOR FRAMES CHANGED on 2026-09-21 (the doctor-pages run, D15):
-// every doctor card now carries its two links, and above the card's `@3xl` the
-// arrangement is the 2×2 grid rather than a flex row. The hrefs below are
-// FIXTURES in the shape the Team page will build — a services anchor into the
-// price list's own category id, a doctor page under /team/ — and, like every
-// string here, they arrive finished (§8.1).
+// two links and a 2×2 grid. They CHANGED AGAIN on 2026-09-30 (D17, the owner's
+// direct dispatch on a stand-in iterated live that day): ONE link, „Mai multe
+// despre mine", to the doctor's own page on the solid face; the transparent
+// CUTOUT in an 18rem cell instead of the framed portrait; the 40 / 60 grid —
+// row 1 the picture on its row's floor ‖ the words, row 2 the name and
+// specialty ‖ the link, level with each other; and on a phone the order
+// specialty → name → picture → words → link. The plays assert the numbers the
+// planner measured on that stand-in: the picture 18rem × 24rem, the pair 12px
+// under it, the pair's and the link's centres on one line, the pair as wide as
+// its words, the link min(28rem, the words' width) wide, centred under them
+// and 56px tall, the two sides mirrored — and the phone's painted order. The
+// hrefs are FIXTURES in the shape the band will build (a doctor page under
+// /team/), and, like every string here, they arrive finished (§8.1). Later the
+// same day they took THE FRAME (D17, the owner: "i want to use for this card
+// the border of the non current review from the review carrousel"): ui/Card's
+// `framed` tone, a 3px lavender border where the 1px hairline was, every box
+// inside exactly where it stood — the two expectNoInset plays measure both
+// halves. The auxiliary frames did not change.
 
 const Band = ({ children }: { children: ReactNode }): ReactElement => (
   <section className="bg-page">
@@ -98,11 +118,19 @@ const withBand: Decorator = (Story) => (
   </Band>
 );
 
-/** The three committed demo portraits, all at the ONE team ratio (3:4, D3). */
+/** The three committed demo portraits the auxiliary tiles wear, all at the ONE
+ *  team ratio (3:4, D3). */
 const PORTRAITS = {
-  elena: { src: '/images/demo/portrait-1.jpg', width: 600, height: 800 },
+  mihaela: { src: '/images/demo/portrait-1.jpg', width: 600, height: 800 },
   ioana: { src: '/images/demo/portrait-2.jpg', width: 600, height: 800 },
-  andrei: { src: '/images/demo/portrait-3.jpg', width: 600, height: 800 },
+  anaMaria: { src: '/images/demo/portrait-3.jpg', width: 600, height: 800 },
+} satisfies Record<string, PersonnelPhoto>;
+
+/** The two committed demo CUTOUTS the doctor cards wear (D17): the doctor from
+ *  the waist up, no background, the same 3:4 ratio. */
+const CUTOUTS = {
+  elena: { src: '/images/demo/cutout-1.png', width: 900, height: 1200 },
+  andrei: { src: '/images/demo/cutout-2.png', width: 900, height: 1200 },
 } satisfies Record<string, PersonnelPhoto>;
 
 /** The two doctors' own words (D8), with the keyword fragments a `t.rich(…, {
@@ -126,28 +154,15 @@ const ANDREI_ABOUT = (
   </>
 );
 
-/** The two doctors' calls to action (D15), and the German pair the expansion
- *  stress carries: finished hrefs — the Team page's localeHref() output — and
- *  finished labels, which are also the links' accessible names. The left one
- *  is "see the services this doctor does" (an anchor into the price list's own
- *  category), the right one "go to his page" (the owner's brief, verbatim). */
-const ACTIONS = {
-  elena: {
-    services: { href: '/ro/services/#orthodontics', label: 'Vezi serviciile' },
-    profile: { href: '/ro/team/elena-marin/', label: 'Vezi profilul' },
-  },
-  andrei: {
-    services: { href: '/ro/services/#oral-surgery', label: 'Vezi serviciile' },
-    profile: { href: '/ro/team/andrei-serban/', label: 'Vezi profilul' },
-  },
-  german: {
-    services: {
-      href: '/de/services/#orthodontics',
-      label: 'Leistungen ansehen',
-    },
-    profile: { href: '/de/team/elena-marin/', label: 'Profil ansehen' },
-  },
-} satisfies Record<string, PersonnelActions>;
+/** Each doctor's ONE link (D17), and the German one the expansion stress
+ *  carries: a finished href — the band's localeHref() output, the doctor's own
+ *  page — and a finished label in the doctor's own voice, which also leads the
+ *  link's accessible name (D15). */
+const PROFILES = {
+  elena: { href: '/ro/team/elena-marin/', label: 'Mai multe despre mine' },
+  andrei: { href: '/ro/team/andrei-serban/', label: 'Mai multe despre mine' },
+  german: { href: '/de/team/elena-marin/', label: 'Mehr über mich' },
+} satisfies Record<string, PersonnelLink>;
 
 /** The three auxiliary tiles the grid stories share. The third position is
  *  deliberately long enough to WRAP inside a three-column track, so the grid
@@ -162,17 +177,17 @@ const AUXILIARIES = [
   {
     name: 'Mihaela Crăciun',
     position: 'Asistentă medicală',
-    photo: PORTRAITS.elena,
+    photo: PORTRAITS.mihaela,
   },
   {
     name: 'Ana-Maria Dobre',
     position: 'Recepție, programări și comunicarea cu pacienții',
-    photo: PORTRAITS.andrei,
+    photo: PORTRAITS.anaMaria,
   },
 ];
 
-/** The band's own grid — the page shape a Team lane will write around these
- *  cards, and the two lines it must copy exactly. `@md`/`@3xl` measure the
+/** The staff grid — the shape sections/TeamRoster writes around these cards,
+ *  and the two lines it copies exactly. `@md`/`@3xl` measure the
  *  CONTAINER column (§6.5). `role="list"` is redundant in the spec but
  *  load-bearing in WebKit, which drops list semantics from any
  *  `list-style: none` list (the ui/SpeedDial precedent, configured as an
@@ -199,58 +214,124 @@ const expectNoSidewaysScroll = async (element: HTMLElement): Promise<void> => {
   await expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth);
 };
 
+/** `n` rem in px, at whatever the root font-size is — never a baked-in 16
+ *  (G2 typescript), so every number below survives a visitor's setting. */
+const rem = (n: number): number =>
+  n * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
 /**
- * WHERE THE DOCTOR ROW FLIPS, derived rather than assumed. `@3xl` is 48rem of
- * CARD width (D7) and a container query asks the CONTENT box — so ui/Card's own
- * border and padding (25px per side, its sum rule) come off before the
- * comparison, from the FRACTIONAL border-box width (`clientWidth` is an
- * integer and would disagree with the engine inside a sub-pixel window around
- * the step — G2 react), against 48rem at whatever the root font-size is
- * rather than a baked-in 768 (G2 typescript). Deriving it here is what lets
+ * WHERE THE DOCTOR GRID FLIPS, derived rather than assumed. `@3xl` is 48rem of
+ * the INSET's width (D7, D17) and a container query asks the CONTENT box — so
+ * the inset's own padding (0 outside a ribbon, the lanes' surplus inside one)
+ * comes off before the comparison, from the FRACTIONAL border-box width
+ * (`clientWidth` is an integer and would disagree with the engine inside a
+ * sub-pixel window around the step — G2 react). Deriving it here is what lets
  * these plays hold at ANY width: the visual runner ignores the viewport pin
  * and renders every `Sections/*` story at 390 and 1536, and the workbench
  * canvas is whatever the sidebar leaves.
  */
-const sitsBeside = (card: HTMLElement): boolean => {
-  const { paddingLeft, paddingRight, borderLeftWidth, borderRightWidth } =
-    getComputedStyle(card);
+const sitsBeside = (inset: HTMLElement): boolean => {
+  const { paddingLeft, paddingRight } = getComputedStyle(inset);
   const contentWidth =
-    card.getBoundingClientRect().width -
-    parseFloat(borderLeftWidth) -
-    parseFloat(borderRightWidth) -
+    inset.getBoundingClientRect().width -
     parseFloat(paddingLeft) -
     parseFloat(paddingRight);
-  const step =
-    48 * parseFloat(getComputedStyle(document.documentElement).fontSize);
-  return contentWidth >= step;
+  return contentWidth >= rem(48);
 };
 
-/** A doctor card's five boxes, reached from the one element that has a role:
- *  the quote sits between the portrait block and the actions row, and the
- *  block holds the portrait cell and the name/position pair (D6, D7, D15).
- *  None of them carries a role — they are layout boxes — so structure is the
- *  only honest way in. */
-const partsOf = (quote: HTMLElement) => {
-  const block = quote.previousElementSibling as HTMLElement;
+/** A doctor card's boxes, reached from the <article>: the INSET is its one
+ *  child, the GRID the inset's, and the grid holds the block, the quote and
+ *  the link; the block holds the cutout's cell and the name/specialty pair
+ *  (D6, D7, D17). None of the boxes carries a role — they are layout — so
+ *  structure is the only honest way in. */
+const partsOf = (card: HTMLElement) => {
+  const inset = card.firstElementChild as HTMLElement;
+  const grid = inset.firstElementChild as HTMLElement;
+  const block = grid.children[0] as HTMLElement;
+  const pair = block.children[1] as HTMLElement;
   return {
-    layout: quote.parentElement as HTMLElement,
+    inset,
+    grid,
     block,
-    portrait: block.children[0] as HTMLElement,
-    names: block.children[1] as HTMLElement,
-    actions: quote.nextElementSibling as HTMLElement,
+    picture: block.children[0] as HTMLElement,
+    pair,
+    heading: pair.children[0] as HTMLElement,
+    eyebrow: pair.children[1] as HTMLElement,
+    quote: grid.children[1] as HTMLElement,
+    link: grid.children[2] as HTMLElement,
   };
+};
+
+/** The width of the WORDS inside an element — the union of its text nodes'
+ *  own rects, never an element's box — which is what the pair must hug. */
+const wordsWidth = (element: HTMLElement): number => {
+  const range = document.createRange();
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  let left = Infinity;
+  let right = -Infinity;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    range.selectNodeContents(node);
+    for (const rect of range.getClientRects()) {
+      left = Math.min(left, rect.left);
+      right = Math.max(right, rect.right);
+    }
+  }
+  return right - left;
 };
 
 const centreY = (box: DOMRect): number => box.top + box.height / 2;
 
+/** The four sides, as CSS spells them in a longhand's name. */
+const SIDES = ['top', 'right', 'bottom', 'left'] as const;
+
+/**
+ * THE FRAME, AND THE INSET THAT ADDS NOTHING OUTSIDE A RIBBON (D17). The
+ * doctor card wears ui/Card's `framed` tone — the reviews deck's idle card, a
+ * 3px border on every side — and the frame moves nothing: its two extra px of
+ * border come out of the padding (ui/Card's SUM RULE), so border plus padding
+ * is still 1.5rem + 1px per side, 25px at the default font size, exactly the
+ * flat `surface` card's 1px + 1.5rem. The INSET adds nothing on top: the
+ * lanes' registered initial value is 24px, less 1.5rem. So the words start
+ * where they always did — measured as the content's own box against the
+ * card's, on all four sides (the card is as tall as its content here).
+ */
+const expectNoInset = async (card: HTMLElement): Promise<void> => {
+  const { inset } = partsOf(card);
+  const insetStyle = getComputedStyle(inset);
+  for (const padding of [
+    insetStyle.paddingTop,
+    insetStyle.paddingRight,
+    insetStyle.paddingBottom,
+    insetStyle.paddingLeft,
+  ]) {
+    await expect(padding).toBe('0px');
+  }
+  const cardStyle = getComputedStyle(card);
+  for (const side of SIDES) {
+    const border = cardStyle.getPropertyValue(`border-${side}-width`);
+    await expect(border).toBe('3px');
+    await expect(
+      parseFloat(border) +
+        parseFloat(cardStyle.getPropertyValue(`padding-${side}`)),
+    ).toBeCloseTo(rem(1.5) + 1, 1);
+  }
+  const cardBox = card.getBoundingClientRect();
+  const contentBox = inset.getBoundingClientRect();
+  const edge = rem(1.5) + 1;
+  await expect(contentBox.top - cardBox.top).toBeCloseTo(edge, 1);
+  await expect(cardBox.right - contentBox.right).toBeCloseTo(edge, 1);
+  await expect(cardBox.bottom - contentBox.bottom).toBeCloseTo(edge, 1);
+  await expect(contentBox.left - cardBox.left).toBeCloseTo(edge, 1);
+};
+
 /** The arrangement contract in one place: the DOM order never moves, and the
- *  boxes sit where the measured width says they should (D7, D15). */
+ *  boxes sit where the measured width says they should (D7, D17). */
 const expectArrangement = async (
   card: HTMLElement,
-  quote: HTMLElement,
   side: PersonnelSide,
 ): Promise<void> => {
-  const { layout, block, portrait, names, actions } = partsOf(quote);
+  const { inset, grid, block, picture, pair, heading, eyebrow, quote, link } =
+    partsOf(card);
 
   // Reading order is "who, then what they say, then what you can do" whichever
   // way the card faces — `side` is a visual-only mirror, so a screen reader
@@ -259,118 +340,154 @@ const expectArrangement = async (
     block.compareDocumentPosition(quote) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
   await expect(
-    quote.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING,
+    quote.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
 
-  // The step itself, read off the layout box: a flex `column` below `@3xl`, the
-  // 2×2 grid above it. Asserting this as well as the geometry is what keeps
-  // the frame honest at every width — whichever branch the runner lands in,
-  // one of the two is being proved rather than skipped.
-  const beside = sitsBeside(card);
-  const layoutStyle = getComputedStyle(layout);
-  await expect(layoutStyle.display).toBe(beside ? 'grid' : 'flex');
+  // The step itself, read off the grid box: a flex `column` below `@3xl`, the
+  // grid above it. Asserting this as well as the geometry is what keeps the
+  // frame honest at every width — whichever branch the runner lands in, one
+  // of the two is being proved rather than skipped.
+  const beside = sitsBeside(inset);
+  const gridStyle = getComputedStyle(grid);
+  await expect(gridStyle.display).toBe(beside ? 'grid' : 'flex');
 
+  const pictureBox = picture.getBoundingClientRect();
+  const pairBox = pair.getBoundingClientRect();
   const quoteBox = quote.getBoundingClientRect();
-  const actionsBox = actions.getBoundingClientRect();
-  // A collapsed quote (zero height) would satisfy the stacked comparison
-  // below by accident — the words must occupy real space first (G2 react).
-  await expect(quoteBox.height).toBeGreaterThan(0);
-  await expect(actionsBox.height).toBeGreaterThan(0);
+  const linkBox = link.getBoundingClientRect();
+  // A collapsed box (zero height) would satisfy an ordering comparison by
+  // accident — every one must occupy real space first (G2 react).
+  for (const box of [pictureBox, pairBox, quoteBox, linkBox]) {
+    await expect(box.height).toBeGreaterThan(0);
+  }
+
+  // THE LINK, in both layouts: as wide as the words up to 28rem and centred
+  // under them — the words span their column, so on a phone the link spans
+  // the content width (D17: "be wider", then "too wide", then 28rem).
+  await expect(
+    Math.abs(linkBox.width - Math.min(rem(28), quoteBox.width)),
+  ).toBeLessThanOrEqual(1);
+  await expect(
+    Math.abs(linkBox.left - quoteBox.left - (quoteBox.right - linkBox.right)),
+  ).toBeLessThanOrEqual(1);
 
   if (!beside) {
-    // Below the step: one column, portrait first, the justified words below,
-    // the two links under them — the owner's brief, verbatim.
-    await expect(layoutStyle.flexDirection).toBe('column');
+    // Below the step: one column, PAINTED specialty → name → picture → words
+    // → link — the owner's phone order (D17). The DOM keeps the name before
+    // the specialty and both before the picture; the reversal is paint.
+    await expect(gridStyle.flexDirection).toBe('column');
     await expect(getComputedStyle(block).display).toBe('flex');
-    await expect(quoteBox.top).toBeGreaterThanOrEqual(
-      block.getBoundingClientRect().bottom,
+    const painted = [eyebrow, heading, picture, quote, link].map((element) =>
+      element.getBoundingClientRect(),
     );
-    await expect(actionsBox.top).toBeGreaterThanOrEqual(quoteBox.bottom);
+    for (const [index, box] of painted.entries()) {
+      if (index === 0) continue;
+      await expect(box.top).toBeGreaterThanOrEqual(
+        painted[index - 1].bottom - 0.5,
+      );
+    }
     return;
   }
 
-  // At the step the D6 block DISSOLVES (`display: contents`, D15) so its two
-  // boxes are grid items of their own — which is why nothing here measures the
-  // block itself: an element with no box has no rectangle to measure.
+  // At the step the block DISSOLVES (`display: contents`, D15) so its two
+  // boxes are grid items of their own — which is why nothing here measures
+  // the block itself: an element with no box has no rectangle to measure.
   await expect(getComputedStyle(block).display).toBe('contents');
   // The two gaps are the grid's longhands, not the column's 24px shorthand:
-  // 32px across, 12px down (the card's own rhythm between the portrait and the
-  // name). Compared rather than read in pixels, so the assertion survives a
-  // visitor's root font-size.
-  await expect(parseFloat(layoutStyle.columnGap)).toBeGreaterThan(
-    parseFloat(layoutStyle.rowGap),
-  );
+  // 32px across, 12px down. Compared rather than read in pixels, so the
+  // assertion survives a visitor's root font-size.
+  const rowGap = parseFloat(gridStyle.rowGap);
+  await expect(parseFloat(gridStyle.columnGap)).toBeGreaterThan(rowGap);
 
-  const portraitBox = portrait.getBoundingClientRect();
-  const namesBox = names.getBoundingClientRect();
-  if (side === 'start') {
-    await expect(portraitBox.right).toBeLessThanOrEqual(quoteBox.left);
-    await expect(namesBox.right).toBeLessThanOrEqual(actionsBox.left);
+  // THE CUTOUT: 18rem wide — its column is never narrower at the step
+  // (2 / 5 of 48rem less the gap) — and 3:4 (D17).
+  await expect(Math.abs(pictureBox.width - rem(18))).toBeLessThanOrEqual(1);
+  await expect(
+    Math.abs(pictureBox.height - (pictureBox.width * 4) / 3),
+  ).toBeLessThanOrEqual(1);
+  // …on its row's FLOOR, with the words on its centre line: while the words
+  // are shorter the two share a centre, once they run taller the picture
+  // sinks to the bottom of the row they set (PHOTO_CELL / TEXT_CELL).
+  if (quoteBox.height <= pictureBox.height) {
+    await expect(
+      Math.abs(centreY(quoteBox) - centreY(pictureBox)),
+    ).toBeLessThanOrEqual(1);
   } else {
-    await expect(quoteBox.right).toBeLessThanOrEqual(portraitBox.left);
-    await expect(actionsBox.right).toBeLessThanOrEqual(namesBox.left);
+    await expect(
+      Math.abs(quoteBox.bottom - pictureBox.bottom),
+    ).toBeLessThanOrEqual(1);
   }
 
-  // Row 2 sits under row 1: the words over the links, the portrait over the
-  // name — one grid, read down each column.
-  await expect(actionsBox.top).toBeGreaterThanOrEqual(quoteBox.bottom);
-  await expect(namesBox.top).toBeGreaterThanOrEqual(portraitBox.bottom);
-
-  // THE OWNER'S OWN SENTENCE, measured: the two buttons sit "at the same level
-  // on the oy axis as [name + position]". Both row-2 cells are `self-center`,
-  // so their vertical centres coincide whichever of the two is taller —
-  // ±2px for sub-pixel rounding (D15).
+  // THE PAIR exactly one row gap under the picture — the waist right above the
+  // name — and on ONE LEVEL with the link: "dr name and specialization also
+  // sticky to bot of card next to the button" (D17), both `self-center`.
   await expect(
-    Math.abs(centreY(namesBox) - centreY(actionsBox)),
-  ).toBeLessThanOrEqual(2);
-
-  // …and "centered below the description text": the row is capped at 48rem and
-  // centred in its column, whose edges are the quote's own (the quote stretches
-  // across it). Equal slack left and right, ±2px.
-  await expect(actionsBox.width).toBeLessThanOrEqual(quoteBox.width + 1);
+    Math.abs(pairBox.top - pictureBox.bottom - rowGap),
+  ).toBeLessThanOrEqual(1);
   await expect(
-    Math.abs(
-      actionsBox.left - quoteBox.left - (quoteBox.right - actionsBox.right),
-    ),
-  ).toBeLessThanOrEqual(2);
+    Math.abs(centreY(pairBox) - centreY(linkBox)),
+  ).toBeLessThanOrEqual(1);
+  // INSIDE the pair the name stands OVER the specialty at the step: the
+  // phone's painted order (specialty first) must not leak past it.
+  await expect(heading.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    eyebrow.getBoundingClientRect().top,
+  );
+  // THE HUG: the pair's box is as wide as its words — a keep-out is what is
+  // painted, and a stretched pair marked empty space for the ribbon (D17).
+  await expect(Math.abs(pairBox.width - wordsWidth(pair))).toBeLessThanOrEqual(
+    1,
+  );
+  // The link is `lg`: 3.5rem, one line of label at this width (§9's 44px+).
+  await expect(Math.abs(linkBox.height - rem(3.5))).toBeLessThanOrEqual(1);
+
+  // THE MIRROR: the picture and the name on the start side, the words and the
+  // link on the other — and the other way round for `end` (D7).
+  if (side === 'start') {
+    await expect(pictureBox.right).toBeLessThanOrEqual(quoteBox.left);
+    await expect(pairBox.right).toBeLessThanOrEqual(linkBox.left);
+  } else {
+    await expect(quoteBox.right).toBeLessThanOrEqual(pictureBox.left);
+    await expect(linkBox.right).toBeLessThanOrEqual(pairBox.left);
+  }
+  // Row 2 sits under row 1: the words over the link, the picture over the name.
+  await expect(linkBox.top).toBeGreaterThanOrEqual(quoteBox.bottom);
+  await expect(pairBox.top).toBeGreaterThanOrEqual(pictureBox.bottom);
 };
 
 /** THE ACCESSIBLE NAME of a doctor's link: the label, then the person (D15's
- *  EACH LINK NAMES ITSELF bullet — a page of doctors repeats the same two
- *  labels, and a rotor reads names out of context). The VISIBLE text is still
- *  the label alone, which is the leading substring SC 2.5.3 asks for. */
+ *  EACH LINK NAMES ITSELF bullet — a page of doctors repeats the same label,
+ *  and a rotor reads names out of context). The VISIBLE text is still the
+ *  label alone, which is the leading substring SC 2.5.3 asks for. */
 const linkName = (label: string, doctor: string): string =>
   `${label} ${doctor}`;
 
-/** Both links of a doctor card, by role and by name — the composed name is
- *  what a screen reader announces, which is the assertion §9 wants made
- *  (D15), and the label alone is what a visitor reads. */
-const expectBothLinks = async (
-  canvas: {
-    getByRole: (role: string, options: { name: string }) => HTMLElement;
-  },
-  actions: PersonnelActions,
+/** A doctor card's ONE link, by role and by name — the composed name is what
+ *  a screen reader announces, which is the assertion §9 wants made (D15), and
+ *  the label alone is what a visitor reads (D17). */
+const expectTheLink = async (
+  card: HTMLElement,
+  profile: PersonnelLink,
   doctor: string,
-): Promise<void> => {
-  for (const link of [actions.services, actions.profile]) {
-    const anchor = canvas.getByRole('link', {
-      name: linkName(link.label, doctor),
-    });
-    await expect(anchor).toBeVisible();
-    await expect(anchor).toHaveAttribute('href', link.href);
-    await expect(anchor).toHaveTextContent(link.label);
-  }
+): Promise<HTMLElement> => {
+  const links = [...card.querySelectorAll('a')];
+  await expect(links).toHaveLength(1);
+  const [anchor] = links;
+  await expect(anchor).toHaveAccessibleName(linkName(profile.label, doctor));
+  await expect(anchor).toBeVisible();
+  await expect(anchor).toHaveAttribute('href', profile.href);
+  await expect(anchor).toHaveTextContent(profile.label);
+  // A label that WRAPS stays centred — ui/Button's `text-center`, measured
+  // here because the unit tier has no stylesheet (D17's first consumer).
+  await expect(getComputedStyle(anchor).textAlign).toBe('center');
+  return anchor;
 };
 
-/** The two controls' options, derived from keyed objects rather than typed as
- *  arrays (the Card.stories `TONE_OPTIONS` reasoning): `satisfies { [K in
- *  PersonnelKind]: K }` refuses to compile while a member is MISSING, which a
- *  `satisfies PersonnelKind[]` array cannot see — it only catches a wrong one
- *  (G2 typescript). */
-const KIND_OPTIONS = {
-  auxiliary: 'auxiliary',
-  doctor: 'doctor',
-} satisfies { [K in PersonnelKind]: K };
+/** The `side` control's options, derived from a keyed object rather than typed
+ *  as an array (the Card.stories `TONE_OPTIONS` reasoning): `satisfies { [K in
+ *  PersonnelSide]: K }` refuses to compile while a member is MISSING, which a
+ *  `satisfies PersonnelSide[]` array cannot see — it only catches a wrong one
+ *  (G2 typescript). `kind` has no such list: it is not a live control (see
+ *  its argType). */
 const SIDE_OPTIONS = {
   start: 'start',
   end: 'end',
@@ -388,10 +505,9 @@ const meta = {
   },
   argTypes: {
     kind: {
-      control: 'inline-radio',
-      options: Object.values(KIND_OPTIONS),
+      control: false,
       description:
-        'Which card this is (D2) — REQUIRED, with no default: the Team band always knows, and a default discriminant would weaken the union at every call site. `auxiliary` is the portrait column alone; `doctor` adds the quote and the wide-step row. Switching it here without an `about` renders a doctor card with an empty quote, which is exactly what the TYPES refuse at a real call site',
+        'Which card this is (D2) — REQUIRED, with no default: the band always knows, and a default discriminant would weaken the union at every call site. `auxiliary` is the portrait column alone; `doctor` is the cutout, the quote and the one link. NOT a live control: a doctor card needs its `about` and its `profile`, which a radio cannot supply — the TYPES refuse that half-built card at a real call site, and the component reads `profile.href` without a guard because they do',
     },
     name: {
       control: 'text',
@@ -406,7 +522,7 @@ const meta = {
     photo: {
       control: false,
       description:
-        'The portrait: a path under public/ plus its INTRINSIC pixel size, which is the optimizer’s srcset input and the reserved box (§11, zero layout shift). One 3:4 ratio for the whole team, and `alt=""` by construction — the name below IS the identity (D3). Not a live control: a text knob over a file path would only ever produce a broken image',
+        'The picture: a path under public/images/ plus its INTRINSIC pixel size, which is the optimizer’s srcset input and the reserved box (§11, zero layout shift). An auxiliary’s is the framed portrait; a doctor’s is the transparent waist-up CUTOUT, drawn whole in an 18rem cell (D17). One 3:4 ratio for the whole team, and `alt=""` by construction — the name beside it IS the identity (D3). Not a live control: a text knob over a file path would only ever produce a broken image',
     },
     about: {
       control: false,
@@ -417,18 +533,23 @@ const meta = {
       control: 'inline-radio',
       options: Object.values(SIDE_OPTIONS),
       description:
-        'Which side the portrait block sits on at the wide step. Default `start`. It mirrors the COLUMNS ONLY: the DOM order stays block → quote → actions for both values, so reading order never moves (D7)',
+        'Which side the picture and the name sit on at the wide step. Default `start`. It mirrors the COLUMNS ONLY: the DOM order stays block → quote → link for both values, so reading order never moves (D7)',
     },
     headingLevel: {
       control: 'inline-radio',
       options: [2, 3],
       description:
-        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1, which is what sections/TeamRoster passes. The element and the Heading step change together (§15.24, run D48: `band` at 2 — 30px on a card narrower than 28rem, 36px from it, read against the card’s own container — `title` at 3); the id and the aria-labelledby pair do not',
+        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1. The ELEMENT follows it for both kinds; an auxiliary’s step does too (§15.24, run D48: `band` at 2 — 30px on a card narrower than 28rem, 36px from it — `title` at 3), while a doctor’s name wears `band` at both (D17); the id and the aria-labelledby pair never change',
     },
-    actions: {
+    profile: {
       control: false,
       description:
-        'The doctor’s two calls to action — REQUIRED on that kind, refused on the auxiliary one (D15). Finished hrefs and finished labels (§8.1): `services` wears the Hero’s solid `lg` face and goes to the work he does, `profile` its outline twin and goes to his page. Not a live control: a text knob over two hrefs and two labels would only ever produce a broken pair',
+        'The doctor’s ONE link, to his own page — REQUIRED on that kind, refused on the auxiliary one (D17). A finished href and a finished label (§8.1) in the doctor’s own voice; it wears the solid `lg` face, as wide as the words up to 28rem, and names itself WITH the person („Mai multe despre mine Dr. Elena Marin", D15). Not a live control: a text knob over an href and a label would only ever produce a broken link',
+    },
+    preload: {
+      control: false,
+      description:
+        'THE EAGER PATH (D18) — default false: the picture loads lazily, like every picture below the fold (§11). `true` hands ui/Image the pair DoctorIntro gives its own cutout — `preload` and `fetchPriority="high"`: no lazy loading, a high fetch priority and a preload link — for a doctor card whose picture is its page’s LCP element (§10.6). A BAND decides it, never the card: sections/DoctorShowcase asks it of its first card on the Team page. Refused on the auxiliary kind. Not a live control: it moves no pixel, and on this meta’s auxiliary card it would build the shape the TYPES refuse',
     },
     className: {
       control: false,
@@ -447,9 +568,9 @@ type Story = StoryObj<typeof meta>;
  * `max-w-sm` placement box because that is the width a grid track gives it on a
  * real page (the card owns none of its own, D10).
  *
- * All four controls that can move a card are live here: flip `kind` to
- * `doctor` and the quote row appears empty, which is the runtime shadow of the
- * type error a real call site would get instead (D2).
+ * The name, the position and the heading level are live controls here; `kind`
+ * is not, on any story — a doctor card cannot be built from a radio alone (D2:
+ * its `about` and its `profile` are REQUIRED by the types).
  *
  * **390 · 320 (`stress-320`):** the 192px portrait inside `p-6`, with the name
  * and the position centred under it and 208px of content still fitting at the
@@ -505,7 +626,6 @@ export const AuxiliaryGrid: Story = {
   // Three fixed fixtures — the ROW is the subject, so every per-card control
   // would move nothing. Off, rather than silently inert.
   argTypes: {
-    kind: { control: false },
     name: { control: false },
     position: { control: false },
     photo: { control: false },
@@ -528,9 +648,9 @@ export const AuxiliaryGrid: Story = {
 };
 
 /**
- * THE DOCTOR CARD, portrait on the start side — the arrangement the owner
- * described first ("photo, name … kept on the left side and … a text about the
- * doctor").
+ * THE DOCTOR CARD, picture on the start side — the arrangement the owner
+ * approved on the stand-in (D17): the cutout beside the words, the name and
+ * the specialty under the cutout, level with the one link under the words.
  *
  * This is the frame where the quote's dress is actually measurable, and the
  * play measures all of it because none of it survives in a unit test (no
@@ -543,21 +663,22 @@ export const AuxiliaryGrid: Story = {
  * bold, then D55's italic, then this), and the opening mark as CSS generated
  * content rather than a character in a string.
  *
- * It is also the frame where the TWO LINKS are measured (D15): the owner's
- * "at the same level on the oy axis as [name + position] and centered below
- * the description text" is two geometry assertions inside expectArrangement,
- * and their faces are the Hero's pair — solid left, outline right.
+ * It is also the frame where the ONE LINK is measured: its name with the
+ * person (D15), its solid face, its centred label — and, through
+ * expectArrangement, the stand-in's numbers (the header). And it measures THE
+ * FRAME (D17) — the reviews deck's 3px border on every side — and proves that
+ * neither it nor the INSET moves the words: they start 1.5rem + 1px inside the
+ * card's edge, 25px, exactly where they did on the flat 1px card.
  *
- * The arrangement assertion is DERIVED from the card's measured content width,
- * not from the pinned viewport: at 1536 the card is the 2×2 grid and at 390
- * and 320 it is the stacked one column the owner asked for, and one assertion
- * covers all three.
+ * The arrangement assertion is DERIVED from the inset's measured content
+ * width, not from the pinned viewport: at 1536 the card is the grid and at
+ * 390 and 320 it is the stacked one column, and one assertion covers all
+ * three.
  */
 export const Doctor: Story = {
   tags: ['stress-320'],
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   argTypes: {
-    kind: { control: false },
     name: { control: false },
     position: { control: false },
     photo: { control: false },
@@ -567,9 +688,9 @@ export const Doctor: Story = {
       kind="doctor"
       name="Dr. Elena Marin"
       position="Medic specialist ortodonție"
-      photo={PORTRAITS.elena}
+      photo={CUTOUTS.elena}
       about={ELENA_ABOUT}
-      actions={ACTIONS.elena}
+      profile={PROFILES.elena}
       {...(side ? { side } : {})}
     />
   ),
@@ -616,49 +737,40 @@ export const Doctor: Story = {
     await expect(keywordStyle.fontStyle).toBe('normal');
     await expect(keywordStyle.textDecorationLine).toBe('none');
 
-    await expectBothLinks(canvas, ACTIONS.elena, 'Dr. Elena Marin');
-    // The faces, measured rather than read off a class list: the solid CTA is
-    // filled, the outline one is not — the Hero's pair (D15). --cta is
-    // #008854; an outline button rests on the surface with a cta border.
-    const services = canvas.getByRole('link', {
-      name: linkName(ACTIONS.elena.services.label, 'Dr. Elena Marin'),
-    });
-    const profile = canvas.getByRole('link', {
-      name: linkName(ACTIONS.elena.profile.label, 'Dr. Elena Marin'),
-    });
-    await expect(getComputedStyle(services).backgroundColor).toBe(
-      'rgb(0, 136, 84)',
-    );
-    await expect(getComputedStyle(profile).borderTopColor).toBe(
+    const link = await expectTheLink(card, PROFILES.elena, 'Dr. Elena Marin');
+    // The face, measured rather than read off a class list: the old services
+    // button's SOLID face (D17) — filled with --cta (#008854), no border of
+    // its own.
+    await expect(getComputedStyle(link).backgroundColor).toBe(
       'rgb(0, 136, 84)',
     );
     // ≥44px for a primary action (§9); `lg` is 56px of min-height.
-    await expect(
-      services.getBoundingClientRect().height,
-    ).toBeGreaterThanOrEqual(44);
+    await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+      44,
+    );
 
-    await expectArrangement(card, quote, 'start');
+    await expectNoInset(card);
+    await expectArrangement(card, 'start');
     await expectNoSidewaysScroll(card);
   },
 };
 
 /**
- * THE SAME DOCTOR, MIRRORED — `side="end"`, the alternation the owner asked for
+ * THE SAME CARD, MIRRORED — `side="end"`, the alternation the owner asked for
  * down a page of doctors ("alternate in which it will be turned around, photo,
  * name, etc on right side and text on left").
  *
  * The whole point of the frame is that only the PICTURE changes: the play
- * asserts the quote's box now sits left of the portrait's — and the links left
- * of the name — while the DOM order is still block → quote → actions, which is
- * what the mirrored COLUMN placement buys and why the mirror costs a screen
- * reader nothing (D7, D15). Below the step this story is byte-identical in
- * arrangement to `Doctor` — portrait first, words, then the two links — and the
- * derived assertion says so at whatever width it is rendered.
+ * asserts the words now sit left of the cutout — and the link left of the
+ * name — while the DOM order is still block → quote → link, which is what the
+ * mirrored COLUMN placement buys and why the mirror costs a screen reader
+ * nothing (D7). Below the step this story is identical in arrangement to
+ * `Doctor` — specialty, name, cutout, words, link — and the derived assertion
+ * says so at whatever width it is rendered.
  */
 export const DoctorMirrored: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   argTypes: {
-    kind: { control: false },
     name: { control: false },
     position: { control: false },
     photo: { control: false },
@@ -671,84 +783,19 @@ export const DoctorMirrored: Story = {
       kind="doctor"
       name="Dr. Andrei Șerban"
       position="Medic dentist, chirurgie orală"
-      photo={PORTRAITS.andrei}
+      photo={CUTOUTS.andrei}
       about={ANDREI_ABOUT}
-      actions={ACTIONS.andrei}
+      profile={PROFILES.andrei}
       side="end"
     />
   ),
   play: async ({ canvas }) => {
     const card = canvas.getByRole('article', { name: 'Dr. Andrei Șerban' });
-    const quote = canvas.getByRole('blockquote');
 
-    await expectBothLinks(canvas, ACTIONS.andrei, 'Dr. Andrei Șerban');
-    await expectArrangement(card, quote, 'end');
+    await expectTheLink(card, PROFILES.andrei, 'Dr. Andrei Șerban');
+    await expectNoInset(card);
+    await expectArrangement(card, 'end');
     await expectNoSidewaysScroll(card);
-  },
-};
-
-/**
- * THE PAGE SHAPE — what the Team band will actually stack: two doctors
- * alternating sides, then the auxiliary grid under them, one 24px rhythm all
- * the way down.
- *
- * It exists to catch what a single card cannot show: that two doctor cards of
- * different quote lengths keep the same portrait column, that the alternation
- * reads as a rhythm rather than as an accident, and that the auxiliary tiles
- * below sit in the same measure as the cards above them. The band, its heading
- * and its strings belong to the page lane (§15.17) — this frame is the
- * COMPOSITION only, which is why there is no <h2> in it.
- */
-export const TeamComposition: Story = {
-  globals: { locale: 'ro', viewport: { value: 'laptop' } },
-  argTypes: {
-    kind: { control: false },
-    name: { control: false },
-    position: { control: false },
-    photo: { control: false },
-    side: { control: false },
-  },
-  render: () => (
-    <div className="flex flex-col gap-6">
-      <PersonnelCard
-        kind="doctor"
-        name="Dr. Elena Marin"
-        position="Medic specialist ortodonție"
-        photo={PORTRAITS.elena}
-        about={ELENA_ABOUT}
-        actions={ACTIONS.elena}
-        side="start"
-      />
-      <PersonnelCard
-        kind="doctor"
-        name="Dr. Andrei Șerban"
-        position="Medic dentist, chirurgie orală"
-        photo={PORTRAITS.andrei}
-        about={ANDREI_ABOUT}
-        actions={ACTIONS.andrei}
-        side="end"
-      />
-      <AuxiliaryTiles />
-    </div>
-  ),
-  play: async ({ canvas, canvasElement }) => {
-    await expect(canvas.getAllByRole('article')).toHaveLength(5);
-    await expect(canvas.getAllByRole('blockquote')).toHaveLength(2);
-    await expect(canvasElement.querySelectorAll('img')).toHaveLength(5);
-    // Two doctors, two links each; the three auxiliary tiles bring none (D15).
-    await expect(canvas.getAllByRole('link')).toHaveLength(4);
-
-    const [first, second] = canvas.getAllByRole('blockquote');
-    await expectArrangement(
-      canvas.getByRole('article', { name: 'Dr. Elena Marin' }),
-      first,
-      'start',
-    );
-    await expectArrangement(
-      canvas.getByRole('article', { name: 'Dr. Andrei Șerban' }),
-      second,
-      'end',
-    );
   },
 };
 
@@ -771,17 +818,15 @@ export const TeamComposition: Story = {
  * ever clips at 320, the fix is the page's measure, never a syllable break
  * through a person's surname.
  *
- * The two LABELS are German too — „Leistungen ansehen" / „Profil ansehen", the
- * longest of the five (§8.4) — and the row they sit in is the stress: at 390
- * and 320 there is no room for two 16rem bases, so each link takes its own
- * full-width line, and ui/Button's `hyphens-none` (§15.14's rider) means a
- * label may wrap between words but never split one (D15).
+ * The LABEL is German too — „Mehr über mich" — and the link it sits in spans
+ * the phone's column: ui/Button's `hyphens-none` (§15.14's rider) means a
+ * label may wrap between words but never split one, and its `text-center`
+ * keeps a wrapped label centred at 320 (D17).
  */
 export const GermanLongest: Story = {
   tags: ['stress-320'],
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },
   argTypes: {
-    kind: { control: false },
     name: { control: false },
     position: { control: false },
     photo: { control: false },
@@ -793,7 +838,7 @@ export const GermanLongest: Story = {
       lang="de"
       name="Dr. Friederike Schwarzenbeck-Hoffmann"
       position="Fachzahnärztin für Kieferorthopädie"
-      photo={PORTRAITS.elena}
+      photo={CUTOUTS.elena}
       about={
         <>
           Meine <Keyword>Behandlungsschwerpunkte</Keyword> sind Kieferorthopädie
@@ -802,28 +847,25 @@ export const GermanLongest: Story = {
           gemeinsam.
         </>
       }
-      actions={ACTIONS.german}
+      profile={PROFILES.german}
     />
   ),
   play: async ({ canvas }) => {
     const card = canvas.getByRole('article', {
       name: 'Dr. Friederike Schwarzenbeck-Hoffmann',
     });
-    const quote = canvas.getByRole('blockquote');
 
     await expect(card).toHaveAttribute('lang', 'de');
-    await expectBothLinks(
-      canvas,
-      ACTIONS.german,
+    const link = await expectTheLink(
+      card,
+      PROFILES.german,
       'Dr. Friederike Schwarzenbeck-Hoffmann',
     );
-    // Neither label may be split at a syllable (§15.14's rider): whatever the
-    // row does with them, the words stay whole.
-    for (const link of canvas.getAllByRole('link')) {
-      await expect(getComputedStyle(link).hyphens).toBe('none');
-    }
+    // The label may not be split at a syllable (§15.14's rider): whatever the
+    // column does with it, the words stay whole.
+    await expect(getComputedStyle(link).hyphens).toBe('none');
 
-    await expectArrangement(card, quote, 'start');
+    await expectArrangement(card, 'start');
     await expectNoSidewaysScroll(card);
   },
 };
@@ -846,7 +888,6 @@ export const PseudoLocale: Story = {
   tags: ['stress-320'],
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },
   argTypes: {
-    kind: { control: false },
     name: { control: false },
     position: { control: false },
     photo: { control: false },

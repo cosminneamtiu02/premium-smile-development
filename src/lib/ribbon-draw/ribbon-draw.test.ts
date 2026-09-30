@@ -43,7 +43,7 @@ const FIRST_TOP = 100;
 const CARD_H = 400;
 const GAP = 150;
 const SECOND_TOP = FIRST_TOP + CARD_H + GAP;
-const TOKENS = { '--ribbon-dark': '#2d263c', '--ribbon-light': '#8377a3' };
+const TOKENS = { '--ribbon': '#8377a3', '--ribbon-shadow': '#2d263c' };
 /** The window's y at which a card of height h is due, before the TALL_LINE floor. */
 const lineOf = (h: number) => Math.max(HEIGHT / 2 - h / 2, TALL_LINE * HEIGHT);
 
@@ -211,7 +211,7 @@ describe('startRibbonDraw — one call starts it', () => {
     expect(h.frames.pending).toBe(0);
   });
 
-  it('gives every canvas the ribbon’s shadow, in its dark face', () => {
+  it('gives every canvas the ribbon’s shadow, in the shadow token’s colour — not the ribbon’s', () => {
     const h = harness();
     h.start();
     for (const tile of tiles(h)) {
@@ -423,7 +423,7 @@ describe('reduced motion (lib/reduced-motion)', () => {
     h.frames.run(1_400);
     expect(draw.getSnapshot()).toMatchObject({ drawn: 0, drawing: 0 });
 
-    h.root.style.removeProperty('--ribbon-dark');
+    h.root.style.removeProperty('--ribbon-shadow');
     resize();
     h.frames.run(1_500);
     expect(draw.getSnapshot().painted).toBe(false);
@@ -431,7 +431,7 @@ describe('reduced motion (lib/reduced-motion)', () => {
     expect(draw.getSnapshot()).toMatchObject({ drawn: 0, drawing: 0 });
 
     const fills = vi.spyOn(CanvasRenderingContext2D.prototype, 'fill');
-    h.root.style.setProperty('--ribbon-dark', TOKENS['--ribbon-dark']);
+    h.root.style.setProperty('--ribbon-shadow', TOKENS['--ribbon-shadow']);
     resize();
     h.frames.run(1_600);
     expect(draw.getSnapshot()).toEqual({
@@ -653,7 +653,7 @@ describe('the guard: no lanes, no ribbon', () => {
     const h = harness({ tokens: false, reduced: true });
     expect(h.start().getSnapshot()).toMatchObject({ painted: false });
     expect(tiles(h).every((tile) => paintedPixels(tile) === 0)).toBe(true);
-    expect(warnings()[0]).toMatch(/--ribbon-dark/);
+    expect(warnings()[0]).toMatch(/--ribbon-shadow/);
     expect(warnings()[0]).not.toMatch(/words/);
   });
 
@@ -706,7 +706,7 @@ describe('the guard: no lanes, no ribbon', () => {
     }
     resize();
     h.frames.run(500);
-    h.root.style.removeProperty('--ribbon-light');
+    h.root.style.removeProperty('--ribbon');
     resize();
     h.frames.run(600);
     expect(warnings()).toHaveLength(2);
@@ -885,10 +885,7 @@ describe('handOver — where a card passes from one canvas to the next', () => {
     (_, golden) => {
       const model = buildCard(golden.input);
       // Mirroring moves x alone, so one strip answers for both sides.
-      const strip = buildStrip(model, false, {
-        dark: [0.2, 0.2, 0.2],
-        light: [0.6, 0.6, 0.6],
-      });
+      const strip = buildStrip(model, false, [0.6, 0.6, 0.6]);
       const { u0, u1 } = model.atoms.wrapEntry;
       const { l, r } = strip[handOver(strip, (u0 + u1) / 2)];
       const behind = Math.min(l[1], r[1]) + model.T / 2;

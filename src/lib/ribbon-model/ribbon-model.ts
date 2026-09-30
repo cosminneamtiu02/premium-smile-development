@@ -48,7 +48,10 @@
 // layouts: `ribbon-model.golden.ts`, a frozen record this module's test
 // rebuilds to 1e-9. From the day that test passes this file is the ribbon's
 // single source; a change of the DESIGN, on the owner's word, re-writes the
-// record from here and the change-set shows every number that moved.
+// record from here and the change-set shows every number that moved. That has
+// happened once: on 2026-09-30 the waves were made SMOOTH BESIDE A KEEP-OUT
+// (wave(), on the owner's word), and the record's numbers on the four cards
+// whose side wave a keep-out holds back were written again from this module.
 //
 // ── NO DEAD CODE (the approval's own sentence: "i want no dead code"). Only
 // the ribbon is ported, not the package: the loop-era segments (`Shift`,
@@ -216,8 +219,14 @@ const A = 0.2;
 const ROLL = 0.5;
 /** M — the air kept between the ribbon and a keep-out, in card units. */
 const M = 0.08;
-/** D — how much of a hump survives on the side AWAY from a keep-out it meets. */
+/** D — how much of a hump survives beside a keep-out the wave meets: on the
+ *  side AWAY from it, and — the base line keeps that hump's room (wave()) —
+ *  towards it too. */
 const D = 0.35;
+/** The half-width over which a hinge is rounded (× k): where a wave's base
+ *  line eases onto a limit, and where a hump fades in or becomes whole
+ *  (wave()'s SMOOTH BESIDE A KEEP-OUT). */
+const SOFT = 0.05;
 /** p_d — the side wave's phase (radians). */
 const P_D = 1.2;
 /** The ribbon's width (× k). */
@@ -338,6 +347,32 @@ function pinned(t: number, taper: number, endTaper: number): number {
   const s = Math.sin(0.5 * PI * Math.min(t / taper, (1 - t) / endTaper, 1));
   return s * s;
 }
+
+/** A smooth step from 0 to 1. */
+const smoothstep = (u: number) => u * u * (3 - 2 * u);
+
+/**
+ * max(0, x) with its corner rounded: 0 below −w, x above +w, and between
+ * them the integral of a smooth step — never below max(0, x).
+ */
+function knee(x: number, w: number): number {
+  if (x <= -w) return 0;
+  if (x >= w) return x;
+  const s = (x + w) / (2 * w);
+  return 2 * w * s * s * s * (1 - 0.5 * s);
+}
+
+/**
+ * The share of a whole hump that fits in a room of x amplitudes: never below
+ * 0, never above max(0, x), never above 1, and eased over the width w at
+ * both ends — a hump fades in over its first w of room, and becomes whole
+ * over ± w round 1 (that second easing never wider than 1: no room is no hump).
+ */
+function fit(x: number, w: number): number {
+  const g = x <= 0 ? 0 : x >= w ? x : x * smoothstep(x / w);
+  return g - knee(g - 1, Math.min(w, 1));
+}
+
 /** A direction in the card plane, with the rounding noise of an axis snapped
  *  to zero — so a run along an axis is exactly along it. */
 const snap = (c: number) => Math.round(c * 1e12) / 1e12;
@@ -619,22 +654,63 @@ function sway(pen: Pen, name: string, L: number): Segment {
 /**
  * A calm wave from the pen to `end` = [x, z], along the current heading (an
  * axis of the card): a run of length L with a lateral hump profile sin θ and
- * a shear T_0 sin θ along it, under a window, pushed clear of every keep-out.
+ * a shear T_0 sin θ along it, under a window, kept clear of every keep-out —
+ * and SMOOTH beside one (below).
  *
  *   θ(t) = REF − 2π n (1 − t)   bonded: the run ends on a hump pointing into the card
  *        = 2π n t + phase       free
  *   n = L / (l k), and A_eff = A k min(1, 0.7 n)² — a short wave is a calmer one.
  *
  * Keep-outs: box i projects on the run to [a1, a2] (in t) and has a lateral
- * limit lmax = (its near edge) − w/2 − M; its plateau p_i(t) is 1 over the box
- * with smooth ramps, pinned to zero at the wave's ends. Then
- *   route(t) = δ′ ease(t) − (Σ (max(0, δ′ ease(t) − lmax_i) p_i)^8)^(1/8)   the base line, pushed clear
- *   C+ (toward a box) = min_i 1 − p_i (1 − min(1, room_i / A_eff)),  room_i = max(0, lmax_i − route)
- *   C− (away)         = min_i 1 − p_i eng_i (1 − D),  eng_i = clamp((2 A_eff − lmax_i) / A_eff)
+ * limit lmax_i = (its near edge) − w/2 − M, which no part of the wave may
+ * pass; its plateau p_i(t) is 1 over the box with smooth ramps, pinned to
+ * zero at the wave's ends. Beside box i the wave keeps the share
+ *   keep_i = 1 − eng_i (1 − D),  eng_i = clamp((2 A_eff − lmax_i) / A_eff)
+ * of a hump — D of one beside a box it meets, a whole one beside a box its
+ * base line only drifts towards — and its BASE LINE stays that hump's
+ * amplitude short of the limit: limit_i = lmax_i − A_eff keep_i. With the
+ * boxes in the order of their limits, the nearest first, and
+ *   ∪(ask) = Σ_i (ask_i − ask_{i+1}) (1 − Π_{j ≤ i} (1 − p_j))      THE LAYERED UNION
+ * the wave is
+ *   route(t) = δ′ ease(t) − ∪(knee(δ′ ease(t) − limit_i))           the base line, held off every limit
+ *   C+ (toward a box) = 1 − ∪(1 − fit((lmax_i − route) / A_eff))     a hump never larger than its room
+ *   C− (away)         = 1 − ∪(1 − keep_i)
  *   lat(t) = route + A_eff Env(t) sin θ (C− + (C+ − C−) σ),  σ = ease(clamp((sin θ + 0.3) / 0.6))
  * The heading is atan2(d lat, d along) by central differences; the roll is
  * r Env sin θ C−; the humps rise towards the viewer by
  * y = −bulge Env (1 + sin(0.7 · 2π n t + bulgePhase)) / 2.
+ *
+ * ── SMOOTH BESIDE A KEEP-OUT (the owner, 2026-09-30: "it looks like a
+ * rectangle … i want a smooth one"). Until that day the base line was
+ * clamped ON the limit by a hard max(0, ·): where its drift met a limit it
+ * turned a CORNER — 4.75° on the card the owner was looking at, 10.5° on a
+ * German card with a short side wave, 5° to 8° on a phone — and from there
+ * it lay on the limit with no room left, so the hump towards the card was
+ * cancelled and the ribbon ran as a ruler line for half a wavelength, evenly
+ * lit: a rectangle. Three things changed, and a wave no keep-out touches —
+ * no hump of it damped, its base line free — is the same to the last bit
+ * (one that a box only damps differs by rounding beside a single box, and
+ * by hundredths of a px where two boxes' plateaus overlap):
+ *   · THE KNEE. knee(x) is max(0, x) with its corner rounded over ± SOFT k —
+ *     never below max(0, x), so a rounded push only ever pushes more.
+ *   · THE HUMP'S ROOM. The base line stops keep_i of an amplitude short of
+ *     the limit, so the hump towards the box has exactly the room the hump
+ *     away from it keeps: beside a block the wave goes on, a calmer one, and
+ *     its crest comes up to the limit instead of lying on it. fit(x) is the
+ *     share of a hump that fits in x amplitudes of room, eased over SOFT k.
+ *   · THE LAYERED UNION. `min` over the boxes, and the eighth-power sum that
+ *     pushed the base line, turned a corner wherever two boxes' plateaus
+ *     crossed. In the union, what box i asks for BEYOND the next-nearest box
+ *     applies wherever ANY box at least as near is present — 1 − Π (1 − p),
+ *     a union of plateaus with no corner where two of them cross. It asks
+ *     for no more than the nearest box does alone, and never for less than
+ *     any box does by itself.
+ * The ribbon never comes closer to a keep-out than the clamp allowed: the
+ * base line only moves away from a limit, and a hump towards a box is never
+ * larger than its room (ribbon-model.test.ts pins no corner, no ruler line
+ * and no keep-out entered on the recorded cards and on the layouts that
+ * showed the fault, and no corner and no keep-out entered on a seeded
+ * sweep).
  */
 function wave(
   pen: Pen,
@@ -667,27 +743,50 @@ function wave(
   // one amplitude so the hump lands where the run was aimed.
   const deltaP = shape.bonded ? delta - Aeff : delta;
 
-  const edges = boxes.map((box) => {
-    const X1 = box.x - box.w;
-    const X2 = box.x + box.w;
-    const Z1 = box.z - box.h;
-    const Z2 = box.z + box.h;
-    // The box's extent along a direction of the card plane, from the start.
-    const extent = (v: readonly [number, number]) =>
-      Math.abs(v[1]) < 1e-12
-        ? [(X1 - x0) * v[0], (X2 - x0) * v[0]]
-        : [(Z1 - z0) * v[1], (Z2 - z0) * v[1]];
-    const along = extent(d);
-    const later = extent(p);
-    const lmax = Math.min(...later) - pen.width / 2 - M;
-    return {
-      a1: Math.min(...along) / L,
-      a2: Math.max(...along) / L,
-      lmax,
-      ramp: Math.max(0.5 * period, 1.8 * Math.max(0, -lmax)) / L,
-      eng: clamp01((2 * Aeff - lmax) / (Aeff + 0.001)),
-    };
-  });
+  // The boxes in the order of their limits, THE NEAREST FIRST — the order THE
+  // LAYERED UNION is laid in (limit and keep both grow with lmax, so one
+  // order serves the base line and both sides of a hump).
+  const edges = boxes
+    .map((box) => {
+      const X1 = box.x - box.w;
+      const X2 = box.x + box.w;
+      const Z1 = box.z - box.h;
+      const Z2 = box.z + box.h;
+      // The box's extent along a direction of the card plane, from the start.
+      const extent = (v: readonly [number, number]) =>
+        Math.abs(v[1]) < 1e-12
+          ? [(X1 - x0) * v[0], (X2 - x0) * v[0]]
+          : [(Z1 - z0) * v[1], (Z2 - z0) * v[1]];
+      const along = extent(d);
+      const later = extent(p);
+      const lmax = Math.min(...later) - pen.width / 2 - M;
+      const eng = clamp01((2 * Aeff - lmax) / (Aeff + 0.001));
+      /** The share of a hump the wave keeps beside this box. */
+      const keep = 1 - eng * (1 - D);
+      /** Where the BASE LINE may run beside it: that hump's amplitude short of the limit. */
+      const limit = lmax - Aeff * keep;
+      return {
+        a1: Math.min(...along) / L,
+        a2: Math.max(...along) / L,
+        lmax,
+        limit,
+        keep,
+        ramp: Math.max(0.5 * period, 1.8 * Math.max(0, -lmax)) / L,
+      };
+    })
+    .sort((a, b) => a.lmax - b.lmax);
+  const soft = SOFT * k;
+  /** THE LAYERED UNION of what each box asks for, the boxes in `edges`' order. */
+  const union = (plateaus: readonly number[], asks: readonly number[]) => {
+    // `none`: no box at least this near is present.
+    let none = 1;
+    let total = 0;
+    asks.forEach((ask, i) => {
+      none *= 1 - plateaus[i];
+      total += (ask - (i + 1 < asks.length ? asks[i + 1] : 0)) * (1 - none);
+    });
+    return total;
+  };
 
   const latAndDamp = (t: number) => {
     const plateaus = edges.map(
@@ -697,21 +796,28 @@ function wave(
         window(t, TAPER0),
     );
     const r0 = deltaP * ease(t);
-    let pushed = 0;
-    edges.forEach((edge, i) => {
-      pushed += Math.pow(Math.max(0, r0 - edge.lmax) * plateaus[i], 8);
-    });
-    const route = r0 - Math.pow(pushed, 1 / 8);
-    let toward = 1;
-    let away = 1;
-    edges.forEach((edge, i) => {
-      const room = Math.max(0, edge.lmax - route);
-      toward = Math.min(
-        toward,
-        1 - plateaus[i] * (1 - Math.min(1, room / (Aeff + 0.001))),
+    const route =
+      r0 -
+      union(
+        plateaus,
+        edges.map((edge) => knee(r0 - edge.limit, soft)),
       );
-      away = Math.min(away, 1 - plateaus[i] * edge.eng * (1 - D));
-    });
+    const toward =
+      1 -
+      union(
+        plateaus,
+        edges.map(
+          (edge) =>
+            1 -
+            fit((edge.lmax - route) / (Aeff + 0.001), soft / (Aeff + 0.001)),
+        ),
+      );
+    const away =
+      1 -
+      union(
+        plateaus,
+        edges.map((edge) => 1 - edge.keep),
+      );
     const hump = Math.sin(theta(t));
     const sigma = ease(clamp01((hump + 0.3) / 0.6));
     return {

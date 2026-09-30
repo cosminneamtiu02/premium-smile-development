@@ -23,8 +23,10 @@ import {
 // function of the surface's normal (`shade`). A ribbon is flat across its
 // width, so its colour changes ALONG it only: one colour per sample, and a
 // gradient between two samples is what the graphics chip computed per pixel.
-// The face turned to the viewer takes the dark colour, the other the light
-// one — the two tokens lib/ribbon-draw reads (globals.css, fb-475).
+// The ribbon is ONE colour (globals.css's `--ribbon`; the owner, 2026-09-30:
+// "drop the dark mauve,/ black one and use the mov"). Until that day its two
+// sides wore two, and lib/ribbon-model's hidden half twist showed them in
+// turn; now the light simply falls on whichever side is turned to the viewer.
 //
 // ── A STRIP IS IN THE CARD'S OWN COORDINATES — card units, origin at the
 // card's centre, mirrored when the column mirrors the card. Where it lands in
@@ -65,14 +67,11 @@ import {
 // which changed 0 to 4 pixels per card, measured on the six recorded cards
 // before that branch was removed.
 
-/** A face's colour: three channels, 0 … 1. */
+/** A colour: three channels, 0 … 1. */
 export type Rgb = readonly [number, number, number];
 
 /** A shaded colour: three channels, 0 … 255, not rounded. */
 export type Shade = readonly [number, number, number];
-
-/** The ribbon's two faces: `dark` towards the viewer, `light` away. */
-export type Faces = Readonly<{ dark: Rgb; light: Rgb }>;
 
 /**
  * One sample of the strip: where it lies along the centre line (`u`, 0 … 1),
@@ -116,8 +115,9 @@ const GROUND = [0.6, 0.525, 0.435].map((c) => Math.pow(c, GAMMA));
 const SHININESS = 30;
 
 /**
- * A face's colour, 0 … 255 per channel and not rounded, for the direction its
- * surface looks in (`normal`, a unit vector pointing out of that face).
+ * A colour under the light, 0 … 255 per channel and not rounded, for the
+ * direction the surface looks in (`normal`, a unit vector pointing out of
+ * the side that is looked at).
  */
 export function shade(base: Rgb, normal: Vec3): Shade {
   const kd = Math.max(dot(normal, KEY), 0);
@@ -160,7 +160,7 @@ export function samplesOf(segment: Segment): number {
 export function buildStrip(
   model: CardModel,
   mirror: boolean,
-  faces: Faces,
+  base: Rgb,
 ): readonly StripSample[] {
   const half = model.width / 2;
   const sx = mirror ? -1 : 1;
@@ -190,7 +190,8 @@ export function buildStrip(
       along[2] * B[0] - along[0] * B[2],
       along[0] * B[1] - along[1] * B[0],
     ]);
-    // The face turned to the viewer — the winding test, as geometry.
+    // The side turned to the viewer — the winding test, as geometry. The
+    // ribbon is one colour, so the side only says which way its surface looks.
     const front = normal[1] < 0;
     if (i > 0) {
       const o = points[i - 1].p;
@@ -204,9 +205,10 @@ export function buildStrip(
       u,
       l: [p[0] - half * B[0], p[1] - half * B[1], p[2] - half * B[2]],
       r: [p[0] + half * B[0], p[1] + half * B[1], p[2] + half * B[2]],
-      colour: front
-        ? shade(faces.dark, normal)
-        : shade(faces.light, [-normal[0], -normal[1], -normal[2]]),
+      colour: shade(
+        base,
+        front ? normal : [-normal[0], -normal[1], -normal[2]],
+      ),
       effort,
     });
   });

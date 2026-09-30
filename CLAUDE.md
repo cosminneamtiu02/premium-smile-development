@@ -97,7 +97,7 @@ src/
     scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic, on ONE of three lines: the landing line (the default — where a fragment jump rests), the viewport's centre (`line: 'middle'` — the doctor page's timeline, round 2k) or THE READING LINE (`line: 'reading'` — the price menu, 2026-09-29: the middle of the CLEAR area, bent at both ends of the page so every target has a turn, every target's landing planned by lib/reading-line and WRITTEN as its `scroll-margin-top`, the module's one write) + bottom rule + top fallback (`topFallback: 'first' | 'none'` — the named trigger fired by the doctor page's timeline, 2026-09-26) + click pin, which judges only a page that has stopped (THE START GRACE, 2026-09-29) (React-free; price-list pack round 2, 2026-09-14)
     reading-line/reading-line.ts  # THE arithmetic of the reading line: where a jump to each target comes to rest (centred when it fits the clear area, on its old ceiling when it does not), landings kept inside the page and apart by a share of each target's size, and the probe the walk measures — numbers in, numbers out, no DOM (price-list round 5, 2026-09-29)
     sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a link the KEYBOARD focused reveals its edge — a pointer's focus is never answered, 2026-09-29 (React-free; price-menu-pin lane, 2026-09-18)
-    ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; six frozen reference cards beside it (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
+    ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; its two waves SMOOTH beside a keep-out — no corner, no ruler line (§15.26 round 2); six frozen reference cards beside it, the side waves of four re-written from the module in that round (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
     ribbon-layout/ribbon-layout.ts  # the page → the model's numbers: stations and their keep-out blocks found by `data-ribbon-keepout` MARKERS, never by their place in the markup; a keep-out is WHAT IS PAINTED (the element's box and its contents'), a marker that paints nothing is skipped; the portrait's inset; every second card mirrored (§15.26)
     ribbon-paint/ribbon-paint.ts  # numbers → pixels on the ordinary 2D canvas: the strip, the light, additive blending, the plane cut at the card's front face — what is deeper is not painted (§15.26)
     ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's centre-line rule and its two additions, the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
@@ -1801,7 +1801,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     day" (fb-504; the planner's tucked tail was rejected) · ONE look ("looks perfect now, I do not need
     alternatives or rebuilds", fb-505) · NO DOT on the ribbon (fb-475, the connector's board) · colours
     `--ribbon-light` `#8377a3` and `--ribbon-dark` `#2d263c`, both from the old site's palette, raw tokens
-    with NO utility name (nothing paints with a class; the painter reads them).
+    with NO utility name (nothing paints with a class; the painter reads them) — ONE colour since round 2,
+    below: `--ribbon` `#8377a3`, and `--ribbon-shadow` `#2d263c` for the shadow alone.
     **The motion (fb-502, fb-503, fb-507):** "drawn while scrolling but remains drawn" — a card's stretch is
     drawn when "the fixxed center line of the screen" reaches "the center line of the card", in order, and it
     stays drawn: no undoing on the way up, no pinning, the page's scroll never touched (source-fenced by
@@ -1851,8 +1852,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     island list gains `ui/Ribbon` in the lane that mounts it.
     **The machinery — five pieces:** `lib/ribbon-model` (the mathematics: the path as a chain of segments by
     arc length, the gauge rule, the lanes, the clearance measure; SIX FROZEN REFERENCE CARDS written out by
-    the approved prototype, reproduced to 1e-9) · `lib/ribbon-layout` (the page → numbers, blocks found by
-    MARKERS, never by their place in the markup) · `lib/ribbon-paint` (numbers → pixels) · `lib/ribbon-draw`
+    the approved prototype, reproduced to 1e-9 — the side waves of four re-written from the module in
+    round 2, below) · `lib/ribbon-layout` (the page → numbers, blocks found by MARKERS, never by their place
+    in the markup) · `lib/ribbon-paint` (numbers → pixels) · `lib/ribbon-draw`
     (when: the owner's rule, the queue, the pen, reduced motion, a new geometry; `startRibbonDraw(layer)` →
     `{ dispose, getSnapshot }` — one call starts it, one function stops it, and NOT the ring's construct /
     start / dispose protocol: nothing is built before the effect and nothing renders from it) · `ui/Ribbon`
@@ -1923,6 +1925,42 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     spellings in this lane's tests and stories — the repo-wide test-helper promotion lane takes it · the
     ribbon's line moved from the screen's centre to the CLEAR part's centre (`lib/reading-line`) only on the
     owner's word — the rule is the owner's own sentence.
+    **Round 2 (owner, the same day, 2026-09-30 — a bug report and a colour, lane `fix/ribbon-smooth-keepout`,
+    `/debug-deep`; verbatim: "a visual bug in the ribbon. it looks like a rectangle. i hate how it looks. it's a
+    bug and want it removed … i want a smooth one", then "i need you to also change the color to part of the
+    ribbon. drop the dark mauve,/ black one and use the mov, the purple that is used at: «FAMILIA PREMIUM SMILE /
+    Specialiștii cu care ne mândrim» for first traversal section"):** (1) **SMOOTH BESIDE A KEEP-OUT.** The
+    rectangle was not two stretches overlapping (the owner's guess): in `lib/ribbon-model`'s `wave()` a wave's
+    base line drifts towards the next card's drop-in and was held off each keep-out by a hard `max(0, ·)` — a
+    CORNER where the drift met the limit (4.75° on the card of the report, 10.5° on a German card with a short
+    side wave, 5° to 8° on a phone), then the base line lay ON the limit with no room left, the hump towards the
+    card was cancelled, and the ribbon ran as a ruler line for half a wavelength (50 to 60 px), evenly lit. It
+    showed on that card because its name block's keep-out spanned its whole grid column; the fault was the
+    model's, wherever a keep-out holds a wave back: three of the six recorded cards had it (tablet, phone,
+    narrowest), and about 30 % of the waves of 1 199 random layouts. Three changes inside `wave()`: THE KNEE
+    (the hinge rounded over ± `SOFT` k, 0.05 k, never below `max(0, x)`), THE HUMP'S ROOM (the base line stops a
+    damped hump's amplitude short of the limit, so beside a block the wave goes on, calmer — rounding the corner
+    alone left the ruler line: prototyped, rejected by the picture) and THE LAYERED UNION (what a box asks for
+    beyond the next-nearest applies wherever any box at least as near is present, `1 − Π (1 − p)`, in place of
+    `min` over the boxes and the eighth-power sum, which turned corners where two plateaus crossed). Measured: 0
+    corners on 30 measured cards and on the 1 199 random ones (20 of 60 and 715 of 2 398 waves before); never
+    closer to a keep-out than the clamp allowed; a wave no keep-out touches is the same to the last bit; beside
+    a block that holds it back the ribbon runs 2.4 to 7 px further out. The two records were re-written FROM
+    THE PORT as their headers provide (the side waves of `desktopMirrored`, `tabletStacked`, `phoneMirrored`,
+    `narrowestLongGerman`; `desktop` and `widestMirrored` did not move). Pinned in `ribbon-model.test.ts`: no
+    corner, no ruler line, no keep-out entered — on the recorded cards, on four layouts that showed the fault
+    (`ownerCard` among them) and, for corners and keep-outs, on a seeded sweep of forty. THE SEAM, for a card:
+    a keep-out is what is PAINTED, the marked element's own box included — mark the element that hugs the
+    words, or the ribbon is kept out of empty space. (2) **ONE COLOUR.** The dark face is gone: the whole ribbon
+    wears `--ribbon` `#8377a3` (the old `--ribbon-light`), and `--ribbon-shadow` `#2d263c` is the colour of its
+    shadow alone, unchanged at 0.38 — so every stretch that was purple keeps its pixels. `lib/ribbon-paint`'s
+    `Faces` type is gone (`buildStrip(model, mirror, base)`), the painter's recorded colours were re-written,
+    no geometry moved. The model's hidden half twist STAYS — its one job was to show the second colour, and it
+    is the way back to two tones; removing it is the owner's word. **Reviews:** a Fable TypeScript review of (1)
+    — approve with changes, no defect in `wave()`, its comment and test findings folded; the adversarial maths
+    read was stopped unfinished and (2) was not reviewed by a separate agent (the owner's Fable quota).
+    **Visual:** no existing cell moves — the ribbon is mounted nowhere on develop; all eight `ui/ribbon/*` cells
+    change (they still have no darwin baseline: the owner's). **Evidence at READY:** see the lane's PR.
 
 ## 16. Build-time vs runtime contract
 

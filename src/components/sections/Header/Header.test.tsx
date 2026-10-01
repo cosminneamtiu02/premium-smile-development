@@ -30,7 +30,7 @@ import itemSource from './NavItem.tsx?raw';
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, same convention as GlyphButton.test.tsx
 // and FloatingActions.test.tsx. A direct consequence, and the reason so many
-// queries below are scoped with within(): `hidden @min-[60rem]:flex` hides
+// queries below are scoped with within(): `hidden @min-[62rem]:flex` hides
 // nothing in this runner, so the bar row AND the open panel are both fully
 // queryable and a bare getByRole('link', { name: 'Blog' }) would find two
 // (board §5·B7).
@@ -193,13 +193,13 @@ const classesOf = (el: Element): string[] =>
 
 /**
  * THE BAR'S STEP, spelled once for this suite: Tailwind v4's arbitrary
- * container variant, `@container (width >= 60rem)` — a MEASURED number since
- * the header-nav-gap lane (the owner's ask, 2026-09-26; Tailwind's named
- * `@3xl`, 48rem, before). Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"
+ * container variant, `@container (width >= 62rem)` — a MEASURED number since
+ * the header-nav-gap lane (the owner's ask, 2026-09-26: 60rem; 62rem since the
+ * owner's logo sizes of 2026-10-01; Tailwind's named `@3xl`, 48rem, before). Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"
  * block carries the arithmetic; the single-spelling fence at the bottom of
  * this file pins that the three source files agree with this constant.
  */
-const STEP = '@min-[60rem]:';
+const STEP = '@min-[62rem]:';
 
 /**
  * The three files' source with their PROSE removed, which is what the
@@ -886,17 +886,26 @@ describe('Header — the nav row, the panel list, and the current page', () => {
 describe('Header — the brand and the two Contact links', () => {
   it('hands its brand corner to sections/Wordmark, in a self-stretch box', () => {
     // The fb-200 swap: the corner used to be a locale-prefixed <Link> named
-    // from `brand.ariaLabel`; it is now the shared lockup — artwork, hairline
-    // bar, the name at Heading's title step — and this file owns only the BOX
-    // around it (§6.4/§6.8). `self-stretch` is load-bearing: the row is
-    // `items-center`, and the lockup's bar and artwork are sized as
-    // percentages of the row height, which a centred child does not have.
+    // from `brand.ariaLabel`; it is now the shared lockup — the mark and the
+    // name — and this file owns only the BOX around it (§6.4/§6.8).
+    // `self-stretch` is load-bearing: the row is `items-center`, and the
+    // lockup's artwork is sized as a percentage of the row height, which a
+    // centred child does not have. The SIZES are the lockup's own since the
+    // owner's "update also in footer" (2026-10-01, Wordmark.tsx's THE OWNER'S
+    // SIZES) — the bar shows them, so the name here is the `section` step.
+    // Class-level here (this project loads no stylesheet); the Default and
+    // MenuOpen stories MEASURE.
     const { container } = mount();
     const row = container.querySelector('header > div') as HTMLElement;
     const box = row.firstElementChild as HTMLElement;
     const lockup = box.firstElementChild as HTMLElement;
 
     expect(classesOf(box)).toEqual(expect.arrayContaining(['self-stretch']));
+    const name = lockup.querySelector('span');
+    expect(name, "the lockup's name host").not.toBeNull();
+    expect(classesOf(name as HTMLElement)).toEqual(
+      expect.arrayContaining(['font-display', 'text-3xl']),
+    );
     expect(lockup.tagName).toBe('A');
     expect(lockup).toHaveTextContent(clinic.name);
     // The brand is NOT a heading (C2): one <h1> per page belongs to the page.
@@ -1072,7 +1081,7 @@ describe('Header — the brand and the two Contact links', () => {
 
   it('renders the bar CTA and the row only above the container step', () => {
     // The ENTIRE breakpoint: both variants exist in the HTML at every width
-    // and CSS decides which is drawn — the bar's step, 60rem, measured
+    // and CSS decides which is drawn — the bar's step, 62rem, measured
     // against the BAR, never the viewport (§6.5).
     const { barNav, barCtaBox, burger } = mount();
 
@@ -1086,8 +1095,8 @@ describe('Header — the brand and the two Contact links', () => {
     expect(classesOf(burger())).toContain(`${STEP}hidden`);
     // Container steps only: a viewport media query here would measure the
     // window instead of the bar (§6.5). Token-wise, not a substring match —
-    // `@min-[60rem]:` legitimately contains "min-[". The arbitrary spelling
-    // put the MEDIA twin one character away: `min-[60rem]:` without the `@`
+    // `@min-[62rem]:` legitimately contains "min-[". The arbitrary spelling
+    // put the MEDIA twin one character away: `min-[62rem]:` without the `@`
     // is a viewport query. So every media shape Tailwind v4 compiles from a
     // breakpoint is rejected: the bare names, their `min-*` / `max-*` /
     // `not-*` forms (`min-md:` → `@media (width >= 48rem)`, `not-sm:` →
@@ -1173,7 +1182,7 @@ describe('Header — the brand and the two Contact links', () => {
 });
 
 describe("Header — the bar's step is ONE number in three files", () => {
-  it('spells the step `@min-[60rem]:` in Header, HeaderNav and NavMenu, and nothing else', () => {
+  it('spells the step `@min-[62rem]:` in Header, HeaderNav and NavMenu, and nothing else', () => {
     // THE SINGLE-SPELLING FENCE (header-nav-gap lane, the owner's ask,
     // 2026-09-26). The breakpoint has no home of its own: it is the same
     // container variant written into three files — the grid and the CTA box
@@ -1192,7 +1201,7 @@ describe("Header — the bar's step is ONE number in three files", () => {
     // files" claim. The old named step is asserted absent by name for a
     // readable failure; any other `@<step>:` (a `@4xl:` added to one file, a
     // `@min-[56rem]:` typo) fails the set check. The pattern also takes the
-    // NAMED-container form (`@3xl/bar:`, `@min-[60rem]/x:` — the optional
+    // NAMED-container form (`@3xl/bar:`, `@min-[62rem]/x:` — the optional
     // `/name` before the colon), which would otherwise evade both checks.
     const containerVariant =
       /(?<![\w-])@[a-z0-9-]+(?:\[[^\]]*\])?(?:\/[\w-]+)?:/g;

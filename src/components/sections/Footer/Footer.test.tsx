@@ -149,7 +149,7 @@ describe('Footer — every control is a LINK (zero-island contract)', () => {
 describe('Footer — row 1, the brand', () => {
   it('opens the band with sections/Wordmark, centred in an h-20 box', () => {
     // Since the fb-200 swap this row is the SAME lockup the Header's corner
-    // renders — the mark, the name at Heading's title step in the brand's two
+    // renders — the mark, the name at Heading's section step in the brand's two
     // colours (2026-10-01; the hairline bar left with D12) — which is how the
     // §15.6 logo arrived in one file instead of two. The name is still
     // data from lib/clinic/clinic.ts (§10.1), and the brand is still identified
@@ -159,7 +159,8 @@ describe('Footer — row 1, the brand', () => {
     // against, matching the header instance exactly (fb-205). The ruler tracks
     // Header's row rather than standing on its own: it went 4rem → 5rem on
     // 2026-09-04 when the owner asked for one bar height on every screen, and
-    // fb-205 is what makes that a required knock-on rather than a nicety.
+    // fb-205 is what makes that a required knock-on rather than a nicety — and
+    // why the owner's sizes of 2026-10-01 live in sections/Wordmark itself.
     const { footer } = mount();
     const gutter = footer().firstElementChild as HTMLElement;
     const brandRow = gutter.firstElementChild as HTMLElement;

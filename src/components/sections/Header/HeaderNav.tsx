@@ -33,11 +33,12 @@ export function HeaderNav(): ReactElement {
   const items = useNavItems();
 
   return (
-    // `hidden @min-[60rem]:flex` is one half of the entire breakpoint (the
-    // burger's `@min-[60rem]:hidden` in NavMenu.tsx is the other): both exist
+    // `hidden @min-[62rem]:flex` is one half of the entire breakpoint (the
+    // burger's `@min-[62rem]:hidden` in NavMenu.tsx is the other): both exist
     // in the HTML at every width and CSS decides which is drawn. The step is a
-    // MEASURED container step, 60rem of bar (header-nav-gap lane, the owner's
-    // ask, 2026-09-26 — Tailwind's named `@3xl`, 48rem, before): the smallest
+    // MEASURED container step, 62rem of bar since 2026-10-01 (60rem from the
+    // header-nav-gap lane, the owner's ask, 2026-09-26 — Tailwind's named
+    // `@3xl`, 48rem, before): the smallest
     // whole rem at which German, the longest row, keeps 4rem of air between
     // the brand and its first link. Header.tsx's "THE BREAKPOINT IS A
     // CONTAINER STEP" block carries the arithmetic; the number is spelled in
@@ -80,7 +81,7 @@ export function HeaderNav(): ReactElement {
     // at all, so without `col-start-*` the right cell would slide into column 2.
     <nav
       aria-label={t('nav.ariaLabel')}
-      className="hidden @min-[60rem]:col-start-2 @min-[60rem]:flex @min-[60rem]:justify-self-center group-has-[#header-menu]/bar:hidden"
+      className="hidden @min-[62rem]:col-start-2 @min-[62rem]:flex @min-[62rem]:justify-self-center group-has-[#header-menu]/bar:hidden"
     >
       {/* A list, because it IS one: screen readers announce "list, 4 items"
           and offer item-by-item navigation. The section owns the spacing

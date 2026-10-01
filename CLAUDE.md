@@ -88,7 +88,9 @@ src/
       blog/page.tsx      # ro only       → /ro/blog
       blog/[slug]/page.tsx
       404/page.tsx       # localized 404 → /ro/404 — real shell page ×5 (S6, §5; dispatcher = out/404.html)
-    page.tsx             # root "/" → client-side locale redirect (see §5)
+    icon.svg             # THE BROWSER TAB'S ICON — a byte copy of public/images/brand/mark.svg (Next's icon convention; §15.31)
+    favicon.ico          # its raster twin, the mark at 16 · 32 · 48px PNG-in-ICO, for every Safari before 26 (§15.31)
+    (no page.tsx)        # root "/" is out/index.html, the client-side locale redirect tools/generate-root-redirect.ts writes at build (see §5)
   lib/                   # one folder per module, its test beside it (lib-foldering lane, 2026-09-06)
     clinic/clinic.ts     # SINGLE SOURCE of NAP: name, address, phone, hours, geo, sameAs links
     routes/routes.ts     # THE route list + matchesRoute/equivalentPath (one list, all consumers)
@@ -542,8 +544,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    lettering; if that ever arrives it replaces the words as a second file. The purple
    confirmation is now a NUMBER, not a change: the logo's lilac is #8576B1 against
    `accent-decorative`'s #7A6D9C and the ribbon's #8377A3 — adopting it is the owner's call
-   (§15.28). STILL OPEN: the favicon and the OG share image, for which the mark is the natural
-   source (`src/app/icon.svg` is a one-file favicon under the App Router).
+   (§15.28). THE FAVICON LANDED THE SAME DAY (§15.31): the mark itself is the tab's icon —
+   `src/app/icon.svg`, a byte copy, beside `src/app/favicon.ico` rasterised from it. STILL OPEN: the
+   OG share image, for which the mark is the natural source.
 7. **Visual-testing environment — DECIDED 2026-07-31 (owner, via plan-canvas review):**
    no Docker on the development machine. Playwright baselines are **platform-suffixed dual
    sets**: the **darwin set** is generated/compared natively on the workstation and serves
@@ -1720,6 +1723,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     and is unaffected — pin Home at `notebook` if the page audit should see the row); `stripComments`
     is now the ninth copy (the §15.19 round-3 helper-promotion trigger stands); AtTheStep's 390
     frame duplicates GermanStress's 390 (harmless).
+    *(Annotated 2026-10-01: THE STEP MOVED to `@min-[62rem]:` — the owner's logo sizes grew the brand to 270.1px, which left
+    German 56.25px at 60rem and overlapping under text spacing; §15.31 (a) has the arithmetic and the measurements.)*
 
 23. **Doctor-pages run — BUILT ON THE OWNER'S DISPATCH (2026-09-21, verbatim: "starting from
     latest development … a rework on the doctors card … 2 buttons identical as aspect to the
@@ -2994,13 +2999,15 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     aligned to `h-20` in the same change, and every Wordmark frame is re-recorded anyway. **THE BRAND SHRANK,
     THE STEP STAYED:** near-square, the mark draws 71.2 px wide at the row's 72 px where the 1.49:1 cat drew
     107.8, so the lockup is ~222 px, not 258.5 — the German gap at the 60rem step is ~104 px (AtTheStep's
-    ceiling moved 5rem → 7rem), and re-run, the §15.22 arithmetic's smallest whole rem would be 56rem, which is
+    ceiling moved 5rem → 7rem; the same evening's owner sizes took the lockup to 270.1px and the gap to 56.25px,
+    under the floor — §15.31), and re-run, the §15.22 arithmetic's smallest whole rem would be 56rem, which is
     Tailwind's NAMED `@4xl` and moves the flip from ≈1221 to ≈1141 px of window. NOT taken: a behaviour change
     the owner did not ask for with the logo — his lever. **Recorded, not built — the owner's:** `accent-decorative`
     #7A6D9C and `--ribbon` #8377A3 to the logo's own #8576B1 (repaints tints, auras, keywords, the ribbon;
-    #8576B1 reads 3.82:1 on the page, inside the display charter's 3:1); the favicon (`src/app/icon.svg`) and the
-    OG share image from the mark; the mark's size in the pill (90 % / 40 % of the row, kept from the cat — one
-    number in Wordmark.tsx); the Publio lettering, if it ever arrives, as a second file; the placeholder `<a>` →
+    #8576B1 reads 3.82:1 on the page, inside the display charter's 3:1); the favicon (`src/app/icon.svg`) *(BUILT
+    2026-10-01, §15.31)* and the OG share image from the mark; the mark's size in the pill (90 % / 40 % of the row,
+    kept from the cat — one number in Wordmark.tsx) *(TAKEN 2026-10-01, §15.31: 68.85 % / 30.6 %, the name to the
+    30px `section` step, in both instances)*; the Publio lettering, if it ever arrives, as a second file; the placeholder `<a>` →
     `<span>` now that the home link is dropped for good (three suites and the e2e find the lockup through it);
     striking the uncalled `common.brand.ariaLabel` key ×5. **Evidence at READY:** see the lane's PR. **Visual:**
     every cell with the shell moves (the brand corner is on every page) — Sections/Wordmark (5), Sections/Header
@@ -3201,6 +3208,99 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     (no spec covers the corner). No reviewer round was run — the #120/#124 recolour precedent; from
     this evening every reviewer runs on Opus unless the owner explicitly says otherwise (his rule, set
     in the flows on branch `chore/reviewers-on-opus`).
+
+31. **The logo's sizes and the tab icon — ON THE OWNER'S WORD (2026-10-01, four messages, verbatim: "use the logo
+    from top bar also in the tab. and make logo in top bar 15% smaller" · "make the logo 10% smaller again and make
+    the premium smile text next to it same height" — asked, because one line of letters as tall as the mark (~55px
+    type, ~380px wide) would push the menu row out of every window under ~1690px, and two stacked lines would not —
+    "ok then just make the text 50% bigger than it is now and i'll see about top bar fittings later" · "update als
+    in footer. now it looks sensational"; lane `rework/header-mark-favicon`):** two of §15.28's recorded levers,
+    taken. "Logo" is read as the MARK — the owner's own word for the tooth when supplying it, and the only part of
+    the lockup a tab can show.
+    **(1) THE LOGO'S SIZES — sections/Wordmark, both instances.** The mark 72 → **55.08px** (90 % × 85 % × 90 % of
+    the 5rem box, spelled as a FIXED `h-[3.4425rem]` with `max-w-none`, below) and, below the phone step, 32 →
+    **24.47px** (`@max-sm:h-[1.53rem]`); the name from ui/Heading's `title` step (20px) to its **`section`** step
+    (30px — 1.5× the size, a little under 1.5× the width: the face has an optical-size axis), kept at **20px below
+    the phone step** (`@max-sm:text-xl`). While the owner's words named the top bar, the sizes were built in the
+    Header's box (85 %, then 76.5 % of its row) plus a name-size prop; "update also in footer" made them the
+    lockup's look everywhere, so they moved INTO the component (Wordmark.tsx's THE OWNER'S SIZES), the Header's cell
+    went back to `self-stretch`, the prop was deleted, and fb-205 ("both read at the same size") holds. MEASURED on
+    the built export: desktop and tablet — the mark 55.08 × 54.44px, the name 203.7px on one line, the lockup
+    270.1px, header and footer identical, the name on the row's centre line; phones — the 170.9px phone lockup on ONE
+    line in the bar from a ~311px viewport (fb-207's one line at 390, restored) and in the footer always; in the
+    runner's 15px-gutter 320 cell (163px) it wraps to two 28px lines with 47px of slack. Corrected on the way: the
+    Header's row has had NO gap since the shell mount took its `gap-4` off on 2026-09-04 (#69), so the 147px cell
+    Wordmark.tsx's D10 and its Stress320 harness recorded, right when written, had been stale since that day; both
+    say 163px now. WCAG: at 30px the name is large text (3:1): the lilac clears it on both grounds; the grey reaches
+    it only on pure white (3.00:1) and misses it on the page (2.85:1) and on the bar's glass (~2.7:1 over the Hero) —
+    the logotype exemption (§15.28) carries it. Pinned by measurement in the Header stories
+    (`expectMarkAtTopBarSize`, Default + MenuOpen: the mark 68.85 % / 30.6 % of the row, the name 1.875 / 1.25rem by
+    the step, both on the centre line), the Wordmark stories (69 / 31 % rounded, 55.08 × 54.44, the 163px cell, the
+    two lines one line box apart — both plays load the real face first), the Footer stories' lockup chain, and by
+    class in the unit suites.
+    **THE FITTINGS — RULED (owner, the same evening, on the two left open: "whatever, do your thing"), measured in
+    Chromium, Firefox and WebKit on the built export:** (a) THE STEP MOVED, `@min-[60rem]:` → **`@min-[62rem]:`**
+    (§15.22's arithmetic with the 270.1px brand: a bar ≥ 2 × (270.1 + 64) + 279.3 + 32 = 979.5px → 62rem). At 60rem
+    the German gap at the step had fallen to 56.25px, under the 4rem floor, and under WCAG 1.4.12's text-spacing
+    overrides „Smile" and „Startseite" OVERLAPPED (−13.8px of ink at a 1225px window, −7.8 at 1240). At 62rem German
+    keeps 70.6px at the step (Chromium; 73–78 in Firefox and WebKit, whose bars are 15px wider at the same window),
+    the flip moves from ≈1221 to ≈1261px of window (≈1243 without a scrollbar gutter) and the 1280 Notebook keeps the
+    row. (a′) THE MARK COUNTS: the a11y review's lever — a fixed rem height so the grid's `1fr` auto floor sees the
+    artwork — did NOT work alone (measured: the lockup's min-content stayed its text, 215.7px, in all three engines),
+    because Tailwind's preflight gives every `<img>` `max-width: 100%`, which makes it COMPRESSIBLE (CSS Sizing 3: a
+    min-content contribution of zero, whatever its height) — the true reason, too, behind Header.tsx's 2026-09-26
+    record of the artwork "counting for ZERO". With `max-w-none` added, the min-content is the whole lockup: under
+    the text-spacing overrides at the step the left track floors at 321.7px and the nav moves 7px right of centre
+    instead of under the brand — no box overlaps, no ink closer than 1px, in any engine; at normal spacing nothing
+    moves. (b) THE PHONE STEP MOVED, `@max-xs` (20rem) → **`@max-sm`** (24rem, Tailwind's next named step), and
+    below it the name keeps the old 20px: with the 30px name at 20rem the bar wrapped the name on every phone up to
+    ~392px and gave the large iPhones (403–435px) a 55px mark beside a two-line name; now every phone shows the
+    phone lockup on one line, and the full sizes start where they fit on one line (a ~398px bar). Below 320 (a phone
+    at a large text size) the burger stays on screen down to a ~223px layout (measured before the fitting).
+    Tests that moved with it: Header.test's `STEP`, AtTheStep's 62rem frame (expected gap ≈72.2px, its 7rem
+    ceiling unchanged), tests/e2e/header-step.spec.ts's windows 1180 / 1240 → 1220 / 1280 (the same 15–33px
+    margins either side of the flip, gutter or not), the Wordmark phone-step pins.
+    **(2) THE TAB ICON.** Next's own file conventions, no metadata code: `src/app/icon.svg` — a BYTE COPY of
+    `public/images/brand/mark.svg` (the convention reads a file inside src/app; the `<img>` needs the mark in
+    public/) — and `src/app/favicon.ico`, the mark rasterised to 16 · 32 · 48px PNG entries in one ICO (3.6 KB).
+    MEASURED on the build: every page's head carries `<link rel="icon" href="/favicon.ico?…" sizes="48x48"
+    type="image/x-icon">` then `<link rel="icon" href="/icon.svg?…" sizes="any" type="image/svg+xml">`, both files at
+    the export root — Next collects `favicon` for the top-level segment although the root layout is
+    `[locale]/layout.tsx` — and with `PAGES_BASE_PATH` set both hrefs carry the prefix (the Wordmark's own `<img>`
+    does not: its KNOWN DEBT, so on the interim host the tab shows the logo while the header's is the recorded 404).
+    WHY TWO FILES: SVG tab icons are drawn by Chrome 80+, Firefox 41+ and Safari 26+ only — every Safari up to 18.7,
+    on the Mac and on the iPhone, draws none (caniuse link-icon-svg), and an older patient's iPhone may never run iOS
+    26; the ICO is their icon, and it is also the file a browser asks for by default on the two documents Next does
+    not write (`out/index.html`, the root redirect, and `out/404.html`, the dispatcher — no link tags there): that
+    request goes to the domain root, so it finds the file on a root-served host and misses it on the interim Pages
+    host's base path. The ICO's `sizes="48x48"` — not `any` — is what lets Chrome prefer the SVG. THE RECIPE,
+    JavaScript only (§15.26's rule; the script stays machine-local, like the tracer): sharp renders the mark
+    straight at each size — `sharp(svg, { density: 72 × size / 261 }).resize(size, size, { fit: 'contain',
+    background: transparent }).png()`; sharp re-renders a vector at the target size, so supersampling changes
+    nothing (measured: byte-identical) — and the ICO is a 6-byte header (0 · 1 · 3), three 16-byte entries (size ·
+    size · 0 · 0 · planes 1 · 32 bpp · length · offset) and the three PNGs. `tests/unit/logotype-census.test.ts` pins
+    the copy byte for byte (the mark's own census then covers it), the ICO's PROVENANCE — the SHA-256 of the mark it
+    was rendered from, so a re-cut mark fails there until the ICO is regenerated and the hash moved with it — and
+    its structure (16 / 32 / 48, each a whole PNG: signature, IHDR matching its entry, IEND last, every read
+    bounds-checked). THE LOOK, measured: at 16px (a 1× screen) the strokes are under a pixel wide and the tooth reads
+    faint; at 32px — a Retina tab, every iPhone — it reads clearly. On the common tab grounds the lilac half reads
+    ≥ 3:1 and the grey half 2.3–5.4:1 (lowest on Chrome's light inactive tab, #dee1e6) — the logo's own colours,
+    exempt as a logo (SC 1.4.11). The old site shipped Vite's default lightning bolt as `public/favicon.svg` and
+    never linked it, so its tabs showed no icon at all (MIGRATION_INVENTORY).
+    **REVIEW (G2 — react-reviewer, typescript-reviewer and a11y-architect, all on Opus by the owner's rule; asked:
+    "did you run opus reviews?"):** three times APPROVE WITH CHANGES, 0 critical, 0 high. The mediums — AtTheStep's
+    ceiling raised for a size that never shipped (back to develop's 7rem), widths computed as 1.5 × the 20px ones
+    where the page measures less (every number in the lane now measured), the ICO not tied to its source mark (the
+    SHA-256 pin), the text-spacing overlap (measured, then RULED under (a) and (a′)) — and the lows (stale comments, the 147px
+    history, "every phone", a float compared exactly, the old site's unlinked favicon, the Pages note) folded in one
+    round. Recorded, not built: `loadFace` in Wordmark.stories.tsx is the sixth copy of the `document.fonts.load`
+    idiom (the §15.19 helper-promotion census).
+    **Recorded, not built — the owner's:** an `apple-icon.png` (180 × 180: the iPhone home-screen and bookmark
+    tile, one more file beside these); the OG share image (§15.6's last open item); a bolder small-size cut of the
+    mark for 1× screens. Overlap, recorded: the uncommitted page-scale lane rewrites the same
+    assertions in Wordmark.stories.tsx's Default play and Footer.stories.tsx's `expectLockupChain` (rem-relative
+    sizes) — whichever merges second folds the other's numbers into its own (68.85 % of `5 * rem()`, the 30px name
+    as `1.875 * rem()`).
 
 ## 16. Build-time vs runtime contract
 

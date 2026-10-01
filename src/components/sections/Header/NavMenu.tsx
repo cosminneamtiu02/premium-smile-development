@@ -198,7 +198,8 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // recording why it moved THIS round and pointedly did not the round before,
 // because the two look like the same edit: the first ask grew the row only at
 // the bar's @5xl step, and this panel can only ever EXIST below the bar's step
-// (`@3xl` then, `@min-[60rem]:` since 2026-09-26 — Header.tsx) — the burger
+// (`@3xl` then, `@min-[60rem]:` from 2026-09-26, `@min-[62rem]:` since
+// 2026-10-01 — Header.tsx) — the burger
 // that opens it is hidden at the step, and a display:none button cannot be
 // pressed — so every width where a panel is reachable still had an h-16 row and
 // the cap was already correct. The uniform height removes that shelter: the
@@ -509,7 +510,7 @@ export function NavMenu(): ReactElement {
         aria-expanded={open}
         aria-controls={PANEL_ID}
         onClick={() => (open ? close() : setOpen(true))}
-        className={open ? undefined : '@min-[60rem]:hidden'}
+        className={open ? undefined : '@min-[62rem]:hidden'}
       >
         <BurgerToggle />
       </GlyphButton>

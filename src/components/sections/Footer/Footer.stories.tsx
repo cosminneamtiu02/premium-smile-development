@@ -92,8 +92,8 @@ const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
  *
  * sections/Wordmark sizes its artwork as a percentage of the anchor's height,
  * and the anchor is `h-full` — so the whole lockup rests on a chain of three
- * boxes this file owns: the centring row, the `h-16` box inside it, and the
- * `self-stretch`-equivalent flex item. Break any link (drop the `h-16`,
+ * boxes this file owns: the centring row, the `h-20` box inside it, and the
+ * `self-stretch`-equivalent flex item. Break any link (drop the `h-20`,
  * centre instead of stretch) and the percentage resolves against `auto`: the
  * artwork keeps only its intrinsic size (D12: no bar). Nothing throws, and
  * the Wordmark's own stories cannot catch it — they reproduce the HEADER's
@@ -116,13 +116,15 @@ const expectLockupChain = async (
   // Footer's ruler with it; this is the assertion that would have caught the
   // two drifting apart, so it moves in the same edit or not at all.
   await expect(anchor.getBoundingClientRect().height).toBe(80);
+  // The mark's share of that ruler: 68.85% / 30.6% (Wordmark.tsx's THE
+  // OWNER'S SIZES, 2026-10-01 — 90% / 40% until then), read rounded.
   await expect(
     Math.round(
       (img.getBoundingClientRect().height /
         anchor.getBoundingClientRect().height) *
         100,
     ),
-  ).toBe(wide ? 90 : 40);
+  ).toBe(wide ? 69 : 31);
 };
 
 /**
@@ -205,8 +207,8 @@ export const Smartphone: Story = {
     ).toHaveAttribute('href', '#top');
     await expectNoSidewaysScroll(band);
     // The TIGHTENED half of the lockup chain (G2 react r2, M1): at the phone
-    // width the gutter box is under the @max-xs step, so the artwork must be
-    // at 40%. This is the ONE assertion that notices the Footer losing its
+    // width the gutter box is under the @max-sm step, so the artwork must be
+    // at its phone share (30.6% since 2026-10-01). This is the ONE assertion that notices the Footer losing its
     // `@container` (the gutter-box `@container` comment in Footer.tsx) — the
     // query then never matches, the
     // lockup renders full-size at every width, and nothing else throws.

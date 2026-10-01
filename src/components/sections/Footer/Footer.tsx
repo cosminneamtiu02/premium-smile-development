@@ -160,8 +160,8 @@ export function Footer(): ReactElement {
       <Container className="py-10">
         {/* ── ROW 1 · THE BRAND, since the fb-200 swap the SAME component the
             Header's corner renders (sections/Wordmark, contract v2
-            fb-200…fb-208): the clinic's mark · the name at Heading's title
-            step, its two words in the brand's grey and lilac (owner,
+            fb-200…fb-208): the clinic's mark · the name at Heading's section
+            step (30px since 2026-10-01), its two words in the brand's grey and lilac (owner,
             2026-10-01; the D12 hairline bar between them is long gone). The
             name is still data from lib/clinic/clinic.ts (§10.1) — never a
             message key — and the real mark landed there as ONE edit to the
@@ -187,7 +187,11 @@ export function Footer(): ReactElement {
             that automatically through `self-stretch`, so leaving this ruler at
             4rem would have quietly broken the very rule this comment cites —
             two instances of one component reading at two sizes. The number here
-            is not independent; it tracks Header's row. */}
+            is not independent; it tracks Header's row.
+            AND THE RULE HELD ON 2026-10-01: the owner's new sizes for the
+            lockup — the mark smaller, the name half again bigger, then "update
+            also in footer" — live in sections/Wordmark (its THE OWNER'S SIZES
+            block), so this box and the Header's row took them in one edit. */}
         <div className="flex justify-center pb-8">
           <div className="flex h-20">
             <Wordmark />

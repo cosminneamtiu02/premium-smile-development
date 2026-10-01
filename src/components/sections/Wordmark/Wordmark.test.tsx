@@ -127,7 +127,7 @@ describe('Wordmark — the mark', () => {
     expect(img.getAttribute('width')).toBe('258');
     expect(img.getAttribute('height')).toBe('261');
     expect(classesOf(img)).toEqual(
-      expect.arrayContaining(['h-[90%]', 'w-auto']),
+      expect.arrayContaining(['h-[3.4425rem]', 'w-auto', 'max-w-none']),
     );
   });
 
@@ -189,14 +189,16 @@ describe('Wordmark — the name', () => {
     expect(text.textContent).toBe(clinic.name);
   });
 
-  it('wears ui/Heading title step plus hyphens-none on the host — nothing else', () => {
-    // The string the Header used to spell inline on its brand anchor, and
+  it('wears ui/Heading section step plus hyphens-none on the host — nothing else', () => {
+    // The `section` step, 30px — half again the `title` step (20px) it wore
+    // until the owner's "make the text 50% bigger than it is now" and "update
+    // also in footer" (2026-10-01, Wordmark.tsx's THE OWNER'S SIZES) — and
     // §15.14's rider for labels: a brand name may break between its words,
     // never at a syllable. Byte exactness keeps a third utility from riding
     // in unnoticed.
     const { text } = mount();
     expect(text.getAttribute('class')).toBe(
-      'font-display text-xl text-ink-strong hyphens-none',
+      'font-display text-3xl text-ink-strong hyphens-none @max-sm:text-xl',
     );
   });
 
@@ -341,17 +343,21 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
     );
   });
 
-  it('tightens on ONE named container step, gap and mark only', () => {
+  it('tightens on ONE named container step: gap, mark and name', () => {
     // D10 (fb-202): same elements at every width, one step at most, and the
     // step is one of Tailwind's own names — no custom value may enter the
-    // untouched default scale (§3). The two values are derived from a
-    // measurement recorded in Wordmark.tsx and re-checked by the Stress320
-    // story, which reproduces the real header cell.
+    // untouched default scale (§3). The two values are the owner's chosen
+    // sizes (Wordmark.tsx's THE OWNER'S SIZES), whose fit is re-checked by
+    // the Stress320 story, which reproduces the real header cell.
     const { anchor } = mount();
     const tokens = [anchor, ...anchor.querySelectorAll('*')].flatMap(classesOf);
     const stepped = tokens.filter((t) => t.startsWith('@'));
 
-    expect(stepped.toSorted()).toEqual(['@max-xs:gap-2', '@max-xs:h-[40%]']);
+    expect(stepped.toSorted()).toEqual([
+      '@max-sm:gap-2',
+      '@max-sm:h-[1.53rem]',
+      '@max-sm:text-xl',
+    ]);
     // Nothing may HIDE at the step — that is the rule the old site broke.
     expect(tokens.filter((t) => t.includes('hidden'))).toEqual([]);
     // …and nothing may forbid the wrap the 320 arithmetic rests on: the

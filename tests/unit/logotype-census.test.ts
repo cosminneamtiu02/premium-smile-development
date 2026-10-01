@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -122,6 +123,96 @@ describe('the mark (public/images/brand/mark.svg)', () => {
     expect(wordmark).toMatch(new RegExp(`width:\\s*${w},`));
     expect(wordmark).toMatch(new RegExp(`height:\\s*${h},`));
     expect(wordmark).toContain(`'/${MARK.replace(/^public\//, '')}'`);
+  });
+});
+
+/** The browser tab's icon, through Next's own file conventions in src/app. */
+const TAB_ICON = 'src/app/icon.svg';
+const TAB_FALLBACK = 'src/app/favicon.ico';
+/**
+ * The SHA-256 of the mark favicon.ico was RENDERED from (CLAUDE.md §15.31's
+ * recipe). A raster cannot be compared with the .svg byte for byte, so the
+ * ICO's provenance is pinned instead: re-cut the mark and this turns red
+ * until the ICO is regenerated from the new file and this hash moves with it.
+ */
+const ICO_SOURCE_SHA256 =
+  '703f1941b08cad31493cf612f8111bbf29bbd4f65d1a2a8e3074514af038c1dd';
+const PNG_SIGNATURE = Buffer.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+]);
+
+describe("the browser tab's icon (src/app — Next's icon + favicon conventions)", () => {
+  // THE LOGO IN THE TAB (owner, 2026-10-01: "use the logo from top bar also in
+  // the tab"). Next writes one <link rel="icon"> per file into every page's
+  // head: icon.svg (`sizes="any"`) for the browsers that draw an SVG tab icon
+  // — Chrome 80+, Firefox 41+, Safari 26+ — and favicon.ico (`sizes="48x48"`)
+  // for the ones that do not, which is every Safari up to 18.7 on the Mac AND
+  // on the iPhone (caniuse link-icon-svg), and for the browser's own
+  // `/favicon.ico` request on the two documents Next does not write (the root
+  // redirect and the 404 dispatcher, tools/) — a request to the DOMAIN root,
+  // so it finds the file on a root-served host and misses it on the interim
+  // Pages host's base path. Measured on the build: both links carry that base
+  // path, unlike the Wordmark's own <img> (Wordmark.tsx's KNOWN DEBT ·
+  // basePath).
+
+  it('is the mark itself, byte for byte (src/app/icon.svg)', () => {
+    // A COPY, because Next's convention reads a file inside src/app while the
+    // <img> needs the mark in public/ — so this is the KEEP-IN-SYNC pin, and
+    // the mark's census above covers the copy too (two brand fills, no text,
+    // no script, no reference outside itself). A re-cut mark that forgets the
+    // tab turns this red: copy it here, and regenerate favicon.ico from it
+    // (the recipe is CLAUDE.md §15.31).
+    const icon = readFileSync(join(ROOT, TAB_ICON));
+    expect(icon.equals(readFileSync(join(ROOT, MARK))), TAB_ICON).toBe(true);
+  });
+
+  it('falls back to a 16 · 32 · 48px PNG-in-ICO of THIS mark (src/app/favicon.ico)', () => {
+    const source = createHash('sha256')
+      .update(readFileSync(join(ROOT, MARK)))
+      .digest('hex');
+    expect(
+      source,
+      `${TAB_FALLBACK} was rendered from another ${MARK}: regenerate it from the current mark (CLAUDE.md §15.31) and update ICO_SOURCE_SHA256`,
+    ).toBe(ICO_SOURCE_SHA256);
+
+    const ico = readFileSync(join(ROOT, TAB_FALLBACK));
+    // Every read below is bounds-checked first, so a short or truncated file
+    // fails with a NAMED assertion rather than a bare RangeError — and
+    // `subarray`, which clamps silently, can never hand over half a PNG.
+    expect(ico.length, 'the ICO header').toBeGreaterThanOrEqual(6);
+    expect(ico.readUInt16LE(0)).toBe(0); // reserved
+    expect(ico.readUInt16LE(2)).toBe(1); // 1 = an icon (2 would be a cursor)
+    const count = ico.readUInt16LE(4);
+    expect(ico.length, 'the ICO directory').toBeGreaterThanOrEqual(
+      6 + 16 * count,
+    );
+    const sizes = Array.from({ length: count }, (_, i) => {
+      const entry = 6 + 16 * i;
+      const width = ico.readUInt8(entry) || 256; // 0 encodes 256
+      const height = ico.readUInt8(entry + 1) || 256;
+      const length = ico.readUInt32LE(entry + 8);
+      const offset = ico.readUInt32LE(entry + 12);
+      expect(offset + length, `the ${width}px entry`).toBeLessThanOrEqual(
+        ico.length,
+      );
+      const png = ico.subarray(offset, offset + length);
+      // A WHOLE PNG — what every engine that reads an ICO decodes: the
+      // signature, the IHDR chunk first (its tag at byte 12, then width and
+      // height, big-endian) saying what the directory says, and the IEND chunk
+      // last (its tag 8 bytes from the end, before its CRC).
+      expect(png.subarray(0, 8).equals(PNG_SIGNATURE), `${width}px`).toBe(true);
+      expect(png.toString('latin1', 12, 16)).toBe('IHDR');
+      expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([
+        width,
+        height,
+      ]);
+      expect(png.toString('latin1', png.length - 8, png.length - 4)).toBe(
+        'IEND',
+      );
+      expect(height).toBe(width);
+      return width;
+    });
+    expect(sizes).toEqual([16, 32, 48]);
   });
 });
 

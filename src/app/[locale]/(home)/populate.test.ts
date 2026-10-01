@@ -18,8 +18,8 @@ import { populateHero } from './populate';
 
 const FIXTURE: readonly HeroSlideEntry[] = [
   {
-    id: 'calm',
-    picture: { src: '/images/demo/hero-calm.jpg' },
+    id: 'lobby',
+    picture: { src: '/images/hero/lobby.jpg' },
     words: {
       ro: { alt: 'Cabinet', title: 'O clinică modernă' },
       en: { alt: 'Room', title: 'A modern practice' },
@@ -29,8 +29,8 @@ const FIXTURE: readonly HeroSlideEntry[] = [
     },
   },
   {
-    id: 'team',
-    picture: { src: '/images/demo/hero-team.jpg' },
+    id: 'treatment-room',
+    picture: { src: '/images/hero/treatment-room.jpg' },
     words: {
       ro: { alt: 'Echipa', title: 'O echipă care ascultă' },
       en: { alt: 'Team', title: 'A team that listens' },
@@ -44,10 +44,13 @@ const FIXTURE: readonly HeroSlideEntry[] = [
 describe('populateHero — against a fixture', () => {
   it('passes ids, pictures and order through untouched', () => {
     const slides = populateHero('ro', () => 'x', FIXTURE);
-    expect(slides.map((slide) => slide.id)).toEqual(['calm', 'team']);
+    expect(slides.map((slide) => slide.id)).toEqual([
+      'lobby',
+      'treatment-room',
+    ]);
     expect(slides.map((slide) => slide.src)).toEqual([
-      '/images/demo/hero-calm.jpg',
-      '/images/demo/hero-team.jpg',
+      '/images/hero/lobby.jpg',
+      '/images/hero/treatment-room.jpg',
     ]);
   });
 

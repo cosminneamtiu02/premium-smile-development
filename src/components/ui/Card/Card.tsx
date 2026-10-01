@@ -55,7 +55,7 @@ import { slotClone } from '../slot';
 //     the whole site" fell on the owner's word — "i want that rounded corner
 //     effect that the doctor card from old webpage has" — and the personnel
 //     card wears the old site's 1rem corner while every other card keeps the
-//     6px default (§15.28). A row joins that lookup by decision, never a
+//     6px default (§15.29). A row joins that lookup by decision, never a
 //     `radius={…}` prop.
 //   · TEXT COLOUR — ink is inherited from the body, so a card reads the same
 //     wherever it lands and a section can still tone individual lines through
@@ -131,7 +131,7 @@ import { slotClone } from '../slot';
 // arises. The radius rides the same rule — one `rounded-*` per rendered card,
 // chosen by the `corners` row (THE CORNER AXIS below): `rounded-md` for every
 // card on the site, the old site's 16px only where a section asks for `soft`
-// (owner 2026-10-01, §15.28 — until that day the old review card's 16px was
+// (owner 2026-10-01, §15.29 — until that day the old review card's 16px was
 // deliberately NOT imported, and this sentence said so).
 // (2) EMPHASIS IS FILL AND BORDER COLOUR, NOT THICKNESS — with exactly one
 // owner-decided exception, `framed` (fb-423, pack round 1: "the old website
@@ -385,7 +385,7 @@ export type CardAura = boolean | 'current';
 
 /** WHICH CORNER a card wears — a named situation, like `tone`:
  *  `house` = §15.1's 6px default (`rounded-md`, every card on the site) ·
- *  `soft` = the old site's card corner, `--radius-soft` 1rem (§15.28). */
+ *  `soft` = the old site's card corner, `--radius-soft` 1rem (§15.29). */
 export type CardCorners = 'house' | 'soft';
 
 /** The attribute `aura="current"` answers to: PRESENT while the card is the
@@ -418,7 +418,7 @@ type CardOwnProps = {
   /** WHICH CORNER this card wears — chosen per card KIND in its section, like `aura`:
    *  `house` = the 6px default every card wears · `soft` = the old site's 1rem card corner
    *  (owner 2026-10-01: sections/PersonnelCard, both kinds; the Header pill, ui/TextButton
-   *  and ui/Modal wear the same token, §15.28). @default 'house' */
+   *  and ui/Modal wear the same token, §15.29). @default 'house' */
   corners?: CardCorners;
   /** THE MARK `aura="current"` answers to, when a client component renders it
    *  as a prop: the EMPTY STRING while the card is current, `undefined`
@@ -447,7 +447,7 @@ const cardGeometry = '@container flex flex-col gap-3';
 
 // THE CORNER AXIS (owner 2026-10-01: "i want that rounded corner effect that
 // the doctor card from old webpage has … implemented in all mentioned parts";
-// §15.28). Situations, never CSS knobs — `house` is §15.1's 6px default, worn
+// §15.29). Situations, never CSS knobs — `house` is §15.1's 6px default, worn
 // by every card on the site; `soft` is the old site's card corner, the
 // `rounded-2xl` its doctor, staff and review cards wore, imported as the ONE
 // token `--radius-soft` (1rem, globals.css) that the Header pill, NavMenu's
@@ -458,7 +458,7 @@ const cardGeometry = '@container flex flex-col gap-3';
 // menu and category cards wore it for an hour ("apply to all cards on
 // services page too") and lost it on the owner's "i liked card from before
 // better for services. it looked perfect." A card KIND's corner is taste,
-// chosen per kind and recorded (§15.28), never inferred from a neighbour.
+// chosen per kind and recorded (§15.29), never inferred from a neighbour.
 // Emitted right after the geometry, where `rounded-md` always stood, so every
 // card that does not ask keeps its class string byte for byte — the
 // consumers' pins (ReviewCard, CategoryCard, CredoCard, ScheduleCard) never

@@ -160,11 +160,13 @@ export function Footer(): ReactElement {
       <Container className="py-10">
         {/* ── ROW 1 · THE BRAND, since the fb-200 swap the SAME component the
             Header's corner renders (sections/Wordmark, contract v2
-            fb-200…fb-208): artwork · hairline bar · the name at Heading's
-            title step. The name is still data from lib/clinic/clinic.ts (§10.1) —
-            never a message key — and the vectorized logo still lands by
-            swapping one `src`, but now in ONE file instead of two that can
-            disagree.
+            fb-200…fb-208): the clinic's mark · the name at Heading's title
+            step, its two words in the brand's grey and lilac (owner,
+            2026-10-01; the D12 hairline bar between them is long gone). The
+            name is still data from lib/clinic/clinic.ts (§10.1) — never a
+            message key — and the real mark landed there as ONE edit to the
+            component's default (§15.6), which is what having ONE file instead
+            of two that can disagree was for.
             THE fb-179 RULE THIS ROW WAS BUILT ON IS NOT BROKEN, it is MOOT:
             "no second link to home in the footer" assumed a link, and D9's
             wordmark is a placeholder <a> with no href — it navigates nowhere,

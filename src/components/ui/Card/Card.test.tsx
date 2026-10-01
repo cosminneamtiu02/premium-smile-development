@@ -261,7 +261,7 @@ describe('Card — THE surface definition', () => {
   });
 });
 
-describe('Card — THE CORNER AXIS (owner 2026-10-01, §15.28)', () => {
+describe('Card — THE CORNER AXIS (owner 2026-10-01, §15.29)', () => {
   // The union pinned like `tone`'s: widening it to `string` would keep every
   // Record compiling with stale rows while `cornerClasses[x]` went undefined.
   expectTypeOf<CardCorners>().toEqualTypeOf<'house' | 'soft'>();
@@ -1254,7 +1254,7 @@ describe('Card — the zero-island invariant (source guard)', () => {
     // separators) so discussing the geometry can never redden the guard. This
     // counter cannot see any other file — the src-WIDE half, "no second
     // spelling anywhere", is tests/unit/card-single-spelling.test.ts. Since
-    // the corner axis (§15.28) the signature is the geometry's FOUR utilities
+    // the corner axis (§15.29) the signature is the geometry's FOUR utilities
     // alone: `rounded-md` rides the `corners` lookup and is composed at render.
     expect(source.split('@container flex flex-col gap-3').length - 1).toBe(1);
     expect(source).not.toContain('flex flex-col gap-3 rounded-md');

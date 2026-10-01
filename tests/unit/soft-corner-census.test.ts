@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// THE SOFT CORNER'S CENSUS (owner 2026-10-01, §15.28 — "i want that rounded
+// THE SOFT CORNER'S CENSUS (owner 2026-10-01, §15.29 — "i want that rounded
 // corner effect that the doctor card from old webpage has … implemented in
 // all mentioned parts"). The old site's card radius — `rounded-2xl`, 1rem —
 // ships as ONE token, `--radius-soft`, worn by exactly four parts: ui/Card's
@@ -61,7 +61,7 @@ const count = (source: string, form: RegExp): number =>
 
 /** Every wearer, with its EXPECTED post-strip counts and the reason it is
  * one. Growing this list is a design decision — the owner named four parts —
- * never a paste: name the file AND the part, and record it in §15.28. */
+ * never a paste: name the file AND the part, and record it in §15.29. */
 const WEARERS: Readonly<
   Record<string, { whole: number; bottom: number; part: string }>
 > = {
@@ -101,7 +101,7 @@ const ASKERS = [
   // were askers for one evening (owner: "apply to all cards on services page
   // too") and are NOT any more (owner, the same evening: "i liked card from
   // before better for services. it looked perfect.") — a taste decision,
-  // §15.28; adding them back is one word on each call site and one row here.
+  // §15.29; adding them back is one word on each call site and one row here.
   'components/sections/PersonnelCard/PersonnelCard.tsx',
 ];
 const ASK = /corners=(?:"soft"|\{'soft'\}|\{"soft"\})/g;
@@ -116,7 +116,7 @@ const sourceFiles = readdirSync(SRC_DIR, {
   .map((name) => name.replaceAll('\\', '/'))
   .sort();
 
-describe('the soft corner — ONE token, four wearers (owner 2026-10-01, §15.28)', () => {
+describe('the soft corner — ONE token, four wearers (owner 2026-10-01, §15.29)', () => {
   const globals = code(read('styles/globals.css'));
 
   it('declares exactly 1rem inside @theme, where Tailwind mints rounded-soft from it', () => {

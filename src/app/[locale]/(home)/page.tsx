@@ -25,10 +25,11 @@ import { populateHero } from './populate';
 // file always said they would) — the „Ne găsești" band late on the page
 // (ClinicLocation board D3, owner 2026-09-09) — and the reviews deck BELOW
 // the map (owner, 2026-09-20, the hero lane's round 4: "it should be below
-// the map"; the old site's order too). The deck reads lib/reviews itself and,
-// while that list is empty, shows the first five of lib/reviews' demo rows —
-// the Storybook "Five" story, on the owner's round-5 word (ReviewsCarousel.tsx,
-// AN EMPTY LIST) — this page passes it nothing.
+// the map"; the old site's order too). The deck reads lib/reviews itself —
+// the clinic's own Google reviews since 2026-09-30, which retired the demo
+// rows that held the band's place from 2026-09-20 (ReviewsCarousel.tsx, AN
+// EMPTY LIST) — and measures "how long ago" from the build's own clock, so
+// this page passes it nothing.
 // ServicesTeaser and CTABanner still slot around them in their own lanes
 // (§14).
 //
@@ -44,8 +45,9 @@ import { populateHero } from './populate';
 // rotation's law ("one static h1, outside the slides"; a per-slide h1 would
 // replace the page's only heading every seven seconds) and the Services
 // page's own shape. The slogans inside the band are display text on a <p>.
-// `home.hero.subtitle` is no longer rendered anywhere — it was the stub's
-// second line; the key stays in the five files until the owner strikes it.
+// `home.hero.subtitle`, the stub's second line, was STRUCK from the five
+// files on 2026-10-01 (the hero-photos lane, the owner's "discard dead
+// code"): nothing had rendered it since the band arrived.
 //
 // No `params` plumbing: the locale reaches next-intl through the [locale]
 // root param (src/i18n/request.ts, §15.16) — `getLocale` reads it.

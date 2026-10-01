@@ -16,10 +16,10 @@ import { NavMenu } from './NavMenu';
 //
 // This section IS mounted: src/app/[locale]/layout.tsx renders it in the shell
 // as a body-level sibling (skip link · Header · main · Footer · FloatingActions
-// · LanguageBanner). Not here: the LanguageSwitcher (deferred, fb-129) and
-// the real Publio logo (§15.6 — the brand corner is sections/Wordmark since the
-// fb-200 swap, carrying interim demo artwork beside the name until the owner
-// supplies the vectorized mark).
+// · LanguageBanner). Not here: the LanguageSwitcher (deferred, fb-129). The
+// brand corner is sections/Wordmark since the fb-200 swap — the clinic's own
+// mark and its two lettering colours since 2026-10-01 (§15.6 landed there,
+// one edit to that file's default; this file only hands it the cell).
 //
 // ── THE CONTACT MODAL IS WIRED (org-review F1, 2026-09-02). This IS the "next
 // run" D4 parked, so the interim `tel:` links are gone from both CTAs: the
@@ -113,6 +113,17 @@ import { NavMenu } from './NavMenu';
 // + 4px — the gap at its floor) and GermanStress (German at 1536). Move the
 // NUMBER if the brand or German ever outgrows it — re-run the arithmetic
 // above, never the architecture, and never without the planning loop.
+// THE BRAND SHRANK, THE NUMBER STAYED (2026-10-01, the wordmark-brand lane):
+// the clinic's mark is near-square (258:261) where the demo cat was 1.49:1,
+// so at the row's 72px the lockup is ~222px wide (71.2 + 12 + 138.8), not
+// 258.5 — every side track is now ~36px roomier, the German gap AT the step
+// is ~104px (AtTheStep's bounds follow it), and the floor above is met with
+// room. Re-run, the arithmetic's own answer would be a lower step — a bar
+// ≥ 2 × (222 + 64) + 279.3 + 32 = 883px → 56rem, which is Tailwind's NAMED
+// `@4xl` — but that moves the flip from ≈1221px to ≈1141px of window (the
+// row instead of the burger on ~80px of laptop widths), a behaviour change
+// the owner did not ask for with the logo; recorded in §15.28 as his lever,
+// not taken. The step is safe where it is: a wider gap, never a narrower.
 //
 // THE COUPLED SPELLINGS — one number, every place it is written. Move the step
 // and ALL of these move in the same change-set:
@@ -196,7 +207,7 @@ export function Header(): ReactElement {
     // the glass and the bar's own container step all ride this one element.
     // One definition, two consumption modes; the Footer takes the box, the
     // Header takes the number. rounded-soft = 1rem — THE SOFT CORNER (owner
-    // 2026-10-01, §15.28: "that rounded corner effect that the doctor card
+    // 2026-10-01, §15.29: "that rounded corner effect that the doctor card
     // from old webpage has … the top bar"): the old site's CARD radius, the
     // one token `--radius-soft` the personnel card, ui/TextButton and the
     // contact dialog wear too, worn by the PILL and, matching it, by
@@ -409,16 +420,28 @@ export function Header(): ReactElement {
             of the pill. `grid-rows-1` compiles to a single `minmax(0,1fr)` row,
             which inside this definite-height box is a definite 5rem — the
             same thing a flex line gave for free.
-            `whitespace-nowrap` keeps the lockup on one line: the side tracks are
-            `1fr` = `minmax(auto,1fr)`, and for wrappable text that auto floor is
-            the longest WORD, so a squeezed track would break the brand mid-word
-            (measured: "Pre-mium Smi-le" at 390 before the grid was scoped to
-            the bar's step). WHAT NOWRAP DOES NOT DO, measured 2026-09-26: it
-            does not floor the track at the whole lockup — the brand's
-            min-content ignores the percentage-height artwork, so a squeezed
-            track OVERFLOWS instead (the grid's RECORDED TRADE-OFF above). The
-            bar's step is what keeps every shown track wider than the brand. */}
-        <div className="flex self-stretch whitespace-nowrap @min-[60rem]:col-start-1 @min-[60rem]:justify-self-start">
+            `whitespace-nowrap` keeps the lockup on one line IN THE GRID: the
+            side tracks are `1fr` = `minmax(auto,1fr)`, and for wrappable text
+            that auto floor is the longest WORD, so a squeezed track would
+            break the brand mid-word (measured: "Pre-mium Smi-le" at 390
+            before the grid was scoped to the bar's step). WHAT NOWRAP DOES
+            NOT DO, measured 2026-09-26: it does not floor the track at the
+            whole lockup — the brand's min-content ignores the
+            percentage-height artwork, so a squeezed track OVERFLOWS instead
+            (the grid's RECORDED TRADE-OFF above). The bar's step is what
+            keeps every shown track wider than the brand.
+            AT THE STEP ONLY, since 2026-10-01 (the wordmark-brand lane).
+            Below it this row is flex and the cell is exactly as wide as the
+            burger leaves it — 147px at 320 (§7's stress width) against a
+            one-line lockup of ~178px — so the name MUST be free to wrap
+            there, which is what sections/Wordmark's D10 arithmetic has always
+            promised (two 28px lines inside the 5rem row). An unconditional
+            nowrap made that impossible: the one-line name overflowed its
+            cell and „Smile" was painted 32px under the burger at 320
+            (measured on develop's preview; flagged by the real-clinic-data
+            lane on 2026-09-30, fixed here). The grid's reason for nowrap
+            starts where the grid starts, so the class now wears the step. */}
+        <div className="flex self-stretch @min-[60rem]:col-start-1 @min-[60rem]:justify-self-start @min-[60rem]:whitespace-nowrap">
           <Wordmark />
         </div>
 

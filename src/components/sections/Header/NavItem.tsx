@@ -57,7 +57,7 @@ export function NavItem({
     // wearing the atom's classes — the DOM is exactly what the two call sites
     // produced before the extraction.
     // `active` is sugar for aria-current="page" + the static full-width
-    // underline + the cta-hover green: the same fact told to screen readers
+    // underline + the `accent` lavender: the same fact told to screen readers
     // and to eyes.
     <TextButton asChild active={active} className={className}>
       <a href={href}>{label}</a>

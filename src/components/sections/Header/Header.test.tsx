@@ -631,7 +631,7 @@ describe('Header — the panel hangs off the bar and survives a short screen', (
     expect(classes).not.toContain('fixed');
   });
 
-  it('shares the SOFT CORNER with the bar — one token on the pill and its panel (§15.28)', async () => {
+  it('shares the SOFT CORNER with the bar — one token on the pill and its panel (§15.29)', async () => {
     // owner 2026-10-01: "that rounded corner effect that the doctor card from
     // old webpage has … the top bar". Both wear `rounded-soft` — the old
     // site's 1rem card corner, ONE token in globals.css — so the two glass
@@ -977,6 +977,30 @@ describe('Header — the brand and the two Contact links', () => {
       name: clinic.phoneDisplay,
     });
     expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
+  });
+
+  it('keeps BOTH Contact buttons on the green solid face, never the menu lavender (owner, 2026-10-01)', async () => {
+    // The owner, the day the menu links turned lavender (ui/TextButton's
+    // `accent` role): "contact button MUST STAY GREEN AS IT MUST JUMP INTO
+    // YOUR EYES". The site's one conversion goal is a call (§1), so the CTA
+    // keeps the green family (§15.1) while the quiet menu controls around it
+    // wear the lavender — the difference between the two IS the point, and
+    // this pin is what stops a later "make the bar match" edit from erasing it.
+    const user = userEvent.setup();
+    const { burger, panel, barCta, messages } = mount();
+    const bar = barCta();
+
+    await user.click(burger());
+    const panelCta = within(panel() as HTMLElement).getByRole('button', {
+      name: messages.actions.contact,
+    });
+
+    for (const cta of [bar, panelCta]) {
+      expect(classesOf(cta)).toEqual(
+        expect.arrayContaining(['bg-cta', 'text-ink-inverse']),
+      );
+      expect(classesOf(cta).filter((c) => c.includes('accent'))).toEqual([]);
+    }
   });
 
   it('never puts a display utility in the CTA atom own class list', () => {

@@ -251,7 +251,7 @@ const layerClasses =
 //
 // The look (ex-D4, unchanged by the split): the menu panel's own clothes —
 // `rounded-soft border border-line-subtle bg-surface` (NavMenu.tsx; the SOFT
-// CORNER since 2026-10-01, §15.28 — the owner named the contact dialog among
+// CORNER since 2026-10-01, §15.29 — the owner named the contact dialog among
 // his four parts, and the token is the panel's too, so the two glass boxes
 // still round alike) — so the site
 // has ONE overlay language, plus `shadow-xl`. The shadow is invisible over the
@@ -361,7 +361,7 @@ const slotClasses =
   'flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-3 [&>*]:min-w-0';
 // The body's padding is the same in both modes — P left/right/bottom, G on top
 // (D5). `rounded-b-soft` matches the panel's own corners (the SOFT CORNER,
-// §15.28), since this container reaches the bottom edge of the box — a square
+// §15.29), since this container reaches the bottom edge of the box — a square
 // body would paint over a rounded box's lower corners from inside.
 //
 // The focus ring lives here, in BOTH modes (G2). It is obviously needed in the

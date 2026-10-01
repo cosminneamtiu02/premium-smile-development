@@ -213,7 +213,7 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // Under prefers-reduced-motion the transition is off and the panel simply
 // appears (§9) — nothing is conveyed by the animation.
 // rounded-soft = 1rem, matching the pill — THE SOFT CORNER of 2026-10-01
-// (§15.28; it was the old bar's 8px from 2026-08-16 until then; the panel's
+// (§15.29; it was the old bar's 8px from 2026-08-16 until then; the panel's
 // controls keep §15.1's 6px, its TextButtons take the soft corner on their own
 // box, Header.tsx tells the whole story). The dimmed page shows through at
 // all four corners AND through the mt-2 gap above, which is the intended

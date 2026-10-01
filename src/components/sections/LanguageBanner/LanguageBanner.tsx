@@ -173,7 +173,7 @@ export interface LanguageBannerProps {
 // LOOK: the site's one overlay language — ui/Modal's box and NavMenu's panel
 // wear `border border-line-subtle bg-surface` like this card, and the shadow
 // is what lifts this one off the page it floats over (there is no scrim here to
-// separate them). THE CORNER PARTED on 2026-10-01 (§15.28): the box and the
+// separate them). THE CORNER PARTED on 2026-10-01 (§15.29): the box and the
 // panel took the old site's 1rem card corner, `rounded-soft`, as two of the
 // owner's four named parts — this toast was not among them, so it keeps its
 // 8px `rounded-lg`; following them is one class, the owner's call. Semantic tokens only (§3 standing notes). No container query

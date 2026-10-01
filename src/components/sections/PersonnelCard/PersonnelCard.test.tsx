@@ -154,7 +154,7 @@ const CARD_BASE = [
   'flex',
   'flex-col',
   'gap-3',
-  // THE CORNER (owner 2026-10-01, §15.28): ui/Card's `corners="soft"` row on
+  // THE CORNER (owner 2026-10-01, §15.29): ui/Card's `corners="soft"` row on
   // BOTH kinds — the old doctor card's rounded-2xl, the 1rem token — in the
   // slot where every other card's `rounded-md` stands: the one moved token.
   'rounded-soft',
@@ -1553,7 +1553,7 @@ describe('PersonnelCard — the heading level is an additive axis (D4, 2026-09-2
   });
 });
 
-describe('PersonnelCard — THE CORNER (owner 2026-10-01, §15.28)', () => {
+describe('PersonnelCard — THE CORNER (owner 2026-10-01, §15.29)', () => {
   it.each([
     ['doctor', renderDoctor],
     ['auxiliary', renderAuxiliary],

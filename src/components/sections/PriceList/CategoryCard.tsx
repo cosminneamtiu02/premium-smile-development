@@ -283,7 +283,7 @@ export function CategoryCard({
     <Card asChild aura="current">
       {/* The <section> IS the card: surface, inset and the @container context
           (and the HOUSE corner, 6px — ui/Card's default: the soft 1rem corner
-          of §15.28 was put on this page on the owner's "apply to all cards on
+          of §15.29 was put on this page on the owner's "apply to all cards on
           services page too" and taken off again the same evening on his "i
           liked card from before better for services. it looked perfect." —
           a taste decision, recorded there; `corners="soft"` is one word away)

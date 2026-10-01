@@ -883,7 +883,7 @@ describe('PriceList — the current category (the island)', () => {
 
     expect(links[0]).toHaveAttribute('aria-current', 'location');
     expect(tokensOf(links[0])).toEqual(
-      expect.arrayContaining(['text-cta-hover', 'after:scale-x-100']),
+      expect.arrayContaining(['text-accent', 'after:scale-x-100']),
     );
     for (const link of links.slice(1)) {
       expect(link).not.toHaveAttribute('aria-current');
@@ -1588,7 +1588,7 @@ describe('PriceList — dumb by construction', () => {
   });
 });
 
-describe('PriceList — every card of the page keeps the HOUSE corner (owner 2026-10-01, §15.28)', () => {
+describe('PriceList — every card of the page keeps the HOUSE corner (owner 2026-10-01, §15.29)', () => {
   // The soft 1rem corner (ui/Card's `corners="soft"`, the personnel card's)
   // was put on the menu card and on each of the eleven category cards on the
   // owner's "apply to all cards on services page too", and taken off the same

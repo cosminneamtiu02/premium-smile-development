@@ -465,7 +465,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // were `rounded-2xl` — Tailwind's 2xl step, 1rem, on an untouched radius
 // scale — so BOTH kinds pass ui/Card's `corners="soft"`, the atom's second
 // corner situation over the ONE token `--radius-soft` the Header pill,
-// NavMenu's panel, ui/TextButton and ui/Modal wear as well (§15.28). Every
+// NavMenu's panel, ui/TextButton and ui/Modal wear as well (§15.29). Every
 // other card on the site keeps the 6px `house` corner (the services page's
 // cards tried the soft one for an hour on his "apply to all cards on services
 // page too" and went back on his "i liked card from before better for

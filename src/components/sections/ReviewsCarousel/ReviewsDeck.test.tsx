@@ -13,19 +13,28 @@ import {
   it,
   vi,
 } from 'vitest';
+import { createTranslator } from 'next-intl';
 import type { ClockEnv } from '@/lib/clock/clock';
+import { reviews, type Review } from '@/lib/reviews/reviews';
+import { formatTimeAgo } from '@/lib/time-ago/time-ago';
 import ro from '@/messages/ro.json';
+import { REVIEWS_NOW } from './ReviewsCarousel.fixtures';
 import { ReviewsDeck, type ReviewSlide } from './ReviewsDeck';
 import source from './ReviewsDeck.tsx?raw';
 
 // sections/ReviewsCarousel/ReviewsDeck — the island's interaction suite, i.e.
 // the MANNERS lib/rotation's header law assigns to a consumer, as this deck
-// keeps them after the owner's pack round 2 (2026-09-12: no rotation control;
-// a hand on the deck stops it). Role-based queries throughout (§9, §13): a
-// passing suite doubles as proof of accessible markup, and every user-facing
-// string comes from the REAL message files — never a literal typed in here
-// (§17.4), so a renamed key fails HERE as well as in the translation-parity
-// gate.
+// keeps them today: no rotation control (the owner's pack round 2,
+// 2026-09-12) and, since the hero lane's round 6 (2026-09-20), the Hero's
+// manners — the band hands it the Hero's rhythm (a 1.5 s first dwell, then
+// one move every 5.5 s; the suite below runs its own numbers), a press on
+// prev or next steps and buys a full interval before the ring moves on,
+// keyboard focus inside the region is a transient hold that lifts when focus
+// leaves, no pointer holds it, and nothing stops it for good. Role-based
+// queries throughout (§9, §13): a passing suite doubles as proof of
+// accessible markup, and every user-facing string comes from the REAL message
+// files — never a literal typed in here (§17.4), so a renamed key fails HERE
+// as well as in the translation-parity gate.
 //
 // ── TIME AND THE ENVIRONMENT ARE THE SUITE'S, NEVER THE MACHINE'S (the
 // lib/clock convention, reused verbatim). Every deck below is built with an
@@ -83,76 +92,55 @@ const fill = (message: string, values: Record<string, string>): string =>
     message,
   );
 
+/** The band's own `home.reviews.*` sentences, through the REAL messages (§17.4). */
+const tReviews = createTranslator({
+  locale: 'ro',
+  messages: ro,
+  namespace: 'home.reviews',
+});
+
 /**
- * DEMO reviews — the old site's fabricated Romanian copy (board D15), Romanian
- * with diacritics per §15.7. Never the site's data: lib/reviews ships EMPTY
- * and the real reviews are the owner's to supply. No pictures: the deck only
- * forwards them, the BAND is what maps them (ReviewsCarousel.test.tsx), and a
- * 404'd <img> swaps to ui/Avatar's letters face asynchronously — a moving DOM
- * under assertions that are about something else.
+ * One REAL review (lib/reviews) handed over the way the band hands it — its
+ * Romanian words, the rating's sentence through ICU, lib/time-ago's phrase
+ * measured from the folder's REVIEWS_NOW — because the island formats nothing:
+ * it receives finished words (owner, 2026-10-01: "all fabricated ones need to
+ * be dropped" — no invented review stands in for them here). No pictures: the
+ * deck only forwards them, the BAND is what maps them (ReviewsCarousel.test.tsx),
+ * and where the optimizer's width variants are missing a picture swaps to
+ * ui/Avatar's letters face asynchronously — a moving DOM under assertions that
+ * are about something else.
  */
-const DEMO: readonly Omit<ReviewSlide, 'label'>[] = [
-  {
-    id: 'ana-petrescu',
-    initials: 'AP',
-    rating: 5,
-    ratingLabel: '5 din 5 stele',
-    title: 'Copiii îmi cer să mergem',
-    body: 'Doi copii, zero crize. Camera pediatrică și personalul fac fiecare vizită să pară o aventură.',
-    name: 'Ana Petrescu',
-    procedure: 'Pacient familie',
-  },
-  {
-    id: 'cristian-voicu',
-    initials: 'CV',
-    rating: 5,
-    ratingLabel: '5 din 5 stele',
-    title: 'Au văzut imaginea de ansamblu',
-    body: 'Alte clinici mi-au dat un preț. Premium Smile mi-a dat un plan. Trei ani mai târziu, gura mea este sănătoasă.',
-    name: 'Cristian Voicu',
-    procedure: 'Plan complet',
-  },
-  {
-    id: 'bogdan-ene',
-    initials: 'BE',
-    rating: 4.5,
-    ratingLabel: '4,5 din 5 stele',
-    title: 'Fără durere, chiar și la tratamentul de canal',
-    body: 'Sincer, mă așteptam la ce e mai rău. Mi-au explicat fiecare minut și am plecat fără pic de durere.',
-    name: 'Bogdan Ene',
-    procedure: 'Tratament canal',
-  },
-  {
-    id: 'ioana-stan',
-    initials: 'IS',
-    rating: 4.5,
-    ratingLabel: '4,5 din 5 stele',
-    title: 'Ca o persoană diferită',
-    body: 'Optsprezece luni de aligneri transparenți, controale săptămânale, zero presiune.',
-    name: 'Ioana Stan',
-    procedure: 'Ortodonție',
-  },
-  {
-    id: 'diana-munteanu',
-    initials: 'DM',
-    rating: 4,
-    ratingLabel: '4 din 5 stele',
-    title: 'O reparație mică a schimbat totul',
-    body: 'Doar un dinte din față ciobit, dar mă deranja de ani buni. Douăzeci de minute aici și nu mai disting care a fost reparat.',
-    name: 'Diana Munteanu',
-    procedure: 'Lipire estetică',
-  },
-  {
-    id: 'stefan-radu',
-    initials: 'ȘR',
-    rating: 3.5,
-    ratingLabel: '3,5 din 5 stele',
-    title: 'Rapid, lin, prietenos',
-    body: 'Toate cele patru măsele de minte într-o dimineață. Instrucțiuni clare și un telefon de control a doua zi.',
-    name: 'Ștefan Radu',
-    procedure: 'Măsele de minte',
-  },
-];
+const toSlide = (review: Review): Omit<ReviewSlide, 'label'> => ({
+  id: review.id,
+  initials: review.initials,
+  rating: review.rating,
+  ratingLabel: tReviews('rating', { rating: review.rating }),
+  title: review.words.ro.title,
+  body: review.words.ro.text,
+  name: review.name,
+  postedOn: review.postedOn,
+  postedAgo: formatTimeAgo('ro', review.postedOn, REVIEWS_NOW),
+});
+
+/**
+ * How many slides a deck gets when a test names no count: SIX — the shape the
+ * suite's literals were written for („Recenzia 2 din 6") and the smallest ring
+ * with a far card (+3) past the stage's edge.
+ */
+const DEFAULT_COUNT = 6;
+
+/**
+ * The first `count` real reviews as slides, chosen by POSITION — never by id,
+ * so an edit to the list cannot break a test — with a clear failure, never a
+ * quietly shorter deck, when lib/reviews holds fewer than a test needs.
+ */
+function realSlides(count: number): readonly Omit<ReviewSlide, 'label'>[] {
+  if (reviews.length < count)
+    throw new Error(
+      `This test needs ${count} real reviews; lib/reviews holds ${reviews.length}.`,
+    );
+  return reviews.slice(0, count).map(toSlide);
+}
 
 /** A browser that neither reduces motion nor hides the tab, unless asked. */
 const quietEnv = (reduced = false): ClockEnv => ({
@@ -184,7 +172,7 @@ function label(index: number, total: number): string {
 }
 
 function mount(options: MountOptions = {}) {
-  const rows = options.slides ?? DEMO.slice(0, options.count ?? DEMO.length);
+  const rows = options.slides ?? realSlides(options.count ?? DEFAULT_COUNT);
   const slides: readonly ReviewSlide[] = rows.map((row, index) => ({
     ...row,
     label: label(index, rows.length),
@@ -336,8 +324,9 @@ describe('ReviewsDeck — the region the APG asks for', () => {
 describe('ReviewsDeck — no rotation control, on the owner’s word (2026-09-12)', () => {
   it('renders NO pause/play button — the only buttons are prev and next', () => {
     // The owner's sentence: "absolutely no pause button". What stands in for
-    // it — hover suspends, keyboard entry stops, a hand on the deck stops —
-    // is the subject of the describes below.
+    // it since 2026-09-20 — a press steps and the ring goes on a full
+    // interval later, a keyboard entry holds it only while focus stays
+    // inside, no pointer holds it — is the subject of the describes below.
     const { region } = mount();
     const names = [...region().querySelectorAll('button')].map((button) =>
       button.getAttribute('aria-label'),
@@ -354,9 +343,9 @@ describe('ReviewsDeck — no rotation control, on the owner’s word (2026-09-12
     // a change announced there would be one somebody asked for.
     const html = renderToStaticMarkup(
       <ReviewsDeck
-        slides={DEMO.map((row, index) => ({
+        slides={realSlides(DEFAULT_COUNT).map((row, index, rows) => ({
           ...row,
-          label: label(index, DEMO.length),
+          label: label(index, rows.length),
         }))}
         labels={LABELS}
         intervalMs={INTERVAL}
@@ -382,9 +371,9 @@ describe('ReviewsDeck — hydration, end to end', () => {
     // renderToString (not renderToStaticMarkup) because hydration needs the
     // markers React writes for itself; the console.error spy is the only way
     // to see a hydration warning, since React logs rather than throws.
-    const slides = DEMO.map((row, index) => ({
+    const slides = realSlides(DEFAULT_COUNT).map((row, index, rows) => ({
       ...row,
-      label: label(index, DEMO.length),
+      label: label(index, rows.length),
     }));
     const deck = (
       <ReviewsDeck
@@ -546,6 +535,20 @@ describe('ReviewsDeck — the slides, and which one is the visitor’s', () => {
     }
   });
 
+  it('hands every card its date line: the day on <time dateTime>, the band’s finished phrase as its words', () => {
+    // EVERY PROP IS SPELLED (the JSX's own comment): the two date props reach
+    // ReviewCard one by one, so a slide whose card lost either would show
+    // here — on the far slides too, which stay laid out behind the fan.
+    const { slideNodes, slides } = mount();
+
+    expect(slideNodes()).toHaveLength(slides.length);
+    slideNodes().forEach((slide, index) => {
+      const day = slide.querySelector('article time');
+      expect(day).toHaveAttribute('datetime', slides[index].postedOn);
+      expect(day).toHaveTextContent(slides[index].postedAgo);
+    });
+  });
+
   it('sizes every slide as the stage’s share and stacks them in ONE cell', () => {
     // The geometry is measured in the stories; the WIRING is pinned here: the
     // width is the stage's `--deck-card` dial, every slide sits in the same
@@ -561,7 +564,7 @@ describe('ReviewsDeck — the slides, and which one is the visitor’s', () => {
     }
     const stageTokens = (stage().getAttribute('class') ?? '').split(/\s+/);
     expect(stageTokens).toContain('mx-[calc(50%_-_50vw)]');
-    expect(stageTokens).toContain('[--deck-card:clamp(14rem,66%,8%_+_20rem)]');
+    expect(stageTokens).toContain('[--deck-card:clamp(14rem,80%,8%_+_20rem)]');
     expect(stageTokens).toContain('[--fan-step:87%]');
     expect(stageTokens).toContain('overflow-x-clip');
   });

@@ -656,7 +656,7 @@ describe('Modal — the container is the BOX, not the layer (§6.5, D17)', () =>
   });
 });
 
-describe('Modal — THE SOFT CORNER (owner 2026-10-01, §15.28)', () => {
+describe('Modal — THE SOFT CORNER (owner 2026-10-01, §15.29)', () => {
   it('rounds the BOX with the one token the pill and the personnel card wear, and the body’s bottom with it', () => {
     // "that rounded corner effect that the doctor card from old webpage has …
     // contact us modal": `rounded-soft` on the box — 1rem, `--radius-soft` in

@@ -60,7 +60,7 @@ const QUIET_RING = 'not-data-[arrival=keyboard]:focus-visible:outline-hidden';
 const ARRIVAL = 'data-arrival';
 
 /** ui/Card's own surface, ARMED with the glow (`aura="current"`) and on the
- *  HOUSE corner (the atom's default — the soft corner of §15.28 was tried on
+ *  HOUSE corner (the atom's default — the soft corner of §15.29 was tried on
  *  this page and reverted on the owner's taste, 2026-10-01), DERIVED from a
  *  rendered card rather than retyped — so an edit to the atom's geometry,
  *  corner rows, tone rows or glow layer lands in these assertions instead of
@@ -91,7 +91,7 @@ describe('CategoryCard — the card IS the section (ui/Card asChild)', () => {
     expect(card.className).toBe(`${cardSurface()} scroll-mt-10 ${QUIET_RING}`);
   });
 
-  it('keeps the HOUSE corner — the owner’s taste (2026-10-01, §15.28)', () => {
+  it('keeps the HOUSE corner — the owner’s taste (2026-10-01, §15.29)', () => {
     // The soft 1rem corner (`corners="soft"`) was put on this card on the
     // owner's "apply to all cards on services page too" and taken off the
     // same evening on his "i liked card from before better for services. it

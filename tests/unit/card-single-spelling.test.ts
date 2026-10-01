@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 // <Card> — the fast unit project (and the pre-push hook, and CI) goes red
 // naming the file.
 //
-// TWO SIGNATURES SINCE THE CORNER AXIS (owner 2026-10-01, §15.28). Until that
+// TWO SIGNATURES SINCE THE CORNER AXIS (owner 2026-10-01, §15.29). Until that
 // day one contiguous string served both jobs — `flex flex-col gap-3
 // rounded-md` opened the definition (`cardClasses`) AND the dossier root it
 // replaced (`… border border-line-subtle bg-surface p-6` continues from the

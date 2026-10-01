@@ -13,6 +13,7 @@ import { userEvent as realUser } from 'vitest/browser';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import type { ClockEnv } from '@/lib/clock/clock';
+import { heroSlides } from '@/lib/hero-slides/hero-slides';
 import ro from '@/messages/ro.json';
 import {
   Hero,
@@ -39,9 +40,11 @@ import source from './Hero.tsx?raw';
 // no stylesheet, so the picture wrapper's `absolute` never computes in this
 // runner; the built export has it positioned. Not a defect — do not chase.
 //
-// Fixtures are Romanian with diacritics (§15.7) — the old site's own three
-// slogans, the words lib/hero-slides ships — and the labels are the real
-// message file's, so a renamed key fails here before it fails on the page.
+// Fixtures are Romanian with diacritics (§15.7) — the three rows
+// lib/hero-slides ships, read from the module itself so a reworded slogan or
+// a renamed picture can never leave a stale copy here (the clinic's own
+// photographs, 2026-10-01) — and the labels are the real message file's, so a
+// renamed key fails here before it fails on the page.
 // Every string that reaches the band is FINISHED (§8.1): this suite formats
 // the „{index} din {total}" sentence itself, as the page's populator does.
 
@@ -68,26 +71,13 @@ const LABELS: HeroLabels = {
   services: ro.home.hero.services,
 };
 
-const WORDS = [
-  {
-    id: 'calm',
-    src: '/images/demo/hero-calm.jpg',
-    alt: 'Cabinet de tratament liniștit cu lumină naturală',
-    title: 'O clinică stomatologică modernă pentru toată familia',
-  },
-  {
-    id: 'team',
-    src: '/images/demo/hero-team.jpg',
-    alt: 'Medic primitor salutând un pacient la recepție',
-    title: 'O echipă care ascultă, pe limba ta',
-  },
-  {
-    id: 'result',
-    src: '/images/demo/hero-result.jpg',
-    alt: 'Pacient zâmbind încrezător după tratament',
-    title: 'Tratamente realizate ca într-un studio de lux',
-  },
-] as const satisfies readonly Omit<HeroSlide, 'label'>[];
+/** The shipped ring in Romanian — lib/hero-slides' own rows, never a copy. */
+const WORDS: readonly Omit<HeroSlide, 'label'>[] = heroSlides.map((row) => ({
+  id: row.id,
+  src: row.picture.src,
+  alt: row.words.ro.alt,
+  title: row.words.ro.title,
+}));
 
 const SERVICES_HREF = '/ro/services/';
 const INTERVAL = 5_000;
@@ -211,6 +201,9 @@ describe('Hero — the region and its slides (lib/rotation’s markup duties)', 
     // slogan as the words Container's top padding, so the buttons stay put.
     const slogan = screen.getByText(WORDS[0].title);
     expect(slogan.tagName).toBe('P');
+    // Never split at a syllable (the clinic's own copy, 2026-10-01): the
+    // site-wide hyphenation is opted out ON the slogan, per element.
+    expect(slogan.className).toContain('hyphens-none');
     expect(slogan.nextElementSibling).toBeNull();
     expect(slogan.parentElement?.parentElement?.className).toContain('pt-10');
   });

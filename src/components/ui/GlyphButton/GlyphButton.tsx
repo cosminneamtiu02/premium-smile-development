@@ -198,12 +198,17 @@ const motionClasses: Record<GlyphButtonMotion, string> = {
 // that says nothing byte-identical to before the axis existed. `accent` is
 // worn, each on the owner's word, by the Footer's four discs and the reviews
 // deck's prev/next (outline — which FILLS lavender on hover, this atom's own
-// two-way mirror) and by the map band's two row discs (solid, through
-// ClinicLocation's `ROW_HOVER`). NOT by the fixed corner's call and WhatsApp
-// discs ("do not modify at least yet the hovering buttons from bottom
-// right") and not by the Header's burger (ghost paints with ink):
-// tests/unit/accent-census.test.ts names every wearer with its ground, and
-// FloatingActions.test.tsx pins the corner green.
+// two-way mirror), by the map band's two row discs (solid, through
+// ClinicLocation's `ROW_HOVER`) and, since the evening of the same day, by
+// the fixed corner's call and WhatsApp discs (solid — held back that morning,
+// "do not modify at least yet the hovering buttons from bottom right", turned
+// on "i thaught i told you to refactor the whatsapp and call buttons to be
+// lilla too"; FloatingActions.test.tsx pins the lilac). Not by the Header's
+// burger (ghost paints with ink). So no call site of THIS atom wears `cta`
+// today: the green stays the DEFAULT — Button's twin, and Button's green is
+// still worn, by the contact dialog's two buttons — with this atom's stories
+// and tests as its only readers. tests/unit/accent-census.test.ts names every
+// wearer with its ground.
 // KEEP-IN-SYNC (ClinicLocation board D6, 2026-09-09): sections/ClinicLocation's
 // `ROW_HOVER` spells solid's `hover:`/`active:` members — the ACCENT cell's,
 // since 2026-10-01 — with the `group-` prefix: a decorative disc (this atom

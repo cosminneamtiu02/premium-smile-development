@@ -29,9 +29,12 @@ import { describe, expect, it } from 'vitest';
 // and joined it the same evening on his own reversal: "also paint the
 // contact button from top bar a lilla and make it wider, more seszable and
 // adjust to widest language form"; Header.test.tsx pins the lilac on both of
-// the Header's Contacts now. The fixed corner's two discs are still NOT
-// wearers — "do not modify at least yet the hovering buttons from bottom
-// right"; FloatingActions.test.tsx pins them green.)
+// the Header's Contacts now. The fixed corner's two discs joined the list
+// later that evening: held back that morning — "do not modify at least yet
+// the hovering buttons from bottom right" — they turned on "i thaught i told
+// you to refactor the whatsapp and call buttons to be lilla too", the owner's
+// pick of the corner pair over the contact dialog's, which stays green;
+// FloatingActions.test.tsx pins the lilac.)
 //
 // THE VALUE IS MEASURED HERE TOO. The ratios are computed from the tokens' own
 // lines in globals.css, so a later edit to the value — the old site's exact
@@ -107,9 +110,12 @@ const RENDERERS: Readonly<Record<string, string>> = {
  * Every file that passes `tone="accent"` to ui/Button or ui/GlyphButton —
  * the owner's list of 2026-10-01, one row per band, with the ground. A button
  * paints its OWN ground (the solid's lavender face, the outline's white box),
- * so what the band's ground meets is the outline's border (SC 1.4.11's 3:1:
- * 4.81:1 over --page, 5.06:1 over white) — never the tint, where the role
- * fails as text. Growing this list is the same deliberate act as above.
+ * so what the band's ground meets is the face's edge or the outline's border
+ * (SC 1.4.11's 3:1: 4.81:1 over --page, 5.06:1 over white) — never the tint
+ * as TEXT, where the role fails. The one caller that does cross the tint, the
+ * fixed corner, crosses it as a solid face — a control's edge owes 3:1, not
+ * 4.5:1 — and the last measuring `it` below holds that. Growing this list is
+ * the same deliberate act as above.
  */
 const ACCENT_TONE_CALLERS: Readonly<Record<string, string>> = {
   // The contact trigger (solid) and the services link (outline), each on its
@@ -135,6 +141,10 @@ const ACCENT_TONE_CALLERS: Readonly<Record<string, string>> = {
   // The two row discs beside the map (solid, ROW_HOVER).
   'components/sections/ClinicLocation/ClinicLocation.tsx':
     'bg-page — the map band, the two row discs on their own lavender face',
+  // The fixed corner's call and WhatsApp discs (solid) — the owner's pick of
+  // the evening of 2026-10-01. `fixed`: every band scrolls under them.
+  'components/sections/FloatingActions/FloatingActions.tsx':
+    'every band, under `fixed` — the two discs on their own lavender face',
 };
 
 /** The lilac band and every band that composes it — where the role fails. */
@@ -251,14 +261,12 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
       expect(source, `${file} — ${ground}`).not.toContain('--tint');
       expect(source, `${file} — ${ground}`).not.toMatch(/TintedBand/);
     }
-    // The files that stay GREEN say nothing of the family: the fixed corner's
-    // two discs ("do not modify at least yet …") and the contact dialog's own
-    // two buttons (never asked). The Header's two files left this list the
-    // evening of 2026-10-01 — the owner's reversal, recorded above.
-    for (const file of [
-      'components/sections/FloatingActions/FloatingActions.tsx',
-      'components/sections/ContactModal/ContactModal.tsx',
-    ]) {
+    // The file that stays GREEN says nothing of the family: the contact
+    // dialog's own two buttons — never asked, and passed over by name the
+    // evening the corner turned (the owner chose the corner pair). The
+    // Header's two files and FloatingActions left this list that evening, on
+    // the owner's words recorded above.
+    for (const file of ['components/sections/ContactModal/ContactModal.tsx']) {
       expect(PASSES_ACCENT_TONE.test(stripComments(read(file))), file).toBe(
         false,
       );
@@ -357,6 +365,29 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
       ctaHoverOnSubtle,
       `cta-hover on line-subtle: ${ctaHoverOnSubtle.toFixed(2)}:1`,
     ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('holds SC 1.4.11’s 3:1 against every band the fixed corner floats over', () => {
+    // The corner's two discs are `fixed` (sections/FloatingActions, lavender
+    // since the evening of 2026-10-01): the page scrolls under them, so their
+    // face meets every band's ground in turn — the doctor pages' 30 % tint
+    // among them, where the role is barred as TEXT (above) while a control's
+    // edge owes 3:1, not 4.5:1. The white glyph on the face is measured above.
+    const css = read('styles/globals.css');
+    const accent = token(css, 'accent');
+    const page = token(css, 'page');
+    const tint = over(token(css, 'accent-decorative'), 0.3, page);
+    for (const [ground, hex] of [
+      ['--page', page],
+      ['--surface', token(css, 'surface')],
+      ['the doctor pages’ tint', tint],
+    ] as const) {
+      const ratio = contrast(accent, hex);
+      expect(
+        ratio,
+        `the corner's lavender face on ${ground} ${hex}: ${ratio.toFixed(2)}:1`,
+      ).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it('strips the prose mention, so the count is the class and not the comment', () => {

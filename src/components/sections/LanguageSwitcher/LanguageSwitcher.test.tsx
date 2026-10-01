@@ -224,7 +224,14 @@ describe('LanguageSwitcher — closed: one control, four crawlable alternates', 
     expect(bulbOf()).toHaveAccessibleName(bulbName('ro'));
   });
 
-  it('keeps the CTA bundle on the bulb — hover-manner parity with the call disc (D4 reversed 2026-09-04; rest-colour half superseded by the flag, 2026-09-05)', () => {
+  it('keeps the CTA bundle on the bulb, under its flag (D4 reversed 2026-09-04; rest colour superseded by the flag 2026-09-05; the call disc it matched turned lilac 2026-10-01)', () => {
+    // TITLE REWORDED AGAIN (2026-10-01): the call and WhatsApp discs turned
+    // lilac on the owner's word ("i thaught i told you to refactor the
+    // whatsapp and call buttons to be lilla too") and the bulb, not named,
+    // kept `cta` — so "parity with the call disc" is history too (the
+    // matching note beside tone="cta" in LanguageSwitcher.tsx). The
+    // ASSERTIONS are unchanged: they pin the ROLE the bulb is painted with,
+    // which is still --cta, under the art.
     // TITLE REWORDED at G2 (2026-09-05, both reviewers): the flag now covers
     // the bulb at rest, so the old "rest parity" claim is history — see the
     // SUPERSEDED IN PART note beside tone="cta" in LanguageSwitcher.tsx. The
@@ -251,10 +258,11 @@ describe('LanguageSwitcher — closed: one control, four crawlable alternates', 
     } finally {
       probe.remove();
     }
-    // …and the hover manner comes with it, from the SAME bundle GlyphButton's
-    // `solid` call disc wears (SpeedDial's `cta` toneClasses): one named pair,
-    // so the two corners cannot fade differently. The stem is unaffected — tone
-    // stops at the bulb since the owner's 2026-08-27 reversal of D5.
+    // …and the hover manner comes with it: SpeedDial's `cta` toneClasses, the
+    // green pair GlyphButton's `solid` face is cut from — the call disc's until
+    // 2026-10-01, when it took the lavender cut of the same face. The stem is
+    // unaffected — tone stops at the bulb since the owner's 2026-08-27
+    // reversal of D5.
     expect(Array.from(bulbOf().classList)).toEqual(
       expect.arrayContaining(['bg-cta', 'hover:bg-cta-hover']),
     );

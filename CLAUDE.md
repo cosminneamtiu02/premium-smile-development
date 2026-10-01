@@ -126,6 +126,7 @@ src/
   content/blog/          # MDX posts (ro)
   styles/globals.css     # Tailwind theme tokens
 public/                  # pre-optimized images, self-hosted fonts, robots.txt
+  images/brand/mark.svg  # THE clinic's tooth mark — two paths in the brand's two colours, traced from the owner's PNG (2026-10-01, §15.28); sections/Wordmark's default artwork; an .svg the optimizer never touches
 ```
 
 **Dependency direction (hard rule):** `app` → `sections` → `ui` → tokens. Never the reverse.
@@ -416,7 +417,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    fonts **Source Serif 4** (display + body) + **JetBrains Mono** (eyebrows), Publio only
    inside the vectorized logo; body base **1.125rem**; default radius **6px**; star
    `#B29126` → **`#D4AF37` (amended 2026-09-12, owner — the rider at the end of this item)**; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
-   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter; 20 since 2026-10-01 — `--accent` #746894, the menu buttons' lavender, the rider at the end of this item). Amendments from contradiction
+   start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter; 20 since 2026-10-01 — `--accent` #746894, the menu buttons' lavender, the rider at the end of this item; 22 the same day — `--brand-grey` #939598 and `--brand-lilac` #8576b1, the logotype's two colours, legal on the brand name alone by WCAG 2.2 SC 1.4.3's logo clause and worn by nothing else, the census test, §15.28). Amendments from contradiction
    review: font tokens are named `--font-display` / `--font-body` / `--font-mono` (never
    `--font-sans`); one additional role `--color-accent-decorative: #7A6D9C` for large
    display text (≥ 3:1 contexts) and graphics only — the a11y addon polices misuse.
@@ -517,6 +518,17 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    but is not in the repo; owner must supply it. Vectorize it to SVG (Publio never ships as
    a webfont) — this also settles the purple confirmation in item 1. Blocks §10.3 OG tags
    and the favicon, not the early phases.
+   **THE MARK LANDED 2026-10-01 (owner: "this is the actual logo of the clinic premium
+   smile"; the run is §15.28):** the tooth mark, traced from the owner's PNG into
+   `public/images/brand/mark.svg`, is sections/Wordmark's default artwork in the header and
+   the footer of every page, and the name beside it wears the brand's two lettering colours
+   („Premium" grey, „Smile" lilac). The lettering itself stays LIVE text in Source Serif 4
+   (the Publio stand-in, §3) — the owner supplied the mark and the colours, not Publio
+   lettering; if that ever arrives it replaces the words as a second file. The purple
+   confirmation is now a NUMBER, not a change: the logo's lilac is #8576B1 against
+   `accent-decorative`'s #7A6D9C and the ribbon's #8377A3 — adopting it is the owner's call
+   (§15.28). STILL OPEN: the favicon and the OG share image, for which the mark is the natural
+   source (`src/app/icon.svg` is a one-file favicon under the App Router).
 7. **Visual-testing environment — DECIDED 2026-07-31 (owner, via plan-canvas review):**
    no Docker on the development machine. Playwright baselines are **platform-suffixed dual
    sets**: the **darwin set** is generated/compared natively on the workstation and serves
@@ -2465,6 +2477,65 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     sync before the lane, 12 already stale); the 36 `pages/*` cells stay as develop has them — 12 stale, 24
     never recorded — because lanes in flight change those pages again and own their record. **Evidence at
     READY:** see the lane's PR.
+
+28. **The clinic's mark and its lettering colours — ON THE OWNER'S WORD (2026-10-01, verbatim: "refactor on
+    logo section this is the actual logo of the clinic premium smile and on the text use those colors as
+    described: Lilac/purple: #8576B1 (RGB 133, 118, 177) Grey: #939598 (RGB 147, 149, 152) on Premium the gray
+    and on smile the liliac"; lane `rework/wordmark-brand`):** §15.6's logo is in the repository. **THE MARK:**
+    the owner's 261×262 PNG (a cut-out with real alpha and a whitish fringe: the tooth's lilac stroke, its grey
+    stroke and a thinner smile in a duller lilac) TRACED into `public/images/brand/mark.svg` — two paths, one
+    per colour, 2.3 KB, viewBox 258×261 (the ink's own box plus one unit of air). The recipe, JavaScript only
+    (§15.26's "no Python" rule; the tracer stays machine-local, never a dependency): a pixel is ink at alpha
+    ≥ 0.5 unless it is the fringe (max channel > 225); ink is lilac or grey by a COVERAGE-INVARIANT hue ratio,
+    (blue − red) / (255 − max channel) > 0.12 — the main stroke reads ≈ 0.6, the smile ≈ 0.21, the grey ≈ 0.05,
+    and both a plain hue threshold and an RGB-distance rule misfiled the anti-aliased smile (measured: a grey rim
+    round every lilac stroke, then a grey smile); the lilac mask is dilated one source pixel under the grey at
+    their one seam and the grey path is drawn last, so no hairline opens and the source's layering (the lilac
+    slides under the grey, top right) is kept; each mask upscaled 4× (lanczos), blurred σ 3 at that scale, traced
+    by the potrace port (specks under 3 source px dropped, 8 for the grey layer — the smile's two washed tips),
+    curve tolerance 1, coordinates rounded to whole units by svgo (half a unit is 0.14 px at the header's 72 px).
+    Judged by eye at every crop against the source and accepted. It ships as a FILE by fb-83's rule (static,
+    fixed-colour artwork; the optimizer's extension list has no .svg, so the one file serves in dev, vitest,
+    storybook and the build — the demo cat's committed WEBP derivative, F12, is deleted with its consumer).
+    **THE WORDS:** `sections/Wordmark` splits `clinic.name` once at build time (`brandWords` — anything but two
+    words is a build error by name) and paints „Premium" `text-brand-grey`, „Smile" `text-brand-lilac`: two NEW
+    semantic roles (`--brand-grey` #939598, `--brand-lilac` #8576b1 — §15.1, roles 21 and 22 beside the menu
+    buttons' `--accent`, the 20th, minted the same day by its own lane), the host `hyphens-none`
+    (§15.14's label rider). **CONTRAST, MEASURED and RECORDED as the owner's brand:** grey 3.00:1 on white ·
+    2.85:1 on the page; lilac 4.02:1 · 3.82:1 — all under §9's 4.5:1 (20px regular is not large text; bold
+    would lift the bar to 3:1 and the grey would still miss it on the page ground). Legal by WCAG 2.2 SC 1.4.3's
+    own clause — "text that is part of a logo or brand name has no minimum contrast requirement" — and by SC
+    1.4.11's for the mark. axe cannot tell a logotype from a paragraph (measured: it flags the two words at 20px
+    regular, still flags them bold on the page ground, inside a `role="img"` wrapper and behind `aria-hidden`;
+    only an image escapes it), so the two words carry `data-logotype` and `.storybook/preview.tsx` narrows the
+    color-contrast rule by that attribute — `axe.configure`'s per-rule `selector`, measured to leave an unmarked
+    neighbour flagged; NOT the run-context `exclude`, which lifts every rule. NEW
+    `tests/unit/logotype-census.test.ts` keeps it honest: the two utilities and the marker are worn by
+    Wordmark.tsx and nowhere else, the exemption is keyed on the same literal, the .svg is painted with exactly
+    the two token values (a file cannot read a token — a KEEP-IN-SYNC pair), its viewBox equals the component's
+    width/height, and no text, script or href rides in the file. The name still reaches everyone in full ink (the
+    Footer's copyright line and site-map title; the JSON-LD), and the two spans read as ONE string. **THE PHONE,
+    FIXED ON THE WAY:** the Header's brand cell wore `whitespace-nowrap` at every width, so the two-line wrap
+    Wordmark's D10 arithmetic promised at 320 could never happen there — the one-line name painted „Smile" 32 px
+    under the burger (measured on develop's preview; the real-clinic-data lane's flag of 2026-09-30). The class
+    now wears the bar's step, `@min-[60rem]:whitespace-nowrap` (the grid's reason starts where the grid starts),
+    and at 320 the name wraps „Premium" over „Smile" inside the 5rem row with 23.7 px of slack; the Wordmark
+    story harness, which had sampled the old 4rem row since 2026-09-04 (the stale claim recorded then), is
+    aligned to `h-20` in the same change, and every Wordmark frame is re-recorded anyway. **THE BRAND SHRANK,
+    THE STEP STAYED:** near-square, the mark draws 71.2 px wide at the row's 72 px where the 1.49:1 cat drew
+    107.8, so the lockup is ~222 px, not 258.5 — the German gap at the 60rem step is ~104 px (AtTheStep's
+    ceiling moved 5rem → 7rem), and re-run, the §15.22 arithmetic's smallest whole rem would be 56rem, which is
+    Tailwind's NAMED `@4xl` and moves the flip from ≈1221 to ≈1141 px of window. NOT taken: a behaviour change
+    the owner did not ask for with the logo — his lever. **Recorded, not built — the owner's:** `accent-decorative`
+    #7A6D9C and `--ribbon` #8377A3 to the logo's own #8576B1 (repaints tints, auras, keywords, the ribbon;
+    #8576B1 reads 3.82:1 on the page, inside the display charter's 3:1); the favicon (`src/app/icon.svg`) and the
+    OG share image from the mark; the mark's size in the pill (90 % / 40 % of the row, kept from the cat — one
+    number in Wordmark.tsx); the Publio lettering, if it ever arrives, as a second file; the placeholder `<a>` →
+    `<span>` now that the home link is dropped for good (three suites and the e2e find the lockup through it);
+    striking the uncalled `common.brand.ariaLabel` key ×5. **Evidence at READY:** see the lane's PR. **Visual:**
+    every cell with the shell moves (the brand corner is on every page) — Sections/Wordmark (5), Sections/Header
+    (8), Sections/Footer (8), Sections/Hero (the Header above the band), Pages/* in both languages; the darwin
+    re-record is the owner's, on the owner's machine (§15.7).
 
 ## 16. Build-time vs runtime contract
 

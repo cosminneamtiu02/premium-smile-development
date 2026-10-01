@@ -30,8 +30,17 @@
    keywords: "what if you make the faint text lighter"): ink-faint — washed
    prose that still passes body text's 4.5:1, the 19th semantic role; its
    charter and its numbers sit on the declaration below.
+   ADDED (2026-10-01, the clinic's real mark — the wordmark-brand lane):
+   brand-grey #939598 + brand-lilac #8576b1, the logotype's two colours, roles
+   21 and 22 (the menu buttons' `--accent`, minted the same day by its own
+   lane, is the 20th); worn by sections/Wordmark's two words and by nothing else
+   (WCAG 2.2 SC 1.4.3's logo clause; tests/unit/logotype-census.test.ts). The
+   "purple hue confirm" is now a NUMBER: the logo's lilac is #8576b1 against
+   accent-decorative's #7a6d9c and the ribbon's #8377a3 — moving those two to
+   it repaints tints, auras and keywords and is the owner's call (§15.28).
    Everything else is PROVISIONAL warm-grayscale until the token-audit values
-   land (open: purple hue confirm against the real logo, §15.1 + §15.6).
+   land (open: whether accent-decorative and --ribbon adopt the logo's own
+   lilac now that it is known, §15.1 + §15.28).
    ──────────────────────────────────────────────────────────────────────────── */
 
 @theme {
@@ -195,9 +204,11 @@
   }
 }
 
-/* Semantic color roles — exactly 20: §15.1's 17 (`success` dropped) +
+/* Semantic color roles — exactly 22: §15.1's 17 (`success` dropped) +
    accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) + accent
-   (the menu buttons' lavender, owner 2026-10-01) — plus
+   (the menu buttons' lavender, owner 2026-10-01) + the brand's two, brand-grey
+   and brand-lilac (the same day, the logotype's own — the charter sits on
+   their declaration) — plus
    the one additional accent-decorative role, and the floss ribbon's colour
    and its shadow's, --ribbon and --ribbon-shadow (§15.26): raw values read
    by lib/ribbon-draw for its canvases, so they get NO utility name in the
@@ -317,13 +328,27 @@
      --accent-strong — tests/unit/accent-census.test.ts measures it on every
      ground named here. */
   --accent: #746894;
-  /* additional role outside the 20 (§15.1 amendment) */
-  --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
+  /* additional role outside the 22 (§15.1 amendment) */
+  --accent-decorative: #7a6d9c; /* the real logo's lilac is --brand-lilac #8576b1 (2026-10-01) — moving this role (and --ribbon) to it is the owner's call, §15.28 */
   /* the ribbon's colour and its shadow's (§15.26) — the old site's OWN palette, never invented. ONE colour
      since 2026-09-30 (owner: "drop the dark mauve,/ black one and use the mov"); the dark mauve that was its
      second face stays as the colour of the shadow it casts: */
   --ribbon: #8377a3; /* old `--accent` rgb(131 119 163) — its primary lavender */
   --ribbon-shadow: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness */
+  /* THE BRAND'S TWO COLOURS (owner, 2026-10-01, with the clinic's real mark:
+     "Lilac/purple: #8576B1 (RGB 133, 118, 177) · Grey: #939598 (RGB 147, 149,
+     152)" — "on Premium the gray and on smile the liliac"). THE CHARTER: the
+     LOGOTYPE and nothing else — sections/Wordmark's two words are the only
+     wearers, and tests/unit/logotype-census.test.ts keeps it so. Both FAIL
+     body text's 4.5:1 on both light grounds (measured, WCAG 2.2 relative
+     luminance): grey 3.00:1 on --surface · 2.85:1 on --page; lilac 4.02:1 ·
+     3.82:1 — legal on the brand name alone, by WCAG 2.2 SC 1.4.3's own
+     logotype clause (Wordmark.tsx, THE TWO COLOURS). Never an ink for prose,
+     never a control's face. The .svg mark paints with the same two values as
+     literals (a file loaded through <img> cannot read a token) — the census
+     holds the pair in sync. */
+  --brand-grey: #939598;
+  --brand-lilac: #8576b1;
 }
 
 /* THE RIBBON'S LANES, REGISTERED (§15.26). ui/Ribbon DECLARES these on the box
@@ -379,6 +404,8 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-decorative: var(--accent-decorative);
+  --color-brand-grey: var(--brand-grey);
+  --color-brand-lilac: var(--brand-lilac);
 }
 
 @layer base {

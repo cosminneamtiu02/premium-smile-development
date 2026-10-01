@@ -130,7 +130,26 @@ const preview: Preview = {
   parameters: {
     // Zero violations is a merge gate (§9, §13): the vitest addon turns every
     // axe violation into a test failure, not just a panel warning.
-    a11y: { test: 'error' },
+    a11y: {
+      test: 'error',
+      // THE ONE EXEMPTION, and it is WCAG's own (2026-10-01): SC 1.4.3 — "Text
+      // that is part of a logo or brand name has no minimum contrast
+      // requirement". The clinic's wordmark paints „Premium" in the brand
+      // grey and „Smile" in the brand lilac (the owner's colours; 2.85:1 and
+      // 3.82:1 on the page ground, measured), and axe cannot tell a logotype
+      // from a paragraph — so sections/Wordmark's two words carry
+      // `data-logotype`, and the color-contrast rule keeps its WHOLE reach
+      // except those nodes: `axe.configure`'s per-rule `selector` (measured:
+      // an unmarked neighbour in the same document is still flagged). Not the
+      // run-context `exclude`, which would lift EVERY rule off the two words.
+      // Every other node in every story is still judged at 4.5:1. The marker
+      // is worn by sections/Wordmark and nowhere else, and
+      // tests/unit/logotype-census.test.ts pins both the wearer and this
+      // selector — rename either and the census turns red.
+      config: {
+        rules: [{ id: 'color-contrast', selector: '*:not([data-logotype])' }],
+      },
+    },
 
     viewport: {
       // The named test viewports (§7) + the 320px accessibility stress width,

@@ -36,8 +36,11 @@ project exists to eliminate. Copying markup for reference is fine; copying style
 - [ ] Hosting: production is NOT GitHub Pages. Confirm the host (recommended:
       Cloudflare Pages) → tokens into the two environments → replace both DEPLOY
       PLACEHOLDER blocks. Staging must always build with `STAGING=1` (noindex).
-- [ ] In parallel (owner track): obtain the logo file (settles the purple + favicon +
-      OG image); start drafting Romanian content per page.
+- [x] In parallel (owner track): obtain the logo file — the clinic's tooth MARK and its two
+      lettering colours landed 2026-10-01 (`public/images/brand/mark.svg`, sections/Wordmark;
+      CLAUDE.md §15.28). The purple hue is now a known number the owner may adopt for
+      `accent-decorative` (his call); the favicon and the OG image are still open items of §15.6.
+- [ ] In parallel (owner track): start drafting Romanian content per page.
 
 **Phase gate:** repo settings, branches, protections, and environments exist. Note that
 `ci.yml` needs `package.json` to run — the CI-green check on a trivial PR becomes
@@ -203,9 +206,10 @@ boxes stay open BY DESIGN, annotated below — they are not lane debt:
       *(the trigger-wiring half shipped earlier, in PR #63; this lane added the provider
       that makes it live — a Header outside one THROWS by design, which is what the mount
       discharges)*
-- [ ] Wordmark's declared two-line home-link wiring diff (Wordmark.tsx header) — landing it
-      re-poses fb-179 (second home link in the Footer).
-      *(parked — owner supplies the wiring moment)*
+- [x] Wordmark's declared two-line home-link wiring diff — DROPPED, not parked (owner,
+      2026-09-06: "i am dropping wordmark home link"); fb-179 is closed by removal. The three
+      files that still described it as parked were cleaned on 2026-10-01 (Wordmark.tsx D9,
+      Footer.test.tsx, the header-step e2e).
 - [x] **Skip-link** — named in the Order above and carried by NO section header: it is a NEW
       build item of this shell lane, not a mount of something that exists.
 - [x] Delete the placeholder header/footer markup in `layout.tsx` (and its duplicate

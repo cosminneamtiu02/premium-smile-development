@@ -15,10 +15,11 @@ import { STATION } from '@/lib/ribbon-layout/ribbon-layout';
 import { slotClone } from '../slot';
 
 // ui/Ribbon — THE FLOSS RIBBON (CLAUDE.md §15.26): a decorative ribbon that
-// wraps a column of cards — down into each card's top corner, round its
-// edge, along the top lane as a calm wave, behind the card, back round the
-// opposite edge and down the side lane to the next card, which it wraps
-// mirrored — painted on ordinary 2D canvases and DRAWN LIVE, card by card,
+// wraps a column of cards — over the first card's top edge and across its
+// top lane in a low ripple, behind the card, back round the opposite edge
+// and down the side lane to the next card, which it wraps mirrored: down
+// into its top corner, round its edge, across its top lane, and on — painted
+// on ordinary 2D canvases and DRAWN LIVE, card by card,
 // as the visitor scrolls; once drawn it stays drawn. The mathematics,
 // the page, the pixels and the moment are four lib modules (ribbon-model,
 // ribbon-layout, ribbon-paint, ribbon-draw); this file is the markup they
@@ -46,11 +47,16 @@ import { slotClone } from '../slot';
 // ON PURPOSE — an exception to CLAUDE.md §7's "all sizing in rem": the
 // ribbon follows the column's width, not the text's size, and only the
 // 1.5rem floor follows the font. The inner box also owns the ribbon's HEAD
-// and TAIL room as its padding: the drop-in starts k above the first card
-// (100 k px — `--ribbon-k`), the tail ends 60px under the last one (lanes'
-// gap under the last card, less the gauge the side wave stops short by), and
-// each gets 1rem more for a tile's 2px margin and the shadow — so every tile
-// lies inside the root's height (Ribbon.test.tsx). Across, a tile may
+// and TAIL room as its padding: k above the first card (100 k px —
+// `--ribbon-k`) and 60px under the last one (lanes' gap under the last card,
+// less the gauge the side wave stops short by), each with 1rem more for a
+// tile's 2px margin and the shadow — so every tile lies inside the root's
+// height (Ribbon.test.tsx). The head room was the drop-in's, which started
+// k above the first card, until 2026-10-01; since then the first card has no
+// drop-in (lib/ribbon-draw, THE FIRST CARD HAS NO HEAD — its ribbon is first
+// seen over its top edge, 0.08 k above it) and the room is the band's air
+// alone, kept at that measure so no page moved — one spelling to shrink,
+// the owner's. Across, a tile may
 // overhang the column by the few px the ribbon sticks out round a card's
 // edge; at a 320px window that never scrolls the page sideways (the
 // Narrowest story's test).

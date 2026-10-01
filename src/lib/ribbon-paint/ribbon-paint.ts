@@ -38,8 +38,8 @@ import {
 //
 // ── HOW FINELY: by what a segment IS, never by its name (`samplesOf` reads
 // the segment's `kind`; lib/ribbon-model's header says why that matters).
-// A bend round an edge 16 · an arc 16 per quarter turn · a wave 32 per unit
-// · the sway 32 · a straight 24 per unit — a straight is flat, but the pen
+// A bend round an edge 16 · an arc 16 per quarter turn · a wave or the top
+// ripple 32 per unit · the sway 32 · a straight 24 per unit — a straight is flat, but the pen
 // must be SEEN to travel along it. (The design's shortest arc turns 20° and
 // still gets 4; every length is positive, so nothing gets fewer than 1.)
 //
@@ -56,6 +56,21 @@ import {
 // ribbon's outer edges are painted once, and drawing piece by piece ends on
 // the picture of drawing at once, pixel for pixel (ribbon-paint.test.ts pins
 // both).
+//
+// ── THE SHADOW IS PAINTED, NOT FILTERED (the owner, 2026-10-01: "when ribbon
+// is generated … it's shadow is squareish and after a while it rerenders and
+// transforms into a smooth one. i want it directly generated as smooth"). Until
+// that day each canvas wore a CSS `filter: drop-shadow(…)`, and what the
+// visitor saw while a stretch was being drawn was the engine's filter on a
+// layer that changed every frame — an approximation that the engine replaced
+// by the real thing once the canvas held still: the "balcony". Now the shadow
+// is pixels of the canvas like the ribbon: `outlineStretch` collects the
+// visible pieces of a stretch as ONE path, and `paintShadow` lays that path's
+// drop shadow UNDER whatever the canvas holds ('destination-over'), with the
+// canvas's own shadow — the same offset and blur the filter had, the shape
+// itself drawn far above the canvas where it is clipped away, so only its
+// shadow lands. One path, one shadow: no seam between pieces, and a frame's
+// picture is final the moment it is painted.
 //
 // ── WHAT IS BEHIND THE CARD IS NOT PAINTED — and that is the whole truth,
 // not a shortcut. A piece that crosses the card's front face is cut there
@@ -97,6 +112,11 @@ export type Stretch = Readonly<{
 
 /** How much a hidden stretch costs the pen, per px of ribbon. */
 export const HIDDEN_PACE = 0.35;
+
+/** The shadow's opacity — the prototype's drop-shadow at 0.38 (THE SHADOW IS PAINTED). */
+export const SHADOW_ALPHA = 0.38;
+/** How far above the canvas the shadow's shape is drawn, in CSS px: past any tile's height, so only the shadow lands. */
+const SHADOW_LIFT = 100_000;
 
 // ── THE LIGHT (the approved picture's shader). A key light from the upper
 // left, a fill from the right, the eye straight on; a warm ground bounce.
@@ -145,6 +165,7 @@ export function samplesOf(segment: Segment): number {
     case 'arc':
       return Math.ceil((Math.abs(segment.turn) / (Math.PI / 2)) * 16);
     case 'wave':
+    case 'ripple':
       return Math.ceil(segment.length * 32);
     case 'sway':
       return 32;
@@ -239,23 +260,25 @@ function inFront(polygon: readonly Vec3[], frontY: number): Vec3[] {
   return kept;
 }
 
-/**
- * Paint the stretch between the efforts `from` and `to`, in the order the
- * ribbon travels — the part of it in front of the card's face. Painting
- * 0 … total at once, or the same range in pieces that end on whole samples,
- * gives the same pixels.
- */
-export function paintStretch(
-  ctx: CanvasRenderingContext2D,
+/** One visible piece of a stretch: its polygon (card units, in front of the
+ *  face) and the centre line's two ends and colours. */
+type Piece = Readonly<{
+  polygon: readonly Vec3[];
+  from: Vec3;
+  to: Vec3;
+  colourFrom: Shade;
+  colourTo: Shade;
+}>;
+
+/** The visible pieces of the stretch between the efforts `from` and `to`, in
+ *  the order the ribbon travels — the one loop painting and outlining share. */
+function* piecesOf(
   stretch: Stretch,
   from: number,
   to: number,
-): void {
-  const { strip, place, frontY } = stretch;
+): Generator<Piece> {
+  const { strip, frontY } = stretch;
   const last = strip.length - 1;
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-
   let i = 0;
   while (i < last - 1 && strip[i + 1].effort <= from) i++;
   for (; i < last && strip[i].effort < to; i++) {
@@ -269,21 +292,47 @@ export function paintStretch(
     });
     const q0 = at(Math.max(0, (from - a.effort) / span));
     const q1 = at(Math.min(1, (to - a.effort) / span));
-    const piece = inFront([q0.l, q0.r, q1.r, q1.l], frontY);
-    if (piece.length < 3) continue;
-    const [x0, y0] = place(mix(q0.l, q0.r, 0.5));
-    const [x1, y1] = place(mix(q1.l, q1.r, 0.5));
+    const polygon = inFront([q0.l, q0.r, q1.r, q1.l], frontY);
+    if (polygon.length < 3) continue;
+    yield {
+      polygon,
+      from: mix(q0.l, q0.r, 0.5),
+      to: mix(q1.l, q1.r, 0.5),
+      colourFrom: q0.colour,
+      colourTo: q1.colour,
+    };
+  }
+}
+
+/**
+ * Paint the stretch between the efforts `from` and `to`, in the order the
+ * ribbon travels — the part of it in front of the card's face. Painting
+ * 0 … total at once, or the same range in pieces that end on whole samples,
+ * gives the same pixels.
+ */
+export function paintStretch(
+  ctx: CanvasRenderingContext2D,
+  stretch: Stretch,
+  from: number,
+  to: number,
+): void {
+  const { place } = stretch;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const piece of piecesOf(stretch, from, to)) {
+    const [x0, y0] = place(piece.from);
+    const [x1, y1] = place(piece.to);
     if (Math.hypot(x1 - x0, y1 - y0) > 0.01) {
       const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
-      gradient.addColorStop(0, css(q0.colour));
-      gradient.addColorStop(1, css(q1.colour));
+      gradient.addColorStop(0, css(piece.colourFrom));
+      gradient.addColorStop(1, css(piece.colourTo));
       ctx.fillStyle = gradient;
     } else {
       // Too short for a gradient to have a direction: its first colour.
-      ctx.fillStyle = css(q0.colour);
+      ctx.fillStyle = css(piece.colourFrom);
     }
     ctx.beginPath();
-    piece.forEach((point, j) => {
+    piece.polygon.forEach((point, j) => {
       const [x, y] = place(point);
       if (j === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -291,5 +340,55 @@ export function paintStretch(
     ctx.closePath();
     ctx.fill();
   }
+  ctx.restore();
+}
+
+/**
+ * THE SHADOW's shape: the visible pieces of the stretch between the efforts
+ * `from` and `to`, added to `path` as subpaths in canvas px — exactly what
+ * paintStretch paints for the same range, as one path.
+ */
+export function outlineStretch(
+  path: Path2D,
+  stretch: Stretch,
+  from: number,
+  to: number,
+): void {
+  for (const piece of piecesOf(stretch, from, to)) {
+    piece.polygon.forEach((point, j) => {
+      const [x, y] = stretch.place(point);
+      if (j === 0) path.moveTo(x, y);
+      else path.lineTo(x, y);
+    });
+    path.closePath();
+  }
+}
+
+/**
+ * THE SHADOW, painted under whatever the canvas holds: `path`'s drop shadow,
+ * `dy` CSS px down and blurred by `blur` CSS px (the drop-shadow's own two
+ * numbers; the blur's standard deviation is half of it, as the filter's was),
+ * in `colour` at SHADOW_ALPHA — and nothing else lands. A canvas's shadow
+ * offset and blur ignore its transform, so the canvas's own scale is applied
+ * to both here.
+ */
+export function paintShadow(
+  ctx: CanvasRenderingContext2D,
+  path: Path2D,
+  colour: Rgb,
+  dy: number,
+  blur: number,
+): void {
+  const { a: scaleX, d: scaleY } = ctx.getTransform();
+  const channels = colour.map((c) => Math.round(c * 255)).join(', ');
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.shadowColor = `rgba(${channels}, ${SHADOW_ALPHA})`;
+  ctx.shadowBlur = blur * Math.max(scaleX, scaleY);
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = (SHADOW_LIFT + dy) * scaleY;
+  ctx.translate(0, -SHADOW_LIFT);
+  ctx.fillStyle = '#000000';
+  ctx.fill(path);
   ctx.restore();
 }

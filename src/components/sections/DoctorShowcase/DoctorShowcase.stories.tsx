@@ -31,8 +31,9 @@ import { DoctorShowcase, type DoctorShowcaseDoctor } from './DoctorShowcase';
 //     from the pinned width.
 //
 // ── THE RIBBON: LIVE IN THE WORKBENCH, WHOLE IN THE NET. In Storybook the
-// ribbon draws as a visitor sees it — scroll a card's centre to the screen's
-// centre and its stretch is drawn, and stays drawn (§15.26). The pixel net's
+// ribbon draws as a visitor sees it — scroll a card's centre to the ribbon's
+// line, a quarter of the screen above its bottom, and its stretch is drawn,
+// and stays drawn (§15.26). The pixel net's
 // projects ask for reduced motion (playwright.config.ts, THE STILLNESS
 // LEVER), under which the ribbon is painted whole at once, so every
 // photograph is the finished ribbon and none is caught mid-stroke. That is

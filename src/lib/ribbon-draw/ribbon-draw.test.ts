@@ -7,7 +7,7 @@ import {
   vi,
   type Mock,
 } from 'vitest';
-import { buildCard } from '../ribbon-model/ribbon-model.ts';
+import { buildCard, gaugeRule } from '../ribbon-model/ribbon-model.ts';
 import { GOLDEN_CARDS } from '../ribbon-model/ribbon-model.golden.ts';
 import { buildStrip, type StripSample } from '../ribbon-paint/ribbon-paint.ts';
 import {
@@ -15,8 +15,8 @@ import {
   DRAW_MS,
   handOver,
   HURRY,
+  LINE,
   startRibbonDraw,
-  TALL_LINE,
   tileScale,
   type RibbonDraw,
   type RibbonDrawEnv,
@@ -35,8 +35,9 @@ import {
 //
 // THE COLUMN, in numbers these tests predict: a root whose padding puts the
 // first card 100px down, cards 600 × 400 px, 150px apart. With a window 800px
-// tall a 400px card is DUE when its top reaches 800 / 2 − 400 / 2 = 200px
-// under the window's top — the centre lines meet.
+// tall a 400px card is DUE when its top reaches 0.75 × 800 − 400 / 2 = 400px
+// under the window's top — its centre line on the ribbon's line, a quarter
+// of the screen above the window's bottom (LINE).
 
 const HEIGHT = 800;
 const FIRST_TOP = 100;
@@ -44,8 +45,9 @@ const CARD_H = 400;
 const GAP = 150;
 const SECOND_TOP = FIRST_TOP + CARD_H + GAP;
 const TOKENS = { '--ribbon': '#8377a3', '--ribbon-shadow': '#2d263c' };
-/** The window's y at which a card of height h is due, before the TALL_LINE floor. */
-const lineOf = (h: number) => Math.max(HEIGHT / 2 - h / 2, TALL_LINE * HEIGHT);
+/** The window's y at which a card of height h is due: its centre on the line — or, taller than the screen, its top LINE under the window's top. */
+const lineOf = (h: number) =>
+  Math.max((1 - LINE) * HEIGHT - h / 2, LINE * HEIGHT);
 
 type Harness = {
   root: HTMLElement;
@@ -215,9 +217,9 @@ describe('startRibbonDraw — one call starts it', () => {
     const h = harness();
     h.start();
     for (const tile of tiles(h)) {
-      expect(tile.style.filter).toMatch(
-        /^drop-shadow\(rgba\(45, 38, 60, 0\.38\) 0px [\d.]+px [\d.]+px\)$/,
-      );
+      // THE SHADOW IS PAINTED: no filter on the tile — the shadow is pixels
+      // of the canvas, under the ribbon (lib/ribbon-paint).
+      expect(tile.style.filter).toBe('');
     }
   });
 
@@ -230,7 +232,7 @@ describe('startRibbonDraw — one call starts it', () => {
   });
 });
 
-describe('the owner’s rule (fb-507): the screen’s centre line meets the card’s', () => {
+describe('the owner’s rule (fb-507; since 2026-10-01 the line is a quarter of the screen above its bottom): the card’s centre line reaches the line', () => {
   it('queues a card when its top reaches the line, and not a pixel before', () => {
     const h = harness();
     const draw = h.start();
@@ -265,16 +267,19 @@ describe('the owner’s rule (fb-507): the screen’s centre line meets the card
     expect(paintedPixels(tiles(h)[0])).toBe(whole);
   });
 
-  it('draws a card taller than about three quarters of the screen when its top is TALL_LINE under the screen’s top (fb-509)', () => {
-    const tall = 1_200;
+  it('draws a card taller than the screen when its top is LINE under the screen’s top (fb-509, re-derived for the lower line)', () => {
+    const tall = 1_400;
     const h = harness({ cards: [card(tall), card(CARD_H)] });
     const draw = h.start();
-    // Its centre line would meet the screen's only with its top 200px ABOVE
-    // the window — where the ribbon enters. The floor is TALL_LINE instead.
-    expect(lineOf(tall)).toBe(TALL_LINE * HEIGHT);
-    scrollTo(h, TALL_LINE * HEIGHT - FIRST_TOP + 1);
+    // Its centre line would reach the line only with its top 100px ABOVE
+    // the window — where the ribbon's first stroke is. The floor is LINE
+    // under the top instead — the SAME quarter, so the two halves of the rule
+    // meet, without a jump, at a card exactly as tall as the screen.
+    expect(lineOf(tall)).toBe(LINE * HEIGHT);
+    expect((1 - LINE) * HEIGHT - HEIGHT / 2).toBe(LINE * HEIGHT);
+    scrollTo(h, LINE * HEIGHT - FIRST_TOP + 1);
     expect(h.frames.pending).toBe(0);
-    scrollTo(h, TALL_LINE * HEIGHT - FIRST_TOP);
+    scrollTo(h, LINE * HEIGHT - FIRST_TOP);
     h.frames.run(1_000);
     expect(draw.getSnapshot().drawing).toBe(0);
   });
@@ -322,19 +327,21 @@ describe('the owner’s rule (fb-507): the screen’s centre line meets the card
     expect(h.frames.pending).toBe(0);
   });
 
-  it('keeps four cards due together under five seconds of movement (SC 2.2.2, the header’s count)', () => {
+  it('keeps six cards due together — the clinic’s roster — under five seconds of movement (SC 2.2.2, the header’s count)', () => {
     const h = harness({
-      cards: [card(CARD_H), card(CARD_H), card(CARD_H), card(CARD_H)],
+      cards: Array.from({ length: 6 }, () => card(CARD_H)),
       atEnd: true,
     });
     const draw = h.start();
     let time = 0;
-    for (; draw.getSnapshot().drawn < 4; time += 16) {
+    for (; draw.getSnapshot().drawn < 6; time += 16) {
       h.frames.run(time);
       expect(time).toBeLessThan(10_000);
     }
-    // 2 s × (1 + 1/1.6 + 1/2.2 + 1/2.8) = 4 873 ms, and a frame per card.
-    expect(time - 16).toBeGreaterThanOrEqual(4_873);
+    // 1.3 s × (1 + 1/1.6 + 1/2.2 + 1/2.8 + 1/3.4 + 1/4) = 3 875 ms, and a
+    // frame per card. (At the prototype's 2 s pace six took 5 962 ms — past
+    // the criterion's five seconds; four took 4 873.)
+    expect(time - 16).toBeGreaterThanOrEqual(3_875);
     expect(time - 16).toBeLessThan(5_000);
   });
 
@@ -355,6 +362,31 @@ describe('the owner’s rule (fb-507): the screen’s centre line meets the card
     expect(paintedPixels(second)).toBe(0);
     h.frames.run(4_000 + DRAW_MS); // and the rest, on its own
     expect(paintedPixels(second)).toBeGreaterThan(0);
+  });
+
+  it('draws the FIRST card with no head: its canvas reaches no higher than the ribbon over its top edge, and its first stroke is on its own canvas', () => {
+    const h = harness();
+    const draw = h.start();
+    const [first, second] = tiles(h);
+    // A 600px column: k = gaugeRule(6). The drop-in started a whole k above
+    // the first card's top; the ribbon over the top edge reaches R_FOLD k
+    // (0.08 k) above it, plus the shadow's blur (4 k px) and the tile's 2px
+    // margin — under 0.3 k in all.
+    const k = gaugeRule(6);
+    const above = FIRST_TOP - parseFloat(first.style.top);
+    expect(above).toBeGreaterThan(0);
+    expect(above).toBeLessThan(0.3 * k * 100);
+
+    scrollTo(h, lineOf(CARD_H) - FIRST_TOP);
+    h.frames.run(1_000);
+    h.frames.run(1_000 + DRAW_MS * 0.15);
+    // A sixth of the way in the pen is past the hidden S behind the card
+    // (about 2 % of the stretch) and its first stroke — over the top edge,
+    // into the ripple — is on the first canvas, and on no other.
+    expect(paintedPixels(first)).toBeGreaterThan(0);
+    expect(paintedPixels(second)).toBe(0);
+    h.frames.run(1_000 + DRAW_MS);
+    expect(draw.getSnapshot()).toMatchObject({ drawn: 1, drawing: -1 });
   });
 
   it('shows a card that is already above the screen at start at once — there is nothing to watch', () => {

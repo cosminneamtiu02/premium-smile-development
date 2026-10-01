@@ -802,7 +802,8 @@ describe('ui/Ribbon — the scroll drawing, on a real scroll', () => {
       }
     };
 
-    // The first card's centre past the screen's centre — a real scroll.
+    // The first card's centre past the ribbon's line (a quarter of the screen
+    // above its bottom): the screen's centre is past it too — a real scroll.
     const card = rootOf(container).querySelector('article');
     if (card === null) throw new Error('no card');
     card.scrollIntoView({ block: 'center', behavior: 'instant' });

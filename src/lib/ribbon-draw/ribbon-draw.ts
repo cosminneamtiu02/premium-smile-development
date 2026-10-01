@@ -18,6 +18,8 @@ import {
 } from '../ribbon-layout/ribbon-layout.ts';
 import {
   buildStrip,
+  outlineStretch,
+  paintShadow,
   paintStretch,
   type Rgb,
   type Stretch,
@@ -66,48 +68,66 @@ import {
 // ── THE OWNER'S RULE, in the owner's words (fb-507): "if you reach like with
 // scrolling the fixxed center line of the screen the center line of the card
 // drawn on the y axis, so horizontally from left to right, then it fires this
-// animation"; and (fb-502) "drawn while scrolling but remains drawn". As code,
-// a card is DUE when
-//     cardTop ≤ max(innerHeight / 2 − cardHeight / 2, TALL_LINE × innerHeight)
+// animation"; (fb-502) "drawn while scrolling but remains drawn"; and, on
+// 2026-10-01, THE LINE MOVED DOWN: "move lower the start animation for
+// generating the ribbon, a little lower, because it starts generating it on
+// some screens just after you are past it, so idk, move it at the 25% of the
+// bottom of the screen, not at the half of the screen". As code, a card is
+// DUE when
+//     cardTop ≤ max((1 − LINE) × innerHeight − cardHeight / 2, LINE × innerHeight)
 //     or the page is scrolled to its end (within END_PX)
-// with cardTop in viewport px. The `max` is the first addition the owner
-// agreed to (fb-509): for a card taller than about three quarters of the
-// screen (h / 2 − H / 2 < 0.12 h, that is H > 0.76 h) the centre lines would
-// meet with its top — where the ribbon enters — less than TALL_LINE of the
-// screen under the screen's top, or above it, so its line is its top
-// reaching TALL_LINE under the screen's top. The second is the end of the
-// page: there EVERY waiting card
-// becomes due, in order — a last card whose centre cannot reach the line is
-// drawn when the page stops. lib/scroll-spy's bottom rule allows 1px and
-// applies only to a page that can scroll; this one allows 2px and asks
-// nothing more, ON PURPOSE: on a page that cannot scroll no card can ever
-// reach its line, so every card is due at load. Once every card is drawn, a
-// scroll reads nothing at all.
+// with cardTop in viewport px and LINE = 0.25: the line sits a quarter of
+// the screen above its bottom edge, and a card is due when its centre line
+// reaches it. The `max` is the first addition the owner agreed to (fb-509),
+// re-derived for the lower line: for a card TALLER THAN THE SCREEN the centre
+// lines would meet with its top — where the ribbon's first stroke is — less
+// than LINE of the screen under the screen's top, or above it, so its line is
+// its top reaching LINE under the screen's top. ONE NUMBER FOR BOTH HALVES,
+// on purpose: a card exactly as tall as the screen is due at the same scroll
+// by either, so the rule hands over from the centre to the top without a
+// jump. (With the line at the screen's centre the floor was a second number,
+// 12 %, binding from three quarters of the screen's height — and on a phone
+// it put a card's top under the header pill, which reaches 112px down: the
+// same "after you are past it".) The second addition is the end of the page:
+// there EVERY waiting card becomes due, in order — a last card whose centre
+// cannot reach the line is drawn when the page stops. lib/scroll-spy's bottom
+// rule allows 1px and applies only to a page that can scroll; this one allows
+// 2px and asks nothing more, ON PURPOSE: on a page that cannot scroll no card
+// can ever reach its line, so every card is due at load. Once every card is
+// drawn, a scroll reads nothing at all.
 //
-// ── THE LINE IS THE SCREEN'S CENTRE, ON PURPOSE. Its neighbour,
+// ── THE LINE IS A SHARE OF THE WHOLE SCREEN, ON PURPOSE. Its neighbour,
 // lib/reading-line (the price list's lane), puts ITS line in the middle of
 // the CLEAR part of the window, under the header pill, and moves where a
-// jump lands. This rule is the owner's own sentence ("the fixxed center line
-// of the screen"), the prototype the owner approved used `innerHeight / 2`,
-// and it is a ONE-WAY latch — due once, drawn for good — which a reading
-// line is not. Neither module borrows from the other; §15.26 records moving
-// this line as a WAIT trigger, on the owner's word only.
+// jump lands. This rule is the owner's own sentence and, since 2026-10-01,
+// the owner's own number — until that day the line was the screen's centre,
+// the prototype's `innerHeight / 2` — and it is a ONE-WAY latch: due once,
+// drawn for good, which a reading line is not. Neither module borrows from
+// the other; §15.26 records moving this line to the clear part's centre as a
+// WAIT trigger, on the owner's word only — the move of 2026-10-01 was to a
+// share of the screen, not to the clear part.
 //
 // ── IN ORDER, ONE AT A TIME. The ribbon is one ribbon: the walk stops at the
 // first card that is not due. A due card is queued, and one card is drawn at
 // a time. Two behaviours came with the prototype the owner approved and are
 // kept as it had them: HURRY — a card is drawn over DRAW_MS / (1 + HURRY ×
-// waiting), so 2 s alone, 1.25 s with one card waiting and 0.91 s with two,
+// waiting), so 1.3 s alone, 0.81 s with one card waiting and 0.59 s with two,
 // and a visitor who scrolls fast is not kept waiting for a ribbon they have
-// scrolled past — and the AT-START rule (below).
+// scrolled past — and the AT-START rule (below). DRAW_MS was 2 000 until
+// 2026-10-01, the prototype's own pace; the owner asked for the drawing
+// "twice as fast", then, shown 1 s, for "30% slower" — 1 300, that one
+// constant (§15.26 round 3); the hurry and the rule are as they were.
 //
 // ── SC 2.2.2, COUNTED. A stretch lasts at most DRAW_MS and never repeats,
 // but cards drawn one after another are one movement: n cards due at once
-// draw for DRAW_MS × Σ 1 / (1 + HURRY × j), j = 0 … n − 1 — 3.25 s for two,
-// 4.87 s for four, 5.46 s for five, past the five seconds after which WCAG
-// asks for a way to stop a movement. WAIT trigger (§15.26): five cards due
-// at once pass five seconds; the roster has two. ribbon-draw.test.ts pins
-// four under 5 000 ms.
+// draw for DRAW_MS × Σ 1 / (1 + HURRY × j), j = 0 … n − 1 — 2.11 s for two,
+// 3.17 s for four, 3.88 s for the clinic's SIX (a visitor who jumps to the
+// page's end with every card still waiting), and the five seconds after
+// which WCAG asks for a way to stop a movement are reached at ELEVEN cards
+// due at once (ten draw for 4.83 s). At the 2 s pace six drew for 5.96 s,
+// and §15.26's WAIT trigger for a bound by construction had FIRED with the
+// six-doctor roster; this pace discharges it by arithmetic, and a column of
+// eleven doctors re-arms it. ribbon-draw.test.ts pins six under 5 000 ms.
 //
 // ── THE PEN. Progress is e(t) = ½ − ½ cos(π (0.12 + 0.76 t)), normalised to
 // run 0 → 1 — a gentle start and stop, a steady pen between. It is kept as a
@@ -172,8 +192,16 @@ import {
 // colour since 2026-09-30, on the owner's word) and normalised by a canvas of
 // their own: a CSS colour assigned to a 2D context's `fillStyle` reads back
 // as `#rrggbb`. A missing or unreadable token, or a translucent one: nothing
-// is painted. The canvases' shadow is the prototype's, in the shadow token's
-// colour — drop-shadow(0 max(1px, 3k px) max(1.5px, 4k px)) at 0.38.
+// is painted. The ribbon's shadow is the prototype's — 0 max(1px, 3k px)
+// down, blurred max(1.5px, 4k px), in the shadow token's colour at 0.38 —
+// and since 2026-10-01 it is PAINTED into each canvas under the ribbon
+// (lib/ribbon-paint's THE SHADOW IS PAINTED), never a CSS filter on it: the
+// owner saw the filter's "balcony" while a stretch was being drawn, and
+// wanted the ribbon "directly generated as smooth". So a tile is repainted
+// from what is drawn, every frame — its pieces, then ONE shadow under them
+// (REPAINT, below) — and what the visitor sees in any frame is the canvas's
+// own bitmap, final the moment it is painted. Each tile is grown by the
+// shadow's reach (its offset and its blur) so no shadow is clipped.
 //
 // ── TILES: ONE CANVAS PER CARD, JOINED WHERE NOBODY SEES — BEHIND THE CARD.
 // One canvas for the page would pass what iOS gives ONE canvas (16.7 million
@@ -186,16 +214,35 @@ import {
 // and the hook, over the card's own top corner — is painted on the canvas
 // BEFORE this card's; the BODY — from the hand-over to the next card's
 // drop-in — on this card's. So canvas i holds card i's body and card i+1's
-// head (canvas 0 card 0's head too): every visible run, a side wave into the
-// next card's drop-in included, lies on ONE canvas, where the additive blend
-// closes its seams (lib/ribbon-paint), and two canvases meet only behind a
-// card, where nothing is painted — no seam to hide, and no canvas's shadow
-// across another's ribbon. A card's stretch is still ONE unit of drawing —
-// the rule, the queue, the pen and the effort know nothing of the cut:
-// painting [from, to] paints what falls in the head on the canvas before and
-// what falls in the body on its own, and a frame still ends on a whole
-// sample. A tile is the bounding box of the samples it holds, grown by
-// TILE_MARGIN px and snapped outward to whole CSS px, at the device's pixel
+// head: every visible run, a side wave into the next card's drop-in
+// included, lies on ONE canvas, where the additive blend closes its seams
+// (lib/ribbon-paint), and two canvases meet only behind a card, where
+// nothing is painted — no seam to hide, and no canvas's shadow across
+// another's ribbon. A card's stretch is still ONE unit of drawing — the
+// rule, the queue, the pen and the effort know nothing of the cut: painting
+// [from, to] paints what falls in the head on the canvas before and what
+// falls in the body on its own, and a frame still ends on a whole sample.
+// THE FIRST CARD HAS NO HEAD. A head is the ribbon ARRIVING from the card
+// before — its side wave's end becomes the drop-in — and the first card has
+// no card before it: its drop-in and hook hung in the air over its top
+// corner, and the owner (2026-10-01) saw a ribbon that "starts from
+// nowhere" — "on first card and first card only … should not have that top
+// right component … it should just spawn as first step the traversal
+// section". So card 0's stretch is its BODY alone: its effort is counted
+// from the hand-over point, behind the card, and the first stroke the
+// visitor sees is the ribbon coming over the card's top edge into the top
+// ripple — 0.5 to 2 % of the stretch in, the hidden S that leads to the edge
+// at HIDDEN_PACE (measured on the six recorded cards; the head that is gone
+// was 4 to 15 % of the whole). The model still builds every card's whole
+// chain (lib/ribbon-model's record stands, and the hidden S is laid from the
+// entry's end); the head is simply never painted, and the room ui/Ribbon
+// keeps above the first card is the band's air. REPAINT: a tile's picture is
+// rebuilt from `drawn` whenever a card on it moves — cleared, each half's
+// drawn range painted, and ONE shadow of
+// all of it laid under — so the shadow is never a filter's afterthought and
+// never seamed between pieces; the finished tiles are not touched. A tile is
+// the bounding box of the samples it holds, grown by TILE_MARGIN px and the
+// shadow's reach and snapped outward to whole CSS px, at the device's pixel
 // ratio capped at DPR_CAP — and lower for a tile that would still pass 16
 // million pixels or 16 384 px on a side. Measured on the stand-in column
 // (three doctors, German, long quotes): a tile is 0.63 to 2.44 million CSS px
@@ -252,10 +299,10 @@ export type RibbonDraw = Readonly<{
   getSnapshot: () => RibbonDrawSnapshot;
 }>;
 
-/** One card's stretch, in ms, with no other card waiting (IN ORDER, ONE AT A TIME). */
-export const DRAW_MS = 2_000;
-/** A card taller than about three quarters of the screen is due when its top is this share of the screen under the screen's top. */
-export const TALL_LINE = 0.12;
+/** One card's stretch, in ms, with no other card waiting (IN ORDER, ONE AT A TIME; 2 000 until 2026-10-01). */
+export const DRAW_MS = 1_300;
+/** THE LINE: this share of the screen above its bottom edge, where a card's centre makes it due — and, for a card taller than the screen, the same share under the screen's top, where its top does (THE OWNER'S RULE). */
+export const LINE = 0.25;
 /** How much faster the pen draws for each card waiting in the queue. */
 export const HURRY = 0.6;
 /** The most canvas pixels per CSS px. */
@@ -265,8 +312,13 @@ export const DPR_CAP = 2;
 const END_PX = 2;
 /** How deep a strip may reach into a keep-out before the guard refuses the column, in card units (0.1 px). */
 const GUARD_DEPTH = 0.001;
-/** The px a tile keeps around its strip. */
+/** The px a tile keeps around its strip, beyond the shadow's reach. */
 const TILE_MARGIN = 2;
+/** THE SHADOW's offset down and blur, in CSS px, for the gauge k (the prototype's drop-shadow). */
+const shadowOf = (k: number) => ({
+  dy: Math.max(1, 3 * k),
+  blur: Math.max(1.5, 4 * k),
+});
 /** What one canvas may hold: under iOS's 16.7 million pixels, and every engine's side. */
 const MAX_TILE_PIXELS = 16_000_000;
 const MAX_TILE_SIDE = 16_384;
@@ -343,16 +395,28 @@ function opaque(probe: CanvasRenderingContext2D, value: string): Rgb | null {
 
 type Status = 'waiting' | 'queued' | 'drawn';
 
-/** One card as THE GUARD passed it: its strip, and the index of its hand-over sample. */
+/** One card as THE GUARD passed it: its strip — what the pen walks — and its
+ *  two halves, the head up to the hand-over sample and the body from it
+ *  (TILES); the first card's head is empty (THE FIRST CARD HAS NO HEAD). */
 type Planned = Readonly<{
   placed: PlacedCard;
   strip: readonly StripSample[];
-  cut: number;
+  head: readonly StripSample[];
+  body: readonly StripSample[];
   frontY: number;
 }>;
 
-/** A half of a card's stretch, on the canvas that holds it. */
-type Part = Readonly<{ ctx: CanvasRenderingContext2D; stretch: Stretch }>;
+/** A half of a card's stretch, and the tile that holds it. */
+type Part = Readonly<{ tile: number; stretch: Stretch }>;
+
+/** One canvas of the column: its context, its shadow, and which halves it holds (REPAINT). */
+type Tile = Readonly<{
+  ctx: CanvasRenderingContext2D;
+  canvas: HTMLCanvasElement;
+  shadow: Rgb;
+  dy: number;
+  blur: number;
+}>;
 
 /** One card, built for the current geometry. */
 type Built = Readonly<{
@@ -388,6 +452,8 @@ export function startRibbonDraw(
   /** What dispose() takes away: every listener, the observer and the watch, as they were attached. */
   const attached: (() => void)[] = [];
   const canvases: HTMLCanvasElement[] = [];
+  /** The tiles as last laid, by index (REPAINT). */
+  let tiles: readonly Tile[] = [];
   /** The stations and keep-outs the observer watches — each once. */
   let observed = new Set<Element>();
   /** The column as last built. */
@@ -515,7 +581,23 @@ export function startRibbonDraw(
       }
       const wrap = model.atoms.wrapEntry;
       const cut = handOver(strip, (wrap.u0 + wrap.u1) / 2);
-      planned.push({ placed, strip, cut, frontY });
+      if (placed.index === 0) {
+        // THE FIRST CARD HAS NO HEAD: its stretch is its body alone, the
+        // effort counted from the hand-over point.
+        const from = strip[cut].effort;
+        const body = strip
+          .slice(cut)
+          .map((sample) => ({ ...sample, effort: sample.effort - from }));
+        planned.push({ placed, strip: body, head: [], body, frontY });
+      } else {
+        planned.push({
+          placed,
+          strip,
+          head: strip.slice(0, cut + 1),
+          body: strip.slice(cut),
+          frontY,
+        });
+      }
     }
     return { shadow, planned };
   }
@@ -526,29 +608,19 @@ export function startRibbonDraw(
     shadow: Rgb,
     ratio: number,
   ): readonly Built[] | string {
-    // Card i's head goes on canvas i − 1 (card 0's on its own), its body on
+    // Card i's head goes on canvas i − 1 (card 0 has none), its body on
     // canvas i — each half with its card's centre, in root px, which is what
     // places it.
-    const halves = planned.flatMap(({ placed, strip, cut, frontY }, i) => {
+    const halves = planned.flatMap(({ placed, head, body, frontY }, i) => {
       const cx = placed.card.left + placed.card.width / 2;
       const cy = placed.card.top + placed.card.height / 2;
       return [
-        {
-          tile: Math.max(0, i - 1),
-          cx,
-          cy,
-          frontY,
-          samples: strip.slice(0, cut + 1),
-        },
-        { tile: i, cx, cy, frontY, samples: strip.slice(cut) },
+        { tile: Math.max(0, i - 1), cx, cy, frontY, samples: head },
+        { tile: i, cx, cy, frontY, samples: body },
       ];
     });
-    const channels = shadow.map((c) => Math.round(c * 255)).join(' ');
-    const tiles: Readonly<{
-      ctx: CanvasRenderingContext2D;
-      left: number;
-      top: number;
-    }>[] = [];
+    const laid: Tile[] = [];
+    const places: Readonly<{ left: number; top: number }>[] = [];
     for (let t = 0; t < planned.length; t++) {
       // The bounding box of every sample the tile holds, in root px.
       let [minX, maxX, minY, maxY] = [Infinity, -Infinity, Infinity, -Infinity];
@@ -563,10 +635,13 @@ export function startRibbonDraw(
           }
         }
       }
-      const left = Math.floor(minX - TILE_MARGIN);
-      const top = Math.floor(minY - TILE_MARGIN);
-      const width = Math.ceil(maxX + TILE_MARGIN) - left;
-      const height = Math.ceil(maxY + TILE_MARGIN) - top;
+      // Grown by the shadow's reach: its blur all round, its offset below.
+      const { k } = planned[t].placed.input;
+      const { dy, blur } = shadowOf(k);
+      const left = Math.floor(minX - TILE_MARGIN - blur);
+      const top = Math.floor(minY - TILE_MARGIN - blur);
+      const width = Math.ceil(maxX + TILE_MARGIN + blur) - left;
+      const height = Math.ceil(maxY + TILE_MARGIN + blur + dy) - top;
 
       let canvas = canvases[t];
       if (canvas === undefined) {
@@ -587,23 +662,23 @@ export function startRibbonDraw(
         0,
         0,
       );
-      const { k } = planned[t].placed.input;
       Object.assign(canvas.style, {
         position: 'absolute',
         left: `${left}px`,
         top: `${top}px`,
         width: `${width}px`,
         height: `${height}px`,
-        filter: `drop-shadow(0 ${Math.max(1, 3 * k)}px ${Math.max(1.5, 4 * k)}px rgb(${channels} / 0.38))`,
       });
-      tiles.push({ ctx, left, top });
+      laid.push({ ctx, canvas, shadow, dy, blur });
+      places.push({ left, top });
     }
     for (const canvas of canvases.splice(planned.length)) canvas.remove();
+    tiles = laid;
 
     const parts = halves.map(({ tile, cx, cy, frontY, samples }): Part => {
-      const { ctx, left, top } = tiles[tile];
+      const { left, top } = places[tile];
       return {
-        ctx,
+        tile,
         stretch: {
           strip: samples,
           place: (p) => [cx + p[0] * UNIT_PX - left, cy - p[2] * UNIT_PX - top],
@@ -611,11 +686,11 @@ export function startRibbonDraw(
         },
       };
     });
-    return planned.map(({ placed, strip, cut }, i) => ({
+    return planned.map(({ placed, strip, body }, i) => ({
       placed,
       strip,
       total: strip[strip.length - 1].effort,
-      split: strip[cut].effort,
+      split: body[0].effort,
       head: parts[2 * i],
       body: parts[2 * i + 1],
     }));
@@ -662,9 +737,7 @@ export function startRibbonDraw(
       drawn = cards.map((card, i) => shares[i] * card.total);
       painted = true;
       built = key;
-      cards.forEach((card, i) => {
-        if (drawn[i] > 0) paintCard(card, 0, drawn[i]);
-      });
+      tiles.forEach((_, t) => repaint(t));
       if (reduced) finishAll();
       else if (running !== null || queue.length > 0) schedulePen();
     }
@@ -673,32 +746,49 @@ export function startRibbonDraw(
     warned = false;
   }
 
-  /** Paint a card's stretch between two efforts — its head's part on the canvas before, its body's on its own (TILES). */
-  function paintCard(card: Built, from: number, to: number): void {
-    if (from < card.split) {
-      paintStretch(
-        card.head.ctx,
-        card.head.stretch,
-        from,
-        Math.min(to, card.split),
-      );
-    }
-    if (to > card.split) {
-      paintStretch(
-        card.body.ctx,
-        card.body.stretch,
-        Math.max(from, card.split),
-        to,
-      );
-    }
+  /** REPAINT (the header): tile `t`'s picture from what is drawn — cleared, each half's drawn range painted, ONE shadow under all of it. */
+  function repaint(t: number): void {
+    const tile = tiles[t];
+    if (tile === undefined) return;
+    const { ctx, canvas } = tile;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    const outline = new Path2D();
+    let any = false;
+    cards.forEach((card, i) => {
+      // The head's range is [0, split], the body's [split, total]; each
+      // clipped to what is drawn.
+      const halves: readonly (readonly [Part, number, number])[] = [
+        [card.head, 0, Math.min(drawn[i], card.split)],
+        [card.body, card.split, drawn[i]],
+      ];
+      for (const [part, from, to] of halves) {
+        if (part.tile !== t || !(to > from)) continue;
+        paintStretch(ctx, part.stretch, from, to);
+        outlineStretch(outline, part.stretch, from, to);
+        any = true;
+      }
+    });
+    if (any) paintShadow(ctx, outline, tile.shadow, tile.dy, tile.blur);
+  }
+
+  /** The tiles a card's stretch touches between two efforts, repainted — its head's tile, its body's (TILES). */
+  function repaintCard(card: Built, from: number, to: number): void {
+    const touched = new Set<number>();
+    if (from < card.split) touched.add(card.head.tile);
+    if (to > card.split) touched.add(card.body.tile);
+    for (const t of touched) repaint(t);
   }
 
   /** Paint the rest of a card's stretch at once; it is drawn for good. */
   function finish(index: number): void {
     const card = cards[index];
     if (drawn[index] < card.total) {
-      paintCard(card, drawn[index], card.total);
+      const from = drawn[index];
       drawn[index] = card.total;
+      repaintCard(card, from, card.total);
     }
     status[index] = 'drawn';
   }
@@ -719,8 +809,8 @@ export function startRibbonDraw(
       const { top, height } = card.placed.card;
       const cardTop = view.rootTop + top;
       const line = Math.max(
-        view.height / 2 - height / 2,
-        TALL_LINE * view.height,
+        (1 - LINE) * view.height - height / 2,
+        LINE * view.height,
       );
       if (!(cardTop <= line || view.atEnd)) break;
       if (first && cardTop + height < 0) {
@@ -755,8 +845,9 @@ export function startRibbonDraw(
     while (j < card.strip.length - 1 && card.strip[j + 1].effort <= wish) j++;
     const to = card.strip[j].effort;
     if (to > drawn[index]) {
-      paintCard(card, drawn[index], to);
+      const from = drawn[index];
       drawn[index] = to;
+      repaintCard(card, from, to);
     }
     if (t >= 1) {
       status[index] = 'drawn';

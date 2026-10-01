@@ -1,7 +1,7 @@
 import { createRef, type ReactNode, type Ref } from 'react';
 import { renderToString } from 'react-dom/server';
 import { render, screen, waitFor, within } from '@testing-library/react';
-import { cdp, page, userEvent as realUser } from 'vitest/browser';
+import { page, userEvent as realUser } from 'vitest/browser';
 import {
   afterAll,
   afterEach,
@@ -1095,37 +1095,6 @@ const withRootFont = (px: number): (() => void) => {
   return () => style.remove();
 };
 
-/**
- * A TOUCH SCREEN for one case — Chromium's own touch emulation, through the
- * DevTools protocol (Vitest's `cdp()`, a session on the page that holds this
- * runner's frame): it turns the primary pointer coarse and hover off, the
- * frame included, which is the device the owner's "Touch devices unchanged"
- * names; `false` takes it away again. `Emulation.setEmulatedMedia` cannot
- * stand in: Chromium ignores a `pointer` or `hover` feature there (measured
- * 2026-10-01, Chromium 151: neither the query nor the stylesheet moved).
- */
-const touchScreen = async (on: boolean): Promise<void> => {
-  await cdp().send(
-    'Emulation.setTouchEmulationEnabled',
-    on ? { enabled: true, maxTouchPoints: 5 } : { enabled: false },
-  );
-  // THE DEVICE, SETTLED: the protocol answers before the frame's media
-  // queries are evaluated again — at once on macOS, a frame or more later on
-  // CI's Linux Chromium, where the next case drew its band before the pointer
-  // was fine again (2026-10-01: the REFERENCE case read the regime off). So
-  // the switch is not done until the query itself says so, bounded.
-  await expect
-    .poll(
-      () =>
-        realMatchMedia(on ? '(pointer: coarse)' : '(pointer: fine)').matches,
-      {
-        timeout: 5_000,
-        interval: 16,
-      },
-    )
-    .toBe(true);
-};
-
 /** ui/Container's gutter per side at this window, read off a probe wearing
  *  the real class — the clamp is spelled once, in Container.tsx. */
 const gutter = (): number => {
@@ -1905,54 +1874,76 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
     }
   });
 
-  // LAST in the group, on purpose: it is the one case that changes the
-  // device, and nothing measured after it can inherit its pointer.
-  it('turns the regime OFF on a TOUCH screen at any width — a 1300px column plain, an 1800px one uncapped: the owner’s “Touch devices unchanged” (D10, THE GATES)', async () => {
-    // Chromium's own touch emulation (`touchScreen`): the primary pointer
-    // turns coarse, `scalable:` stops matching, and the band is today's at
-    // every width — no design pixel, no remap, no cap, the theme's sizes, the
-    // unscaled card two-column wherever its own flip puts it.
-    await touchScreen(true);
-    try {
-      expect(
-        realMatchMedia('(pointer: coarse)').matches,
-        'a touch screen',
-      ).toBe(true);
-      expect(realMatchMedia('(pointer: fine)').matches).toBe(false);
-      for (const width of [1300, 1800]) {
-        const scene = renderColumn(width);
-        try {
-          const at = `${width}px, touch`;
-          expect(remapped(scene.rhythm), at).toBe(false);
-          expect(
-            getComputedStyle(scene.rhythm).getPropertyValue('--scale-px'),
-            at,
-          ).toBe('1px');
-          exact(
-            scene.rhythm.getBoundingClientRect().width,
-            width,
-            `${at}: no cap`,
-          );
-          for (const card of scene.cards) {
-            const { inset, grid, picture, quote, name } = partsOf(card);
-            expect(getComputedStyle(grid).display, at).toBe('grid');
-            exact(lengthOf(quote, 'font-size'), 18, `${at}: the quote`);
-            exact(
-              lengthOf(name, 'font-size'),
-              contentWidth(inset) >= 28 * 16 ? 36 : 30,
-              `${at}: the name`,
-            );
-            exact(picture.getBoundingClientRect().width, 288, `${at}: picture`);
+  it('puts every rule of the scale behind its GATES in the real stylesheet — inside `@supports (color: rgb(from red r g b))` and `@media (pointer: fine)`, the regime also behind both container steps — so a touch screen, upright or sideways, and an engine that cannot register custom properties draw today’s band (D10, THE GATES)', () => {
+    // THE DEVICE ITSELF is driven end to end, in a fresh browser per window
+    // (tests/e2e/doctor-showcase.spec.ts, the touch tablets): Chromium's touch
+    // emulation switched on and off inside this shared runner did not report a
+    // fine pointer again on CI's Linux within seconds (2026-10-01), and the tab
+    // it leaves coarse is every later file's. Here: the compiled rules, read
+    // from the CSSOM — each `scalable:` class of RHYTHM is found, and every
+    // rule that styles it sits under both gates, the regime's two also under
+    // the Container's 56rem step and the 896px floor.
+    const gated = RHYTHM_BOX.split(' ').filter((token) =>
+      token.startsWith('scalable:'),
+    );
+    expect(gated).toHaveLength(3);
+    type Found = { conditions: string[] };
+    const found = new Map<string, Found[]>(gated.map((token) => [token, []]));
+    const walk = (rules: CSSRuleList, conditions: string[]): void => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSStyleRule) {
+          for (const token of gated) {
+            if (rule.selectorText === `.${CSS.escape(token)}`) {
+              found.get(token)?.push({ conditions });
+            }
           }
-        } finally {
-          scene.unmount();
+        } else if (rule instanceof CSSSupportsRule) {
+          walk(rule.cssRules, [
+            ...conditions,
+            `supports ${rule.conditionText}`,
+          ]);
+        } else if (rule instanceof CSSMediaRule) {
+          walk(rule.cssRules, [...conditions, `media ${rule.media.mediaText}`]);
+        } else if (rule instanceof CSSContainerRule) {
+          walk(rule.cssRules, [
+            ...conditions,
+            `container ${rule.conditionText}`,
+          ]);
+        } else if ('cssRules' in rule) {
+          walk((rule as CSSGroupingRule).cssRules, conditions);
         }
       }
-    } finally {
-      await touchScreen(false);
+    };
+    for (const sheet of Array.from(document.styleSheets)) {
+      walk(sheet.cssRules, []);
     }
-    expect(realMatchMedia('(pointer: fine)').matches, 'the mouse, back').toBe(
-      true,
-    );
+    const supports = /^supports \(?color: rgb\(from red r g b\)\)?$/;
+    const fine = /^media \(pointer: fine\)$/;
+    const step = /^container \((?:min-width: 56rem|width >= 56rem)\)$/;
+    const floor = /^container \((?:min-width: 896px|width >= 896px)\)$/;
+    for (const token of gated) {
+      const rules = found.get(token) ?? [];
+      expect(rules.length, `${token}: compiled`).toBeGreaterThan(0);
+      for (const { conditions } of rules) {
+        expect(
+          conditions.some((c) => supports.test(c)),
+          `${token}: ${conditions.join(' › ')}`,
+        ).toBe(true);
+        expect(
+          conditions.some((c) => fine.test(c)),
+          `${token}: ${conditions.join(' › ')}`,
+        ).toBe(true);
+        if (token !== 'scalable:max-w-[96rem]') {
+          expect(
+            conditions.some((c) => step.test(c)),
+            `${token}: ${conditions.join(' › ')}`,
+          ).toBe(true);
+          expect(
+            conditions.some((c) => floor.test(c)),
+            `${token}: ${conditions.join(' › ')}`,
+          ).toBe(true);
+        }
+      }
+    }
   });
 });

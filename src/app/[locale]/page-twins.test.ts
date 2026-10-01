@@ -21,7 +21,8 @@ import teamPage from './team/page.tsx?raw';
 //   · THE BANDS, IN ORDER — the elements each page returns, and its twin's;
 //   · THE DOCTORS BAND'S PROPS — by NAME: the Team page says `firstScreen`
 //     (the band opens its first screen — DoctorShowcase D9), Home does not
-//     (the band sits under the Hero), and each twin says what its page says;
+//     (the band sits below the Hero and the numbers), and each twin says
+//     what its page says;
 //   · THE NUMBERS BAND'S PROPS (sections/DoctorStats, since 2026-10-01) — by
 //     NAME too, on all three pages that carry it: Home and the Team page
 //     say `ground` and `align` and no `lead` (the owner: "without that
@@ -211,12 +212,15 @@ describe('the Team page and its story twin — read off their source', () => {
 });
 
 describe('the Home page and its story twin — read off their source', () => {
-  it('returns the same bands in the same order: h1 → hero → doctors → numbers → map → reviews', () => {
+  it('returns the same bands in the same order: h1 → hero → numbers → doctors → map → reviews', () => {
+    // The numbers BEFORE the doctors — the owner's order since 2026-10-01
+    // ("i need to swap these 2 sections between them … so first in cifre and
+    // then doctors"); Home's alone, the Team page's order above is untouched.
     expect(bandsOf(HOME.page)).toEqual([
       'h1',
       'Hero',
-      'DoctorShowcase',
       'DoctorStats',
+      'DoctorShowcase',
       'ClinicLocation',
       'ReviewsCarousel',
     ]);
@@ -241,9 +245,9 @@ describe('the Home page and its story twin — read off their source', () => {
     );
   });
 
-  it('leaves the doctors band LAZY under the hero — no `firstScreen`, page and twin alike (D9)', () => {
-    // Home's largest paint is the hero's photograph; a preloaded cutout a
-    // screen further down would only compete with it.
+  it('leaves the doctors band LAZY below the hero and the numbers — no `firstScreen`, page and twin alike (D9)', () => {
+    // Home's largest paint is the hero's photograph; a preloaded cutout
+    // screens further down would only compete with it.
     expect(propsOf(HOME.page, 'DoctorShowcase')).toEqual([
       'doctors',
       'eyebrow',

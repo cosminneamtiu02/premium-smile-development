@@ -576,8 +576,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // `<link rel="preload" as="image">` in the head for the same srcset and
 // `sizes` (read off the doctor page's built export). Which card asks is the
 // band's call — DoctorShowcase D9: its first, and only when the page says the
-// band is on its first screen. On Home the same card sits under the Hero (the
-// first cutout at y ≈ 1103), the hero's picture is the LCP, and every cutout
+// band is on its first screen. On Home the same card sits under the Hero and
+// the clinic's numbers (the first cutout at y ≈ 1655 at 1280 × 800 since
+// 2026-10-01, ≈ 1103 before), the hero's picture is the LCP, and every cutout
 // stays lazy. False or absent, the <img> is attribute for attribute the one
 // this card rendered before D18: PersonnelCard.test.tsx COMPARES it with a
 // bare ui/Image instead of trusting `preload={false}` to be a no-op. Typed

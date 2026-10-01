@@ -128,16 +128,17 @@ async function open(page: Page, path: string): Promise<void> {
   await page.waitForSelector(STATION, { state: 'attached' });
 }
 
-/** How far PAST the window's centre line a card's centre is carried. A scroll
+/** How far PAST the ribbon's line a card's centre is carried. A scroll
  *  position is a whole pixel and a card's centre is not: aimed exactly at the
  *  line, the first card stopped 0.48px short of it on the 1920 × 945 window
  *  and was — correctly — never drawn (measured; two pixels further it was).
  *  A visitor scrolls THROUGH the line; so does this. */
 const PAST_THE_LINE = 8;
 
-/** Carry one card's centre across the window's centre line — the owner's rule
- *  for when that card's stretch is drawn (lib/ribbon-draw). Instant: the
- *  shell's smooth scrolling would make the arrival a race. */
+/** Carry one card's centre across the ribbon's line — a quarter of the window
+ *  above its bottom, the owner's rule for when that card's stretch is drawn
+ *  (lib/ribbon-draw's LINE; the window's centre until 2026-10-01). Instant:
+ *  the shell's smooth scrolling would make the arrival a race. */
 const centreOn = (page: Page, index: number): Promise<void> =>
   page.evaluate(
     ([station, i, past]) => {
@@ -149,7 +150,7 @@ const centreOn = (page: Page, index: number): Promise<void> =>
           window.scrollY +
           box.top +
           box.height / 2 -
-          window.innerHeight / 2 +
+          0.75 * window.innerHeight +
           past,
         behavior: 'instant',
       });
@@ -369,7 +370,7 @@ for (const [locale, path] of [
 }
 
 test.describe('/ro/team/ — the ribbon, drawn as the page is scrolled', () => {
-  test('each card is wrapped when its centre reaches the window’s, and STAYS wrapped', async ({
+  test('each card is wrapped when its centre reaches the ribbon’s line, and STAYS wrapped', async ({
     page,
   }) => {
     await open(page, '/ro/team/');

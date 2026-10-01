@@ -29,7 +29,8 @@ import {
 // reduced motion (playwright.config.ts, THE STILLNESS LEVER), under which the
 // ribbon is painted whole at once — so every photograph is the finished
 // ribbon, and none is caught mid-stroke. In Storybook itself the ribbon draws
-// as a visitor would see it: scroll a card's centre to the screen's centre.
+// as a visitor would see it: scroll a card's centre to the ribbon's line, a
+// quarter of the screen above its bottom (lib/ribbon-draw's LINE).
 // ReducedMotion asks for it in the workbench too; Drawing leaves room to
 // scroll.
 //
@@ -99,10 +100,12 @@ async function expectDecorative(canvasElement: HTMLElement, cards: number) {
 /**
  * The picture the owner approved: two doctors at the desktop's 1009px column,
  * each card in two columns — the portrait and the name beside the quote, the
- * buttons under both. The ribbon is 20px wide (k = 0.8): it comes down into
- * the first card's top-right corner, round its edge, along the top lane as a
- * calm wave, behind the card, back round the left edge and down the side
- * lane into the second card — which it wraps mirrored.
+ * buttons under both. The ribbon is 20px wide (k = 0.8): it comes over the
+ * first card's top edge — the first card alone has no drop-in (the owner,
+ * 2026-10-01: it "starts from nowhere") — across the top lane in a low
+ * ripple — a valley, a crest, a valley — behind the card, back round the
+ * left edge and down the side lane as a calm wave into the second card's
+ * top-left corner, which it wraps mirrored.
  */
 export const Desktop: Story = {
   render: () => (
@@ -205,7 +208,7 @@ export const German: Story = {
 
 /**
  * For a visitor who asks for less motion (§9): the whole ribbon at once, no
- * card waiting for the screen's centre line. The story asks for it itself —
+ * card waiting for the ribbon's line. The story asks for it itself —
  * `matchMedia` answers "reduce" for as long as the story is on screen — so the
  * workbench shows what the pixel net photographs everywhere; the net itself
  * never photographs it ('no-visual'), for that picture is Desktop's.
@@ -244,8 +247,9 @@ export const ReducedMotion: Story = {
 /**
  * THE SCROLL DRAWING, live (fb-502, fb-507): a screen of room above three
  * doctors and a screen below them — scroll it with your own hand. A card's
- * stretch is drawn when the screen's centre line meets the card's centre
- * line — two seconds, in order, faster while others wait — and it stays
+ * stretch is drawn when the card's centre line reaches a quarter of the
+ * screen above its bottom — 1.3 seconds, in order, faster while others wait
+ * — and it stays
  * drawn on the way back up. The play scrolls nothing, so the story opens
  * with nothing drawn (and with the whole ribbon at once for a viewer whose
  * system asks for reduced motion); the scrolling itself is

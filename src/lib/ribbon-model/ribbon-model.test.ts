@@ -16,10 +16,12 @@ import {
 
 // lib/ribbon-model — the port rebuilds the frozen record beside this file to
 // nine decimals (the prototype the owner approved; since 2026-09-30 the port's
-// own side waves where a keep-out holds them back), and the path it draws is
-// sound: continuous, without kinks, its width across its travel, its hidden
-// pieces close to the card. Runs in the `components` project (real Chromium)
-// only because every src/ test does; nothing here touches the DOM.
+// own side waves where a keep-out holds them back; since 2026-10-01 the port's
+// own TOP RIPPLE), and the path it draws is sound: continuous, without kinks,
+// its width across its travel, its hidden pieces close to the card, its top
+// ripple three low bumps inside the card. Runs in the `components` project
+// (real Chromium) only because every src/ test does; nothing here touches the
+// DOM.
 //
 // ── WHAT THE RECORD IS. Six real layouts of the Team page, measured in a
 // browser under the decided gauge rule, from the narrowest phone to the widest
@@ -35,9 +37,14 @@ import {
 // "rectangle" the owner saw on 2026-09-30. The recorded cards and the layouts
 // that showed the fault are measured for both, a seeded sweep of layouts
 // nobody measured for corners, and every one of them for a keep-out entered —
-// a smooth wave that covers a word is no cure. Every test that walks a wave
-// carries a 60 s budget: a band takes about a second on the development
-// machine, and the CI runner is about six times slower.
+// a smooth wave that covers a word is no cure. Since 2026-10-01 a card has ONE
+// wave, the side wave: the top lane carries THE RIPPLE — three low bumps of
+// normal-distribution shape, a valley, a crest, a valley (the owner: the top
+// waves were "too much"; then "3 waves … pretty low, pretty smooth … well
+// distributed normal distributions") — and "the path is sound" pins its shape
+// instead. Every test that walks a wave carries a 60 s budget: a band takes
+// about a second on the development machine, and the CI runner is about six
+// times slower.
 
 const NINE = 1e-9;
 
@@ -47,13 +54,20 @@ const ATOMS: readonly AtomName[] = [
   'hookEntry',
   'wrapEntry',
   'leadOut',
-  'waveTop',
+  'rippleTop',
   'liftExit',
   'wrapExit',
   'reentry',
   'waveSide',
 ];
-const KINDS: readonly SegmentKind[] = ['line', 'arc', 'fold', 'sway', 'wave'];
+const KINDS: readonly SegmentKind[] = [
+  'line',
+  'arc',
+  'fold',
+  'sway',
+  'wave',
+  'ripple',
+];
 
 /** The largest absolute difference between two equal-length lists. */
 function worst(actual: readonly number[], expected: readonly number[]): number {
@@ -93,6 +107,27 @@ function finePenetration(model: CardModel, boxes: CardInput['boxes']): number {
     for (const v of [0, 0.5, 1]) points.push(model.surface(u, v));
   }
   return penetration(points, boxes, -model.T / 2);
+}
+
+/** The top ripple's turning points, in order — each a valley or a crest, at
+ *  its share of the run — by the sign of the rise between 400 samples. */
+function rippleTurns(
+  model: CardModel,
+): readonly Readonly<{ kind: 'valley' | 'crest'; at: number }>[] {
+  const run = model.atoms.rippleTop;
+  const steps = 400;
+  const z: number[] = [];
+  for (let i = 0; i <= steps; i++) {
+    z.push(at(model, (run.u0 + (run.u1 - run.u0) * (i / steps)) * model.S).z);
+  }
+  const turns: { kind: 'valley' | 'crest'; at: number }[] = [];
+  for (let i = 1; i < steps; i++) {
+    const before = z[i] - z[i - 1];
+    const after = z[i + 1] - z[i];
+    if (before < 0 && after > 0) turns.push({ kind: 'valley', at: i / steps });
+    if (before > 0 && after < 0) turns.push({ kind: 'crest', at: i / steps });
+  }
+  return turns;
 }
 
 describe('lib/ribbon-model — the record, to nine decimals (GOLDEN_CARDS)', () => {
@@ -244,15 +279,16 @@ describe('lib/ribbon-model — the path is sound', () => {
 
     // THE WIDTH ACROSS THE TRAVEL, measured the way the consult's checks
     // measured the prototype ("ribbon-ness |B·T|"): every piece whose heading
-    // is ANALYTIC — straights, arcs, bends, the sway — to 1e-3; the two waves
-    // apart. A wave's humps rise towards the viewer
-    // (its bulge) while the ribbon rolls with them, and its heading is a
-    // central difference, so its width vector leans off the 3D travel by a
-    // few degrees: 0.070 at worst on these six cards, the prototype's number
-    // to the digit — a property of the approved design, not of the port.
+    // is ANALYTIC — straights, arcs, bends, the sway — to 1e-3; the side wave
+    // apart. A wave's humps rise towards the viewer (its bulge) while the
+    // ribbon rolls with them, and its heading is a central difference, so its
+    // width vector leans off the 3D travel by a few degrees: 0.062 at worst
+    // on these six cards (0.070 while the top wave ran — the prototype's
+    // number to the digit — until the top run was made straight on
+    // 2026-10-01) — a property of the approved design, not of the port.
     const PERPENDICULAR = { wave: 0.08, other: 1e-3 };
 
-    it('keeps the width vector across the travel: < 1e-3, the waves < 0.08', () => {
+    it('keeps the width vector across the travel: < 1e-3, the side wave < 0.08', () => {
       const h = 1e-6;
       const most = { wave: 0, other: 0 };
       for (const segment of model.segments) {
@@ -291,6 +327,53 @@ describe('lib/ribbon-model — the path is sound', () => {
 
     it('never enters a keep-out: fine penetration is 0 (200 per unit, three across)', () => {
       expect(finePenetration(model, card.input.boxes)).toBe(0);
+    });
+
+    // THE TOP RIPPLE (the owner, 2026-10-01): between its two corner arcs the
+    // ribbon runs flat on the face in a VALLEY, a CREST and a VALLEY — three
+    // turning points, in that order and no other — levelled at both ends,
+    // "pretty low" (a valley at most DIP = 3 % of the run deep, the crest at
+    // most CREST = 1.5 % high), and the whole of it inside the card: its
+    // upper edge never nearer the top edge than HEADROOM_AIR (0.04 k), its
+    // lower edge never nearer the lane's floor than M (0.08 units). Its
+    // heading is analytic, so the width-vector test above holds it to 1e-3
+    // like a straight, and "no kink" holds its two joints with the arcs.
+    it('ripples along the top lane — a valley, a crest, a valley — low, and inside the card', () => {
+      const run = model.atoms.rippleTop;
+      expect(run.length).toBeGreaterThan(0);
+      const first = at(model, run.u0 * model.S + 1e-7);
+      const last = at(model, run.u1 * model.S - 1e-7);
+      expect(Math.abs(last.z - first.z)).toBeLessThan(1e-3);
+      expect(first.y).toBeLessThan(-model.T / 2);
+      const steps = 400;
+      const z: number[] = [];
+      // The depth below the CHORD at each step — the line between the two
+      // ends, which the arcs leave a hair apart.
+      const dips: number[] = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const frame = at(model, (run.u0 + (run.u1 - run.u0) * t) * model.S);
+        expect(Math.abs(frame.y - first.y)).toBeLessThan(NINE);
+        expect(Math.abs(frame.B[1])).toBeLessThan(NINE);
+        z.push(frame.z);
+        dips.push(first.z + t * (last.z - first.z) - frame.z);
+      }
+      expect(rippleTurns(model).map((turn) => turn.kind)).toEqual([
+        'valley',
+        'crest',
+        'valley',
+      ]);
+      const lowest = Math.min(...z);
+      const highest = Math.max(...z);
+      expect(Math.max(...dips)).toBeLessThan(0.03 * run.length + 1e-6);
+      expect(-Math.min(...dips)).toBeLessThan(0.015 * run.length + 1e-6);
+      const lane = lanes(k).top / UNIT_PX;
+      expect(H / 2 - (highest + model.width / 2)).toBeGreaterThanOrEqual(
+        0.04 * k - 1e-9,
+      );
+      expect(lowest - model.width / 2 - (H / 2 - lane)).toBeGreaterThanOrEqual(
+        0.08 - 1e-9,
+      );
     });
   });
 });
@@ -374,14 +457,12 @@ const PINNED: readonly PinnedCard[] = [
 /** A point of a wave's centre line seen from the front: [x, z]. */
 type Point = readonly [number, number];
 
-/** A card's two waves as they are travelled — named in a failure's message. */
-const WAVES = ['the top wave', 'the side wave'] as const;
-
-/** A card's two waves: the top wave, then the side wave. */
-function wavesOf(model: CardModel): Segment[] {
+/** A card's ONE wave, the side wave (the top run has been straight since
+ *  2026-10-01). */
+function waveOf(model: CardModel): Segment {
   const waves = model.segments.filter((segment) => segment.kind === 'wave');
-  expect(waves).toHaveLength(WAVES.length);
-  return waves;
+  expect(waves).toHaveLength(1);
+  return waves[0];
 }
 
 /** A wave's centre line seen from the front, `perPx` points per CSS px of its
@@ -452,23 +533,19 @@ describe('lib/ribbon-model — smooth beside a keep-out (SMOOTH BESIDE A KEEP-OU
       // with the sampling (×2.3 to ×3.8 on the seven of these cards that had
       // the fault, before wave() was made smooth). A bend's rate is the
       // curve's own, and does not (×1.00 to ×1.01).
-      wavesOf(model).forEach((wave, i) => {
-        expect(
-          sharpest(model, wave, 32) / sharpest(model, wave, 8),
-          WAVES[i],
-        ).toBeLessThan(1.2);
-      });
+      const wave = waveOf(model);
+      expect(sharpest(model, wave, 32) / sharpest(model, wave, 8)).toBeLessThan(
+        1.2,
+      );
     }, 60_000);
 
     it('draws no ruler line: beside a keep-out the wave goes on', () => {
       // 0.15 of the wave's period, in px. The ruler lines of the fault were
       // 50 to 60 px of a 130 to 185 px period; on these cards the straightest
       // stretch is now under 3 px.
-      wavesOf(model).forEach((wave, i) => {
-        expect(longestStraight(model, wave), WAVES[i]).toBeLessThan(
-          0.15 * model.l * card.input.k * UNIT_PX,
-        );
-      });
+      expect(longestStraight(model, waveOf(model))).toBeLessThan(
+        0.15 * model.l * card.input.k * UNIT_PX,
+      );
     }, 60_000);
   });
 
@@ -558,12 +635,11 @@ describe('lib/ribbon-model — smooth on layouts nobody measured (a seeded sweep
       sweep(seed, PER_BAND).forEach((input, index) => {
         const model = buildCard(input);
         const card = `card ${index + 1} (W ${input.W}, H ${input.H.toFixed(2)})`;
-        wavesOf(model).forEach((wave, i) => {
-          expect(
-            sharpest(model, wave, 32) / sharpest(model, wave, 8),
-            `${card}, ${WAVES[i]}`,
-          ).toBeLessThan(1.2);
-        });
+        const wave = waveOf(model);
+        expect(
+          sharpest(model, wave, 32) / sharpest(model, wave, 8),
+          card,
+        ).toBeLessThan(1.2);
         expect(finePenetration(model, input.boxes), card).toBe(0);
       });
     },
@@ -578,6 +654,45 @@ describe('lib/ribbon-model — smooth on layouts nobody measured (a seeded sweep
     expect(widths.some((W) => W < 5)).toBe(true);
     expect(widths.some((W) => W > 10)).toBe(true);
   });
+});
+
+describe('lib/ribbon-model — three waves at every width (the owner, 2026-10-01: "on widening still just 3 waves … not more but wider")', () => {
+  // Every column width ui/Container gives, 241 to 2 145px, every 8px (the
+  // stand-in sweep of Ribbon.test.tsx), at three card heights: a valley, a
+  // crest and a valley on each one, at the SAME share of the run — the bumps
+  // are shares of the run (RIPPLE), so a wider card gets wider waves, never
+  // more of them. The shares are the levelled sum's own extremes, a hair off
+  // the bumps' centres; one sample is 1/400 of the run.
+  it('ripples as a valley, a crest and a valley from 241px to 2 145px, the three at the same shares of the run', () => {
+    const SHARES = [0.2175, 0.515, 0.794];
+    let built = 0;
+    for (let px = 241; px <= 2145; px += 8) {
+      const W = px / UNIT_PX;
+      const k = gaugeRule(W);
+      for (const H of [3.5, 5.5, 9]) {
+        const model = buildCard({
+          W,
+          H,
+          G: lanes(k).gap / UNIT_PX,
+          k,
+          boxes: [],
+        });
+        const turns = rippleTurns(model);
+        expect(
+          turns.map((turn) => turn.kind),
+          `${px}px × ${H}`,
+        ).toEqual(['valley', 'crest', 'valley']);
+        turns.forEach((turn, i) => {
+          expect(
+            Math.abs(turn.at - SHARES[i]),
+            `${px}px × ${H}, turn ${i}`,
+          ).toBeLessThanOrEqual(1 / 400 + 1e-12);
+        });
+        built++;
+      }
+    }
+    expect(built).toBe(717);
+  }, 60_000);
 });
 
 describe('lib/ribbon-model — penetration, the one number the guard reads', () => {
@@ -630,7 +745,7 @@ describe('lib/ribbon-model — input it cannot wrap is refused, loudly', () => {
     );
   });
 
-  it('refuses a card too narrow for its gauge — the top wave would run backwards', () => {
+  it('refuses a card too narrow for its gauge — the top ripple would span backwards', () => {
     expect(() => buildCard({ ...desktop, W: 2 })).toThrow(
       /^buildCard: a card 2 units wide is too narrow for the gauge 0\.8/,
     );

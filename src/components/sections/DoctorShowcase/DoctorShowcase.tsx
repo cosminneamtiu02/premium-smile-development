@@ -66,10 +66,11 @@ import { cx } from '@/lib/cx/cx';
 // band opens with the standard band top (`pt-12 @lg:pt-16 @3xl:pt-20`) and
 // carries NO bottom padding and NO gap between the heading and the ribbon:
 // the ribbon's own column already reserves its HEAD room above the first card
-// (the drop-in's, `--ribbon-k` + 1rem) and its TAIL room under the last
-// (60px + 1rem) — ui/Ribbon's TWO BOXES — and that room IS this band's air.
-// The usual `pb` on top of it would double it; a `gap` would push the drop-in
-// away from the title it falls from. The stepped `pt` sits on the rhythm box
+// (`--ribbon-k` + 1rem — the drop-in's until 2026-10-01; the first card has
+// no drop-in since, and the room is this band's air alone, kept at that
+// measure, ui/Ribbon's TWO BOXES) and its TAIL room under the last (60px +
+// 1rem) — and that room IS this band's air. The usual `pb` on top of it would
+// double it, and so would a `gap`. The stepped `pt` sits on the rhythm box
 // one level in, because an element cannot query its own size (the
 // DoctorCourses / ClinicLocation spelling, ui/Container's recipe rule 3).
 //

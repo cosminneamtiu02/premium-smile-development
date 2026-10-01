@@ -13,15 +13,25 @@
 // crosses the side face, goes behind the card — where its ONE half twist is,
 // where nobody sees it — and over the top face (`rside` … `tcross`); comes
 // down over the top edge and eases into the top lane (`tfold2`, `lead`); runs
-// right to left along the top as a calm wave (`t`); curls up out of the wave's
-// last hump and over the top edge again (`lift` … `xfold2`); goes behind the
+// right to left across the top lane in a low ripple, flat on the face — a
+// valley, a crest, a valley (`t`, THE TOP RIPPLE); curls up out of the last
+// valley and over the top edge again (`lift` … `xfold2`); goes behind the
 // card on a diagonal to the back-left edge (`dturn`, `dback`); round that edge
 // onto the front at 35° from the vertical (`fold1` … `dease`); and runs down
 // the left lane as a calm wave to where the next card's drop-in begins (`d`).
 // The next card is the same ribbon MIRRORED (lib/ribbon-layout), so the column
-// is one ribbon. No loops (fb-489), the hook lower (fb-492), the drop-in a
+// is one ribbon — and the FIRST card's drop-in and hook, built here like every
+// card's, are never drawn: nothing arrives from above it, and the owner saw a
+// ribbon that "starts from nowhere" (lib/ribbon-draw, THE FIRST CARD HAS NO
+// HEAD, 2026-10-01) — its ribbon is first seen coming over its top edge into
+// the ripple. No loops (fb-489), the hook lower (fb-492), the drop-in a
 // little wavy (fb-494), the tail in the air (fb-504) — the owner's words are
-// in §15.26.
+// in §15.26. Until 2026-10-01 the top lane carried a second calm wave, which
+// ran four to five humps across a desktop card's top edge, rolling as it
+// went; the owner found it "too much" and asked for "something simpler, more
+// physically plausible" — then, shown a straight run, for "a second degree
+// function", and shown that bow, for "3 waves … pretty low, pretty smooth"
+// (§15.26 round 3).
 //
 // ── COORDINATES AND UNITS. Card-centred: x right, z up, y depth — the viewer
 // at −y, the card's front face at y = −T/2. One card unit is UNIT_PX = 100 CSS
@@ -49,9 +59,17 @@
 // rebuilds to 1e-9. From the day that test passes this file is the ribbon's
 // single source; a change of the DESIGN, on the owner's word, re-writes the
 // record from here and the change-set shows every number that moved. That has
-// happened once: on 2026-09-30 the waves were made SMOOTH BESIDE A KEEP-OUT
+// happened twice: on 2026-09-30 the waves were made SMOOTH BESIDE A KEEP-OUT
 // (wave(), on the owner's word), and the record's numbers on the four cards
-// whose side wave a keep-out holds back were written again from this module.
+// whose side wave a keep-out holds back were written again from this module;
+// on 2026-10-01 the TOP WAVE BECAME THE TOP RIPPLE (buildCard, on the owner's
+// word), which moves, on every card, the `t` segment's kind and shape, the
+// two arcs beside it (they turn less), S and every later start — the chain is
+// a little longer, the arcs a little shorter — and the heading of every
+// sample before the run by 5.1e-5 rad (the old wave's finite-difference
+// heading at its start was not exactly zero, and a segment's start value is
+// added to every point before it). The painter's record (lib/ribbon-paint)
+// moves from the lead arc on.
 //
 // ── NO DEAD CODE (the approval's own sentence: "i want no dead code"). Only
 // the ribbon is ported, not the package: the loop-era segments (`Shift`,
@@ -96,7 +114,7 @@ export type CardInput = Readonly<{
 }>;
 
 /** What a segment IS — the painter reads this, never a name (the header). */
-export type SegmentKind = 'line' | 'arc' | 'fold' | 'sway' | 'wave';
+export type SegmentKind = 'line' | 'arc' | 'fold' | 'sway' | 'wave' | 'ripple';
 
 /** The prototype's nine pieces of a card's ribbon. */
 export type AtomName =
@@ -104,7 +122,7 @@ export type AtomName =
   | 'hookEntry'
   | 'wrapEntry'
   | 'leadOut'
-  | 'waveTop'
+  | 'rippleTop'
   | 'liftExit'
   | 'wrapExit'
   | 'reentry'
@@ -229,6 +247,29 @@ const D = 0.35;
 const SOFT = 0.05;
 /** p_d — the side wave's phase (radians). */
 const P_D = 1.2;
+/** THE TOP RIPPLE's three bumps (the owner, 2026-10-01: "3 waves … like some
+ *  pretty well distributed normal distributions … of slightly different
+ *  widths so that they do not look that mechanical"): where each sits along
+ *  the run (a share of it), its standard deviation (a share of the run), and
+ *  which way it bends — a VALLEY into the card (+1) or the CREST towards the
+ *  top edge (−1). Not quite even, not quite alike, on purpose. */
+const RIPPLE = [
+  { at: 0.22, width: 0.1, sense: 1 },
+  { at: 0.52, width: 0.115, sense: -1 },
+  { at: 0.79, width: 0.095, sense: 1 },
+] as const;
+/** How deep a valley hangs and how high the crest rises, as shares of the
+ *  run — "pretty low" — before the lane's room and the top edge's headroom
+ *  cap them (THE TOP RIPPLE, in buildCard). */
+const DIP = 0.03;
+const CREST = 0.015;
+/** The air kept between the crest's upper edge and the card's top edge (× k):
+ *  the whole ripple stays inside the card. */
+const HEADROOM_AIR = 0.04;
+/** How finely the ripple is scanned for its extremes before each is refined (THE TOP RIPPLE). */
+const RIPPLE_GRID = 200;
+/** The golden-section steps that refine an extreme: 0.618^60 of a grid cell, far under nine decimals. */
+const PEAK_STEPS = 60;
 /** The ribbon's width (× k). */
 const WIDTH = 0.25;
 /** How far a wave's humps rise towards the viewer (× k), and their pace against the wave's own. */
@@ -263,22 +304,12 @@ const TAPER = 0.3;
 const TAPER0 = 0.12;
 /** The finite-difference step for a wave's heading. */
 const FD_H = 0.002;
-/** The phase reference: a maximum of the hump profile. */
-const REF = Math.PI / 2;
-
-/** How each wave ends. The top wave is BONDED — it ends on a hump pointing
- *  into the card, where the lift curls up out of it; the side wave is FREE
- *  at its own phase and fades out over a TAIL before the next drop-in. */
-type WaveShape =
-  | Readonly<{ bonded: true; bulgePhase: number }>
-  | Readonly<{
-      bonded: false;
-      bulgePhase: number;
-      phase: number;
-      tail: number;
-    }>;
-
-const TOP_WAVE: WaveShape = { bonded: true, bulgePhase: 0.6 };
+/** How the side wave runs: FREE at its own phase, its humps' bulge at theirs,
+ *  and it fades out over a TAIL before the next drop-in. (Until 2026-10-01 a
+ *  second, BONDED shape ran the top lane — it ended on a hump pointing into
+ *  the card, where the lift curled up out of it; the top run is straight now,
+ *  and that branch is gone with it.) */
+type WaveShape = Readonly<{ bulgePhase: number; phase: number; tail: number }>;
 
 /**
  * The gauge the owner approved for a column `W` card units wide.
@@ -337,11 +368,6 @@ const PI = Math.PI;
 const clamp01 = (t: number) => Math.min(Math.max(t, 0), 1);
 /** A half-cosine ease from 0 to 1. */
 const ease = (t: number) => 0.5 * (1 - Math.cos(PI * t));
-/** A window that rises over the first `taper` of a run and stays at 1. */
-function rise(t: number, taper: number): number {
-  const s = Math.sin(0.5 * PI * Math.min(t / taper, 1));
-  return s * s;
-}
 /** A window pinned at both ends: rises over `taper`, falls over `endTaper`. */
 function pinned(t: number, taper: number, endTaper: number): number {
   const s = Math.sin(0.5 * PI * Math.min(t / taper, (1 - t) / endTaper, 1));
@@ -651,14 +677,142 @@ function sway(pen: Pen, name: string, L: number): Segment {
   return segment;
 }
 
+/** A lateral profile along a run: its offset at t (card units, positive
+ *  towards the run's LEFT — into the card on the top run) and its slope
+ *  d(offset)/dt. */
+type Profile = Readonly<{
+  h: (t: number) => number;
+  dh: (t: number) => number;
+}>;
+
+/**
+ * The largest value of `f` on [t0, t1], where it rises then falls — a
+ * golden-section search over a fixed number of steps, so every engine lands
+ * on the same number.
+ */
+function peak(f: (t: number) => number, t0: number, t1: number): number {
+  const G = (Math.sqrt(5) - 1) / 2;
+  let a = t0;
+  let b = t1;
+  let c = b - G * (b - a);
+  let d = a + G * (b - a);
+  let fc = f(c);
+  let fd = f(d);
+  for (let i = 0; i < PEAK_STEPS; i++) {
+    if (fc < fd) {
+      a = c;
+      c = d;
+      fc = fd;
+      d = a + G * (b - a);
+      fd = f(d);
+    } else {
+      b = d;
+      d = c;
+      fd = fc;
+      c = b - G * (b - a);
+      fc = f(c);
+    }
+  }
+  return Math.max(fc, fd, f(t0), f(t1));
+}
+
+/** The largest value of `f` on [0, 1]: a scan of RIPPLE_GRID cells, then the best cell's neighbourhood refined. */
+function largest(f: (t: number) => number): number {
+  let best = 0;
+  let at = 0;
+  for (let j = 0; j <= RIPPLE_GRID; j++) {
+    const value = f(j / RIPPLE_GRID);
+    if (value > best) {
+      best = value;
+      at = j;
+    }
+  }
+  if (best <= 0) return 0;
+  return peak(
+    f,
+    Math.max(0, (at - 1) / RIPPLE_GRID),
+    Math.min(1, (at + 1) / RIPPLE_GRID),
+  );
+}
+
+/** A normal-distribution bump: exp(−((t − at) / width)² / 2), and its slope. */
+const bell = (t: number, at: number, width: number) =>
+  Math.exp(-0.5 * ((t - at) / width) ** 2);
+const bellSlope = (t: number, at: number, width: number) =>
+  (-(t - at) / (width * width)) * bell(t, at, width);
+
+/**
+ * The ripple's two shapes, each LEVELLED — the straight line through its two
+ * end values taken away, so it is 0 at both ends and the run lands where it
+ * is aimed: a(t), the valleys together; b(t), the crest alone. The profile is
+ * D a(t) − U b(t) for a depth D and a height U (THE TOP RIPPLE).
+ */
+function rippleShapes(): Readonly<{ a: Profile; b: Profile }> {
+  const shape = (sense: 1 | -1): Profile => {
+    const bumps = RIPPLE.filter((bump) => bump.sense === sense);
+    const raw = (t: number) =>
+      bumps.reduce((sum, bump) => sum + bell(t, bump.at, bump.width), 0);
+    const rawSlope = (t: number) =>
+      bumps.reduce((sum, bump) => sum + bellSlope(t, bump.at, bump.width), 0);
+    const h0 = raw(0);
+    const h1 = raw(1);
+    return {
+      h: (t) => raw(t) - (1 - t) * h0 - t * h1,
+      dh: (t) => rawSlope(t) + h0 - h1,
+    };
+  };
+  return { a: shape(1), b: shape(-1) };
+}
+
+/**
+ * THE RIPPLE (the owner, 2026-10-01): a run from the pen to `end` = [x, z]
+ * whose lateral offset is `profile`, flat on the face, no roll; its heading
+ * is the profile's own, so it is tangent to an arc that arrives at its start
+ * slope and leaves at its end slope. The chord sets the direction.
+ */
+function ripple(
+  pen: Pen,
+  name: string,
+  end: readonly [number, number],
+  profile: Profile,
+): Segment {
+  const dx = end[0] - pen.x;
+  const dz = end[1] - pen.z;
+  const L = Math.hypot(dx, dz);
+  const d = [snap(dx / L), snap(dz / L)] as const;
+  const p = [-d[1], d[0]] as const;
+  const slope = (t: number) => Math.atan2(profile.dh(t), L);
+  const s0 = slope(0);
+  const segment = lay(pen, {
+    kind: 'ripple',
+    name,
+    start: pen.s,
+    length: L,
+    xyz: (t) => {
+      const run = L * t;
+      const a = profile.h(t);
+      return [d[0] * run + p[0] * a, 0, d[1] * run + p[1] * a];
+    },
+    phi: (t) => slope(t) - s0,
+    psi: () => 0,
+  });
+  const turned = slope(1) - s0;
+  pen.x = end[0];
+  pen.z = end[1];
+  pen.phi += turned;
+  pen.th += turned;
+  pen.tan = [Math.cos(pen.th), 0, Math.sin(pen.th)];
+  return segment;
+}
+
 /**
  * A calm wave from the pen to `end` = [x, z], along the current heading (an
  * axis of the card): a run of length L with a lateral hump profile sin θ and
- * a shear T_0 sin θ along it, under a window, kept clear of every keep-out —
- * and SMOOTH beside one (below).
+ * a shear T_0 sin θ along it, under a window pinned at both ends, kept clear
+ * of every keep-out — and SMOOTH beside one (below). The side wave is its one
+ * consumer since 2026-10-01: the top run is straight (buildCard).
  *
- *   θ(t) = REF − 2π n (1 − t)   bonded: the run ends on a hump pointing into the card
- *        = 2π n t + phase       free
+ *   θ(t) = 2π n t + phase
  *   n = L / (l k), and A_eff = A k min(1, 0.7 n)² — a short wave is a calmer one.
  *
  * Keep-outs: box i projects on the run to [a1, a2] (in t) and has a lateral
@@ -730,18 +884,12 @@ function wave(
   const n = L / period;
   const Aeff = A * k * Math.pow(Math.min(1, 0.7 * n), 2);
   const bulge = BULGE * k;
-  // The end taper: a free wave fades over its tail (a length), a bonded one
-  // over the usual share.
-  const endTaper = (taper: number) =>
-    shape.bonded ? taper : Math.min(taper, shape.tail / L);
+  // The end taper: the wave fades over its tail (a length), never over more
+  // than the usual share.
+  const endTaper = (taper: number) => Math.min(taper, shape.tail / L);
   const window = (t: number, taper = TAPER) =>
     pinned(t, taper, endTaper(taper));
-  const env = (t: number) => (shape.bonded ? rise(t, TAPER) : window(t));
-  const theta = (t: number) =>
-    shape.bonded ? REF - 2 * PI * n * (1 - t) : 2 * PI * n * t + shape.phase;
-  // A bonded wave ends on a hump (sin REF = 1): its base line is shifted by
-  // one amplitude so the hump lands where the run was aimed.
-  const deltaP = shape.bonded ? delta - Aeff : delta;
+  const theta = (t: number) => 2 * PI * n * t + shape.phase;
 
   // The boxes in the order of their limits, THE NEAREST FIRST — the order THE
   // LAYERED UNION is laid in (limit and keep both grow with lmax, so one
@@ -795,7 +943,7 @@ function wave(
         ease(clamp01((edge.a2 + edge.ramp - t) / edge.ramp)) *
         window(t, TAPER0),
     );
-    const r0 = deltaP * ease(t);
+    const r0 = delta * ease(t);
     const route =
       r0 -
       union(
@@ -821,17 +969,14 @@ function wave(
     const hump = Math.sin(theta(t));
     const sigma = ease(clamp01((hump + 0.3) / 0.6));
     return {
-      lat: route + Aeff * env(t) * hump * (away + (toward - away) * sigma),
+      lat: route + Aeff * window(t) * hump * (away + (toward - away) * sigma),
       away,
       hump,
     };
   };
   const lat = (t: number) => latAndDamp(t).lat;
-  const shear = (t: number) => {
-    const sh = env(t) * Math.sin(theta(t)) * T_0;
-    return Aeff * (shape.bonded ? sh - t * T_0 : sh);
-  };
-  const h = shape.bonded ? FD_H : FD_H * Math.min(1, shape.tail / L / TAPER);
+  const shear = (t: number) => Aeff * window(t) * Math.sin(theta(t)) * T_0;
+  const h = FD_H * Math.min(1, shape.tail / L / TAPER);
 
   const segment = lay(pen, {
     kind: 'wave',
@@ -985,7 +1130,6 @@ export function buildCard(input: CardInput): CardModel {
   fold(pen, 'tfold1', 'x'); //                        over the top edge
   const tcross = across(pen, 'tcross');
   const tfold2 = fold(pen, 'tfold2', 'x'); //         down onto the front, heading down-left at β
-  const lead = arc(pen, 'lead', rLead, -beta); //     eases into the lane, heading −x
 
   // The exit corner is laid out BACKWARDS from the back-left edge, where the
   // re-entry has to start.
@@ -993,21 +1137,101 @@ export function buildCard(input: CardInput): CardModel {
   const rTurn = 0.8 * R_2 * k;
   const dDiag = D_B * k;
   const turnDx = rTurn * (Math.sin(1.5 * PI - alpha) - Math.sin(PI + beta));
-  const waveTop = wave(
-    pen,
-    't',
-    [
-      -W / 2 + inset + dDiag - turnDx + over + rLead * sb,
-      top - rLead * (1 - cb),
-    ],
-    TOP_WAVE,
-  );
-  if (!(waveTop.length > 0)) {
+  /** Where the lift ends and the ribbon goes back over the top edge, at `top`. */
+  const xExit = -W / 2 + inset + dDiag - turnDx + over;
+
+  // THE TOP RIPPLE (the owner, 2026-10-01: "3 waves, so once it enters the
+  // card from behind with the parabola top pointed downwards, then one with
+  // the parabola head pointed upwards and then with the parabola head pointed
+  // downwards again … pretty low, pretty smooth … inbounds of the card …
+  // well distributed normal distributions … slightly different widths … bind
+  // with each other in a harmonised manner"): between the two corners the
+  // ribbon runs flat on the face in a VALLEY, a CREST and a VALLEY — three
+  // normal-distribution bumps (RIPPLE) whose sum is levelled at both ends —
+  // and the two corner arcs ease the ribbon only to the ripple's own end
+  // slopes, so fold, arc, ripple, arc and fold are one tangent-continuous
+  // curve with no flat stretch. The valleys hang DIP of the run and the crest
+  // rises CREST of it, so the ripple reads the same on every screen — and
+  // never more than the ROOM the top lane leaves above its floor (the lane,
+  // less the ribbon's depth at the deeper end, its half width and the air M)
+  // nor more than the HEADROOM under the card's top edge (the ribbon's depth
+  // at the shallower end, less its half width and HEADROOM_AIR): the whole
+  // ripple stays inside the card, clear of every word. The end slopes, the
+  // chord, the room and the headroom depend on one another through the arcs
+  // (an arc that turns less ends higher and reaches less far), so they are
+  // solved together by a fixed point — a contraction, iterated a fixed number
+  // of times, far past the record's nine decimals.
+  const chord0 = pen.x - rLead * sb - (xExit + rLead * sb);
+  if (!(chord0 > 0)) {
     throw new RangeError(
-      `buildCard: a card ${W} units wide is too narrow for the gauge ${k}: its top wave would be ${waveTop.length.toFixed(3)} units long. At this gauge a card must be wider than ${(W - waveTop.length).toFixed(3)} units; gaugeRule(${W}) is ${gaugeRule(W).toFixed(3)}.`,
+      `buildCard: a card ${W} units wide is too narrow for the gauge ${k}: its top ripple would span ${chord0.toFixed(3)} units. At this gauge a card must be wider than ${(W - chord0).toFixed(3)} units; gaugeRule(${W}) is ${gaugeRule(W).toFixed(3)}.`,
     );
   }
-  const lift = arc(pen, 'lift', rLead, -beta); //     curls up out of the wave's last hump
+  const lane = lanes(k).top / UNIT_PX;
+  const shapes = rippleShapes();
+  const xEntry = pen.x;
+  let sLead = 0;
+  let sLift = 0;
+  let depth = 0;
+  let height = 0;
+  let rippleEnd: readonly [number, number] = [xExit + rLead * sb, pen.z];
+  for (let i = 0; i < 40; i++) {
+    const z1 = top - rLead * (Math.cos(sLead) - cb);
+    const z2 = top - rLead * (Math.cos(sLift) - cb);
+    const x1 = xEntry - rLead * (sb - Math.sin(sLead));
+    const x2 = xExit + rLead * (sb - Math.sin(sLift));
+    rippleEnd = [x2, z2];
+    const chord = Math.hypot(x2 - x1, z2 - z1);
+    const deeper = Math.max(H / 2 - z1, H / 2 - z2);
+    const shallower = Math.min(H / 2 - z1, H / 2 - z2);
+    const room = Math.max(0, lane - M - deeper - width / 2);
+    const headroom = Math.max(0, shallower - width / 2 - HEADROOM_AIR * k);
+    // What the ripple may reach: a valley DIP of the run deep or the room,
+    // the crest CREST of the run high or the headroom — whichever is less.
+    const valleyCap = Math.min(DIP * chord, room);
+    const crestCap = Math.min(CREST * chord, headroom);
+    if (i === 0) {
+      depth = valleyCap;
+      height = crestCap;
+    }
+    // The profile's EXTREMES with these sizes (the levelled valleys lift the
+    // middle a little, so the crest is more than its own bump), and the two
+    // sizes scaled so the extremes meet their caps.
+    const h = (t: number) => depth * shapes.a.h(t) - height * shapes.b.h(t);
+    const valley = largest(h);
+    if (valley > 0) depth *= valleyCap / valley;
+    const crest = largest((t) => -h(t));
+    if (crest > crestCap) {
+      // Scale the crest's bump down; what the valleys lift by themselves is
+      // taken off the valleys when the bump alone cannot give the room back.
+      const lifted = largest((t) => -depth * shapes.a.h(t));
+      if (lifted >= crestCap) {
+        height = 0;
+        depth *= lifted > 0 ? crestCap / lifted : 1;
+      } else {
+        height *= (crestCap - lifted) / Math.max(crest - lifted, 1e-12);
+      }
+    }
+    // The ripple's own end slopes, from the chord; the arcs end where the
+    // chord's tilt puts those slopes against the card's x axis.
+    const tilt = Math.atan2(z2 - z1, x1 - x2);
+    const slope0 = Math.atan2(
+      depth * shapes.a.dh(0) - height * shapes.b.dh(0),
+      chord,
+    );
+    const slope1 = Math.atan2(
+      depth * shapes.a.dh(1) - height * shapes.b.dh(1),
+      chord,
+    );
+    sLead = slope0 - tilt;
+    sLift = -slope1 + tilt;
+  }
+  const lead = arc(pen, 'lead', rLead, -(beta - sLead)); // eases to the ripple's first slope
+  const rippleTop = ripple(pen, 't', rippleEnd, {
+    h: (t) => depth * shapes.a.h(t) - height * shapes.b.h(t),
+    dh: (t) => depth * shapes.a.dh(t) - height * shapes.b.dh(t),
+  });
+  const lift = arc(pen, 'lift', rLead, -(beta - sLift)); // eases up out of its last valley
   const xfold1 = fold(pen, 'xfold1', 'x'); //         over the top edge
   const xcross = across(pen, 'xcross');
   fold(pen, 'xfold2', 'x'); //                        behind the card, heading down-left
@@ -1028,7 +1252,7 @@ export function buildCard(input: CardInput): CardModel {
     pen,
     'd',
     [-W / 2 + reach, -H / 2 - G + k], // ends at the next card's drop-in (mirrored)
-    { bonded: false, bulgePhase: 2.2, phase: P_D, tail: TAIL_D * k },
+    { bulgePhase: 2.2, phase: P_D, tail: TAIL_D * k },
   );
   if (!(waveSide.length > 0)) {
     throw new RangeError(
@@ -1048,7 +1272,7 @@ export function buildCard(input: CardInput): CardModel {
     hookEntry: atom(hookArc, rfold1),
     wrapEntry: atom(rside, tcross),
     leadOut: atom(tfold2, lead),
-    waveTop: atom(waveTop, waveTop),
+    rippleTop: atom(rippleTop, rippleTop),
     liftExit: atom(lift, xfold1),
     wrapExit: atom(xcross, dback),
     reentry: atom(fold1, dease),

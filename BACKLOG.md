@@ -10,23 +10,54 @@ Decisions still go to CLAUDE.md §15.
 ## 1 · Cookies — consent for the Google Maps embed
 
 - **Why it waits:** the owner, 2026-09-09: "bypass somehow cookies consent for the moment … we'll
-  get to cookies consent and implementation later" — recorded as CLAUDE.md §12's rider.
+  get to cookies consent and implementation later" — recorded as CLAUDE.md §12's rider. The
+  smaller first step below, `credentialless`, was proposed on 2026-10-01 and sent here by the
+  owner on 2026-10-02: "add to backlog cookies".
 - **Today:** the „Ne găsești" map (`sections/ClinicLocation`, on Home, Team and every doctor page)
   loads Google's `<iframe>` with the page, with no consent gate. The only cookie the site itself
   writes is the language cookie (COOKIES.md §2).
 - **Known since 2026-10-01, not yet in COOKIES.md:** §3's "the embed set zero cookies" holds for
   WRITES only. In Chrome and Edge, which keep third-party cookies on, the frame SENDS a signed-in
-  visitor's existing Google cookies (19 of 46 requests in a probe on the built page) and Google's
-  page can read them. The `credentialless` attribute on the `<iframe>` stopped that with no visible
-  or functional change (Chrome and Edge 110+; Safari blocks third-party cookies anyway — 0 sent,
-  measured — and Firefox partitions them). What no attribute fixes while the map loads by itself:
-  the visitor's IP address reaching Google. Record this in COOKIES.md §3 and §7 when the lane
-  starts.
+  visitor's existing Google cookies and Google's page can read them: 19 of 46 requests carried one
+  in a probe of the shipped `<iframe>` (the real Romanian map with the band's own attributes, on a
+  test page, in Chromium holding a stand-in Google sign-in cookie). The EU cookie rule covers
+  reading what a device stores, not only writing it. Safari blocks these cookies (0 sent, measured
+  in WebKit); Firefox keeps each site's cookies apart by default (documented, not measured).
+- **The smaller first step, no modal — `credentialless`:** the attribute gives the frame a fresh,
+  empty cookie jar, thrown away when the page closes. Measured on the same probe: 19 → 0 requests
+  carrying the visitor's cookie; the same picture and the same dragging; the place card's „larger
+  map" and directions buttons open the same Google pages in a new tab as without it; no extra
+  download (about 637 kB on a first visit and 2 kB on the next, either way). Chrome, Edge, Opera
+  and Samsung Internet support it; Safari and Firefox ignore it and are covered above. The job:
+  `credentialless=""` on the `<iframe>` under the `CONSENT SEAM` comment in ClinicLocation.tsx —
+  the empty string, because React drops `credentialless={true}` with a warning (checked on
+  19.2.8) — a few lines declaring the attribute for TypeScript (`@types/react` does not list it),
+  a pin beside the attribute pins in ClinicLocation.test.tsx, and the read finding written into
+  COOKIES.md §3 and §7 and CLAUDE.md §12's rider. No visual baseline moves: the visual net already
+  blocks the map's traffic (`THE NETWORK FENCE` in `tests/visual/stories.spec.ts`).
+- **What no attribute fixes:** the visitor's IP address reaching Google whenever the map loads by
+  itself — the risk accepted and postponed on 2026-09-09 (COOKIES.md §3, the Google Fonts case).
+  Routing the map through our own address does not help: Google's page fetches its pieces
+  straight from Google's servers, and a static site has no server to route them. The two ways
+  out without a modal are both in COOKIES.md §3's list. Click to load inside the map's own box: a
+  picture of the map, one button and one line saying Google will see the visitor's IP address;
+  the click is the consent and nothing is stored, so it asks again on every page with the map,
+  and the map is not live until the click (for the picture, an OpenStreetMap image with its
+  credit line or a drawn map; whether Google's terms allow a screenshot of its map is not
+  checked). Or our own map (MapLibre with map data we host): live, with no Google and no consent,
+  but not Google's look, no rating card and a large new library.
 - **The work:** COOKIES.md §7 is the checklist — nine items, one lane: the consent record, the
   `<iframe>` absent (never hidden) until consent, the design of the no-consent branch (an image, a
   "show map" button or a plain link out — that lane's call), hydration safety (CLAUDE.md §16 rule
   2), the live flip, the tests, the disclosure (entry 3) and the clean-up of §12's rider. Read
   COOKIES.md §5 before adopting any third-party consent manager.
+- **Also checked on 2026-10-01:** nothing else stores anything — the only cookie writer is
+  `src/i18n/cookie.ts`, no other browser storage is used, and GitHub Pages, the interim host,
+  sends no cookies (its response headers). A link inside the map opens Google's own pages in a
+  new tab, where Google sets its own cookies (five Google Analytics cookies on its Terms page, in
+  the probe) — the visitor's own visit, like any link out. Cloudflare, §15.2's candidate launch
+  host, can add a cookie of its own (`__cf_bm`) through its bot protection: keep that off, or list
+  it on the policy page (entry 3).
 
 ## 2 · A complete accessibility test, re-run on the finished site
 

@@ -22,15 +22,17 @@ import { toStatTiles } from '../team/stat-tiles';
 import { populateHero } from './populate';
 
 // Pages/Home — the page as it actually ships: the Hero opener (the site's
-// second rotator, owner dispatch 2026-09-19, epic #103) over the DOCTORS band
-// (sections/DoctorShowcase, owner dispatch 2026-09-30 — the band the Team page
-// opens with, populated by the Team page's own walk, ../team/populate.ts)
-// over the clinic's NUMBERS (sections/DoctorStats on the page ground, owner
-// 2026-10-01: "i want it on home page too with just 3 components. experience,
-// patients and nr of procedures" — the doctor page's „în cifre" band, its
-// eyebrow and title at the start, no lead, lib/team's three `clinicStats`
-// through ../team/populate.ts' `populateStats` and ../team/stat-tiles.tsx,
-// the Team page's band prop for prop) over the „Ne găsești"
+// second rotator, owner dispatch 2026-09-19, epic #103) over the clinic's
+// NUMBERS (sections/DoctorStats on the page ground, owner 2026-10-01: "i want
+// it on home page too with just 3 components. experience, patients and nr of
+// procedures" — the doctor page's „în cifre" band, its eyebrow and title at
+// the start, no lead, lib/team's three `clinicStats` through
+// ../team/populate.ts' `populateStats` and ../team/stat-tiles.tsx, the Team
+// page's band prop for prop) over the DOCTORS band (sections/DoctorShowcase,
+// owner dispatch 2026-09-30 — the band the Team page opens with, populated by
+// the Team page's own walk, ../team/populate.ts) — numbers first, doctors
+// second, the owner's order since 2026-10-01 ("so first in cifre and then
+// doctors", ./page.tsx's header) — over the „Ne găsești"
 // band (owner 2026-09-09, board D3) over the reviews deck (mounted
 // 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — over the
 // clinic's own Google reviews since 2026-09-30), in the old site's order.
@@ -144,14 +146,10 @@ function HomePageBand(): ReactElement {
         }}
         servicesHref={localeHref(locale, '/services')}
       />
-      <DoctorShowcase
-        eyebrow={tt('showcase.eyebrow')}
-        title={tt('showcase.title')}
-        doctors={cards}
-      />
       {/* The clinic's numbers — the page's band, prop for prop: the page
           ground, the opener at the start, no lead, lib/team's `clinicStats`
-          through the same walk and the same glyph map. */}
+          through the same walk and the same glyph map. First under the Hero,
+          before the doctors, as on the page. */}
       <DoctorStats
         ground="page"
         align="start"
@@ -160,6 +158,11 @@ function HomePageBand(): ReactElement {
         atLeast={tt('doctor.stats.atLeast')}
         tiles={toStatTiles(populateStats(locale, clinicStats))}
         format={new Intl.NumberFormat(locale).format}
+      />
+      <DoctorShowcase
+        eyebrow={tt('showcase.eyebrow')}
+        title={tt('showcase.title')}
+        doctors={cards}
       />
       <ClinicLocation />
       {/* The page passes nothing and measures "how long ago" from the build;
@@ -192,10 +195,10 @@ export const Romanian: Story = {
   globals: { locale: 'ro' },
   play: async ({ canvas, canvasElement }) => {
     // THE DOCTORS BAND (owner, 2026-09-30) — and HOW ITS PICTURES SHIP, read
-    // BEFORE `settled` asks for every picture on the page: under the hero
-    // they are all LAZY. This page's largest paint is the hero's photograph;
-    // only the Team page, which the band opens, preloads its first
-    // (`firstScreen`, the band's D9).
+    // BEFORE `settled` asks for every picture on the page: below the hero and
+    // the numbers they are all LAZY. This page's largest paint is the hero's
+    // photograph; only the Team page, which the band opens, preloads its
+    // first (`firstScreen`, the band's D9).
     const showcase = canvas.getByRole('region', {
       name: ro.team.showcase.title,
     });
@@ -236,8 +239,8 @@ export const Romanian: Story = {
     await expect(
       canvas.getByRole('link', { name: ro.home.hero.services }),
     ).toHaveAttribute('href', '/ro/services/');
-    // The doctors band sits right under the hero, before the map: every
-    // lib/team doctor as a card with the ONE link to his own page.
+    // The doctors band, between the numbers and the map: every lib/team
+    // doctor as a card with the ONE link to the doctor's own page.
     await expect(
       within(showcase).getByText(ro.team.showcase.eyebrow),
     ).toBeVisible();
@@ -267,18 +270,19 @@ export const Romanian: Story = {
         .getAllByRole('heading', { level: 3 })
         .map((label) => label.textContent),
     ).toEqual(clinicStats.map((stat) => stat.words.ro.label));
-    // The map, named by its own h2 — after the doctors and their numbers, as
-    // on the page: hero → doctors → numbers → map.
+    // The map, named by its own h2 — after the numbers and the doctors, as on
+    // the page: hero → numbers → doctors → map (the owner's order since
+    // 2026-10-01: "so first in cifre and then doctors").
     const map = canvas.getByRole('region', { name: ro.home.location.title });
     await expect(
-      hero.compareDocumentPosition(showcase) & Node.DOCUMENT_POSITION_FOLLOWING,
+      hero.compareDocumentPosition(stats) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     await expect(
-      showcase.compareDocumentPosition(stats) &
+      stats.compareDocumentPosition(showcase) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     await expect(
-      stats.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING,
+      showcase.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     // The reviews deck below the map, over the clinic's own Google reviews
     // (lib/reviews, since 2026-09-30) — every one of them, since the deck lays

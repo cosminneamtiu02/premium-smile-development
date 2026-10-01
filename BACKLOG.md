@@ -70,3 +70,25 @@ Decisions still go to CLAUDE.md §15.
 - **Who writes what:** the words are the owner's (§15.17); the machinery — the route in five
   languages, the Footer link, the page itself — is built on his dispatch. Entry 1's disclosure
   lands here.
+
+## 4 · New words for the doctors band's eyebrow, „Familia Premium Smile"
+
+- **Why it waits:** the owner, 2026-10-02: "add to backlog changing familoia premium smile as that
+  sounds particularly toxic". The label came from his own direction of 2026-09-30 ("… in the
+  direction of specialistii cu care ne mandrim familia premium smile", CLAUDE.md §15.25); no
+  replacement is chosen yet, and the words are the owner's (§15.17).
+- **Today:** `team.showcase.eyebrow` — RO „Familia Premium Smile", EN "The Premium Smile family",
+  DE „Die Premium-Smile-Familie", FR « La famille Premium Smile », IT «La famiglia Premium Smile»
+  (the last four Claude's drafts) — the small mono label above „Specialiștii cu care ne mândrim"
+  in the doctors band (`sections/DoctorShowcase`), on Home and on the Team page. The title stays
+  unless the owner widens this entry.
+- **The work:** the five values in `src/messages/*.json` — the CMSR scan (CLAUDE.md §13) reads
+  every `team.*` value, so a new label passes it or fails CI; the band's own fixtures that quote
+  today's Romanian, `EYEBROW_RO` in DoctorShowcase.stories.tsx and `EYEBROW` in
+  DoctorShowcase.test.tsx (the page twins read the key and follow by themselves; the e2e spells
+  only the title); the records that quote it — CLAUDE.md §14's Home and Team rows and §15.25's
+  **Words**; and the screenshots that show it — Pages/Home, Pages/Team, and Sections/DoctorShowcase
+  if its fixtures follow.
+- **Directions, if useful when the time comes (drafts, not decisions):** a plain name for the
+  people — „Echipa medicală", „Medicii noștri"; not „Echipa noastră", which is already the Team
+  page's own `<h1>` (hidden, but read by screen readers just before this band).

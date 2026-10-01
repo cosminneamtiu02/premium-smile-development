@@ -13,22 +13,25 @@ import { toStatTiles } from '../team/stat-tiles';
 import { populateHero } from './populate';
 
 // Home lives at /{locale} itself — never /{locale}/home (brief §5).
-// FIVE real bands so far. Third since 2026-10-01, between the doctors and the
-// map: the clinic's NUMBERS (sections/DoctorStats on the page ground — owner,
-// verbatim: "i want it on home page too with just 3 components. experience,
-// patients and nr of procedures"), the doctor page's „în cifre" band with its
-// eyebrow and title at the start, no lead and lib/team's three `clinicStats`
-// tiles; the same band closes the Team page's staff the same way (owner,
-// minutes later: "same component as on main page with the stats on the team
-// page between map and helping staff") — its place here, after the people
-// the numbers describe and before the map as on a doctor's page, is the
-// planner's pick, a lever. Second since 2026-09-30, right under the Hero: the
-// DOCTORS band (sections/DoctorShowcase — owner, verbatim: "crete it as a
-// section in the home page and in the personell page with heading and
-// eyebrow smth in the direction of specialistii cu care ne mandrim familia
-// premium smile"), the same band the Team page opens with, populated by the
-// Team page's own walk (../team/populate.ts) and the Team page's own words
-// (`team.showcase.*`) — its place on this page is the planner's pick, a lever.
+// FIVE real bands so far, and the two bands added on 2026-09-30 and
+// 2026-10-01 stand in the OWNER'S order since 2026-10-01: "i need to swap
+// these 2 sections between them … so first in cifre and then doctors" —
+// the Hero, then the numbers, then the doctors, then the map. Both places
+// had been the planner's picks, levers; this is the owner pulling them.
+// Second, right under the Hero: the clinic's NUMBERS (sections/DoctorStats
+// on the page ground — owner, verbatim: "i want it on home page too with
+// just 3 components. experience, patients and nr of procedures"), the doctor
+// page's „în cifre" band with its eyebrow and title at the start, no lead
+// and lib/team's three `clinicStats` tiles; the same band closes the Team
+// page's staff (owner, minutes later: "same component as on main page with
+// the stats on the team page between map and helping staff"), and the swap
+// is Home's alone — on the Team page the two bands are not neighbours.
+// Third, between the numbers and the map: the DOCTORS band
+// (sections/DoctorShowcase — owner, verbatim: "crete it as a section in the
+// home page and in the personell page with heading and eyebrow smth in the
+// direction of specialistii cu care ne mandrim familia premium smile"), the
+// same band the Team page opens with, populated by the Team page's own walk
+// (../team/populate.ts) and the Team page's own words (`team.showcase.*`).
 // The other three, in the old site's order: the Hero FIRST — the
 // opener, the whole first screen UNDER the Header pill (owner dispatch
 // 2026-09-19, epic #103; pack round 2, 2026-09-20: the band pulls itself up
@@ -104,17 +107,14 @@ export default async function HomePage() {
         }}
         servicesHref={localeHref(locale, '/services')}
       />
-      <DoctorShowcase
-        eyebrow={tt('showcase.eyebrow')}
-        title={tt('showcase.title')}
-        doctors={doctors}
-      />
       {/* THE CLINIC'S NUMBERS (owner, 2026-10-01): the doctor page's „în
           cifre" band on the page ground, its eyebrow and title at the start
           like every Home band's, no lead, and three tiles — lib/team's
           `clinicStats` through the same walk and glyph map a doctor's page
           uses. The words are the doctor page's own keys, so the band reads
-          the same on every page that carries it (the showcase's precedent). */}
+          the same on every page that carries it (the showcase's precedent).
+          FIRST under the Hero, before the doctors — the owner's order, the
+          header's opening paragraph. */}
       <DoctorStats
         ground="page"
         align="start"
@@ -123,6 +123,11 @@ export default async function HomePage() {
         atLeast={tt('doctor.stats.atLeast')}
         tiles={toStatTiles(populateStats(locale, clinicStats))}
         format={new Intl.NumberFormat(locale).format}
+      />
+      <DoctorShowcase
+        eyebrow={tt('showcase.eyebrow')}
+        title={tt('showcase.title')}
+        doctors={doctors}
       />
       <ClinicLocation />
       <ReviewsCarousel />

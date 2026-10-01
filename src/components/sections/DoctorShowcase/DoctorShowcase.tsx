@@ -119,7 +119,9 @@ import { cx } from '@/lib/cx/cx';
 // band opens, the FIRST doctor's cutout is the page's LCP element (§10.6) —
 // 226 × 302 on a 390 phone, 288 × 384 at 1280 and 1920, still the LCP at
 // 1366 × 633 — and it shipped lazy, with no `fetchpriority` and no preload
-// link. On Home the band sits under the Hero, the first cutout at y ≈ 1103,
+// link. On Home the band sits under the Hero and, since 2026-10-01, under the
+// clinic's numbers too (the owner's order), the first cutout at y ≈ 1655 at a
+// 1280 × 800 window (≈ 1103 right under the Hero, before the band scaled),
 // and the hero's picture is the LCP: lazy is RIGHT there (§11 — "lazy-loading
 // below the fold, eager + high-priority for the hero"). The band cannot tell
 // the two pages apart — it knows no page (D1) — and it must not measure the

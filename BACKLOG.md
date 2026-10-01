@@ -123,3 +123,39 @@ Decisions still go to CLAUDE.md §15.
 - **Directions, if useful when the time comes (drafts, not decisions):** a plain name for the
   people — „Echipa medicală", „Medicii noștri"; not „Echipa noastră", which is already the Team
   page's own `<h1>` (hidden, but read by screen readers just before this band).
+
+## 5 · Larger text on the Services page, for older patients
+
+- **Why it waits:** the owner, 2026-10-02: "add to backlog … larger text on services page" · "it is
+  a measurte for old people" — CLAUDE.md §1's patients skew older. No size is chosen yet.
+- **What kind of change it is:** a larger default, not a fix. WCAG 2.2 AA sets no minimum text
+  size (SC 1.4.4 asks that text can be enlarged to 200%, which entry 2's pass checks), and a
+  visitor who has set a larger font size in the browser already gets it on this page, which is
+  sized in rem (§7). The entry is about what every patient sees without touching a setting.
+- **Today, read from the code (at the browser's default 16px):** the service names and prices in
+  each category card are `ui/Text` rows at `text-base`, 16px on a 24px line — one step UNDER the
+  18px body text of the rest of the site (§15.1's 1.125rem). ui/Text has one size by design; its
+  header names `text-base` the smaller step under that body text. Around the rows: each card's
+  eyebrow at 14px (ui/Eyebrow, the same on every page), the category titles at 30px on a phone
+  and 36px on a card at least 498px wide (Heading's `band` step, §15.24) and the menu's eleven
+  links at 18px (ui/TextButton).
+- **The work:**
+  - the rows' size belongs to ui/Text, not to the band: §6.8 lets a parent's `className` place an
+    atom, never restyle it. Two routes, the owner's call between them — a size axis on ui/Text
+    that only the price rows ask for (a change to the atom's contract, through `/new-atom`), or a
+    larger size for every `ui/Text`, which also enlarges its five other users: the Footer, the
+    contact dialog, the review cards, a doctor's schedule card and the number tiles on Home, Team
+    and every doctor page;
+  - the cards and the menu grow with their text. The reading line plans each card's landing from
+    its measured height, and `lib/sticky-rail` already pins a menu taller than the window, so both
+    follow by themselves — re-run the three `tests/e2e/price-*.spec.ts` on the built page anyway,
+    in Romanian and German;
+  - phones: at 320px and at 200% zoom the longest German names wrap onto more lines, and no row may
+    push the page sideways;
+  - the screenshots: every Sections/PriceList and Pages/Services cell (and every changed `ui/Text`
+    user's on the second route); the records: CLAUDE.md §15.20, the price list's run, and a new
+    §15 item for the decision.
+- **Directions, if useful when the time comes (drafts, not decisions):** the rows at the site's
+  own 18px body size is the smallest step, and it ends the rows being smaller than everything
+  else; a bigger step is a look to try on the built page at 390 and 1280. The 14px eyebrows are
+  site-wide (§15.24), so enlarging them widens this entry — on the owner's word.

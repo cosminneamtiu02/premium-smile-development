@@ -267,7 +267,8 @@ describe('FloatingActions — the call CTA', () => {
     // modify at least yet the hovering buttons from bottom right" — and
     // turned that evening: "i thaught i told you to refactor the whatsapp and
     // call buttons to be lilla too", the owner's pick of THIS pair over the
-    // contact dialog's two buttons, which stay green. ui/GlyphButton's
+    // contact dialog's two buttons (they followed later that night, on his
+    // own word — ContactModal.test.tsx pins them). ui/GlyphButton's
     // `tone="accent"` cuts the SAME solid face from the lavender: lilac at
     // rest under the white glyph, draining to the white face with a lilac
     // glyph and hairline on hover, the deep violet on press. No green token

@@ -492,6 +492,39 @@ describe('ContactModal — the dialog’s content', () => {
     ).not.toHaveAttribute('target');
   });
 
+  it('dresses BOTH channel controls in the lavender solid face — the owner’s word (2026-10-01)', () => {
+    // The dialog's last green. The night the Header's Contact and the fixed
+    // corner's discs turned lilac these two stayed green — the owner's pick of
+    // the corner pair passed them over — until he named them: "on the modal
+    // with contact opened from the contact button i need the 2 buttons for
+    // calling by phone and contatcatine pe whatsap to be also lilla at
+    // standstill", then "so all is green there rurn to liliac". ui/Button's
+    // `tone="accent"` cuts the SAME solid face from the lavender: lilac at rest
+    // under the white label and glyph, draining to the white face with a lilac
+    // label and hairline on hover, the deep violet on press. No green token
+    // survives on either control, and the prop never reaches the DOM.
+    const { dialog, messages } = mount({ defaultOpen: true });
+    for (const name of [clinic.phoneDisplay, messages.whatsapp]) {
+      const control = within(dialog()).getByRole('link', { name });
+      const tokens = control.className.split(/\s+/);
+      expect(tokens, name).toEqual(
+        expect.arrayContaining([
+          'bg-accent',
+          'text-ink-inverse',
+          'hover:bg-surface',
+          'hover:text-accent',
+          'hover:inset-ring-accent',
+          'active:bg-accent-strong',
+        ]),
+      );
+      expect(
+        tokens.filter((t) => t.includes('cta')),
+        name,
+      ).toEqual([]);
+      expect(control, name).not.toHaveAttribute('tone');
+    }
+  });
+
   it.each([
     ['phone', () => clinic.phoneDisplay],
     ['whatsapp', () => ro.contact.whatsapp],
@@ -735,7 +768,7 @@ describe('ContactModal — the dialog’s content', () => {
       // fit-content rail, so the longer label — German's "Kontaktieren Sie uns
       // über WhatsApp" — decides the width of BOTH and neither is pinned to a
       // pixel count that a translation could outgrow. A ragged pair of
-      // different-width green blocks is what this prevents.
+      // different-width blocks is what this prevents.
       const { dialog, messages } = mount({ locale, defaultOpen: true });
       const call = within(dialog()).getByRole('link', {
         name: clinic.phoneDisplay,
@@ -958,9 +991,8 @@ describe('ContactModal — the box is never capped, so it never scrolls', () => 
     // a group — option B's deeper collapse, which is what the title's second
     // line costs — and, since 2026-09-26, gap-0 on the rail too: G2-R2 tier 2,
     // the 30px title's cost bought back in part, 0 → 4px of slack) and the
-    // divider yields with them (owner, 2026-09-05). Two stacked green controls
-    // under a title that already names both channels still read as
-    // alternatives.
+    // divider yields with them (owner, 2026-09-05). Two stacked controls under
+    // a title that already names both channels still read as alternatives.
     expect(getComputedStyle(groups).rowGap).toBe('0px');
     expect(getComputedStyle(groups).marginTop).toBe('0px');
     expect(getComputedStyle(groups).marginBottom).toBe('0px');

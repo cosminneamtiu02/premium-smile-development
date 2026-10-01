@@ -205,10 +205,10 @@ const motionClasses: Record<GlyphButtonMotion, string> = {
 // on "i thaught i told you to refactor the whatsapp and call buttons to be
 // lilla too"; FloatingActions.test.tsx pins the lilac). Not by the Header's
 // burger (ghost paints with ink). So no call site of THIS atom wears `cta`
-// today: the green stays the DEFAULT — Button's twin, and Button's green is
-// still worn, by the contact dialog's two buttons — with this atom's stories
-// and tests as its only readers. tests/unit/accent-census.test.ts names every
-// wearer with its ground.
+// today: the green stays the DEFAULT — Button's twin, whose green the contact
+// dialog's two buttons wore until they too turned lilac later that night —
+// read only by story and test code. tests/unit/accent-census.test.ts names
+// every wearer with its ground.
 // KEEP-IN-SYNC (ClinicLocation board D6, 2026-09-09): sections/ClinicLocation's
 // `ROW_HOVER` spells solid's `hover:`/`active:` members — the ACCENT cell's,
 // since 2026-10-01 — with the `group-` prefix: a decorative disc (this atom

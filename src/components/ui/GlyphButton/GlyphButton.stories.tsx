@@ -250,10 +250,10 @@ export const HoverSolid: Story = {
 /**
  * THE LAVENDER FAMILY (owner, 2026-10-01): the same bundles cut from the menu
  * buttons' `accent` role — GlyphButton.tsx's THE TWO FAMILIES, Button.tsx's
- * measured pairs. Accent is the map band's two row discs (solid); AccentOutline
- * the Footer's four discs and the reviews deck's chevrons (outline). The
- * corner's call and WhatsApp discs stay on Default's green, on the owner's
- * word.
+ * measured pairs. Accent is the map band's two row discs and, since the evening
+ * of the same day, the fixed corner's call and WhatsApp discs (solid);
+ * AccentOutline the Footer's four discs and the reviews deck's chevrons
+ * (outline). No call site the site ships wears Default's green any more.
  */
 export const Accent: Story = {
   args: { tone: 'accent' },

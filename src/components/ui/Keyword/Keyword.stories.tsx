@@ -23,19 +23,25 @@ import { Text } from '../Text/Text';
 // wear: since D58 the two consumers' quotes are the lighter `--ink-faint`
 // (#766f69), which ui/Text has no tone for, and the atom owns neither. The
 // fragments are a little bold (650), upright, with no line under them, in the
-// accent lilac `--accent-strong` #4b3a86: the owner's "remove the underline"
-// of 2026-09-26 (the atom's D60), one look after D59's "add just a little more
-// bold and underline them maybe" raised the weight to 650 and drew a thin
-// line that read as a link — the weight stayed, the line went. Before them,
-// D56's "a darker lilla and just a little bold and drop italic" set the
-// weight at 600 and D57's "a more seeable one … make it just jump at you
-// more" deepened the ink to a clear violet. The 650 is a true instance of the
+// lavender `--accent` #746894 — the colour of the doctor card's „Mai multe
+// despre mine" button, on the owner's word of 2026-10-02 ("i want that
+// highlighted text to actually be the color of the current mai multe despre
+// mine button"; the violet `--accent-strong` #4b3a86 until then). The plain
+// line is the owner's "remove the underline" of 2026-09-26 (the atom's D60),
+// one look after D59's "add just a little more bold and underline them maybe"
+// raised the weight to 650 and drew a thin line that read as a link — the
+// weight stayed, the line went. Before them, D56's "a darker lilla and just a
+// little bold and drop italic" set the weight at 600 and D57's "a more
+// seeable one … make it just jump at you more" deepened the ink to the clear
+// violet the button's lavender replaced. The 650 is a true instance of the
 // hosted variable serif, so these frames photograph drawn letterforms. The
-// key word is set apart by HUE, WEIGHT and a small LIGHTNESS step (the lilac
-// the darker ink) — of the three cues the weight survives forced colours;
-// together they are salience, not information (the atom's THREE LIMITS),
-// which is why every fixture still reads as a complete sentence with the
-// marking ignored.
+// key word is set apart by HUE and WEIGHT — the small LIGHTNESS step the
+// violet had left with it: on the real quotes' faint ink the lavender has the
+// same lightness (1.02:1), and against THIS muted stand-in it reads a shade
+// LIGHTER (1.45:1), so these frames show the hue and the weight at work, not
+// a darker word. Of the two cues the weight survives forced colours; together
+// they are salience, not information (the atom's THREE LIMITS), which is why
+// every fixture still reads as a complete sentence with the marking ignored.
 //
 // Copy is Romanian with diacritics (§15.7), first-person and factual — no
 // superlatives, no promises, no result guarantees (CMSR advertising rules for
@@ -82,9 +88,11 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * THE FRAGMENT ALONE — HTML's `<b>`, a little bold (`font-[650]`: a pinned 650
- * that overrides Preflight's parent-relative `bolder`) and in the deep accent
- * lilac for body-size text (`--accent-strong`, #4b3a86 — 9.34:1 on white),
- * with no line under it (D60: the owner's "remove the underline").
+ * that overrides Preflight's parent-relative `bolder`) and in the lavender of
+ * the doctor card's „Mai multe despre mine" button (`--accent`, #746894 —
+ * 5.06:1 on white; the owner, 2026-10-02: "i want that highlighted text to
+ * actually be the color of the current mai multe despre mine button"), with
+ * no line under it (D60: the owner's "remove the underline").
  *
  * Out of a sentence it reads as a heavier lilac word and nothing more, and
  * that is the atom being right: the element says "key word" to the machine,
@@ -102,13 +110,14 @@ export const Default: Story = {};
  * (chunks) => <Keyword>{chunks}</Keyword> })` as a ReactNode.
  *
  * This is the frame where the atom's reason to exist is visible: two fragments
- * heavier than the quiet copy around them (650 against 400), in the deep lilac
- * against its warm grey, a little darker than it, and with no line under them
- * — the owner's "remove the underline" (D60) over D59's "just a little more
- * bold and underline them maybe", after D52's bold was "too bold", D55's
- * italic "looks stupid", D56's "just a little bold" 600 and D57's "make it
- * just jump at you more" (#4b3a86) — so the eye finds the specialities without
- * the line of text losing its evenness.
+ * heavier than the quiet copy around them (650 against 400), in the doctor
+ * card button's lavender against its warm grey (the owner's colour of
+ * 2026-10-02, over D57's violet #4b3a86, "make it just jump at you more"),
+ * and with no line under them — the owner's "remove the underline" (D60) over
+ * D59's "just a little more bold and underline them maybe", after D52's bold
+ * was "too bold", D55's italic "looks stupid" and D56's "just a little bold"
+ * 600 — so the eye finds the specialities without the line of text losing its
+ * evenness.
  */
 export const InASentence: Story = {
   argTypes: { children: { control: false } },

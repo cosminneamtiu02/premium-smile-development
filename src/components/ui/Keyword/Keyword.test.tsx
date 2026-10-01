@@ -7,7 +7,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 // is D60's look: "650, upright, undecorated and lilac whatever the parent
 // weighs" is a property of the cascade (the utility overriding Preflight's
 // relative `bolder`, the arbitrary `font-[650]` compiling to a weight,
-// --accent-strong reaching its utility through the `@theme inline` bridge),
+// --accent reaching its utility through the `@theme inline` bridge),
 // never of a class name. No
 // next/font variable exists in this project, so the family resolves to the
 // fallback stack — the pins read the REQUEST (weight, style, decoration,
@@ -43,10 +43,11 @@ import {
 // stylesheet loaded — since D60 (2026-09-26, the owner's "remove the
 // underline", one look after D59's "add just a little more bold and underline
 // them maybe"): the computed weight 650 (D59's, kept), style normal and NO
-// text decoration under every parent weight, and the --accent-strong ink
-// itself — #4b3a86 since D57, the owner's "a more seeable one … make it just
-// jump at you more" — inside the quiet quote ink, unchanged by D59 and D60. A
-// third layer pins the token itself, off globals.css's source text.
+// text decoration under every parent weight, and the ink itself — --accent
+// #746894 since THE BUTTON'S LAVENDER (2026-10-02, the owner: "i want that
+// highlighted text to actually be the color of the current mai multe despre
+// mine button"; --accent-strong #4b3a86 until then) — inside the quiet quote
+// ink. A third layer pins the token itself, off globals.css's source text.
 
 /** All seven Romanian marks — Ș ș Ț ț ă â î — so a broken encoding path fails
  *  here rather than in front of a patient. */
@@ -84,13 +85,15 @@ const SEGMENTS: readonly KeywordSegment[] = [
  *  arbitrary `font-[650]` and added the underline trio — `underline`,
  *  `decoration-1`, `underline-offset-2`; D60 (the owner's "remove the
  *  underline") took the trio back out and kept the 650 — the engine pin below
- *  reads `none` back off the key word. */
-const RECIPE = 'font-[650] text-accent-strong';
+ *  reads `none` back off the key word. And on 2026-10-02 THE BUTTON'S
+ *  LAVENDER moved the ink from `text-accent-strong` to `text-accent`, the
+ *  colour of the doctor card's „Mai multe despre mine" button. */
+const RECIPE = 'font-[650] text-accent';
 
-/** The computed forms of the two inks — `--accent-strong` #4b3a86 (the role
- *  D56's, the value D57's) and `--ink-muted` #5b554f — as Chromium serialises
- *  them. */
-const ACCENT_STRONG = 'rgb(75, 58, 134)';
+/** The computed forms of the two inks — `--accent` #746894 (the menu buttons'
+ *  lavender and the `accent` button family's face) and `--ink-muted` #5b554f
+ *  — as Chromium serialises them. */
+const ACCENT = 'rgb(116, 104, 148)';
 const INK_MUTED = 'rgb(91, 85, 79)';
 
 const tokensOf = (element: Element) =>
@@ -202,22 +205,25 @@ describe('Keyword — the look, read off the engine (D60)', () => {
     ]);
     for (const keyword of keywords) {
       expect(keyword.textDecorationLine).toBe('none');
-      expect(keyword.color).toBe(ACCENT_STRONG);
+      expect(keyword.color).toBe(ACCENT);
     }
   });
 
-  it('stands apart from the quiet quote by weight, hue and a darker ink — and neither wears a line', () => {
+  it('stands apart from the quiet quote by weight and hue — and neither wears a line', () => {
     // The consumers' shape (PersonnelCard's blockquote, the CredoCard's <p>):
     // a sentence in a quiet ink, upright, at the body's 400, the fragments
     // inside it. The muted ink stands in for the quote here — the consumers
     // have worn the lighter --ink-faint since D58, and the atom owns neither.
     // Since D56 the two differ in weight (650 since D59, against 400 — the
-    // owner's "just a little more bold") and in hue (the lilac against the
-    // warm grey); since D57 in LIGHTNESS too, with the key word the darker of
-    // the two. D59's fourth difference, SHAPE — the key word alone underlined
-    // — lasted one look: D60 struck it, so neither wears a line. This pins the
-    // two inks, the two weights and the absent decoration on both, never a
-    // contrast between the inks — the step is not one. Both stand upright.
+    // owner's "just a little more bold") and in hue (the lavender against the
+    // warm grey). D57's LIGHTNESS step — the violet key word the darker of the
+    // two — left with THE BUTTON'S LAVENDER (2026-10-02): against the faint
+    // quote the two inks now share one lightness (1.02:1), and against this
+    // muted stand-in the lavender is the lighter. D59's fourth difference,
+    // SHAPE — the key word alone underlined — lasted one look: D60 struck it,
+    // so neither wears a line. This pins the two inks, the two weights and the
+    // absent decoration on both, never a contrast between the inks — the step
+    // is not one. Both stand upright.
     render(
       <p className="text-ink-muted">
         <Keywords segments={SEGMENTS} />
@@ -233,7 +239,7 @@ describe('Keyword — the look, read off the engine (D60)', () => {
 
     for (const text of [PARTS.first, PARTS.second]) {
       const keyword = getComputedStyle(screen.getByText(text));
-      expect(keyword.color).toBe(ACCENT_STRONG);
+      expect(keyword.color).toBe(ACCENT);
       expect(keyword.fontWeight).toBe('650');
       expect(keyword.fontStyle).toBe('normal');
       expect(keyword.textDecorationLine).toBe('none');
@@ -241,18 +247,22 @@ describe('Keyword — the look, read off the engine (D60)', () => {
   });
 });
 
-describe('Keyword — its ink’s token, read off globals.css (D56)', () => {
-  // `--accent-strong` is wired EXACTLY as `--accent-decorative` is, and that
-  // wiring has TWO spellings: the raw hex on the semantic light-theme block
-  // (`:root, [data-theme='light'], ::backdrop` — where the sheet's header
-  // says a colour's raw value lives; the `@theme` primitive layer holds the
-  // fonts, the aura and the animations, and no colour at all), and the
-  // `@theme inline` bridge that mints `text-accent-strong` from it. A renamed
-  // variable or a dropped bridge leaves the class silently inert — no runtime
-  // error, no lint error, and the engine test above would read an inherited
-  // ink instead — so the source text is pinned as well. Comments are stripped
-  // first: the token layer explains itself in prose that names the very
-  // strings matched below, and a guard that cannot fail is not a guard.
+describe('Keyword — its ink’s token, read off globals.css (THE BUTTON’S LAVENDER)', () => {
+  // `--accent` — the key words' ink since 2026-10-02, the doctor card's
+  // button colour; `--accent-strong` (D56) until then — is wired EXACTLY as
+  // `--accent-decorative` is, and that wiring has TWO spellings: the raw hex
+  // on the semantic light-theme block (`:root, [data-theme='light'],
+  // ::backdrop` — where the sheet's header says a colour's raw value lives;
+  // the `@theme` primitive layer holds the fonts, the aura and the
+  // animations, and no colour at all), and the `@theme inline` bridge that
+  // mints `text-accent` from it. A renamed variable or a dropped bridge leaves
+  // the class silently inert — no runtime error, no lint error, and the engine
+  // test above would read an inherited ink instead — so the source text is
+  // pinned as well. (tests/unit/accent-census.test.ts measures the same
+  // value's contrast on every ground it may sit on; this pins its wiring.)
+  // Comments are stripped first: the token layer explains itself in prose
+  // that names the very strings matched below, and a guard that cannot fail
+  // is not a guard.
   const css = globalsCss.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\s+/g, ' ');
 
   /** One block's body, from its opener to its first `}` — safe for both
@@ -265,14 +275,14 @@ describe('Keyword — its ink’s token, read off globals.css (D56)', () => {
   };
   const SEMANTIC = ":root, [data-theme='light'], ::backdrop {";
   const BRIDGE = '@theme inline {';
-  const VALUE = '--accent-strong: #4b3a86;';
-  const UTILITY = '--color-accent-strong: var(--accent-strong);';
+  const VALUE = '--accent: #746894;';
+  const UTILITY = '--color-accent: var(--accent);';
 
   it('carries the exact hex on the semantic light-theme block', () => {
     expect(blockOf(css, SEMANTIC)).toContain(VALUE);
   });
 
-  it('bridges it to the `text-accent-strong` utility inside @theme inline', () => {
+  it('bridges it to the `text-accent` utility inside @theme inline', () => {
     expect(blockOf(css, BRIDGE)).toContain(UTILITY);
   });
 
@@ -287,12 +297,12 @@ describe('Keyword — its ink’s token, read off globals.css (D56)', () => {
   });
 
   it('has teeth — and each spelling occurs exactly ONCE in the sheet', () => {
-    expect(css.split('#4b3a86').length - 1).toBe(1);
-    expect(css.split('--accent-strong:').length - 1).toBe(1);
-    expect(css.split('--color-accent-strong:').length - 1).toBe(1);
+    expect(css.split('#746894').length - 1).toBe(1);
+    expect(css.split('--accent:').length - 1).toBe(1);
+    expect(css.split('--color-accent:').length - 1).toBe(1);
     const without = css.replace(VALUE, '');
     expect(without).not.toBe(css);
-    expect(blockOf(without, SEMANTIC)).not.toContain('--accent-strong:');
+    expect(blockOf(without, SEMANTIC)).not.toContain('--accent:');
   });
 });
 

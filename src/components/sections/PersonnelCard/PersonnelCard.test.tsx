@@ -1373,22 +1373,25 @@ describe('PersonnelCard — doctor: the quote (D8, D9)', () => {
     expect(quote.textContent).not.toMatch(/[„”“«»"]/);
   });
 
-  it('keeps every keyword dressed inside the quote (ui/Keyword, D9 + D56 + D59 + D60)', () => {
+  it('keeps every keyword dressed inside the quote (ui/Keyword, D9 + D56 + D59 + D60 + the button’s lavender)', () => {
     // The section's half of the promoted atom's contract: a fragment handed to
     // `about` arrives inside the blockquote still wearing the atom's own
-    // utilities — a darker lilac and a little weight since D56 ("italic looks
-    // stupid … use a darker lilla and just a little bold and drop italic"),
-    // which replaced D55's italic, itself over D52's one round of bold — and
-    // since D59 ("add just a little more bold and underline them maybe") a
-    // touch heavier at 650 — the thin underline D59 added was dropped after one
-    // look by D60 ("remove the underline"), the 650 and the violet kept. The
-    // atom's own suite lives in ui/Keyword.
+    // utilities — a little weight since D56 ("italic looks stupid … use a
+    // darker lilla and just a little bold and drop italic"), which replaced
+    // D55's italic, itself over D52's one round of bold; a touch heavier at
+    // 650 since D59 ("add just a little more bold and underline them maybe" —
+    // its thin underline dropped after one look by D60, "remove the
+    // underline"); and since 2026-10-02 in the lavender of THIS card's own
+    // button (the owner: "i want that highlighted text to actually be the
+    // color of the current mai multe despre mine button"), where D56–D60 wore
+    // the deep violet `accent-strong`. The Doctor story's play measures the
+    // two colours equal. The atom's own suite lives in ui/Keyword.
     renderDoctor();
 
     const keywords = screen.getByRole('blockquote').querySelectorAll('b');
     expect(keywords).toHaveLength(2);
     for (const keyword of keywords) {
-      expect(keyword.className).toBe('font-[650] text-accent-strong');
+      expect(keyword.className).toBe('font-[650] text-accent');
     }
   });
 });

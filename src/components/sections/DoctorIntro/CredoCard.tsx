@@ -146,9 +146,13 @@ import { Card } from '@/components/ui/Card/Card';
 //                    white ground (4.70:1 on --page), AA for body text (§9);
 //                    the role is NOT for sections/TintedBand's 30 % lilac,
 //                    where it reads 3.24:1 — this card sits in the opener, on
-//                    the page ground, never on the band. The key words step
-//                    UP to `accent-strong` (ui/Keyword), 1.89:1 off the quote
-//                    where they stood 1.27:1 off the muted ink.
+//                    the page ground, never on the band. The key words
+//                    stepped UP to `accent-strong` (ui/Keyword), 1.89:1 off
+//                    the quote where they stood 1.27:1 off the muted ink —
+//                    until 2026-10-02, when they took the doctor card
+//                    button's `--accent` (the owner's word, ui/Keyword's THE
+//                    BUTTON'S LAVENDER): the quote's own lightness (1.02:1),
+//                    set apart by hue and weight.
 //   before/after     content-[open-quote] / content-[close-quote]: the marks
 //                    come from `quotes: auto` against the INHERITED lang —
 //                    „…” for ro, „…“ for de, «…» for fr — zero strings, zero

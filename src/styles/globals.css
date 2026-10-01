@@ -268,17 +268,22 @@
      THE CHARTER: washed prose that still passes body text's 4.5:1 — the
      owner's "relatively washed or ghost" for a doctor's own words
      (sections/PersonnelCard D8) given an ink of its own, lighter than
-     --ink-muted, so the --accent-strong keywords inside it stand further
-     off. Consumers: the two doctor quotes ONLY — PersonnelCard's
-     <blockquote> and sections/DoctorIntro's CredoCard <p> — and the
+     --ink-muted, so the --accent-strong keywords inside it stood further
+     off — until 2026-10-02, when the key words took --accent, the doctor
+     card button's lavender, at this ink's own lightness (1.02:1; the owner:
+     "i want that highlighted text to actually be the color of the current
+     mai multe despre mine button"). Consumers: the two doctor quotes ONLY
+     — PersonnelCard's <blockquote> and sections/DoctorIntro's CredoCard <p>
+     — and the
      STAND-IN of the first in ui/Ribbon's stories (Ribbon.fixtures.tsx,
      §15.26): a stand-in judged beside the ribbon must wear the card's own
      ink, on the same white ground. Every other quiet text keeps --ink-muted.
      Measured (WCAG 2.2 relative luminance, sRGB): 4.94:1 on --surface white ·
      4.70:1 on --page — the ground that binds: #79726c, three units lighter
-     per channel, already reads 4.499:1 there · 1.89:1 against --accent-strong,
-     where --ink-muted reads 1.27:1: the keyword's gap widens · 1.49:1
-     against --ink-muted.
+     per channel, already reads 4.499:1 there · 1.02:1 against --accent, the
+     key words' ink since 2026-10-02: the same lightness, the key words set
+     apart by hue and weight (1.89:1 against the --accent-strong they wore
+     before, where --ink-muted read 1.27:1) · 1.49:1 against --ink-muted.
      NOT FOR THE TINT: 3.24:1 on sections/TintedBand's 30% lilac ground
      (#d4cfdc), under 4.5:1 — prose on the lilac band keeps --ink or
      --ink-muted. Dark grounds are outside the charter: 3.24:1 on
@@ -302,7 +307,11 @@
   --error: #b3261e;
   /* accent ink — the 18th semantic role (D56, owner 2026-09-26: "a darker
      lilla"). THE CHARTER: accent ink for body-size text — the lilac that
-     passes 4.5:1; keywords are its first consumer (ui/Keyword);
+     passes 4.5:1; keywords were its first consumer (ui/Keyword, from D56
+     until 2026-10-02, when the owner moved them to --accent below: "i want
+     that highlighted text to actually be the color of the current mai multe
+     despre mine button"), and the `accent` button family's press face and
+     darkened hover label are its consumers today (--accent's charter);
      `accent-decorative` stays the display/graphics role.
      THE VALUE is D57's (the same day: "a more seeable one … make it just jump
      at you more, as keyword, important information"): #4b3a86, darker AND
@@ -341,9 +350,15 @@
      morning ("do not modify at least yet the hovering buttons from bottom
      right") and turned on the owner's "i thaught i told you to refactor the
      whatsapp and call buttons to be lilla too" (FloatingActions.test.tsx
-     pins the lilac) — and, last, the contact dialog's own two buttons, on the
+     pins the lilac) — and the contact dialog's own two buttons, on the
      owner's "so all is green there rurn to liliac" (ContactModal.test.tsx
-     pins the lilac). As an outline's hover GROUND the lavender family greys
+     pins the lilac) — and, since 2026-10-02, as TEXT INK: ui/Keyword's key
+     words inside the two doctor quotes, on the owner's "i want that
+     highlighted text to actually be the color of the current mai multe
+     despre mine button" — body text, so 4.5:1 binds, met on their white
+     cards at 5.06:1 (the census names the pages that render them, and the
+     tint stays barred for them like for every label). As an outline's hover
+     GROUND the lavender family greys
      to --line, not --line-subtle (the owner, the same evening: "on hover of
      vezi serviciile i want little darker shade of gray"): --accent-strong
      reads 6.33:1 on it and the --accent border 3.43:1; the green cell keeps
@@ -381,7 +396,8 @@
      Beside its siblings: --accent-decorative (#7a6d9c) is the display and
      graphics lavender and reads 4.44:1 on --page, under the bar — this role is
      the TEXT grade of the same lavender; --accent-strong (#4b3a86) is the deep
-     violet of the keywords. A literal, not a mix: the day §15.1's hue confirm
+     violet of the family's press and hover faces — and of the keywords until
+     2026-10-02. A literal, not a mix: the day §15.1's hue confirm
      moves --accent-decorative, this value is re-derived by hand, like
      --accent-strong — tests/unit/accent-census.test.ts measures it on every
      ground named here. */

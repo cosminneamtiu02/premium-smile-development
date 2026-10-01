@@ -967,7 +967,7 @@ const playPage =
  * picture, the framed „Filozofia mea" card — the reviews
  * deck's idle card, under the price cards' lavender glow since round 2r (D61)
  * — quoting the doctor in Romanian marks („…”) with the key words at weight 650 in
- * the deep violet accent-strong (D60); the lavender band fading in and out of the page ground with
+ * the doctor card button's lavender, accent (since 2026-10-02); the lavender band fading in and out of the page ground with
  * „Despre Dr. Malea (Sabău) Oana Bianca" and three paragraphs on the left and the „Când mă
  * găsiți la clinică" card on the right, centred on them (D37); the years in
  * one column down the timeline on the left (D34), newest first, all at rest

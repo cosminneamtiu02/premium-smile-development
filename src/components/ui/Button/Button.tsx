@@ -162,8 +162,9 @@ export type ButtonProps = ButtonOwnProps &
 // existed. `accent` is the lavender role minted for ui/TextButton on
 // 2026-10-01 (globals.css carries its charter), cut to the SAME faces with
 // three substitutions and nothing else: cta → accent, cta-hover →
-// accent-strong (the family's one-step-darker ink, the violet of ui/Keyword),
-// the hairline → inset-ring-accent. The hover contract, the fade clock, the
+// accent-strong (the family's one-step-darker ink — the violet ui/Keyword's
+// key words wore until they took `accent` itself on 2026-10-02), the
+// hairline → inset-ring-accent. The hover contract, the fade clock, the
 // press snap and the mirror law are unchanged — only the hue (Button.test
 // derives one family from the other, so a fourth substitution cannot hide).
 // Who wears it is a per-call-site decision, each on the owner's word, and

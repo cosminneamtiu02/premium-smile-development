@@ -41,6 +41,16 @@ import { describe, expect, it } from 'vitest';
 // ContactModal.test.tsx pins the lilac. No page the site ships wears either
 // button atom's green family since.)
 //
+// THE KEY WORDS (owner, 2026-10-02: "i want that highlighted text to actually
+// be the color of the current mai multe despre mine button"): ui/Keyword
+// wears the role as body-text INK — the doctors' quotes, 18px and 20px — so
+// their bar is 4.5:1 and the tint is barred for them as for every label.
+// They reach the page through the three PAGES that turn lib/team's quotes
+// into <Keywords> (the sections take the finished node and import nothing),
+// and the one walk those pages share calls that callback on a doctor's
+// philosophy only: the doctor card's quote and the credo card, both white.
+// KEYWORD_RENDERERS and KEYWORD_WALK below hold both halves.
+//
 // THE VALUE IS MEASURED HERE TOO. The ratios are computed from the tokens' own
 // lines in globals.css, so a later edit to the value — the old site's exact
 // #8377a3 among them, 4.09:1 on white — fails with the number in the message
@@ -61,7 +71,7 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 const WEARS_ACCENT =
   /\b(?:text|bg|border(?:-[trblxyse])?|outline|decoration|fill|stroke|ring|shadow|from|via|to|caret|divide|placeholder)-accent(?:\/\d+)?(?![\w-])|var\(--(?:color-)?accent\)/g;
 
-/** The wearers — three atoms and one section — and how many spellings each carries. */
+/** The wearers — five atoms and one section — and how many spellings each carries. */
 const WEARERS: Readonly<Record<string, number>> = {
   // The hover label, the underline and the active label — TextButton.tsx's
   // COLOR INVARIANT: one colour for all three.
@@ -82,6 +92,12 @@ const WEARERS: Readonly<Record<string, number>> = {
   // circle of persons initials to be in lilla, not in current green"; the
   // avatar board's D3 green until then). White on it 5.06:1, measured below.
   'components/ui/Avatar/Avatar.tsx': 1,
+  // The key words inside the doctors' quotes — the INK of ui/Keyword's <b>
+  // (owner 2026-10-02: "i want that highlighted text to actually be the color
+  // of the current mai multe despre mine button"; the violet --accent-strong
+  // until then). BODY TEXT at 18px and 20px, so its bar is 4.5:1 — on the
+  // white cards, measured below; the renderers are named in KEYWORD_RENDERERS.
+  'components/ui/Keyword/Keyword.tsx': 1,
 };
 
 /**
@@ -93,6 +109,34 @@ const AVATAR_RENDERERS: Readonly<Record<string, string>> = {
   'components/sections/ReviewCard/ReviewCard.tsx':
     'the review card (ui/Card surface · framed · emphasized) — the disc paints its own lavender ground',
 };
+
+/**
+ * Every file that RENDERS ui/Keyword — the three PAGES, which turn lib/team's
+ * cut-up quotes into <Keywords> and hand the finished node to a card (the
+ * sections take it as a prop and import nothing) — each with the card its
+ * quotes land on. The key words are body text, so their bar is 4.5:1: 5.06:1
+ * on white, measured below; never the tint (3.32:1). A fourth renderer names
+ * itself and its ground here first.
+ */
+const KEYWORD_RENDERERS: Readonly<Record<string, string>> = {
+  'app/[locale]/(home)/page.tsx':
+    'the doctors band — every doctor card’s quote, ui/Card framed (bg-surface)',
+  'app/[locale]/team/page.tsx':
+    'the doctors band — every doctor card’s quote, ui/Card framed (bg-surface)',
+  'app/[locale]/team/[slug]/page.tsx':
+    'the opener’s „Filozofia mea” card — CredoCard, ui/Card framed (bg-surface)',
+};
+
+/**
+ * The ONE walk all three pages hand their <Keywords> callback to: it calls the
+ * callback on a doctor's PHILOSOPHY and nowhere else — the doctor card's quote
+ * and the credo card, both white. A call on any other field would seat key
+ * words on a ground nobody measured. The two tinted bands already refuse a
+ * node BY TYPE (sections/DoctorProfile's paragraphs and sections/DoctorStats'
+ * lead, labels and descriptions are plain strings); a new ReactNode slot
+ * would not, so the walk is counted here.
+ */
+const KEYWORD_WALK = 'app/[locale]/team/populate.ts';
 
 /**
  * Every file that RENDERS ui/TextButton, with the ground its TextButtons sit
@@ -167,11 +211,20 @@ const TINTED = [
 
 const IMPORTS_TEXT_BUTTON = /ui\/TextButton\/TextButton['"]/;
 const IMPORTS_AVATAR = /ui\/Avatar\/Avatar['"]/;
+const IMPORTS_KEYWORD = /ui\/Keyword\/Keyword['"]/;
 const PASSES_ACCENT_TONE = /\btone=["']accent["']/;
 
-/** Line and block comments out; strings and code stay. */
+// Line and block comments out; strings and code stay. FULL-LINE line comments
+// go FIRST: a line comment may carry a block opener of its own — a path like
+// src/messages/*.json — and a block pass run first reads it as one and deletes
+// real code up to the next closer. Found 2026-10-02: app/[locale]/team/page.tsx
+// lost its <Keywords> to its own line 81 that way, and seven more files in src
+// carry the same shape (ui/Keyword's header among them), every count here
+// right by the luck of where the next closer fell. Then the block comments,
+// then the line comments that trail code.
 function stripComments(source: string): string {
   return source
+    .replace(/^[ \t]*\/\/.*$/gm, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 }
@@ -231,7 +284,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2026-10-01)', () => {
-  it('is worn by the three atoms and the map band, each exactly as many times as named', () => {
+  it('is worn by the five atoms and the map band, each exactly as many times as named', () => {
     for (const [file, count] of Object.entries(WEARERS)) {
       expect(wearings(stripComments(read(file))), file).toBe(count);
     }
@@ -289,12 +342,36 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     }
   });
 
+  it('reaches the page as key words through the named renderers only — the doctors’ quotes, on white cards', () => {
+    const renderers = sourceFiles.filter((file) =>
+      IMPORTS_KEYWORD.test(read(file)),
+    );
+    expect(renderers.sort()).toEqual(Object.keys(KEYWORD_RENDERERS).sort());
+    for (const [file, ground] of Object.entries(KEYWORD_RENDERERS)) {
+      // One <Keywords> per page: the render callback the walk calls.
+      const source = stripComments(read(file));
+      expect(
+        source.match(/<Keywords\b/g) ?? [],
+        `${file} — ${ground}`,
+      ).toHaveLength(1);
+    }
+    // …and the walk calls that callback on a doctor's philosophy and nowhere
+    // else — every call, counted, is the philosophy call.
+    const walk = stripComments(read(KEYWORD_WALK));
+    const calls = walk.match(/\brenderQuote\(/g) ?? [];
+    const onPhilosophy =
+      walk.match(/\brenderQuote\(splitKeywords\(words\.philosophy\)\)/g) ?? [];
+    expect(calls.length, KEYWORD_WALK).toBeGreaterThan(0);
+    expect(onPhilosophy.length, KEYWORD_WALK).toBe(calls.length);
+  });
+
   it('never appears inside sections/TintedBand or the bands that compose it', () => {
     for (const file of TINTED) {
       const source = stripComments(read(file));
       expect(wearings(source), file).toBe(0);
       expect(IMPORTS_TEXT_BUTTON.test(source), file).toBe(false);
       expect(IMPORTS_AVATAR.test(source), file).toBe(false);
+      expect(IMPORTS_KEYWORD.test(source), file).toBe(false);
       expect(PASSES_ACCENT_TONE.test(source), file).toBe(false);
     }
   });
@@ -314,6 +391,8 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     // sections/TintedBand: accent-decorative at 30 % over the page ground.
     const tint = over(token(css, 'accent-decorative'), 0.3, page);
 
+    // (--surface is also the key words' ground: both doctor quotes sit on a
+    // white card — KEYWORD_RENDERERS.)
     for (const [ground, hex] of [
       ['the glass floor', glassFloor],
       ['--page', page],
@@ -401,6 +480,11 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     const raw = read('components/ui/TextButton/TextButton.tsx');
     expect(wearings(raw)).toBeGreaterThan(wearings(stripComments(raw)));
     expect(stripComments('a // text-accent\n/* bg-accent */ b')).toBe('a \n b');
+    // …and a block opener inside a line comment opens nothing — the shape that
+    // ate the Team page's <Keywords> before the full-line pass came first.
+    expect(stripComments('// src/messages/*.json\nkeep\n/* x */')).toBe(
+      '\nkeep\n',
+    );
     // …and the lookahead keeps the two siblings out of the count.
     expect(wearings('text-accent-strong bg-accent-decorative')).toBe(0);
     expect(wearings('hover:text-accent after:bg-accent text-accent/50')).toBe(

@@ -44,13 +44,30 @@ import {
 // lib/ribbon-draw's ResizeObserver to watch: its contents resizing alone is
 // noticed only when the card or its station resizes too.
 //
-// ── EVERY RECT IS RELATIVE TO THE ROOT — the ribbon's own box, where its
-// canvases live — and every rect comes from something the browser lays
-// out, so the scroll position never enters a measurement (a boxless marker
-// read as the all-zero rect would be the one exception: the window's
+// ── EVERY RECT IS IN CSS PX, RELATIVE TO THE ROOT — the ribbon's own box,
+// where its canvases live — and every rect comes from something the browser
+// lays out, so the scroll position never enters a measurement (a boxless
+// marker read as the all-zero rect would be the one exception: the window's
 // corner, which moves with the scroll — hence SKIPPED, above). The root
 // wears no border (its classes are ui/Ribbon's own; a caller's className
 // is placement, §6.8), so its border box IS the canvases' box.
+//
+// ── THE UNIT CONVERTS (§15.25 round 2, §15.26). A rect is the page's px; the
+// model counts in card units. placeColumn divides by how many CSS px one
+// unit is on THIS page — the ribbon's `--ribbon-unit`, which lib/ribbon-draw
+// reads off the root: the model's UNIT_PX, 100, unless a scaled design says
+// otherwise (ui/Ribbon, THE UNIT). In a design scaled by s every rect is s
+// times the reference's and so is the unit, so the model is handed the
+// reference's numbers — and draws the reference's ribbon, scaled. The one
+// number no rect gives — the LAST card's gap, which nothing on the page
+// measures — is the model's own, lanes(k).gap over UNIT_PX: already units.
+// The unit is the CALLER'S to give, every time — no default, which would let
+// a forgotten unit measure a scaled column in the reference's px, silently —
+// and one that is not a finite number of px above 0 is refused by name, a
+// RangeError like a station's that holds no card, rather than surfacing as a
+// card's W that lib/ribbon-model refuses. lib/ribbon-draw never hands it
+// one: the unit it reads off the root is UNIT_PX for anything else (its
+// THE UNIT).
 //
 // ── THE PORTRAIT'S INSET. A portrait's corners are background, and the owner
 // approved pictures drawn with exactly this inset: the central 60 % × 70 % of
@@ -168,12 +185,25 @@ export function measureColumn(root: HTMLElement): readonly MeasuredCard[] {
 /**
  * Each measured card as lib/ribbon-model takes it — pure arithmetic, no DOM.
  * W and the gauge are the first card's; every second card is mirrored.
+ *
+ * @param unitPx the CSS px of one card unit on this page, REQUIRED — the
+ * ribbon's `--ribbon-unit`, which lib/ribbon-draw reads off the root; the
+ * model's own UNIT_PX unless a scaled design says otherwise (THE UNIT
+ * CONVERTS).
+ * @throws RangeError naming a unit that is not a finite number of CSS px
+ * above 0 — whatever the column, an empty one included (THE UNIT CONVERTS).
  */
 export function placeColumn(
   cards: readonly MeasuredCard[],
+  unitPx: number,
 ): readonly PlacedCard[] {
+  if (!(Number.isFinite(unitPx) && unitPx > 0)) {
+    throw new RangeError(
+      `placeColumn: unitPx must be a finite number of CSS px above 0 (received ${unitPx})`,
+    );
+  }
   if (cards.length === 0) return [];
-  const W = cards[0].card.width / UNIT_PX;
+  const W = cards[0].card.width / unitPx;
   const k = gaugeRule(W);
   return cards.map(({ card, keepouts }, index) => {
     const mirror = index % 2 === 1;
@@ -181,22 +211,22 @@ export function placeColumn(
     const G =
       next === undefined
         ? null
-        : (next.card.top - (card.top + card.height)) / UNIT_PX;
+        : (next.card.top - (card.top + card.height)) / unitPx;
     const cx = card.left + card.width / 2;
     const cy = card.top + card.height / 2;
     const boxes = keepouts.map((block): KeepOut => {
-      const x = (block.left + block.width / 2 - cx) / UNIT_PX;
+      const x = (block.left + block.width / 2 - cx) / unitPx;
       return {
         x: mirror ? -x : x,
-        z: -(block.top + block.height / 2 - cy) / UNIT_PX,
-        w: block.width / 2 / UNIT_PX,
-        h: block.height / 2 / UNIT_PX,
+        z: -(block.top + block.height / 2 - cy) / unitPx,
+        w: block.width / 2 / unitPx,
+        h: block.height / 2 / unitPx,
       };
     });
     return {
       index,
       mirror,
-      input: { W, H: card.height / UNIT_PX, G, k, boxes },
+      input: { W, H: card.height / unitPx, G, k, boxes },
       card,
     };
   });

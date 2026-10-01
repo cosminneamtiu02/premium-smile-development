@@ -1,4 +1,4 @@
-import { createRef, StrictMode } from 'react';
+import { createRef, type CSSProperties, StrictMode } from 'react';
 import { act, render, screen, within } from '@testing-library/react';
 import { hydrateRoot, type Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
@@ -516,6 +516,176 @@ describe('ui/Ribbon — the lanes the CSS computes are lib/ribbon-model’s (KEE
   );
 });
 
+describe('ui/Ribbon — inside a scaled design, the reference ribbon scaled (THE UNIT)', () => {
+  // THE HAIRLINE is the one length of the stand-in card that THE DESIGN SCALE
+  // leaves alone, on purpose (globals.css: "a hairline stays a hairline"), so
+  // a scaled column's cards would fall a pixel short of ×1.5 for every
+  // hairline above them. The probe takes it off both columns: what is left of
+  // a card is theme lengths, which scale exactly — and then so must the
+  // ribbon, which is what is tested here.
+  let hairlineOff: HTMLStyleElement | undefined;
+
+  beforeAll(() => {
+    hairlineOff = document.createElement('style');
+    hairlineOff.textContent = '[data-scale-probe] article { border-width: 0 }';
+    document.head.append(hairlineOff);
+  });
+
+  afterAll(() => hairlineOff?.remove());
+
+  /** lib/reduced-motion's own query answers "reduce": every ribbon is painted whole at start. */
+  const reduce = (query: string): MediaQueryList => ({
+    matches: query === '(prefers-reduced-motion: reduce)',
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  });
+
+  /** What a column computed and drew, in its root's px. */
+  function read(container: HTMLElement) {
+    const root = rootOf(container);
+    const column = root.firstElementChild;
+    if (!(column instanceof HTMLElement)) throw new Error('no column');
+    const style = getComputedStyle(column);
+    // `--ribbon-k` is not registered — its computed value is text; a box
+    // as wide as it, out of the column's flow, reads it as a length.
+    const gauge = document.createElement('div');
+    gauge.style.cssText = 'position: absolute; width: var(--ribbon-k)';
+    column.append(gauge);
+    const k = parseFloat(getComputedStyle(gauge).width);
+    gauge.remove();
+    const origin = root.getBoundingClientRect();
+    return {
+      unit: parseFloat(style.getPropertyValue('--ribbon-unit')),
+      lengths: [
+        k,
+        parseFloat(style.getPropertyValue('--ribbon-lane-top')),
+        parseFloat(style.getPropertyValue('--ribbon-lane-side')),
+        parseFloat(style.rowGap),
+        parseFloat(style.paddingTop),
+        parseFloat(style.paddingBottom),
+      ],
+      stations: [...root.querySelectorAll('[data-ribbon-station]')].map(
+        (station) => {
+          const box = station.getBoundingClientRect();
+          return [
+            box.left - origin.left,
+            box.top - origin.top,
+            box.width,
+            box.height,
+          ];
+        },
+      ),
+      canvases: canvasesOf(container).map((canvas) => {
+        const { left, top, width, height } = canvas.style;
+        return {
+          edges: [
+            parseFloat(left),
+            parseFloat(top),
+            parseFloat(left) + parseFloat(width),
+            parseFloat(top) + parseFloat(height),
+          ],
+          paint: painted(canvas),
+        };
+      }),
+    };
+  }
+
+  it.each([
+    [1009, 'the desktop’s two-column card, on the gauge’s ratio'],
+    [599, 'the stacked card, on the gauge’s straight line'],
+  ])(
+    'at a %ipx column — %s — and at ×1.5, inside `design-scale` with a 1.5px design pixel: every length, station and canvas ×1.5',
+    async (width) => {
+      vi.spyOn(window, 'matchMedia').mockImplementation(reduce);
+      const warned = vi.spyOn(console, 'warn');
+      const doctors = DOCTORS_RO.slice(0, 2);
+      const plain = render(
+        <div data-scale-probe style={{ width: `${width}px` }}>
+          <StandInColumn doctors={doctors} />
+        </div>,
+      );
+      // The design pixel rides an INLINE style, never an arbitrary class:
+      // Tailwind reads class names from every scanned file, tests included,
+      // and would ship a rule only this test reads (globals.css, THE DESIGN
+      // SCALE — THE BARE RULE SHIPS). `design-scale` is the site's own rule.
+      const scaled = render(
+        <div
+          data-scale-probe
+          className="design-scale"
+          style={
+            {
+              '--scale-px': '1.5px',
+              width: `${1.5 * width}px`,
+            } as CSSProperties
+          }
+        >
+          <StandInColumn doctors={doctors} />
+        </div>,
+      );
+      // The observer's first reports, on the real clock: nothing new to build.
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
+      const [a, b] = [read(plain.container), read(scaled.container)];
+
+      // THE UNIT: the registered default, and the design's 100 pixels.
+      expect([a.unit, b.unit]).toEqual([UNIT_PX, 1.5 * UNIT_PX]);
+      // The plain column's gauge is the model's — read through a box's width,
+      // to layout's own 1/64px; the scaled one's — and its lanes, gap, head
+      // and tail room — are the plain one's ×1.5.
+      expect(
+        Math.abs(a.lengths[0] - gaugeRule(width / UNIT_PX) * UNIT_PX),
+      ).toBeLessThanOrEqual(1 / 64);
+      a.lengths.forEach((length, i) =>
+        expect(
+          Math.abs(b.lengths[i] - 1.5 * length),
+          `length ${i}`,
+        ).toBeLessThanOrEqual(0.05),
+      );
+      // Every station — the card it holds — where the plain one is, ×1.5.
+      expect(b.stations).toHaveLength(doctors.length);
+      a.stations.forEach((box, i) =>
+        box.forEach((value, j) =>
+          expect(
+            Math.abs(b.stations[i][j] - 1.5 * value),
+            `station ${i}, ${['left', 'top', 'width', 'height'][j]}`,
+          ).toBeLessThanOrEqual(0.5),
+        ),
+      );
+      // The ribbon, painted in both: each canvas the plain one's ×1.5, its
+      // edges inward by at most 2.5px — a tile's 2px margin is CSS px at any
+      // unit (1px of it), and each edge is snapped outward to a whole px (the
+      // plain one's snap ×1.5, up to 1.5px; layout's sub-pixels can move the
+      // scaled one's across a whole px) — and the paint ×1.5², less the
+      // anti-aliased fringe a raster keeps at any size.
+      expect(b.canvases).toHaveLength(doctors.length);
+      a.canvases.forEach((canvas, i) => {
+        expect(canvas.paint, `canvas ${i}`).toBeGreaterThan(0);
+        canvas.edges.forEach((edge, j) => {
+          const inward =
+            (b.canvases[i].edges[j] - 1.5 * edge) * (j < 2 ? 1 : -1);
+          expect(inward, `canvas ${i}, edge ${j}`).toBeGreaterThan(-0.1);
+          expect(inward, `canvas ${i}, edge ${j}`).toBeLessThan(2.6);
+        });
+        const ratio = b.canvases[i].paint / canvas.paint;
+        expect(ratio, `canvas ${i}`).toBeGreaterThan(2.1);
+        expect(ratio, `canvas ${i}`).toBeLessThan(2.3);
+      });
+      // …and THE GUARD let both through.
+      expect(
+        warned.mock.calls.filter(([text]) => /not painted/.test(String(text))),
+      ).toEqual([]);
+      plain.unmount();
+      scaled.unmount();
+    },
+  );
+});
+
 describe('ui/Ribbon — the stand-in card is the card the owner saw', () => {
   it('lays out, at the 1009px column, what the prototype measured on the real card', () => {
     const { container } = render(
@@ -683,7 +853,7 @@ describe('ui/Ribbon — two canvases meet where nobody sees: behind the card', (
       // Card i's hand-over joins canvas i − 1 (its head) to canvas i (its
       // body); the first card's head and body share canvas 0.
       const colour = [0.6, 0.6, 0.6] as const;
-      for (const placed of placeColumn(measureColumn(root)).slice(1)) {
+      for (const placed of placeColumn(measureColumn(root), UNIT_PX).slice(1)) {
         const model = buildCard(placed.input);
         const strip = buildStrip(model, placed.mirror, colour);
         const { u0, u1 } = model.atoms.wrapEntry;
@@ -750,7 +920,7 @@ describe('ui/Ribbon — two canvases meet where nobody sees: behind the card', (
       );
       const root = rootOf(container);
       const whole = await probe(root, true);
-      const column = placeColumn(measureColumn(root));
+      const column = placeColumn(measureColumn(root), UNIT_PX);
       const last = column[column.length - 1];
       expect(last.input.G).toBeNull();
       const canvas = whole.canvases()[last.index];
@@ -774,7 +944,7 @@ describe('ui/Ribbon — two canvases meet where nobody sees: behind the card', (
       const ribbon = lowestAbove(199);
       expect(ribbon).toBeGreaterThanOrEqual(edge - 1);
       expect(ribbon).toBeLessThanOrEqual(edge + curl + 1);
-      const { dy, blur } = shadowOf(k);
+      const { dy, blur } = shadowOf(k, UNIT_PX);
       expect(lowestAbove(0)).toBeLessThanOrEqual(
         edge + curl + dy + 2 * blur + 1,
       );
@@ -953,7 +1123,7 @@ describe('ui/Ribbon — text is never covered', () => {
       let cards = 0;
       for (let width = from; width <= to; width += 8) {
         frame.style.width = `${width}px`;
-        for (const placed of placeColumn(measureColumn(root))) {
+        for (const placed of placeColumn(measureColumn(root), UNIT_PX)) {
           const model = buildCard(placed.input);
           // 200 points per unit along the ribbon, three across it — both
           // edges and the centre — in the model's own frame, where the

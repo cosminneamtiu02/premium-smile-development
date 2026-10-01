@@ -33,13 +33,15 @@ import { Ribbon, RibbonStation } from './Ribbon';
 // ── THE SURFACE IS SPELLED HERE, ON A PLAIN <article>. ui/Card fixes its
 // padding at p-6 and its header forbids `className` as a padding API, while
 // a ribbon's card takes the two LANES as its padding, spelled as ui/Ribbon's
-// TWO BOXES paragraph asks — `max(1.5rem, var(--ribbon-lane-top, 1.5rem))`
-// on top, the same with `--ribbon-lane-side` either side, the card's own
-// 1.5rem below. The REAL card cannot spell its padding — it composes ui/Card
-// — so it takes the lanes through an INSET on its inner column instead
-// (sections/PersonnelCard D17). The surface is ui/Card's `surface` row and its
-// corner and container mark, without the card's inner flex column (this
-// card's one child is a column of its own).
+// TWO BOXES paragraph asks — `max(P, var(--ribbon-lane-top, P))` on top, the
+// same with `--ribbon-lane-side` either side, the card's own `pb-6` below —
+// with P ui/Card's own `p-6`, `calc(var(--spacing) * 6)`: 1.5rem, and the
+// design's 24px inside a scaled design (ui/Ribbon, THE UNIT), where the
+// stand-in must scale whole. The REAL card cannot spell its padding — it
+// composes ui/Card — so it takes the lanes through an INSET on its inner
+// column instead (sections/PersonnelCard D17). The surface is ui/Card's
+// `surface` row and its corner and container mark, without the card's inner
+// flex column (this card's one child is a column of its own).
 //
 // ── THE SEAM (§15.26), the real card's own (PersonnelCard D17): the LITERAL
 // attribute `data-ribbon-keepout` on the quote, the name block and the
@@ -170,8 +172,8 @@ const ACTIONS_ROW =
 /** ui/Card's `surface` row, corner and container mark — with the two LANES as its padding (the header). */
 const SURFACE =
   '@container rounded-md border border-line-subtle bg-surface ' +
-  'pt-[max(1.5rem,var(--ribbon-lane-top,1.5rem))] ' +
-  'px-[max(1.5rem,var(--ribbon-lane-side,1.5rem))] pb-6';
+  'pt-[max(calc(var(--spacing)*6),var(--ribbon-lane-top,calc(var(--spacing)*6)))] ' +
+  'px-[max(calc(var(--spacing)*6),var(--ribbon-lane-side,calc(var(--spacing)*6)))] pb-6';
 
 type StandInCardProps = Readonly<{
   doctor: StandInDoctor;

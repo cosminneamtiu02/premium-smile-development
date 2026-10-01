@@ -61,7 +61,9 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 
 **Standing configuration notes (unchanged decisions):**
 - Tailwind **default breakpoints untouched** (sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536)
-  and default spacing scale untouched.
+  and default spacing scale untouched. *(A scaled design remaps the UNIT, never the scale: globals.css's
+  `design-scale` utility re-expresses every default length step — spacing, text, container, radius — in a
+  band's own design pixel, inside that band alone, each step keeping Tailwind's ratio; §15.25 round 2.)*
 - Design tokens in `styles/globals.css`: theme-independent **primitives** in `@theme`, plus
   **semantic color tokens scoped as themes** (`:root` / `[data-theme='light']`, wired to
   utilities via `@theme inline`). **v1 ships exactly one theme: light.** Future themes remap
@@ -239,7 +241,13 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
   · Desktop **1920×1080** — plus **320px** as the accessibility stress width.
 - Layouts are **fluid between checkpoints** (min/max, flex, grid) — the five sizes are sampling
   points, not the design. Nothing may require horizontal scrolling at 320px.
-- All sizing in `rem` so browser zoom and user font settings behave.
+- All sizing in `rem` so browser zoom and user font settings behave. *(One exception, owner 2026-10-01:
+  on a mouse or trackpad device — a laptop or a desktop — from a column of max(56rem, 896px) the doctors
+  band — sections/DoctorShowcase, cards and ribbon — measures in its OWN design pixel, its column ÷ 1106, so
+  it keeps the proportions of the owner's 1401 window at every laptop and desktop width; on every touch
+  device (a tablet held either way included), below the step, and in an engine that cannot register custom
+  properties it is rem like everything else. What that costs browser zoom and the user's font size is
+  recorded in §15.25 round 2.)*
 
 ## 8. Internationalization contract
 
@@ -404,9 +412,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'slogan'/'inverse-aura' — the old page's stroked letters under a lilac halo at the plain weight, changing hands in a sequence instead of a dissolve, and the tablet's own ratio of the viewport from the tablet up (round 12, 2026-10-01) — over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link — both in ui/Button's lilac `accent` family since 2026-10-01, the services link under the top bar's aura and greying one step darker on hover, both with the old site's hover jump (§15.30 round 3) —, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorShowcase** (the doctors band, right under the Hero since 2026-09-30 — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys; its place on this page is the planner's pick, a lever — §15.25) · **DoctorStats** (the clinic's NUMBERS since 2026-10-01 — the doctor page's „în cifre" band on the plain page ground (`ground="page"`: no tint, no fades), its eyebrow „În cifre" and h2 „Experiență confirmată în timp" at the START like every Home band's (`align="start"`), NO lead, and THREE tiles — lib/team's `clinicStats`: years · patients · procedures, the numbers placeholders flagged TODO(owner) — one row from the column's `@xl`, stacked below; between the doctors and the map, the planner's pick, a lever — §15.23 round 5) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner | `home` |
+| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'slogan'/'inverse-aura' — the old page's stroked letters under a lilac halo at the plain weight, changing hands in a sequence instead of a dissolve, and the tablet's own ratio of the viewport from the tablet up (round 12, 2026-10-01) — over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link — both in ui/Button's lilac `accent` family since 2026-10-01, the services link under the top bar's aura and greying one step darker on hover, both with the old site's hover jump (§15.30 round 3) —, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorShowcase** (the doctors band, right under the Hero since 2026-09-30 — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26) — on a laptop or desktop (a mouse or trackpad device), from a 56rem column, the whole band is ONE design scaled to its column, the proportions of the owner's 1401 window at every width up to a 1920 desktop's, while every touch device keeps it unscaled (§15.25 round 2); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys; its place on this page is the planner's pick, a lever — §15.25) · **DoctorStats** (the clinic's NUMBERS since 2026-10-01 — the doctor page's „în cifre" band on the plain page ground (`ground="page"`: no tint, no fades), its eyebrow „În cifre" and h2 „Experiență confirmată în timp" at the START like every Home band's (`align="start"`), NO lead, and THREE tiles — lib/team's `clinicStats`: years · patients · procedures, the numbers placeholders flagged TODO(owner) — one row from the column's `@xl`, stacked below; between the doctors and the map, the planner's pick, a lever — §15.23 round 5) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner | `home` |
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven category cards, of which ONLY the one the visitor is at wears the aura, faded in and out over 400ms — round 4, 2026-09-29; every card wore it from 2026-09-14 until then; "at" is THE READING LINE since round 5, the same day: a card lights as its top crosses the middle of the clear part of the window, the first card at the top of the page, and a menu click brings a card that fits to that middle, with no focus ring for a pointer — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` on its link in BOTH directions, scroll and click, and — round 4 — by a `data-current` mark the island stamps on the card that link points at) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
-| Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button; the FIRST card's picture preloads on this page, its LCP element. The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30 — `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))`; until then it also held the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · **DoctorStats** (the clinic's numbers since 2026-10-01 — the Home page's band, prop for prop, between the staff and the map: the owner, "same component as on main page with the stats on the team page between map and helping staff"; §15.23 round 5) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
+| Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount), scaled as one design on a laptop or desktop (§15.25 round 2) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button; the FIRST card's picture preloads on this page, its LCP element. The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30 — `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))`; until then it also held the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · **DoctorStats** (the clinic's numbers since 2026-10-01 — the Home page's band, prop for prop, between the staff and the map: the owner, "same component as on main page with the stats on the team page between map and helping staff"; §15.23 round 5) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step; on a laptop and a desktop, since 2026-10-01 (§15.23 round 6), the owner's TWO CONTAINERS across the whole column — the picture's track a third of the column after an inset of 15 % of the gutter, a gap of a sixth of the column clamped to 3–10.5rem, the words in the rest: the specialty over the name a ninth of the column down and the credo card under them on ONE left edge 1.5rem into the words, the card up to 36rem wide and centred in the height the name leaves (as much space above it as below), and the cutout drawn out of flow as tall as the row, growing (centred, up to 1.4 × its third) until it stands on the words' floor, so the two containers share ONE floor — the `align` seat axis (rounds 2e–2l's `lowered`) and round 2k's centred content-sized columns retired with it; the band's own rhythm halved in round 2j ("it starts height wise too low … also the image, so the whole thing"), the credo's quote on `text-xl`; and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred (round 2k: "name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the deep violet `accent-strong` (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Experiență confirmată în timp” (the reference's „Excelență" until round 2s) centred over a lead sentence and four tiles: a light disc with a line glyph — LILAC (`accent-decorative`) since 2026-10-01, the owner: "paint it's svgs lilla"; green until then —, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the twin (`sr-only` until 2026-10-01, since then an invisible copy laid exactly over the digits on one line, so a screen reader's cursor outlines the number and VoiceOver touch finds it — §15.23 round 5) SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"; a space grouping the spoken number's digits dropped since round 5 — « plus de 3000 »); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
@@ -417,7 +425,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 1. Design tokens — **LOCKED 2026-07-30** on the TOKEN_AUDIT proposal plus these owner
    decisions: CTA restored to the green family (`#008854` button face, `#00A968` anchor);
    fonts **Source Serif 4** (display + body) + **JetBrains Mono** (eyebrows), Publio only
-   inside the vectorized logo; body base **1.125rem**; default radius **6px**; star
+   inside the vectorized logo; body base **1.125rem** (inside the doctors band's scale, 18 of its design pixels — §15.25 round 2); default radius **6px**; star
    `#B29126` → **`#D4AF37` (amended 2026-09-12, owner — the rider at the end of this item)**; hero text scrim floor ≥ 0.55; single light theme; long prose `text-align:
    start`; `success` role dropped (17 semantic roles total — 18 since 2026-09-26, 19 the same evening — `--ink-faint` #766f69, washed prose that still passes body text's 4.5:1 (4.94:1 on white, 4.70:1 on the page ground; never on the 30 % tint at 3.24:1), the two doctor quotes its only consumers, the owner: "what if you make the faint text lighter" — and `--accent-strong` #4b3a86 (#655885 for its first hour — the owner: "a darker accent … make it just jump at you more, as keyword, important information"), the violet that passes body text's 4.5:1 with room — 8.88:1 on the page ground, 9.34:1 on white — for body-size accent INK, ui/Keyword's `<k>` fragments its first consumer; the owner, doctor-pages round 2m: "use a darker lilla and just a little bold"; `accent-decorative` keeps its display/graphics charter; 20 since 2026-10-01 — `--accent` #746894, the menu buttons' lavender, the rider at the end of this item; 22 the same day — `--brand-grey` #939598 and `--brand-lilac` #8576b1, the logotype's two colours, legal on the brand name alone by WCAG 2.2 SC 1.4.3's logo clause and worn by nothing else, the census test, §15.28). Amendments from contradiction
    review: font tokens are named `--font-display` / `--font-body` / `--font-mono` (never
@@ -2395,6 +2403,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the rule; the arithmetic lives in Heading.tsx's `'band' JOINED` paragraph. Visual: Pages/Team, Sections/TeamRoster (the
     cards at level 2), Pages/NotFound and Sections/ContactModal's open frames change; Sections/
     PersonnelCard's own stories (default level 3) do not; the darwin re-record is the owner's (§15.7).
+    *(Amended 2026-10-01, §15.25 round 2: INSIDE THE DOCTORS BAND'S SCALE — a mouse or trackpad device, a column
+    of max(56rem, 896px) — every size above is its step × the band's design pixel (column ÷ 1106, up to 1.389):
+    the band's h2 and the doctors' h3 names read 29.2px at the step, 36 at the 1401 window and 50 past the cap,
+    the eyebrows 11.3 → 14 → 19.4px, while every other band keeps the steps above — so on a 1920 desktop the
+    doctors' names (49.5px) outrank the map band's h2 (36) and the staff tiles' names (30–36) by more than
+    §15.25 already recorded. The steps themselves are untouched.)*
 
 25. **Doctor-showcase run — BUILT ON THE OWNER'S DISPATCH (2026-09-30; lane `rework/doctor-showcase`; no epic
     issue and no contract board — the card was approved LIVE on Storybook stories; the seal word, verbatim:
@@ -2571,6 +2585,151 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     now on the only way to a doctor page · a WRAPPED `lg` label fills the button's 56px exactly (two
     28px lines), a small `py` is the look's lever · one LISTEN is owed on iOS VoiceOver — the list
     ("list, N items"; Chromium's tree exposes exactly that, measured) and the phone's reading order.
+    **Round 2 — THE SCALE (owner, 2026-10-01, verbatim: "so about the doctors component with the line. i like
+    how it looks on phone and tablet and i want to keep that unchanged. but on  laptop and desktop if you make it
+    bigger/smaller in width it gets highly disproportioned. i want card and component and all contents to adjust
+    in size harmonically all at once and mentain raports as on following sizes: 1401x1063. i might even make it
+    myself smaller for it to fit in a different container or smth but i think i'd want same rations to still
+    remian. no fable reviewers, all you delegate must be in opus on max"; lane `rework/doctor-band-scale`, every
+    delegated agent on Opus at max effort):** THE PROBLEM, MEASURED on develop's export (a 1063px-tall window, the
+    classic 15px scrollbar): the words, the picture and the button are rem while the card follows the window, so
+    the band held its proportions at ONE width — the card's height ÷ width 0.679 at a 1136 window, 0.557 at 1401,
+    0.392 at 1920, 0.283 at 2560; the picture ÷ the width 0.322 → 0.260 → 0.189 → 0.134; the quote's size per
+    mille of the width 20.1 → 16.3 → 11.8 → 8.4 — and the ribbon's gauge followed the column while its side
+    waves followed k^−0.6 and its lanes carried px offsets, so a wider card wore denser waves. THE DECISION: on a
+    MOUSE OR TRACKPAD device — a laptop or a desktop; the owner's answer when G2 found landscape iPads inside
+    the first cut's range (2026-10-01, asked "how should tablets be treated?": "Touch devices unchanged") — from
+    a column of max(56rem, 896px) — about a 1120px window, 1139 with a classic scrollbar: the Container's named
+    `@4xl` step, the first past the card's own two-column flip at an 893px column, floored in px so a smaller user
+    font cannot start it on a tablet-wide column — the WHOLE band (eyebrow, title, the ribbon, every card and
+    everything in it) is ONE design drawn at the owner's 1401 window and scaled to its column: every length is its
+    length at a 1106px column (the 1401 window's: 1401 − 15 − 2 × 140.1 = 1105.81, measured) × column ÷ 1106.
+    BYTE-IDENTICAL on every phone, on every touch tablet held either way, below the step, and in an engine that
+    cannot register custom properties (Safari before 16.4, Firefox before 128 — there the design pixel would be
+    pasted as text and the cards' contents drawn at ≈0.865 of the design, measured by G2). CAPPED at a 96rem
+    column — 1536px at the default root, the 1920 window's (§7's largest sampling point; "laptop and desktop") and
+    in rem so the step and the cap keep their ratio at any root font: beyond it the band stops growing and centres
+    in its column. CONTAINER-RELATIVE, the owner's "make it myself smaller": in a narrower
+    container the same band, smaller, the same proportions (the NarrowContainer story). DoctorShowcase D10
+    carries the levers — REFERENCE 1106, CAP 96rem (1536px at the default root), STEP max(`@4xl`, 896px), GATE
+    `scalable:`. THE MECHANISM — no prop, no new
+    component: (1) globals.css THE DESIGN SCALE — Tailwind v4 compiles every utility to its theme variable (`p-6`
+    is `calc(var(--spacing) * 6)`, read off the built sheet), so a NEW `@utility design-scale` remaps every
+    default LENGTH step (--spacing, --text-xs…9xl, --container-3xs…7xl, --radius-xs…4xl, --radius-soft), the
+    box's font size and the ribbon's unit to multiples of `--scale-px`, a REGISTERED `<length>` (unregistered, its
+    `cqw` is measured again against whichever card reads it — 86.48 where 100 was due, probed in Chromium and
+    WebKit, which agree to 0.001px); the band's rhythm box declares `scalable:@4xl:@min-[896px]:[--scale-px:
+    calc(min(100cqw,96rem)/1106)]` and `scalable:@4xl:@min-[896px]:design-scale` with `mx-auto
+    scalable:max-w-[96rem]` — `scalable:` a custom variant in globals.css, `@supports (color: rgb(from red r g
+    b))` (relative colour syntax shipped with `@property` in Safari 16.4 and Firefox 128, after it in Chrome 119 —
+    read off caniuse-lite) × `@media (pointer: fine)`, spelled once; tests/unit/design-scale.test.ts holds every
+    multiplier to Tailwind's own default (rem × 16) and the regime to one spelling, and
+    tests/unit/soft-corner-census.test.ts counts one VALUE now (the remap is the name's second declaration).
+    (2) ui/Ribbon THE UNIT — a registered `--ribbon-unit` (100px, lib/ribbon-model's UNIT_PX) is the ribbon's
+    card unit: the COLUMN's px constants became unit fractions (byte-identical at 100px, measured at 243 widths
+    in both engines; `var(--ribbon-unit,100px)` keeps today's column where `@property` is missing),
+    lib/ribbon-layout's `placeColumn(cards, unitPx)` and lib/ribbon-draw convert with the computed unit (the
+    boxes, the placement, the shadow, the rebuild key), so a ribbon inside a scaled design is the REFERENCE
+    ribbon scaled — the same waves, the lanes × s; the head and tail room follow the unit (0.16 and 0.76 of it:
+    1rem and 60px + 1rem at the default root, no longer growing with a larger user font). (3) ui/Card's FRAMED
+    padding in the spacing step, `p-[calc(var(--spacing)*6_-_2px)]`, the 3px frame KEPT: an engine FLOORS a
+    border to whole device pixels (measured: 4.5 → 4, 2.9995 → 2) and a frame spelled in the step lost a whole
+    pixel at the owner's own 1401 window, so the frame stays a px border and the padding carries the step — THE
+    SUM RULE exact at any root and in any scale (six steps + 1px); a frame that grows in whole pixels (a
+    `supports`-gated `round()`) is the recorded lever. (4) PersonnelCard D19 — the INSET subtracts six steps
+    instead of 1.5rem, the cutout asks `sizes="(min-width: 70rem) and (pointer: fine) 21vw, 18rem"` (CUTOUT_SIZES — a touch
+    tablet's cell stays 18rem, so it asks 18rem; the preload link
+    carries it). MEASURED AFTER (the e2e on the built export, /ro/team/ and /de/, classic scrollbar): the 1401
+    window s = 0.99983, the first card's height ÷ width 0.5572 (develop's 0.557); 1140 → s 0.811 · 1280 → 0.912 ·
+    1536 → 1.097 · 1920 → 1.375 · 2560 and 2800 capped at 1.389 (the band 1536 wide, centred); the worst drift
+    from the 1401 window's ratios over six cards and every window: height ÷ width 0.12 %, picture 0.004 %,
+    quote 0.0006 %, name 0.0003 %, link 0.003 %. The quote reads 14.6px at the step, 16.4 at 1280, 19.8 at 1536,
+    24.75 at 1920 and 25.0 past the cap; the name 29.2 → 50.0. RECORDED FOR THE OWNER, each his call: (a) ZOOM,
+    WCAG 2.2 SC 1.4.4 (the F94 pattern) — browser zoom narrows the window in CSS px by the factor it enlarges
+    them, so inside the regime the band's text keeps its size on screen until the zoomed column drops under the
+    step: on a 1920 screen the quote is 24.75 device px at 100, 125 and 150 %, 31.5 at 175 % and 36 at 200 %
+    (×1.45); on a 1440 laptop 18.5 at 100 and 125 %, 27 at 150 %, 36 at 200 %; on a 2560 screen 25.0 → 31.25 at
+    125 % → 33.1 from 150 to 225 % → 45 at 250 %; THE FLOOR (G2 a11y, verified) is a screen of ≈2240–2560px,
+    where 200 % draws the quote at only ×1.17–×1.32 of 100 % — a 24″ iMac at its default resolution (2240) reads
+    25.0 / 27.5 / 29.2 / 29.2 / 29.2 / 29.2 / 45 at 100 / 110 / 125 / 150 / 175 / 200 / 250 %: four zoom
+    presses that leave it unchanged. A first cut capped at the 2560 window's column made zoom SHRINK the text
+    there (34.9 → 33.1) — the reason the cap is the 1920 window's; and the cap being rem, the gutter can no
+    longer make it shrink at any root. ONE shrink remains, AT THE STEP, for roots under ≈13px: the px floor holds
+    the regime's quote at 14.6px while the theme's quote below the step is 13.5px at a 12px root — on a 1366
+    laptop at a 12px root it reads 17.54 / 17.56 / 16.88 / 20.25 device px at 100 / 110 / 125 / 150 %, one zoom
+    press ≈4 % smaller (measured on the final build).
+    Firefox's "Zoom Text Only" multiplies every font size, px ones included, so there the band's words grow
+    while its boxes keep their size and the words reflow inside the card. Levers: CAP, STEP, a cap at the
+    REFERENCE (the band never grows; 200 % then reaches the theme's own 36px everywhere but on ≈2260–2780px
+    screens), a floor on the design pixel. (b) The user's DEFAULT FONT SIZE is not followed inside the regime
+    (§7's exception): the step and the cap are rem, so a larger root moves the regime's start and its end
+    (a 20px root from a 1120px column), but inside it the design pixel is the column's, not the font's — a
+    20px-root reader at a given column gets the 16px-root band's sizes; a SMALLER root cannot start the regime
+    under an 896px column (the px floor), so the scale never drops under 0.81 on a tablet-wide column (G2
+    react measured 0.61 at a 12px root before the floor). (c) THE STEP is a jump: 1–3px under it the unscaled
+    TWO-column card at 18px (it stacks only below an ≈893px column), 1px over it the same card at 14.6px.
+    (d) Source Serif 4's optical sizes (`font-optical-sizing: auto`) set larger text a little narrower per em (a
+    word box 3.3 % under × s at × 1.389) — kept, the 1401 look being the owner's: the card ratios hold to 0.12 %
+    while every quote is SHORTER than its picture; a quote taller than the picture can gain a line at s < 1 and
+    lose one at s > 1 — ≈±4 % of the card's height ÷ width, measured by G2 react with quotes ×5 — so with real,
+    longer biographies the band is the 1401 design to within a line of text; the lever is pinning the optical
+    size inside the regime to each text's DESIGN size (the quote at `'opsz' 18` — measured by G2's verifier at
+    0.004 % on the 1401 look, with no re-wrap from 1140 to 2560; `font-optical-sizing: none` would cost ≈2 %). (e) The bare `.design-scale`
+    rule ships (≈0.4 KB gzipped): every mention of the word generates it — accepted; a test sets its design pixel
+    with an inline style, never an arbitrary class (two dead rules found and removed). (f) PAGE-SCALE (the
+    uncommitted whole-page root scale, `rework/page-scale`): if it lands, its 64rem column cap and this REFERENCE
+    must be reconciled — REFERENCE = the capped column (1024 at the default root) moves the two together.
+    (g) `refactor/ribbon-tucked-tail` (#130) edits the same COLUMN and `placeColumn`: whichever merges second
+    rebases, and the tuck's tail room `0.13 × --ribbon-k + 8px` becomes `+ 0.08 × --ribbon-unit`. (h) THE GUARD'S
+    AIR: the ribbon's keep-outs grow by M/2 card units — 4 CSS px at the default unit, 4·s px inside the scale
+    (3.24px at s 0.81) — while a focus ring stays 4px, so inside the scale it is the model's own clearance M
+    (8·s ≥ 6.5px) that keeps the strip off a ring: measured closest approach to a name block 7.33px at s 0.811,
+    nothing crossed. (i) The headings: §15.24's amendment records the band's sizes against the other bands'.
+    **Visual,
+    MEASURED** at zero tolerance against a pristine build of develop 6630f9f (456 cells, a private port): exactly
+    the declared 18 cells move — Pages/Home and Pages/Team, Romanian and German, at 1280, 1536 and 1920 (the band
+    inside the scale) and Sections/DoctorShowcase's six stories at 1536 — plus 2 NEW (NarrowContainer at 390 and
+    1536); every 390, 320 and 768 cell and every UI/Card, UI/Ribbon, PersonnelCard, ReviewCard, ReviewsCarousel,
+    DoctorIntro and DoctorProfile cell is byte-identical (the framed padding's new spelling and the ribbon's unit
+    are pixel-identical at the default root); the PriceList and SpeedDial cells that differed by 1–9px differ on
+    pristine develop against its OWN reference too (7 of 31 on a re-shoot) — the harness's known flicker. THE
+    DARWIN SET, at the seal (the owner: "just create pr"), on the tree rebased onto develop 04599e1 (#129–#132,
+    the tuck among them) under classic scrollbars (the site's gutter measured at 15px): this lane's 20 cells
+    recorded and verified — Pages/Home and Pages/Team, Romanian and German, at 1280, 1536 and 1920, the six
+    Sections/DoctorShowcase stories at 1536 and NarrowContainer at 390 and 1536 (new). FOUND, NOT THIS LANE'S,
+    left as develop has it: 58 stories with no darwin baseline at all (Sections/DoctorCourses, DoctorIntro,
+    DoctorProfile, TintedBand; some UI/Heading, UI/Keyword and UI/Text stories) and 28 stale cells
+    (Pages/Doctor and Pages/NotFound at several widths, Sections/ReviewCard, Sections/SectionHeading at 1536,
+    UI/Button's Hover Outline, UI/Glyphs' Gallery) — every one of their components pixel-identical under this
+    lane at zero tolerance (above), the staleness from the PRs merged since. **G2 — three Opus reviewers at
+    max effort (react-reviewer, typescript-reviewer, a11y-architect), every finding above LOW handed to an Opus
+    verifier told to refute it:** react APPROVE WITH CHANGES — it compared every box of the band (97 elements) at
+    eight widths against the 1401 window × s and found no length that does not scale beyond the ones named here,
+    and swept 186 loads in Chromium and WebKit (1132–2600): the ribbon painted, never sideways, LCP still the first
+    cutout, +709 B gzipped of CSS; typescript APPROVE WITH CHANGES; a11y REQUEST CHANGES. VERIFIED REAL, every one
+    MEDIUM, every one FOLDED: landscape tablets inside the first cut's range (A1/R1 — the owner's answer, the
+    `scalable:` gate); an engine without `@property` drawing the cards' contents at ≈0.865 (A3/R5 — the gate's
+    `@supports`); the zoom record's floor (A2 — the 24″ iMac); real-length quotes re-wrapping under optical sizing
+    (R2 — record (d); the e2e holds the card's structure, not its wrapped text); the e2e's 1401 check failing under
+    overlay scrollbars (T1/R3 — derived from the measured gutter). The LOWs, folded too: the cap in rem (T2), the
+    step's px floor (R6), `placeColumn`'s unit required and validated (T3), the census reading every `@theme` block
+    and named spacing keys (T4), CUTOUT_SIZES tied to the band's numbers by the census and to the pointer (T5/R7),
+    the tile-edge bound 2.5 (T6), tighter e2e ratios (T7), the guard's air and record (c) corrected (T8/R8/A4), the
+    comments that shipped dead rules reworded (R4), §15.1, §15.24 and ui/Button's zoom sentence amended (A5), the
+    NarrowContainer outline drawn inside its box (A6). RECORDED, NOT BUILT — the owner's: Tailwind scans markdown
+    too, so a class spelled only in these docs (MIGRATION_INVENTORY's old Card row still names the framed tone's
+    first padding) ships a dead rule; an `@source not` for `*.md` in globals.css would end that whole class of
+    leftovers, a site-wide one-liner. **Evidence at READY** (the main loop, on the final tree, the scrollbar's
+    gutter checked at 15px first): tsc · eslint · prettier clean; vitest 143 files / 3469 tests, the same with
+    the optimizer variants hidden (CI's condition); build-storybook and `next build` green, the built sheet's
+    regime rule inside `@supports (color:rgb(from red r g b))` and `@media (pointer:fine)`; e2e 133 passed /
+    52 skipped and one timeout in the price list's reading-line spec while four heavy jobs shared the machine —
+    the spec passes alone, 32/32, and the band agent's full run on the same build was 134 passed / 0 failed;
+    the visual differential re-run on the final tree moves the same 18 cells by the same pixel counts (the
+    gates change nothing a fine-pointer Chromium draws), the NarrowContainer story only by its outline, now
+    drawn inside the box, and nothing else beyond the known flicker. AT THE SEAL, rebased onto develop 04599e1:
+    tsc · eslint · prettier clean; vitest 143 files / 3691 tests; build-storybook and `next build` green; e2e 134
+    passed / 52 skipped / 0 failed.
 
 26. **Floss-ribbon run — DECIDED (owner, consult board `.claude/plans/ribbon-3d.plan.md`, five rounds on
     2026-09-29, fb-489 … fb-513; contract board `.claude/plans/ribbon-floss.plan.md`, approved in the chat
@@ -2952,6 +3111,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `ui/ribbon/*` story, Sections/DoctorShowcase, Pages/Home and Pages/Team (the last two also move below the
     band) — and nothing else, by construction (`lib/ribbon-*` and ui/Ribbon's one class string are the only
     runtime code that moved). **Evidence at READY:** see the lane's PR.
+    **THE UNIT (2026-10-01, §15.25 round 2):** the ribbon's whole geometry is measured in ONE registered length,
+    `--ribbon-unit` (globals.css; 100px = UNIT_PX by default): ui/Ribbon's COLUMN spells its gauge, lanes, gap and
+    room as fractions of it, lib/ribbon-layout's `placeColumn(cards, unitPx)` and lib/ribbon-draw convert with the
+    computed value, and lib/ribbon-model never sees it — so the doctors band's design scale (which sets the unit
+    to 100 of its design pixels) draws the REFERENCE ribbon scaled instead of a new one for a wider column. At
+    the default unit the column is byte-identical (243 widths, Chromium and WebKit) and every ribbon test stands.
 
 27. **The clinic's real data — ON THE OWNER'S WORD (2026-09-30, verbatim: "find everywhere in the page where
     the page has data about the clininc ,that is not photos and add those ones … tell me if i skipped any" ·

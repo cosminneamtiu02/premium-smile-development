@@ -1,10 +1,13 @@
-import { createRef, useState, type Ref } from 'react';
+import { createRef, useState, type CSSProperties, type Ref } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 // The REAL stylesheet, compiled by the same Tailwind pipeline the site uses.
-// The SUM-RULE pin below is meaningless without it: "border + padding = 25px
+// The SUM-RULE pins below are meaningless without it: "border + padding = 25px
 // per side" is a COMPUTED length — the whole point is that `border-[3px]` and
-// `p-[calc(1.5rem-2px)]` really resolve to 3 and 22 — never a class name.
+// `p-[calc(var(--spacing)*6_-_2px)]` really resolve to 3 and 22 at the default
+// spacing step, and that the padding follows the step inside a scaled design
+// while the frame stays 3px (the describe at the bottom of this file) — never
+// a class name.
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
 // house pattern (Modal, SpeedDial, LanguageSwitcher, LanguageBanner, shell).
 import '@/styles/globals.css';
@@ -99,7 +102,12 @@ const TONE_CLASSES: Record<CardTone, string> = {
   tinted: 'border border-transparent bg-page p-6',
   emphasized:
     'border border-(--card-tint) bg-surface supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint) p-6',
-  framed: 'border-[3px] border-(--card-tint) bg-surface p-[calc(1.5rem-2px)]',
+  // The frame stays a 3px border and the PADDING carries the spacing step
+  // (§15.25 round 2, D-C): 6 steps less the frame's extra 2px — 3px + 22px at
+  // the default 0.25rem step, 6 steps + 1px in all, a flat row's own 1px +
+  // `p-6`.
+  framed:
+    'border-[3px] border-(--card-tint) bg-surface p-[calc(var(--spacing)*6_-_2px)]',
 };
 
 // THE ARMED GLOW (owner 2026-09-29 — Card.tsx's THE GLOW CAN FOLLOW A MARK
@@ -240,9 +248,12 @@ describe('Card — THE surface definition', () => {
     // 1px of border + `--spacing` × 6 = 24px of padding, at the 16px root
     // globals.css keeps (§15.1 puts the 1.125rem base on BODY; html stays
     // 16px so rem and user zoom behave, §7). The invariant the sum rule
-    // actually claims is root-INDEPENDENT — 3px + (1.5rem − 2px) = 1px +
-    // 1.5rem whatever 1rem turns out to be — so every row below is compared
-    // against this measurement rather than against a repeated number.
+    // actually claims is root-INDEPENDENT — 3px + (6 steps − 2px) = 1px +
+    // 6 steps whatever a step turns out to be — so every row below is compared
+    // against this measurement rather than against a repeated number. The
+    // frame is a whole 3px border at any step, so nothing the engine floors
+    // moves with it (Card.tsx's THE SUM RULE paragraph; the scaled describe at
+    // the bottom of this file holds it inside a design that remaps the step).
     const surfaceSum = measure('surface').inline;
     expect(surfaceSum).toBe(25);
 
@@ -390,8 +401,8 @@ describe('Card — the tone crossfade (owner D1b, 2026-09-10)', () => {
     // Whole tokens, never substrings (the Button.test convention): every one
     // of these sits inside some longer spelling — `transition-none` inside
     // `motion-reduce:transition-none`, `ease-in-out` inside a hypothetical
-    // `hover:ease-in-out` — so an `includes()` check would pass on the wrong
-    // string.
+    // hover-variant spelling of itself — so an `includes()` check would pass
+    // on the wrong string.
     const tokens = tokensOfDefault();
     expect(tokens).toContain('[--fade:400ms]');
     expect(tokens).toContain(CROSSFADE_LIST);
@@ -435,7 +446,7 @@ describe('Card — the tone crossfade (owner D1b, 2026-09-10)', () => {
 
   it('admits no second clock, no second easing and no delay', () => {
     // In and out must mirror each other (the Button precedent): a lone
-    // `hover:duration-1000` or a `delay-150` would desynchronise the two
+    // hover-only duration or any transition delay would desynchronise the two
     // directions of a swap that is supposed to feel like one calm move.
     const tokens = tokensOfDefault();
     expect(
@@ -1033,6 +1044,37 @@ describe('Card — §6.8 native-element fidelity', () => {
     expect(screen.getByText(RO_TITLE).className).toBe(`${DEFAULT_CARD} h-full`);
   });
 
+  it.each([
+    ['p-4', '16px'],
+    ['p-6', '24px'],
+    ['p-8', '32px'],
+  ] as const)(
+    'keeps a framed card’s 22px against a caller’s `%s` — the arbitrary row outranks the named scale',
+    (caller, named) => {
+      // Card.tsx's WHY className CANNOT BE THE PADDING paragraph, read back
+      // from the engine rather than from the class list: Tailwind emits an
+      // ARBITRARY value after the whole named scale, so the framed row's
+      // arbitrary padding beats a caller's `p-4`, `p-6` and `p-8` alike, and
+      // className moves a framed card's inset in neither direction.
+      render(
+        <>
+          <Card tone="framed" className={caller}>
+            {RO_TITLE}
+          </Card>
+          <div className={caller}>{RO_BODY}</div>
+        </>,
+      );
+      const card = getComputedStyle(screen.getByText(RO_TITLE));
+      expect(card.paddingInlineStart).toBe('22px');
+      expect(card.paddingBlockStart).toBe('22px');
+      // NEVER-VACUOUS: the caller's utility is compiled and does apply where
+      // nothing outranks it — a plain box wearing it gets the named step.
+      expect(
+        getComputedStyle(screen.getByText(RO_BODY)).paddingInlineStart,
+      ).toBe(named);
+    },
+  );
+
   it('accepts ref as a regular prop (React 19)', () => {
     const card = createRef<HTMLDivElement>();
     render(<Card ref={card}>{RO_TITLE}</Card>);
@@ -1279,7 +1321,7 @@ describe('Card — ONE tint: the idle frame IS the selected ground (owner 2026-0
     expect(ground).toBe(frame);
     // …and it is the MIX, not either fallback: neither the white base nor the
     // solid accent (#7a6d9c) an engine without color-mix would paint. A
-    // readback of either would mean the `supports-[…]` declaration never
+    // readback of either would mean the color-mix-gated declaration never
     // compiled and every engine would see the fallback.
     expect(ground).not.toBe('rgb(255, 255, 255)');
     expect(ground).not.toBe('rgb(122, 109, 156)');
@@ -1314,4 +1356,123 @@ describe('Card — ONE tint: the idle frame IS the selected ground (owner 2026-0
       false,
     );
   });
+});
+
+describe('Card — THE SUM RULE inside a scaled design (owner 2026-10-01, §15.25 round 2)', () => {
+  // The doctors band measures every theme length in a DESIGN PIXEL
+  // (globals.css's THE DESIGN SCALE): a box wearing `design-scale` remaps
+  // `--spacing` to 4 × `--scale-px`, so every `p-*` inside it — a flat
+  // card's `p-6` among them — follows the design. The framed row keeps its
+  // 3px frame and spells its PADDING in that step (Card.tsx's THE SUM RULE
+  // paragraph, D-C), so a framed card in the band spends exactly what a flat
+  // card spends there: 3px + (6 steps − 2px) = 1px + 6 steps. A frame spelled
+  // in steps would fail here — Chromium, the engine this suite runs in,
+  // floors a border width to whole pixels (4.5px → 4, 2.4px → 2) and leaves a
+  // padding alone.
+  // Each wrapper is the band's own pair, the utility and a design pixel, with
+  // a FIXED design pixel in place of the band's container arithmetic — set
+  // INLINE (D-LIT), never as an arbitrary class: Tailwind scans test files
+  // too and ships every class-like string it finds, so a class only this test
+  // needed would be a dead rule in the site's stylesheet. The bare utility is
+  // generated anyway (any mention of its name produces it). The numbers are
+  // the contract's arithmetic (§15.25 round 2): a step of 6px and of 3.2px,
+  // read through LOGICAL properties, as the default-root test above, to
+  // ±0.05px — a padding keeps its fraction of a pixel (19.2px) and layout
+  // rounds to 1/64px, so strict equality would test floating point, not the
+  // rule.
+  const SCALES = [
+    {
+      scalePx: '1.5px',
+      surface: { border: 1, padding: 36 },
+      framed: { border: 3, padding: 34 },
+      spend: 37,
+    },
+    {
+      scalePx: '0.8px',
+      surface: { border: 1, padding: 19.2 },
+      framed: { border: 3, padding: 17.2 },
+      spend: 20.2,
+    },
+  ] as const;
+
+  /** A card's spend on its inline-start and block-start sides, read from the
+   *  engine, plus where its first child's box really starts inside it. */
+  const spendOf = (testId: string) => {
+    const card = screen.getByTestId(testId);
+    const box = getComputedStyle(card);
+    const outer = card.getBoundingClientRect();
+    const inner = (
+      card.firstElementChild as HTMLElement
+    ).getBoundingClientRect();
+    return {
+      border: parseFloat(box.borderInlineStartWidth),
+      padding: parseFloat(box.paddingInlineStart),
+      inline:
+        parseFloat(box.borderInlineStartWidth) +
+        parseFloat(box.paddingInlineStart),
+      block:
+        parseFloat(box.borderBlockStartWidth) +
+        parseFloat(box.paddingBlockStart),
+      contentInset: inner.left - outer.left,
+    };
+  };
+
+  it.each(SCALES)(
+    'at --scale-px $scalePx a framed card spends exactly what a flat card spends — its frame still 3px',
+    ({ scalePx, surface, framed, spend }) => {
+      render(
+        <div
+          className="design-scale"
+          style={{ '--scale-px': scalePx } as CSSProperties}
+          data-testid="design"
+        >
+          <Card tone="surface" data-testid="flat">
+            <p>{RO_BODY}</p>
+          </Card>
+          <Card tone="framed" data-testid="frame">
+            <p>{RO_TITLE}</p>
+          </Card>
+        </div>,
+      );
+
+      // NEVER-VACUOUS: the design pixel is the declared one, and the flat
+      // card's `p-6` really follows it — with `design-scale` missing from the
+      // sheet both cards would sit at the default 25px and agree for the
+      // wrong reason.
+      expect(
+        getComputedStyle(screen.getByTestId('design')).getPropertyValue(
+          '--scale-px',
+        ),
+      ).toBe(scalePx);
+      const flat = spendOf('flat');
+      expect(flat.border).toBe(surface.border);
+      expect(flat.padding).toBeCloseTo(surface.padding, 1);
+      expect(flat.inline).toBeCloseTo(spend, 1);
+
+      // THE PADDING FOLLOWS THE STEP, THE FRAME DOES NOT, and the sum rule
+      // holds — every number reported at once, so a failure names each one
+      // that moved.
+      const frame = spendOf('frame');
+      expect
+        .soft(frame.border, 'framed: the frame stays 3px')
+        .toBe(framed.border);
+      expect
+        .soft(frame.padding, 'framed: padding')
+        .toBeCloseTo(framed.padding, 1);
+      expect
+        .soft(frame.inline, 'framed: inline-start spend = a flat card’s')
+        .toBeCloseTo(spend, 1);
+      expect
+        .soft(frame.block, 'framed: block-start spend = a flat card’s')
+        .toBeCloseTo(spend, 1);
+      // …and in layout, where the content starts: on the flat card's, within
+      // the same ±0.05px (the engine's layout unit is 1/64px).
+      expect
+        .soft(
+          frame.contentInset,
+          'framed: the content starts where a flat card’s does',
+        )
+        .toBeCloseTo(flat.contentInset, 1);
+    },
+  );
 });

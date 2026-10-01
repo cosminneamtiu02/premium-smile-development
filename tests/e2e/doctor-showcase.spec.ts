@@ -598,3 +598,476 @@ for (const locale of ['ro', 'de'] as const) {
     });
   });
 }
+
+// ── F · THE SCALE (DoctorShowcase D10) ─────────────────────────────────────
+// The owner, 2026-10-01: "i like how it looks on phone and tablet and i want
+// to keep that unchanged. but on laptop and desktop if you make it
+// bigger/smaller in width it gets highly disproportioned. i want card and
+// component and all contents to adjust in size harmonically all at once and
+// mentain raports as on following sizes: 1401x1063." — and, asked the same
+// day how tablets should be treated: "Touch devices unchanged". On the built
+// pages, at his own window and at every laptop and desktop width round it,
+// each card's STRUCTURE — its picture's and its link's width, its name's,
+// specialty's and quote's size, each over the card's width — is the 1401
+// window's to 0.3 %, the band drawn in its design pixel, min(column, 96rem)
+// / 1106: the column's up to a 1920 window (SCALED_WINDOWS), the cap's past
+// it, the band 96rem wide and centred in its column (CAPPED_WINDOWS). A
+// card's height over its width is held to the same 0.3 % only where its
+// quote is SHORTER than its picture, which then sets the card's height: a
+// quote re-wraps across the regime — the typeface's optical size — and a
+// taller one would move the card by a line of text (D10, THE WORDS' LIMIT),
+// which is the text's doing, never the scale's. Below the step (390 · 768 ·
+// 1024) nothing is declared and the stacked or unscaled card is today's;
+// on a TOUCH tablet, upright or sideways, nothing is declared at any width
+// (TOUCH_TABLETS); and the user's default font size moves the gates without
+// breaking them — a 12px root starts nothing under the 896px floor, a 28px
+// root keeps every card two-column under the cap in rem. Each window is a
+// fresh load (a resize would measure the ribbon mid-rebuild) under reduced
+// motion (the ribbon painted whole), every picture asked for first.
+
+/** D10's numbers, written out: the reference column, the cap in rem of the
+ *  root, and THE STEP's two halves — 56rem and the 896px floor. */
+const REFERENCE_COLUMN = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/** The owner's window — "1401x1063". */
+const OWNER_WINDOW = { width: 1401, height: 1063 } as const;
+
+/** The laptop and desktop windows whose column is under the cap — from the
+ *  step's first (≈ 1139 under a classic scrollbar) to §7's 1920 — each drawn
+ *  at its own column, s = column / 1106. */
+const SCALED_WINDOWS = [1140, 1280, 1536, 1920] as const;
+
+/** Windows past the cap (≈ 1939 under a classic scrollbar, 1920 under
+ *  overlay ones): s = 96rem / 1106, the band 96rem wide and centred. */
+const CAPPED_WINDOWS = [2560, 2800] as const;
+
+/** Windows whose column is under the step whatever the pointer — the phone,
+ *  §7's tablet held upright, and a 1024 window — unchanged. */
+const BELOW_STEP = [390, 768, 1024] as const;
+
+/** Tablets held SIDEWAYS — every one of them wider than the step's ≈ 1120px
+ *  window, which a mouse there would scale: an iPad mini (1133 × 744), an
+ *  iPad Air (1180 × 820), an iPad Pro 11″ (1194 × 834) and a 1280 × 800
+ *  Android tablet — measured by G2 inside the first cut's range; the owner's
+ *  "Touch devices unchanged" keeps them out. */
+const TOUCH_TABLETS = [
+  { width: 1133, height: 744 },
+  { width: 1180, height: 820 },
+  { width: 1194, height: 834 },
+  { width: 1280, height: 800 },
+] as const;
+
+/** The unscaled card's own two-column flip: its inset's content box against
+ *  48rem (PersonnelCard D17), in px at the default root. */
+const CARD_FLIP = 48 * 16;
+
+/** The structure tolerance: ≈ 2.5 × the worst drift measured on the built
+ *  pages (0.12 %, a card's height over its width), and well under what one
+ *  unscaled step would cost — a single remap line dropped moves a card's
+ *  height over its width by ≈ 0.8 % (G2 typescript, T7). */
+const STRUCTURE = 0.003;
+
+interface CardShape {
+  readonly width: number;
+  readonly height: number;
+  /** The cutout as drawn: width, height. */
+  readonly picture: readonly [number, number];
+  /** The cutout's own height over its width, from its attributes (§11). */
+  readonly aspect: number;
+  /** Font sizes, px: the quote, the name, the specialty under it. */
+  readonly quote: number;
+  readonly name: number;
+  readonly specialty: number;
+  /** The quote's laid-out height — set against the picture's (THE WORDS'
+   *  LIMIT). */
+  readonly words: number;
+  /** The link's width. */
+  readonly link: number;
+  /** The card's grid: `grid` (two columns) or `flex` (stacked). */
+  readonly grid: string;
+  /** The inset's content width — what the card's `@3xl` and `@md` read. */
+  readonly room: number;
+}
+
+interface BandShape {
+  /** The root's font size, px — every rem of the gates reads it. */
+  readonly rem: number;
+  /** The scrollbar gutter, read off the BODY: under Playwright's
+   *  --hide-scrollbars the root's clientWidth is the window's in both modes,
+   *  and `scrollbar-gutter: stable` reserves 15px only for a classic bar. */
+  readonly gutter: number;
+  /** ui/Container's width — the band's column. */
+  readonly column: number;
+  /** The rhythm box in its column: left offset, width. */
+  readonly box: readonly [number, number];
+  /** The rhythm box's design pixel, as computed. */
+  readonly scalePx: string;
+  /** Whether `design-scale` remaps the step on the rhythm box. */
+  readonly remapped: boolean;
+  readonly cards: readonly CardShape[];
+}
+
+/** The band as the page lays it out right now. */
+const readShape = (page: Page, locale: Locale): Promise<BandShape> =>
+  band(page, locale).evaluate((section) => {
+    const column = section.firstElementChild as HTMLElement;
+    const rhythm = column.firstElementChild as HTMLElement;
+    const size = (element: Element | null): number =>
+      element === null ? NaN : parseFloat(getComputedStyle(element).fontSize);
+    const from = column.getBoundingClientRect();
+    const box = rhythm.getBoundingClientRect();
+    return {
+      rem: size(document.documentElement),
+      gutter: window.innerWidth - document.body.getBoundingClientRect().width,
+      column: from.width,
+      box: [box.left - from.left, box.width] as const,
+      scalePx: getComputedStyle(rhythm).getPropertyValue('--scale-px'),
+      remapped:
+        getComputedStyle(rhythm).getPropertyValue('--spacing') !==
+        getComputedStyle(document.documentElement).getPropertyValue(
+          '--spacing',
+        ),
+      cards: Array.from(
+        section.querySelectorAll('[data-ribbon-station] > article'),
+        (card) => {
+          const inset = card.firstElementChild as HTMLElement;
+          const grid = inset.firstElementChild as HTMLElement;
+          const own = card.getBoundingClientRect();
+          const image = card.querySelector('img');
+          const picture = image?.getBoundingClientRect();
+          const quote = card.querySelector('blockquote');
+          const style = getComputedStyle(inset);
+          return {
+            width: own.width,
+            height: own.height,
+            picture: [picture?.width ?? NaN, picture?.height ?? NaN] as const,
+            aspect:
+              Number(image?.getAttribute('height')) /
+              Number(image?.getAttribute('width')),
+            quote: size(quote),
+            name: size(card.querySelector('h3')),
+            // The specialty is the eyebrow beside the name (PersonnelCard
+            // D17's PAIR): the name first in the DOM, the specialty after it.
+            specialty: size(card.querySelector('h3 + p')),
+            words: quote?.getBoundingClientRect().height ?? NaN,
+            link: card.querySelector('a')?.getBoundingClientRect().width ?? NaN,
+            grid: getComputedStyle(grid).display,
+            room:
+              inset.getBoundingClientRect().width -
+              parseFloat(style.paddingLeft) -
+              parseFloat(style.paddingRight),
+          };
+        },
+      ),
+    };
+  });
+
+/** A fresh load at one window, settled: the typefaces in, every picture of
+ *  the band asked for and arrived (or broken — every box is reserved from
+ *  its width and height, §11), the ribbon painted whole, and no sideways
+ *  scroll. */
+async function openAt(
+  page: Page,
+  path: string,
+  width: number,
+  height: number,
+): Promise<void> {
+  await page.setViewportSize({ width, height });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await open(page, path);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    for (const picture of document.querySelectorAll<HTMLImageElement>(
+      '[data-ribbon-station] img',
+    )) {
+      picture.loading = 'eager';
+    }
+  });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          Array.from(
+            document.querySelectorAll<HTMLImageElement>(
+              '[data-ribbon-station] img',
+            ),
+          ).every((picture) => picture.complete),
+        ),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+  await expectDrawn(page);
+  const sideways = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth,
+  );
+  expect(sideways, `${width}px: sideways scroll`).toBeLessThanOrEqual(0);
+}
+
+/** THE STRUCTURE the owner's sentence is about, for one card: every length
+ *  that is no line of text, each over the card's width. */
+const structureOf = (card: CardShape): Record<string, number> => ({
+  'picture width / card width': card.picture[0] / card.width,
+  'link width / card width': card.link / card.width,
+  'name size / card width': card.name / card.width,
+  'specialty size / card width': card.specialty / card.width,
+  'quote size / card width': card.quote / card.width,
+});
+
+/** A card whose quote is SHORTER than its picture — the picture then sets
+ *  the card's height, and the height over the width is the scale's alone. */
+const pictureSetsHeight = (card: CardShape): boolean =>
+  card.words < card.picture[1];
+
+/**
+ * THE REGIME at one window, which `capped` says it must be in — so a
+ * scrollbar or a gutter that carried a window across the cap fails as itself,
+ * never as a ratio: the design pixel min(column, 96rem) / 1106, the box as
+ * wide as what it draws and centred in its column (flush under the cap), and
+ * every card two-column with its quote 18 × s and its name 36 × s, to a
+ * twentieth of a pixel — the cap and the step in rem of the page's own root.
+ */
+const expectRegime = (shape: BandShape, at: string, capped: boolean): void => {
+  const cap = CAP_REM * shape.rem;
+  expect(shape.remapped, at).toBe(true);
+  expect(shape.column, `${at}: from the step`).toBeGreaterThanOrEqual(
+    Math.max(STEP_REM * shape.rem, STEP_FLOOR),
+  );
+  if (capped) {
+    expect(shape.column, `${at}: past the cap`).toBeGreaterThan(cap);
+  } else {
+    expect(shape.column, `${at}: under the cap`).toBeLessThanOrEqual(cap);
+  }
+  const drawn = Math.min(shape.column, cap);
+  const s = drawn / REFERENCE_COLUMN;
+  expect(parseFloat(shape.scalePx), at).toBeCloseTo(s, 4);
+  expect(Math.abs(shape.box[1] - drawn), `${at}: the box`).toBeLessThan(0.5);
+  expect(
+    Math.abs(shape.box[0] - (shape.column - drawn) / 2),
+    `${at}: centred`,
+  ).toBeLessThan(0.5);
+  expect(shape.cards.length, at).toBeGreaterThan(0);
+  shape.cards.forEach((card, i) => {
+    const where = `${at}, card ${i + 1}`;
+    expect(card.grid, where).toBe('grid');
+    expect(Math.abs(card.quote - 18 * s), `${where}: quote`).toBeLessThan(0.05);
+    expect(Math.abs(card.name - 36 * s), `${where}: name`).toBeLessThan(0.05);
+  });
+};
+
+/**
+ * TODAY'S BAND at one window — no design pixel, no remap, no cap: the box
+ * its whole column, and every card at the theme's own sizes, in the layout
+ * its own flip gives it at that column (two columns from an inset of 48rem,
+ * stacked below), the cutout in its 18rem cell — the inset's whole width
+ * where that is less — at its own ratio.
+ */
+const expectUnscaled = (shape: BandShape, at: string): void => {
+  expect(shape.remapped, at).toBe(false);
+  expect(shape.scalePx, at).toBe('1px');
+  expect(Math.abs(shape.box[1] - shape.column), `${at}: no cap`).toBeLessThan(
+    0.5,
+  );
+  expect(shape.cards.length, at).toBeGreaterThan(0);
+  shape.cards.forEach((card, i) => {
+    const where = `${at}, card ${i + 1}`;
+    expect(card.grid, where).toBe(card.room >= CARD_FLIP ? 'grid' : 'flex');
+    expect(card.quote, where).toBe(18);
+    expect(card.specialty, where).toBe(14);
+    expect(card.name, where).toBe(card.room >= 448 ? 36 : 30);
+    const cell = Math.min(288, card.room);
+    expect(Math.abs(card.picture[0] - cell), where).toBeLessThan(0.5);
+    expect(Math.abs(card.picture[1] - cell * card.aspect), where).toBeLessThan(
+      0.5,
+    );
+  });
+};
+
+/** Every window round the owner's, with the regime it must be in. */
+const ROUND_THE_OWNER = [
+  ...SCALED_WINDOWS.map((width) => ({ width, capped: false })),
+  ...CAPPED_WINDOWS.map((width) => ({ width, capped: true })),
+];
+
+/** The browser's own default font size, set through the DevTools protocol —
+ *  Chrome's "Font size" setting, which every rem on the page follows (the
+ *  root's computed size, a container query's and a media query's alike). It
+ *  holds across the page's navigations; the context dies with the test. */
+async function defaultFont(page: Page, px: number): Promise<void> {
+  const session = await page.context().newCDPSession(page);
+  await session.send('Page.enable');
+  await session.send('Page.setFontSizes', { fontSizes: { standard: px } });
+}
+
+for (const [locale, path] of [
+  ['ro', '/ro/team/'],
+  ['de', '/de/'],
+] as const) {
+  test.describe(`${path} — THE SCALE: the 1401 window's ratios at every laptop and desktop width`, () => {
+    test.use({ locale: BROWSER_LOCALE[locale] });
+    onLaptopOnly();
+
+    test(`every card keeps the owner’s structure to 0.3 %, the band drawn in its design pixel, capped at ${CAP_REM}rem`, async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(180_000);
+      await openAt(page, path, OWNER_WINDOW.width, OWNER_WINDOW.height);
+      const reference = await readShape(page, locale);
+      const at1401 = `${path} at ${OWNER_WINDOW.width}px`;
+      expectRegime(reference, at1401, false);
+      // REFERENCE is the owner's window's column: 1401 less two 10vw margins
+      // and the gutter — 1105.81 under a classic scrollbar (s = 0.99983, the
+      // band he approved, to the pixel), 1120.81 under overlay ones, which
+      // reserve no gutter (s = 1.0134, the same band 1.3 % larger); the
+      // regime above already held s to whichever column the page has.
+      expect([0, 15], `${at1401}: the scrollbar gutter`).toContain(
+        reference.gutter,
+      );
+      expect(
+        Math.abs(
+          reference.column -
+            (OWNER_WINDOW.width - reference.gutter - 0.2 * OWNER_WINDOW.width),
+        ),
+        `${at1401}: the column is the window's`,
+      ).toBeLessThan(0.5);
+      expect(
+        Math.abs(reference.column + reference.gutter - 15 - REFERENCE_COLUMN),
+        `${at1401}: REFERENCE is this window's column under a classic scrollbar`,
+      ).toBeLessThan(0.5);
+
+      const structure = reference.cards.map(structureOf);
+      const held: string[] = [];
+      for (const { width, capped } of ROUND_THE_OWNER) {
+        await openAt(page, path, width, OWNER_WINDOW.height);
+        const shape = await readShape(page, locale);
+        const at = `${path} at ${width}px`;
+        expectRegime(shape, at, capped);
+        expect(shape.cards).toHaveLength(reference.cards.length);
+        shape.cards.forEach((card, i) => {
+          const before = reference.cards[i];
+          if (before === undefined) throw new Error(`${at}: no card ${i + 1}`);
+          // …the card's structure, every length that is no line of text…
+          for (const [name, value] of Object.entries(structureOf(card))) {
+            const want = structure[i]?.[name] ?? NaN;
+            expect(
+              Math.abs(value / want - 1),
+              `${at}, card ${i + 1}: ${name} ${value.toFixed(6)} against ${want.toFixed(6)}`,
+            ).toBeLessThanOrEqual(STRUCTURE);
+          }
+          // …and its height over its width wherever the picture, not the
+          // words, sets that height, at the reference and here alike.
+          if (pictureSetsHeight(before) && pictureSetsHeight(card)) {
+            const value = card.height / card.width;
+            const want = before.height / before.width;
+            expect(
+              Math.abs(value / want - 1),
+              `${at}, card ${i + 1}: height / width ${value.toFixed(5)} against ${want.toFixed(5)}`,
+            ).toBeLessThanOrEqual(STRUCTURE);
+            held.push(`${width}: ${i + 1}`);
+          }
+        });
+      }
+      // WHICH cards had their height held, said out loud — and never none.
+      // With today's quotes every card is held at every window; a longer
+      // biography drops out of this list instead of failing the suite.
+      testInfo.annotations.push({
+        type: 'height / width held (window: card)',
+        description: held.join(' · '),
+      });
+      expect(
+        held.length,
+        'no card had a quote shorter than its picture',
+      ).toBeGreaterThan(0);
+    });
+
+    test('below the step — the phone, the tablet upright, a 1024 window — the band is today’s: nothing declared, the theme’s own sizes', async ({
+      page,
+    }) => {
+      test.setTimeout(120_000);
+      for (const width of BELOW_STEP) {
+        await openAt(page, path, width, 900);
+        const shape = await readShape(page, locale);
+        expect(shape.column, `${width}px: under the step`).toBeLessThan(
+          STEP_FLOOR,
+        );
+        expectUnscaled(shape, `${path} at ${width}px`);
+      }
+    });
+
+    test('a SMALLER default font starts nothing under the step’s 896px floor — Chrome’s 12px at a 1024 window, a column past its own 56rem (G2 react, R6)', async ({
+      page,
+    }) => {
+      await defaultFont(page, 12);
+      await openAt(page, path, 1024, 900);
+      const shape = await readShape(page, locale);
+      const at = `${path} at 1024px, a 12px root`;
+      expect(shape.rem, at).toBe(12);
+      // Past 56rem — the rem half of the step alone would scale this column,
+      // at 0.73 of the design — and under the floor, which keeps it plain.
+      expect(shape.column, at).toBeGreaterThan(STEP_REM * shape.rem);
+      expect(shape.column, at).toBeLessThan(STEP_FLOOR);
+      expect(shape.remapped, at).toBe(false);
+      expect(shape.scalePx, at).toBe('1px');
+    });
+
+    test('a LARGER default font keeps every card two-column inside the regime — 28px at a 2560 window, the cap in rem (G2 typescript, T2)', async ({
+      page,
+    }) => {
+      // With the cap in px, a root of ≈ 27.4px put the 56rem step past it and
+      // stacked every card inside the regime: the inset 1329px against 48rem
+      // of 1344px. In rem the step and the cap keep their ratio.
+      await defaultFont(page, 28);
+      await openAt(page, path, 2560, 1063);
+      const shape = await readShape(page, locale);
+      const at = `${path} at 2560px, a 28px root`;
+      expect(shape.rem, at).toBe(28);
+      expectRegime(shape, at, false);
+      for (const card of shape.cards) {
+        expect(card.room, at).toBeGreaterThanOrEqual(48 * shape.rem);
+      }
+    });
+  });
+
+  test.describe(`${path} — THE SCALE: a touch tablet keeps today’s band at any width (the owner: “Touch devices unchanged”)`, () => {
+    test.use({ locale: BROWSER_LOCALE[locale] });
+    onLaptopOnly();
+
+    for (const tablet of TOUCH_TABLETS) {
+      test.describe(`a ${tablet.width} × ${tablet.height} touch tablet, held sideways`, () => {
+        // Chromium's own touch emulation and a mobile viewport — overlay
+        // scrollbars, the page's meta viewport honoured — exactly as G2
+        // measured the tablets. It turns the primary pointer coarse and hover
+        // off (measured 2026-10-01; a DevTools `Emulation.setEmulatedMedia`
+        // with a `pointer` feature, by contrast, is ignored by Chromium), and
+        // the first assertion checks that it did.
+        test.use({ viewport: tablet, hasTouch: true, isMobile: true });
+
+        test('declares nothing: no design pixel, no remap, no cap — today’s card, the ribbon painted, nothing sideways', async ({
+          page,
+        }) => {
+          // FIRST, the device: asked on the context's blank first page, before
+          // the band is loaded, so a touch emulation that did not take fails
+          // as itself rather than as a scale.
+          expect(
+            await page.evaluate(() => ({
+              coarse: matchMedia('(pointer: coarse)').matches,
+              hoverNone: matchMedia('(hover: none)').matches,
+            })),
+            'a touch screen',
+          ).toEqual({ coarse: true, hoverNone: true });
+          await openAt(page, path, tablet.width, tablet.height);
+          const shape = await readShape(page, locale);
+          const at = `${path} on a ${tablet.width}px touch tablet`;
+          // The window a MOUSE would scale — the column past the step…
+          expect(shape.column, at).toBeGreaterThanOrEqual(STEP_FLOOR);
+          // …and today's band all the same.
+          expectUnscaled(shape, at);
+        });
+      });
+    }
+  });
+}

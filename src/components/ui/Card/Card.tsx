@@ -64,18 +64,21 @@ import { slotClone } from '../slot';
 // ── WHY className CANNOT BE THE PADDING OR COLOUR API — measured on the board
 // against this repo's own Tailwind (4.3.3) rather than assumed: the sheet emits
 // `p-4` before `p-6` before `p-8`, `rounded-lg` before `rounded-md`,
-// `bg-black` before `bg-white`. One flat layer, single-class selectors, equal
+// black before white backgrounds. One flat layer, single-class selectors, equal
 // specificity — and `cx` is a plain join (lib/cx/cx.ts), so the attribute order
 // it produces is a convention, never a cascade. CSS picks the LATER rule in
 // the STYLESHEET, which means a caller's `p-4` can never beat this atom's
 // padding while `p-8` happens to win: an "override" that works in one
 // direction only is worse than none, because it reads as an API. On a `framed`
 // card not even that half survives: ARBITRARY values are emitted AFTER the
-// whole named scale, so `p-[calc(1.5rem-2px)]` outranks `p-4`, `p-6` and `p-8`
-// alike and no caller `p-*` wins in either direction. The conclusion is the
-// same one, only stronger: className is PLACEMENT only (§6.8 — `h-full`,
-// `max-w-*`, `col-span-*`, a grid area), and anything that must be able to win
-// in BOTH directions is a prop here or it is nothing.
+// whole named scale, so the row's `p-[calc(var(--spacing)*6_-_2px)]` (the old
+// 1.5rem − 2px arbitrary padding until §15.25 round 2, the same 22px)
+// outranks `p-4`, `p-6` and `p-8` alike and no caller `p-*` wins in either
+// direction — read back from the engine in Card.test.tsx ("keeps a framed
+// card's 22px against a caller's …"). The conclusion is the same one, only
+// stronger: className is PLACEMENT only (§6.8 — `h-full`, `max-w-*`,
+// `col-span-*`, a grid area), and anything that must be able to win in BOTH
+// directions is a prop here or it is nothing.
 //
 // ── THE CONTAINER MARK IS BUNDLED WITH THE SURFACE (D10), for ui/Container's
 // reason rather than a new one: splitting them has a silent failure mode. A
@@ -110,9 +113,10 @@ import { slotClone } from '../slot';
 // with no `flex-1`, `basis-*` or `w-full` (flex-basis stays `auto`, the
 // contained content contributes 0, and the card shrinks to roughly 50px of
 // padding and border); a grid whose `justify-items`/`justify-content` is
-// anything other than stretch; `w-fit`/`w-max`; a float; an absolutely
-// positioned box with no inset pair. In every one of those, hand the card a
-// width — the rule does not change, only the list of places that break it.
+// anything other than stretch; a fit-content or max-content width; a float;
+// an absolutely positioned box with no inset pair. In every one of those,
+// hand the card a width — the rule does not change, only the list of places
+// that break it.
 //
 // ── `tone` NAMES SITUATIONS, NEVER CSS KNOBS (ui/Image's D1 doctrine): a
 // section asks for `emphasized`, not for a background and a border colour, so
@@ -123,7 +127,38 @@ import { slotClone } from '../slot';
 // therefore starts at the same place whatever tone a card wears, so switching
 // one moves nothing by a pixel and a framed card in a grid row keeps its text
 // edges aligned with its neighbours' — the property the old repo's cards did
-// not have. It also explains why the PADDING lives in the rows rather than in
+// not have. THE PADDING CARRIES THE STEP (§15.25 round 2 — owner, 2026-10-01,
+// the doctors band: "i want card and component and all contents to adjust in
+// size harmonically all at once"): `framed` keeps its frame a 3px border and
+// spells its padding as 6 spacing steps less the frame's extra 2px —
+// `1.5rem − 2px` until then, the same 22px at the default 0.25rem step — so
+// border + padding = 6 steps + 1px, a flat row's own 1px + `p-6`, at any root
+// and inside a box that remaps the step (globals.css's THE DESIGN SCALE, which
+// leaves px borders alone): at a 1.5px design pixel, 3 + 34 = 1 + 36.
+// DECIDED on a measurement (D-C): the first spelling, option A — the frame in
+// steps too, 0.75 steps over 5.25 steps + 1px — renders short, because an
+// engine FLOORS a border width and leaves a padding alone. MEASURED 2026-10-01
+// under Playwright: Chromium floors to whole CSS pixels at every density
+// tried (1 to 3) — a 1.5px design pixel's 4.5px frame renders 4px, a 0.8px
+// one's 2.4px renders 2px, and the band at the owner's own 1401px window
+// under a classic scrollbar (a 0.99983px design pixel, 2.9995px of frame)
+// renders 2px, a whole pixel lost at the very window he named — and WebKit
+// floors to whole device pixels (2.9995px → 2.5px at a density of 2). The
+// same probe found C exactly as exact as the 3px + 22px before it: in
+// Chromium at densities 1, 1.25, 1.5, 2 and 3 and in WebKit at 1, 1.5, 2 and
+// 3, at design pixels of 1, 0.99983, 1.5, 0.8 and 1.25px (the last a 20px
+// user root's step), a framed card's content starts on a flat card's to the
+// layout unit. Its one exception was the old spelling's too: WebKit at a
+// density of 1.25 snaps EVERY border to device pixels — the flat rows' 1px to
+// 0.8px, the frame's 3px to 2.4px — so there a framed card's content starts
+// 0.4px (half a device pixel) nearer its edge. RECORDED LEVERS, not built: A
+// (it floors, above) and B′ — the frame rounded to whole pixels by CSS
+// `round()` behind a `@supports` gate that leaves older engines on C, the
+// padding taking the remainder: a frame that grows with the band in whole
+// pixels, the owner's lever if he wants the frame to grow with it. The frame
+// and its glow's edge stay one 3px spelling (THE GLOW CAN FOLLOW A MARK), and
+// Card.test.tsx's scaled describe holds C's numbers — read from the engine.
+// It also explains why the PADDING lives in the rows rather than in
 // the shared geometry: a row that had to correct the shared `p-6` would emit a
 // second `p-*` on the same element, and which of the two wins is decided by
 // their order in the compiled sheet, not by the code — a coin toss. One
@@ -365,9 +400,9 @@ import { slotClone } from '../slot';
 // second half is the FALLBACK, because every `color-mix()` Tailwind emits is
 // `@supports`-gated: `--card-tint` starts as the SOLID accent (what the frame
 // degrades to on engines without color-mix — Safari < 16.2, every iPhone
-// frozen on iOS 15, §1), the `supports-[…]` variant re-declares it as the mix,
-// and the `emphasized` row keeps an explicit `bg-surface` base under its own
-// `supports-[…]:bg-(--card-tint)` — so an old engine paints a solid-lavender
+// frozen on iOS 15, §1), a variant gated on color-mix support re-declares it
+// as the mix, and the `emphasized` row keeps an explicit `bg-surface` base
+// under its own gated tint ground — so an old engine paints a solid-lavender
 // FRAME (harmless) and a WHITE ground, never lavender under text (1.57:1 for
 // muted body copy). Modern engines paint the tint on both. Measured on the
 // tint: muted body text 5.8:1, the mono eyebrow the same, display ink above
@@ -484,13 +519,19 @@ const cardClock =
 
 // THE SUM RULE: border-width + padding = 25px per side on EVERY row (1 + 24, or 3 + 22 for
 // `framed`), so switching tone never moves content and a framed card's text edges still line
-// up with its neighbours'. `framed` is the ONE thickness situation (owner fb-423).
+// up with its neighbours'. `framed` is the ONE thickness situation (owner fb-423). Its frame
+// stays a 3px border — an engine floors a border width, so a frame in steps renders short —
+// and its PADDING carries the spacing step (§15.25 round 2, D-C): 6 steps less the frame's
+// extra 2px, so border + padding = 6 steps + 1px, a flat row's 1px + `p-6`, at any root and
+// inside a scaled design (globals.css's THE DESIGN SCALE). THE SUM RULE paragraph above has
+// the measurement and the two recorded levers.
 const toneClasses: Record<CardTone, string> = {
   surface: 'border border-line-subtle bg-surface p-6',
   tinted: 'border border-transparent bg-page p-6',
   emphasized:
     'border border-(--card-tint) bg-surface supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint) p-6',
-  framed: 'border-[3px] border-(--card-tint) bg-surface p-[calc(1.5rem-2px)]',
+  framed:
+    'border-[3px] border-(--card-tint) bg-surface p-[calc(var(--spacing)*6_-_2px)]',
 };
 
 // THE ARMED GLOW'S LAYER (`aura="current"`) — every utility in it is argued in

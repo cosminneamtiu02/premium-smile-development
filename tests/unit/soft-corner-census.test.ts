@@ -125,7 +125,16 @@ describe('the soft corner — ONE token, four wearers (owner 2026-10-01, §15.29
     // Up to the first `}`: the token sits before the keyframes, like the aura
     // (aura-token.test.ts records why).
     expect(theme.slice(0, theme.indexOf('}'))).toContain(DECLARATION);
-    expect(globals.split('--radius-soft:').length - 1).toBe(1);
+    // ONE VALUE. The design scale (globals.css THE DESIGN SCALE, §15.25
+    // round 2) re-declares the NAME once more, inside its utility, as 16 of a
+    // scaled design's pixels — the unit moves there, never the value; its own
+    // census (tests/unit/design-scale.test.ts) holds that multiplier to the
+    // token's 1rem × 16. Any third declaration is a second spelling.
+    expect(globals.split(DECLARATION).length - 1).toBe(1);
+    expect(
+      globals.split('--radius-soft: calc(var(--scale-px) * 16);').length - 1,
+    ).toBe(1);
+    expect(globals.split('--radius-soft:').length - 1).toBe(2);
   });
 
   it('scans a real tree (the census never passes vacuously)', () => {

@@ -40,33 +40,76 @@ import { slotClone } from '../slot';
 // lengths, so a box inside a card — itself a container — reads the column's
 // numbers, not its own; the gauge and the gap are read on the column itself,
 // and are not registered. A card spells its padding
-// `max(1.5rem, var(--ribbon-lane-top, 1.5rem))` on top and the same with
-// `--ribbon-lane-side` either side: the fallback serves an engine without
-// `@property`, and the `max` a root font above 16px outside a ribbon, where
-// the registered initial value is 24px while ui/Card gives 1.5rem. The
-// column spaces its stations by `--ribbon-gap`. The lanes are px and `cqw`
-// ON PURPOSE — an exception to CLAUDE.md §7's "all sizing in rem": the
-// ribbon follows the column's width, not the text's size, and only the
-// 1.5rem floor follows the font. The inner box also owns the ribbon's HEAD
-// and TAIL room as its padding, so every tile lies inside the root's height
-// (Ribbon.test.tsx). THE HEAD ROOM is k above the first card (100 k px —
-// `--ribbon-k`) and 1rem more for a tile's 2px margin and the shadow; it was
-// the drop-in's, which started k above the first card, until 2026-10-01 —
-// since then the first card has no drop-in (lib/ribbon-draw, THE FIRST CARD
-// HAS NO HEAD — its ribbon is first seen over its top edge, 0.08 k above it)
-// and the room is the band's air alone, kept at that measure so no page
-// moved — one spelling to shrink, the owner's. THE TAIL ROOM is only what the
-// last card's TUCK needs (lib/ribbon-model — the ribbon goes under the card's
-// bottom edge and behind it): its bend's curl, 0.056 k under the edge, and
-// the shadow under that, 0.03 k down and blurred 0.04 k (lib/ribbon-draw's
-// THE COLOURS) — 0.126 k, spelled 0.13 × `--ribbon-k` — and 8px for the
-// tile's 2px margin, the shadow's floors and a pixel of rounding: about 13px
-// on a phone, 18px on a laptop, 30px at the widest column. Until 2026-10-01
-// it was 60px + 1rem, where the tail HUNG under the last card; the owner, the
-// day the tail was tucked: "remove that space". Across, a tile may
+// `max(P, var(--ribbon-lane-top, P))` on top and the same with
+// `--ribbon-lane-side` either side, P its own padding outside a ribbon — for
+// a card on ui/Card's step, `calc(var(--spacing) * 6)`: 1.5rem, and the
+// design's 24px inside a scaled design (THE UNIT). The fallback serves an
+// engine without `@property`, and the `max` a root font above 16px outside a
+// ribbon, where the registered initial value is 24px while ui/Card gives
+// 1.5rem. The column spaces its stations by `--ribbon-gap`. The lanes are
+// spelled in the ribbon's UNIT and `cqw` ON PURPOSE — an exception to
+// CLAUDE.md §7's "all sizing in rem": the ribbon follows the column's width
+// and the design's scale, not the text's size, and only the 1.5rem floors
+// follow the font. The inner box also owns the ribbon's HEAD and TAIL room
+// as its padding, so every tile lies inside the root's height
+// (Ribbon.test.tsx). THE HEAD ROOM is k above the first card (`--ribbon-k`,
+// k units) and 0.16 of a unit more for a tile's 2px margin and the shadow;
+// it was the drop-in's, which started k above the first card, until
+// 2026-10-01 — since then the first card has no drop-in (lib/ribbon-draw,
+// THE FIRST CARD HAS NO HEAD — its ribbon is first seen over its top edge,
+// 0.08 k above it) and the room is the band's air alone, kept at that
+// measure so no page moved — one spelling to shrink, the owner's. THE TAIL
+// ROOM is only what the last card's TUCK needs (lib/ribbon-model — the
+// ribbon goes under the card's bottom edge and behind it): its bend's curl,
+// 0.056 k under the edge, and the shadow under that, 0.03 k down and blurred
+// 0.04 k (lib/ribbon-draw's THE COLOURS) — 0.126 k, spelled 0.13 ×
+// `--ribbon-k` — and 0.08 of a unit (8px at the default) for the tile's 2px
+// margin, the shadow's floors and a pixel of rounding: about 13px on a
+// phone, 18px on a laptop, 30px at the widest column at the default unit.
+// Until 2026-10-01 it was 60px + 1rem, where the tail HUNG under the last
+// card; the owner, the day the tail was tucked: "remove that space". Across,
+// a tile may
 // overhang the column by the few px the ribbon sticks out round a card's
 // edge; at a 320px window that never scrolls the page sideways (the
 // Narrowest story's test).
+//
+// ── THE UNIT (CLAUDE.md §15.25 round 2, §15.26). Every length of the ribbon
+// is a multiple of ONE CARD UNIT — lib/ribbon-model's UNIT_PX, the 100 CSS px
+// of the design the owner approved — and the column reads it as
+// `--ribbon-unit`, a registered length whose initial value is those 100px
+// (globals.css, THE RIBBON'S UNIT). A SCALED DESIGN sets it: globals.css's
+// `design-scale` (THE DESIGN SCALE) makes it 100 of the design's pixels,
+// and the doctors band wears that utility from its step
+// (sections/DoctorShowcase, THE SCALE), so its cards and their ribbon grow
+// and shrink together — the owner, 2026-10-01: "i want card and component
+// and all contents to adjust in size harmonically all at once". That is why
+// COLUMN's constants are FRACTIONS OF THE UNIT, not px: the gauge's straight
+// line, the lanes' offsets, the gap's 60px, the head and tail room. At the
+// default unit each is the px it always was — every computed value and every
+// laid-out box the same to the last digit, measured in Chromium and WebKit at
+// every 8px of column from 241 to 2 145 (2026-10-01) — and in a design
+// scaled by s each is the reference's ×s, while the gauge's `cqw` reads a
+// column scaled by s too: the ribbon inside a scaled design is the reference
+// ribbon, scaled — the same shape, the same waves, the lanes ×s — never a
+// new ribbon for a wider column (in px, the lanes' +8px and the gap's +60px
+// stood still while the column grew, and the waves crowded in).
+// lib/ribbon-draw reads the same unit off the root (its THE UNIT), and
+// lib/ribbon-layout divides the page's px by it. NOT the unit's: the two
+// 1.5rem FLOORS — a card's padding outside a ribbon (§7), which every
+// column the site has clears by far — and the fallback in each
+// `var(--ribbon-unit, 100px)`: today's column in an engine without
+// `@property`, where the unit has no initial value and no scaled design
+// declares it, for the band scales only where the engine registers custom
+// properties (sections/DoctorShowcase, D10's gates —
+// `@supports (color: rgb(from red r g b))`, registration's companion
+// feature in every engine). There the unit is that 100px, and
+// lib/ribbon-draw reads the same; an unregistered scaled design would paste
+// its unit as text where it is read, while lib/ribbon-draw would read
+// UNIT_PX under cards drawn scaled — the gate is what keeps one off the
+// page. The head and tail room follow the unit, not the font, since that
+// change: their 0.16 of a unit was 1rem — the same 16px at the default root,
+// but no longer more at a larger user font. It holds a tile's 2px margin and
+// the shadow, and the shadow follows the unit.
 //
 // ── THE SEAM TO A CARD — all the two share. The card marks four blocks with
 // the LITERAL attribute `data-ribbon-keepout` (the quote, the name block,
@@ -95,15 +138,23 @@ import { slotClone } from '../slot';
 // progress and its mirror are kept by its index, so a station added or
 // removed after mount is not supported. Children that are not stations are
 // not kept out. Forced colours and print hide the canvases by the class
-// string — pinned end to end since the mount (tests/e2e/doctor-showcase
-// .spec.ts). A button's focus ring reaches 4px outside its row, which is
-// exactly the guard's air (lib/ribbon-model's keep-outs are grown by 4px):
-// at rest the ribbon may touch a ring, never cross it. A button that GROWS
-// on hover (ui/Button's `motion="jump"`, 105 % — the doctor card's link) is
-// measured at rest, so where it fills the content box's width — the stacked
-// card — its hovered edge and ring can slide a few px under the side wave,
-// which paints above the cards: never wholly hidden (SC 2.4.11); growing its
-// keep-out by the jump is the owner's call (CLAUDE.md §15.26 round 5).
+// string — pinned end to end on the built pages since the mount
+// (tests/e2e/doctor-showcase.spec.ts). A button's focus ring reaches 4px
+// outside its row. At the default unit that is exactly the guard's air —
+// lib/ribbon-model's `penetration` grows a keep-out by M / 2, 4px — so the
+// guard keeps the ring clear by construction: at rest the ribbon may touch a
+// ring, never cross it. Inside a scaled design the guard's air is 4·s px
+// (3.24 at the band's smallest s, 0.81) while a ring stays 4 CSS px
+// (globals.css, THE DESIGN SCALE, leaves outlines alone), so there it is the
+// model's own clearance, M = 8·s px — 6.48 at that smallest s — that keeps
+// the strip off a ring: measured on the built Team page, the closest
+// approach to a name block is 7.33px at s 0.811, 7.80 at a 1280 window and
+// 8.44 at 1401 — nothing crossed. A button that GROWS on hover (ui/Button's
+// `motion="jump"`, 105 % — the doctor card's link) is measured at rest, so
+// where it fills the content box's width — the stacked card — its hovered
+// edge and ring can slide a few px under the side wave, which paints above
+// the cards: never wholly hidden (SC 2.4.11); growing its keep-out by the
+// jump is the owner's call (CLAUDE.md §15.26 round 5).
 //
 // ── DECORATIVE. The canvases' box is `aria-hidden`, nothing in it is
 // focusable, clicks fall through it, and it is hidden in forced-colours mode
@@ -149,21 +200,26 @@ const RibbonScope = createContext<true | null>(null);
 
 const ROOT = '@container relative isolate';
 
-// THE GAUGE AND THE LANES, in CSS (TWO BOXES, in the header) — KEEP IN SYNC
-// with lib/ribbon-model's gaugeRule() and lanes(): `--ribbon-k` is 100 k in
-// px, `max(RATIO × 100cqw, 100 (BOLD − SLOPE × 2.97) px + SLOPE × 100cqw)`;
-// the lanes are `max(24, 62 k + 8)`, `max(24, 60 k + 12, 83 k + 1)` and
-// `100 k + 60` px. Pinned twice: tests/unit/ribbon-lanes-sync.test.ts reads
-// the model's numbers back from its functions and finds them here, and
-// Ribbon.test.tsx measures what the browser computes at nine widths. Static
+// THE GAUGE AND THE LANES, in CSS (TWO BOXES, in the header), in the ribbon's
+// UNIT (THE UNIT) — KEEP IN SYNC with lib/ribbon-model's gaugeRule() and
+// lanes(): `--ribbon-k` is k units, `max(RATIO × 100cqw, (BOLD − SLOPE ×
+// 2.97) units + SLOPE × 100cqw)`; the lanes are `max(24, 62 k + 8)`,
+// `max(24, 60 k + 12, 83 k + 1)` and `100 k + 60` px at the default unit —
+// so each px is a hundredth of a unit here, and each 24px floor 1.5rem. The
+// head room is k + 0.16 of a unit, the tail room 0.13 k + 0.08 of a unit —
+// the tuck's curl and shadow (TWO BOXES says why).
+// Pinned three times: tests/unit/ribbon-lanes-sync.test.ts reads the model's
+// numbers back from its functions and finds them here, Ribbon.test.tsx
+// measures what the browser computes at nine widths, and — in a scaled design
+// — that every one of these lengths is the plain column's, scaled. Static
 // strings, so Tailwind's scanner sees every one.
 const COLUMN =
   'flex flex-col gap-(--ribbon-gap) ' +
-  'pt-[calc(var(--ribbon-k)_+_1rem)] pb-[calc(0.13*var(--ribbon-k)_+_8px)] ' +
-  '[--ribbon-k:max(7.9286cqw,calc(19.240px_+_6.0218cqw))] ' +
-  '[--ribbon-lane-top:max(1.5rem,calc(0.62*var(--ribbon-k)_+_8px))] ' +
-  '[--ribbon-lane-side:max(1.5rem,calc(0.60*var(--ribbon-k)_+_12px),calc(0.83*var(--ribbon-k)_+_1px))] ' +
-  '[--ribbon-gap:calc(var(--ribbon-k)_+_60px)]';
+  'pt-[calc(var(--ribbon-k)_+_0.16*var(--ribbon-unit,100px))] pb-[calc(0.13*var(--ribbon-k)_+_0.08*var(--ribbon-unit,100px))] ' +
+  '[--ribbon-k:max(7.9286cqw,calc(0.19240*var(--ribbon-unit,100px)_+_6.0218cqw))] ' +
+  '[--ribbon-lane-top:max(1.5rem,calc(0.62*var(--ribbon-k)_+_0.08*var(--ribbon-unit,100px)))] ' +
+  '[--ribbon-lane-side:max(1.5rem,calc(0.60*var(--ribbon-k)_+_0.12*var(--ribbon-unit,100px)),calc(0.83*var(--ribbon-k)_+_0.01*var(--ribbon-unit,100px)))] ' +
+  '[--ribbon-gap:calc(var(--ribbon-k)_+_0.60*var(--ribbon-unit,100px))]';
 
 const LAYER =
   'pointer-events-none absolute inset-0 forced-colors:hidden print:hidden';

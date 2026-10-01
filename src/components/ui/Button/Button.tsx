@@ -244,7 +244,7 @@ const base =
 // bundle (Button.test's fb-50 twin ban), and a consumer's static `shadow-aura`
 // simply scales with the box. The jump cell is the ONE place `scale` enters
 // the transition list, and the three longhands are ARBITRARY PROPERTIES on
-// purpose: `transition-[…]` + `duration-*` + `ease-*` would set the same
+// purpose: a transition-list class + `duration-*` + `ease-*` would set the same
 // three properties a second time, and two utilities on one property are
 // decided by the sheet's order, not by the caller (Header.tsx's `display`
 // lesson). KEEP-IN-SYNC with GlyphButton's `motionClasses` — byte-identical
@@ -317,7 +317,8 @@ const variantClasses: Record<ButtonVariant, Record<ButtonTone, string>> = {
 };
 
 // min-heights (not fixed heights) so long DE/FR labels may wrap (§8.4);
-// Tailwind spacing is rem-based, so browser zoom scales everything (§7).
+// Tailwind spacing is rem-based outside a scaled design (§15.25 round 2) — so
+// browser zoom scales everything there (§7).
 // `hero` JOINED 2026-10-01 with sections/Hero as its measured consumer
 // (owner, on the pack of the hero-aura lane: "buttons should also expand
 // retract in accord to adjusting of current tab for all screens. so they

@@ -217,10 +217,12 @@ import { Card } from '@/components/ui/Card/Card';
 // per-side padding outright (D5) and names the one way in, a `density` axis
 // of its own that joins when a SECOND proven card kind measures a different
 // inset. And className cannot stand in for it: on a `framed` card the atom's
-// arbitrary `p-[calc(1.5rem-2px)]` is emitted after the whole named scale, so
-// no caller `p-*` wins in either direction (ui/Card's WHY className CANNOT BE
-// THE PADDING paragraph) — which §6.8 forbids anyway. A roomier inset is
-// therefore an ATOM decision, reported to the planner, not spelled here.
+// arbitrary `p-[calc(var(--spacing)*6_-_2px)]` (22px at the default step;
+// spelled in steps since §15.25 round 2) is emitted after the whole named
+// scale, so no caller `p-*` wins in either direction (ui/Card's WHY
+// className CANNOT BE THE PADDING paragraph) — which §6.8 forbids anyway. A
+// roomier inset is therefore an ATOM decision, reported to the planner, not
+// spelled here.
 
 /**
  * The credo card's words — finished text (§8.1); `body` carries ui/Keyword's

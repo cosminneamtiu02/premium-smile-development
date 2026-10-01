@@ -168,14 +168,42 @@ import {
 // specification's letter, which reports it again, and a report is a
 // rebuild.
 //
-// ── NO REBUILD WITHOUT A NEW GEOMETRY. When the placed column, the device's
-// pixel ratio and the two colour tokens are what the last good build had, no
-// canvas is touched: the observer's first report repeats the build the start
-// has just made, and a phone fires `resize` when its address bar folds away
-// mid-scroll, where only the window's height moved. That frame still walks
-// the rule, because the window's height moves the line. In every frame the
-// window's numbers are read with the column, before the first canvas is
-// written — one layout, not two.
+// ── NO REBUILD WITHOUT A NEW GEOMETRY. When the placed column, the unit (THE
+// UNIT), the device's pixel ratio and the two colour tokens are what the last
+// good build had, no canvas is touched: the observer's first report repeats
+// the build the start has just made, and a phone fires `resize` when its
+// address bar folds away mid-scroll, where only the window's height moved.
+// That frame still walks the rule, because the window's height moves the
+// line. In every frame the unit is read first and the window's numbers with
+// the column, before the first canvas is written — one layout, not two.
+//
+// ── THE UNIT (CLAUDE.md §15.25 round 2, §15.26). The model counts in card
+// units, the page in CSS px, and the px of one unit are read off the root at
+// every build: its computed `--ribbon-unit` (globals.css, THE RIBBON'S
+// UNIT) — the same getComputedStyle that serves THE COLOURS, read FIRST so
+// the column is measured in it. It is 100px, the model's UNIT_PX — the
+// registered initial value — unless a scaled design says otherwise
+// (ui/Ribbon, THE UNIT); a value that is not a number above 0 reads as
+// UNIT_PX, which is the ribbon as it was. On the site that is ONE case: an
+// engine without `@property`, where the unit is nothing at all — no
+// registration, so no initial value, and no scaled design to declare it, for
+// the band scales only where the engine registers custom properties
+// (sections/DoctorShowcase, D10's gates:
+// `@supports (color: rgb(from red r g b))`, relative colour syntax, which
+// shipped with `@property` or after it in every engine — Safari 16.4,
+// Firefox 128, Chrome 119). There the ribbon reads UNIT_PX as its column
+// reads the 100px of `var(--ribbon-unit, 100px)`: the two agree. An
+// UNREGISTERED declaration of the unit would be text — read as UNIT_PX here
+// while the cards drew scaled — and the band's gate is what keeps one off
+// the page. The unit divides the page's px into the model's numbers
+// (lib/ribbon-layout's placeColumn), multiplies the model's points back into
+// canvas px, and scales THE SHADOW, so a ribbon inside a design scaled by s
+// is the reference ribbon scaled by s — its waves, its lanes and its shadow
+// alike — and at the default unit every number is the one it was, bit for
+// bit. What does NOT follow it: TILE_MARGIN, the rasteriser's 2px of air,
+// CSS px at any unit; and the pen's EFFORT, which lib/ribbon-paint counts in
+// the design's px — a pace is a share of the stretch, so a scaled ribbon
+// draws in the same time.
 //
 // ── THE GUARD: NO LANES, NO RIBBON. After every build, if any card's strip —
 // the painter's own samples, edges and centre — enters its own keep-outs by
@@ -193,7 +221,8 @@ import {
 // their own: a CSS colour assigned to a 2D context's `fillStyle` reads back
 // as `#rrggbb`. A missing or unreadable token, or a translucent one: nothing
 // is painted. The ribbon's shadow is the prototype's — 0 max(1px, 3k px)
-// down, blurred max(1.5px, 4k px), in the shadow token's colour at 0.38 —
+// down, blurred max(1.5px, 4k px), in the shadow token's colour at 0.38;
+// px at the default unit, and scaled with the unit (THE UNIT) —
 // and since 2026-10-01 it is PAINTED into each canvas under the ribbon
 // (lib/ribbon-paint's THE SHADOW IS PAINTED), never a CSS filter on it: the
 // owner saw the filter's "balcony" while a stretch was being drawn, and
@@ -315,15 +344,18 @@ export const DPR_CAP = 2;
 
 /** The end of the page, within this many px — and nothing more asked (THE OWNER'S RULE says why). */
 const END_PX = 2;
-/** How deep a strip may reach into a keep-out before the guard refuses the column, in card units (0.1 px). */
+/** How deep a strip may reach into a keep-out before the guard refuses the column, in card units (0.1 px at the default unit). */
 const GUARD_DEPTH = 0.001;
-/** The px a tile keeps around its strip, beyond the shadow's reach — read by ui/Ribbon's tests, whose tail room must hold it. */
+/** The px a tile keeps around its strip, beyond the shadow's reach — CSS px at any unit (THE UNIT); read by ui/Ribbon's tests, whose tail room must hold it. */
 export const TILE_MARGIN = 2;
-/** THE SHADOW's offset down and blur, in CSS px, for the gauge k (the prototype's drop-shadow) — read by ui/Ribbon's tests, whose tail room must hold it. */
-export const shadowOf = (k: number) => ({
-  dy: Math.max(1, 3 * k),
-  blur: Math.max(1.5, 4 * k),
-});
+/** THE SHADOW's offset down and blur, in CSS px, for the gauge k — the prototype's drop-shadow at UNIT_PX, scaled with the page's unit (THE UNIT); read by ui/Ribbon's tests, whose tail room must hold it. */
+export const shadowOf = (k: number, unit: number) => {
+  const scale = unit / UNIT_PX;
+  return {
+    dy: Math.max(1, 3 * k) * scale,
+    blur: Math.max(1.5, 4 * k) * scale,
+  };
+};
 /** What one canvas may hold: under iOS's 16.7 million pixels, and every engine's side. */
 const MAX_TILE_PIXELS = 16_000_000;
 const MAX_TILE_SIDE = 16_384;
@@ -371,6 +403,14 @@ function readView(root: HTMLElement): RibbonView {
       window.scrollY + window.innerHeight >=
       document.documentElement.scrollHeight - END_PX,
   };
+}
+
+/** THE UNIT: the CSS px of one card unit on the ribbon's root — its computed
+ *  `--ribbon-unit` — or UNIT_PX where that is not a number above 0; so never
+ *  a unit lib/ribbon-layout's placeColumn refuses. */
+function unitOf(style: CSSStyleDeclaration): number {
+  const unit = parseFloat(style.getPropertyValue('--ribbon-unit'));
+  return Number.isFinite(unit) && unit > 0 ? unit : UNIT_PX;
 }
 
 /** A RangeError is a column the model or the layout refuses — its text is the
@@ -550,6 +590,7 @@ export function startRibbonDraw(
   function plan(
     column: readonly PlacedCard[],
     tokens: readonly [string, string],
+    unit: number,
   ): Readonly<{ shadow: Rgb; planned: readonly Planned[] }> | string {
     probe ??= document.createElement('canvas').getContext('2d');
     if (probe === null) {
@@ -582,7 +623,7 @@ export function startRibbonDraw(
         : placed.input.boxes;
       const depth = penetration(points, boxes, frontY);
       if (depth > GUARD_DEPTH) {
-        return `card ${placed.index} would enter its keep-outs by ${depth.toFixed(4)} card units (${(depth * UNIT_PX).toFixed(1)}px) — a card owes the ribbon its lanes, --ribbon-lane-top and --ribbon-lane-side, and a ribbon over a card's words is worse than no ribbon (§15.26)`;
+        return `card ${placed.index} would enter its keep-outs by ${depth.toFixed(4)} card units (${(depth * unit).toFixed(1)}px) — a card owes the ribbon its lanes, --ribbon-lane-top and --ribbon-lane-side, and a ribbon over a card's words is worse than no ribbon (§15.26)`;
       }
       const wrap = model.atoms.wrapEntry;
       const cut = handOver(strip, (wrap.u0 + wrap.u1) / 2);
@@ -612,6 +653,7 @@ export function startRibbonDraw(
     planned: readonly Planned[],
     shadow: Rgb,
     ratio: number,
+    unit: number,
   ): readonly Built[] | string {
     // Card i's head goes on canvas i − 1 (card 0 has none), its body on
     // canvas i — each half with its card's centre, in root px, which is what
@@ -633,16 +675,16 @@ export function startRibbonDraw(
         if (tile !== t) continue;
         for (const { l, r } of samples) {
           for (const [x, , z] of [l, r]) {
-            minX = Math.min(minX, cx + x * UNIT_PX);
-            maxX = Math.max(maxX, cx + x * UNIT_PX);
-            minY = Math.min(minY, cy - z * UNIT_PX);
-            maxY = Math.max(maxY, cy - z * UNIT_PX);
+            minX = Math.min(minX, cx + x * unit);
+            maxX = Math.max(maxX, cx + x * unit);
+            minY = Math.min(minY, cy - z * unit);
+            maxY = Math.max(maxY, cy - z * unit);
           }
         }
       }
       // Grown by the shadow's reach: its blur all round, its offset below.
       const { k } = planned[t].placed.input;
-      const { dy, blur } = shadowOf(k);
+      const { dy, blur } = shadowOf(k, unit);
       const left = Math.floor(minX - TILE_MARGIN - blur);
       const top = Math.floor(minY - TILE_MARGIN - blur);
       const width = Math.ceil(maxX + TILE_MARGIN + blur) - left;
@@ -686,7 +728,7 @@ export function startRibbonDraw(
         tile,
         stretch: {
           strip: samples,
-          place: (p) => [cx + p[0] * UNIT_PX - left, cy - p[2] * UNIT_PX - top],
+          place: (p) => [cx + p[0] * unit - left, cy - p[2] * unit - top],
           frontY,
         },
       };
@@ -704,23 +746,25 @@ export function startRibbonDraw(
   /** Measure and place the column; rebuild only for A NEW GEOMETRY; then walk the rule. */
   function rebuild(root: HTMLElement, observer: ResizeObserver): void {
     watch(root, observer);
+    // THE UNIT first — the column is measured in it — and the rest read with
+    // the column, before the first canvas write: one layout.
+    const style = getComputedStyle(root);
+    const unit = unitOf(style);
     let column: readonly PlacedCard[];
     try {
-      column = placeColumn(measureColumn(root));
+      column = placeColumn(measureColumn(root), unit);
     } catch (error) {
       refuse(reasonOf(error));
       return;
     }
     status = column.map((_, i) => status[i] ?? 'waiting');
-    // Read with the column, before the first canvas write: one layout.
     const view = !reduced && status.includes('waiting') ? viewOf(root) : null;
-    const style = getComputedStyle(root);
     const tokens = [
       style.getPropertyValue('--ribbon'),
       style.getPropertyValue('--ribbon-shadow'),
     ] as const;
     const ratio = window.devicePixelRatio;
-    const key = JSON.stringify([column, ratio, tokens]);
+    const key = JSON.stringify([column, unit, ratio, tokens]);
     if (key !== built) {
       // Progress crosses the rebuild by index, as a share of the stretch.
       const shares = column.map((_, i) =>
@@ -728,11 +772,11 @@ export function startRibbonDraw(
       );
       if (running !== null && running.index >= column.length) running = null;
       queue = queue.filter((index) => index < column.length);
-      const outcome = plan(column, tokens);
+      const outcome = plan(column, tokens, unit);
       const laid =
         typeof outcome === 'string'
           ? outcome
-          : lay(outcome.planned, outcome.shadow, ratio);
+          : lay(outcome.planned, outcome.shadow, ratio, unit);
       if (typeof laid === 'string') {
         refuse(laid);
         return;

@@ -7,7 +7,7 @@ import {
   vi,
   type Mock,
 } from 'vitest';
-import { buildCard, gaugeRule } from '../ribbon-model/ribbon-model.ts';
+import { buildCard, gaugeRule, UNIT_PX } from '../ribbon-model/ribbon-model.ts';
 import { GOLDEN_CARDS } from '../ribbon-model/ribbon-model.golden.ts';
 import { buildStrip, type StripSample } from '../ribbon-paint/ribbon-paint.ts';
 import {
@@ -77,14 +77,19 @@ function harness(
     atEnd?: boolean;
     tokens?: boolean;
     view?: (root: HTMLElement) => RibbonView;
+    /** The column's own lengths — its width, its gap, its padding — times this (THE UNIT's tests; the cards are the caller's). */
+    scale?: number;
+    /** The root's `--ribbon-unit`, as a page would declare it (THE UNIT). */
+    unit?: string;
   } = {},
 ): Harness {
   const cards = options.cards ?? [card(CARD_H), card(CARD_H)];
+  const s = options.scale ?? 1;
   const host = document.createElement('div');
-  host.style.cssText = 'position: absolute; left: 0; top: 0; width: 600px';
+  host.style.cssText = `position: absolute; left: 0; top: 0; width: ${600 * s}px`;
   host.innerHTML = `
     <div style="position: relative">
-      <div style="display: flex; flex-direction: column; gap: ${GAP}px; padding: ${FIRST_TOP}px 0 100px">${cards.join('')}</div>
+      <div style="display: flex; flex-direction: column; gap: ${GAP * s}px; padding: ${FIRST_TOP * s}px 0 ${100 * s}px">${cards.join('')}</div>
       <div data-layer style="position: absolute; inset: 0"></div>
     </div>`;
   document.body.append(host);
@@ -96,6 +101,9 @@ function harness(
     for (const [name, value] of Object.entries(TOKENS)) {
       root.style.setProperty(name, value);
     }
+  }
+  if (options.unit !== undefined) {
+    root.style.setProperty('--ribbon-unit', options.unit);
   }
 
   const pending = new Map<number, (time: number) => void>();
@@ -644,6 +652,150 @@ describe('a new geometry — the prototype’s second bug', () => {
     resize();
     resize();
     expect(h.frames.pending).toBe(1);
+  });
+});
+
+describe('THE UNIT — the root’s --ribbon-unit, the CSS px of one card unit', () => {
+  /** The harness's column, every length of it and its cards' `s` times, in a unit of 100 s px — a design scaled by `s`. */
+  const scaled = (s: number) =>
+    harness({
+      cards: [card(CARD_H * s), card(CARD_H * s)],
+      reduced: true,
+      scale: s,
+      unit: `${UNIT_PX * s}px`,
+    });
+  /** Each canvas's four edges, in the root's px: left, top, right, bottom. */
+  const edges = (h: Harness) =>
+    tiles(h).map((tile) => {
+      const { left, top, width, height } = tile.style;
+      return [
+        parseFloat(left),
+        parseFloat(top),
+        parseFloat(left) + parseFloat(width),
+        parseFloat(top) + parseFloat(height),
+      ];
+    });
+
+  it('lays a column ×1.5 in a unit of 150px as the plain column ×1.5 — each canvas edge under 2.5px inside, for the tile’s CSS-px margin and two whole-px snaps', () => {
+    const plain = harness({ reduced: true });
+    plain.start();
+    const big = scaled(1.5);
+    expect(big.start().getSnapshot()).toMatchObject({
+      painted: true,
+      drawn: 2,
+    });
+    // Each edge moves INWARD by 1 + 1.5 f − f′ px: 1px because a tile's
+    // TILE_MARGIN is CSS px at any unit — the scaled tile keeps 2px where the
+    // plain one's ×1.5 keeps 3; plus the plain tile's own snap ×1.5 — every
+    // edge is snapped OUTWARD to a whole px, by an f in [0, 1), so up to
+    // 1.5px; less the scaled tile's own snap, an f′ in [0, 1). Strictly
+    // between 0 and 2.5px, then — Ribbon.test.tsx's derivation, without its
+    // layout's sub-pixels: this column is whole px, and ×1.5 exactly — and in
+    // steps of half a px, every edge being a whole px and the plain one's
+    // ×1.5 a half (measured: 2, 2, 1.5, 1 · 1.5, 2, 2, 1).
+    const [a, b] = [edges(plain), edges(big)];
+    expect(b).toHaveLength(a.length);
+    a.forEach((tile, i) =>
+      tile.forEach((edge, j) => {
+        // left and top move right and down; right and bottom, left and up.
+        const inward = (b[i][j] - 1.5 * edge) * (j < 2 ? 1 : -1);
+        expect(inward, `canvas ${i}, edge ${j}`).toBeGreaterThan(0);
+        expect(inward, `canvas ${i}, edge ${j}`).toBeLessThan(2.5);
+      }),
+    );
+    // As much thicker as it is longer: the paint covers ×1.5² the pixels,
+    // to the anti-aliased fringe a raster keeps at any size.
+    tiles(big).forEach((tile, i) => {
+      const ratio = paintedPixels(tile) / paintedPixels(tiles(plain)[i]);
+      expect(ratio, `canvas ${i}`).toBeGreaterThan(2.1);
+      expect(ratio, `canvas ${i}`).toBeLessThan(2.3);
+    });
+  });
+
+  it('scales THE SHADOW with the unit: its blur ×1.5, and its offset down by half again the plain one', () => {
+    const blur = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'shadowBlur',
+      'set',
+    );
+    const offset = vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'shadowOffsetY',
+      'set',
+    );
+    const plain = harness({ reduced: true });
+    plain.start();
+    const [plainBlur, plainOffset] = [blur, offset].map((spy) =>
+      spy.mock.calls.map(([value]) => value),
+    );
+    blur.mockClear();
+    offset.mockClear();
+    scaled(1.5).start();
+    const [bigBlur, bigOffset] = [blur, offset].map((spy) =>
+      spy.mock.calls.map(([value]) => value),
+    );
+    // One shadow per repaint — the same repaints in both columns.
+    expect(plainBlur.length).toBeGreaterThan(0);
+    expect(bigBlur).toHaveLength(plainBlur.length);
+    // The canvas's own scale rides both numbers (lib/ribbon-paint's
+    // paintShadow); the offset also carries the shape's lift, which is no
+    // length of the ribbon's — so its step is what the unit moved.
+    const [tile] = tiles(plain);
+    const ratio = tile.width / parseFloat(tile.style.width);
+    const dy = Math.max(1, 3 * gaugeRule(6));
+    plainBlur.forEach((value, i) => {
+      expect(bigBlur[i] / value).toBeCloseTo(1.5, 9);
+      expect(bigOffset[i] - plainOffset[i]).toBeCloseTo(0.5 * dy * ratio, 6);
+    });
+  });
+
+  it('reads UNIT_PX where the unit is not a number above 0 — text, a zero, a negative', () => {
+    // Text is what an UNREGISTERED declaration computes to, and the site
+    // never shows the ribbon one: an engine without `@property` never enters
+    // a scaled design (sections/DoctorShowcase, D10's gates), so there the
+    // unit is no declaration at all — the reference column below, for this
+    // file registers nothing. Text, a zero and a negative are unitOf's belt.
+    const reference = harness({ reduced: true });
+    reference.start();
+    for (const unit of ['calc(1.5px * 100)', '0px', '-150px', 'auto']) {
+      const h = harness({ reduced: true, unit });
+      expect(h.start().getSnapshot().painted, unit).toBe(true);
+      expect(edges(h), unit).toEqual(edges(reference));
+    }
+  });
+
+  it('rebuilds for a new unit alone — the same cards in another unit are a new geometry', async () => {
+    const widths = vi.spyOn(HTMLCanvasElement.prototype, 'width', 'set');
+    const h = harness({ reduced: true });
+    const draw = h.start();
+    await settle();
+    h.frames.run(500);
+    expect(widths).toHaveBeenCalledTimes(2);
+    const before = edges(h);
+
+    h.root.style.setProperty('--ribbon-unit', '120px');
+    resize();
+    h.frames.run(600);
+    expect(widths).toHaveBeenCalledTimes(4);
+    expect(edges(h)).not.toEqual(before);
+    expect(draw.getSnapshot()).toMatchObject({ painted: true, drawn: 2 });
+  });
+
+  it('tells how deep a refused card would reach in the PAGE’s px — card units × the unit', () => {
+    const covered = card(
+      CARD_H,
+      '<div data-ribbon-keepout style="position: absolute; inset: 0"></div>',
+    );
+    harness({
+      cards: [card(CARD_H), covered],
+      reduced: true,
+      unit: '150px',
+    }).start();
+    const depth = /by (\d+\.\d+) card units \((\d+\.\d+)px\)/.exec(
+      warnings()[0],
+    );
+    if (depth === null) throw new Error('no depth in the warning');
+    expect(Number(depth[2])).toBeCloseTo(Number(depth[1]) * 150, 0);
   });
 });
 

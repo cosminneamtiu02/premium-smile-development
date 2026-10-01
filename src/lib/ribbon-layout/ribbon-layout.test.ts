@@ -203,7 +203,7 @@ describe('placeColumn — the numbers the model takes, one card at a time', () =
         card: { left: 10, top: 700, width: 900, height: 504 },
       },
     ];
-    const placed = placeColumn(cards);
+    const placed = placeColumn(cards, UNIT_PX);
     const W = 1009 / UNIT_PX;
     for (const card of placed) {
       expect(card.input.W).toBe(W);
@@ -212,7 +212,7 @@ describe('placeColumn — the numbers the model takes, one card at a time', () =
   });
 
   it('keeps every box relative to its card’s centre, in card units, z up', () => {
-    const [first] = placeColumn([measured(0)]);
+    const [first] = placeColumn([measured(0)], UNIT_PX);
     expect(first.input.H).toBeCloseTo(5.04, 12);
     expect(first.input.boxes).toHaveLength(1);
     const [box] = first.input.boxes;
@@ -223,7 +223,10 @@ describe('placeColumn — the numbers the model takes, one card at a time', () =
   });
 
   it('mirrors every second card, by INDEX: its boxes’ x flips, nothing else', () => {
-    const placed = placeColumn([measured(0), measured(700), measured(1400)]);
+    const placed = placeColumn(
+      [measured(0), measured(700), measured(1400)],
+      UNIT_PX,
+    );
     expect(placed.map((card) => card.mirror)).toEqual([false, true, false]);
     expect(placed.map((card) => card.index)).toEqual([0, 1, 2]);
     expect(placed[1].input.boxes[0].x).toBeCloseTo(-2.5, 12);
@@ -232,19 +235,79 @@ describe('placeColumn — the numbers the model takes, one card at a time', () =
   });
 
   it('measures G to the next card’s top, and gives the last card none — null: the ribbon tucks under it (lib/ribbon-model’s THE TUCK)', () => {
-    const placed = placeColumn([measured(0), measured(700)]);
+    const placed = placeColumn([measured(0), measured(700)], UNIT_PX);
     expect(placed[0].input.G).toBeCloseTo((700 - 504) / UNIT_PX, 12);
     expect(placed[1].input.G).toBeNull();
     // A column of one card: it is the first and the last.
-    expect(placeColumn([measured(0)])[0].input.G).toBeNull();
+    expect(placeColumn([measured(0)], UNIT_PX)[0].input.G).toBeNull();
   });
 
   it('hands each card’s own rect through — it places the card’s ribbon', () => {
-    const [first] = placeColumn([measured(0)]);
+    const [first] = placeColumn([measured(0)], UNIT_PX);
     expect(first.card).toEqual(measured(0).card);
   });
 
   it('places nothing for nothing measured', () => {
-    expect(placeColumn([])).toEqual([]);
+    expect(placeColumn([], UNIT_PX)).toEqual([]);
+  });
+});
+
+describe('placeColumn — THE UNIT CONVERTS: a scaled design is the same column to the model', () => {
+  const scaled = (rect: Rect, s: number): Rect => ({
+    left: rect.left * s,
+    top: rect.top * s,
+    width: rect.width * s,
+    height: rect.height * s,
+  });
+  /** The column a design scaled by `s` lays out: every rect `s` times the reference's. */
+  const column = (s: number): MeasuredCard[] =>
+    [0, 700, 1400].map((top) => {
+      const card = {
+        card: { left: 10, top, width: 1009, height: 504 },
+        keepouts: [
+          { left: 714.5, top: top + 122, width: 100, height: 60 },
+          { left: 60, top: top + 40, width: 300, height: 200 },
+        ],
+      };
+      return {
+        card: scaled(card.card, s),
+        keepouts: card.keepouts.map((rect) => scaled(rect, s)),
+      };
+    });
+
+  it('hands the model the SAME numbers for a column ×1.5 in a unit of 150px — the reference ribbon, scaled', () => {
+    const reference = placeColumn(column(1), UNIT_PX);
+    const big = placeColumn(column(1.5), 1.5 * UNIT_PX);
+    // Every px here is a whole or a half px, ×1.5 a quarter at most: the
+    // floating point agrees to the last bit, mirror and last gap included.
+    expect(big.map(({ input }) => input)).toEqual(
+      reference.map(({ input }) => input),
+    );
+    expect(big.map(({ mirror }) => mirror)).toEqual([false, true, false]);
+    // The card's own rect still travels in the page's px: it places the
+    // card's ribbon.
+    expect(big[1].card).toEqual(scaled(column(1)[1].card, 1.5));
+  });
+
+  it('refuses a unit that is missing or not a finite number of CSS px above 0 — a RangeError naming it, whatever the column', () => {
+    const refusal = (unit: unknown) =>
+      `placeColumn: unitPx must be a finite number of CSS px above 0 (received ${String(unit)})`;
+    // The unit has no default — a forgotten one would measure a scaled column
+    // in the reference's px, silently (THE UNIT CONVERTS) — so it fails to
+    // compile, and a caller the types do not reach is refused at run time.
+    // @ts-expect-error — the unit is REQUIRED
+    const forgotten = () => placeColumn(column(1));
+    expect(forgotten).toThrow(RangeError);
+    expect(forgotten).toThrow(refusal(undefined));
+    for (const unit of [0, Number.NaN, -1, Number.POSITIVE_INFINITY]) {
+      for (const cards of [column(1), []]) {
+        expect(() => placeColumn(cards, unit), String(unit)).toThrow(
+          RangeError,
+        );
+        expect(() => placeColumn(cards, unit), String(unit)).toThrow(
+          refusal(unit),
+        );
+      }
+    }
   });
 });

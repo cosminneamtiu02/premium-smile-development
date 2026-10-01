@@ -1,6 +1,22 @@
-import { createRef, type Ref } from 'react';
+import { createRef, type CSSProperties, type Ref } from 'react';
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from 'vitest';
+// The REAL stylesheet, for ONE block of this suite since 2026-10-01 (D19):
+// THE INSET measured — at the theme's step and inside a design drawn at
+// another pixel (globals.css's THE DESIGN SCALE) — because a subtraction of
+// six spacing steps is a COMPUTED length that no class string can answer.
+// tests/setup/components.ts loads no CSS globally; the per-file import is the
+// house pattern (Card, Ribbon, Modal, ContactModal …). The STYLES note below
+// says what that changes for the rest of the file: nothing.
+import '@/styles/globals.css';
 import {
   Button,
   type ButtonTone,
@@ -34,13 +50,18 @@ import source from './PersonnelCard.tsx?raw';
 // FIXTURE the consuming band would have translated — Romanian with diacritics
 // (§15.7), factual and first-person (CMSR: no superlatives, no promises).
 //
-// ── Styles are NOT loaded in this project (tests/setup/components.ts imports no
-// stylesheet), so computed values would read back as browser defaults: the
-// utility TOKENS are the contract here, the convention every component test in
-// this repo follows. What needs real CSS — the justified quote, the faint ink,
-// the lilac keywords, the language's own quotation marks, the doctor card's 3px
-// frame and the 25px it still keeps to its content, the inset that adds
-// nothing outside a ribbon and the two arrangements of the doctor card — is
+// ── STYLES: the project loads none (tests/setup/components.ts imports no
+// stylesheet), and until 2026-10-01 this file loaded none either, so the
+// utility TOKENS are the contract almost everywhere here — the convention
+// every component test in this repo follows. Since D19 the file imports
+// globals.css (top of file) for ONE describe block, "THE INSET, measured":
+// the INSET's subtraction is six SPACING STEPS, and only an engine can say
+// what that comes to at the theme's step and inside a design drawn at
+// another pixel. Every other assertion still reads tokens, attributes and
+// roles — none reads a computed value, so each holds with the sheet or
+// without it. What else needs real CSS — the justified quote, the faint ink,
+// the lilac keywords, the language's own quotation marks, the doctor card's
+// frame on all four sides and the two arrangements of the doctor card — is
 // asserted one tier up, in PersonnelCard.stories.tsx's play functions.
 //
 // ── HARNESS NOTE — why a `process` shim, copied verbatim from Image.test.tsx
@@ -181,12 +202,18 @@ const CARD_BASE = [
 const SURFACE_ROW = ['border', 'border-line-subtle', 'bg-surface', 'p-6'];
 
 /** ui/Card's `framed` row — the doctor card's since D17's THE FRAME: the
- *  reviews deck's idle card, 3px of border over 1.5rem − 2px of padding. */
+ *  reviews deck's idle card, a 3px border over six spacing steps less 2px of
+ *  padding — 3px + 22px at the theme's step. Since 2026-10-01 the PADDING is
+ *  written in the step, so a band's scale moves it (D19), while the frame
+ *  stays a px border at every scale — an engine floors a fractional border
+ *  width to a whole pixel and keeps a padding's fraction (ui/Card's THE SUM
+ *  RULE). What the two come to is MEASURED below ("THE INSET, measured"), not
+ *  only spelled here. */
 const FRAMED_ROW = [
   'border-[3px]',
   'border-(--card-tint)',
   'bg-surface',
-  'p-[calc(1.5rem-2px)]',
+  'p-[calc(var(--spacing)*6_-_2px)]',
 ];
 
 const CARD_SURFACE = [...CARD_BASE, ...SURFACE_ROW].join(' ');
@@ -238,7 +265,13 @@ const NAME_PAIR = 'flex flex-col items-center gap-3';
  *  three row placements, the quote's dress and the link's width — byte for
  *  byte. */
 const INSET =
-  '@container pt-[max(0px,calc(var(--ribbon-lane-top,1.5rem)_-_1.5rem))] px-[max(0px,calc(var(--ribbon-lane-side,1.5rem)_-_1.5rem))]';
+  '@container pt-[max(0px,calc(var(--ribbon-lane-top,calc(var(--spacing)*6))_-_calc(var(--spacing)*6)))] px-[max(0px,calc(var(--ribbon-lane-side,calc(var(--spacing)*6))_-_calc(var(--spacing)*6)))]';
+/** The cutout's `sizes` (D17's THE PICTURE'S `sizes`, D19): from a 70rem
+ *  window on a mouse or trackpad — the band's own `pointer: fine` gate — the
+ *  cell the doctors band scales, 21vw; everywhere else, every touch screen at
+ *  any width included ("Touch devices unchanged", the owner, 2026-10-01), the
+ *  18rem cell. */
+const CUTOUT_SIZES = '(min-width: 70rem) and (pointer: fine) 21vw, 18rem';
 const GRID = {
   start:
     'flex flex-col gap-6 @3xl:grid @3xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] @3xl:gap-x-8 @3xl:gap-y-3',
@@ -475,8 +508,9 @@ describe('PersonnelCard — ui/Card dresses the article, the article IS the card
     // of the flat row's border or padding — a second border width or `p-*`
     // would leave the stylesheet's order to pick one. The ribbon's lanes still
     // ride the INSET, never the card: ui/Card refuses className as a padding
-    // API, and `framed` spends the same 1.5rem + 1px per side on border and
-    // padding as `surface` does (the Doctor stories measure it).
+    // API, and `framed` spends the same six spacing steps + 1px per side on
+    // border and padding as `surface` does — 25px at the theme's step,
+    // measured in "THE INSET, measured" below and in the Doctor stories.
     const { container } = renderDoctor();
 
     const card = cardOf(container);
@@ -717,11 +751,14 @@ describe('PersonnelCard — auxiliary is the column alone (D2)', () => {
 });
 
 describe('PersonnelCard — doctor: the inset the ribbon reads (D17)', () => {
-  it('wraps the whole doctor card in ONE inset — the lanes less Card’s 1.5rem, a container of its own', () => {
-    // ui/Card's `p-6` stays; the inset pads the DIFFERENCE, never below 0, so
-    // outside a ribbon it adds nothing (the stories measure that) and inside
-    // one the card's inset is the lane. Its own `@container` is what makes
-    // `@3xl` and the name's `band` measure the box the grid really has.
+  it('wraps the whole doctor card in ONE inset — the lanes less Card’s six spacing steps, a container of its own', () => {
+    // ui/Card's own spend stays; the inset pads the DIFFERENCE, never below
+    // 0, so outside a ribbon it adds nothing and inside one the card's inset
+    // is the lane — at the theme's step and inside a band's scaled one alike,
+    // because the subtraction is spelled in the step, `calc(var(--spacing)*6)`,
+    // never as the 1.5rem it comes to by default (D19; both measured in the
+    // next block). Its own `@container` is what makes `@3xl` and the name's
+    // `band` measure the box the grid really has.
     const { container } = renderDoctor();
 
     const card = cardOf(container);
@@ -736,6 +773,208 @@ describe('PersonnelCard — doctor: the inset the ribbon reads (D17)', () => {
       .map((t) => t.slice(0, t.indexOf('-')));
     expect(paddings).toEqual(['pt', 'px']);
   });
+});
+
+/** The two lanes a ribbon would declare around the card (§15.26's seam) —
+ *  two made-up lengths, each more than six steps at every scale measured
+ *  below, so the INSET always has a difference to pad. */
+const LANE_TOP = 90;
+const LANE_SIDE = 110;
+
+/** The four sides, as CSS spells them in a longhand's name. */
+const SIDES = ['top', 'right', 'bottom', 'left'] as const;
+
+/** The theme's spacing step — `--spacing`, 0.25rem — read off the root rather
+ *  than baked in (the stories' rem() rule): 4px at the 16px root this runner
+ *  keeps. */
+const themeStep = (): number =>
+  parseFloat(getComputedStyle(document.documentElement).fontSize) / 4;
+
+/**
+ * A doctor card in a plain 600px box — the width-giving parent ui/Card's
+ * inline-size containment needs (Card D10) — either bare (the theme's own
+ * step, no ribbon) or inside a design drawn at `scalePx` with a ribbon's two
+ * lanes declared around it: `design-scale` is globals.css's real utility, the
+ * one sections/DoctorShowcase wears. 600px keeps the card ONE column in every
+ * frame below — its INSET is under 48rem, the premise each test asserts — so
+ * the quote spans the INSET's content box and its edges ARE that box's. The
+ * scale and the lanes ride an inline style, never an arbitrary class: they
+ * vary per case, and Tailwind reads class names from source text.
+ */
+const renderMeasured = (scaled?: { scalePx: number }) => {
+  const style = {
+    width: '600px',
+    ...(scaled && {
+      '--scale-px': `${scaled.scalePx}px`,
+      '--ribbon-lane-top': `${LANE_TOP}px`,
+      '--ribbon-lane-side': `${LANE_SIDE}px`,
+    }),
+  } as CSSProperties;
+  render(
+    <div className={scaled ? 'design-scale' : undefined} style={style}>
+      <PersonnelCard
+        kind="doctor"
+        name={DOCTOR_NAME}
+        position={DOCTOR_ROLE}
+        photo={CUTOUT}
+        about={ABOUT}
+        profile={PROFILE}
+      />
+    </div>,
+  );
+  const card = screen.getByRole('article', { name: DOCTOR_NAME });
+  const inset = card.firstElementChild as HTMLElement;
+  const grid = inset.firstElementChild as HTMLElement;
+  return {
+    cardStyle: getComputedStyle(card),
+    insetStyle: getComputedStyle(inset),
+    gridStyle: getComputedStyle(grid),
+    cardBox: card.getBoundingClientRect(),
+    gridBox: grid.getBoundingClientRect(),
+    quoteBox: screen.getByRole('blockquote').getBoundingClientRect(),
+  };
+};
+
+type Measured = ReturnType<typeof renderMeasured>;
+
+/**
+ * WHERE THE WORDS START, measured from the card's BORDER edge: `top` down to
+ * the GRID — the INSET's one child, so the INSET's content edge — and `side`
+ * in to the quote on the left and on the right. On the way, the card's own
+ * SPEND per side — its frame plus its padding, as the engine renders them,
+ * computed values and never classes — is held to what the INSET subtracts it
+ * against: six steps + 1px (ui/Card's THE SUM RULE, in the step). EXACT at
+ * every step: the frame is a whole 3px border wherever the card is drawn and
+ * the padding, six steps less 2px, carries the step (D19), so nothing is
+ * floored. The 0.05px of slack (toBeCloseTo's one decimal) is the engine's own
+ * layout precision and no more — Chromium lays boxes out in 64ths of a pixel,
+ * so a length that is no whole pixel lands within 1/64px of its value, and
+ * each distance below sums two such lengths with the 3px frame: 1/32px at
+ * worst, inside the 0.05. A frame drawn IN the step — D19's first round —
+ * failed this bound by the
+ * engine's floor wherever ¾ of the step was no whole pixel: 0.5px short at a
+ * 1.5px design pixel, a whole pixel at the owner's own window. The spend, not
+ * the frame/padding split, is what is held here: that split is ui/Card's to
+ * choose (FRAMED_ROW pins its spelling above), and the INSET relies on the
+ * sum alone.
+ */
+const expectWordsAt = (
+  measured: Measured,
+  step: number,
+  edge: { top: number; side: number },
+): void => {
+  const { cardStyle, cardBox, gridBox, quoteBox } = measured;
+  for (const side of SIDES) {
+    const spend =
+      parseFloat(cardStyle.getPropertyValue(`border-${side}-width`)) +
+      parseFloat(cardStyle.getPropertyValue(`padding-${side}`));
+    expect(spend, side).toBeCloseTo(6 * step + 1, 1);
+  }
+  expect(quoteBox.left - cardBox.left).toBeCloseTo(edge.side, 1);
+  expect(cardBox.right - quoteBox.right).toBeCloseTo(edge.side, 1);
+  expect(gridBox.top - cardBox.top).toBeCloseTo(edge.top, 1);
+};
+
+/** The band's design pixel at its OWN STEP — a column of max(56rem, 896px),
+ *  896px at this runner's 16px root, over the 1106 it is drawn for
+ *  (sections/DoctorShowcase's STEP and REFERENCE): the narrowest the band
+ *  ever scales, 0.81 — at ANY root, since the step's px floor (G2, R6) —
+ *  where ¾ of a step is 2.43px, no whole pixel. */
+const DESIGN_PX_AT_STEP = 896 / 1106;
+
+/** The band's design pixel at the owner's own 1401px window under a classic
+ *  scrollbar — its column, measured at 1105.81px (the band's REFERENCE
+ *  paragraph), over the 1106 it is drawn for: 0.99983, where ¾ of a step is
+ *  2.9995px — no whole pixel either. */
+const DESIGN_PX_AT_OWNER_WINDOW = 1105.81 / 1106;
+
+describe('PersonnelCard — doctor: THE INSET, measured (D17, D19 — real stylesheet)', () => {
+  // THE STILLNESS RULE (the PR #45 rule, Ribbon.test.tsx's spelling):
+  // unlayered, so it beats every @layer'd utility — the card's colour fade and
+  // the link's jump never run under a reading. Scoped to this block, the one
+  // that reads computed values.
+  let still: HTMLStyleElement | undefined;
+  beforeAll(() => {
+    still = document.createElement('style');
+    still.textContent =
+      '*, *::before, *::after { transition: none !important; animation: none !important; }';
+    document.head.append(still);
+  });
+  afterAll(() => {
+    still?.remove();
+  });
+
+  it('adds NOTHING outside a ribbon — the words start where the framed card alone puts them, six steps + 1px in (25px)', () => {
+    // No lanes declared: the registered initial value, 24px — six steps at
+    // the 16px root — less six steps is 0, on every side. The frame is the
+    // reviews deck's whole 3px, a px border at every step, over six steps
+    // less 2px of padding — 22px here (D17's THE FRAME) — so the words start
+    // exactly 25px in, as they did before D19.
+    const step = themeStep();
+    const measured = renderMeasured();
+    expect(measured.gridStyle.display).toBe('flex');
+    for (const side of SIDES) {
+      expect(measured.insetStyle.getPropertyValue(`padding-${side}`)).toBe(
+        '0px',
+      );
+      expect(measured.cardStyle.getPropertyValue(`border-${side}-width`)).toBe(
+        '3px',
+      );
+      expect(measured.cardStyle.getPropertyValue(`padding-${side}`)).toBe(
+        `${6 * step - 2}px`,
+      );
+    }
+    expectWordsAt(measured, step, { top: 6 * step + 1, side: 6 * step + 1 });
+  });
+
+  it.each([
+    { scalePx: DESIGN_PX_AT_STEP, design: 'the band’s own step (0.81px)' },
+    {
+      scalePx: DESIGN_PX_AT_OWNER_WINDOW,
+      design: 'the owner’s window (0.99983px)',
+    },
+    { scalePx: 1, design: '1px' },
+    { scalePx: 1.5, design: '1.5px' },
+    { scalePx: 2, design: '2px' },
+  ])(
+    'puts the words exactly `lane + 1px` from the card’s edge in a design drawn at $design — six steps of THAT design come off, never 1.5rem (D19)',
+    ({ scalePx }) => {
+      // 1px is the owner's reference, the owner's window his 1401px window
+      // to the measured hundredth of its column, the band's step the
+      // narrowest it ever scales, and 1.5px and 2px a design drawn wider:
+      // the INSET's subtraction knows no reference and no cap, only the
+      // step. Inside `design-scale` the step is 4 design pixels, so six of
+      // them come to 19.4, 23.996, 24, 36 and 48px — where the old literal
+      // 1.5rem would have taken 24px at every scale: the words 4.6px too
+      // close at the band's step, and 12px and 24px too far in at the two
+      // wider designs (those two mutated back once, both red). EXACT in every
+      // case — the frame stays 3px and the padding carries the step — and
+      // three of them (0.81, the owner's window, 1.5) are where a frame drawn
+      // in the step came out floored, 0.43, 0.9995 and 0.5px thin (measured
+      // in Chromium at 1× and 2× alike), which this bound refuses.
+      const step = 4 * scalePx;
+      const measured = renderMeasured({ scalePx });
+      expect(measured.gridStyle.display).toBe('flex');
+      // THE INSET's own share: each lane less six steps, as the computed
+      // value serialises it — to six figures (`90.557px` at the band's step),
+      // so never an exact string where six steps are no whole pixel — and
+      // nothing below, where the ribbon's seam has no lane (§15.26).
+      expect(parseFloat(measured.insetStyle.paddingTop)).toBeCloseTo(
+        LANE_TOP - 6 * step,
+        1,
+      );
+      expect(parseFloat(measured.insetStyle.paddingRight)).toBeCloseTo(
+        LANE_SIDE - 6 * step,
+        1,
+      );
+      expect(measured.insetStyle.paddingBottom).toBe('0px');
+      expect(parseFloat(measured.insetStyle.paddingLeft)).toBeCloseTo(
+        LANE_SIDE - 6 * step,
+        1,
+      );
+      expectWordsAt(measured, step, { top: LANE_TOP + 1, side: LANE_SIDE + 1 });
+    },
+  );
 });
 
 describe('PersonnelCard — doctor: the block, the words, the link (D7, D17)', () => {
@@ -855,7 +1094,7 @@ describe('PersonnelCard — doctor: the cutout (D3, D17)', () => {
     expect(cutout.parentElement).toBe(doctorPartsOf(container).picture);
   });
 
-  it('keeps the cutout’s intrinsic size, declares an 18rem box and loads lazily (§11)', () => {
+  it('keeps the cutout’s intrinsic size, declares its box — 18rem, and 21vw where the band scales it — and loads lazily (§11)', () => {
     const { container } = renderDoctor();
 
     const cutout = within(container).getByRole('presentation');
@@ -863,11 +1102,55 @@ describe('PersonnelCard — doctor: the cutout (D3, D17)', () => {
     expect(cutout).toHaveAttribute('height', String(CUTOUT.height));
     expect(cutout.getAttribute('src')).toContain('cutout-1');
     expect(cutout.getAttribute('srcset')).toContain('nextImageExportOptimizer');
-    // The cell is 18rem (`w-72`); `sizes` says so, or the browser assumes
-    // 100vw and fetches a file five times too wide.
-    expect(cutout).toHaveAttribute('sizes', '18rem');
+    // The cell is 18rem (`w-72`), and from a 70rem window on a mouse or
+    // trackpad the doctors band draws it at its own scale, ≈ 21vw of the
+    // window (D19) — never on a touch screen, which keeps the 18rem cell at
+    // any width and must ask for it; `sizes` says so, or the browser assumes
+    // 100vw and fetches a file five times too wide — or, in the band, keeps
+    // fetching the 18rem file for a cell that has grown past it.
+    expect(cutout).toHaveAttribute('sizes', CUTOUT_SIZES);
     // Lazy unless a band asks otherwise (D18, the block below).
     expect(cutout).toHaveAttribute('loading', 'lazy');
+  });
+
+  it('lets next/image READ the `21vw` — the srcset sheds only the widths no box of the card can use (D19)', () => {
+    // THE SPACE BEFORE `21vw` IS LOAD-BEARING (PersonnelCard.tsx,
+    // THE PICTURE'S `sizes`): next/image reads the smallest `vw` share it
+    // finds at the start or after a space — here after the pointer condition,
+    // `(pointer: fine) 21vw` — and keeps only the candidates of at least
+    // deviceSizes[0] × that share — 640 × 0.21 = 134.4px, on this runner's
+    // default config as on the site's (both start their deviceSizes at 640).
+    const widthsOf = (picture: HTMLElement): number[] =>
+      [
+        ...(picture.getAttribute('srcset') ?? '').matchAll(/\s(\d+)w(?:,|$)/g),
+      ].map((match) => Number(match[1]));
+
+    const widths = widthsOf(cutoutOf(renderDoctor().container));
+    expect(widths.length).toBeGreaterThan(0);
+    expect(Math.min(...widths)).toBeGreaterThanOrEqual(640 * 0.21);
+    // …and every width the cell asks for at 1×, 2× and 3× stays: 18rem on
+    // every touch screen and under a 70rem window (384 · 640 · 1080), 21vw of
+    // the step's own 70rem window (256) and of a 1920 window, 403px (640 ·
+    // 828 · 1920).
+    for (const width of [256, 384, 640, 828, 1080, 1920]) {
+      expect(widths).toContain(width);
+    }
+
+    // NEVER VACUOUS: the same picture asked for `18rem` alone keeps the
+    // small widths, so the shedding above is the `21vw`'s doing — read — and
+    // not the config's.
+    const { container, unmount } = render(
+      <Image
+        variant="artwork"
+        src={CUTOUT.src}
+        width={CUTOUT.width}
+        height={CUTOUT.height}
+        alt=""
+        sizes="18rem"
+      />,
+    );
+    expect(Math.min(...widthsOf(cutoutOf(container)))).toBeLessThan(640 * 0.21);
+    unmount();
   });
 });
 
@@ -891,8 +1174,9 @@ const cutoutOf = (container: HTMLElement): HTMLElement =>
 
 /**
  * The cutout as this card rendered it BEFORE D18 — ui/Image with the card's
- * own six props and nothing else — mounted and unmounted inside the helper, so
- * "attribute for attribute what it is today" is a comparison, never a belief.
+ * own six props and nothing else (its `sizes` D19's CUTOUT_SIZES) — mounted
+ * and unmounted inside the helper, so "attribute for attribute what it is
+ * today" is a comparison, never a belief.
  */
 const bareCutout = (): Record<string, string | null> => {
   const { container, unmount } = render(
@@ -902,7 +1186,7 @@ const bareCutout = (): Record<string, string | null> => {
       width={CUTOUT.width}
       height={CUTOUT.height}
       alt=""
-      sizes="18rem"
+      sizes={CUTOUT_SIZES}
     />,
   );
   const attributes = attributesOf(cutoutOf(container));
@@ -979,7 +1263,12 @@ describe('PersonnelCard — doctor: eager only when the band asks (D18)', () => 
         element.getAttribute('imagesrcset') === cutout.getAttribute('srcset'),
     );
     expect(link).toBeInstanceOf(HTMLLinkElement);
-    expect(link).toHaveAttribute('imagesizes', '18rem');
+    // The SAME `sizes` as the <img> — D19's CUTOUT_SIZES, its pointer
+    // condition and the scaled cell's 21vw included — or the preload would
+    // fetch a variant the <img> does not pick, and the page's largest paint
+    // would download twice.
+    expect(link).toHaveAttribute('imagesizes', CUTOUT_SIZES);
+    expect(link?.getAttribute('imagesizes')).toBe(cutout.getAttribute('sizes'));
     expect(link).toHaveAttribute('fetchpriority', 'high');
   });
 

@@ -272,9 +272,12 @@ export const GermanStress: Story = {
  * row widest: this is where the brand-to-first-link gap sits at its FLOOR.
  * Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block puts the step at
  * 60rem so that German keeps ≥ 4rem (64px — ~70% of the 94px "Startseite")
- * there; at this story's 964px bar the expected gap is
- * (932 − 279.3) / 2 − 258.5 ≈ 67.85px (row = bar − the `px-4`; nav 279.3;
- * brand 258.5).
+ * there; at this story's 964px bar the expected gap was
+ * (932 − 279.3) / 2 − 258.5 ≈ 67.85px with the demo cat (row = bar − the
+ * `px-4`; nav 279.3; brand 258.5) and is ≈ 104.4px since the clinic's
+ * near-square mark (2026-10-01: brand ≈ 221.9 = 71.2 + 12 + 138.8). The step
+ * stayed and the brand shrank — Header.tsx, THE BRAND SHRANK, records why the
+ * number was not lowered with it.
  *
  * HOW THE FRAME REACHES THE STEP at any window width: the pill's side margins
  * are `clamp(1rem, 10vw, 12.5rem)` each (ui/Container's `containerClasses`),
@@ -289,10 +292,14 @@ export const GermanStress: Story = {
  *
  * The play measures, it does not read classes back: the row is drawn (the
  * current link is reachable by role, which a display:none row is not), the
- * bar really is at the step, the gap is within [4rem, 5rem], the bar never
- * scrolls sideways, and the nav still sits on the bar's centre line — at the
- * step each side track is ≥ 324px against the 258.5px brand, so exact
- * centring holds here too.
+ * bar really is at the step, the gap is within [4rem, 7rem] — the owner's
+ * floor, and a ceiling that proves this frame is AT the step and not past
+ * it: the ~222px brand leaves ≈ 104px here, 7rem (112px) is the first whole
+ * rem above that, and a wider bar adds a pixel of gap for every two of bar,
+ * so a frame even 16px past the flip would breach it (5rem was the ceiling
+ * for the demo cat's 67.85) — the bar never scrolls sideways, and the nav
+ * still sits on the bar's centre line — at the step each side track is
+ * ≥ 324px against the ~222px brand, so exact centring holds here too.
  */
 export const AtTheStep: Story = {
   globals: { locale: 'de', viewport: { value: 'notebook' } },
@@ -359,10 +366,12 @@ export const AtTheStep: Story = {
     });
     const [first] = within(nav).getAllByRole('link');
     const gap = first.getBoundingClientRect().left - brandRight;
-    // ≥ 4rem is the owner's floor; ≤ 5rem proves this frame really is AT the
-    // step rather than comfortably past it.
+    // ≥ 4rem is the owner's floor; ≤ 7rem proves this frame really is AT the
+    // step rather than comfortably past it (≈ 104px expected since the
+    // clinic's mark, 2026-10-01 — the doc comment has the arithmetic; 5rem
+    // was the ceiling for the demo cat's ≈ 67.85px).
     await expect(gap).toBeGreaterThanOrEqual(4 * rem);
-    await expect(gap).toBeLessThanOrEqual(5 * rem);
+    await expect(gap).toBeLessThanOrEqual(7 * rem);
 
     // §7 — nothing may require horizontal scrolling.
     await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth);

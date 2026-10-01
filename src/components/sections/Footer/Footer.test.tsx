@@ -149,8 +149,9 @@ describe('Footer — every control is a LINK (zero-island contract)', () => {
 describe('Footer — row 1, the brand', () => {
   it('opens the band with sections/Wordmark, centred in an h-20 box', () => {
     // Since the fb-200 swap this row is the SAME lockup the Header's corner
-    // renders — artwork, hairline bar, the name at Heading's title step — so
-    // the §15.6 logo arrives in one file instead of two. The name is still
+    // renders — the mark, the name at Heading's title step in the brand's two
+    // colours (2026-10-01; the hairline bar left with D12) — which is how the
+    // §15.6 logo arrived in one file instead of two. The name is still
     // data from lib/clinic/clinic.ts (§10.1), and the brand is still identified
     // positionally: the first child of the gutter box. The two wrappers are
     // this section owning placement and SIZE (§6.4/§6.8) — `pb-8` is the old
@@ -171,9 +172,12 @@ describe('Footer — row 1, the brand', () => {
     expect(classesOf(box)).toEqual(expect.arrayContaining(['flex', 'h-20']));
     expect(lockup.tagName).toBe('A');
     expect(lockup).toHaveTextContent(clinic.name);
-    expect(classesOf(within(lockup).getByText(clinic.name))).toContain(
-      'font-display',
-    );
+    // The name is ONE string split over two coloured words (Wordmark.tsx, THE
+    // TWO COLOURS), so it is found by its Heading host, not by a text match
+    // that a single text node would satisfy and two spans cannot.
+    const host = lockup.querySelector('span.font-display') as HTMLElement;
+    expect(host.textContent).toBe(clinic.name);
+    expect(host.querySelectorAll('[data-logotype]')).toHaveLength(2);
     // NOT a heading either: the one <h1> belongs to the page, and a repeated
     // shell element must not claim an outline slot (the Header's C2 rule).
     expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
@@ -183,9 +187,9 @@ describe('Footer — row 1, the brand', () => {
     // The rule this row was built on ("the Header owns the home link; a second
     // link with the same name is a duplicate destination") is not broken by
     // the swap, it is MOOT: D9's lockup is a placeholder <a> with no href, so
-    // it takes no link role, no tab stop and no accessible name. The question
-    // re-poses itself the day the wiring diff lands, and Wordmark.tsx is where
-    // that is written down.
+    // it takes no link role, no tab stop and no accessible name — and since
+    // the owner dropped the wiring (2026-09-06, Wordmark.tsx D9) the question
+    // is closed by removal, not merely deferred.
     const { footer } = mount();
     const gutter = footer().firstElementChild as HTMLElement;
     const lockup = gutter.querySelector('a') as HTMLElement;

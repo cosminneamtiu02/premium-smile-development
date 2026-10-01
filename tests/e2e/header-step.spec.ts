@@ -50,12 +50,15 @@ const readBar = (page: Page): Promise<Bar> =>
       el !== null && getComputedStyle(el).display !== 'none';
     // The brand corner is sections/Wordmark's lockup: the one <a> in the bar
     // wrapping an <img> (the artwork; D10 renders every part at every width).
-    // NOT "the <a> without an href" — that is D9's placeholder state, and
-    // Wordmark schedules the home-link wiring that ends it (G2, 2026-09-26).
+    // NOT "the <a> without an href" — D9's placeholder state is FINAL since
+    // the owner dropped the home-link wiring (2026-09-06), and a selector
+    // keyed on an absence would be the wrong idiom anyway (G2, 2026-09-26).
     // The gap is measured from what the lockup PAINTS — the right edge of its
     // last child, the name — never from the anchor's own box: WebKit sizes
     // that box from the artwork's natural width (301.5px around the 258.5px
-    // it paints, measured 2026-09-26) and Firefox lets the brand's cell span
+    // the demo cat's lockup painted, measured 2026-09-26; the clinic's
+    // near-square mark makes the lockup ~222px since 2026-10-01 and the
+    // German gap at the step ~104px — Header.tsx) and Firefox lets the brand's cell span
     // its whole track, so a box edge would misreport the air between "Smile"
     // and the first link. Chromium is the only engine this suite runs today;
     // the measurement is engine-proof anyway.

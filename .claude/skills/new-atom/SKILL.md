@@ -31,7 +31,7 @@ merge into develop in parallel; main waits until the owner feels develop is read
 
 Stop-and-ask only for: ambiguous mapping, merge/drop verdicts, brief-§15 parked decisions.
 
-### Model routing (owner decision 2026-08-03)
+### Model routing (owner decisions 2026-08-03 + 2026-10-01)
 
 Planning and judgment run in the **main loop** (session model — Fable by owner
 preference): S0–S3, every canvas interaction, G2 finding-verification, V, S7,
@@ -42,10 +42,14 @@ spec incl. amendments, the expected-diff manifest, fixture strings, and the
 atom path. On return the main loop **re-runs G1 itself** (trust but verify)
 and continues G2 → V → S7. **G2 reviewers run as the project-shadow agents**
 in `.claude/agents/` (`react-reviewer`, `typescript-reviewer`,
-`a11y-architect` — verbatim ecc copies pinned `model: fable` + `effort: max`;
-project scope beats plugin scope, so dispatch the UNSCOPED names). Code
-review and finding-verification stay on the judgment model at max effort;
-only the S4–S6 build runs on Opus. The main loop's own effort floor is
+`a11y-architect` — verbatim ecc copies pinned `model: opus` + `effort: max`;
+project scope beats plugin scope, so dispatch the UNSCOPED names, passing
+`model: "opus"` too). Every reviewer runs on Opus at max effort — the owner,
+2026-10-01: "NO MORE FABLE REVIEWERS FROM NOW ON UNLESS I EXPLICITLY SAY SO.
+ALL REVIEWERS MUST USE OPUS" (the 2026-08-03 Fable pin is history); a Fable
+review only on his explicit word in the current conversation, as a model
+override at dispatch. Finding-verification stays in the main loop; the
+S4–S6 build runs on Opus. The main loop's own effort floor is
 persisted as `effortLevel: xhigh` in `.claude/settings.json` (`max` is
 session-only — the owner may top up with `/effort max`). If the Agent tool
 or an agent type is unavailable, do that stage inline and note it in the
@@ -103,11 +107,12 @@ layout-relevant.
 `npx tsc --noEmit` · `npm run lint` · `npx prettier --check .` · `npm run test -- --run` ·
 `npm run build-storybook` · axe = 0 violations. Red → `/debug-deep`. Never tweak-and-retry.
 
-### G2 · AGENT GATE *(reviewers = Fable @ max effort)*
+### G2 · AGENT GATE *(reviewers = Opus @ max effort — Fable only on the owner's explicit word)*
 `react-reviewer` + `typescript-reviewer` (parallel); `a11y-architect` for
 interactive atoms — the UNSCOPED names resolve to the project shadows in
-`.claude/agents/`, pinned `model: fable` + `effort: max` (owner decision
-2026-08-03). Verify findings before applying; CRITICAL/HIGH → S5.
+`.claude/agents/`, pinned `model: opus` + `effort: max` (owner rule
+2026-10-01, replacing the 2026-08-03 Fable pin). Verify findings before
+applying; CRITICAL/HIGH → S5.
 **Iteration economy:** on pack-annotation loops, G2 re-runs **only if the diff since the
 last G2 touches types/logic** — pure class-string/token tweaks skip straight to V.
 

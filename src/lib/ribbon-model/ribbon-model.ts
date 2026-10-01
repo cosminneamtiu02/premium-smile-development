@@ -203,7 +203,11 @@ export type CardModel = Readonly<{
   surface(u: number, v: number): Vec3;
 }>;
 
-/** One card unit, in CSS px (the prototype's PX). */
+/** One card unit, in CSS px (the prototype's PX) — at the DEFAULT unit. A
+ *  scaled design sets `--ribbon-unit` to 100 of its own pixels (globals.css THE
+ *  DESIGN SCALE, §15.25 round 2) and lib/ribbon-layout / lib/ribbon-draw
+ *  convert with that computed value instead, so nothing in this module ever
+ *  sees the scale: its numbers are the reference ribbon's, at every width. */
 export const UNIT_PX = 100;
 
 // ── THE GAUGE RULE (fb-489, fb-501, fb-510 "agree"). The desktop keeps the
@@ -212,8 +216,9 @@ export const UNIT_PX = 100;
 // one straight line between the two, the desktop's own ratio above the
 // desktop's card: no jump anywhere, and no breakpoint.
 // KEEP IN SYNC with ui/Ribbon's `--ribbon-k` (`COLUMN` there), which spells
-// this rule in CSS as `max(RATIO × 100cqw, 100 (BOLD − SLOPE × 2.97) px +
-// SLOPE × 100cqw)`; tests/unit/ribbon-lanes-sync.test.ts reads the numbers
+// this rule in CSS as `max(RATIO × 100cqw, (BOLD − SLOPE × 2.97) units +
+// SLOPE × 100cqw)` — the constant a fraction of `--ribbon-unit`, 100px unless
+// a scaled design says otherwise; tests/unit/ribbon-lanes-sync.test.ts reads the numbers
 // back from gaugeRule() and finds them in that class string, and
 // ui/Ribbon/Ribbon.test.tsx measures the result in a browser.
 const DESKTOP_W = 10.09;
@@ -332,9 +337,10 @@ export function gaugeRule(W: number): number {
 }
 
 /**
- * The lanes the ribbon runs in, in CSS px, for the gauge k: the card's top
- * padding, its side padding, and the gap between two cards. Never under the
- * 24px (1.5rem) a card keeps outside a ribbon.
+ * The lanes the ribbon runs in, in CSS px AT THE DEFAULT UNIT (UNIT_PX) — a
+ * scaled design's lanes are these × its `--ribbon-unit` / 100px — for the
+ * gauge k: the card's top padding, its side padding, and the gap between two
+ * cards. Never under the 24px (1.5rem) a card keeps outside a ribbon.
  * KEEP IN SYNC with ui/Ribbon's `--ribbon-lane-top`, `--ribbon-lane-side` and
  * `--ribbon-gap` (`COLUMN` there) — the same pair of pins as gaugeRule().
  */

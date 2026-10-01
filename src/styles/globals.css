@@ -439,6 +439,128 @@
   inherits: true;
   initial-value: 24px;
 }
+/* THE RIBBON'S UNIT (§15.26, §15.25 round 2): one of lib/ribbon-model's card
+   units, in CSS px — 100px, the prototype's, unless a scaled design says
+   otherwise (`design-scale` below makes it 100 of the design's pixels).
+   ui/Ribbon spells its gauge, lanes, gap and room from it and
+   lib/ribbon-draw reads it off the ribbon's root to turn the model's units
+   into canvas pixels, so a ribbon inside a scaled design is the reference
+   ribbon, scaled — not a new ribbon for a wider column. Registered for the
+   lanes' reason: it is read as a plain length where it is used, and
+   lib/ribbon-draw needs a computed length, not text. */
+@property --ribbon-unit {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 100px;
+}
+
+/* THE DESIGN SCALE (§15.25 round 2 — owner, 2026-10-01: "i want card and
+   component and all contents to adjust in size harmonically all at once and
+   mentain raports as on following sizes: 1401x1063. i might even make it
+   myself smaller for it to fit in a different container or smth but i think
+   i'd want same rations to still remian"). A box that wears `design-scale`
+   measures every theme LENGTH in `--scale-px` — one pixel of a design drawn
+   at a fixed reference width — instead of in rem: the spacing step, every
+   text step, every container step, every radius, its own font size (the
+   §15.1 body base, 18) and the floss ribbon's unit. Tailwind v4 compiles each
+   utility to its theme variable — `p-6` is `calc(var(--spacing) * 6)`,
+   `text-lg` is `var(--text-lg)`, `max-w-md` is `var(--container-md)` (read
+   off the built sheet) — so remapping the variables on ONE box rescales every
+   utility inside it and no atom is edited: §3's theme mechanism ("future
+   themes remap the same variable names") applied to lengths. The SCALE stays
+   untouched (§3): every step keeps Tailwind's own ratio, each multiplier
+   below is its default rem × 16; only the unit moves. Letter spacing (em)
+   and line heights (unitless) follow the font by themselves.
+   THE CONSUMER declares `--scale-px` from its container's width — `calc(min(
+   100cqw, cap) / reference)` — and wears this utility under the SAME
+   container variant, so below its regime nothing changes and rem stays the
+   unit (§7). `--scale-px` is REGISTERED for the ribbon lanes' reason (above):
+   an unregistered one is pasted as text and its `cqw` measured again against
+   the nearest container of whichever box reads it — and every card in a band
+   is a container — so the band's design pixel would come out a card's
+   (measured: 86.48px where 100 was due, Chromium and WebKit agreeing to
+   0.001px). Registered, it is computed once, where it is declared, and
+   inherited as a plain length.
+   NOT remapped, on purpose: borders and outlines spelled in px — a hairline
+   stays a hairline, a focus ring stays the ring §9 measured, and ui/Card's
+   3px frame stays 3px (an engine FLOORS a border to whole device pixels, so
+   a frame in the step lost a pixel at the reference itself; the card's
+   PADDING carries the step instead — ui/Card's THE SUM RULE). The census
+   (tests/unit/design-scale.test.ts) holds every multiplier to Tailwind's
+   default and every default length step to a line here.
+   THE BARE RULE SHIPS: Tailwind generates a utility for every mention of its
+   name in a scanned file — comments and these docs included — so the bare
+   `.design-scale` sits in the site's stylesheet beside the variant form the
+   band wears (≈0.4 KB gzipped); accepted, rather than banning the word from
+   the comments that explain it. A test sets its design pixel with an INLINE
+   style, never with an arbitrary class, which would ship a rule only the
+   test reads. */
+@property --scale-px {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 1px;
+}
+/* THE SCALABLE VARIANT — where a scaled design may apply AT ALL (G2, the
+   owner's answer of 2026-10-01: "Touch devices unchanged"). Two conditions,
+   spelled once, worn as `scalable:` in front of a consumer's own container
+   step: (1) `(pointer: fine)` — a mouse or trackpad is the primary input, so
+   a laptop or a desktop; every touch device, a tablet held either way
+   included, keeps its rem design at any width; (2) `@supports (color: rgb(from
+   red r g b))` — the engine REGISTERS custom properties: relative colour
+   syntax shipped in the same releases as `@property` in Safari (16.4) and
+   Firefox (128) and after it in Chrome (119; `@property` 85), read off
+   caniuse-lite. Without registration `--scale-px` would be pasted as text and
+   its `cqw` measured against each card (the 86.48 above): the cards' contents
+   would draw at ≈0.865 of the design (the reviewers measured it), so an
+   engine that cannot register keeps today's rem band instead. A Chrome 85–118
+   loses the scale too — harmless, it sees the rem band. */
+@custom-variant scalable {
+  @supports (color: rgb(from red r g b)) {
+    @media (pointer: fine) {
+      @slot;
+    }
+  }
+}
+@utility design-scale {
+  --spacing: calc(var(--scale-px) * 4);
+  --text-xs: calc(var(--scale-px) * 12);
+  --text-sm: calc(var(--scale-px) * 14);
+  --text-base: calc(var(--scale-px) * 16);
+  --text-lg: calc(var(--scale-px) * 18);
+  --text-xl: calc(var(--scale-px) * 20);
+  --text-2xl: calc(var(--scale-px) * 24);
+  --text-3xl: calc(var(--scale-px) * 30);
+  --text-4xl: calc(var(--scale-px) * 36);
+  --text-5xl: calc(var(--scale-px) * 48);
+  --text-6xl: calc(var(--scale-px) * 60);
+  --text-7xl: calc(var(--scale-px) * 72);
+  --text-8xl: calc(var(--scale-px) * 96);
+  --text-9xl: calc(var(--scale-px) * 128);
+  --container-3xs: calc(var(--scale-px) * 256);
+  --container-2xs: calc(var(--scale-px) * 288);
+  --container-xs: calc(var(--scale-px) * 320);
+  --container-sm: calc(var(--scale-px) * 384);
+  --container-md: calc(var(--scale-px) * 448);
+  --container-lg: calc(var(--scale-px) * 512);
+  --container-xl: calc(var(--scale-px) * 576);
+  --container-2xl: calc(var(--scale-px) * 672);
+  --container-3xl: calc(var(--scale-px) * 768);
+  --container-4xl: calc(var(--scale-px) * 896);
+  --container-5xl: calc(var(--scale-px) * 1024);
+  --container-6xl: calc(var(--scale-px) * 1152);
+  --container-7xl: calc(var(--scale-px) * 1280);
+  --radius-xs: calc(var(--scale-px) * 2);
+  --radius-sm: calc(var(--scale-px) * 4);
+  --radius-md: calc(var(--scale-px) * 6);
+  --radius-lg: calc(var(--scale-px) * 8);
+  --radius-xl: calc(var(--scale-px) * 12);
+  --radius-2xl: calc(var(--scale-px) * 16);
+  --radius-3xl: calc(var(--scale-px) * 24);
+  --radius-4xl: calc(var(--scale-px) * 32);
+  --radius-soft: calc(var(--scale-px) * 16);
+  --ribbon-unit: calc(var(--scale-px) * 100);
+  font-size: calc(var(--scale-px) * 18);
+}
 
 @theme inline {
   --color-page: var(--page);

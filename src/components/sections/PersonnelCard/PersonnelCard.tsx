@@ -31,7 +31,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // keeps ONE link, wears the cutout and the reviews deck's frame, and is laid
 // out for the floss ribbon — D17 below, which amends D1, D2, D3, D4, D6, D7,
 // D11 and D15 — and, the same day, D18 lets a band ask for its picture EARLY.
-// The auxiliary kind is byte-identical to before both.
+// The auxiliary kind is byte-identical to before both. On 2026-10-01 D19
+// records the doctors band's SCALE, which this card follows with no prop of
+// its own — two spellings moved for it (THE INSET and the cutout's `sizes`).
 //
 // ── NO OLD COUNTERPART, deliberately. The owner's brief opens with "do not
 // inspire yourself from the old website, as this will be a new card", so the
@@ -99,8 +101,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // purpose: eslint-config-next maps <Image> to img for jsx-a11y/alt-text and a
 // spread does not satisfy that rule (the ui/Image test fixtures' note) — the
 // right enforcement for this atom, so it is honoured rather than disabled.
-// `sizes` tells the browser the box — `12rem` for the auxiliary's cell,
-// `18rem` for the doctor's — so it picks a small variant on a 2× screen
+// `sizes` tells the browser the box — `12rem` for the auxiliary's cell; for
+// the doctor's, `18rem`, and `21vw` from a 70rem window on a mouse or
+// trackpad, where the doctors band draws the card at its own scale (D17's
+// THE PICTURE'S `sizes`, D19) — so it picks a small variant on a 2× screen
 // instead of the 1080px one (Image's own G2 a11y A5 note).
 //
 // ── D4 · THE NAME. `Heading` on a REAL heading through asChild, for BOTH
@@ -394,7 +398,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     one 3:4 ratio for the team (§11; the demo files 900 × 1200) — drawn
 //     whole by ui/Image's `artwork` variant (never cropped, no frame, no blur
 //     placeholder) in an 18rem cell (`w-72`: about the width of the name and
-//     the specialty under it; `max-w-full` on a narrow phone), `sizes="18rem"`.
+//     the specialty under it; `max-w-full` on a narrow phone), whose `sizes`
+//     names that cell — and the cell the doctors band scales (THE PICTURE'S
+//     `sizes` below, D19).
 //   · THE GRID at the step is 40 / 60 (`2fr` / `3fr`): row 1 the picture ‖ the
 //     words, row 2 the name + specialty ‖ the link, 32px across and 12px down,
 //     columns mirrored by `side`. The picture stands on its row's FLOOR
@@ -413,14 +419,33 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // card is inset by the two LANES — `max(1.5rem, lane)` on top and either side,
 // 1.5rem below (§15.26, the seam) — but ui/Card fixes each tone's border and
 // padding and refuses className as a padding API (its header). Every tone
-// spends the same 1.5rem + 1px per side on the two — `surface` 1px + 1.5rem,
-// `framed` 3px + (1.5rem − 2px), 25px at the default font size (its SUM
-// RULE) — so the doctor card's one child pads the DIFFERENCE, `max(0px, lane −
-// 1.5rem)`, inside that constant: outside a ribbon the lanes' registered
-// initial value is 24px and the INSET adds nothing (an engine without
-// `@property` reads the 1.5rem fallback — nothing again); inside one the words
-// start `lane + 1px` from the card's edge, exactly where ui/Ribbon's stand-in
-// card (1px + `max(1.5rem, lane)`) puts them, whichever tone this card wears.
+// spends the same SIX SPACING STEPS + 1px per side on the two — `surface` 1px
+// + `p-6`, `framed` 3px of border + (six steps − 2px) of padding: 1.5rem +
+// 1px at the theme's 0.25rem step, 25px at the default font size (its SUM
+// RULE) — so the doctor card's one child pads the DIFFERENCE,
+// `max(0px, lane − 6 steps)`, inside that constant: outside a ribbon the
+// lanes' registered initial value is 24px and the INSET adds nothing (an
+// engine without `@property` reads the fallback, six steps — nothing again);
+// inside one the words start `lane + 1px` from the card's edge, exactly where
+// ui/Ribbon's stand-in card (1px + `max(1.5rem, lane)`) puts them, whichever
+// tone this card wears.
+// THE STEP, NOT `1.5rem` (2026-10-01, D19). The INSET subtracted the literal
+// 1.5rem until the doctors band began to redraw the step, and ui/Card's
+// `framed` PADDING moved into the step the same day; spelled
+// `calc(var(--spacing)*6)`, the subtraction is the card's own spend less its
+// 1px at any step — the same 24px at the default, 36px in a design drawn at
+// 1.5px — so the words keep their `lane + 1px` inside the band's scale too,
+// and EXACTLY: the frame stays a whole 3px border at every step (D19 says
+// why), the padding, six steps − 2px, carries the step, and the spend is six
+// steps + 1px to the engine's own layout precision (Chromium's 1/64px).
+// PersonnelCard.test.tsx measures it to 0.05px at the theme's step and in
+// designs drawn at the band's own step (0.81px), at the owner's own 1401px
+// window (0.99983px) and at 1, 1.5 and 2px. One edge, stated rather than
+// found: the lanes' initial 24px is more than six steps wherever the step is
+// under 4px (a smaller root font, a band drawn below its reference), and
+// there the INSET pads the excess — outside a ribbon the words never start
+// closer than 25px, and the band always carries its ribbon, whose lanes are
+// drawn in its own units.
 // It is its OWN `@container` because the lanes make it narrower than the card:
 // the grid's `@3xl` and the name's `band` must measure the box the grid really
 // has — two columns from a card of ~893px in a ribbon, from 818px (768 + 50)
@@ -441,12 +466,60 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // 294.6px track at the 1136px window. The ribbon still painted in both
 // probes. If real names or specialties make it matter, the lever is
 // lib/ribbon-layout measuring the words' own rectangles, never this card.
-// THE PICTURE'S `sizes` (G2 react, recorded, not changed): `18rem` over-asks
-// wherever the cell is narrower than 18rem — a 390px phone at 3× fetches the
-// 1080w candidate for a 226px box. `min(18rem, calc(80vw - 4.5rem))` would
-// ask for less (no space before `80vw`, or next/image drops the small
-// candidates), but the gain is unproven on the demo art: measure with a real
-// cutout before moving it.
+// THE PICTURE'S `sizes`, since 2026-10-01 (D19; CUTOUT_SIZES):
+// `(min-width: 70rem) and (pointer: fine) 21vw, 18rem`. Where the doctors
+// band scales — on a mouse or trackpad, in an engine that registers custom
+// properties, from a column of max(56rem, 896px): the three gates of
+// sections/DoctorShowcase's THE SCALE (its D10) — it draws this card at
+// column / 1106 of its reference, the column counted up to its 96rem cap, so
+// the 18rem cell is 288 × column / 1106 px; with ui/Container's 10vw gutters
+// a 56rem column is a 70rem window (overlay scrollbars) and the cell ≈ 0.208
+// × the window — 20.8vw: 396px at a 1920 window (the planner's measurement,
+// classic scrollbar), where `21vw` asks for 403. Everywhere else the cell is
+// 18rem.
+// THE POINTER CONDITION is the band's own gate (globals.css's THE SCALABLE
+// VARIANT), on the owner's answer of 2026-10-01 — asked how tablets should be
+// treated: "Touch devices unchanged" — so a touch screen asks for the 18rem
+// it draws at ANY width: without the condition a 1180px landscape iPad, wider
+// than 70rem, would be told 21vw — 247.8px for its 288px cell, 14 % under.
+// The band and `sizes` read the SAME media feature, so on every device they
+// agree, whatever its pointer reports.
+// THE BOUNDS, derived — each a file a little smaller or larger than the cell
+// could use, never a wrong box (`sizes` chooses the file; CSS sizes the box):
+// (1) a classic 15px scrollbar moves the band's step to a ≈ 1139px window, so
+// between 1120 and 1139 a mouse is told 21vw of a cell still 288px wide,
+// about 18 % under; (2) from the band's CAP on — a 96rem column, 1536px at
+// the default root: a 1920px window, ≈ 1939 under a classic scrollbar — the
+// cell holds at 400px (288 × 1536 / 1106) while `21vw` grows on, 538px at a
+// 2560 window (× 1.34); (3) `sizes` cannot ask the band's `@supports` gate,
+// so in an engine that refuses it (Safari before 16.4, Firefox before 128,
+// Chrome before 119) the cell stays 18rem while a mouse from a 70rem window
+// is told 21vw — under the cell up to a ≈ 1371px window (288 / 0.21), over
+// it beyond (× 1.87 at 2560); (4) a media query's rem is the browser's
+// default font size — the root's here too, globals.css sets none — so
+// `70rem` follows a LARGER user font exactly as the band's 56rem step does
+// (70 = 56 / 0.8), but under a SMALLER one the band's step holds at its 896px
+// floor while `70rem` comes earlier — at a 14px font from a 980px window,
+// where the band waits for 1120 — and in between a mouse is told 21vw of an
+// 18rem cell, up to 18 % under at that font. KEEP IN SYNC with the band's
+// REFERENCE (1106px), STEP (max(56rem, 896px)), CAP (96rem) and pointer gate:
+// every number here is derived from them, and tests/unit/design-scale.test.ts
+// reads CUTOUT_SIZES' exact string.
+// THE SPACE BEFORE `21vw` IS LOAD-BEARING: next/image (get-img-props,
+// getWidths) reads the smallest `vw` share it finds at the start or after a
+// space — `(^|\s)(1?\d?\d)vw` — and keeps only the candidates of at least
+// deviceSizes[0] × that share, 640 × 0.21 = 134.4px: the 16 … 128 widths go,
+// which no box of this card can use (the least it ever asks for is 21vw of a
+// 70rem window, 235px at the default font size), and every one the scaled
+// cell needs stays (640 at 1×, 828 at 2× for the 1920 window's 403px). D18's
+// preload link carries the same `sizes` — next/image hands one value to both.
+// Wherever `sizes` answers 18rem — every touch screen, a mouse under a 70rem
+// window — the G2 react note stands: `18rem` over-asks wherever the cell is
+// narrower than 18rem — a 390px phone at 3× fetches the 1080w candidate for a
+// 226px box — and `min(18rem, calc(80vw - 4.5rem))` would ask for less (the
+// filter takes the SMALLEST share, so beside `21vw` an `80vw` it read would
+// change nothing), but the gain is unproven on the demo art: measure with a
+// real cutout before moving it.
 // THE FRAME — the owner, later the same day (2026-09-30), verbatim: "one more
 // thing to mention. i want to use for this card the border of the non current
 // review from the review carrousel. can you do that." That border is ui/Card's
@@ -481,9 +554,11 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // `surface`) · the link's face (`solid` ↔ `outline`) and its colour family
 // (`accent` ↔ `cta`) · its cap (`max-w-md`,
 // 28rem — 24rem was "not wide enough", the whole text box "too wide") · the
-// picture's width (`w-72`, with `sizes`) · the name's step on level 3
-// (NAME_STEP's doctor row) · the phone order (the two `flex-col-reverse`) ·
-// the corner (`corners`, `soft` ↔ `house`, THE CORNER — both kinds at once).
+// picture's width (`w-72`, with CUTOUT_SIZES — its `18rem`, and its `21vw`
+// and its media condition whenever the band's reference, step or gates move)
+// · the name's step on level 3 (NAME_STEP's doctor row) · the phone order
+// (the two `flex-col-reverse`) · the corner (`corners`, `soft` ↔ `house`,
+// THE CORNER — both kinds at once).
 //
 // ── D18 · THE EAGER PATH — a band asks, the card never guesses (the
 // doctor-showcase lane, 2026-09-30). A card does not know where it sits on a
@@ -508,6 +583,60 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // bare ui/Image instead of trusting `preload={false}` to be a no-op. Typed
 // `never` on the auxiliary kind (D2): no page opens on a staff tile — the day
 // one does, the key joins that branch additively.
+//
+// ── D19 · THE BAND'S SCALE (2026-10-01). The owner, verbatim: "i like how it
+// looks on phone and tablet and i want to keep that unchanged. but on laptop
+// and desktop if you make it bigger/smaller in width it gets highly
+// disproportioned. i want card and component and all contents to adjust in
+// size harmonically all at once and mentain raports as on following sizes:
+// 1401x1063. i might even make it myself smaller for it to fit in a different
+// container or smth but i think i'd want same rations to still remian." —
+// and, asked the same day how tablets should be treated: "Touch devices
+// unchanged". The card OWNS NO SCALE, and that is the decision: it is drawn
+// in the theme's units — the spacing step and the text, container and radius
+// steps — and sections/DoctorShowcase redraws those units for its own box
+// where its three gates hold (its D10): a mouse or trackpad device
+// (`pointer: fine`), an engine that registers custom properties (both
+// globals.css's THE SCALABLE VARIANT) and a column of max(56rem, 896px). One
+// design pixel is then column / 1106 of a CSS pixel (1106px: the band's
+// column at the owner's 1401px window — THE SCALE there), the column counted
+// up to the band's 96rem cap; the mechanism is globals.css's THE DESIGN
+// SCALE. So inside that regime EVERY length of the card follows the band at
+// once — the cutout's `w-72` cell, the quote's `text-lg`, the name's `band`
+// step, the link's `max-w-md` cap and `lg` height, the gaps, the soft corner,
+// and the frame's padding, which ui/Card's `framed` row spells in the step
+// (its SUM RULE) — while nothing in this file names the band. The scale
+// follows the band's own container, so the owner's "smaller … different
+// container" keeps the ratios wherever the band goes. Everywhere else the
+// card is drawn at the theme's own units, exactly as before: outside the
+// band, under its step, in an engine that cannot register custom properties,
+// and on a TOUCH screen at any width — every phone and every tablet, upright
+// or sideways, the owner's answer above. Two things are not lengths of the
+// design and stay the card's. Its BORDER: the frame is the reviews deck's 3px
+// at every scale. A border spelled in px is not remapped, and it must not be,
+// because an engine FLOORS a fractional border width to a whole pixel while it
+// keeps a padding's fraction — drawn in the step, as this day's first round
+// drew it, the frame lost a whole pixel at the owner's own window (2.9995px,
+// drawn 2px wide by Chromium at 1× and 2× alike). So the padding, six steps −
+// 2px, carries the step for it, and the card's spend stays six steps + 1px
+// EXACTLY at every scale, its 1px a hairline still (THE INSET above). And the
+// container-query STEPS — a query's rem is the root's, never the remapped
+// theme's — so `@3xl` still asks 48rem of the INSET. The INSET scales with
+// the band (the card, its padding and the ribbon's lanes are all the band's
+// lengths), and the band's step keeps it over those 48rem inside the regime
+// at ANY root font size: the step's px floor (G2, R6 — react measured a 0.61
+// design at a 12px root before it) holds the narrowest design the band draws
+// at 896 / 1106 ≈ 0.81 whatever the root. At a root of 16px or less the step
+// is that 896px column and the INSET ≈ 774px, over 48rem (768px or less); at
+// a larger root the 56rem term starts the regime and the INSET there is
+// ≈ 48.4rem, over 48rem again. Derived from the 1401 measurements: thin
+// (≈ 7px at the default root), and the band's to keep — so wherever the band
+// scales the doctor card it stays two-column, which is what "maintain the
+// ratios" means for a layout. What this file changed for the regime is two
+// spellings and no prop: THE INSET's subtraction, in the step (D17), and the
+// cutout's `sizes`, which must name the scaled cell where the band scales it
+// and the 18rem cell everywhere else, its pointer condition the band's own
+// (D17's THE PICTURE'S `sizes`, CUTOUT_SIZES).
 //
 // ── D12–D14 live where they belong rather than here: the fixtures and the
 // stories in PersonnelCard.stories.tsx (synthetic portraits and cutouts, no
@@ -660,13 +789,15 @@ const TONE: Record<PersonnelKind, CardTone> = {
   doctor: 'framed',
 };
 
-/** THE INSET (D17): the ribbon's two lanes less 1.5rem, never below 0 — so
- *  inside a ribbon the words start `lane + 1px` from the card's edge whichever
- *  tone it wears (every tone spends 1.5rem + 1px of border and padding), and
- *  outside one it adds nothing — and its own `@container`, so the steps inside
- *  measure the box the grid really has. */
+/** THE INSET (D17): the ribbon's two lanes less SIX SPACING STEPS (1.5rem at
+ *  the theme's default step), never below 0 — so inside a ribbon the words
+ *  start `lane + 1px` from the card's edge whichever tone it wears (every tone
+ *  spends six steps + 1px of border and padding), at the theme's step or at
+ *  the one a band redraws (D19), and outside one it adds nothing — and its own
+ *  `@container`, so the steps inside measure the box the grid really has. One
+ *  static string: Tailwind reads class names from source text. */
 const INSET =
-  '@container pt-[max(0px,calc(var(--ribbon-lane-top,1.5rem)_-_1.5rem))] px-[max(0px,calc(var(--ribbon-lane-side,1.5rem)_-_1.5rem))]';
+  '@container pt-[max(0px,calc(var(--ribbon-lane-top,calc(var(--spacing)*6))_-_calc(var(--spacing)*6)))] px-[max(0px,calc(var(--ribbon-lane-side,calc(var(--spacing)*6))_-_calc(var(--spacing)*6)))]';
 
 // Record<> rather than a ternary, the ui/Heading growth gate the whole repo
 // uses: widening PersonnelSide cannot compile until this table names the new
@@ -703,6 +834,16 @@ const PAIR =
 /** The cutout's cell (D17): 18rem, about the width of the name block; the
  *  whole column on a narrow phone. */
 const PICTURE = 'w-72 max-w-full';
+
+/** The cutout's `sizes` (D17's THE PICTURE'S `sizes`, D19): from a 70rem
+ *  window on a mouse or trackpad — `(pointer: fine)`, the band's own gate —
+ *  the cell the doctors band scales, ≈ 21vw; everywhere else, every touch
+ *  screen at any width included, the 18rem cell. The space before `21vw` is
+ *  load-bearing — next/image reads the share from it and drops only the
+ *  candidates no box of this card can use. KEEP IN SYNC with
+ *  sections/DoctorShowcase's THE SCALE (its reference, its step and its
+ *  gates); tests/unit/design-scale.test.ts reads this exact string. */
+const CUTOUT_SIZES = '(min-width: 70rem) and (pointer: fine) 21vw, 18rem';
 
 /** Row 1: the picture on its row's floor — the waist right above the name,
  *  however tall the words run — centred in its column (D17). */
@@ -787,14 +928,15 @@ export function PersonnelCard({
                   className={cx(PICTURE, column.block, PHOTO_CELL)}
                 >
                   {/* Lazy unless the band asks (D18) — then DoctorIntro's
-                      pair: preloaded, at high fetch priority. */}
+                      pair: preloaded, at high fetch priority, the preload
+                      link carrying the same CUTOUT_SIZES (D19). */}
                   <Image
                     variant="artwork"
                     src={photo.src}
                     width={photo.width}
                     height={photo.height}
                     alt=""
-                    sizes="18rem"
+                    sizes={CUTOUT_SIZES}
                     preload={preload}
                     fetchPriority={preload ? 'high' : undefined}
                   />

@@ -151,12 +151,14 @@ const EXACT = {
 // its single-spelling fence, tests/unit/card-single-spelling.test.ts, would
 // count a contiguous copy of it here as a second spelling).
 // Both rows read ONE colour, `--card-tint` (Card.tsx's ONE TINT paragraph,
-// owner 2026-09-12): the idle frame IS the selected ground.
+// owner 2026-09-12): the idle frame IS the selected ground. The frame stays
+// 3px and its padding is spelled in spacing steps since §15.25 round 2
+// (Card.tsx's THE SUM RULE) — 22px at the default step, as before.
 const FRAMED = [
   'border-[3px]',
   'border-(--card-tint)',
   'bg-surface',
-  'p-[calc(1.5rem-2px)]',
+  'p-[calc(var(--spacing)*6_-_2px)]',
 ];
 const EMPHASIZED = [
   'border',
@@ -235,7 +237,7 @@ describe('ReviewCard — THE MORPH: tone changes, the card does not (D1a)', () =
     // …and the idle row is gone, not merely joined: two `p-*` utilities on one
     // element would put the inset at the mercy of stylesheet order.
     expect(tokensOf(article)).not.toContain('border-[3px]');
-    expect(tokensOf(article)).not.toContain('p-[calc(1.5rem-2px)]');
+    expect(tokensOf(article)).not.toContain('p-[calc(var(--spacing)*6_-_2px)]');
     // `bg-surface` is now the emphasized row's opaque BASE too — the tell is the tint token.
     expect(tokensOf(article)).toContain(
       'supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint)',

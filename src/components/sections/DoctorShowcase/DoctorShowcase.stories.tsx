@@ -5,16 +5,39 @@ import { Keyword } from '@/components/ui/Keyword/Keyword';
 import { LONG_QUOTE_DE } from '@/components/ui/Ribbon/Ribbon.fixtures';
 import { DoctorShowcase, type DoctorShowcaseDoctor } from './DoctorShowcase';
 
-// SIX stories: the everyday band at the laptop width, the phone, three
+// NINE stories: the everyday band at the laptop width, the phone, three
 // doctors (the second card mirrored, the third the mirror of the mirror), six
 // doctors (the size of the clinic's real roster), German with a
-// ~1 200-character text on the first card, and the narrowest window. The export NAMES are load-bearing — each one names a baseline file
+// ~1 200-character text on the first card, the narrowest window — and, since
+// THE SCALE (DoctorShowcase D10, 2026-10-01), the band at the notebook and
+// the desktop widths and in a container narrower than its page. The export
+// NAMES are load-bearing — each one names a baseline file
 // (`sections/doctorshowcase/default-…`, `…/three-doctors-…`), so renaming or
 // adding an export re-records pictures; this list IS the section's
 // contribution to the visual manifest. The `Sections/*` title prefix routes
 // every one of them to 390 + 1536 (tests/visual/stories.spec.ts, §13), and
 // the 'stress-320' tag adds the accessibility width to `Narrowest`, the one
-// story pinned there.
+// story pinned there. `Notebook` and `Desktop` are 'no-visual': the net sets
+// its own window and ignores their pins, so at 390 and 1536 they would only
+// repeat `Default`'s pixels — they exist for the workbench, where the owner
+// flips between the widths, and for their plays, which run at the pinned
+// width in the Vitest storybook project.
+//
+// ── THE SCALE, IN EVERY PLAY (D10). Wherever D10's three GATES hold — a
+// mouse or trackpad (`pointer: fine`), an engine that registers custom
+// properties, a column of max(56rem, 896px) — the band is drawn in its design
+// pixel, s = min(column, 96rem) / 1106, every length the reference's × s: the
+// quote 18 × s, a doctor's name and the title 36 × s, the eyebrows 14 × s,
+// the picture 288 × s wide, the link 448 × s by 56 × s — and past THE CAP,
+// 96rem (a 1920 window's column at the default root), the cap's band,
+// centred. Wherever one gate fails — every phone, every touch tablet held
+// either way, a column under the step, an engine that cannot register —
+// nothing is declared and the band is today's, unchanged. Every play reads
+// its column, its pointer and its engine and asserts whichever of the two it
+// is in (`expectScale`), never the pinned width — the same reason as the
+// branch reading below. In the Vitest storybook project the pointer is
+// Chromium's fine one, so from the step up every play there asserts the
+// scale.
 //
 // ── EVERY STORY PINS ITS OWN LANGUAGE AND ITS OWN VIEWPORT with per-story
 // `globals`, and both halves are load-bearing:
@@ -288,6 +311,106 @@ const sitsBeside = (element: Element): boolean => {
   return content >= 48 * rem();
 };
 
+/** D10's numbers, written out — the band's REFERENCE column, where its
+ *  design pixel is a CSS pixel; its CAP, in rem of the root (1536px at the
+ *  default 16px, a 1920 window's column); and THE STEP's two halves, `@4xl`'s
+ *  56rem and the floor's 896px. */
+const REFERENCE = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/** A computed length of an element, in px. */
+const px = (element: Element, property: string): number =>
+  parseFloat(getComputedStyle(element).getPropertyValue(property));
+
+/**
+ * THE SCALE (D10), asserted where the play finds itself — the column read
+ * off ui/Container, the band's first box, never the pinned window, and the
+ * two GATES read off the browser the play runs in: a fine primary pointer, and
+ * the relative colour syntax that rides with registered custom properties.
+ * Where all three hold, every size below is the reference's × s, s =
+ * min(column, CAP) / REFERENCE with the cap in rem of the root — to a tenth of
+ * a pixel for a font, half a pixel for a box; elsewhere the band declares
+ * nothing: its design pixel is the registered 1px and the quote the theme's
+ * `text-lg`.
+ */
+const expectScale = async (band: HTMLElement): Promise<void> => {
+  const column = band.firstElementChild;
+  const rhythm = column?.firstElementChild;
+  if (!(column instanceof HTMLElement) || !(rhythm instanceof HTMLElement)) {
+    throw new Error('DoctorShowcase story: the band lost its column');
+  }
+  const near = async (
+    actual: number,
+    expected: number,
+    within: number,
+    label: string,
+  ): Promise<void> => {
+    await expect(
+      Math.abs(actual - expected),
+      `${label}: ${actual} against ${expected}`,
+    ).toBeLessThanOrEqual(within);
+  };
+  const width = column.getBoundingClientRect().width;
+  const cards = within(band).getAllByRole('article');
+  const scalable =
+    window.matchMedia('(pointer: fine)').matches &&
+    CSS.supports('color', 'rgb(from red r g b)') &&
+    width >= Math.max(STEP_REM * rem(), STEP_FLOOR);
+
+  if (!scalable) {
+    await expect(getComputedStyle(rhythm).getPropertyValue('--scale-px')).toBe(
+      '1px',
+    );
+    for (const card of cards) {
+      await near(
+        px(within(card).getByRole('blockquote'), 'font-size'),
+        1.125 * rem(),
+        0.1,
+        'the quote, unscaled',
+      );
+    }
+    return;
+  }
+
+  const s = Math.min(width, CAP_REM * rem()) / REFERENCE;
+  await near(px(rhythm, '--scale-px'), s, 0.0001, 'the design pixel');
+  await near(
+    px(within(band).getByRole('heading', { level: 2 }), 'font-size'),
+    36 * s,
+    0.1,
+    'the title',
+  );
+  for (const card of cards) {
+    const image = card.querySelector('img');
+    if (image === null) {
+      throw new Error('DoctorShowcase story: a card has no picture');
+    }
+    const link = within(card).getByRole('link').getBoundingClientRect();
+    await near(
+      px(within(card).getByRole('blockquote'), 'font-size'),
+      18 * s,
+      0.1,
+      'the quote',
+    );
+    await near(
+      px(within(card).getByRole('heading', { level: 3 }), 'font-size'),
+      36 * s,
+      0.1,
+      'the name',
+    );
+    await near(
+      image.getBoundingClientRect().width,
+      288 * s,
+      0.5,
+      'the picture',
+    );
+    await near(link.width, 448 * s, 0.5, 'the link’s width');
+    await near(link.height, 56 * s, 0.5, 'the link’s height');
+  }
+};
+
 type Expected = Readonly<{
   eyebrow: string;
   title: string;
@@ -305,6 +428,8 @@ type Expected = Readonly<{
  *   · the sides (D5): at the two-column branch the picture LEFT of the words
  *     on every even card and RIGHT of them on every odd one; below it, the
  *     picture ABOVE the words (the owner's adaptability rule, §14);
+ *   · THE SCALE (D10, `expectScale`): from the Container's step the band in
+ *     its design pixel, below it the theme's own sizes;
  *   · nothing scrolls sideways (§7).
  */
 const expectBand = async (
@@ -375,13 +500,17 @@ const expectBand = async (
     // THE PICTURE'S FLOOR (PersonnelCard D17): beside words that run TALLER
     // than it, the picture stands on the bottom of the row the words set, so
     // the waist stays right above the name. `GermanLongText` is the story
-    // where this runs — ~504px of words beside a 384px picture at 1536.
+    // where this runs — inside the scale, ≈ 560 × s px of words (20 lines at
+    // the reference, a line fewer from about the 1536 window: D10's THE
+    // WORDS' LIMIT) beside a 384 × s px picture.
     if (sitsBeside(quote) && words.height > picture.height) {
       await expect(Math.abs(picture.bottom - words.bottom)).toBeLessThanOrEqual(
         1,
       );
     }
   }
+
+  await expectScale(band);
 
   const root = canvasElement.ownerDocument.documentElement;
   await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
@@ -441,6 +570,43 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  play: async ({ canvasElement }) => {
+    await expectBand(canvasElement, {
+      eyebrow: EYEBROW_RO,
+      title: TITLE_RO,
+      doctors: DOCTORS_RO.slice(0, 2),
+    });
+  },
+};
+
+/**
+ * THE NOTEBOOK — §7's 1280 sampling point: the everyday band drawn at about
+ * 0.91 of the owner's reference (D10), every ratio of his 1401 band kept —
+ * the card no shorter for its width, the picture, the words and the link no
+ * smaller for it. For the workbench: 'no-visual' (the header says why).
+ */
+export const Notebook: Story = {
+  tags: ['no-visual'],
+  globals: { locale: 'ro', viewport: { value: 'notebook' } },
+  play: async ({ canvasElement }) => {
+    await expectBand(canvasElement, {
+      eyebrow: EYEBROW_RO,
+      title: TITLE_RO,
+      doctors: DOCTORS_RO.slice(0, 2),
+    });
+  },
+};
+
+/**
+ * THE DESKTOP — §7's 1920 sampling point: the same band at about 1.39 of the
+ * reference (D10), larger in every length at once instead of wider with the
+ * same small things in it — THE CAP's band, or within a classic scrollbar's
+ * 15px of it: every wider window shows the cap's, centred in its column. For
+ * the workbench: 'no-visual' (the header).
+ */
+export const Desktop: Story = {
+  tags: ['no-visual'],
+  globals: { locale: 'ro', viewport: { value: 'desktop' } },
   play: async ({ canvasElement }) => {
     await expectBand(canvasElement, {
       eyebrow: EYEBROW_RO,
@@ -527,6 +693,51 @@ export const GermanLongText: Story = {
 export const Narrowest: Story = {
   tags: ['stress-320'],
   globals: { locale: 'ro', viewport: { value: 'stress320' } },
+  play: async ({ canvasElement }) => {
+    await expectBand(canvasElement, {
+      eyebrow: EYEBROW_RO,
+      title: TITLE_RO,
+      doctors: DOCTORS_RO.slice(0, 2),
+    });
+  },
+};
+
+/** NarrowContainer's box: the reference column with ui/Container's gutter at
+ *  the desktop pin on either side — 1106 + 2 × 192 (10vw of 1920). */
+const NARROW_BOX = 1490;
+
+/**
+ * THE BAND IN A NARROWER CONTAINER (D10 — the owner: "i might even make it
+ * myself smaller for it to fit in a different container or smth but i think
+ * i'd want same rations to still remian"). The band's design pixel reads its
+ * OWN column, never the window, so in a box narrower than its page it is the
+ * same band, smaller. Here the box is 1490px, marked by a dashed line drawn
+ * INSIDE it (`outline-offset: -1px` — outside, the line fell off a
+ * full-screen canvas at 390 and showed only its two sides at 1536, G2 a11y's
+ * A6), and at the desktop pin the column ui/Container leaves inside it is the
+ * owner's own reference — the band of his 1401 window, to the pixel, on a
+ * 1920 screen whose full-width band (`Desktop`) is drawn at 1.39 times it.
+ * Where the screen is narrower than the box, the box is the screen
+ * (`max-width: 100%`): the net's 1536 frame shows the band in a 1490px box —
+ * at s ≈ 1.07 — and its 390 frame the phone's band inside the line.
+ */
+export const NarrowContainer: Story = {
+  globals: { locale: 'ro', viewport: { value: 'desktop' } },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          width: `${NARROW_BOX}px`,
+          maxWidth: '100%',
+          marginInline: 'auto',
+          outline: '1px dashed var(--line)',
+          outlineOffset: '-1px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
   play: async ({ canvasElement }) => {
     await expectBand(canvasElement, {
       eyebrow: EYEBROW_RO,

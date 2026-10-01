@@ -18,7 +18,8 @@ import { slotClone } from '../slot';
 // wraps a column of cards — over the first card's top edge and across its
 // top lane in a low ripple, behind the card, back round the opposite edge
 // and down the side lane to the next card, which it wraps mirrored: down
-// into its top corner, round its edge, across its top lane, and on — painted
+// into its top corner, round its edge, across its top lane, and on — until
+// the last card, under whose bottom edge it tucks, out of sight — painted
 // on ordinary 2D canvases and DRAWN LIVE, card by card,
 // as the visitor scrolls; once drawn it stays drawn. The mathematics,
 // the page, the pixels and the moment are four lib modules (ribbon-model,
@@ -47,16 +48,22 @@ import { slotClone } from '../slot';
 // ON PURPOSE — an exception to CLAUDE.md §7's "all sizing in rem": the
 // ribbon follows the column's width, not the text's size, and only the
 // 1.5rem floor follows the font. The inner box also owns the ribbon's HEAD
-// and TAIL room as its padding: k above the first card (100 k px —
-// `--ribbon-k`) and 60px under the last one (lanes' gap under the last card,
-// less the gauge the side wave stops short by), each with 1rem more for a
-// tile's 2px margin and the shadow — so every tile lies inside the root's
-// height (Ribbon.test.tsx). The head room was the drop-in's, which started
-// k above the first card, until 2026-10-01; since then the first card has no
-// drop-in (lib/ribbon-draw, THE FIRST CARD HAS NO HEAD — its ribbon is first
-// seen over its top edge, 0.08 k above it) and the room is the band's air
-// alone, kept at that measure so no page moved — one spelling to shrink,
-// the owner's. Across, a tile may
+// and TAIL room as its padding, so every tile lies inside the root's height
+// (Ribbon.test.tsx). THE HEAD ROOM is k above the first card (100 k px —
+// `--ribbon-k`) and 1rem more for a tile's 2px margin and the shadow; it was
+// the drop-in's, which started k above the first card, until 2026-10-01 —
+// since then the first card has no drop-in (lib/ribbon-draw, THE FIRST CARD
+// HAS NO HEAD — its ribbon is first seen over its top edge, 0.08 k above it)
+// and the room is the band's air alone, kept at that measure so no page
+// moved — one spelling to shrink, the owner's. THE TAIL ROOM is only what the
+// last card's TUCK needs (lib/ribbon-model — the ribbon goes under the card's
+// bottom edge and behind it): its bend's curl, 0.056 k under the edge, and
+// the shadow under that, 0.03 k down and blurred 0.04 k (lib/ribbon-draw's
+// THE COLOURS) — 0.126 k, spelled 0.13 × `--ribbon-k` — and 8px for the
+// tile's 2px margin, the shadow's floors and a pixel of rounding: about 13px
+// on a phone, 18px on a laptop, 30px at the widest column. Until 2026-10-01
+// it was 60px + 1rem, where the tail HUNG under the last card; the owner, the
+// day the tail was tucked: "remove that space". Across, a tile may
 // overhang the column by the few px the ribbon sticks out round a card's
 // edge; at a 320px window that never scrolls the page sideways (the
 // Narrowest story's test).
@@ -88,10 +95,15 @@ import { slotClone } from '../slot';
 // progress and its mirror are kept by its index, so a station added or
 // removed after mount is not supported. Children that are not stations are
 // not kept out. Forced colours and print hide the canvases by the class
-// string alone in this lane — the behaviour is an end-to-end check owed at
-// the mount. A button's focus ring reaches 4px outside its row, which is
+// string — pinned end to end since the mount (tests/e2e/doctor-showcase
+// .spec.ts). A button's focus ring reaches 4px outside its row, which is
 // exactly the guard's air (lib/ribbon-model's keep-outs are grown by 4px):
-// the ribbon may touch a ring, never cross it.
+// at rest the ribbon may touch a ring, never cross it. A button that GROWS
+// on hover (ui/Button's `motion="jump"`, 105 % — the doctor card's link) is
+// measured at rest, so where it fills the content box's width — the stacked
+// card — its hovered edge and ring can slide a few px under the side wave,
+// which paints above the cards: never wholly hidden (SC 2.4.11); growing its
+// keep-out by the jump is the owner's call (CLAUDE.md §15.26 round 5).
 //
 // ── DECORATIVE. The canvases' box is `aria-hidden`, nothing in it is
 // focusable, clicks fall through it, and it is hidden in forced-colours mode
@@ -147,7 +159,7 @@ const ROOT = '@container relative isolate';
 // strings, so Tailwind's scanner sees every one.
 const COLUMN =
   'flex flex-col gap-(--ribbon-gap) ' +
-  'pt-[calc(var(--ribbon-k)_+_1rem)] pb-[calc(60px_+_1rem)] ' +
+  'pt-[calc(var(--ribbon-k)_+_1rem)] pb-[calc(0.13*var(--ribbon-k)_+_8px)] ' +
   '[--ribbon-k:max(7.9286cqw,calc(19.240px_+_6.0218cqw))] ' +
   '[--ribbon-lane-top:max(1.5rem,calc(0.62*var(--ribbon-k)_+_8px))] ' +
   '[--ribbon-lane-side:max(1.5rem,calc(0.60*var(--ribbon-k)_+_12px),calc(0.83*var(--ribbon-k)_+_1px))] ' +

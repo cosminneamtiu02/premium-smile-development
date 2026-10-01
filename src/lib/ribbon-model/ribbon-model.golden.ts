@@ -27,6 +27,13 @@
  * from the lead arc on moved. The twist, the hidden S and the entry did not. One more thing moved, by 5.1e-5
  * rad: the HEADING (phi) of every sample BEFORE the run — the old wave's finite-difference heading at its start
  * was not exactly zero, and a segment's start value is added to every point before it.
+ *
+ * THE TUCK, ALSO 2026-10-01 — NO NUMBER MOVED: three of these cards were measured as the LAST card of their
+ * column (desktopMirrored, phoneMirrored, widestMirrored — their `why` says so), when the last card was given the
+ * lanes' own gap and its tail hung in the air there. Since that day lib/ribbon-layout gives the last card NO gap
+ * (G null) and lib/ribbon-model tucks its ribbon under it (THE TUCK). These three records keep their gap — the gap
+ * any middle card has at the lanes' measure — so every number stands, for a card with a next one under it; the
+ * tucked last card is pinned by ribbon-model.test.ts (AS_LAST, and THE TUCK's own tests).
  */
 
 export type GoldenBox = { x: number; z: number; w: number; h: number };

@@ -21,6 +21,7 @@ import '@/styles/globals.css';
 import {
   DRAW_MS,
   handOver,
+  shadowOf,
   startRibbonDraw,
   type RibbonDrawEnv,
 } from '@/lib/ribbon-draw/ribbon-draw';
@@ -725,6 +726,58 @@ describe('ui/Ribbon — two canvases meet where nobody sees: behind the card', (
           expect(region.every((channel) => channel === 0)).toBe(true);
         }
       }
+      whole.draw.dispose();
+      unmount();
+    },
+  );
+
+  // THE TUCK (lib/ribbon-model, the owner, 2026-10-01: "tucked in behind
+  // it, not just hanging"): under the LAST card the ribbon goes over the
+  // bottom edge and behind the card. Read on the last canvas, the RIBBON's
+  // own lowest row — alpha 200 and more; the shadow never passes 0.38 × 255
+  // — lies at the card's bottom edge and no further under it than the bend's
+  // curl (0.056 k): the ribbon reaches the edge and stops there. Every
+  // painted pixel, the shadow's too, lies within the curl and the shadow's
+  // reach (lib/ribbon-draw's `shadowOf`). Until that day the tail hung 60px
+  // under the card.
+  it.each(COLUMNS)(
+    '%s: the last card’s ribbon reaches its bottom edge and tucks under it — nothing painted below but the curl and its shadow',
+    async (_, width, doctors) => {
+      const { container, unmount } = render(
+        <StandInFrame width={width}>
+          <StandInColumn doctors={doctors} />
+        </StandInFrame>,
+      );
+      const root = rootOf(container);
+      const whole = await probe(root, true);
+      const column = placeColumn(measureColumn(root));
+      const last = column[column.length - 1];
+      expect(last.input.G).toBeNull();
+      const canvas = whole.canvases()[last.index];
+      const top = parseFloat(canvas.style.top);
+      const scale = canvas.height / parseFloat(canvas.style.height);
+      const data = pixels(canvas);
+      /** The lowest row whose alpha passes `floor`, in root px. */
+      const lowestAbove = (floor: number): number => {
+        for (let row = canvas.height - 1; row >= 0; row--) {
+          for (let x = 0; x < canvas.width; x++) {
+            if (data[(row * canvas.width + x) * 4 + 3] > floor) {
+              return top + (row + 1) / scale;
+            }
+          }
+        }
+        return -Infinity;
+      };
+      const { k } = last.input;
+      const edge = last.card.top + last.card.height;
+      const curl = 0.056 * k * UNIT_PX;
+      const ribbon = lowestAbove(199);
+      expect(ribbon).toBeGreaterThanOrEqual(edge - 1);
+      expect(ribbon).toBeLessThanOrEqual(edge + curl + 1);
+      const { dy, blur } = shadowOf(k);
+      expect(lowestAbove(0)).toBeLessThanOrEqual(
+        edge + curl + dy + 2 * blur + 1,
+      );
       whole.draw.dispose();
       unmount();
     },

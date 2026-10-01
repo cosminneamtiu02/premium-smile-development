@@ -1,6 +1,5 @@
 import {
   gaugeRule,
-  lanes,
   UNIT_PX,
   type CardInput,
   type KeepOut,
@@ -61,8 +60,10 @@ import {
 // (lib/ribbon-model's gaugeRule); every second card is MIRRORED, by index —
 // the ribbon enters it at the other corner, so its keep-outs are mirrored
 // into the model's frame; the gap G under a card is measured to the next
-// card's top, and under the last card it is the lanes' own gap: the tail
-// ends in the air (fb-504).
+// card's top, and under the LAST card there is none — null, and the model
+// tucks the ribbon under it (lib/ribbon-model's THE TUCK, 2026-10-01; until
+// that day the last card was given the lanes' own gap, and the tail ended in
+// the air, fb-504).
 
 /** A box in CSS px, relative to the ribbon's root. */
 export type Rect = Readonly<{
@@ -179,7 +180,7 @@ export function placeColumn(
     const next = cards[index + 1];
     const G =
       next === undefined
-        ? lanes(k).gap / UNIT_PX
+        ? null
         : (next.card.top - (card.top + card.height)) / UNIT_PX;
     const cx = card.left + card.width / 2;
     const cy = card.top + card.height / 2;

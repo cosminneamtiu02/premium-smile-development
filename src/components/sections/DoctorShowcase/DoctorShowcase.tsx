@@ -68,8 +68,11 @@ import { cx } from '@/lib/cx/cx';
 // the ribbon's own column already reserves its HEAD room above the first card
 // (`--ribbon-k` + 1rem — the drop-in's until 2026-10-01; the first card has
 // no drop-in since, and the room is this band's air alone, kept at that
-// measure, ui/Ribbon's TWO BOXES) and its TAIL room under the last (60px +
-// 1rem) — and that room IS this band's air. The usual `pb` on top of it would
+// measure, ui/Ribbon's TWO BOXES) and its TAIL room under the last — since
+// 2026-10-01 only what the last card's tuck needs, its curl and shadow
+// (`0.13 × --ribbon-k + 8px`, 12 to 30px; it was 60px + 1rem while the tail
+// hung there, removed on the owner's word: "remove that space") — and that
+// room IS this band's air. The usual `pb` on top of it would
 // double it, and so would a `gap`. The stepped `pt` sits on the rhythm box
 // one level in, because an element cannot query its own size (the
 // DoctorCourses / ClinicLocation spelling, ui/Container's recipe rule 3).

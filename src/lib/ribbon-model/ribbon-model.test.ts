@@ -19,7 +19,9 @@ import {
 // own side waves where a keep-out holds them back; since 2026-10-01 the port's
 // own TOP RIPPLE), and the path it draws is sound: continuous, without kinks,
 // its width across its travel, its hidden pieces close to the card, its top
-// ripple three low bumps inside the card. Runs in the `components` project
+// ripple three low bumps inside the card — on every recorded card as it is,
+// and as the LAST card of a column, under which the ribbon tucks (THE TUCK,
+// 2026-10-01: the owner's "tucked in behind it"). Runs in the `components` project
 // (real Chromium) only because every src/ test does; nothing here touches the
 // DOM.
 //
@@ -241,8 +243,18 @@ describe('lib/ribbon-model — the record, to nine decimals (GOLDEN_CARDS)', () 
   });
 });
 
+/** The recorded cards as the LAST card of a column: G null — the ribbon tucks
+ *  under them (THE TUCK). Everything "the path is sound" asks of a card, it
+ *  asks of these too. */
+const AS_LAST = GOLDEN_CARDS.map((card) => ({
+  ...card,
+  name: `${card.name}, as the last card`,
+  why: 'the same card as the last of its column: G null, the ribbon tucks under it',
+  input: { ...card.input, G: null },
+}));
+
 describe('lib/ribbon-model — the path is sound', () => {
-  describe.each(GOLDEN_CARDS)('$name', (card) => {
+  describe.each([...GOLDEN_CARDS, ...AS_LAST])('$name', (card) => {
     const model = buildCard(card.input);
     const { k, W, H } = card.input;
     // One micro-unit either side of a joint, in ARC LENGTH. Neighbours agree
@@ -524,30 +536,33 @@ function longestStraight(model: CardModel, segment: Segment): number {
 }
 
 describe('lib/ribbon-model — smooth beside a keep-out (SMOOTH BESIDE A KEEP-OUT)', () => {
-  describe.each([...GOLDEN_CARDS, ...PINNED])('$name — $why', (card) => {
-    const model = buildCard(card.input);
+  describe.each([...GOLDEN_CARDS, ...AS_LAST, ...PINNED])(
+    '$name — $why',
+    (card) => {
+      const model = buildCard(card.input);
 
-    it('turns no corner: its sharpest turn does not grow when looked at four times closer', () => {
-      // A corner is a JUMP of heading: looked at four times closer, the same
-      // jump falls on a step a quarter as long, so its rate per px grows
-      // with the sampling (×2.3 to ×3.8 on the seven of these cards that had
-      // the fault, before wave() was made smooth). A bend's rate is the
-      // curve's own, and does not (×1.00 to ×1.01).
-      const wave = waveOf(model);
-      expect(sharpest(model, wave, 32) / sharpest(model, wave, 8)).toBeLessThan(
-        1.2,
-      );
-    }, 60_000);
+      it('turns no corner: its sharpest turn does not grow when looked at four times closer', () => {
+        // A corner is a JUMP of heading: looked at four times closer, the same
+        // jump falls on a step a quarter as long, so its rate per px grows
+        // with the sampling (×2.3 to ×3.8 on the seven of these cards that had
+        // the fault, before wave() was made smooth). A bend's rate is the
+        // curve's own, and does not (×1.00 to ×1.01).
+        const wave = waveOf(model);
+        expect(
+          sharpest(model, wave, 32) / sharpest(model, wave, 8),
+        ).toBeLessThan(1.2);
+      }, 60_000);
 
-    it('draws no ruler line: beside a keep-out the wave goes on', () => {
-      // 0.15 of the wave's period, in px. The ruler lines of the fault were
-      // 50 to 60 px of a 130 to 185 px period; on these cards the straightest
-      // stretch is now under 3 px.
-      expect(longestStraight(model, waveOf(model))).toBeLessThan(
-        0.15 * model.l * card.input.k * UNIT_PX,
-      );
-    }, 60_000);
-  });
+      it('draws no ruler line: beside a keep-out the wave goes on', () => {
+        // 0.15 of the wave's period, in px. The ruler lines of the fault were
+        // 50 to 60 px of a 130 to 185 px period; on these cards the straightest
+        // stretch is now under 3 px.
+        expect(longestStraight(model, waveOf(model))).toBeLessThan(
+          0.15 * model.l * card.input.k * UNIT_PX,
+        );
+      }, 60_000);
+    },
+  );
 
   // The recorded cards are held to this in "the path is sound"; the layouts
   // that showed the fault, here.
@@ -695,6 +710,157 @@ describe('lib/ribbon-model — three waves at every width (the owner, 2026-10-01
   }, 60_000);
 });
 
+describe('lib/ribbon-model — the last card tucks the ribbon under it (THE TUCK)', () => {
+  // The owner, 2026-10-01: "as on the first card of the list where it starts
+  // from behind the card, i want the ribbon to also end on the last card
+  // behind the bottom side of the last card tucked in behind it, not just
+  // hanging as it is now". Under the LAST card (G null) the side wave runs
+  // straight down its lane, and the ribbon turns on the hook's circle (r_1,
+  // 0.5 k) towards the card's middle, crosses the bottom edge at 35° — the
+  // angle of every crossing of the top edge — and bends onto the back, where
+  // its end is out of sight. "The path is sound" holds the recorded cards to
+  // the chain's every property as the last card too (AS_LAST); here, what
+  // the tuck IS, on the recorded cards and on the layouts that showed the
+  // keep-out fault.
+  const BETA = (35 * Math.PI) / 180;
+
+  describe.each([...GOLDEN_CARDS, ...PINNED])('$name', (card) => {
+    const withNext = buildCard(card.input);
+    const model = buildCard({ ...card.input, G: null });
+    const { W, H, k } = card.input;
+    const segment = (name: string): Segment => {
+      const found = model.segments.find((each) => each.name === name);
+      if (found === undefined) throw new Error(`no segment ${name}`);
+      return found;
+    };
+
+    it('is the chain of a card with a next one down to its side wave — the tuck changes nothing above it', () => {
+      const d = model.segments.findIndex((each) => each.name === 'd');
+      expect(d).toBe(withNext.segments.length - 1);
+      const above = (of: CardModel) =>
+        of.segments
+          .slice(0, d)
+          .map((each) => [each.name, each.kind, each.start, each.length]);
+      expect(above(model)).toEqual(above(withNext));
+      expect(model.twist).toEqual(withNext.twist);
+    });
+
+    it('runs its side wave straight down, then turns on the hook’s circle, bends under the bottom edge, crosses the bottom face and bends onto the back', () => {
+      expect(
+        model.segments.slice(-5).map((each) => [each.name, each.kind]),
+      ).toEqual([
+        ['d', 'wave'],
+        ['tuck', 'arc'],
+        ['bfold1', 'fold'],
+        ['bcross', 'line'],
+        ['bfold2', 'fold'],
+      ]);
+      const d = segment('d');
+      expect(
+        Math.abs(at(model, d.start + d.length).x - at(model, d.start).x),
+      ).toBeLessThan(1e-12);
+      const turn = segment('tuck');
+      if (turn.kind !== 'arc') throw new Error('the turn is an arc');
+      expect(turn.turn).toBeCloseTo(Math.PI / 2 - BETA, 12);
+      expect(turn.length / turn.turn).toBeCloseTo(0.5 * k, 12);
+    });
+
+    it('crosses the bottom edge at 35°, towards the card’s middle — the angle it crosses the top edge at', () => {
+      // The secant over the turn's last 1e-7 units: off its tangent by under
+      // 3e-7 on the tightest of these circles (r_1 on narrowestLongGerman,
+      // measured 2.9e-7 rad) — inside the six-digit tolerance (5e-7).
+      const s = segment('bfold1').start;
+      const travel = minus(point(model, s), point(model, s - 1e-7));
+      const length = size(travel);
+      expect(travel[0] / length).toBeCloseTo(Math.cos(BETA), 6);
+      expect(travel[1] / length).toBeCloseTo(0, 6);
+      expect(travel[2] / length).toBeCloseTo(-Math.sin(BETA), 6);
+      // The unmirrored card's side wave runs down its LEFT lane: +x is the
+      // card's middle. The bend starts where every bend round an edge does,
+      // 0.074 k inside the edge (R_FOLD less EPS).
+      const start = at(model, s);
+      expect(start.x).toBeLessThan(0);
+      expect(Math.abs(start.z - (-H / 2 + 0.074 * k))).toBeLessThan(NINE);
+    });
+
+    it('is tucked: no point of it lies more than 0.056 k under the card’s bottom edge — a card with a next one runs on under it', () => {
+      const lowest = (of: CardModel) => {
+        let z = Infinity;
+        const steps = Math.ceil(of.S * 400);
+        for (let i = 0; i <= steps; i++) {
+          for (const v of [0, 0.5, 1])
+            z = Math.min(z, of.surface(i / steps, v)[2]);
+        }
+        return z;
+      };
+      expect(-H / 2 - lowest(model)).toBeLessThan(0.056 * k);
+      expect(-H / 2 - lowest(withNext)).toBeGreaterThan(0.5);
+    });
+
+    it('ends on the back of the card, where nobody sees its end — the chain closes with the tuck, its nine atoms as every card’s', () => {
+      const end = model.evaluate(1);
+      expect(end.y).toBeGreaterThan(model.T / 2);
+      expect(Math.abs(end.x)).toBeLessThan(W / 2);
+      expect(Math.abs(end.z)).toBeLessThan(H / 2);
+      const back = segment('bfold2');
+      expect(back.start + back.length).toBe(model.S);
+      expect(Object.keys(model.atoms)).toEqual(ATOMS);
+      expect(model.atoms.waveSide.u1).toBe(segment('tuck').start / model.S);
+    });
+
+    it('never enters a keep-out: fine penetration is 0 (200 per unit, three across)', () => {
+      expect(finePenetration(model, card.input.boxes)).toBe(0);
+    }, 60_000);
+  });
+
+  // THE MOST A CARD CAN HOLD. Under a card there is no lane, only the card's
+  // own bottom padding, so the tuck's promise is the card's: a block filling
+  // the WHOLE content box — inside both lanes, and down to the card's bottom
+  // padding (0.24 units, the seeded sweep's own; a real card keeps 25 px,
+  // ui/Card's 1.5rem and its border) — is entered by no part of the ribbon,
+  // at every 8px of column from the 320 window's to the 2 560 window's, on a
+  // card of two heights. The hook's circle passes it by about a quarter of a
+  // px at the widest of these columns (measured): the lead's 0.9 k would
+  // sweep some 13 px into it there — why the tuck turns on the hook's circle.
+  // Wider columns are THE TUCK'S LIMIT (below). Four bands, each its own 60 s
+  // budget (PR #113's lesson: a slower runner is not a covered card).
+  it.each([
+    [241, 713],
+    [721, 1_193],
+    [1_201, 1_673],
+    [1_681, 2_145],
+  ])(
+    'a block filling the content box is never entered, at every 8px of column from %ipx to %ipx',
+    (from, to) => {
+      let built = 0;
+      for (let px = from; px <= to; px += 8) {
+        const W = px / UNIT_PX;
+        const k = gaugeRule(W);
+        const lane = lanes(k);
+        const top = lane.top / UNIT_PX + 0.01;
+        const side = lane.side / UNIT_PX + 0.01;
+        for (const H of [5, 8]) {
+          const [x0, x1] = [-W / 2 + side, W / 2 - side];
+          const [z0, z1] = [-H / 2 + 0.24, H / 2 - top];
+          const boxes = [
+            {
+              x: (x0 + x1) / 2,
+              z: (z0 + z1) / 2,
+              w: (x1 - x0) / 2,
+              h: (z1 - z0) / 2,
+            },
+          ];
+          const model = buildCard({ W, H, G: null, k, boxes });
+          expect(finePenetration(model, boxes), `${px}px × ${H}`).toBe(0);
+          built++;
+        }
+      }
+      expect(built).toBe(((to - from) / 8 + 1) * 2);
+    },
+    60_000,
+  );
+});
+
 describe('lib/ribbon-model — penetration, the one number the guard reads', () => {
   const box = { x: 0, z: 0, w: 1, h: 0.5 };
 
@@ -755,5 +921,35 @@ describe('lib/ribbon-model — input it cannot wrap is refused, loudly', () => {
     expect(() => buildCard({ ...desktop, H: 0.5, G: 0.2 })).toThrow(
       /^buildCard: a card 0\.5 units tall with 0\.2 under it is too short/,
     );
+  });
+
+  it('takes no gap under the LAST card — G null — and refuses a last card too short to tuck the ribbon under it', () => {
+    expect(() => buildCard({ ...desktop, G: null })).not.toThrow();
+    // A last card must hold the turn under it too: taller than about 2.8 k.
+    expect(() => buildCard({ ...desktop, H: 2, G: null })).toThrow(
+      /^buildCard: the last card, 2 units tall, is too short for the gauge 0\.8\d* to tuck the ribbon under it/,
+    );
+    expect(() => buildCard({ ...desktop, H: 2.3, G: null })).not.toThrow();
+  });
+
+  it('meets THE TUCK’S LIMIT on the widest windows — the last card of the built Team page at 3 328px still holds the turn, at 3 840px it is refused by name', () => {
+    // Measured on the built export (/ro/team/, the six doctors): the gauge
+    // grows with the column while a doctor card hardly grows, so from a
+    // window of about 3 400 CSS px the last card is under the ~2.8 k the turn
+    // needs, and the guard withholds the ribbon (lib/ribbon-model's THE TUCK;
+    // the levers are the owner's, §15.26 round 5). With a gap under it — the
+    // hanging tail's room — the same card still draws.
+    const at3328 = { W: 29.13, H: 6.451875, G: null, boxes: [] };
+    const at3840 = { W: 34.25, H: 6.703594, G: null, boxes: [] };
+    expect(() =>
+      buildCard({ ...at3328, k: gaugeRule(at3328.W) }),
+    ).not.toThrow();
+    const k = gaugeRule(at3840.W);
+    expect(() => buildCard({ ...at3840, k })).toThrow(
+      /^buildCard: the last card, 6\.703594 units tall, is too short for the gauge 2\.71\d* to tuck the ribbon under it/,
+    );
+    expect(() =>
+      buildCard({ ...at3840, k, G: lanes(k).gap / UNIT_PX }),
+    ).not.toThrow();
   });
 });

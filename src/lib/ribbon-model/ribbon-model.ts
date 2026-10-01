@@ -24,9 +24,16 @@
 // card's, are never drawn: nothing arrives from above it, and the owner saw a
 // ribbon that "starts from nowhere" (lib/ribbon-draw, THE FIRST CARD HAS NO
 // HEAD, 2026-10-01) — its ribbon is first seen coming over its top edge into
-// the ripple. No loops (fb-489), the hook lower (fb-492), the drop-in a
-// little wavy (fb-494), the tail in the air (fb-504) — the owner's words are
-// in §15.26. Until 2026-10-01 the top lane carried a second calm wave, which
+// the ripple. The LAST card has no next card to run to, so its ribbon ends
+// the way the first card's begins, turned upside down: the side wave runs
+// straight down its lane, turns towards the card's middle on the hook's
+// circle, and goes over the bottom edge at 35° and onto the back (`tuck` …
+// `bfold2`, THE TUCK, 2026-10-01) — the column's ribbon begins and ends
+// behind a card. No loops (fb-489), the hook lower (fb-492), the drop-in a
+// little wavy (fb-494) — the owner's words are in §15.26; the tail hung in
+// the air under the last card (fb-504) until the owner asked for it "tucked
+// in behind it", like the first card's ribbon "where it comes from behind
+// the card". Until 2026-10-01 the top lane carried a second calm wave, which
 // ran four to five humps across a desktop card's top edge, rolling as it
 // went; the owner found it "too much" and asked for "something simpler, more
 // physically plausible" — then, shown a straight run, for "a second degree
@@ -73,8 +80,12 @@
 //
 // ── NO DEAD CODE (the approval's own sentence: "i want no dead code"). Only
 // the ribbon is ported, not the package: the loop-era segments (`Shift`,
-// `HFold`), the tucked tail the owner rejected ("ends in the air all day"),
-// and every lever that does nothing at its approved value are absent. The
+// `HFold`) and every lever that does nothing at its approved value are
+// absent. (The prototype's own tucked tail, which the owner turned down on
+// 2026-09-29 for "ends in the air all day", ran straight down and over the
+// bottom edge square — a cut end, seen from the front; THE TUCK of
+// 2026-10-01 is not that option but the top edge's crossing turned upside
+// down.) The
 // wave's drifts are zero in the approved design, so its hump profile is
 // plain sin(x) and its tilt the constant T_0 — `1 · sin(x + 0)` and `sin(x)`
 // are the same number, and the record agrees. Likewise the hidden S behind the
@@ -102,13 +113,14 @@ export type KeepOut = Readonly<{ x: number; z: number; w: number; h: number }>;
 /**
  * What the page gives one card, in card units: its width W (the column's, the
  * first card's — lib/ribbon-layout), its height H, the gap G under it to the
- * next card's top (or the tail's room), the gauge k, and the blocks the ribbon
+ * next card's top — `null` under the LAST card, which has no next card: its
+ * ribbon tucks under it (THE TUCK) — the gauge k, and the blocks the ribbon
  * must never cover — already mirrored into this card's frame.
  */
 export type CardInput = Readonly<{
   W: number;
   H: number;
-  G: number;
+  G: number | null;
   k: number;
   boxes: readonly KeepOut[];
 }>;
@@ -297,7 +309,7 @@ const LOWER = 1;
 const A_E = 0.06;
 const N_E = 1;
 const R_E = 0.15;
-/** The length over which the side wave fades before the next drop-in (× k). */
+/** The length over which the side wave fades before the next drop-in — or, on the last card, before the turn under it (× k). */
 const TAIL_D = 1;
 /** The taper of a wave's window, and of the window that pins its keep-out pushes to zero at its ends. */
 const TAPER = 0.3;
@@ -307,8 +319,8 @@ const FD_H = 0.002;
 /** How the side wave runs: FREE at its own phase, its humps' bulge at theirs,
  *  and it fades out over a TAIL before the next drop-in. (Until 2026-10-01 a
  *  second, BONDED shape ran the top lane — it ended on a hump pointing into
- *  the card, where the lift curled up out of it; the top run is straight now,
- *  and that branch is gone with it.) */
+ *  the card, where the lift curled up out of it; the top run is the ripple
+ *  now, THE TOP RIPPLE, and that branch is gone with it.) */
 type WaveShape = Readonly<{ bulgePhase: number; phase: number; tail: number }>;
 
 /**
@@ -810,7 +822,8 @@ function ripple(
  * axis of the card): a run of length L with a lateral hump profile sin θ and
  * a shear T_0 sin θ along it, under a window pinned at both ends, kept clear
  * of every keep-out — and SMOOTH beside one (below). The side wave is its one
- * consumer since 2026-10-01: the top run is straight (buildCard).
+ * consumer since 2026-10-01: the top run is the ripple (buildCard, THE TOP
+ * RIPPLE).
  *
  *   θ(t) = 2π n t + phase
  *   n = L / (l k), and A_eff = A k min(1, 0.7 n)² — a short wave is a calmer one.
@@ -1013,7 +1026,9 @@ function wave(
 function validate(input: CardInput): void {
   for (const field of ['W', 'H', 'G', 'k'] as const) {
     const value = input[field];
-    if (!(Number.isFinite(value) && value > 0)) {
+    // G alone may be null: under the last card there is nothing (THE TUCK).
+    if (field === 'G' && value === null) continue;
+    if (!(typeof value === 'number' && Number.isFinite(value) && value > 0)) {
       throw new RangeError(
         `buildCard: ${field} must be a finite number of card units above 0 (received ${String(value)}).`,
       );
@@ -1036,7 +1051,8 @@ function validate(input: CardInput): void {
  * @throws RangeError for input that is not finite and positive, and for a
  * card too small for its gauge — one whose top or side wave would run
  * backwards (a column of cards under about 1 unit wide, or a card shorter
- * than about 2.3 k with the gap under it).
+ * than about 2.3 k with the gap under it — a LAST card, with nothing under
+ * it, must hold the turn under it too: taller than about 2.8 k).
  */
 export function buildCard(input: CardInput): CardModel {
   validate(input);
@@ -1248,16 +1264,57 @@ export function buildCard(input: CardInput): CardModel {
   const Lf = R * k;
   lineDisp(pen, 'dfront', [Lf * sa, 0, -Lf * ca], Lf); // the diagonal on the front face
   const dease = arc(pen, 'dease', R_EASE * k, -alpha); // eases to vertical
+
+  // THE TUCK (the owner, 2026-10-01: "as on the first card of the list where
+  // it starts from behind the card, i want the ribbon to also end on the last
+  // card behind the bottom side of the last card tucked in behind it, not
+  // just hanging as it is now" · "you have an example for tucked in behind
+  // card on first card where it comes from behind the card"). Under the LAST
+  // card nothing follows (G is null), so its side wave runs STRAIGHT DOWN its
+  // lane and the ribbon goes under the card the way it comes over a card's
+  // top edge, turned upside down: it turns towards the card's middle until it
+  // heads β below the horizontal, crosses the bottom edge at that β — the
+  // 35° of every crossing of the top edge — runs across the bottom face, and
+  // bends onto the back, where its end is out of sight (`bfold1`, `bcross`,
+  // `bfold2`: the top's `tfold1` … `tfold2` in reverse). The turn is the
+  // HOOK's circle, r_1 — the one the ribbon takes into every card's top
+  // corner — and not the lead's 0.9 k: under a card there is no lane, only
+  // the card's own bottom padding (1.5rem and its border), and the wider turn
+  // sweeps under a doctor's last line on a laptop — measured on the built
+  // Team and Home pages, every 8px of window from 320 to 2 560, Romanian and
+  // German: the 0.9 k turn makes the guard withhold the ribbon on 66 of 564
+  // windows measured every 16px, the first at 1 232px, while the hook's
+  // circle keeps — every 8px, 1 124 windows — at least 4.5 px of air beyond
+  // the words' own margin on every one, and stays clear of a block that
+  // filled the content box's whole bottom corner — the most a card can hold —
+  // at every column up to the 2 560 window's (ribbon-model.test.ts, THE
+  // TUCK). Drifting the wave towards the card's edge instead, to make that
+  // room, rode its last outward hump over the edge. THE TUCK'S LIMIT: the turn
+  // needs the last card taller than about 2.8 k, and the gauge grows with the
+  // column while a doctor card hardly grows — measured, the last card falls
+  // under that from a window of about 3 400 CSS px (an ultrawide screen at
+  // 100 %), where buildCard refuses it and the guard withholds the ribbon; the
+  // hanging tail drew there. §15.26 round 5 holds the levers, the owner's.
   const waveSide = wave(
     pen,
     'd',
-    [-W / 2 + reach, -H / 2 - G + k], // ends at the next card's drop-in (mirrored)
+    G === null
+      ? [pen.x, -H / 2 + inset + r1 * cb] // straight down, to where the turn under the card begins
+      : [-W / 2 + reach, -H / 2 - G + k], // ends at the next card's drop-in (mirrored)
     { bulgePhase: 2.2, phase: P_D, tail: TAIL_D * k },
   );
   if (!(waveSide.length > 0)) {
     throw new RangeError(
-      `buildCard: a card ${H} units tall with ${G} under it is too short for the gauge ${k}: its side wave would be ${waveSide.length.toFixed(3)} units long. At this gauge H + G must exceed ${(H + G - waveSide.length).toFixed(3)} units.`,
+      G === null
+        ? `buildCard: the last card, ${H} units tall, is too short for the gauge ${k} to tuck the ribbon under it: its side wave would be ${waveSide.length.toFixed(3)} units long. At this gauge the last card must be taller than ${(H - waveSide.length).toFixed(3)} units.`
+        : `buildCard: a card ${H} units tall with ${G} under it is too short for the gauge ${k}: its side wave would be ${waveSide.length.toFixed(3)} units long. At this gauge H + G must exceed ${(H + G - waveSide.length).toFixed(3)} units.`,
     );
+  }
+  if (G === null) {
+    arc(pen, 'tuck', r1, 0.5 * PI - beta); // towards the card's middle, on the hook's circle
+    fold(pen, 'bfold1', 'x'); //              under the bottom edge, at β
+    across(pen, 'bcross');
+    fold(pen, 'bfold2', 'x'); //              onto the back, where the ribbon ends
   }
 
   const segments = pen.segments;

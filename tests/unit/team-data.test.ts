@@ -5,14 +5,15 @@ import { join } from 'node:path';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   auxiliaries,
+  clinicStats,
   coursesByYear,
   doctors,
   splitKeywords,
   type AuxiliaryMember,
   type AuxiliaryWords,
   type Doctor,
-  type DoctorStat,
-  type DoctorStatWords,
+  type Stat,
+  type StatWords,
   type DoctorWords,
   type StatIcon,
   type TeamPicture,
@@ -63,11 +64,25 @@ import { locales, type Locale } from '../../src/i18n/locales';
 // and inside the 21-character ceiling — and THE PATIENTS RULE: a sentence may
 // repeat the tile's number (the owner's „Peste 3000 de zâmbete…"), and then
 // every number it carries must BE that `value`, in as many places in every
-// language as in the Romanian. The last block pins the type the PAGE's glyph
-// map (`STAT_ICONS` in app/[locale]/team/[slug]/stat-tiles.tsx, the one
-// module the page and its story twin share; the band takes a finished
+// language as in the Romanian. The last block pins the type the PAGES' glyph
+// map (`STAT_ICONS` in app/[locale]/team/stat-tiles.tsx, the one module every
+// page that draws tiles and its story twin share; the band takes a finished
 // ReactNode) is exhaustive over — `StatIcon`, exactly the four — and refuses
 // a fifth.
+//
+// SINCE 2026-10-01 (owner: "i want it on home page too with just 3
+// components. experience, patients and nr of procedures", then the same band
+// on the Team page) the clinic has numbers of its OWN — `clinicStats`, the
+// rows of the Home and Team pages' band — and every stat rule above walks
+// them exactly as it walks a doctor's: STAT_LISTS below is the one list of
+// lists those rules read, the clinic's labelled `clinic`. The clinic's rows
+// add three checks of their own: exactly the owner's three drawings in his
+// order, a label ceiling TIGHTER than a doctor's (the three-across row's
+// narrowest tile — CLINIC_STAT_LABEL_CEILING). And, DELIBERATELY, no bound
+// against a doctor's own tiles: a doctor's years, patients and procedures may
+// count a career before the clinic, so a clinic number below one doctor's can
+// be true — a rule demanding otherwise would refuse the owner's real figures
+// (proposed in the build, removed in review, 2026-10-01).
 //
 // SINCE 2026-09-30 (the clinic's six real doctors, review folds): every
 // doctor's week lies INSIDE the clinic's own (`clinic.hours`, lib/clinic —
@@ -194,6 +209,19 @@ const DOCTOR_POSITION_CEILING = 17;
 const STAT_LABEL_CEILING = POSITION_CEILING;
 
 /**
+ * THE CLINIC'S LABELS HAVE A TIGHTER CEILING (the a11y review of 2026-10-01,
+ * LOW-2). A doctor's tile stands one to a row on a phone and two or four on
+ * wider columns; the clinic's three stand three across from the container's
+ * `@xl` — and where that row STARTS, a 576px column less two 40px gaps, each
+ * tile is about 165px wide. A label is a 20px Source Serif 4 `<h3>` wearing
+ * `hyphens-none`, so ~16–17 characters fill that tile, and a longer word would
+ * overflow it rather than break. 16 for the longest unbreakable run, in all
+ * five languages; today's longest are „Interventions" (13) and „d’expérience"
+ * (12). Re-measure on the built band before raising it.
+ */
+const CLINIC_STAT_LABEL_CEILING = 16;
+
+/**
  * The four drawings, spelled once here — lib/team exports `StatIcon` as a
  * TYPE only (the page owns the glyphs, lib is React-free), so, like WEEK
  * above, `satisfies` makes every entry a real icon and the type pin in the
@@ -222,6 +250,18 @@ const numbersIn = (text: string): number[] =>
   [...text.matchAll(NUMBER_IN_TEXT)].map((match) =>
     Number(match[0].replaceAll(/\D/g, '')),
   );
+
+/**
+ * EVERY LIST OF „ÎN CIFRE" ROWS the site ships, labelled for a readable
+ * failure: each doctor's own (his page) and, since 2026-10-01, the clinic's
+ * (`clinicStats`, the Home and Team pages' band) under the label `clinic`.
+ * Every stat rule below walks THIS, so a clinic row is held to exactly what
+ * a doctor's is.
+ */
+const STAT_LISTS: readonly (readonly [string, readonly Stat[]])[] = [
+  ...doctors.map((doctor) => [doctor.id, doctor.stats] as const),
+  ['clinic', clinicStats],
+];
 
 /** Every picture the two lists ship, labelled for a readable failure. */
 const pictures: [string, TeamPicture][] = [
@@ -390,13 +430,6 @@ describe('lib/team — the words, in all five languages', () => {
           longestUnbreakable(words.position).length,
           `${doctor.id}.${locale}.position`,
         ).toBeLessThanOrEqual(DOCTOR_POSITION_CEILING);
-        // The tile's `<h3>` (run ledger D32 — the contract's ceiling).
-        for (const stat of doctor.stats) {
-          expect(
-            longestUnbreakable(stat.words[locale].label).length,
-            `${doctor.id}.stats.${stat.icon}.${locale}.label`,
-          ).toBeLessThanOrEqual(STAT_LABEL_CEILING);
-        }
       }
       for (const member of auxiliaries) {
         const words = member.words[locale];
@@ -408,6 +441,30 @@ describe('lib/team — the words, in all five languages', () => {
           longestUnbreakable(words.position).length,
           `${member.id}.${locale}.position`,
         ).toBeLessThanOrEqual(POSITION_CEILING);
+      }
+      // Every tile's `<h3>`, a doctor's and the clinic's (run ledger D32 —
+      // the contract's ceiling; the clinic's tighter one has its own case).
+      for (const [owner, stats] of STAT_LISTS) {
+        for (const stat of stats) {
+          expect(
+            longestUnbreakable(stat.words[locale].label).length,
+            `${owner}.stats.${stat.icon}.${locale}.label`,
+          ).toBeLessThanOrEqual(STAT_LABEL_CEILING);
+        }
+      }
+    },
+  );
+
+  it.each(locales)(
+    'keeps every CLINIC tile label inside the three-across row’s ceiling for "%s" (the a11y review of 2026-10-01)',
+    (locale: Locale) => {
+      // ~165px tiles where the row starts (CLINIC_STAT_LABEL_CEILING says
+      // how that was measured); the label never hyphenates.
+      for (const stat of clinicStats) {
+        expect(
+          longestUnbreakable(stat.words[locale].label).length,
+          `clinic.stats.${stat.icon}.${locale}.label: ${stat.words[locale].label}`,
+        ).toBeLessThanOrEqual(CLINIC_STAT_LABEL_CEILING);
       }
     },
   );
@@ -440,12 +497,6 @@ describe('lib/team — the words, in all five languages', () => {
             `${doctor.id}.courses[${index}].${locale}`,
           ).not.toMatch(KEYWORD_MARK);
         }
-        for (const stat of doctor.stats) {
-          const { label, description } = stat.words[locale];
-          const where = `${doctor.id}.stats.${stat.icon}.${locale}`;
-          expect(label, `${where}.label`).not.toMatch(KEYWORD_MARK);
-          expect(description, `${where}.description`).not.toMatch(KEYWORD_MARK);
-        }
       }
       for (const member of auxiliaries) {
         const words = member.words[locale];
@@ -455,6 +506,15 @@ describe('lib/team — the words, in all five languages', () => {
         expect(words.position, `${member.id}.${locale}.position`).not.toMatch(
           KEYWORD_MARK,
         );
+      }
+      // Every tile's words, a doctor's and the clinic's.
+      for (const [owner, stats] of STAT_LISTS) {
+        for (const stat of stats) {
+          const { label, description } = stat.words[locale];
+          const where = `${owner}.stats.${stat.icon}.${locale}`;
+          expect(label, `${where}.label`).not.toMatch(KEYWORD_MARK);
+          expect(description, `${where}.description`).not.toMatch(KEYWORD_MARK);
+        }
       }
     },
   );
@@ -602,28 +662,45 @@ describe('lib/team — the course rows (run ledger D17)', () => {
   );
 });
 
-describe('lib/team — the „în cifre" tiles (run ledger D32)', () => {
-  it('gives every doctor at least one tile, each of the four drawings at most once', () => {
-    for (const doctor of doctors) {
-      expect(doctor.stats.length, doctor.id).toBeGreaterThan(0);
-      const icons = doctor.stats.map((stat) => stat.icon);
+describe('lib/team — the „în cifre" tiles (run ledger D32; the clinic’s since 2026-10-01)', () => {
+  it('walks every list of tiles — each doctor’s and the clinic’s (the fence never passes vacuously)', () => {
+    expect(STAT_LISTS).toHaveLength(doctors.length + 1);
+    expect(STAT_LISTS.at(-1)?.[0]).toBe('clinic');
+    expect(STAT_LISTS.at(-1)?.[1]).toBe(clinicStats);
+  });
+
+  it('gives every list at least one tile, each of the four drawings at most once', () => {
+    for (const [owner, stats] of STAT_LISTS) {
+      expect(stats.length, owner).toBeGreaterThan(0);
+      const icons = stats.map((stat) => stat.icon);
       for (const icon of icons) {
         // A cast could smuggle an id the page has no glyph for past the
         // compiler; the page's exhaustive map would then have nothing to draw.
-        expect(STAT_ICONS, `${doctor.id}: ${icon}`).toContain(icon);
+        expect(STAT_ICONS, `${owner}: ${icon}`).toContain(icon);
       }
       // Two tiles wearing one drawing would be two answers to one question —
       // and the drawing is the natural key the band has for its tiles.
-      expect(new Set(icons).size, `${doctor.id}: ${icons.join(' · ')}`).toBe(
+      expect(new Set(icons).size, `${owner}: ${icons.join(' · ')}`).toBe(
         icons.length,
       );
     }
   });
 
+  it('gives the clinic exactly the owner’s three — experience, patients, procedures — in that order', () => {
+    // The owner, 2026-10-01: "just 3 components. experience, patients and nr
+    // of procedures". The TYPE already refuses a fourth row (a three-tuple);
+    // this holds WHICH three, and their order, which is the band's.
+    expect(clinicStats.map((stat) => stat.icon)).toEqual([
+      'experience',
+      'patients',
+      'interventions',
+    ]);
+  });
+
   it('counts with a whole number ≥ 0, followed by "+" or by nothing', () => {
-    for (const doctor of doctors) {
-      for (const stat of doctor.stats) {
-        const where = `${doctor.id}.stats.${stat.icon}: ${stat.value}${stat.suffix ?? ''}`;
+    for (const [owner, stats] of STAT_LISTS) {
+      for (const stat of stats) {
+        const where = `${owner}.stats.${stat.icon}: ${stat.value}${stat.suffix ?? ''}`;
         // Number.isInteger also refuses NaN and ±Infinity — the band counts
         // up to this number frame by frame (D31), and neither is a target.
         expect(Number.isInteger(stat.value), where).toBe(true);
@@ -636,19 +713,17 @@ describe('lib/team — the „în cifre" tiles (run ledger D32)', () => {
   it.each(locales)(
     'gives every tile a finished label and sentence for "%s" — the five languages read ONE list',
     (locale: Locale) => {
-      for (const doctor of doctors) {
+      for (const [owner, stats] of STAT_LISTS) {
         // "They are one list": `Record<Locale, …>` makes a missing language a
         // failed `tsc`, but a cast can still drop one — and the band would
         // then print fewer tiles in one language than in the others.
-        const present = doctor.stats.filter(
+        const present = stats.filter(
           (stat) => stat.words[locale] !== undefined,
         );
-        expect(present.length, `${doctor.id}.stats.${locale}`).toBe(
-          doctor.stats.length,
-        );
+        expect(present.length, `${owner}.stats.${locale}`).toBe(stats.length);
         for (const stat of present) {
           const { label, description } = stat.words[locale];
-          const where = `${doctor.id}.stats.${stat.icon}.${locale}`;
+          const where = `${owner}.stats.${stat.icon}.${locale}`;
           for (const [field, value] of [
             ['label', label],
             ['description', description],
@@ -686,10 +761,11 @@ describe('lib/team — the „în cifre" tiles (run ledger D32)', () => {
       // owner's sentence repeats the tile's count, so the two are one fact
       // written twice — a `value` edited without its sentence, or a sentence
       // translated with a different number, is a page that contradicts
-      // itself inside one tile.
-      for (const doctor of doctors) {
-        for (const stat of doctor.stats) {
-          const where = `${doctor.id}.stats.${stat.icon}.${locale}`;
+      // itself inside one tile. The clinic's patients sentence is the same
+      // sentence with the clinic's own count.
+      for (const [owner, stats] of STAT_LISTS) {
+        for (const stat of stats) {
+          const where = `${owner}.stats.${stat.icon}.${locale}`;
           const numbers = numbersIn(stat.words[locale].description);
           for (const number of numbers) {
             expect(number, `${where}: ${stat.words[locale].description}`).toBe(
@@ -706,16 +782,15 @@ describe('lib/team — the „în cifre" tiles (run ledger D32)', () => {
     },
   );
 
-  it('exercises the patients rule — at least one shipped sentence carries its number', () => {
+  it('exercises the patients rule on a doctor’s tiles AND on the clinic’s — a shipped sentence carries its number in each', () => {
     // Without this, a data edit that removed every number from every sentence
-    // would leave the rule above passing over nothing.
-    expect(
-      doctors.some((doctor) =>
-        doctor.stats.some(
-          (stat) => numbersIn(stat.words.ro.description).length > 0,
-        ),
-      ),
-    ).toBe(true);
+    // would leave the rule above passing over nothing — for the doctors, or
+    // for the clinic's own rows, whose number is the one most likely to be
+    // replaced (lib/team's TODO(owner)).
+    const carries = (stats: readonly Stat[]): boolean =>
+      stats.some((stat) => numbersIn(stat.words.ro.description).length > 0);
+    expect(doctors.some((doctor) => carries(doctor.stats))).toBe(true);
+    expect(carries(clinicStats)).toBe(true);
   });
 });
 
@@ -819,32 +894,40 @@ describe('lib/team — what the types guarantee (run ledger D2)', () => {
     // cannot drift apart.
     expectTypeOf<StatIcon>().toEqualTypeOf<(typeof STAT_ICONS)[number]>();
     // (D-DASH, the other wording rule, is scanned in its own block below.)
-    expectTypeOf<DoctorStat['words']>().toEqualTypeOf<
+    expectTypeOf<Stat['words']>().toEqualTypeOf<
       Readonly<Record<Locale, Readonly<{ label: string; description: string }>>>
     >();
-    expectTypeOf<Doctor['stats']>().toEqualTypeOf<readonly DoctorStat[]>();
+    expectTypeOf<Doctor['stats']>().toEqualTypeOf<readonly Stat[]>();
+    // The clinic's rows are a doctor's row shape, and EXACTLY three of them —
+    // the owner's "just 3 components", a fourth a compile error in lib/team.
+    // Pinned as two plain facts — the length TYPE is the literal 3 (a tuple's,
+    // never an array's `number`) and every row is a `Stat` — rather than one
+    // deep tuple comparison, which the editor's bundled TypeScript and the
+    // project's pinned one disagreed about (2026-10-01).
+    expectTypeOf<(typeof clinicStats)['length']>().toEqualTypeOf<3>();
+    expectTypeOf<(typeof clinicStats)[number]>().toEqualTypeOf<Stat>();
   });
 
   it('refuses a fifth drawing, a suffix other than "+", and a tile with a missing language', () => {
-    const words: DoctorStatWords = {
+    const words: StatWords = {
       label: 'Premii',
       description: 'Recunoaștere pentru calitate.',
     };
     const all = { ro: words, en: words, de: words, fr: words, it: words };
-    const fifth: DoctorStat = {
+    const fifth: Stat = {
       // @ts-expect-error — no fifth drawing: the band has a glyph for four
       icon: 'awards',
       value: 3,
       words: all,
     };
-    const approximately: DoctorStat = {
+    const approximately: Stat = {
       icon: 'patients',
       value: 3000,
       // @ts-expect-error — only "+" is a suffix: it means "at least", nothing else is defined
       suffix: '~',
       words: all,
     };
-    const fourLanguages: DoctorStat = {
+    const fourLanguages: Stat = {
       icon: 'courses',
       value: 10,
       // @ts-expect-error — `fr` is missing: a four-language tile is not a tile
@@ -893,7 +976,8 @@ describe('lib/team — the numbers agree with the page they sit on (round 2f)', 
 
 /**
  * Every string a language ships for the team: the names, positions and
- * philosophy of everyone, a doctor's paragraphs, course lines and stat words.
+ * philosophy of everyone, a doctor's paragraphs and course lines, and the
+ * words of every stat tile — a doctor's and, since 2026-10-01, the clinic's.
  */
 function shippedStrings(locale: Locale): readonly string[] {
   const strings: string[] = [];
@@ -904,7 +988,9 @@ function shippedStrings(locale: Locale): readonly string[] {
     const words = doctor.words[locale];
     strings.push(words.name, words.position, words.philosophy, ...words.about);
     for (const course of doctor.courses) strings.push(course.words[locale]);
-    for (const stat of doctor.stats) {
+  }
+  for (const [, stats] of STAT_LISTS) {
+    for (const stat of stats) {
       strings.push(stat.words[locale].label, stat.words[locale].description);
     }
   }

@@ -5,29 +5,35 @@ import { useLocale, useTranslations } from 'next-intl';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
+import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
 import { Header } from '@/components/sections/Header/Header';
 import { Hero } from '@/components/sections/Hero/Hero';
 import { ReviewsCarousel } from '@/components/sections/ReviewsCarousel/ReviewsCarousel';
 import { REVIEWS_NOW } from '@/components/sections/ReviewsCarousel/ReviewsCarousel.fixtures';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { reviews } from '@/lib/reviews/reviews';
-import { doctors } from '@/lib/team/team';
+import { clinicStats, doctors } from '@/lib/team/team';
 import { localeHref } from '@/i18n/href';
 import { isLocale } from '@/i18n/locales';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
-import { populateDoctorShowcase } from '../team/populate';
+import { populateDoctorShowcase, populateStats } from '../team/populate';
+import { toStatTiles } from '../team/stat-tiles';
 import { populateHero } from './populate';
 
 // Pages/Home — the page as it actually ships: the Hero opener (the site's
 // second rotator, owner dispatch 2026-09-19, epic #103) over the DOCTORS band
 // (sections/DoctorShowcase, owner dispatch 2026-09-30 — the band the Team page
 // opens with, populated by the Team page's own walk, ../team/populate.ts)
-// over the „Ne găsești"
+// over the clinic's NUMBERS (sections/DoctorStats on the page ground, owner
+// 2026-10-01: "i want it on home page too with just 3 components. experience,
+// patients and nr of procedures" — the doctor page's „în cifre" band, its
+// eyebrow and title at the start, no lead, lib/team's three `clinicStats`
+// through ../team/populate.ts' `populateStats` and ../team/stat-tiles.tsx,
+// the Team page's band prop for prop) over the „Ne găsești"
 // band (owner 2026-09-09, board D3) over the reviews deck (mounted
-// 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — on the first
-// five of lib/reviews' demo rows until the real rows land), in the old
-// site's order.
+// 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — over the
+// clinic's own Google reviews since 2026-09-30), in the old site's order.
 // ServicesTeaser and CTABanner still arrive with their own lanes (§14); this
 // story photographs what ships, not a wish. The band's live Google iframe is
 // fenced in the visual net (tests/visual/stories.spec.ts) and photographs as
@@ -102,9 +108,9 @@ const settled = async (root: HTMLElement): Promise<void> => {
   );
 };
 
-/** KEEP-IN-SYNC twin of ./page.tsx — the bands and the doctors band's props
- *  are held equal to the page's by ../page-twins.test.ts, read off both
- *  sources; the plays below pin what this twin renders. */
+/** KEEP-IN-SYNC twin of ./page.tsx — the bands, the doctors band's props and
+ *  the numbers band's are held equal to the page's by ../page-twins.test.ts,
+ *  read off both sources; the plays below pin what this twin renders. */
 function HomePageBand(): ReactElement {
   const t = useTranslations('home');
   const tc = useTranslations('common');
@@ -142,6 +148,18 @@ function HomePageBand(): ReactElement {
         eyebrow={tt('showcase.eyebrow')}
         title={tt('showcase.title')}
         doctors={cards}
+      />
+      {/* The clinic's numbers — the page's band, prop for prop: the page
+          ground, the opener at the start, no lead, lib/team's `clinicStats`
+          through the same walk and the same glyph map. */}
+      <DoctorStats
+        ground="page"
+        align="start"
+        eyebrow={tt('doctor.stats.eyebrow')}
+        title={tt('doctor.stats.title')}
+        atLeast={tt('doctor.stats.atLeast')}
+        tiles={toStatTiles(populateStats(locale, clinicStats))}
+        format={new Intl.NumberFormat(locale).format}
       />
       <ClinicLocation />
       {/* The page passes nothing and measures "how long ago" from the build;
@@ -228,13 +246,39 @@ export const Romanian: Story = {
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
     ).toEqual(doctors.map((doctor) => `/ro/team/${doctor.id}/`));
-    // The map, named by its own h2 — after the doctors, as on the page.
+    // THE CLINIC'S NUMBERS (owner, 2026-10-01): a region named by the doctor
+    // page's own title key, its eyebrow above it and NO lead under it, and
+    // exactly the clinic's three tiles — experience, patients, procedures —
+    // labelled by lib/team's `clinicStats`, in that order.
+    const stats = canvas.getByRole('region', {
+      name: ro.team.doctor.stats.title,
+    });
+    await expect(
+      within(stats).getByText(ro.team.doctor.stats.eyebrow),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByText(ro.team.doctor.stats.lead),
+    ).not.toBeInTheDocument();
+    await expect(
+      within(within(stats).getByRole('list')).getAllByRole('listitem'),
+    ).toHaveLength(3);
+    await expect(
+      within(stats)
+        .getAllByRole('heading', { level: 3 })
+        .map((label) => label.textContent),
+    ).toEqual(clinicStats.map((stat) => stat.words.ro.label));
+    // The map, named by its own h2 — after the doctors and their numbers, as
+    // on the page: hero → doctors → numbers → map.
     const map = canvas.getByRole('region', { name: ro.home.location.title });
     await expect(
       hero.compareDocumentPosition(showcase) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     await expect(
-      showcase.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING,
+      showcase.compareDocumentPosition(stats) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    await expect(
+      stats.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     // The reviews deck below the map, over the clinic's own Google reviews
     // (lib/reviews, since 2026-09-30) — every one of them, since the deck lays
@@ -265,6 +309,10 @@ export const German: Story = {
     ).toHaveAttribute('href', '/de/services/');
     await expect(
       canvas.getByRole('region', { name: de.team.showcase.title }),
+    ).toBeInTheDocument();
+    // The clinic's numbers in German — the doctor page's German title.
+    await expect(
+      canvas.getByRole('region', { name: de.team.doctor.stats.title }),
     ).toBeInTheDocument();
     await expect(
       canvas.getByRole('region', { name: de.home.location.title }),

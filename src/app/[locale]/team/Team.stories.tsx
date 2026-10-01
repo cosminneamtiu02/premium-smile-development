@@ -4,13 +4,19 @@ import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
+import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
 import { TeamRoster } from '@/components/sections/TeamRoster/TeamRoster';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale, type Locale } from '@/i18n/locales';
-import { auxiliaries, doctors } from '@/lib/team/team';
+import { auxiliaries, clinicStats, doctors } from '@/lib/team/team';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
-import { populateDoctorShowcase, populateTeamRoster } from './populate';
+import {
+  populateDoctorShowcase,
+  populateStats,
+  populateTeamRoster,
+} from './populate';
+import { toStatTiles } from './stat-tiles';
 
 // Pages/Team — THE TEAM PAGE'S STORY TWIN. ./page.tsx is an async Server
 // Component (getTranslations/getLocale from next-intl/server), which no
@@ -19,12 +25,18 @@ import { populateDoctorShowcase, populateTeamRoster } from './populate';
 // `useTranslations` + `useLocale` and the SAME ./populate.ts, and its play
 // pins what THIS TWIN renders. KEEP IN SYNC: ../page-twins.test.ts reads
 // page.tsx and this file as source and holds their bands, in order, and the
-// doctors band's props equal — change the JSX in one and that test names it.
+// doctors band's and the numbers band's props equal — change the JSX in one
+// and that test names it.
 //
 // ── THE PAGE SINCE 2026-09-30 (the owner's dispatch, quoted in page.tsx): an
 // `sr-only` <h1> in the page's own markup, then the DOCTORS band
 // (sections/DoctorShowcase — eyebrow, <h2>, every doctor as a card under the
-// ribbon), then the staff tiles (sections/TeamRoster), then the map.
+// ribbon), then the staff tiles (sections/TeamRoster), then — since
+// 2026-10-01 (owner: "same component as on main page with the stats on the
+// team page between map and helping staff") — the clinic's NUMBERS
+// (sections/DoctorStats on the page ground, the Home page's band prop for
+// prop: the opener at the start, no lead, lib/team's three `clinicStats`
+// through ./populate.ts' `populateStats` and ./stat-tiles.tsx), then the map.
 //
 // ── TWO STORIES, the `Pages/*` tier's RO + DE (§13): Romanian pinned at the
 // Laptop window, where the doctor card sits in two columns; German at the
@@ -67,6 +79,15 @@ function TeamPageBands(): ReactElement {
         doctors={cards}
       />
       <TeamRoster members={populateTeamRoster(locale)} />
+      <DoctorStats
+        ground="page"
+        align="start"
+        eyebrow={t('doctor.stats.eyebrow')}
+        title={t('doctor.stats.title')}
+        atLeast={t('doctor.stats.atLeast')}
+        tiles={toStatTiles(populateStats(locale, clinicStats))}
+        format={new Intl.NumberFormat(locale).format}
+      />
       <ClinicLocation />
     </>
   );
@@ -209,6 +230,9 @@ const playPage =
       showcase: string;
       profile: string;
       location: string;
+      /** The numbers band's opener — the doctor page's `team.doctor.stats.*`
+       *  keys — and the lead it must NOT print. */
+      numbers: { eyebrow: string; title: string; lead: string };
     },
     locale: Locale,
   ): NonNullable<Story['play']> =>
@@ -233,6 +257,7 @@ const playPage =
     // ONE PICTURE PER PERSON — a doctor's cutout, a staff member's portrait —
     // so the settle above is never vacuous: a page that stopped rendering
     // <img>s (pictures as CSS backgrounds, say) would let it pass over nothing.
+    // The numbers band adds none: its three drawings are inline <svg> glyphs.
     await expect(canvasElement.querySelectorAll('img')).toHaveLength(
       doctors.length + auxiliaries.length,
     );
@@ -310,10 +335,37 @@ const playPage =
       canvasElement.querySelectorAll('article b').length,
     ).toBeGreaterThan(0);
 
-    // THE MAP IS LAST.
+    // THE CLINIC'S NUMBERS (owner, 2026-10-01: "between map and helping
+    // staff"): the band right after the staff, a region named by the doctor
+    // page's own title key, its eyebrow above it and NO lead under it, and
+    // exactly the clinic's three tiles — experience, patients, procedures —
+    // labelled by lib/team's `clinicStats` in this language.
+    const numbers = staff.nextElementSibling;
+    if (!(numbers instanceof HTMLElement))
+      throw new Error('team story: no numbers band after the staff band');
+    await expect(numbers).toBe(
+      canvas.getByRole('region', { name: words.numbers.title }),
+    );
+    await expect(
+      within(numbers).getByText(words.numbers.eyebrow),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByText(words.numbers.lead),
+    ).not.toBeInTheDocument();
+    await expect(
+      within(within(numbers).getByRole('list')).getAllByRole('listitem'),
+    ).toHaveLength(3);
+    await expect(
+      within(numbers)
+        .getAllByRole('heading', { level: 3 })
+        .map((label) => label.textContent),
+    ).toEqual(clinicStats.map((stat) => stat.words[locale].label));
+
+    // THE MAP IS LAST: doctors → staff → numbers → map.
     const map = canvas.getByRole('region', { name: words.location });
     await expect(precedes(band, staff)).toBe(true);
-    await expect(precedes(staff, map)).toBe(true);
+    await expect(precedes(staff, numbers)).toBe(true);
+    await expect(precedes(numbers, map)).toBe(true);
     await expect(map.nextElementSibling).toBeNull();
 
     // THE OUTLINE, whole: no level is skipped anywhere on the page.
@@ -326,6 +378,8 @@ const playPage =
       2, // the doctors band
       ...doctors.map(() => 3), // one per doctor card
       ...auxiliaries.map(() => 2), // one per staff tile
+      2, // the numbers band
+      ...clinicStats.map(() => 3), // one per clinic tile — three
       2, // the map
     ]);
 
@@ -342,6 +396,7 @@ export const Romanian: Story = {
       showcase: ro.team.showcase.title,
       profile: ro.team.showcase.profile,
       location: ro.home.location.title,
+      numbers: ro.team.doctor.stats,
     },
     'ro',
   ),
@@ -362,6 +417,7 @@ export const German: Story = {
         showcase: de.team.showcase.title,
         profile: de.team.showcase.profile,
         location: de.home.location.title,
+        numbers: de.team.doctor.stats,
       },
       'de',
     )(context);

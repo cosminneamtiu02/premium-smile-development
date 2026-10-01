@@ -6,8 +6,10 @@ import {
 } from 'react';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
+import { Container } from '@/components/ui/Container/Container';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
+import { cx } from '@/lib/cx/cx';
 import { StatNumber, type CountFrames } from './StatNumber';
 
 // sections/DoctorStats — the doctor page's „în cifre" band: a second lilac
@@ -28,12 +30,40 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // owner's CMSR pass, 2026-09-27: „Experiență confirmată în timp",
 // „Intervenții"; tests/unit/cmsr-scan.test.ts keeps them so.)
 //
+// ── THE SECOND AND THIRD PAGES — HOME AND TEAM (owner, 2026-10-01,
+// verbatim: "i want it on home page too with just 3 components. experience,
+// patients and nr of procedures. i want it without that gradient lilla
+// background and to haave : [the eyebrow and the title] left alligned as
+// other headings nad eyebrows on main page and without this: [the lead] so
+// dorp that part" — and, minutes later: "i realised now i want same
+// component as on main page with the stats on the team page between map and
+// helping staff"). The same band, three props apart, each with the doctor
+// page's answer as its default — so that page's call did not change by a
+// character (§6.6); Home and Team pass the same three answers:
+//   · `ground` — 'tint' (TintedBand, the GROUND paragraph) or 'page': the
+//     shape of every other band on those two pages (DoctorShowcase,
+//     TeamRoster, ClinicLocation, ReviewsCarousel — Container.tsx's page-BAND
+//     recipe), a full-bleed `bg-page` <section> around ui/Container, so the
+//     band sits on the page ground with no tint, no fade and no edge against
+//     its neighbours;
+//   · `align` — 'center' or 'start', sections/SectionHeading's own two
+//     answers, so the eyebrow and the title stand where every neighbouring
+//     band's do;
+//   · `lead` — optional; Home and Team pass none, and then no <p> renders.
+// Everything else — the rhythm box, the tiles, the island, the way every
+// string arrives — is one code path on all three pages. There the three tiles
+// are the clinic's OWN numbers (lib/team's `clinicStats`), drawn by the doctor
+// page's glyph map and worded like his tiles; the pages decide that, and this
+// band still knows no doctor and no clinic. Three tiles have a row of their
+// own (the STEPS paragraph's last bullet).
+//
 // ── D30 · DUMB, PROPS-IN, ZERO KEYS — the PriceList/Hero/DoctorProfile shape
 // (the round-1 ledger's D1). Every string arrives FINISHED and translated:
 // the eyebrow, the title, the lead and the `atLeast` word (the SUFFIX, SPOKEN
 // paragraph below) are the page's `team.doctor.stats.*` keys, and each tile's
-// number, label and sentence are facts about the doctor that travel with him
-// in lib/team (D32). The icon arrives as a ReactNode — the page picks the
+// number, label and sentence are facts that travel in lib/team — about the
+// doctor on his page (D32), about the clinic on Home and Team
+// (`clinicStats`). The icon arrives as a ReactNode — the page picks the
 // glyph for the tile's `StatIcon` id — so this file imports NO glyph and
 // knows no doctor: it could not tell „Pacienți" from „Patienten" if it
 // tried. No t(), no message key, no `Locale`, no lib data.
@@ -54,16 +84,20 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // ── THE SUFFIX, SPOKEN — `atLeast` (the owner's decision, 2026-09-27, round
 // 2s). A tile's number reads „3.000+" on screen, and NVDA, JAWS and VoiceOver
 // read the sign as "plus": „3.000 plus" names the glyph, not what it means.
-// The owner wants the meaning said out loud, so the island's sr-only twin
-// reads „peste 3.000" (ro), "over 3,000" (en), „über 3.000" (de), « plus de
-// 3 000 » (fr), « oltre 3.000 » (it). The WORD is the page's
+// The owner wants the meaning said out loud, so the island's twin (an
+// invisible copy laid over the digits — StatNumber.tsx's THE TWIN) reads
+// „peste 3.000" (ro), "over 3,000" (en), „über 3.000" (de), « plus de
+// 3000 » (fr), « oltre 3.000 » (it). The WORD is the page's
 // `team.doctor.stats.atLeast` key, arriving here FINISHED as the REQUIRED
 // `atLeast` prop: never a data field (it is a fact about the language, not
 // about the doctor, so it has no place in lib/team's rows) and never a string
 // inside the island (§8.1: StatNumber knows no language). The band composes
 // each tile's SPOKEN final here, ON THE SERVER, with the same formatter that
-// spells the digits,
-//       tile.suffix ? `${atLeast} ${format(tile.value)}` : format(tile.value)
+// spells the digits — any SPACE it groups them by dropped for the ear
+// (`spokenNumber`: a voice or a braille table that does not take French's
+// narrow no-break space for a thousands separator splits the number in two;
+// the a11y review of 2026-10-01 and its re-review the same day),
+//       tile.suffix ? `${atLeast} ${spokenNumber(…)}` : spokenNumber(…)
 // and hands the island that one finished string as `spoken`: no formatter
 // and no loose word crosses the boundary (the `format` paragraph's rule, the
 // `countFrames` precedent). A tile without a suffix is an exact count and is
@@ -85,25 +119,51 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // consumer (§4's sharing table, first row). This band names itself through
 // it — `aria-labelledby` → the <h2>'s generated id, a named `region` — which
 // is exactly why TintedBand passes the naming attributes through while
-// DoctorProfile refuses them in its own props. Everything below sits inside
-// TintedBand's ui/Container; the vertical rhythm is OURS, on the first box
-// inside it, because an element cannot query its own size (the Container
-// cannot carry its own container-stepped `py`): `py-12 @lg:py-16 @3xl:py-20`,
-// DoctorCourses' rhythm, so the page's two lilac bands and the white one
-// between them breathe alike. NO OUTER MARGIN (§6.4): the page owns the space
-// between bands.
+// DoctorProfile refuses them in its own props. (On the PAGE ground, the
+// SECOND AND THIRD PAGES paragraph, the band's own <section> carries the same
+// name pair and the same ui/Container sits inside it.) Everything below sits
+// inside that ui/Container on either ground; the vertical rhythm is OURS, on
+// the first box inside it, because an element cannot query its own size (the
+// Container cannot carry its own container-stepped `py`): `py-12 @lg:py-16
+// @3xl:py-20`, DoctorCourses' rhythm — and the Home and Team bands' — so the
+// bands around it breathe alike. NO OUTER MARGIN (§6.4): the page owns the
+// space between bands.
 //
-// ── THE OPENER IS CENTRED, AND EVERY CENTRING IS PER ELEMENT (§15.15 b, the
-// text-align board). sections/SectionHeading `align="center"` centres its own
-// box and title; the lead is a <p> that carries its own `text-center`; in each
-// tile the number <p>, the <h3> and the description <p> each carry theirs.
+// ── THE OPENER IS CENTRED BY DEFAULT, AND EVERY CENTRING IS PER ELEMENT
+// (§15.15 b, the text-align board). sections/SectionHeading `align="center"`
+// centres its own box and title; the lead is a <p> that carries its own
+// `text-center`; in each tile the number <p>, the <h3> and the description <p>
+// each carry theirs. With `align="start"` (Home, Team) the opener centres
+// nothing: SectionHeading starts its own lines, the capped box stays at the
+// column's start, and a lead, if one is ever passed, keeps the base rule's
+// `text-align: start`. The TILES stay centred on every page — the owner named the eyebrow
+// and the title, and a tile is a centred stack of four things either way.
 // The <li> centres its children as BOXES (`items-center`) and never as text —
 // no wrapper-level blanket, `[&_p]:` spellings included. The suite walks every
 // element and pins exactly where `text-center` lives. The opener's column is
-// capped at `max-w-3xl` (48rem) and centred with `mx-auto`: the lead is one
-// long sentence, and at the laptop's 1229px column it would otherwise run
-// ~130 characters wide — far past a comfortable measure for §1's older
-// reader.
+// capped at `max-w-3xl` (48rem) on both alignments, and centred with
+// `mx-auto` only when the band is: the lead is one long sentence, and at the
+// laptop's 1229px column it would otherwise run ~130 characters wide — far
+// past a comfortable measure for §1's older reader.
+//
+// ── THE TITLE NEVER SPLITS A WORD (the Opus a11y review of 2026-10-01,
+// folded on the owner's delegation: "fix howver you fell like with that
+// wcag"). The site-wide `hyphens: auto` (§15.14) broke the band's title on
+// phones — „Experiență confir-mată în timp" — and a syllable split in a 30px
+// heading is the hardest place to read one. SectionHeading gets
+// `hyphens-none` through its className merge (§6.8: it lands on the root and
+// inherits to the <h2> and the eyebrow); DoctorProfile's „Despre {name}" is
+// the precedent. Safe by measure: the longest word of any title in the five
+// languages is ~180px at the phone step against a 241px column at 320. Its
+// cost, measured: at 320 the Romanian and the German titles take one line
+// more (+36px, „Experiență / confirmată în / timp"). Its BELT, `wrap-anywhere`
+// beside it (the Opus re-review the same day): a larger default text size eats
+// that margin — ~268px at 150 % by the reviewer's arithmetic — and from about
+// 175 % a word too long for a line by itself would push the page sideways
+// where hyphenation used to break it. `overflow-wrap: anywhere` breaks ONLY
+// such a word — it engages when a line holds no other break — so at every
+// ordinary size not one line moves; the band's own idiom on its lead and its
+// descriptions.
 //
 // ── THE TILES — ORDER, THEN DRESS. Inside the <li>, the reference's order ON
 // SCREEN: disc → number → label → description. In the DOM the label comes
@@ -135,9 +195,17 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //   · THE DISC — a 7rem circle (`size-28`), `bg-surface` white with a
 //     `border-line` ring, the glyph at 3rem through the README's
 //     parent-owns-geometry rule (`[&_svg]:size-12`, which outranks the
-//     glyph's own size class by specificity) in `text-cta` — every disc on
-//     this site is the green CTA family (ClinicLocation's decision; the
-//     lavender is decorative only, §15.1). MEASURED on this ground, and worth
+//     glyph's own size class by specificity) in `text-accent-decorative` —
+//     LILAC since 2026-10-01 (the owner: "paint it's svgs lilla"; the green
+//     CTA family until then). The role is §15.1's for "graphics ONLY", the
+//     hue the courses timeline lights its dots with one band above — and NOT
+//     `--accent`, the menu buttons' lavender, which
+//     tests/unit/accent-census.test.ts bars from every band that composes
+//     TintedBand (as text it fails on the tint, 3.32:1); a drawing is a
+//     graphic, the decorative role's own charter. Computed from the tokens:
+//     #7a6d9c on the white disc is 4.67:1, where SC 1.4.11 would ask 3:1 of
+//     a graphic that carried meaning — and this one is decoration. MEASURED
+//     on the tint, and worth
 //     knowing before a pack review: the tint is rgb(212 207 220); the white
 //     disc stands off it at 1.53:1, and `line` (#d8d4cf) sits at 1.03:1
 //     against the tint and 1.48:1 against the white — so the ring reads as
@@ -146,8 +214,10 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     the tint, a midpoint that draws no edge at all.) A visibly separate
 //     ring would need a darker token than the tint — the owner's call, one
 //     class. The whole disc is `aria-hidden`: decoration, and the glyph
-//     inside is aria-hidden by its own default as well. The glyph's
-//     `text-cta` on white is 4.5:1.
+//     inside is aria-hidden by its own default as well. On Home's PAGE
+//     ground (#faf9f7) the white disc all but vanishes (1.05:1, computed)
+//     and the `line` ring is the edge (1.40:1 against the page): a thin grey
+//     circle round a lilac drawing.
 //   · THE NUMBER — ui/Heading's `page` step on a <p> through `asChild`
 //     (36px, ink-strong — display text; a stat is not a heading OF anything,
 //     so it takes the look and not the outline), `tabular-nums` so the digits
@@ -160,7 +230,8 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     `asChild`, `text-center hyphens-none`: a title breaks between words,
 //     never inside one (the §15.14 rider's reasoning for control labels,
 //     applied to a one- or two-word heading). The outline: page <h1> (the
-//     doctor's name) → this band's <h2> → one <h3> per tile, no gaps (§9).
+//     doctor's name on his page; the page's own `sr-only` <h1> on Home and
+//     Team) → this band's <h2> → one <h3> per tile, no gaps (§9).
 //   · THE DESCRIPTION — ui/Text `tone="muted"` (a <p>), `text-center` through
 //     the className merge (§6.8: it lands on the host element). Measured ink
 //     on the tint: `ink-muted` 4.8:1, `ink-strong` 11.7:1 (TintedBand's D23
@@ -177,8 +248,14 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     wide, and round 2f's „Intervenții reușite" took two lines (round 2s
 //     shortened it to „Intervenții") — a label wraps between words, which
 //     `hyphens-none` guarantees.
-// A doctor with fewer than four tiles leaves the rest of the row empty; the
-// grid does not stretch three tiles over four columns' worth of width.
+//   · THREE TILES — the clinic's band on Home and Team — have a row of their own
+//     (`rowsFor`): ONE column below the column's `@xl` (36rem = 576px), all
+//     THREE across from it (the tablet's 614px column: ~178px tiles; the
+//     notebook's: ~320px). Never two and one: the four-tile steps would leave
+//     the third tile alone on a row with half the band empty beside it.
+// Any other count keeps the four-tile steps, the rest of the row empty: the
+// grid does not stretch tiles over columns' worth of width it was not
+// measured for.
 //
 // ── NO TOKEN MAY PUSH THE PAGE SIDEWAYS (§7 — found by the PseudoLocale
 // story, measured on round 2f's lead: its 70-character run of `·` padding,
@@ -188,8 +265,8 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // on the element, and the choice between the two overflow-wrap values is the
 // layout's, not taste. ui/Modal's slot picked `break-word` plus a zero
 // minimum width, because its long word sits in a flex ROW; here the long
-// token sits in two SHRINK-TO-FIT boxes — the opener column is centred by
-// auto margins, so it is sized fit-content, and each description is a
+// token sits in two SHRINK-TO-FIT boxes — the centred opener column (the
+// default `align`) sits on auto margins, so it is sized fit-content, and each description is a
 // centred flex item inside a grid track that sizes itself from its items'
 // min-content — and `break-word` does not lower min-content, so both boxes
 // would still be as wide as the token. `anywhere` does, and in a box whose
@@ -201,9 +278,11 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // keeps a title whole, and the data test caps an unbreakable label token at
 // 21 characters (D32).
 //
-// ── NO BRANCHES. `tiles` empty is a page bug, not a state: lib/team's data
-// test pins at least one stat per doctor (D32), so this band renders what it
-// is given. Tiles are keyed by their `id`, never an index.
+// ── NO EMPTY STATE. `tiles` empty is a page bug, not a state: lib/team's
+// data test pins at least one stat per doctor (D32) and the clinic's three,
+// so this band renders what it is given; its only branches are the three
+// settings of the SECOND AND THIRD PAGES paragraph. Tiles are keyed by
+// their `id`, never an index.
 //
 // ── Server-safe and zero-JS apart from the island: no 'use client', ONE hook
 // (the server-safe useId, for the heading's id), no state, no handler. The
@@ -224,7 +303,7 @@ export type DoctorStatTile = Readonly<{
   /**
    * Printed after the number ON SCREEN, finished text ("+"), or absent;
    * lib/team's rows allow `'+'` alone, meaning "at least". Never spoken: the
-   * sr-only twin says the band's `atLeast` word BEFORE the number instead
+   * island's twin says the band's `atLeast` word BEFORE the number instead
    * („peste 3.000", the header's SUFFIX, SPOKEN paragraph), and a tile
    * without a suffix is spoken as its number alone. The G2-R2 tier 2 record
    * that stood here (the twin's „3.000+" read "plus" by NVDA, JAWS and
@@ -238,14 +317,40 @@ export type DoctorStatTile = Readonly<{
   description: string;
 }>;
 
+/** Where the band stands — the header's SECOND AND THIRD PAGES paragraph. */
+export type DoctorStatsGround = 'tint' | 'page';
+
+/** How the opener lines up — sections/SectionHeading's two answers. */
+export type DoctorStatsAlign = 'center' | 'start';
+
 type DoctorStatsOwnProps = Readonly<{
   /** The mono micro-label over the title, finished text (§8.1). */
   eyebrow: string;
   /** The band's <h2> — and, through aria-labelledby, the region's name. */
   title: string;
-  /** One sentence under the title, centred. */
-  lead: string;
-  /** The tiles, 1..n, in the page's order (four on every shipped doctor). */
+  /**
+   * One sentence under the title, finished text — or none: the band on Home
+   * and Team has no lead (owner 2026-10-01: "without this … so dorp that
+   * part"), and an absent or empty lead renders no <p>. Optional on purpose,
+   * so the doctor page's lead is pinned by src/app/[locale]/page-twins.test.ts
+   * (that page's band carries `lead`) rather than by this type.
+   */
+  lead?: string;
+  /**
+   * The ground: 'tint' (default) is sections/TintedBand, the doctor page's
+   * lilac with its two fades; 'page' is the plain page ground every other
+   * band on Home and Team stands on (owner 2026-10-01: "without that
+   * gradient lilla background").
+   */
+  ground?: DoctorStatsGround;
+  /**
+   * The opener's alignment: 'center' (default, the doctor page) or 'start'
+   * (Home and Team — "left alligned as other headings nad eyebrows on main
+   * page"). The tiles stay centred either way.
+   */
+  align?: DoctorStatsAlign;
+  /** The tiles, 1..n, in the page's order (four on every doctor, three on
+   *  the clinic's band). */
   tiles: readonly DoctorStatTile[];
   /**
    * Turns a number into the visitor's digits — `Intl.NumberFormat(locale)
@@ -258,8 +363,8 @@ type DoctorStatsOwnProps = Readonly<{
    * The word a screen reader hears for a tile's „+", finished text from the
    * page's `team.doctor.stats.atLeast` key (§8.1): „peste" (ro), "over" (en),
    * „über" (de), « plus de » (fr), « oltre » (it). The band puts it BEFORE
-   * the formatted final value in the sr-only twin of every tile that carries
-   * a suffix, `${atLeast} ${format(value)}` = „peste 3.000", while the screen
+   * the formatted final value in the island's twin of every tile that carries
+   * a suffix, `${atLeast} ${spokenNumber(value, format)}` = „peste 3.000", while the screen
    * keeps showing „3.000+". It names the ONE suffix the data shape allows
    * (`'+'`, "at least"); a second suffix kind would need a second word, a
    * named trigger not built (the header's SUFFIX, SPOKEN paragraph).
@@ -337,6 +442,57 @@ export function countFrames(
   return [...rising, format(value)];
 }
 
+/**
+ * The number as the EAR gets it (the Opus a11y review of 2026-10-01 and its
+ * re-review the same day, folded on the owner's delegation): the page's own
+ * formatter, with every SPACE it puts BETWEEN TWO DIGITS dropped. French
+ * groups thousands with U+202F, the narrow no-break space, and other locales
+ * use U+00A0. Heard, such a space is a risk and its absence never is: a voice
+ * that does not take it for a thousands separator — a French page read by
+ * another language's voice among them — says „huit, zéro zéro zéro"; a
+ * braille table may print a code for it, and in 6-dot literary braille a
+ * space ENDS a number; and a plain space would be a line-break point inside
+ * the number. „8000" is one number to every voice and every table, and it is
+ * how the tiles' own sentences already write it („Plus de 8000 sourires").
+ * Only a space between digits goes: the dots and commas ro, de, it and en
+ * group by are untouched, and so is anything else the formatter prints. The
+ * digits on screen keep the formatter's own spacing (§8.3) — only the twin
+ * hears the number unspaced. Exported for the suites; the band is its only
+ * caller.
+ */
+export function spokenNumber(
+  value: number,
+  format: (value: number) => string,
+): string {
+  return format(value).replace(/(?<=\d)[\u00a0\u202f](?=\d)/g, '');
+}
+
+/**
+ * What `align` does to the opener (the header's CENTRING paragraph): the
+ * capped box centres as a box, and a lead centres its own lines, only when
+ * the band is centred. A Record keyed by the alignment, so a third one is a
+ * compile error here rather than a silent `start` (SectionHeading's ALIGN,
+ * the precedent; the TS review of 2026-10-01).
+ */
+const OPENER: Readonly<
+  Record<DoctorStatsAlign, Readonly<{ box?: string; lead?: string }>>
+> = {
+  center: { box: 'mx-auto', lead: 'text-center' },
+  start: {},
+};
+
+/**
+ * The columns the tiles stand in, by how many there are (the header's STEPS
+ * paragraph): three — the clinic's band on Home and Team, though the rule
+ * reads only the count — one column below the container's `@xl` and all
+ * three across from it; any other count, the doctor page's measured steps,
+ * two from `@md` and four from `@3xl`. Whole class strings, so Tailwind's
+ * scanner sees every one of them.
+ */
+function rowsFor(count: number): string {
+  return count === 3 ? '@xl:grid-cols-3' : '@md:grid-cols-2 @3xl:grid-cols-4';
+}
+
 export function DoctorStats({
   eyebrow,
   title,
@@ -344,89 +500,119 @@ export function DoctorStats({
   tiles,
   format,
   atLeast,
+  ground = 'tint',
+  align = 'center',
   className,
   ...rest
 }: DoctorStatsProps): ReactElement {
   const headingId = useId();
+  const opener = OPENER[align];
 
-  return (
-    // `{...rest}` rides FIRST so a stray attribute can never replace the name
-    // pair; TintedBand merges className caller-last (§6.8).
-    <TintedBand {...rest} aria-labelledby={headingId} className={className}>
-      {/* The rhythm box — band-owned `py` on container steps (the header's
-          GROUND paragraph), and the gap between the opener and the tiles. */}
-      <div className="flex flex-col gap-10 py-12 @lg:py-16 @3xl:py-20">
-        {/* THE OPENER — capped and centred as a BOX; each text centres
-            itself (the header's CENTRING paragraph). */}
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
-          <SectionHeading
-            level={2}
-            id={headingId}
-            eyebrow={eyebrow}
-            title={title}
-            align="center"
-          />
-          <p className="text-lg text-ink-muted text-center wrap-anywhere">
+  const content = (
+    // The rhythm box — band-owned `py` on container steps (the header's
+    // GROUND paragraph), and the gap between the opener and the tiles. The
+    // same box, the same steps, on both grounds.
+    <div className="flex flex-col gap-10 py-12 @lg:py-16 @3xl:py-20">
+      {/* THE OPENER — capped as a BOX, centred as one only when the band is
+          (`mx-auto`); each text centres itself (the header's CENTRING
+          paragraph). */}
+      <div className={cx('flex max-w-3xl flex-col gap-4', opener.box)}>
+        {/* `hyphens-none` — the title wraps between words and never inside
+            one; `wrap-anywhere` — unless a word cannot fit a line by itself
+            (the header's TITLE paragraph). */}
+        <SectionHeading
+          level={2}
+          id={headingId}
+          eyebrow={eyebrow}
+          title={title}
+          align={align}
+          className="hyphens-none wrap-anywhere"
+        />
+        {lead ? (
+          <p
+            className={cx('text-lg text-ink-muted wrap-anywhere', opener.lead)}
+          >
             {lead}
           </p>
-        </div>
-        {/* THE TILES — one column, two from `@md`, four from `@3xl` (the
-            header's STEPS paragraph). `role="list"` is load-bearing in
-            WebKit (the header's TILES paragraph). Each tile's DOM is disc →
-            label → number → description, painted disc → number → label →
-            description (the header's ORDER bullet). */}
-        <ul
-          role="list"
-          className="grid gap-10 @md:grid-cols-2 @3xl:grid-cols-4 @3xl:gap-8"
-        >
-          {tiles.map((tile) => (
-            <li key={tile.id} className="flex flex-col items-center gap-4">
-              {/* THE DISC — decoration (the header's DISC paragraph); painted
+        ) : null}
+      </div>
+      {/* THE TILES — the columns by count (`rowsFor`, the header's STEPS
+          paragraph). `role="list"` is load-bearing in WebKit (the header's
+          TILES paragraph). Each tile's DOM is disc → label → number →
+          description, painted disc → number → label → description (the
+          header's ORDER bullet). */}
+      <ul
+        role="list"
+        className={cx('grid gap-10 @3xl:gap-8', rowsFor(tiles.length))}
+      >
+        {tiles.map((tile) => (
+          <li key={tile.id} className="flex flex-col items-center gap-4">
+            {/* THE DISC — decoration (the header's DISC paragraph); painted
                   first by `-order-2`. */}
-              <span
-                aria-hidden="true"
-                className="-order-2 flex size-28 items-center justify-center rounded-full border border-line bg-surface text-cta [&_svg]:size-12"
-              >
-                {tile.icon}
-              </span>
-              {/* THE LABEL — the tile's <h3>, FIRST in the DOM after the
+            <span
+              aria-hidden="true"
+              className="-order-2 flex size-28 items-center justify-center rounded-full border border-line bg-surface text-accent-decorative [&_svg]:size-12"
+            >
+              {tile.icon}
+            </span>
+            {/* THE LABEL — the tile's <h3>, FIRST in the DOM after the
                   decoration, so a heading jump lands before the number. */}
-              <Heading
-                size="title"
-                asChild
-                className="text-center hyphens-none"
-              >
-                <h3>{tile.label}</h3>
-              </Heading>
-              {/* THE NUMBER — the `page` step on a <p>; the island inside;
+            <Heading size="title" asChild className="text-center hyphens-none">
+              <h3>{tile.label}</h3>
+            </Heading>
+            {/* THE NUMBER — the `page` step on a <p>; the island inside;
                   painted above the label by `-order-1`. The island gets the
                   frames to SHOW and, in `spoken`, the one finished string to
                   be HEARD (the header's SUFFIX, SPOKEN paragraph). */}
-              <Heading
-                size="page"
-                asChild
-                className="-order-1 tabular-nums text-center"
-              >
-                <p>
-                  <StatNumber
-                    frames={countFrames(tile.value, format)}
-                    suffix={tile.suffix}
-                    spoken={
-                      tile.suffix
-                        ? `${atLeast} ${format(tile.value)}`
-                        : format(tile.value)
-                    }
-                  />
-                </p>
-              </Heading>
-              {/* THE DESCRIPTION — a muted <p>, centred on the element. */}
-              <Text tone="muted" className="text-center wrap-anywhere">
-                {tile.description}
-              </Text>
-            </li>
-          ))}
-        </ul>
-      </div>
+            <Heading
+              size="page"
+              asChild
+              className="-order-1 tabular-nums text-center"
+            >
+              <p>
+                <StatNumber
+                  frames={countFrames(tile.value, format)}
+                  suffix={tile.suffix}
+                  spoken={
+                    tile.suffix
+                      ? `${atLeast} ${spokenNumber(tile.value, format)}`
+                      : spokenNumber(tile.value, format)
+                  }
+                />
+              </p>
+            </Heading>
+            {/* THE DESCRIPTION — a muted <p>, centred on the element. */}
+            <Text tone="muted" className="text-center wrap-anywhere">
+              {tile.description}
+            </Text>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  // THE GROUND (the header's SECOND AND THIRD PAGES paragraph). Either way
+  // `{...rest}` rides FIRST so a stray attribute can never replace the name
+  // pair, and the caller's className merges LAST (§6.8) — through TintedBand
+  // on the tint, through cx here on the page ground. A ternary hands anything
+  // new to its else branch, so the next line stops compiling the day the
+  // union gains a third ground (PersonnelCard's `kind` tripwire, the TS
+  // review of 2026-10-01).
+  void (ground satisfies 'tint' | 'page');
+  return ground === 'tint' ? (
+    <TintedBand {...rest} aria-labelledby={headingId} className={className}>
+      {content}
     </TintedBand>
+  ) : (
+    // THE PAGE GROUND — the outer of the bands around it on Home and Team:
+    // full-bleed, the paint and nothing else, ui/Container inside owning the
+    // width and the container-query context the steps read.
+    <section
+      {...rest}
+      aria-labelledby={headingId}
+      className={cx('bg-page', className)}
+    >
+      <Container>{content}</Container>
+    </section>
   );
 }

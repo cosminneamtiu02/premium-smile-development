@@ -9,14 +9,17 @@ import {
   type DoctorIntroCredo,
 } from '@/components/sections/DoctorIntro/DoctorIntro';
 import { DoctorProfile } from '@/components/sections/DoctorProfile/DoctorProfile';
-import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
+import {
+  DoctorStats,
+  spokenNumber,
+} from '@/components/sections/DoctorStats/DoctorStats';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale, type Locale } from '@/i18n/locales';
 import { coursesByYear, doctors, type Doctor } from '@/lib/team/team';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { populateDoctorPage } from '../populate';
-import { toStatTiles } from './stat-tiles';
+import { toStatTiles } from '../stat-tiles';
 
 // Pages/Doctor — a real `/{locale}/team/{id}/` page as it ships: the opener
 // with its credo card, the tinted „Despre" band beside the schedule card, the
@@ -41,7 +44,7 @@ import { toStatTiles } from './stat-tiles';
 // header points back at this one. Both must render the same five bands in the
 // same order (round 2's D18, extended by D33: DoctorIntro → DoctorProfile →
 // DoctorCourses → DoctorStats → ClinicLocation), fed by the same populator and
-// the same ./stat-tiles.tsx, with the same twelve `team.doctor.*` keys (D20,
+// the same ../stat-tiles.tsx, with the same twelve `team.doctor.*` keys (D20,
 // D32, D37) — the about title taking the doctor's name as its ICU argument on
 // both sides. The plays pin exactly that from the outside, so a change on
 // either side that the other does not follow turns this suite red instead of
@@ -189,7 +192,7 @@ function DoctorPageBands(): ReactElement {
           TintedBand ground as the profile. The numbers come through as
           numbers — the island counts up to them — and are printed by
           `Intl.NumberFormat` in the visitor's language (§8.3), never by the
-          band; the icon ids become glyphs in ./stat-tiles.tsx, the one
+          band; the icon ids become glyphs in ../stat-tiles.tsx, the one
           mapping this twin and the page share (G2-R2 tier 3). */}
       <DoctorStats
         eyebrow={t('doctor.stats.eyebrow')}
@@ -700,7 +703,7 @@ const playPage =
     // lead, one <h3> per stat row of lib/team in the doctor's own order, and
     // — from the FIRST frame, before any count-up — the FINAL value of every
     // number: SEEN as „3.000+" in the aria-hidden span, HEARD as the page's
-    // `atLeast` word before the number („peste 3.000") in the sr-only twin, the
+    // `atLeast` word before the number („peste 3.000") in the island's twin, the
     // number alone when the row has no suffix (round 2s, owner 2026-09-27) —
     // both formatted the way the page formats them.
     const stats = canvas.getByRole('region', { name: words.stats.title });
@@ -717,16 +720,19 @@ const playPage =
     for (const [index, stat] of DOCTOR.stats.entries()) {
       const number = numberFormat.format(stat.value);
       const seen = `${number}${stat.suffix ?? ''}`;
-      const heard = stat.suffix ? `${words.stats.atLeast} ${number}` : number;
+      // Heard through the band's own `spokenNumber` — a French frame's
+      // grouping space is dropped for the ear, never read off raw Intl.
+      const spoken = spokenNumber(stat.value, numberFormat.format);
+      const heard = stat.suffix ? `${words.stats.atLeast} ${spoken}` : spoken;
       await expect(
-        within(tiles[index]).getByText(heard, { selector: '.sr-only' }),
+        within(tiles[index]).getByText(heard, { selector: '[data-spoken]' }),
       ).toBeInTheDocument();
       await expect(
         within(tiles[index]).getByText(seen, { selector: '[aria-hidden]' }),
       ).toBeInTheDocument();
-      // The sign is seen, never heard: no sr-only text in the tile carries it.
+      // The sign is seen, never heard: the tile's twin never carries it.
       await expect(
-        within(tiles[index]).queryByText(/\+/, { selector: '.sr-only' }),
+        within(tiles[index]).queryByText(/\+/, { selector: '[data-spoken]' }),
       ).toBeNull();
       await expect(
         within(tiles[index]).getByText(stat.words[locale].description),

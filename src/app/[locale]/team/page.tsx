@@ -2,15 +2,25 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
+import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
 import { TeamRoster } from '@/components/sections/TeamRoster/TeamRoster';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale } from '@/i18n/locales';
-import { populateDoctorShowcase, populateTeamRoster } from './populate';
+import { clinicStats } from '@/lib/team/team';
+import {
+  populateDoctorShowcase,
+  populateStats,
+  populateTeamRoster,
+} from './populate';
+import { toStatTiles } from './stat-tiles';
 
 // THE TEAM PAGE — „Echipa noastră": the doctors band first (its eyebrow and
 // title, every doctor as a card under the ribbon), the auxiliary staff as a
-// grid of tiles, the map last. It replaced the interim stub that existed only
-// so the shell's nav had a resolvable target (PR #69, the link check).
+// grid of tiles, the clinic's numbers (since 2026-10-01 — the Home page's
+// „în cifre" band, prop for prop: the owner, "same component as on main page
+// with the stats on the team page between map and helping staff"), the map
+// last. It replaced the interim stub that existed only so the shell's nav had
+// a resolvable target (PR #69, the link check).
 //
 // ── THE DOCTORS ARE A BAND OF THEIR OWN since 2026-09-30 (owner, verbatim:
 // "make this the official dr card under personell card … integrate it in the
@@ -24,8 +34,8 @@ import { populateDoctorShowcase, populateTeamRoster } from './populate';
 // improvising content (§15.17).
 //
 // ── THIS FILE IS THE ONE POPULATOR (run ledger D1, the services and home
-// pages' precedent). Both bands are DUMB: they hold no message key, import no
-// data, format nothing and do not know what a `Locale` is — they receive
+// pages' precedent). The three bands are DUMB: they hold no message key, import
+// no data, format nothing and do not know what a `Locale` is — they receive
 // finished people and lay them out. So everything that has to KNOW happens
 // here — the language, the band's eyebrow and title, the button's words, the
 // URLs — and ./populate.ts does the walks (its header argues why it is neither
@@ -41,7 +51,8 @@ import { populateDoctorShowcase, populateTeamRoster } from './populate';
 // same on Home, where it cannot be an <h1>. §9's one outline root and the SEO
 // lane's outline still need the element, so it stays, in the page's markup,
 // with the words the tab title shows: h1 (the page) → h2 (the band) → h3 (each
-// doctor) → h2 (each staff tile) → h2 (the map).
+// doctor) → h2 (each staff tile) → h2 (the numbers) → h3 (each tile) → h2 (the
+// map).
 //
 // ── `isLocale` IS THE NARROWING, not a guard against reality: next-intl hands
 // back a plain `string`, and `words[locale]` on a `Record<Locale, …>` refuses
@@ -66,8 +77,9 @@ import { populateDoctorShowcase, populateTeamRoster } from './populate';
 // `title — siteName` on the ` — ` join, and it is built from the SAME
 // `team.title` key the <h1> prints, so the tab and the outline root can never
 // disagree. Zero hardcoded user-facing strings live in this file (§17.4) —
-// `team.title` and `team.showcase.*` are the owner's, in src/messages/*.json,
-// and every name, position and sentence is a fact from lib/team.
+// `team.title`, `team.showcase.*` and the numbers band's three
+// `team.doctor.stats.*` keys are the owner's, in src/messages/*.json, and
+// every name, position, number and sentence is a fact from lib/team.
 //
 // ── KEEP-IN-SYNC with ./Team.stories.tsx: this page is an async Server
 // Component (getTranslations/getLocale from next-intl/server), which no browser
@@ -122,6 +134,20 @@ export default async function TeamPage() {
         doctors={doctors}
       />
       <TeamRoster members={populateTeamRoster(locale)} />
+      {/* THE CLINIC'S NUMBERS — the Home page's band, prop for prop (owner,
+          2026-10-01: "same component as on main page with the stats on the
+          team page between map and helping staff"): the page ground, the
+          eyebrow and title at the start, no lead, lib/team's three
+          `clinicStats` tiles. The words are the doctor page's own keys. */}
+      <DoctorStats
+        ground="page"
+        align="start"
+        eyebrow={t('doctor.stats.eyebrow')}
+        title={t('doctor.stats.title')}
+        atLeast={t('doctor.stats.atLeast')}
+        tiles={toStatTiles(populateStats(locale, clinicStats))}
+        format={new Intl.NumberFormat(locale).format}
+      />
       {/* The map closes every page of this run — the owner's „add at the end
           the map so i can test how it goes back and forth on the page". It
           reads lib/clinic itself and takes nothing from here. */}

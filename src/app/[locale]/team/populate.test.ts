@@ -4,22 +4,28 @@ import type { KeywordSegment } from '@/components/ui/Keyword/Keyword';
 import { locales } from '@/i18n/locales';
 import {
   auxiliaries,
+  clinicStats,
   coursesByYear,
   doctors,
   splitKeywords,
   type AboutSegment,
   type Doctor,
+  type Stat,
 } from '@/lib/team/team';
 import {
   populateDoctorPage,
   populateDoctorShowcase,
+  populateStats,
   populateTeamRoster,
   type DoctorPageContent,
+  type StatContent,
   type TeamList,
 } from './populate';
 
 // populate — the team walks (the doctors band's cards, the auxiliary tiles, a
-// doctor's page), tested without rendering anything. The module is
+// doctor's page, and since 2026-10-01 the „în cifre" rows on their own —
+// `populateStats`, one walk for a doctor's rows and for the clinic's, which
+// Home and the Team page show), tested without rendering anything. The module is
 // pure, JSX-free and next-intl-free by design, and names no `react` specifier
 // (see its header), so this suite needs no provider, no DOM and no mock beyond
 // a spy standing in for the page's quote callback.
@@ -829,6 +835,116 @@ describe('populateDoctorPage — the stats tiles (round 2f, D32)', () => {
           expect(tile.value).toBe(doctor.stats[index].value);
         }
       }
+    }
+  });
+});
+
+describe('populateStats — one walk for a doctor’s rows and the clinic’s (owner, 2026-10-01)', () => {
+  /** The fixture doctor's two rows — one with a suffix, one without. */
+  const ROWS: readonly Stat[] = FIXTURE.doctors[0].stats;
+
+  it('takes lib/team’s row shape and gives the band’s content shape', () => {
+    expectTypeOf(populateStats).parameter(1).toEqualTypeOf<readonly Stat[]>();
+    expectTypeOf(populateStats).returns.toEqualTypeOf<readonly StatContent[]>();
+  });
+
+  it('picks the words of the locale it was given, the icon an id, the number a number', () => {
+    expect(populateStats('de', ROWS)).toEqual([
+      {
+        icon: 'experience',
+        value: 12,
+        suffix: '+',
+        label: 'Jahre Erfahrung',
+        description: 'Über 12 Jahre.',
+      },
+      { icon: 'courses', value: 3, label: 'Kurse', description: 'Drei Kurse.' },
+    ]);
+    expect(populateStats('ro', ROWS).map((tile) => tile.label)).toEqual([
+      'Ani de experiență',
+      'Cursuri',
+    ]);
+  });
+
+  it('passes the numbers through untouched — formatting is the page’s (§8.3)', () => {
+    for (const locale of locales) {
+      for (const [index, tile] of populateStats(locale, ROWS).entries()) {
+        expect(typeof tile.value).toBe('number');
+        expect(tile.value).toBe(ROWS[index].value);
+      }
+    }
+  });
+
+  it('keeps the list’s own order — display order is the data’s, never sorted', () => {
+    expect(
+      populateStats('ro', ROWS.toReversed()).map((tile) => tile.icon),
+    ).toEqual(['courses', 'experience']);
+  });
+
+  it('carries a `suffix` KEY exactly when the row has one — none at all otherwise', () => {
+    const [plus, exact] = populateStats('ro', ROWS);
+    expect(plus.suffix).toBe('+');
+    // An own `suffix: undefined` would still be a key, and ./stat-tiles.tsx
+    // spreads the row whole.
+    expect(Object.hasOwn(exact, 'suffix')).toBe(false);
+    expect(Object.keys(exact).toSorted()).toEqual([
+      'description',
+      'icon',
+      'label',
+      'value',
+    ]);
+  });
+
+  it('returns an empty list for no rows', () => {
+    expect(populateStats('ro', [])).toEqual([]);
+  });
+
+  it('IS the doctor page’s stats walk — the fixture doctor’s page carries exactly its output', () => {
+    for (const locale of locales) {
+      expect(
+        populateDoctorPage(
+          locale,
+          FIXTURE.doctors[0].id,
+          { renderQuote: spyRenderQuote(), closedLabel: 'x' },
+          FIXTURE,
+        )?.stats,
+      ).toEqual(populateStats(locale, ROWS));
+    }
+  });
+
+  it('IS the doctor page’s stats walk for every shipped doctor, in every language', () => {
+    for (const doctor of doctors) {
+      for (const locale of locales) {
+        expect(
+          populateDoctorPage(locale, doctor.id, {
+            renderQuote: spyRenderQuote(),
+            closedLabel: 'x',
+          })?.stats,
+          `${locale}/${doctor.id}`,
+        ).toEqual(populateStats(locale, doctor.stats));
+      }
+    }
+  });
+
+  it('walks the clinic’s own three for Home and the Team page — in their order, every language’s words, every number as written', () => {
+    // Read off `clinicStats` itself, never retyped: the numbers are the
+    // owner's to replace (lib/team's TODO(owner)), and a copy here would be
+    // the first thing to go stale.
+    for (const locale of locales) {
+      const tiles = populateStats(locale, clinicStats);
+      expect(tiles.map((tile) => tile.icon)).toEqual([
+        'experience',
+        'patients',
+        'interventions',
+      ]);
+      expect(tiles).toEqual(
+        clinicStats.map((stat) => ({
+          icon: stat.icon,
+          value: stat.value,
+          ...(stat.suffix === undefined ? {} : { suffix: stat.suffix }),
+          label: stat.words[locale].label,
+          description: stat.words[locale].description,
+        })),
+      );
     }
   });
 });

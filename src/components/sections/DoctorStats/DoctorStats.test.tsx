@@ -14,13 +14,18 @@ import { People } from '@/assets/glyphs/People';
 import { CalendarCheck } from '@/assets/glyphs/CalendarCheck';
 import { ToothCheck } from '@/assets/glyphs/ToothCheck';
 import { Trophy } from '@/assets/glyphs/Trophy';
+import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
+import { containerClasses } from '@/components/ui/Container/Container';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
 import {
   DoctorStats,
   countFrames,
+  spokenNumber,
   type DoctorStatTile,
+  type DoctorStatsAlign,
+  type DoctorStatsGround,
   type DoctorStatsProps,
 } from './DoctorStats';
 import source from './DoctorStats.tsx?raw';
@@ -50,6 +55,20 @@ import source from './DoctorStats.tsx?raw';
 // up, in DoctorStats.stories.tsx's plays, derived from the measured column.
 // Class strings the band takes from an ATOM are derived from a rendered atom,
 // never retyped.
+//
+// ── THE SECOND PAGE (owner, 2026-10-01 — DoctorStats.tsx's SECOND PAGE
+// paragraph): the same band on Home and on the Team page, three settings
+// apart — `ground="page"`, `align="start"`, no `lead` — over THREE tiles. Each
+// setting is pinned on its own below; the defaults are pinned to the doctor
+// page's markup to the byte (`ground="tint" align="center"` renders exactly
+// what no setting renders, so that page's call did not move, §6.6); and what
+// stands INSIDE the ground — the rhythm box, the opener, the tiles — is held
+// to be one code path on both grounds. HOME_TILES is TILES without the courses
+// tile: the clinic's three drawings in the clinic's order (lib/team's
+// `clinicStats`, which stays out of this suite for the reason above). And the
+// glyphs are LILAC since that day (the owner: "paint it's svgs lilla"): the
+// disc's pin below wears `text-accent-decorative`, and no `text-cta` may come
+// back anywhere in the band.
 
 const EYEBROW = 'În cifre';
 const TITLE = 'Experiență confirmată în timp';
@@ -92,6 +111,26 @@ const TILES = [
   },
 ] as const satisfies readonly DoctorStatTile[];
 
+/** Home's and the Team page's three — experience, patients, procedures (the
+ *  owner's "just 3 components"), in that order: TILES without the courses
+ *  tile, so every word is one the doctor page's tiles already print. */
+const HOME_TILES = [
+  TILES[0],
+  TILES[1],
+  TILES[3],
+] as const satisfies readonly DoctorStatTile[];
+
+/** The two grounds and the two alignments, spelled once for the loops below;
+ *  the type pins at the end prove they are ALL of each union. */
+const GROUNDS = [
+  'tint',
+  'page',
+] as const satisfies readonly DoctorStatsGround[];
+const ALIGNS = [
+  'center',
+  'start',
+] as const satisfies readonly DoctorStatsAlign[];
+
 /** The page's formatter for Romanian (§8.3) — „3.000", „1.000". */
 const RO = (value: number): string => new Intl.NumberFormat('ro').format(value);
 
@@ -105,14 +144,26 @@ const FINALS = ['6+', '3.000+', '10', '1.000+'];
  *  page's number on a „+" tile, the number alone on the exact count. */
 const SPOKEN = ['peste 6', 'peste 3.000', '10', 'peste 1.000'];
 
-// ── THE BYTE PINS — this band's OWN class strings.
+// ── THE BYTE PINS — this band's OWN class strings. The opener, the lead and
+// the list are assembled by lib/cx since 2026-10-01 (the base, then what the
+// setting adds), so their tokens read in that order.
 const RHYTHM_BOX = 'flex flex-col gap-10 py-12 @lg:py-16 @3xl:py-20';
-const OPENER = 'mx-auto flex max-w-3xl flex-col gap-4';
-const LEAD_CLASSES = 'text-lg text-ink-muted text-center wrap-anywhere';
-const GRID = 'grid gap-10 @md:grid-cols-2 @3xl:grid-cols-4 @3xl:gap-8';
+/** The opener, centred as a box — the doctor page (the default `align`). */
+const OPENER = 'flex max-w-3xl flex-col gap-4 mx-auto';
+/** …and at the column's start — Home and the Team page (`align="start"`). */
+const OPENER_START = 'flex max-w-3xl flex-col gap-4';
+/** The lead, centred on its own <p> (the default `align`)… */
+const LEAD_CLASSES = 'text-lg text-ink-muted wrap-anywhere text-center';
+/** …and on the base rule's `text-align: start` (`align="start"`). */
+const LEAD_START = 'text-lg text-ink-muted wrap-anywhere';
+/** The list for any count but three — the doctor page's measured steps. */
+const FOUR_TILE_GRID =
+  'grid gap-10 @3xl:gap-8 @md:grid-cols-2 @3xl:grid-cols-4';
+/** The list for THREE tiles — one column, all three across from `@xl`. */
+const THREE_TILE_GRID = 'grid gap-10 @3xl:gap-8 @xl:grid-cols-3';
 const TILE = 'flex flex-col items-center gap-4';
 const DISC =
-  '-order-2 flex size-28 items-center justify-center rounded-full border border-line bg-surface text-cta [&_svg]:size-12';
+  '-order-2 flex size-28 items-center justify-center rounded-full border border-line bg-surface text-accent-decorative [&_svg]:size-12';
 
 const tokensOf = (element: Element): string[] =>
   (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
@@ -161,6 +212,37 @@ const renderBand = (
     />,
   );
 
+/** The band's three settings (the header's SECOND PAGE), each passed ONLY
+ *  when its key is present — so `{}` is the doctor page's call minus its lead,
+ *  and `{ ground: 'page', align: 'start', tiles: HOME_TILES }` is Home's. */
+type Settings = Placement &
+  Readonly<{
+    ground?: DoctorStatsGround;
+    align?: DoctorStatsAlign;
+    lead?: string;
+    tiles?: readonly DoctorStatTile[];
+  }>;
+
+const renderSettings = ({ tiles = TILES, ...settings }: Settings = {}) =>
+  render(
+    <DoctorStats
+      eyebrow={EYEBROW}
+      title={TITLE}
+      tiles={tiles}
+      format={RO}
+      atLeast={AT_LEAST}
+      {...settings}
+    />,
+  );
+
+/** The band exactly as Home and the Team page mount it: the page ground, the
+ *  opener at the start, no lead, three tiles. */
+const HOME = {
+  ground: 'page',
+  align: 'start',
+  tiles: HOME_TILES,
+} as const satisfies Settings;
+
 /** An observer that never reports: the numbers stay final (the header). */
 class StillObserver {
   observe(): void {}
@@ -184,25 +266,66 @@ const bandOf = (container: HTMLElement): HTMLElement =>
 const tilesOf = (): HTMLElement[] =>
   within(screen.getByRole('list')).getAllByRole('listitem');
 
+/** The opener's three boxes, outward from the band's one <h2>: SectionHeading's
+ *  root, the capped opener box around it, the rhythm box around that. One band
+ *  per test, so the <h2> is the screen's. */
+const sectionHeadingOf = (): HTMLElement =>
+  screen.getByRole('heading', { level: 2 }).parentElement as HTMLElement;
+const openerOf = (): HTMLElement =>
+  sectionHeadingOf().parentElement as HTMLElement;
+const rhythmOf = (): HTMLElement => openerOf().parentElement as HTMLElement;
+
+/**
+ * What a band holds INSIDE its ground — the rhythm box's markup, read off one
+ * render's own container (two bands may share the screen) — with the one
+ * generated id taken out: React's useId numbers every mount anew, and the id is
+ * the one byte of the content that is allowed to differ.
+ */
+const contentHtml = (container: HTMLElement): string => {
+  const rhythm =
+    container.querySelector('h2')?.parentElement?.parentElement?.parentElement;
+  if (!rhythm) throw new Error('no rhythm box around the band’s <h2>');
+  const copy = rhythm.cloneNode(true) as HTMLElement;
+  copy.querySelector('h2')?.removeAttribute('id');
+  return copy.outerHTML;
+};
+
+/** `count` tiles with unique ids — TILES' first ones, and for five a fifth
+ *  that is the first again under a key of its own (no list ships five; the
+ *  type allows them, and the steps must still say what they do). */
+const tilesOfCount = (count: 1 | 2 | 3 | 4 | 5): readonly DoctorStatTile[] =>
+  count === 5
+    ? [...TILES, { ...TILES[0], id: 'fifth' }]
+    : TILES.slice(0, count);
+
+/** The island's twin — its `data-spoken` mark (StatNumber.tsx's THE TWIN;
+ *  the `sr-only` class until 2026-10-01, when the twin moved onto the digits). */
+const TWIN = '[data-spoken]';
+
 /**
  * A tile's number <p>, found by what it CARRIES and never by its index among
  * the tile's children (that order is the DOM-order case's to pin, and it
- * moved once, G2-R2 tier 2): the island's sr-only twin, the tile's one
- * `.sr-only` text, which always holds a digit.
+ * moved once, G2-R2 tier 2): the island's twin, the tile's one `data-spoken`
+ * text, which always holds a digit — the <p> is its one paragraph ancestor
+ * (the island's own box sits between them since 2026-10-01).
  */
 const numberOf = (item: HTMLElement): HTMLElement =>
-  within(item).getByText(/\d/, { selector: '.sr-only' })
-    .parentElement as HTMLElement;
+  within(item).getByText(/\d/, { selector: TWIN }).closest('p') as HTMLElement;
+
+/** The number <p>'s two spans — the visible count and the twin — through the
+ *  island's own box. */
+const partsOf = (number: HTMLElement): HTMLElement[] =>
+  [...(number.firstElementChild as HTMLElement).children] as HTMLElement[];
 
 /** The order utilities an element wears, `-order-2` and friends. */
 const ordersOf = (element: Element): string[] =>
   tokensOf(element).filter((token) => /(^|:)-?order-/.test(token));
 
 /** Each tile's two number texts in DOM order: what is SEEN (the aria-hidden
- *  span) and what is HEARD (the sr-only twin). */
+ *  span) and what is HEARD (the twin laid over it). */
 const numberTexts = (): { seen: string[]; heard: string[] } => {
   const pairs = tilesOf().map((item) => {
-    const [visible, twin] = [...numberOf(item).children];
+    const [visible, twin] = partsOf(numberOf(item));
     return [visible.textContent ?? '', twin.textContent ?? ''];
   });
   return {
@@ -293,7 +416,7 @@ describe('DoctorStats — the region landmark (§9)', () => {
   });
 });
 
-describe('DoctorStats — composes sections/TintedBand (D29)', () => {
+describe('DoctorStats — composes sections/TintedBand on the default ground, the doctor page’s (D29)', () => {
   it('IS the lilac ground: the section wears exactly a bare TintedBand’s classes', () => {
     const bare = render(<TintedBand>x</TintedBand>);
     const ground = bandOf(bare.container);
@@ -368,6 +491,267 @@ describe('DoctorStats — composes sections/TintedBand (D29)', () => {
   });
 });
 
+describe('DoctorStats — the defaults ARE the doctor page (§6.6)', () => {
+  it('renders `ground="tint" align="center"` byte for byte as no setting at all — that page’s call did not move', () => {
+    // renderToString IS the static export's render, and it numbers useId by
+    // the tree's shape, so two identical trees print identical ids: the
+    // comparison is the whole server HTML, every byte of it.
+    const doctorPage = {
+      eyebrow: EYEBROW,
+      title: TITLE,
+      lead: LEAD,
+      tiles: TILES,
+      format: RO,
+      atLeast: AT_LEAST,
+    };
+
+    expect(
+      renderToString(
+        <DoctorStats {...doctorPage} ground="tint" align="center" />,
+      ),
+    ).toBe(renderToString(<DoctorStats {...doctorPage} />));
+  });
+
+  it.each(ALIGNS)(
+    'lays ONE content on both grounds — the rhythm box, the opener and the tiles do not know where they stand (align %s)',
+    (align) => {
+      // The header's SECOND PAGE paragraph: "Everything else … is one code
+      // path on both pages." The ground is the only difference between the
+      // two shapes; what it holds is the same markup to the byte.
+      const tint = renderSettings({ ground: 'tint', align, lead: LEAD });
+      const page = renderSettings({ ground: 'page', align, lead: LEAD });
+
+      expect(contentHtml(page.container)).toBe(contentHtml(tint.container));
+    },
+  );
+});
+
+describe('DoctorStats — the PAGE ground, Home’s and the Team page’s (owner, 2026-10-01)', () => {
+  it('is a bare <section> on the page ground — `bg-page` and nothing else — the caller className merged LAST (§6.8)', () => {
+    // The other Home bands' outer (DoctorShowcase, TeamRoster, ClinicLocation
+    // — ui/Container's page-BAND recipe): full-bleed, the paint and nothing
+    // else, no gutter and no outer margin (§6.4).
+    const { container } = renderSettings(HOME);
+    const band = bandOf(container);
+    expect(band.tagName).toBe('SECTION');
+    expect(band.className).toBe('bg-page');
+
+    const { container: placed } = renderSettings({
+      ...HOME,
+      className: 'scroll-mt-10',
+    });
+    expect(bandOf(placed).className).toBe('bg-page scroll-mt-10');
+  });
+
+  it('holds ui/Container as its ONE child and the rhythm box first inside it — no tint, no fade: no TintedBand at all', () => {
+    const { container } = renderSettings(HOME);
+    const band = bandOf(container);
+
+    expect(band.children).toHaveLength(1);
+    const column = band.firstElementChild as HTMLElement;
+    expect(column.tagName).toBe('DIV');
+    expect(column.className).toBe(containerClasses);
+    expect(column.children).toHaveLength(1);
+    expect(column.firstElementChild).toBe(rhythmOf());
+    expect(rhythmOf().className).toBe(RHYTHM_BOX);
+    expect(rhythmOf().children).toHaveLength(2);
+    expect(rhythmOf().lastElementChild).toBe(screen.getByRole('list'));
+
+    // TintedBand's tells, each absent: its two aria-hidden fades (every
+    // aria-hidden box left is a tile's disc or a number's visible span), its
+    // `relative`, the `--tint` variable and the gradients that paint with it.
+    for (const hidden of band.querySelectorAll('[aria-hidden="true"]')) {
+      expect(hidden.closest('li')).not.toBeNull();
+    }
+    expect(tokensOf(band)).not.toContain('relative');
+    expect(band.outerHTML).not.toContain('--tint');
+    expect(band.outerHTML).not.toContain('linear-gradient');
+  });
+
+  it('is still a region named by its own <h2> through a generated id', () => {
+    const { container } = renderSettings(HOME);
+
+    const band = screen.getByRole('region', { name: TITLE });
+    expect(band).toBe(bandOf(container));
+    const heading = screen.getByRole('heading', { level: 2, name: TITLE });
+    expect(heading.id).toBeTruthy();
+    expect(band).toHaveAttribute('aria-labelledby', heading.id);
+  });
+
+  it('accepts ref as a regular prop (React 19) — it is the <section>', () => {
+    const band = createRef<HTMLElement>();
+    renderSettings({ ...HOME, ref: band });
+
+    expect(band.current?.tagName).toBe('SECTION');
+    expect(band.current).toBe(screen.getByRole('region', { name: TITLE }));
+  });
+
+  it('spreads remaining native props onto the section, the name pair intact', () => {
+    const { container } = render(
+      <DoctorStats
+        ground="page"
+        align="start"
+        eyebrow={EYEBROW}
+        title={TITLE}
+        tiles={HOME_TILES}
+        format={RO}
+        atLeast={AT_LEAST}
+        id="in-cifre"
+        lang="de"
+        data-slot="clinic-stats"
+      />,
+    );
+
+    const band = bandOf(container);
+    expect(band).toHaveAttribute('id', 'in-cifre');
+    expect(band).toHaveAttribute('lang', 'de');
+    expect(band).toHaveAttribute('data-slot', 'clinic-stats');
+    expect(screen.getByRole('region', { name: TITLE })).toBe(band);
+    expect(screen.getByRole('heading', { level: 2 })).not.toHaveAttribute(
+      'id',
+      'in-cifre',
+    );
+  });
+
+  it.each(GROUNDS)(
+    'keeps its own name on the %s ground when a caller WRITES `aria-labelledby` in JSX — the spread rides first',
+    (ground) => {
+      // TypeScript exempts a hyphenated JSX attribute from its excess-property
+      // check, so the attribute below COMPILES despite the Omit (the
+      // DoctorShowcase finding, G2 react 2026-09-30). The band's own pair
+      // rides AFTER `{...rest}` on both grounds, so the caller's loses.
+      const { container } = render(
+        <DoctorStats
+          ground={ground}
+          eyebrow={EYEBROW}
+          title={TITLE}
+          tiles={TILES}
+          format={RO}
+          atLeast={AT_LEAST}
+          aria-labelledby="nowhere"
+        />,
+      );
+
+      const band = bandOf(container);
+      const heading = screen.getByRole('heading', { level: 2, name: TITLE });
+      expect(band).toHaveAttribute('aria-labelledby', heading.id);
+      expect(screen.getByRole('region', { name: TITLE })).toBe(band);
+    },
+  );
+});
+
+describe('DoctorStats — the opener’s alignment (owner, 2026-10-01: "left alligned as other headings nad eyebrows on main page")', () => {
+  it.each(ALIGNS)(
+    'hands sections/SectionHeading the band’s `align` — its root is exactly a rendered SectionHeading’s (%s)',
+    (align) => {
+      // Derived, never retyped: SectionHeading's ALIGN map is its own — and
+      // so is its className merge, which carries the band's two additions,
+      // `hyphens-none` and its belt `wrap-anywhere` (the header's TITLE
+      // paragraph, 2026-10-01).
+      const expected = classOfRendered(
+        <SectionHeading
+          level={2}
+          eyebrow={EYEBROW}
+          title={TITLE}
+          align={align}
+          className="hyphens-none wrap-anywhere"
+        />,
+      );
+      renderSettings({ align });
+
+      expect(sectionHeadingOf().className).toBe(expected);
+    },
+  );
+
+  it('starts SectionHeading’s lines and box with align="start" — `items-start text-start`, never a centring token', () => {
+    renderSettings({ align: 'start' });
+    const tokens = tokensOf(sectionHeadingOf());
+
+    expect(tokens).toEqual(
+      expect.arrayContaining(['items-start', 'text-start']),
+    );
+    expect(tokens).not.toContain('items-center');
+    expect(tokens).not.toContain('text-center');
+  });
+
+  it('leaves the capped opener box at the column’s start with align="start" — `max-w-3xl`, no `mx-auto`', () => {
+    renderSettings({ align: 'start', lead: LEAD });
+    const opener = openerOf();
+
+    expect(opener.className).toBe(OPENER_START);
+    expect(tokensOf(opener)).toContain('max-w-3xl');
+    expect(tokensOf(opener)).not.toContain('mx-auto');
+  });
+
+  it('centres NOTHING in the opener with align="start" — a lead keeps the base rule’s `text-align: start`', () => {
+    renderSettings({ align: 'start', lead: LEAD });
+    const opener = openerOf();
+
+    for (const element of [opener, ...opener.querySelectorAll('*')]) {
+      expect(tokensOf(element)).not.toContain('text-center');
+      expect(tokensOf(element)).not.toContain('mx-auto');
+    }
+    const lead = screen.getByText(LEAD);
+    expect(lead.tagName).toBe('P');
+    expect(lead.parentElement).toBe(opener);
+    expect(lead.className).toBe(LEAD_START);
+  });
+
+  it('leaves the TILES centred whichever way the opener lines up — the owner named the eyebrow and the title', () => {
+    for (const align of ALIGNS) {
+      const { unmount } = renderSettings({ align, lead: LEAD });
+      for (const item of tilesOf()) {
+        expect(item.className).toBe(TILE);
+        expect(
+          tokensOf(within(item).getByRole('heading', { level: 3 })),
+        ).toContain('text-center');
+        expect(tokensOf(numberOf(item))).toContain('text-center');
+        expect(tokensOf(item.lastElementChild as HTMLElement)).toContain(
+          'text-center',
+        );
+      }
+      unmount();
+    }
+  });
+});
+
+describe('DoctorStats — the lead is optional (owner, 2026-10-01: "without this … so dorp that part")', () => {
+  it.each([
+    ['absent', 'center', {}],
+    ['absent', 'start', {}],
+    ['empty', 'center', { lead: '' }],
+    ['empty', 'start', { lead: '' }],
+  ] as const)(
+    'renders no <p> when the lead is %s (align %s) — the opener holds SectionHeading alone',
+    (_, align, settings) => {
+      renderSettings({ align, ...settings });
+      const opener = openerOf();
+
+      expect(opener.children).toHaveLength(1);
+      expect(opener.firstElementChild).toBe(sectionHeadingOf());
+      // The one <p> left in the opener is SectionHeading's eyebrow.
+      expect(
+        [...opener.querySelectorAll('p')].map((p) => p.textContent),
+      ).toEqual([EYEBROW]);
+      expect(screen.queryByText(LEAD)).toBeNull();
+      // The rhythm box still holds the opener and the list, nothing between.
+      expect(rhythmOf().children).toHaveLength(2);
+      expect(rhythmOf().lastElementChild).toBe(screen.getByRole('list'));
+    },
+  );
+
+  it('renders Home’s band — the page ground, the start, no lead — with its eyebrow over its <h2> and nothing under them', () => {
+    renderSettings(HOME);
+
+    expect(within(openerOf()).getByText(EYEBROW).tagName).toBe('P');
+    expect(openerOf().children).toHaveLength(1);
+    expect(openerOf().className).toBe(OPENER_START);
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent),
+    ).toEqual(HOME_TILES.map((tile) => tile.label));
+  });
+});
+
 describe('DoctorStats — the tiles (D30)', () => {
   it('renders ONE list with one item per tile, in the page’s order', () => {
     renderBand();
@@ -376,7 +760,7 @@ describe('DoctorStats — the tiles (D30)', () => {
     expect(screen.getAllByRole('list')).toHaveLength(1);
     expect(list.tagName).toBe('UL');
     expect(list).toHaveAttribute('role', 'list');
-    expect(list.className).toBe(GRID);
+    expect(list.className).toBe(FOUR_TILE_GRID);
 
     const items = tilesOf();
     expect(items).toHaveLength(TILES.length);
@@ -429,20 +813,55 @@ describe('DoctorStats — the tiles (D30)', () => {
     }
   });
 
-  it('paints the icon inside an aria-hidden disc, the glyph sized by the parent', () => {
-    renderBand();
+  it.each(GROUNDS)(
+    'paints the icon inside an aria-hidden disc, the glyph sized by the parent — on the %s ground',
+    (ground) => {
+      renderSettings({ ground });
 
-    for (const item of tilesOf()) {
-      const disc = item.firstElementChild as HTMLElement;
-      expect(disc).toHaveAttribute('aria-hidden', 'true');
-      expect(disc.className).toBe(DISC);
-      // The glyph arrived as a prop and landed inside: one bare <svg>,
-      // aria-hidden by its own default too.
-      expect(disc.children).toHaveLength(1);
-      const glyph = disc.firstElementChild as SVGSVGElement;
-      expect(glyph).toBeInstanceOf(SVGSVGElement);
-      expect(glyph).toHaveAttribute('aria-hidden', 'true');
-    }
+      for (const item of tilesOf()) {
+        const disc = item.firstElementChild as HTMLElement;
+        expect(disc).toHaveAttribute('aria-hidden', 'true');
+        expect(disc.className).toBe(DISC);
+        // The glyph arrived as a prop and landed inside: one bare <svg>,
+        // aria-hidden by its own default too.
+        expect(disc.children).toHaveLength(1);
+        const glyph = disc.firstElementChild as SVGSVGElement;
+        expect(glyph).toBeInstanceOf(SVGSVGElement);
+        expect(glyph).toHaveAttribute('aria-hidden', 'true');
+      }
+    },
+  );
+
+  it.each(GROUNDS)(
+    'paints every glyph in the decorative LILAC and nothing in the CTA green — on the %s ground (owner, 2026-10-01: "paint it’s svgs lilla")',
+    (ground) => {
+      // The glyph strokes with `currentColor`, so the disc's ink IS the
+      // drawing's colour: §15.1's graphics role, `accent-decorative` — never
+      // `--accent`, the menu buttons' lavender, which the accent census bars
+      // from every band that composes TintedBand.
+      const { container } = renderSettings({ ground });
+
+      for (const item of tilesOf()) {
+        const disc = item.firstElementChild as HTMLElement;
+        expect(tokensOf(disc)).toContain('text-accent-decorative');
+        expect(disc.firstElementChild).toHaveAttribute(
+          'stroke',
+          'currentColor',
+        );
+      }
+      // The green is gone from the markup, in any variant spelling…
+      for (const element of container.querySelectorAll('*')) {
+        expect(
+          tokensOf(element).some((token) => /(^|:)text-cta(\/|$)/.test(token)),
+        ).toBe(false);
+      }
+    },
+  );
+
+  it('keeps the CTA green out of the band’s SOURCE too — no `text-cta` left to come back through a branch', () => {
+    expect(CODE).not.toMatch(/\btext-cta\b/);
+    // …and the lilac is spelled exactly once, on the disc.
+    expect(CODE.match(/\btext-accent-decorative\b/g)).toHaveLength(1);
   });
 
   it('dresses the number in ui/Heading’s page step on a <p>, painted first, tabular and centred', () => {
@@ -464,15 +883,18 @@ describe('DoctorStats — the tiles (D30)', () => {
     renderBand();
 
     for (const item of tilesOf()) {
-      const [visible, twin] = [...numberOf(item).children] as HTMLElement[];
+      const [visible, twin] = partsOf(numberOf(item));
       expect(visible).toHaveAttribute('aria-hidden', 'true');
-      expect(twin.className).toBe('sr-only');
+      expect(twin).toHaveAttribute('data-spoken', '');
+      expect(twin.className).toBe(
+        'absolute inset-0 overflow-hidden whitespace-nowrap opacity-0 select-none',
+      );
     }
     // The count is held still in this suite, so the visible span is final.
     expect(numberTexts().seen).toEqual(FINALS);
   });
 
-  it('says the SPOKEN final in the sr-only twin: the page’s `atLeast` word before the page’s number on a „+" tile, the number alone otherwise (round 2s)', () => {
+  it('says the SPOKEN final in the twin: the page’s `atLeast` word before the page’s number on a „+" tile, the number alone otherwise (round 2s)', () => {
     renderBand();
 
     // The band's own rule, spelled out once more against the fixture…
@@ -512,9 +934,9 @@ describe('DoctorStats — the tiles (D30)', () => {
       />,
     );
 
-    const twins = [...host.querySelectorAll('li .sr-only')];
+    const twins = [...host.querySelectorAll(`li ${TWIN}`)];
     expect(twins.map((twin) => twin.textContent)).toEqual(SPOKEN);
-    const visibles = [...host.querySelectorAll('li p > [aria-hidden="true"]')];
+    const visibles = [...host.querySelectorAll('li p [aria-hidden="true"]')];
     expect(visibles.map((visible) => visible.textContent)).toEqual(FINALS);
   });
 
@@ -538,32 +960,51 @@ describe('DoctorStats — the tiles (D30)', () => {
     }
   });
 
-  it('centres prose ONLY on the elements themselves (§15.15 b)', () => {
-    const { container } = renderBand();
+  it.each([
+    // [the shape, its settings, does SectionHeading centre, is a lead there]
+    ['the doctor page (centre, a lead)', { lead: LEAD }, true, true],
+    ['centre without a lead', {}, true, false],
+    ['the start with a lead', { align: 'start', lead: LEAD }, false, true],
+    [
+      'Home and the Team page (page ground, start, no lead)',
+      HOME,
+      false,
+      false,
+    ],
+  ] as const)(
+    'centres prose ONLY on the elements themselves (§15.15 b) — %s',
+    (_, settings, headingCentres, hasLead) => {
+      const { container } = renderSettings(settings);
 
-    const centred = [...container.querySelectorAll('*')].filter((element) =>
-      tokensOf(element).includes('text-center'),
-    );
-    const heading = screen.getByRole('heading', { level: 2 });
-    const expected = [
-      heading.parentElement, // SectionHeading's root (align="center")
-      within(bandOf(container)).getByText(LEAD),
-      // In DOM order, which is the order querySelectorAll walks (G2-R2
-      // tier 2, a11y F1): the <h3>, then the number <p>, then the sentence.
-      ...tilesOf().flatMap((item) => [
-        within(item).getByRole('heading', { level: 3 }),
-        numberOf(item),
-        item.lastElementChild, // the description <p>
-      ]),
-    ];
-    expect(centred).toEqual(expected);
-    // No blanket spelling anywhere — `[&_p]:text-center` and friends.
-    for (const element of container.querySelectorAll('*')) {
-      expect(
-        tokensOf(element).some((token) => /\]:text-center$/.test(token)),
-      ).toBe(false);
-    }
-  });
+      const centred = [...container.querySelectorAll('*')].filter((element) =>
+        tokensOf(element).includes('text-center'),
+      );
+      const lead = within(bandOf(container)).queryByText(LEAD);
+      expect(lead !== null).toBe(hasLead);
+      const expected = [
+        // SectionHeading's root, when its `align` is "center".
+        ...(headingCentres ? [sectionHeadingOf()] : []),
+        // The lead, when there is one AND the opener is centred: a lead under
+        // a start-aligned title keeps the base rule's `text-align: start`.
+        ...(headingCentres && lead ? [lead] : []),
+        // In DOM order, which is the order querySelectorAll walks (G2-R2
+        // tier 2, a11y F1): the <h3>, then the number <p>, then the sentence
+        // — on every page, whichever way the opener lines up.
+        ...tilesOf().flatMap((item) => [
+          within(item).getByRole('heading', { level: 3 }),
+          numberOf(item),
+          item.lastElementChild, // the description <p>
+        ]),
+      ];
+      expect(centred).toEqual(expected);
+      // No blanket spelling anywhere — `[&_p]:text-center` and friends.
+      for (const element of container.querySelectorAll('*')) {
+        expect(
+          tokensOf(element).some((token) => /\]:text-center$/.test(token)),
+        ).toBe(false);
+      }
+    },
+  );
 
   it('calls the page formatter with every value — the band formats nothing itself', () => {
     const format = vi.fn(RO);
@@ -604,8 +1045,47 @@ describe('DoctorStats — the tiles (D30)', () => {
 
     expect(tilesOf()).toHaveLength(1);
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1);
-    expect(screen.getByRole('list').className).toBe(GRID);
+    expect(screen.getByRole('list').className).toBe(FOUR_TILE_GRID);
   });
+});
+
+describe('DoctorStats — the rows, by count (`rowsFor`, the header’s STEPS paragraph)', () => {
+  it.each(GROUNDS)(
+    'gives THREE tiles a row of their own on the %s ground — one column, all three across from the container’s @xl, never two and one',
+    (ground) => {
+      renderSettings({ ground, tiles: HOME_TILES });
+      const list = screen.getByRole('list');
+
+      expect(list.className).toBe(THREE_TILE_GRID);
+      // Neither four-tile step: at `@md` they would put two tiles on a row
+      // and leave the third alone beside half a band of nothing.
+      expect(tokensOf(list)).not.toContain('@md:grid-cols-2');
+      expect(tokensOf(list)).not.toContain('@3xl:grid-cols-4');
+      expect(tilesOf()).toHaveLength(3);
+    },
+  );
+
+  it.each([1, 2, 4, 5] as const)(
+    'keeps the doctor page’s measured steps for %i tile(s) — two from @md, four from @3xl, never the three-tile row',
+    (count) => {
+      renderSettings({ tiles: tilesOfCount(count) });
+      const list = screen.getByRole('list');
+
+      expect(tilesOf()).toHaveLength(count);
+      expect(list.className).toBe(FOUR_TILE_GRID);
+      expect(tokensOf(list)).not.toContain('@xl:grid-cols-3');
+    },
+  );
+
+  it.each([1, 2, 3, 4, 5] as const)(
+    'spaces %i tile(s) `gap-10`, `gap-8` from @3xl, whatever the count',
+    (count) => {
+      renderSettings({ tiles: tilesOfCount(count) });
+      const tokens = tokensOf(screen.getByRole('list'));
+
+      expect(tokens.slice(0, 3)).toEqual(['grid', 'gap-10', '@3xl:gap-8']);
+    },
+  );
 });
 
 describe('DoctorStats — countFrames, the count as strings (D31 friction)', () => {
@@ -661,20 +1141,101 @@ describe('DoctorStats — countFrames, the count as strings (D31 friction)', () 
   );
 });
 
-describe('DoctorStats — container steps only, one island (§6.5, §16)', () => {
-  it('carries no media queries anywhere — those are the page’s', () => {
-    const { container } = renderBand();
+describe('DoctorStats — the ear’s spaces (`spokenNumber`, the a11y review of 2026-10-01 and its re-review)', () => {
+  /** French groups thousands with U+202F, the narrow no-break space. */
+  const FR = (value: number): string =>
+    new Intl.NumberFormat('fr').format(value);
+  /** Spelled as escapes: the two characters are invisible in an editor. */
+  const NNBSP = '\u202f';
+  const NBSP = '\u00a0';
 
-    for (const element of [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ]) {
-      for (const token of tokensOf(element)) {
-        expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
-        expect(token).not.toMatch(/(min|max)-\[/);
-      }
-    }
+  it('drops every grouping SPACE between two digits — the narrow no-break space and the no-break space alike', () => {
+    expect(spokenNumber(8000, () => `8${NNBSP}000`)).toBe('8000');
+    expect(spokenNumber(8000, () => `8${NBSP}000`)).toBe('8000');
+    expect(spokenNumber(1_000_000, () => `1${NNBSP}000${NNBSP}000`)).toBe(
+      '1000000',
+    );
   });
+
+  it('touches no other space — none outside two digits, and never a plain one', () => {
+    expect(spokenNumber(8, () => `≈${NBSP}8`)).toBe(`≈${NBSP}8`);
+    expect(spokenNumber(8, () => `8${NNBSP}%`)).toBe(`8${NNBSP}%`);
+    expect(spokenNumber(8, () => '8 000')).toBe('8 000');
+  });
+
+  it('leaves every other formatter output exactly as the page made it', () => {
+    expect(spokenNumber(8000, RO)).toBe(RO(8000)); // „8.000"
+    expect(spokenNumber(8000, (value) => `X${value}`)).toBe('X8000');
+    expect(spokenNumber(10, RO)).toBe('10');
+  });
+
+  it('hears French as ONE number while the eye keeps the page’s own spacing', () => {
+    // The fixture's 3000 in French: „3 000" on screen (U+202F, the page's
+    // formatter untouched), « plus de 3000 » in the twin — the way the tiles'
+    // own sentences write it.
+    renderBand({}, TILES, FR, 'plus de');
+    const { seen, heard } = numberTexts();
+    expect(seen[1]).toBe(`3${NNBSP}000+`);
+    expect(heard[1]).toBe('plus de 3000');
+    expect(heard.join('')).not.toMatch(/[\u00a0\u202f]/);
+  });
+});
+
+describe('DoctorStats — the title never splits a word (the a11y review of 2026-10-01)', () => {
+  it.each([
+    ['tint', 'center'],
+    ['page', 'start'],
+  ] as const)(
+    'wraps the %s ground’s %s-aligned title between words only — `hyphens-none` on SectionHeading’s root, inherited by the <h2>, with `wrap-anywhere` as its belt',
+    (ground, align) => {
+      render(
+        <DoctorStats
+          eyebrow={EYEBROW}
+          title={TITLE}
+          tiles={TILES}
+          format={RO}
+          atLeast={AT_LEAST}
+          ground={ground}
+          align={align}
+        />,
+      );
+      const title = screen.getByRole('heading', { level: 2 });
+      const root = title.parentElement as HTMLElement;
+      // The class on the root; the property inherits to the <h2> (this suite
+      // loads no stylesheet — the Default story's play reads it computed).
+      expect(tokensOf(root)).toContain('hyphens-none');
+      // The belt (the Opus re-review): a word too long for a line by itself —
+      // a large default text size, a 200 % zoom — breaks rather than pushing
+      // the page sideways, now that hyphenation no longer can.
+      expect(tokensOf(root)).toContain('wrap-anywhere');
+      // …and nothing else in the band opted out by the same class: the tile
+      // labels carry their own (the TILES paragraph), the prose keeps §15.14.
+      for (const paragraph of document.querySelectorAll('li p:not(:has(*))'))
+        expect(tokensOf(paragraph)).not.toContain('hyphens-none');
+    },
+  );
+});
+
+describe('DoctorStats — container steps only, one island (§6.5, §16)', () => {
+  it.each([
+    ['the doctor page', { lead: LEAD }],
+    ['Home and the Team page', HOME],
+  ] as const)(
+    'carries no media queries anywhere — those are the page’s (%s)',
+    (_, settings) => {
+      const { container } = renderSettings(settings);
+
+      for (const element of [
+        bandOf(container),
+        ...container.querySelectorAll('*'),
+      ]) {
+        for (const token of tokensOf(element)) {
+          expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
+          expect(token).not.toMatch(/(min|max)-\[/);
+        }
+      }
+    },
+  );
 
   it('ships NO client directive — only ./StatNumber is an island', () => {
     expect(CODE).not.toMatch(/^\s*['"]use client['"]\s*;?\s*(\/\/.*)?$/m);
@@ -690,7 +1251,10 @@ describe('DoctorStats — container steps only, one island (§6.5, §16)', () =>
     expect([...new Set(hooks)]).toEqual(['useId(']);
   });
 
-  it('imports react, TintedBand, SectionHeading, Heading, Text and ./StatNumber — nothing else', () => {
+  it('imports react, TintedBand, SectionHeading, Container, Heading, Text, lib/cx and ./StatNumber — nothing else', () => {
+    // ui/Container and lib/cx arrived with the PAGE ground (2026-10-01): the
+    // other Home bands' outer is a <section> around ui/Container, and the
+    // settings assemble the opener's, the lead's and the list's classes.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -701,12 +1265,19 @@ describe('DoctorStats — container steps only, one island (§6.5, §16)', () =>
       './StatNumber',
       '@/components/sections/SectionHeading/SectionHeading',
       '@/components/sections/TintedBand/TintedBand',
+      '@/components/ui/Container/Container',
       '@/components/ui/Heading/Heading',
       '@/components/ui/Text/Text',
+      '@/lib/cx/cx',
       'react',
     ]);
-    // No lib DATA — a DUMB band knows no doctor (the round-1 ledger's D1).
-    expect(CODE).not.toMatch(/@\/lib\//);
+    // No lib DATA — a DUMB band knows no doctor and no clinic (the round-1
+    // ledger's D1): the one module it takes from lib/ is the class-join
+    // MECHANIC, and no locale reaches it either.
+    expect(
+      specifiers.filter((specifier) => specifier.startsWith('@/lib/')),
+    ).toEqual(['@/lib/cx/cx']);
+    expect(CODE).not.toMatch(/@\/i18n\//);
     // No glyph — the icons arrive as props (D30).
     expect(CODE).not.toMatch(/@\/assets\//);
     expect(CODE).not.toMatch(/^import\s*['"]/m);
@@ -763,6 +1334,46 @@ describe('DoctorStats — type-level pins', () => {
     >();
   });
 
+  it('pins the three settings of the SECOND PAGE: an optional lead, two grounds, two alignments', () => {
+    expectTypeOf<DoctorStatsProps>().toHaveProperty('ground');
+    expectTypeOf<DoctorStatsProps>().toHaveProperty('align');
+    // `lead` is OPTIONAL since 2026-10-01 — Home passes none.
+    expectTypeOf<DoctorStatsProps['lead']>().toEqualTypeOf<
+      string | undefined
+    >();
+    // Exactly the two grounds and the two alignments — and the lists the
+    // loops above walk are ALL of each union, no member left untested.
+    expectTypeOf<DoctorStatsGround>().toEqualTypeOf<'tint' | 'page'>();
+    expectTypeOf<DoctorStatsAlign>().toEqualTypeOf<'center' | 'start'>();
+    expectTypeOf<(typeof GROUNDS)[number]>().toEqualTypeOf<DoctorStatsGround>();
+    expectTypeOf<(typeof ALIGNS)[number]>().toEqualTypeOf<DoctorStatsAlign>();
+    expectTypeOf<DoctorStatsProps['ground']>().toEqualTypeOf<
+      DoctorStatsGround | undefined
+    >();
+    expectTypeOf<DoctorStatsProps['align']>().toEqualTypeOf<
+      DoctorStatsAlign | undefined
+    >();
+  });
+
+  it('accepts the band without a lead — the shape Home and the Team page pass', () => {
+    // Never rendered: these COMPILE, and that is the assertion — no directive
+    // stands over them, so a lead made required again fails `tsc`.
+    const leadless: DoctorStatsProps = {
+      eyebrow: EYEBROW,
+      title: TITLE,
+      tiles: HOME_TILES,
+      format: RO,
+      atLeast: AT_LEAST,
+    };
+    const home: DoctorStatsProps = {
+      ...leadless,
+      ground: 'page',
+      align: 'start',
+    };
+
+    expect([leadless, home]).toHaveLength(2);
+  });
+
   it('refuses the names, the slot and the shapes the types exist to refuse', () => {
     // Never rendered: `tsc --noEmit` fails if the props loosen. Every bad
     // shape stays on ONE line (DoctorCourses.test.tsx's TS2578 finding).
@@ -800,6 +1411,12 @@ describe('DoctorStats — type-level pins', () => {
       tiles: TILES,
       format: RO,
     };
+    // @ts-expect-error — two grounds: TintedBand's 'tint' and the plain 'page'
+    const tinted: DoctorStatsProps = { ...BAND, ground: 'tinted' };
+    // @ts-expect-error — SectionHeading's two answers: 'center' and 'start'
+    const ended: DoctorStatsProps = { ...BAND, align: 'end' };
+    // @ts-expect-error — a lead is a finished sentence or nothing, never a flag
+    const flagged: DoctorStatsProps = { ...BAND, lead: false };
 
     expect([
       nested,
@@ -808,6 +1425,9 @@ describe('DoctorStats — type-level pins', () => {
       textual,
       unformatted,
       wordless,
-    ]).toHaveLength(6);
+      tinted,
+      ended,
+      flagged,
+    ]).toHaveLength(9);
   });
 });

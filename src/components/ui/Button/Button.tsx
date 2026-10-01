@@ -10,7 +10,7 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 export type ButtonVariant = 'solid' | 'outline' | 'ghost';
 export type ButtonTone = 'cta' | 'accent';
 export type ButtonMotion = 'still' | 'jump';
-export type ButtonSize = 'md' | 'lg' | 'xl';
+export type ButtonSize = 'md' | 'lg' | 'xl' | 'hero';
 
 type ButtonOwnProps = {
   /** The face's shape. solid = filled, drains on hover · outline = bordered, greys on hover · ghost = quiet. */
@@ -32,7 +32,12 @@ type ButtonOwnProps = {
    * (2026-10-01); tests/unit/jump-census.test.ts names every one.
    */
   motion?: ButtonMotion;
-  /** Box scale, rem-based: md ≥44px min-height (§9 primary target), lg ≥56px, xl ≥64px (hero). */
+  /**
+   * Box scale: md ≥44px min-height (§9 primary target), lg ≥56px, xl ≥64px —
+   * rem-based — and `hero`, the lg box up to the Laptop checkpoint and
+   * scaled WITH THE VIEWPORT from there (the Home opener's two calls to
+   * action, 2026-10-01; the sizeClasses paragraph has the arithmetic).
+   */
   size?: ButtonSize;
   /**
    * Render no <button> of Button's own — the single child element you nest
@@ -304,10 +309,41 @@ const variantClasses: Record<ButtonVariant, Record<ButtonTone, string>> = {
 
 // min-heights (not fixed heights) so long DE/FR labels may wrap (§8.4);
 // Tailwind spacing is rem-based, so browser zoom scales everything (§7).
+// `hero` JOINED 2026-10-01 with sections/Hero as its measured consumer
+// (owner, on the pack of the hero-aura lane: "buttons should also expand
+// retract in accord to adjusting of current tab for all screens. so they
+// should be corellated size wise in expanding or retracting."): the lg box —
+// 56px tall, 28px of side padding, an 18px label — up to the Laptop
+// checkpoint, 1536px (§7), and from there SCALED by the viewport over 1536,
+// capped at the 1920 value. Each of the three measures is `clamp(lg, lg ×
+// vw / 1536, lg × 1.25)`: 3.6458vw, 1.8229vw and 1.171875vw, capped at
+// 70px / 35px / 22.5px (4.375rem / 2.1875rem / 1.40625rem), where the
+// slogan's own curve stops. THE ANCHOR IS THE OWNER'S, RE-SET THE SAME DAY:
+// the first cut scaled from the tablet's 768px (lg × 2.5 at 1920 — a 140px
+// box, 109px on his window) and read, on his ~1500 × 1063 window, "horribly
+// large … i need them raport wise as they would look on 1500x1063
+// aproxmiatley as screen size. so that would be the sizing ratio i'd want
+// to keep between buttons and text": there the pair is lg under the
+// slogan's 84px (the first pack's look), and that ratio — a label 0.21 of
+// the slogan's size, a box 0.67 of it — is what holds from the checkpoint
+// up, where ui/Heading's `slogan` step and this box are both straight lines
+// through the origin (5.5833vw against 1.171875vw). Below the checkpoint
+// the floors hold: the slogan retracts while the box stays lg — the look of
+// every phone and of the tablet the owner called perfect. (1536 stands in
+// for his "approximately 1500": the named checkpoint, 2.4 % off his number,
+// 1.7px of box at 1920.) The label's line-height keeps text-lg's ratio
+// (1.75 / 1.125 = 1.5556), so a two-line German label stacks as it does at
+// lg. The `vw` term is the ONE place this atom reads the viewport, under
+// the licence ui/Heading's `hero` and `slogan` steps already hold (§6.5's
+// page-level carve-out: the opener's calls to action are page-scale
+// geometry, like its slogan); a Button inside a card or a footer never asks
+// for it, and the three fixed steps are byte-identical. The corner stays
+// `rounded-md` and the icon gap `gap-2` — neither was part of "size wise".
 const sizeClasses: Record<ButtonSize, string> = {
   md: 'min-h-11 px-5 text-lg',
   lg: 'min-h-14 px-7 text-lg',
   xl: 'min-h-16 px-10 text-xl',
+  hero: 'min-h-[clamp(3.5rem,3.6458vw,4.375rem)] px-[clamp(1.75rem,1.8229vw,2.1875rem)] text-[clamp(1.125rem,1.171875vw,1.40625rem)]/[1.5556]',
 };
 
 export function Button({

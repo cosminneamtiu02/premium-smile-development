@@ -93,12 +93,52 @@ describe('Button — variants & sizes are real styling switches', () => {
     ['md', 'lg'],
     ['md', 'xl'],
     ['lg', 'xl'],
+    ['md', 'hero'],
+    ['lg', 'hero'],
+    ['xl', 'hero'],
   ] as const)('size "%s" styles differ from "%s"', (a, b) => {
     const { unmount } = render(<Button size={a}>Ședință</Button>);
     const classA = screen.getByRole('button').className;
     unmount();
     render(<Button size={b}>Ședință</Button>);
     expect(screen.getByRole('button').className).not.toEqual(classA);
+  });
+
+  it('size "hero" is the lg box to the Laptop checkpoint, then scaled with the viewport — three clamps between lg’s own values and the 1920 ones (2026-10-01)', () => {
+    // The owner's "corellated size wise", re-anchored the same day on his
+    // "horribly large … as they would look on 1500x1063": the opener's
+    // buttons are lg up to 1536px and scale by the viewport over 1536 from
+    // there — the ratio the lg box makes with the slogan at the checkpoint.
+    // Each measure is read as a token so a retuned slope, a dropped floor or
+    // a moved cap fails by name; the arithmetic below ties the three slopes
+    // to lg's values over 1536 and the three caps to lg × 1.25 (the 1920
+    // value), like the slogan step's own pins. The ENGINE's reading is the
+    // HeroSize story's play.
+    render(<Button size="hero">Programează o consultație</Button>);
+    const tokens = screen.getByRole('button').className.split(' ');
+    expect(tokens).toContain('min-h-[clamp(3.5rem,3.6458vw,4.375rem)]');
+    expect(tokens).toContain('px-[clamp(1.75rem,1.8229vw,2.1875rem)]');
+    expect(tokens).toContain(
+      'text-[clamp(1.125rem,1.171875vw,1.40625rem)]/[1.5556]',
+    );
+    // The floors ARE lg's tokens (min-h-14 = 3.5rem, px-7 = 1.75rem, text-lg
+    // = 1.125rem), so none of lg's fixed tokens may ride along.
+    for (const fixed of ['min-h-14', 'px-7', 'text-lg'])
+      expect(tokens).not.toContain(fixed);
+    // The slopes: lg's pixels over the checkpoint's 1536, as vw…
+    expect(((3.5 * 16) / 1536) * 100).toBeCloseTo(3.6458, 3);
+    expect(((1.75 * 16) / 1536) * 100).toBeCloseTo(1.8229, 3);
+    expect(((1.125 * 16) / 1536) * 100).toBeCloseTo(1.171875, 5);
+    // …so each floor is met AT the checkpoint, no step and no jump…
+    expect(3.6458 * 15.36).toBeCloseTo(3.5 * 16, 1);
+    expect(1.8229 * 15.36).toBeCloseTo(1.75 * 16, 1);
+    expect(1.171875 * 15.36).toBeCloseTo(1.125 * 16, 5);
+    // …and each cap is the 1920 value, lg × 1.25.
+    expect(3.6458 * 19.2).toBeCloseTo(4.375 * 16, 0);
+    expect(1.8229 * 19.2).toBeCloseTo(2.1875 * 16, 0);
+    expect(1.171875 * 19.2).toBeCloseTo(1.40625 * 16, 5);
+    expect(4.375 / 3.5).toBeCloseTo(1.25, 5);
+    expect(1.75 / 1.125).toBeCloseTo(1.5556, 3);
   });
 });
 

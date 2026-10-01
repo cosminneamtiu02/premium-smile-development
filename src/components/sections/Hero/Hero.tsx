@@ -4,7 +4,7 @@ import type { ComponentProps, ReactElement } from 'react';
 import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { Button } from '@/components/ui/Button/Button';
 import { Container } from '@/components/ui/Container/Container';
-import { Heading } from '@/components/ui/Heading/Heading';
+import { Heading, type HeadingTone } from '@/components/ui/Heading/Heading';
 import { Image } from '@/components/ui/Image/Image';
 import { focusManners, useRotation } from '@/components/ui/use-rotation';
 import type { ClockEnv } from '@/lib/clock/clock';
@@ -194,15 +194,46 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     Safari from 18.4 no longer read containment into the mark; an iPhone
 //     on iOS 16 to 18.3 still does. Outside the Container the picture
 //     resolves against the stage in all of them.
-//   · TWO OPACITIES PER SLIDE, IN LOCKSTEP — the picture's wrapper and the
-//     words' Container each wear the 1 s crossfade (the old site's, ease-in-
-//     out, `motion-reduce:transition-none`); THE SLIDE ELEMENT ITSELF NEVER
-//     FADES. Round 1 faded the whole slide — one attribute — but a mid-fade
-//     opacity makes the slide a stacking context, and a stacking context is
-//     a box nothing inside can leave: the words could then never paint above
-//     a ground that sits OUTSIDE the slides, and the ground must sit outside
-//     (two bullets down). Same `current`, same transition string, one style
-//     recalculation: the two halves cannot drift.
+//   · TWO OPACITIES PER SLIDE, ONE FLAG — the picture's wrapper and the
+//     words' Container each fade on their own box; THE SLIDE ELEMENT ITSELF
+//     NEVER FADES. Round 1 faded the whole slide — one attribute — but a
+//     mid-fade opacity makes the slide a stacking context, and a stacking
+//     context is a box nothing inside can leave: the words could then never
+//     paint above a ground that sits OUTSIDE the slides, and the ground must
+//     sit outside (two bullets down). Until round 12 both halves wore the
+//     same 1 s crossfade; now the picture keeps it and the words run a
+//     sequence of their own (next bullet) — what the two still share is
+//     `current`, so they can never disagree about WHICH slide is showing.
+//   · THE WORDS CHANGE HANDS, THEY NEVER OVERLAP (round 12, owner
+//     2026-10-01: "be very carful, it's transition animation is very stiff
+//     on old website. i want a calm transition that harmonizes with the
+//     transition between images, a gradual one"). The old page crossfaded
+//     its stacked slogans IN STEP with the picture — 1 s, both at once — so
+//     for the middle third of every change two bold, stroked sentences were
+//     legible on top of each other (MEASURED on the old site's dev server:
+//     the frames at 397 and 561 ms read „O echipă care ascultă, a modernă /
+//     pe limba ta a familia"); that double exposure is the stiffness, and
+//     this band had it too, on thinner letters. The PICTURE keeps the 1 s
+//     crossfade (`slideMotion`); the WORDS get a sequence on the words
+//     Container (`wordsMotion` + `wordsShown` / `wordsHidden`): the
+//     outgoing slogan fades out over 500 ms (ease-in-out, sinking 12px) and
+//     the incoming one fades in over 1 s (ease-out, rising from those 12px)
+//     after a 450 ms delay — one text is gone before the next begins, and
+//     the new words settle at ~1.45 s, just after the picture has at 1 s:
+//     the picture changes, the caption follows. The delay rides the SHOWN
+//     state and nothing rides the hidden one, because a transition reads
+//     its timing from the element's NEW class list: a slide that stops
+//     being current has no delay to wait out. `translate`, not `transform`
+//     (Tailwind v4's own property, so a `scale-*`/`rotate-*` utility could
+//     never multiply into it), and 12px = `translate-y-3` (rem-based, so
+//     zoom scales it; a drift in em would be a quarter of a phone's letter
+//     and nothing of a desktop's). `motion-reduce:transition-none` snaps
+//     both halves, as before; under the net's reduced motion nothing moves.
+//     Judged frame by frame on the built page at 1280 against today's
+//     crossfade and against the same sequence without the rise (the lane's
+//     probes): the sequence alone already removes the overlap; the rise is
+//     what makes the arrival read as "gradual". The three numbers are the
+//     lever.
 //   · THE PICTURE IS LIGHT (owner, round 2: "the filter … should not be that
 //     dark, it should be lighter"): `grayscale blur-xs` ON the picture's
 //     wrapper — the old site's `backdrop-filter: grayscale(1) blur(3px)`
@@ -285,15 +316,59 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     semantic variable on this subtree is §3's theme mechanism in miniature
 //     ("themes remap the same variable names additively — no renames, no
 //     component edits"): the atoms are untouched, the ring is white here.
-//   · THE BUTTONS' ROW is intrinsic, no breakpoint: `flex-wrap` with `*:grow
-//     *:basis-64` sets two 16rem bases side by side wherever ~33rem of
-//     column exist (a tablet's 614px, a notebook's 1024px), grown to equal
-//     widths and capped by `max-w-3xl`; narrower, each takes its own row at
-//     full width — the 320px stress width included. The atoms' `min-h` lets
+//   · THE BUTTONS' ROW is intrinsic, no breakpoint: `flex-wrap` with `*:grow`
+//     and a basis of 16rem — 16.6667vw from the Laptop checkpoint up, 20rem
+//     from 1920 — sets two bases side by side wherever the column has room
+//     for them (a tablet's 599px, a notebook's 1009px), grown to equal
+//     widths across the row, which stops at 48rem (50vw from the checkpoint,
+//     60rem from 1920); narrower, each takes its own row at full width — the
+//     320px stress width included. ROUND 12c (owner, on the pack,
+//     2026-10-01: "buttons should also expand retract in accord to adjusting
+//     of current tab for all screens. so they should be corellated size wise
+//     in expanding or retracting."): THE PAIR SCALES WITH THE SLOGAN —
+//     ui/Button gained the fluid `hero` size. ROUND 12d, the same day, SET
+//     ITS ANCHOR: the first cut scaled the lg box from the tablet's 768px
+//     (140px tall at 1920, 109px on the owner's window) and the owner,
+//     looking at a ~1500 × 1063 window: "text looks great now, but buttons
+//     ar horibly large, they look awful. i need them raport wise as they
+//     would look on 1500x1063 aproxmiatley as screen size. so that would be
+//     the sizing ratio i'd want to keep between buttons and text." So the box
+//     is lg (56px tall, 28px of side padding, an 18px label) up to the Laptop
+//     checkpoint, 1536px (§7 — the named sampling point standing in for his
+//     "approximately 1500", 2.4 % off it): the pair of the first pack under
+//     the slogan's 84px, the ratio he named; and from there lg times the
+//     viewport over 1536, capped at the 1920 value (70px / 35px / 22.5px —
+//     the atom's own paragraph has the arithmetic), the row's cap, gap and
+//     basis in the same ratio (48rem / 12px / 16rem → 60rem / 15px / 20rem).
+//     From the checkpoint up the block of slogan and buttons is ONE shape
+//     magnified (both curves are lines through the origin: 5.5833vw against
+//     1.171875vw — a label 0.21 of the slogan's size, a box 0.67 of it);
+//     below it the slogan retracts over a pair that holds — the look of
+//     every phone and of the tablet the owner called perfect, nothing under
+//     1536px moving by a pixel. What does NOT scale: the 24px between the
+//     slogan and the buttons (Default's play pins it) and the beads — the
+//     owner named the buttons. MEASURED on the built export (RO, a classic
+//     15px scrollbar): 378 × 56 with an 18px label at 1280, at his 1500 and
+//     at 1536, under a one-line slogan of 71 / 84 / 86px; 472 × 70 with a
+//     22.5px label at 1920 under the 107px slogan; 294 × 56 at 768 and
+//     297 × 56 stacked at 390, as before. The atoms' `min-h` lets
 //     a long DE/FR label wrap between words (§8.4); syllable splits are the
-//     atoms' own ban (§15.14). The words column is capped `max-w-4xl`, the
-//     old block's measure (720 → 1040px), per-element as the Container's
-//     prose rule wants.
+//     atoms' own ban (§15.14). THE WORDS BLOCK IS THE COLUMN, UNCAPPED
+//     (round 12, 2026-10-01): rounds 1–11 held it to `max-w-4xl`, the old
+//     block's measure (720 → 1040px), and that cap is what made the desktop
+//     differ from the tablet — the slogan's 72px wrapped inside 896px in the
+//     left half of a 1920px screen while a tablet's narrower column never met
+//     the cap (MEASURED on the built export: the slogan was 5.58 % of the
+//     width at 768, 3.75 % at 1920). The owner's "adapt text component
+//     raports in sizing for laptop and desktop as on tablet" is the tablet's
+//     shape SCALED, which ui/Heading's NEW `slogan` step does with its size
+//     (the atom's header: `hero`'s curve to the tablet, the tablet's own
+//     5.5833vw from 768px up — a step BESIDE `hero`, which §15.24 made the
+//     h1 step of every page) and this
+//     uncapped block does with its width. No viewport under 1120px ever
+//     reached the cap, so the phone and the tablet are unchanged by the
+//     letter. The CTA row below scales with it from the Laptop checkpoint
+//     up, since rounds 12c–12d (the start of this bullet).
 //   · `viewport-fit: cover` stays dormant (FloatingActions' caveat): the band
 //     now starts at the layout viewport's top edge, but without that meta the
 //     status-bar strip is outside the layout viewport altogether, so nothing
@@ -334,11 +409,22 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     border heading" — `slogan` defaults to 'plain', the page passes
 //     nothing, the comparison mode is gone, and 'stroked' / 'outlined' stay
 //     as values (tests + the atom's stories). The words' text-shadow rides
-//     every face.
+//     every face. ROUND 12 (2026-10-01) — the owner asked for the old page's
+//     heading back, as he sees it ("white on interior and has a lila aura
+//     shadow as top bar around letters and with that lilla contour and i
+//     think it is in bold … a searate heading stile … likely to be reused in
+//     the future"): ui/Heading's NEW `inverse-aura` — the outlined face plus
+//     a lilac halo (the bold he first named went on his word the same day,
+//     on the pack: "drop the bold."); the atom's header has the comparison
+//     — is THE DEFAULT;
+//     'plain', 'stroked' and 'outlined' stay as values. The wrapper's dark
+//     `wordsShadow` still rides the three older faces; on the aura face the
+//     slogan's own halo outranks it (an element's text-shadow beats an
+//     inherited one), so nothing dark is painted under the glow.
 //
 // ── ONE STATIC h1, OUTSIDE the slides (lib/rotation's law; §9's one-h1
 // rule): the page owns it, `sr-only`, the Services page's precedent. The
-// slogans are display text on ui/Heading's 'hero' step at its default <p>
+// slogans are display text on ui/Heading's 'slogan' step at its default <p>
 // host — never an outline slot, so nothing is announced as a heading every
 // five and a half seconds.
 //
@@ -356,7 +442,7 @@ export type HeroSlide = Readonly<{
   src: ImagePath;
   /** What the picture shows (§11). */
   alt: string;
-  /** The slogan — ui/Heading 'hero', inverse ink. */
+  /** The slogan — ui/Heading's 'slogan' step on the band's face (the aura by default). */
   title: string;
   /**
    * The slide's accessible name AND its bead's — the same „{index} din
@@ -383,22 +469,40 @@ export type HeroLabels = Readonly<{
   services: string;
 }>;
 
+/** The slogan's faces — the `slogan` prop's values (its JSDoc has the history). */
+export type HeroSloganFace = 'aura' | 'plain' | 'stroked' | 'outlined';
+
+/**
+ * Each face → the ui/Heading tone that paints it. Total over the union, so
+ * a face added to the type cannot ship unpainted.
+ */
+const sloganTone: Record<HeroSloganFace, HeadingTone> = {
+  aura: 'inverse-aura',
+  plain: 'inverse',
+  stroked: 'inverse-stroked',
+  outlined: 'inverse-outlined',
+};
+
 type HeroOwnProps = Readonly<{
   /** The ring, in order; the first row is the LCP picture. Empty renders nothing. */
   slides: readonly HeroSlide[];
   labels: HeroLabels;
   /**
-   * The slogan's face: 'plain' (THE DEFAULT — the thin inverse ink, THE
-   * OWNER'S PICK of 2026-09-21, round 10: "keep just the thin with no border
-   * heading"), 'stroked' (the old page's bold slogan with a 2px accent
-   * stroke, ui/Heading's `inverse-stroked`; round 6) or 'outlined' (the
-   * plain weight with that border alone, ui/Heading's `inverse-outlined`;
-   * round 8). Rounds 7–9 carried an 'alternate' comparison mode that cycled
-   * the faces by slide so the owner could choose on the rotating band; the
-   * choice made, it is gone. The two other faces stay as values (the tests
-   * and the atom's stories exercise them) — the page passes nothing.
+   * The slogan's face: 'aura' (THE DEFAULT since round 12, 2026-10-01 — the
+   * old page's heading as the owner sees it, "white on interior … a lila
+   * aura shadow … that lilla contour … in bold", then on the pack "drop the
+   * bold.": ui/Heading's `inverse-aura`, the outlined face plus the halo),
+   * 'plain' (the thin inverse ink — the owner's pick of
+   * 2026-09-21, round 10, and the default until round 12), 'stroked' (the
+   * old page's bold slogan with the 2px accent stroke and no halo,
+   * ui/Heading's `inverse-stroked`; round 6) or 'outlined' (the plain weight
+   * with that border alone, ui/Heading's `inverse-outlined`; round 8).
+   * Rounds 7–9 carried an 'alternate' comparison mode that cycled the faces
+   * by slide so the owner could choose on the rotating band; the choice
+   * made, it is gone. The three other faces stay as values (the tests and
+   * the atom's stories exercise them) — the page passes nothing.
    */
-  slogan?: 'plain' | 'stroked' | 'outlined';
+  slogan?: HeroSloganFace;
   /** `localeHref(locale, '/services')`, built by the page (§15.13). */
   servicesHref: string;
   /** The rhythm in ms — this consumer's number (§15.18). READ ONCE, AT MOUNT. */
@@ -458,11 +562,29 @@ export const HERO_FIRST_DWELL_MS = 1_500;
 
 /**
  * The 1 s crossfade the old site had — paint only, snapped under reduced
- * motion. Worn by the picture's wrapper AND the words' Container of every
- * slide, never by the slide itself (the header's TWO OPACITIES bullet).
+ * motion. Worn by the PICTURE's wrapper of every slide, never by the slide
+ * itself (the header's TWO OPACITIES bullet); the words wore it too until
+ * round 12 and now run the sequence below.
  */
 const slideMotion =
   'transition-opacity duration-1000 ease-in-out motion-reduce:transition-none';
+
+/**
+ * THE WORDS' OWN MOTION (round 12, owner 2026-10-01 — the header's THE WORDS
+ * CHANGE HANDS bullet): opacity and `translate` together, snapped under
+ * reduced motion. The timing rides the STATE: a Container that is showing
+ * waits 450 ms, then eases in over 1 s from 12px below; one that stops
+ * showing leaves at once over 500 ms, sinking those 12px. A transition reads
+ * its timing from the element's NEW class list, so the delay the shown state
+ * carries is never waited out by the one that is leaving — one text is gone
+ * before the next begins, and the new words settle just after the picture
+ * has. THE THREE NUMBERS ARE THE LEVER.
+ */
+const wordsMotion =
+  'transition-[opacity,translate] motion-reduce:transition-none';
+const wordsShown =
+  'translate-y-0 opacity-100 duration-1000 ease-out delay-[450ms]';
+const wordsHidden = 'translate-y-3 opacity-0 duration-500 ease-in-out';
 
 /**
  * THE GROUND: transparent at the top, the veil from 8rem down, held to the
@@ -509,7 +631,7 @@ const wordsShadow = '[text-shadow:0_2px_24px_rgb(0_0_0_/_0.35)]';
 export function Hero({
   slides,
   labels,
-  slogan = 'plain',
+  slogan = 'aura',
   servicesHref,
   intervalMs = HERO_INTERVAL_MS,
   startDelayMs = HERO_FIRST_DWELL_MS,
@@ -664,22 +786,19 @@ export function Hero({
                     // pt-10: the struck line's room, above the slogan (the
                     // header's STAGE paragraph — the buttons stay put).
                     'relative z-10 pt-10 pb-4',
-                    slideMotion,
-                    current ? 'opacity-100' : 'opacity-0',
+                    // The words' OWN sequence, not the picture's crossfade
+                    // (the header's THE WORDS CHANGE HANDS bullet).
+                    wordsMotion,
+                    current ? wordsShown : wordsHidden,
                   )}
                 >
-                  <div
-                    className={cx('flex max-w-4xl flex-col gap-3', wordsShadow)}
-                  >
+                  {/* The block is the COLUMN — no cap (round 12): the
+                      atom's curve spans the viewport, so the words span the
+                      column (the header's THE BUTTONS' ROW bullet). */}
+                  <div className={cx('flex flex-col gap-3', wordsShadow)}>
                     <Heading
-                      size="hero"
-                      tone={
-                        slogan === 'stroked'
-                          ? 'inverse-stroked'
-                          : slogan === 'outlined'
-                            ? 'inverse-outlined'
-                            : 'inverse'
-                      }
+                      size="slogan"
+                      tone={sloganTone[slogan]}
                       // A SLOGAN IS NEVER SPLIT AT A SYLLABLE: the site-wide
                       // `hyphens: auto` (§15.14) broke „Te aș-teptăm" across
                       // two lines at 390 on the clinic's own copy (measured
@@ -732,12 +851,12 @@ export function Hero({
             old site's 105 % pop on its own 200ms clock, the aura scaling
             with the box; tests/unit/jump-census.test.ts names the wearers. */}
         <Container className="relative z-10 col-start-1 row-start-3 pt-2">
-          <div className="flex max-w-3xl flex-wrap gap-3 *:grow *:basis-64">
+          <div className="flex max-w-[clamp(48rem,50vw,60rem)] flex-wrap gap-[clamp(0.75rem,0.78125vw,0.9375rem)] *:grow *:basis-[clamp(16rem,16.6667vw,20rem)]">
             <ContactModalTrigger
               variant="solid"
               tone="accent"
               motion="jump"
-              size="lg"
+              size="hero"
             >
               {labels.contact}
             </ContactModalTrigger>
@@ -745,7 +864,7 @@ export function Hero({
               variant="outline"
               tone="accent"
               motion="jump"
-              size="lg"
+              size="hero"
               asChild
               className="shadow-aura"
             >

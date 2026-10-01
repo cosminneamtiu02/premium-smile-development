@@ -9,8 +9,9 @@ import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { Hero, type HeroLabels, type HeroSlide } from './Hero';
 
-// Sections/Hero — the opener's stories: the everyday picture, the language
-// that stresses it, the band after a bead has picked a slide, the one-picture
+// Sections/Hero — the opener's stories: the everyday picture (the slogan on
+// its aura face), the three kept faces one prop away, the language that
+// stresses it, the band after a bead has picked a slide, the one-picture
 // case with nothing to rotate, and the band in motion from its first second
 // (Rotating, never photographed). The
 // export NAMES are load-bearing — each names a baseline file
@@ -141,9 +142,9 @@ const meta = {
     },
     slogan: {
       control: 'select',
-      options: ['plain', 'stroked', 'outlined'],
+      options: ['aura', 'plain', 'stroked', 'outlined'],
       description:
-        "The slogan's face: 'plain' (default — the thin inverse ink, the owner's pick of 2026-09-21), 'stroked' (the old page's bold, accent-stroked slogan) or 'outlined' (the plain weight with the border alone)",
+        "The slogan's face: 'aura' (default since 2026-10-01 — the old page's accent-stroked slogan under a lilac halo at the plain weight, ui/Heading's inverse-aura), 'plain' (the thin inverse ink, the owner's pick of 2026-09-21 and the default until then), 'stroked' (the bold, stroked face without the halo) or 'outlined' (the plain weight with the border alone, no halo)",
     },
     labels: {
       control: false,
@@ -172,8 +173,13 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * The everyday picture at the laptop width: the first slide showing, its
- * slogan over the veiled photograph, the blank where the line stood, the two calls to
- * action, three beads with the first one a pill.
+ * slogan on the AURA face — the old page's stroked letters under a lilac
+ * halo, at the plain weight ("drop the bold."), the default since round 12
+ * (2026-10-01) — over the veiled
+ * photograph, the two calls to action, three beads with the first one a
+ * pill. At this width the slogan runs 85.8px, the tablet's own share of the
+ * viewport (the atom's new `slogan` step), and the words block spans the
+ * column.
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -206,6 +212,10 @@ export const Default: Story = {
     // services link's bottom edge, the median sits at 58 % of the screen's
     // height — ±3px for the rounding of two shared spacers.
     const slogan = canvas.getByText(heroSlides[0].words.ro.title);
+    // The aura face, by default: stroked at the plain weight, its own halo.
+    await expect(slogan.className).not.toContain('font-bold');
+    await expect(slogan.className).toContain('text-stroke');
+    await expect(slogan.className).toContain('text-shadow:');
     const wordsRow = slogan.parentElement?.parentElement;
     if (!wordsRow) throw new Error('the words Container is missing');
     const services = canvas.getByRole('link', { name: ro.home.hero.services });
@@ -227,10 +237,27 @@ export const Default: Story = {
 };
 
 /**
- * The old page's slogan face, one prop away from the shipped plain one
- * (the owner compared the two on the rotating band in rounds 7–9 and picked
- * plain in round 10): bold, tight, with the 2px accent stroke behind the
- * fill — everything else identical to Default.
+ * The thin face — the owner's pick of 2026-09-21 (round 10) and the default
+ * until round 12 brought the old page's heading back: the inverse ink alone,
+ * no stroke, no halo (the wrapper's dark text-shadow still rides it) —
+ * everything else identical to Default.
+ */
+export const PlainSlogan: Story = {
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  args: { slogan: 'plain' },
+  play: async ({ canvas }) => {
+    const slogan = canvas.getByText(heroSlides[0].words.ro.title);
+    await expect(slogan.className).not.toContain('text-stroke');
+    await expect(slogan.className).not.toContain('font-bold');
+    await expect(slogan.className).not.toContain('text-shadow');
+  },
+};
+
+/**
+ * The BOLD stroked face without the halo — rounds 6–9's port of the old page's
+ * slogan, one prop away from Default's aura face: bold, tight, the 2px
+ * accent stroke behind the fill, the wrapper's dark text-shadow where the
+ * aura face paints its lilac glow — everything else identical to Default.
  */
 export const StrokedSlogan: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -239,6 +266,7 @@ export const StrokedSlogan: Story = {
     const slogan = canvas.getByText(heroSlides[0].words.ro.title);
     await expect(slogan.className).toContain('text-stroke');
     await expect(slogan.className).toContain('font-bold');
+    await expect(slogan.className).not.toContain('text-shadow');
   },
 };
 

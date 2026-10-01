@@ -41,9 +41,10 @@ import { populateHero } from './populate';
 // never twinned by hand), and the play function pins it from the outside.
 //
 // TWO STORIES NOW, Romanian and German — §13's RO + DE page tier, which the
-// stub deferred "until the real page lane": a 72px serif slogan in German is
-// the text-expansion case this page has. `Pages/*` photographs both at all
-// six widths.
+// stub deferred "until the real page lane": a serif slogan of up to 107px in
+// German (the `hero` step's desktop value since 2026-10-01) is the
+// text-expansion case this page has. `Pages/*` photographs both at all six
+// widths.
 //
 // THE CLOCK IS THE REAL ONE, as on the page (functions cannot cross the
 // server→client boundary, so the page never passes lib/clock's env seam and

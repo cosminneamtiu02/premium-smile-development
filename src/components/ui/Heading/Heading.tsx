@@ -66,6 +66,42 @@ import { slotClone } from '../slot';
 // `--text-*--line-height` pairs), so the `/tight` modifier is the step's
 // line-height, spelled where the size is, not an extra utility on an existing
 // step. The three elders emit byte-exactly what they always did.
+// 'slogan' JOINED 2026-10-01 with sections/Hero as its measured consumer
+// (owner, the hero-aura lane — verbatim: "on laptop it looks decent. on
+// tablet it looks very good, on phone it loks good. so leave on phone as
+// is, on tablet is perfect, but adapt text component raports in sizing for
+// laptop and desktop as on tablet, as it looks very good there"): `hero`
+// gave the opener's slogan the tablet's 42.88px — 5.58 % of a 768px
+// viewport — and then FLATTENED: 4.75 % at 1280, 4.54 % at 1536 and 3.75 %
+// at 1920, where the 72px cap bound (MEASURED on the built export; the
+// words block was capped at 896px as well, so on a desktop the slogan
+// wrapped inside the left half of the screen). The new step is TWO
+// STRETCHES in one expression, `clamp(2rem, max(1rem + 3.5vw, 5.5833vw),
+// 6.7rem)`: below the tablet `hero`'s own curve, byte-for-byte in VALUE
+// (the phone's 32px floor; 42.88px at 768, where the two terms are equal
+// and the first is the larger under it), and from the tablet up the
+// tablet's own RATIO, 5.5833vw = 42.88 / 768 — the slogan is the tablet's
+// slogan scaled: 71.5px at 1280, 85.8px at 1536, 107.2px at 1920, where the
+// cap holds it (6.7rem IS that 1920 value; past the desktop sampling point
+// the curve stops, as ui/Container's gutter stops at 12.5rem from 2000px —
+// the cap is the lever if a wider screen should keep scaling). Still ONE
+// curve and still no prefix: a `max()` inside a `clamp()` is one expression
+// the engine evaluates per viewport, not a staircase, and the `vw` licence
+// is `hero`'s. Under a larger root font size the `1rem` term carries the
+// first stretch further right before the ratio takes over — continuous
+// either way, since the max of two continuous terms is continuous.
+// WHY A STEP BESIDE `hero` AND NOT `hero` RESHAPED: `hero` stopped being
+// the slogan's alone on 2026-09-26 — §15.24 made it THE h1 step, worn by
+// the doctor page's name (sections/DoctorIntro, inside a 28rem words
+// column) and the 404 title. The lane's first differential reshaped `hero`
+// itself and moved 22 cells the owner never pointed at — Pages/Doctor,
+// Sections/DoctorIntro and Pages/NotFound at 1280 and above, a doctor's
+// name heading for 107px in a 448px column. A step named by its ROLE and
+// added beside (§6.6's additive growth) moves exactly the opener; the
+// relation is pinned in the test file (the slogan curve's floor and first
+// stretch ARE `hero`'s), and `hero` emits byte-exactly what it always did.
+// The SloganStep story's play reads the curve off the engine: the one
+// proof that a nested `max()` reached the browser as valid CSS.
 //
 // THE TONE AXIS joined in the same lane (the "one foreseeable exception" this
 // paragraph used to promise): `tone` is the ink — 'default' = ink-strong, the
@@ -93,6 +129,40 @@ import { slotClone } from '../slot';
 // 2px accent stroke of 'inverse-stroked' — so the three faces the Hero
 // compares are plain, bold-and-stroked, and stroked. Same tone reasoning,
 // same consumer, the elders still byte-identical.
+// 'inverse-aura' JOINED 2026-10-01 with sections/Hero as its measured
+// consumer (owner, verbatim: "the ones that is white on interior and has a
+// lila aura shadow as top bar around letters and with that lilla contour
+// and i think it is in bold. implement that bold too. so a searate heading
+// stile implemented here which is atm used only in this component but
+// likely to be reused in the future"): the old page's slogan AS THE OWNER
+// SEES IT. The old hero measured `font-bold tracking-tight` (its heading
+// atom's level 1) + white ink + a 2px lavender stroke behind the fill + a
+// 24px DARK drop shadow (`0 2px 24px rgba(20,15,30,.35)` — a blurred dark
+// edge under a lilac rim, which the eye reads as a lilac aura); the owner
+// named the pill's lavender glow (`--shadow-aura`, the aura of §15.1) as the
+// thing around the letters, so this row carries THAT and not the dark
+// shadow: the white, accent-stroked letterforms plus a lilac halo as the
+// text-shadow — at the PLAIN weight: the bold he first described went on
+// his word the same day, on the pack ("drop the bold."), and the tight
+// tracking with it, as the pair came and as 'inverse-outlined' already
+// pairs them, so the row is 'inverse-outlined' plus one token. TWO CENTRED
+// LAYERS,
+// in em: a wide one, 0.28em at 60 %, and a tight one, 0.08em at 40 %, both
+// mixed from `--color-accent-decorative` (§15.1's display role; the aura
+// token mixes from the same variable, so the hue confirm re-tints both at
+// once). Em and not px, because the step this tone is worn on runs 32 →
+// 107px: a 22px glow is a cloud round a phone's letters and a hairline
+// round a desktop's, while 0.28em is 9px and 30px — the same share of the
+// letter — judged on the built page at 390, 1280 and 1920 (the lane's
+// probes, three glows compared at each). Centred (`0 0`), not the pill's
+// `0 8px`: the pill's offset reads as a drop glow under a box; on letters
+// the same value read as a drop shadow, and the owner's word was "around".
+// `text-shadow` is painted by the ELEMENT, so this row's own declaration
+// outranks the one a wrapper hands down (sections/Hero's `wordsShadow`,
+// which its three older faces still inherit). A TONE and not a size, for
+// 'inverse-stroked''s reason; the elders are byte-identical. axe reads the
+// stroke as the foreground here as on the two stroked tones — the AuraTone
+// story records the exemption with the measurement.
 // 'accent' JOINED 2026-09-25 with sections/DoctorCourses as its measured
 // consumer (the doctor-pages run's round 2, D16): the year labels over a
 // doctor's courses, "bold and lilac" in the owner's words.
@@ -211,12 +281,14 @@ import { slotClone } from '../slot';
 // hover/focus/disabled styling for the same reason — an asChild <a>'s focus
 // ring belongs to the globals' :focus-visible net, not to this atom.
 
-export type HeadingSize = 'title' | 'section' | 'band' | 'page' | 'hero';
+export type HeadingSize =
+  'title' | 'section' | 'band' | 'page' | 'hero' | 'slogan';
 export type HeadingTone =
   | 'default'
   | 'inverse'
   | 'inverse-stroked'
   | 'inverse-outlined'
+  | 'inverse-aura'
   | 'accent'
   | 'accent-idle';
 
@@ -228,9 +300,13 @@ type HeadingOwnProps = {
    * the container's 28rem `@md` step, 36px from it, so an h2 never outranks
    * the `hero` h1's 32px floor on a phone — the axis's one
    * container-responsive row (see the header) —
-   * 'page' — the page-hero step the 404 band measured in (2026-09-07) — or
-   * 'hero' — the fluid full-screen slogan step sections/Hero measured in
-   * (2026-09-19; 32px → 72px with the viewport, see the header). The
+   * 'page' — the page-hero step the 404 band measured in (2026-09-07) —
+   * 'hero' — the fluid full-screen step sections/Hero measured in
+   * (2026-09-19; 32px → 72px with the viewport, see the header), THE h1
+   * step since §15.24 (the doctor page's name, the 404 title) — or
+   * 'slogan' — the Home opener's slogan step (2026-10-01): `hero`'s curve to
+   * the tablet, the tablet's own ratio of the viewport from there, 32px →
+   * 107px (see the header). The
    * axis is named by ROLE, not magnitude, so a step landing between two
    * existing ones is an addition instead of a rename (§6.6).
    */
@@ -242,7 +318,11 @@ type HeadingOwnProps = {
    * tight, with the old page's 2px accent stroke behind the letterforms
    * (the Hero's default slogan face since 2026-09-20) · 'inverse-outlined' →
    * the same white ink at the plain weight with that stroke alone (the
-   * Hero's third face, 2026-09-21) · 'accent' → text-accent-decorative,
+   * Hero's third face, 2026-09-21) · 'inverse-aura' → the outlined face,
+   * the plain weight, plus a lilac halo in two em-scaled layers mixed from
+   * the display lilac (the Hero's DEFAULT face since 2026-10-01: "a lila
+   * aura … around letters", then "drop the bold.") · 'accent' →
+   * text-accent-decorative,
    * ALWAYS bold: the lilac year labels over a doctor's courses
    * (sections/DoctorCourses, 2026-09-25). The ink is 4.44:1 on the page
    * ground — large-text only (§15.1) — and bold is what makes the 20px
@@ -283,6 +363,11 @@ const sizeClasses: Record<HeadingSize, string> = {
   // Fluid: 32px floor (the 320px column), 3.5vw slope, 72px cap — the old
   // site's four-prefix staircase as one curve (header). `/tight` = 1.25.
   hero: 'font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight',
+  // The Home opener's slogan (header, 'slogan' JOINED): `hero`'s curve to
+  // the tablet — the same floor, the same slope — and the tablet's own RATIO
+  // from there, 5.5833vw, held at the desktop sampling point's 6.7rem.
+  slogan:
+    'font-display text-[clamp(2rem,max(1rem+3.5vw,5.5833vw),6.7rem)]/tight',
 };
 
 const toneClasses: Record<HeadingTone, string> = {
@@ -296,6 +381,13 @@ const toneClasses: Record<HeadingTone, string> = {
   // same accent edge behind them.
   'inverse-outlined':
     'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill]',
+  // The old page's slogan AS THE OWNER SEES IT (header, 2026-10-01): the
+  // outlined face — the plain weight, the owner's "drop the bold." on the
+  // pack — plus a lilac HALO: two centred glows mixed from the display
+  // lilac, in em so the halo keeps its share of the letter at 32px and at
+  // 107px alike. The <p>'s own shadow outranks a wrapper's inherited one.
+  'inverse-aura':
+    'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill] [text-shadow:0_0_0.28em_color-mix(in_srgb,var(--color-accent-decorative)_60%,transparent),0_0_0.08em_color-mix(in_srgb,var(--color-accent-decorative)_40%,transparent)]',
   // The lilac year labels (header, D16): the accent ink is 4.44:1 on the
   // page ground, so it travels with `font-bold` — the weight that makes the
   // 20px title step "large" text, where 3:1 binds. Never one without the other.

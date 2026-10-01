@@ -208,13 +208,34 @@ describe('Hero — the region and its slides (lib/rotation’s markup duties)', 
     expect(slogan.parentElement?.parentElement?.className).toContain('pt-10');
   });
 
-  it('wears the PLAIN slogan by default — the owner’s pick (round 10) — and the old page’s stroked face on slogan="stroked"', () => {
+  it('wears the AURA face by default (owner, round 12) — the old page’s stroked slogan under a lilac halo, at the plain weight — the plain face on slogan="plain", the bold stroked face without the halo on slogan="stroked"', () => {
     const { unmount } = mount();
+    const aura = screen.getByText(WORDS[0].title).className;
+    expect(aura).toContain('text-ink-inverse');
+    expect(aura).not.toContain('font-bold'); // "drop the bold." (owner, on the pack)
+    expect(aura).toContain('text-stroke:2px');
+    // The halo is the slogan's OWN text-shadow: it outranks the wrapper's
+    // inherited dark one (the header's THE SLOGAN'S FACE bullet).
+    expect(aura).toContain('[text-shadow:0_0_0.28em_color-mix(');
+    unmount();
+
+    const plainMount = render(
+      <Providers>
+        <Hero
+          slides={slidesOf()}
+          labels={LABELS}
+          servicesHref={SERVICES_HREF}
+          slogan="plain"
+          env={quietEnv()}
+        />
+      </Providers>,
+    );
     const plain = screen.getByText(WORDS[0].title).className;
     expect(plain).toContain('text-ink-inverse');
     expect(plain).not.toContain('text-stroke');
     expect(plain).not.toContain('font-bold');
-    unmount();
+    expect(plain).not.toContain('text-shadow');
+    plainMount.unmount();
 
     render(
       <Providers>
@@ -231,6 +252,57 @@ describe('Hero — the region and its slides (lib/rotation’s markup duties)', 
     expect(stroked).toContain('text-ink-inverse');
     expect(stroked).toContain('font-bold');
     expect(stroked).toContain('text-stroke:2px');
+    expect(stroked).not.toContain('text-shadow'); // the dark wrapper shadow alone
+  });
+
+  it('the words change hands and never overlap (owner, round 12): the showing words wait 450 ms and ease in over 1 s, the others leave in 500 ms and sink 12px; the picture keeps the 1 s crossfade', () => {
+    mount();
+    const wordsBox = (title: string): string[] =>
+      (screen.getByText(title).parentElement?.parentElement?.className ?? '')
+        .split(' ')
+        .filter(Boolean);
+    const shown = wordsBox(WORDS[0].title);
+    const hidden = wordsBox(WORDS[1].title);
+    for (const box of [shown, hidden]) {
+      expect(box).toContain('transition-[opacity,translate]');
+      expect(box).toContain('motion-reduce:transition-none');
+      expect(box).not.toContain('transition-opacity');
+    }
+    expect(shown).toContain('opacity-100');
+    expect(shown).toContain('translate-y-0');
+    expect(shown).toContain('duration-1000');
+    expect(shown).toContain('ease-out');
+    expect(shown).toContain('delay-[450ms]');
+    expect(hidden).toContain('opacity-0');
+    expect(hidden).toContain('translate-y-3');
+    expect(hidden).toContain('duration-500');
+    expect(hidden).toContain('ease-in-out');
+    // No delay on the leaving words: a transition reads its timing from the
+    // NEW class list, so the outgoing slogan goes at once.
+    expect(hidden.some((token) => token.startsWith('delay-'))).toBe(false);
+    // The picture's crossfade is untouched — 1 s, ease-in-out, no delay.
+    const picture = (
+      screen.getAllByRole('img', { hidden: true })[0].parentElement
+        ?.className ?? ''
+    ).split(' ');
+    expect(picture).toContain('transition-opacity');
+    expect(picture).toContain('duration-1000');
+    expect(picture).toContain('ease-in-out');
+    expect(picture.some((token) => token.startsWith('delay-'))).toBe(false);
+  });
+
+  it('the words block is the COLUMN — no cap (owner, round 12: the ratios as on the tablet); the CTA row keeps a cap of its own, fluid since round 12d', () => {
+    mount();
+    const block = screen.getByText(WORDS[0].title).parentElement;
+    expect(block?.className).not.toMatch(/\bmax-w-/);
+    const row = screen.getByRole('link', {
+      name: LABELS.services,
+    }).parentElement;
+    // The old `max-w-3xl` (48rem) as a floor, grown with the pair from the
+    // Laptop checkpoint (50vw) to the 1920 value (60rem) — never the column.
+    expect(row?.className.split(' ')).toContain(
+      'max-w-[clamp(48rem,50vw,60rem)]',
+    );
   });
 
   it('wears the border alone on slogan="outlined" (owner, round 8)', () => {
@@ -605,14 +677,31 @@ describe('Hero — the two calls to action', () => {
     expect(tokens).not.toContain('shadow-aura');
   });
 
-  it('both sit in one wrapping row that shares the width equally', () => {
+  it('both sit in one wrapping row that shares its capped width equally, and SCALE with the slogan from the Laptop checkpoint up (owner, rounds 12c–12d)', () => {
     mount();
     const link = screen.getByRole('link', { name: LABELS.services });
-    const row = link.parentElement;
-    expect(row?.className).toContain('flex-wrap');
-    expect(row?.className).toContain('*:grow');
-    expect(row?.className).toContain('*:basis-64');
-    expect(row?.className).toContain('max-w-3xl');
+    const contact = screen.getByRole('button', { name: LABELS.contact });
+    const row = (link.parentElement?.className ?? '').split(' ');
+    expect(row).toContain('flex-wrap');
+    expect(row).toContain('*:grow');
+    // The row's cap, the basis and the gap in the lg box's ratio of the
+    // viewport from the checkpoint's 1536px up: 48rem / 16rem / 0.75rem until
+    // then (the first pack's row), 60rem / 20rem / 0.9375rem from 1920.
+    expect(row).toContain('max-w-[clamp(48rem,50vw,60rem)]');
+    expect(row).toContain('*:basis-[clamp(16rem,16.6667vw,20rem)]');
+    expect(row).toContain('gap-[clamp(0.75rem,0.78125vw,0.9375rem)]');
+    expect((48 * 16) / 1536).toBeCloseTo(0.5, 5);
+    expect((16 * 16) / 1536).toBeCloseTo(0.166667, 5);
+    expect((0.75 * 16) / 1536).toBeCloseTo(0.0078125, 7);
+    // Both controls wear ui/Button's fluid `hero` size — the lg box to the
+    // checkpoint, scaled by the slogan's own factor from there (the atom's
+    // paragraph has the arithmetic).
+    for (const control of [link, contact]) {
+      expect(control.className).toContain(
+        'min-h-[clamp(3.5rem,3.6458vw,4.375rem)]',
+      );
+      expect(control.className).not.toContain('min-h-14');
+    }
   });
 });
 

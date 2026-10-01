@@ -1,16 +1,28 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
+import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
 import { Hero } from '@/components/sections/Hero/Hero';
 import { ReviewsCarousel } from '@/components/sections/ReviewsCarousel/ReviewsCarousel';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { localeHref } from '@/i18n/href';
 import { isLocale } from '@/i18n/locales';
-import { populateDoctorShowcase } from '../team/populate';
+import { clinicStats } from '@/lib/team/team';
+import { populateDoctorShowcase, populateStats } from '../team/populate';
+import { toStatTiles } from '../team/stat-tiles';
 import { populateHero } from './populate';
 
 // Home lives at /{locale} itself — never /{locale}/home (brief §5).
-// FOUR real bands so far. Second since 2026-09-30, right under the Hero: the
+// FIVE real bands so far. Third since 2026-10-01, between the doctors and the
+// map: the clinic's NUMBERS (sections/DoctorStats on the page ground — owner,
+// verbatim: "i want it on home page too with just 3 components. experience,
+// patients and nr of procedures"), the doctor page's „în cifre" band with its
+// eyebrow and title at the start, no lead and lib/team's three `clinicStats`
+// tiles; the same band closes the Team page's staff the same way (owner,
+// minutes later: "same component as on main page with the stats on the team
+// page between map and helping staff") — its place here, after the people
+// the numbers describe and before the map as on a doctor's page, is the
+// planner's pick, a lever. Second since 2026-09-30, right under the Hero: the
 // DOCTORS band (sections/DoctorShowcase — owner, verbatim: "crete it as a
 // section in the home page and in the personell page with heading and
 // eyebrow smth in the direction of specialistii cu care ne mandrim familia
@@ -96,6 +108,21 @@ export default async function HomePage() {
         eyebrow={tt('showcase.eyebrow')}
         title={tt('showcase.title')}
         doctors={doctors}
+      />
+      {/* THE CLINIC'S NUMBERS (owner, 2026-10-01): the doctor page's „în
+          cifre" band on the page ground, its eyebrow and title at the start
+          like every Home band's, no lead, and three tiles — lib/team's
+          `clinicStats` through the same walk and glyph map a doctor's page
+          uses. The words are the doctor page's own keys, so the band reads
+          the same on every page that carries it (the showcase's precedent). */}
+      <DoctorStats
+        ground="page"
+        align="start"
+        eyebrow={tt('doctor.stats.eyebrow')}
+        title={tt('doctor.stats.title')}
+        atLeast={tt('doctor.stats.atLeast')}
+        tiles={toStatTiles(populateStats(locale, clinicStats))}
+        format={new Intl.NumberFormat(locale).format}
       />
       <ClinicLocation />
       <ReviewsCarousel />

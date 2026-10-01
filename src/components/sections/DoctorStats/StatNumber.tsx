@@ -52,7 +52,14 @@ import { prefersReducedMotion } from '@/lib/reduced-motion/reduced-motion';
 // screen when the page hydrates paints its final number first and then counts
 // from 0 once. The doctor page puts this band fourth (D33), under the
 // opener, the profile and the courses, so in an ordinary visit it scrolls
-// into view long after hydration and the visitor sees only the count.
+// into view long after hydration and the visitor sees only the count. Home
+// and Team (since 2026-10-01, the clinic's three numbers) put it under the
+// doctors band — six cards — so a fresh visit scrolls to it too; the case
+// the trade-off does cost is a RELOAD that restores the scroll at the band
+// (Back from a doctor's page when the browser's back-forward cache did not
+// keep the document): the numbers show, then count once. Recorded, not
+// changed: skipping the count when the first intersection is already there
+// at mount would remove it, the owner's call (it amends D31).
 //
 // ── THE LIFECYCLE (D31), all in one effect:
 //   1. mount — if `prefersReducedMotion()` (lib/reduced-motion, the React-free
@@ -95,7 +102,7 @@ import { prefersReducedMotion } from '@/lib/reduced-motion/reduced-motion';
 // which is not worth a listener.
 //
 // ── THE TWIN — ACCESSIBILITY: THE SCREEN READER HEARS ONE NUMBER, ONCE. The
-// visible <span> is `aria-hidden`; an `sr-only` twin carries `spoken`, the
+// visible <span> is `aria-hidden`; a twin carries `spoken`, the
 // band's finished words for the FINAL value, at every moment. A screen reader
 // that reads the tile mid-count therefore says „peste 3.000", never "0, 1,
 // 2 …", and the two copies are never read together. The final frame's
@@ -111,12 +118,41 @@ import { prefersReducedMotion } from '@/lib/reduced-motion/reduced-motion';
 // text node would not be. `tabular-nums` rides
 // the band's <p> around this island, so every digit keeps its width while it
 // counts and the number grows only as it gains digits.
+//   · THE TWIN LIES ON THE DIGITS, NOT IN A CORNER (the Opus a11y review of
+//     2026-10-01, delegated to the planner by the owner: "fix howver you fell
+//     like with that wcag"). Until that day it was `sr-only` — a 1×1px clipped
+//     box — and two things followed. A VoiceOver user exploring an iPhone
+//     screen BY TOUCH found nothing under the big number (the digits are
+//     `aria-hidden`, the twin a speck elsewhere), and on every platform the
+//     screen reader's cursor drew its outline round that speck instead of
+//     round the number it was reading. So the island now wraps both spans in
+//     its own `relative inline-block` box, exactly as wide as the visible
+//     digits, and the twin is `absolute inset-0` inside it: the same box,
+//     invisible (`opacity-0` — still in the accessibility tree in every
+//     engine, which is the whole technique; the accessible custom checkbox, an
+//     opacity-0 native input laid over its drawing, is the standard
+//     precedent), on ONE line (`whitespace-nowrap` — the one property of
+//     `sr-only` the overlay must keep, the Opus re-review the same day: the
+//     words are longer than the digits, and wrapped they stood „peste" over
+//     „3.000", so a screen reader reading by VISUAL LINE — NVDA's mouse
+//     tracking, VoiceOver's rotor, a braille line — split the number from its
+//     word or ran the two together, the very "smushed text" bug `sr-only`'s
+//     nowrap exists for), clipped (`overflow-hidden`: the words run on past
+//     the digits and never paint or hit-test outside their box) and
+//     unselectable (`select-none`, so a mouse drag never selects text nobody
+//     can see — and NOT `pointer-events-none`, which would let a finger
+//     exploring the screen fall through to the paragraph). The box follows
+//     the count, since it is sized by the digits on screen. `data-spoken`
+//     names the twin for the suites (and for nothing at runtime) now that no
+//     utility class does.
 //
 // ── THE COST, SAID OUT LOUD. This is the doctor page's SECOND scripted thing
 // (ui/Image's optimizer island under the opener's portrait being the first,
 // PersonnelCard D11): one small client chunk — react's hooks, this function
 // and lib/reduced-motion's two lines — shared by the four tiles, hydrated four
-// times. §16's island list gains it in the planner's docs change (D31).
+// times. §16's island list gains it in the planner's docs change (D31). Since
+// 2026-10-01 Home and Team load the same chunk for their three tiles (the
+// clinic's numbers), hydrated three times on each.
 //
 // ── DEPENDENCIES: react and lib/reduced-motion, nothing else. No lib data, no
 // next-intl, no `Intl` (see WHAT CROSSES THE BOUNDARY) — the suite pins the
@@ -137,7 +173,7 @@ export type StatNumberProps = Readonly<{
   frames: CountFrames;
   /**
    * Printed after the number on every VISIBLE frame ("+"), or absent. Never
-   * in the sr-only twin, which says `spoken` instead (THE TWIN). The "plus"
+   * in the twin, which says `spoken` instead (THE TWIN). The "plus"
    * sentence recorded in G2-R2 tier 2 (a screen reader reading the twin's
    * „3.000+" as "3.000 plus") is superseded by the owner's word, 2026-09-27
    * (round 2s).
@@ -147,8 +183,8 @@ export type StatNumberProps = Readonly<{
    * What the screen reader hears, finished text the band composed on the
    * server: the page's `atLeast` word before the formatted final value for a
    * tile with a suffix („peste 3.000"), the formatted value alone for one
-   * without („10"). Rendered as the sr-only twin, whole and unchanged, at
-   * every moment of the count (THE TWIN).
+   * without („10"). Rendered as the twin laid over the digits, whole and
+   * unchanged, at every moment of the count (THE TWIN).
    */
   spoken: string;
 }>;
@@ -234,13 +270,21 @@ export function StatNumber({
 
   const final = frames[last];
   return (
-    <>
+    // THE NUMBER'S OWN BOX — `relative inline-block`, as wide as the digits
+    // the eye sees, so the twin can lie exactly on them (THE TWIN, above).
+    <span className="relative inline-block">
       <span ref={visible} aria-hidden="true">
         {step === null ? final : frames[step]}
         {suffix}
       </span>
-      {/* THE TWIN — `spoken`, whole; no suffix, no word of its own. */}
-      <span className="sr-only">{spoken}</span>
-    </>
+      {/* THE TWIN — `spoken`, whole; no suffix, no word of its own; laid
+          over the digits it speaks for, on one line, and never seen. */}
+      <span
+        data-spoken=""
+        className="absolute inset-0 overflow-hidden whitespace-nowrap opacity-0 select-none"
+      >
+        {spoken}
+      </span>
+    </span>
   );
 }

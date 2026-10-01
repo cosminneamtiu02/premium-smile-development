@@ -6,20 +6,45 @@ import { ToothCheck } from '@/assets/glyphs/ToothCheck';
 import { Trophy } from '@/assets/glyphs/Trophy';
 import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 
-// FIVE stories, and the count is the honest one: the everyday band at the
+// EIGHT stories, and the count is the honest one: the everyday band at the
 // width where the four tiles stand on one row, the phone arrangement with one
 // tile above the other, the two expansion stresses — and `Counting`, a
 // play-only twin of the everyday band that watches the count from its first
-// frame (G2-R2 tier 2, react F3), tagged 'no-visual' so it names no baseline.
-// The export NAMES of the other four are load-bearing — each one names a
-// baseline file (`sections-doctorstats--default`,
+// frame (G2-R2 tier 2, react F3), tagged 'no-visual' so it names no baseline —
+// then, since 2026-10-01, THE SECOND PAGE in three frames (`PageGround`,
+// `PageGroundStacked`, `PageGroundGerman`; the header's own paragraph below).
+// The export NAMES of the photographed seven are load-bearing — each one names
+// a baseline file (`sections-doctorstats--default`,
 // `sections-doctorstats--stacked`, …), so renaming or adding a photographed
-// export re-records pictures; those four ARE the band's contribution to the
-// round-2f visual manifest (D30), which `Counting` leaves unchanged. The
-// `Sections/*` title prefix routes every photographed one to 390 + 1536
+// export re-records pictures; the first four ARE the band's contribution to the
+// round-2f visual manifest (D30), which `Counting` leaves unchanged, and the
+// three `PageGround*` frames are the 2026-10-01 lane's. The `Sections/*` title
+// prefix routes every photographed one to 390 + 1536
 // (tests/visual/stories.spec.ts, §13); the 'stress-320' tag adds the
-// accessibility width to the three whose layout has something to say there (a
-// 256px column of 18px prose, German labels in it, a 40%-expanded lead).
+// accessibility width to the four whose layout has something to say there (a
+// 256px column of 18px prose, German labels in it, a 40%-expanded lead, the
+// Home shape's three tiles one above the other).
+//
+// ── THE SECOND PAGE — HOME AND THE TEAM PAGE (owner, 2026-10-01, verbatim:
+// "i want it on home page too with just 3 components. experience, patients
+// and nr of procedures. i want it without that gradient lilla background and
+// to haave : [the eyebrow and the title] left alligned as other headings nad
+// eyebrows on main page and without this: [the lead] so dorp that part"; the
+// same band then closed the Team page's staff). The three `PageGround*`
+// stories render exactly that call — `ground="page"`, `align="start"`, NO
+// lead — over THREE tiles: this file's four without the courses tile, the
+// drawings and the order of lib/team's `clinicStats` (the pages pass the real
+// rows; a dumb band's workbench owes the data list nothing, the demo-copy
+// paragraph at the end). Their plays read off the ENGINE what the suite can
+// only read off the tokens: the eyebrow and the <h2> standing on the
+// Container column's left edge, the section painted in the page ground and
+// nothing tinted inside it, the three tiles in one row from the container's
+// `@xl` (all three across on the tablet, the narrowest named width that holds
+// them) and one above the other below it, every label whole. And every frame
+// of the band, both grounds, paints its glyphs LILAC (the owner, the same
+// day: "paint it's svgs lilla"): `expectLilacGlyphs` compares each drawing's
+// computed colour with the decorative role's own token, resolved by the
+// engine and never typed here.
 //
 // ── NO `ReducedMotion` STORY, by the contract's design: the preference is
 // READ in the plays of `Default` and `Counting`, each asserting whichever
@@ -82,7 +107,7 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // „peste" in Romanian, „über" in `GermanLongest`, the preview's pseudo form of
 // „peste" in `PseudoLocale`. It is never SEEN: every play reads the count off
 // the visible (aria-hidden) span, which keeps the „+", and the spoken form
-// („peste 3.000") off the sr-only twin.
+// („peste 3.000") off the twin laid over the digits.
 
 const EYEBROW = 'În cifre';
 const TITLE = 'Experiență confirmată în timp';
@@ -161,6 +186,31 @@ const GERMAN_TILES = [
   },
 ] as const satisfies readonly DoctorStatTile[];
 
+/** THE SECOND PAGE's three (the header's own paragraph): experience, patients,
+ *  procedures — the four above without the courses tile, in lib/team's
+ *  `clinicStats` order. */
+const THREE_TILES = [
+  TILES[0],
+  TILES[1],
+  TILES[3],
+] as const satisfies readonly DoctorStatTile[];
+
+/** …and the same three in German, for the tablet's narrowest three-across
+ *  tiles (~173px): „Jahre Erfahrung" is the longest label they carry. */
+const GERMAN_THREE_TILES = [
+  GERMAN_TILES[0],
+  GERMAN_TILES[1],
+  GERMAN_TILES[3],
+] as const satisfies readonly DoctorStatTile[];
+
+/** The German opener — `team.doctor.stats` (DRAFTED, §15.17): the eyebrow and
+ *  the title `GermanLongest` and `PageGroundGerman` both print, and the lead
+ *  only the first does (the second shows Home's band, which has none). */
+const GERMAN_EYEBROW = 'In Zahlen';
+const GERMAN_TITLE = 'Über die Jahre bestätigte Erfahrung';
+const GERMAN_LEAD =
+  'Die Zahlen unten sagen in Kürze, wie wir arbeiten: sorgfältig, mit moderner Technik und mit echter Aufmerksamkeit für jeden Patienten.';
+
 /**
  * Every string of the band put through the preview's OWN pseudo transform
  * (the same ACCENT map, the same `·`-padding at 40 % of the source length) —
@@ -220,6 +270,13 @@ const RO_SPOKEN = ['peste 6', 'peste 3.000', '10', 'peste 1.000'];
 const DE_SPOKEN = ['über 6', 'über 3.000', '10', 'über 1.000'];
 const PSEUDO_SPOKEN = ['péšťé ·· 6', 'péšťé ·· 3.000', '10', 'péšťé ·· 1.000'];
 
+/** The SECOND PAGE's three, seen and heard — the four above without the
+ *  courses tile's exact count, so every one is an "at least". */
+const RO_THREE_FINALS = ['6+', '3.000+', '1.000+'];
+const DE_THREE_FINALS = ['6+', '3.000+', '1.000+'];
+const RO_THREE_SPOKEN = ['peste 6', 'peste 3.000', 'peste 1.000'];
+const DE_THREE_SPOKEN = ['über 6', 'über 3.000', 'über 1.000'];
+
 /** The count's own budget — StatNumber's 1.5 s plus half a second of slack
  *  for the observer's first report and a busy runner. */
 const COUNT_BUDGET_MS = 2_000;
@@ -242,27 +299,58 @@ const tilesOf = (band: HTMLElement): HTMLElement[] =>
   within(within(band).getByRole('list')).getAllByRole('listitem');
 
 /**
- * Each tile's number — the <p>, its visible (aria-hidden) span and its sr-only
- * twin — found by what it SAYS and never by its index among the tile's
- * children, because the DOM order is not the painted one (G2-R2 tier 2, a11y
- * F1): the twin is the tile's one `.sr-only` text and always holds a digit
- * (the SPOKEN form since round 2s, „peste 3.000": the word, then the number),
- * the visible span is the number's one aria-hidden text holding a digit
- * (mid-count too: "0+" is a digit), the number <p> is their parent. The count
- * is read off `visible`; what is heard, off `twin`.
+ * Each tile's number — the <p>, its visible (aria-hidden) span and its twin —
+ * found by what it SAYS and never by its index among the tile's children,
+ * because the DOM order is not the painted one (G2-R2 tier 2, a11y F1): the
+ * twin is the tile's one `data-spoken` text and always holds a digit (the
+ * SPOKEN form since round 2s, „peste 3.000": the word, then the number), the
+ * visible span is the number's one aria-hidden text holding a digit
+ * (mid-count too: "0+" is a digit), the number <p> is their one paragraph
+ * ancestor (the island's own box sits between since 2026-10-01, when the twin
+ * moved from `sr-only` onto the digits — StatNumber.tsx's THE TWIN). The
+ * count is read off `visible`; what is heard, off `twin`.
  */
 const numbersOf = (band: HTMLElement) =>
   tilesOf(band).map((tile) => {
-    const twin = within(tile).getByText(/\d/, { selector: '.sr-only' });
-    const number = twin.parentElement as HTMLElement;
+    const twin = within(tile).getByText(/\d/, { selector: '[data-spoken]' });
+    const number = twin.closest('p') as HTMLElement;
     const visible = within(number).getByText(/\d/, {
       selector: '[aria-hidden="true"]',
     });
     return { number, visible, twin };
   });
 
+/**
+ * THE TWIN LIES ON THE DIGITS (the a11y review of 2026-10-01): what a screen
+ * reader's cursor outlines, and what VoiceOver finds under a finger, is the
+ * twin's box — so in every tile it must be the visible number's box, to the
+ * pixel, and never painted. A picture cannot show this: the twin is invisible
+ * by design, so only a play can pin it.
+ */
+const expectTwinsOnTheDigits = async (band: HTMLElement): Promise<void> => {
+  for (const { visible, twin } of numbersOf(band)) {
+    // The twin IS the island's box — one line tall — and that box sits on the
+    // digits: the same left edge and width, and the same vertical CENTRE (the
+    // line spreads its leading evenly above and below the glyphs' own box,
+    // which can be a few px taller than the line, so edges differ, centres
+    // never do).
+    const box = (twin.parentElement as HTMLElement).getBoundingClientRect();
+    const seen = visible.getBoundingClientRect();
+    const heard = twin.getBoundingClientRect();
+    await expect(seen.width).toBeGreaterThan(0);
+    for (const side of ['left', 'top', 'width', 'height'] as const) {
+      await expect(Math.abs(heard[side] - box[side])).toBeLessThanOrEqual(1);
+    }
+    await expect(Math.abs(heard.left - seen.left)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(heard.width - seen.width)).toBeLessThanOrEqual(1);
+    const centre = (rect: DOMRect): number => (rect.top + rect.bottom) / 2;
+    await expect(Math.abs(centre(heard) - centre(seen))).toBeLessThanOrEqual(1);
+    await expect(getComputedStyle(twin).opacity).toBe('0');
+  }
+};
+
 /** The facts a picture cannot show: a named region, its one <h2>, one <h3>
- *  per tile in order, and the SPOKEN finals in the sr-only twins from the
+ *  per tile in order, and the SPOKEN finals in the twins from the
  *  very first frame (§16 rule 2 — the accessible name never counts; round 2s
  *  — it says the page's word, never the sign). */
 const expectOutline = async (
@@ -420,17 +508,29 @@ const jumpTo = (top: number): void => {
 };
 
 /**
+ * How many tiles one row holds, by COUNT and by the measured column —
+ * DoctorStats.tsx's `rowsFor`, read back (its STEPS paragraph): three tiles
+ * all across from `@xl` (36rem) and one column below it, never two and one;
+ * any other count four from `@3xl` (48rem), two from `@md` (28rem), one below.
+ */
+const columnsFor = (count: number, width: number): 4 | 3 | 2 | 1 => {
+  if (count === 3) return width >= stepPx(36) ? 3 : 1;
+  return width >= stepPx(48) ? 4 : width >= stepPx(28) ? 2 : 1;
+};
+
+type Branch = 'four' | 'three' | 'two' | 'one';
+const BRANCH = { 4: 'four', 3: 'three', 2: 'two', 1: 'one' } as const;
+
+/**
  * THE ARRANGEMENT CONTRACT (D30, D21), DERIVED from the measured list — the
  * box every `@`-variant here is read against is ui/Container's column, and
  * the list is exactly that wide (no padding between them). FRACTIONAL widths,
- * never clientWidth. Four columns from 48rem, two from 28rem, one below:
- * tiles of one row share a top (within 1px) and sit left to right without
+ * never clientWidth. The row width is `columnsFor`'s: four, three, two or one
+ * — tiles of one row share a top (within 1px) and sit left to right without
  * overlapping; each row starts at or under the previous row's bottom; in one
  * column every tile is on the list's left edge and as wide as the list.
  */
-const expectArrangement = async (
-  band: HTMLElement,
-): Promise<'four' | 'two' | 'one'> => {
+const expectArrangement = async (band: HTMLElement): Promise<Branch> => {
   const list = within(band).getByRole('list').getBoundingClientRect();
   const boxes = tilesOf(band).map((tile) => tile.getBoundingClientRect());
 
@@ -439,8 +539,7 @@ const expectArrangement = async (
     await expect(box.height).toBeGreaterThan(0);
   }
 
-  const columns =
-    list.width >= stepPx(48) ? 4 : list.width >= stepPx(28) ? 2 : 1;
+  const columns = columnsFor(boxes.length, list.width);
 
   for (const [index, box] of boxes.entries()) {
     const column = index % columns;
@@ -459,26 +558,223 @@ const expectArrangement = async (
       await expect(Math.abs(box.width - list.width)).toBeLessThanOrEqual(1);
     }
   }
-  return columns === 4 ? 'four' : columns === 2 ? 'two' : 'one';
+  return BRANCH[columns];
 };
 
 /**
  * THE PIN IS NOT VACUOUS (the DoctorCourses guard): below 28rem of WINDOW the
  * column is narrower still, so one column is the only possibility; from 64rem
  * of window the column (the window less two gutters of at most 10vw) is past
- * 48rem, so four is the only possibility. Conditioned on the live window, so
- * a Playwright project photographing the story at another width runs it
- * without a false failure.
+ * 48rem, so four is the only possibility; and for THREE tiles, from 48rem of
+ * window the column is past 36rem — 80 % of the window less a classic
+ * scrollbar is 38.4rem less 17px at most — so all three across is the only
+ * possibility (the tablet's 768px is exactly that threshold). Conditioned on
+ * the live window, so a Playwright project photographing the story at another
+ * width runs it without a false failure.
  */
 const expectBranch = async (
-  branch: 'four' | 'two' | 'one',
-  pinned: 'four' | 'one',
+  branch: Branch,
+  pinned: 'four' | 'three' | 'one',
 ): Promise<void> => {
   if (pinned === 'one' && window.innerWidth < stepPx(28)) {
     await expect(branch).toBe('one');
   }
   if (pinned === 'four' && window.innerWidth >= stepPx(64)) {
     await expect(branch).toBe('four');
+  }
+  if (pinned === 'three' && window.innerWidth >= stepPx(48)) {
+    await expect(branch).toBe('three');
+  }
+};
+
+/**
+ * A colour TOKEN as the engine resolves it, in the very serialization
+ * getComputedStyle gives every painted colour (`rgb(…)`) — never a hex typed
+ * here, so §15.1's still-open hue confirm moves the expectation with the
+ * token. The probe stands OUTSIDE the band, on the body: a token the
+ * stylesheet failed to declare would leave it the body's ink, never the
+ * band's own colour, and the check could not pass by inheriting what it
+ * measures. A token missing from :root is named rather than compared.
+ */
+const tokenColour = (name: string): string => {
+  const declared = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  if (declared === '') {
+    throw new Error(`DoctorStats story: ${name} is not declared on :root`);
+  }
+  const probe = document.createElement('span');
+  probe.style.color = `var(${name})`;
+  document.body.append(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+};
+
+/**
+ * THE GLYPHS ARE LILAC (owner, 2026-10-01: "paint it's svgs lilla"): every
+ * tile's drawing computes to §15.1's graphics role, `accent-decorative` — the
+ * disc's `color`, which the glyph's `stroke="currentColor"` paints with. Both
+ * read off the <svg>, both against the token, on whichever ground the band
+ * stands.
+ */
+const expectLilacGlyphs = async (band: HTMLElement): Promise<void> => {
+  const lilac = tokenColour('--color-accent-decorative');
+  const tiles = tilesOf(band);
+  await expect(tiles.length).toBeGreaterThan(0);
+  for (const tile of tiles) {
+    const glyph = tile.querySelector('svg');
+    if (!glyph) throw new Error('DoctorStats story: a tile lost its glyph');
+    await expect(getComputedStyle(glyph).color).toBe(lilac);
+    await expect(getComputedStyle(glyph).stroke).toBe(lilac);
+  }
+};
+
+/** The nearest size container above an element — ui/Container's column, the
+ *  box every `@`-step of the band reads (the Pages/Team `columnOf`). */
+const columnOf = (element: Element): HTMLElement => {
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    if (getComputedStyle(node).containerType !== 'normal') return node;
+  }
+  throw new Error('DoctorStats story: no size container above the element');
+};
+
+/**
+ * THE PAGE GROUND, read off the engine: the <section> paints the page's own
+ * colour (`--color-page`, resolved, never typed), and NOTHING inside it is
+ * tinted — its one child is ui/Container (a size container, no background of
+ * its own), no fade box stands above or below it, and the rhythm box inside
+ * paints nothing either. TintedBand would have put three boxes there, two of
+ * them aria-hidden gradients and the middle one in the lilac.
+ */
+const expectPageGround = async (band: HTMLElement): Promise<void> => {
+  const transparent = 'rgba(0, 0, 0, 0)';
+  await expect(getComputedStyle(band).backgroundColor).toBe(
+    tokenColour('--color-page'),
+  );
+  await expect(getComputedStyle(band).backgroundImage).toBe('none');
+  await expect(band.children).toHaveLength(1);
+  const column = band.firstElementChild as HTMLElement;
+  await expect(column).not.toHaveAttribute('aria-hidden');
+  await expect(getComputedStyle(column).containerType).toBe('inline-size');
+  await expect(getComputedStyle(column).backgroundColor).toBe(transparent);
+  const rhythm = column.firstElementChild as HTMLElement;
+  await expect(getComputedStyle(rhythm).backgroundColor).toBe(transparent);
+  await expect(getComputedStyle(rhythm).backgroundImage).toBe('none');
+};
+
+/**
+ * THE REAL FACE BEFORE ANY TEXT IS MEASURED (the CI failure of 2026-10-01,
+ * Sections/Hero's `loadFace`, DoctorIntro's recipe): Storybook's faces are
+ * `font-display: block`, so a play that measures right after the render may
+ * lay text out in the FALLBACK serif, whose words are wider — and whether the
+ * real face has arrived depends on which stories ran before in the same
+ * browser. `load()` fetches the exact face the element asks for.
+ */
+const loadFace = async (element: HTMLElement): Promise<void> => {
+  const style = getComputedStyle(element);
+  await document.fonts.load(
+    `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+    element.textContent ?? '',
+  );
+  await document.fonts.ready;
+};
+
+/**
+ * THE OPENER AT THE START (owner, 2026-10-01: "left alligned as other
+ * headings nad eyebrows on main page"): the eyebrow's and the <h2>'s left
+ * edges stand on the Container column's left edge (within 1px), and both read
+ * their lines from the start. Font-independent when it passes — a
+ * start-aligned box begins at its column whatever its text measures — and not
+ * vacuous: a centred opener on a laptop column puts both a few hundred pixels
+ * in. The real faces load first all the same (`loadFace`): how far in a
+ * centred box would sit IS a text measure, and a failure should report the
+ * shipped face's number. (At a phone's column a wrapping title fills it
+ * either way; the `textAlign` reads are what hold there.)
+ */
+const expectStartAligned = async (
+  band: HTMLElement,
+  eyebrow: string,
+): Promise<void> => {
+  const heading = within(band).getByRole('heading', { level: 2 });
+  const kicker = within(band).getByText(eyebrow);
+  await loadFace(kicker);
+  await loadFace(heading);
+  const column = columnOf(heading).getBoundingClientRect();
+  for (const element of [kicker, heading]) {
+    await expect(
+      Math.abs(element.getBoundingClientRect().left - column.left),
+    ).toBeLessThanOrEqual(1);
+    await expect(getComputedStyle(element).textAlign).toBe('start');
+  }
+};
+
+/**
+ * NO LEAD (owner, 2026-10-01: "without this … so dorp that part"): the opener
+ * box holds SectionHeading alone — its one <p> is the eyebrow — and the lead
+ * sentence is nowhere in the band.
+ */
+const expectNoLead = async (band: HTMLElement, lead: string): Promise<void> => {
+  const opener = within(band).getByRole('heading', { level: 2 }).parentElement
+    ?.parentElement as HTMLElement;
+  await expect(opener.children).toHaveLength(1);
+  await expect(opener.querySelectorAll(':scope > p')).toHaveLength(0);
+  await expect(within(band).queryByText(lead)).toBeNull();
+};
+
+/**
+ * EVERY LABEL WHOLE (the header's TILES paragraph: a title breaks between
+ * words, never inside one — `hyphens-none`). Read off the engine in the real
+ * face: each <h3> computes `hyphens: none`, each WORD of it lays out as ONE
+ * line fragment (a word cut at a syllable is two), and no label leaves its
+ * TILE. That last read is against the <li>, never the label's own box: the
+ * tile centres its children as boxes, so a word wider than the tile widens
+ * the <h3> to fit and spills over both of the tile's edges — the label's own
+ * scroll width would never notice (measured, with a 36-letter German
+ * compound in this frame). German on the tablet's ~173–178px three-across
+ * tiles is the frame it exists for.
+ */
+const expectLabelsWhole = async (band: HTMLElement): Promise<void> => {
+  const labels = within(band).getAllByRole('heading', { level: 3 });
+  await expect(labels.length).toBeGreaterThan(0);
+  for (const label of labels) {
+    await loadFace(label);
+    await expect(getComputedStyle(label).hyphens).toBe('none');
+    const tile = label.closest('li');
+    if (!tile) throw new Error('DoctorStats story: a label outside its tile');
+    const [box, room] = [label, tile].map((element) =>
+      element.getBoundingClientRect(),
+    );
+    await expect(box.left).toBeGreaterThanOrEqual(room.left - 0.5);
+    await expect(box.right).toBeLessThanOrEqual(room.right + 0.5);
+    const text = label.firstChild;
+    if (!(text instanceof Text)) {
+      throw new Error('DoctorStats story: a label is not one text node');
+    }
+    for (const word of text.data.matchAll(/\S+/g)) {
+      const range = document.createRange();
+      range.setStart(text, word.index);
+      range.setEnd(text, word.index + word[0].length);
+      const fragments = [...range.getClientRects()].filter(
+        (rect) => rect.width > 0,
+      );
+      await expect(fragments, `„${word[0]}" in „${text.data}"`).toHaveLength(1);
+    }
+  }
+};
+
+/** THE D21 RIDER, spelled for the stacked frame: one tile above the other,
+ *  every top strictly under the one before. Asked only of the one-column
+ *  branch — a wider window, which Playwright may give the story, puts the
+ *  three in a row. */
+const expectStackedTops = async (
+  band: HTMLElement,
+  branch: Branch,
+): Promise<void> => {
+  if (branch !== 'one') return;
+  const tops = tilesOf(band).map((tile) => tile.getBoundingClientRect().top);
+  for (let index = 1; index < tops.length; index += 1) {
+    await expect(tops[index]).toBeGreaterThan(tops[index - 1]);
   }
 };
 
@@ -507,12 +803,25 @@ const meta = {
     },
     lead: {
       control: 'text',
-      description: 'One sentence under the title, centred on its own <p>',
+      description:
+        'One sentence under the title, on its own <p> — centred with the opener, start-aligned under a start-aligned one. OPTIONAL since 2026-10-01: Home and the Team page pass none, and an absent (or empty) lead renders no <p> at all',
+    },
+    ground: {
+      control: 'inline-radio',
+      options: ['tint', 'page'],
+      description:
+        'Where the band stands: `tint` (default) is sections/TintedBand, the doctor page’s lilac with its two fades; `page` is the plain page ground every other Home band stands on — a `bg-page` <section> around ui/Container (owner, 2026-10-01: "without that gradient lilla background")',
+    },
+    align: {
+      control: 'inline-radio',
+      options: ['center', 'start'],
+      description:
+        'How the opener lines up — sections/SectionHeading’s two answers: `center` (default, the doctor page) or `start` (Home and the Team page, "left alligned as other headings nad eyebrows on main page"). The tiles stay centred either way',
     },
     tiles: {
       control: false,
       description:
-        'The tiles, in the page’s order: `id` (the list key) · `icon` (a glyph element, painted at 3rem in the CTA green inside a white disc) · `value` (the FINAL integer — the static HTML prints it, the island counts up to it) · `suffix` ("+", or absent for an exact count) · `label` (the <h3>) · `description` (one sentence). One column below the 28rem container step, two to 48rem, four from there',
+        'The tiles, in the page’s order: `id` (the list key) · `icon` (a glyph element, painted at 3rem in the decorative lilac inside a white disc) · `value` (the FINAL integer — the static HTML prints it, the island counts up to it) · `suffix` ("+", or absent for an exact count) · `label` (the <h3>) · `description` (one sentence). One column below the 28rem container step, two to 48rem, four from there — and THREE tiles one column below 36rem, all three across from there',
     },
     format: {
       control: false,
@@ -522,12 +831,12 @@ const meta = {
     atLeast: {
       control: 'text',
       description:
-        'The word a screen reader hears for a tile’s „+”, finished and already translated (§8.1): the page’s `team.doctor.stats.atLeast` key, „peste” · “over” · „über” · « plus de » · « oltre ». The band puts it BEFORE the formatted final value in the sr-only twin of every tile with a suffix („peste 3.000”), ON THE SERVER, while the screen keeps showing „3.000+”; a tile without a suffix is spoken as its number alone. It names the one suffix the data allows („+”, at least): a second suffix kind would need a second word',
+        'The word a screen reader hears for a tile’s „+”, finished and already translated (§8.1): the page’s `team.doctor.stats.atLeast` key, „peste” · “over” · „über” · « plus de » · « oltre ». The band puts it BEFORE the formatted final value in the twin laid over the digits of every tile with a suffix („peste 3.000”), ON THE SERVER, while the screen keeps showing „3.000+”; a tile without a suffix is spoken as its number alone. It names the one suffix the data allows („+”, at least): a second suffix kind would need a second word',
     },
     className: {
       control: false,
       description:
-        'Placement only, merged LAST onto the <section> through sections/TintedBand (§6.4/§6.8). The band owns its ground, gutter and vertical rhythm; the page owns the space BETWEEN bands',
+        'Placement only, merged LAST onto the <section> — through sections/TintedBand on the tint, directly on the page ground (§6.4/§6.8). The band owns its ground, gutter and vertical rhythm; the page owns the space BETWEEN bands',
     },
   },
 } satisfies Meta<typeof DoctorStats>;
@@ -541,7 +850,8 @@ const LABELS = TILES.map((tile) => tile.label);
  * THE EVERYDAY BAND — Romanian, at the laptop width, where the reference's
  * shape reads as intended: the lilac ground fading in, „În cifre" over
  * „Experiență confirmată în timp" and the lead, all centred, then four tiles on
- * one row — a green line icon in a white disc, the number, the label, the
+ * one row — a lilac line icon in a white disc (the owner, 2026-10-01: "paint
+ * it's svgs lilla"; the CTA green until then), the number, the label, the
  * sentence. What to look at: the four discs level, each number centred over
  * its label, and the numbers COUNTING UP once the row is half on screen (the
  * workbench shows the count; the visual net photographs the final values,
@@ -554,8 +864,9 @@ const LABELS = TILES.map((tile) => tile.label);
  * page's word and never the sign, round 2s), the still branch
  * when the machine asks for reduced motion, every number final within the
  * budget, the painted order (the number above its <h3>, which follows it in
- * the DOM) and the arrangement derived from the measured column. The count
- * itself is watched in `Counting` (the header says why).
+ * the DOM), the glyphs' lilac against the decorative role's own token and the
+ * arrangement derived from the measured column. The count itself is watched
+ * in `Counting` (the header says why).
  */
 export const Default: Story = {
   tags: ['stress-320'],
@@ -565,6 +876,16 @@ export const Default: Story = {
 
     await expect(canvas.getByText(EYEBROW)).toBeVisible();
     await expectOutline(band, TITLE, LABELS, RO_SPOKEN);
+    await expectLilacGlyphs(band);
+    await expectTwinsOnTheDigits(band);
+    // The title never splits a word (the a11y review of 2026-10-01): the
+    // class rides SectionHeading's root and the <h2> inherits it, computed —
+    // and its belt with it, a word too long for a line by itself still breaks.
+    const titleStyle = getComputedStyle(
+      within(band).getByRole('heading', { level: 2 }),
+    );
+    await expect(titleStyle.hyphens).toBe('none');
+    await expect(titleStyle.overflowWrap).toBe('anywhere');
     if (reducedMotion()) {
       await expectStill(numbersOf(band)[0].visible, RO_FINALS[0]);
     }
@@ -613,23 +934,22 @@ export const GermanLongest: Story = {
   tags: ['stress-320'],
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
   args: {
-    eyebrow: 'In Zahlen',
-    title: 'Über die Jahre bestätigte Erfahrung',
-    lead: 'Die Zahlen unten sagen in Kürze, wie wir arbeiten: sorgfältig, mit moderner Technik und mit echter Aufmerksamkeit für jeden Patienten.',
+    eyebrow: GERMAN_EYEBROW,
+    title: GERMAN_TITLE,
+    lead: GERMAN_LEAD,
     tiles: GERMAN_TILES,
     format: formatFor('de'),
     atLeast: GERMAN_AT_LEAST,
     lang: 'de',
   },
   play: async ({ canvas }) => {
-    const title = 'Über die Jahre bestätigte Erfahrung';
-    const band = canvas.getByRole('region', { name: title });
+    const band = canvas.getByRole('region', { name: GERMAN_TITLE });
 
     await expect(band).toHaveAttribute('lang', 'de');
-    await expect(canvas.getByText('In Zahlen')).toBeVisible();
+    await expect(canvas.getByText(GERMAN_EYEBROW)).toBeVisible();
     await expectOutline(
       band,
-      title,
+      GERMAN_TITLE,
       GERMAN_TILES.map((tile) => tile.label),
       DE_SPOKEN,
     );
@@ -734,5 +1054,133 @@ export const Counting: Story = {
     }
     await expectFinalWithinBudget(band, RO_FINALS, RO_SPOKEN);
     await expectOutline(band, TITLE, LABELS, RO_SPOKEN);
+  },
+};
+
+const THREE_LABELS = THREE_TILES.map((tile) => tile.label);
+
+/**
+ * THE SECOND PAGE'S CALL, prop for prop — what Home and the Team page pass
+ * besides the words: the page ground, the opener at the start, NO lead. The
+ * `lead: undefined` takes the meta's Romanian lead back OUT, so the band
+ * receives what those pages hand it: nothing (the header's own paragraph).
+ */
+const HOME_ARGS = {
+  ground: 'page',
+  align: 'start',
+  lead: undefined,
+  tiles: THREE_TILES,
+} as const;
+
+/**
+ * THE SECOND PAGE — Home's band and the Team page's, at the laptop width
+ * (owner, 2026-10-01): the same band on the PAGE ground, no lilac and no fade,
+ * its eyebrow „În cifre" and its title at the column's start like every other
+ * Home band's opener, NO lead under them, and three tiles in one row —
+ * experience, patients, procedures — each a lilac drawing in a white disc
+ * whose `line` ring is now its only edge (the white disc stands off the page
+ * ground at 1.05:1, DoctorStats.tsx's DISC bullet). What to look at: the
+ * opener on the column's left edge, the three tiles level and evenly spread,
+ * nothing tinted anywhere.
+ *
+ * **1536 · 390 · 320 (`stress-320`):** below the container's `@xl` the three
+ * stand one above the other (`PageGroundStacked` pins the phone). The play
+ * reads back what a picture cannot: the outline, the absent lead, the page
+ * ground resolved from its own token, the start alignment off the engine, the
+ * lilac glyphs, every number final within the budget, the painted order, and
+ * the arrangement derived from the measured column — one row of three
+ * wherever the window is 48rem or wider (`expectBranch`).
+ */
+export const PageGround: Story = {
+  tags: ['stress-320'],
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  args: HOME_ARGS,
+  play: async ({ canvas }) => {
+    const band = canvas.getByRole('region', { name: TITLE });
+
+    await expect(canvas.getByText(EYEBROW)).toBeVisible();
+    await expectOutline(band, TITLE, THREE_LABELS, RO_THREE_SPOKEN);
+    await expectNoLead(band, LEAD);
+    await expectPageGround(band);
+    await expectStartAligned(band, EYEBROW);
+    await expectLilacGlyphs(band);
+    await expectTwinsOnTheDigits(band);
+    await expectFinalWithinBudget(band, RO_THREE_FINALS, RO_THREE_SPOKEN);
+    await expectPaintOrder(band, THREE_TILES);
+    await expectBranch(await expectArrangement(band), 'three');
+    await expectNoSidewaysScroll(band);
+  },
+};
+
+/**
+ * THE SECOND PAGE ON A PHONE — the owner's adaptability rule (D21): at 390
+ * the column is 312px, far short of the container's `@xl` (36rem), so the
+ * three tiles stand one above the other — every top strictly under the one
+ * before, every tile as wide as the column, never two and one. The opener
+ * stays at the start (a wrapping title fills the column; its lines still read
+ * from the start), and nothing scrolls sideways.
+ */
+export const PageGroundStacked: Story = {
+  globals: { locale: 'ro', viewport: { value: 'smartphone' } },
+  args: HOME_ARGS,
+  play: async ({ canvas }) => {
+    const band = canvas.getByRole('region', { name: TITLE });
+
+    await expectOutline(band, TITLE, THREE_LABELS, RO_THREE_SPOKEN);
+    await expectNoLead(band, LEAD);
+    await expectStartAligned(band, EYEBROW);
+    await expectFinalWithinBudget(band, RO_THREE_FINALS, RO_THREE_SPOKEN);
+    await expectPaintOrder(band, THREE_TILES);
+    const branch = await expectArrangement(band);
+    await expectBranch(branch, 'one');
+    await expectStackedTops(band, branch);
+    await expectNoSidewaysScroll(band);
+  },
+};
+
+/**
+ * THE SECOND PAGE IN GERMAN ON THE TABLET — the longest language (§8.4) at the
+ * narrowest named width that holds the three in a row: the tablet's 614px
+ * column gives each tile ~178px (~173 under a classic scrollbar), and „Jahre
+ * Erfahrung" (DRAFTED, §15.17) on the 20px title step must break between its
+ * words and never inside one (`hyphens-none`). The play loads the real face
+ * first, then reads every label's words one line fragment each and no label
+ * wider than its tile, the three in one row, the German opener at the start
+ * with no lead, and nothing sideways. `lang="de"` rides the native prop spread
+ * onto the section, as in `GermanLongest`, so the prose hyphenates with the
+ * German dictionary while the labels opt out.
+ *
+ * **390 · 1536:** the Sections tier's two widths; at 390 the three stack and
+ * the labels' check still holds — a whole word is whole in any column.
+ */
+export const PageGroundGerman: Story = {
+  globals: { locale: 'de', viewport: { value: 'tablet' } },
+  args: {
+    ...HOME_ARGS,
+    eyebrow: GERMAN_EYEBROW,
+    title: GERMAN_TITLE,
+    tiles: GERMAN_THREE_TILES,
+    format: formatFor('de'),
+    atLeast: GERMAN_AT_LEAST,
+    lang: 'de',
+  },
+  play: async ({ canvas }) => {
+    const band = canvas.getByRole('region', { name: GERMAN_TITLE });
+
+    await expect(band).toHaveAttribute('lang', 'de');
+    await expect(canvas.getByText(GERMAN_EYEBROW)).toBeVisible();
+    await expectOutline(
+      band,
+      GERMAN_TITLE,
+      GERMAN_THREE_TILES.map((tile) => tile.label),
+      DE_THREE_SPOKEN,
+    );
+    await expectNoLead(band, GERMAN_LEAD);
+    await expectPageGround(band);
+    await expectStartAligned(band, GERMAN_EYEBROW);
+    await expectFinalWithinBudget(band, DE_THREE_FINALS, DE_THREE_SPOKEN);
+    await expectLabelsWhole(band);
+    await expectBranch(await expectArrangement(band), 'three');
+    await expectNoSidewaysScroll(band);
   },
 };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { heroSlides } from '../../src/lib/hero-slides/hero-slides';
 import { reviews } from '../../src/lib/reviews/reviews';
-import { auxiliaries, doctors } from '../../src/lib/team/team';
+import { auxiliaries, clinicStats, doctors } from '../../src/lib/team/team';
 import { locales, type Locale } from '../../src/i18n/locales';
 import de from '../../src/messages/de.json';
 import en from '../../src/messages/en.json';
@@ -25,7 +25,10 @@ import ro from '../../src/messages/ro.json';
 //
 // WHAT IT SCANS: every string a language ships for the team — lib/team's
 // positions, philosophy, biography paragraphs, course lines and stat words
-// (never the NAMES, which are proper nouns) — and every value under the `team`
+// (never the NAMES, which are proper nouns), the clinic's OWN stat words among
+// them since 2026-10-01 (`clinicStats`, the „în cifre" band of the Home and
+// Team pages — the clinic talking about itself in numbers, labelled
+// `clinic.stats.<icon>`) — and every value under the `team`
 // namespace of the five message files — and, since two lanes a day apart, two
 // more lists. The real Google reviews (2026-09-30): their TITLES are written
 // by the clinic, and their QUOTES are the patients' words with every banned
@@ -165,6 +168,13 @@ function teamStrings(locale: Locale): readonly [string, string][] {
       ]);
     }
   }
+  for (const stat of clinicStats) {
+    out.push([`clinic.stats.${stat.icon}.label`, stat.words[locale].label]);
+    out.push([
+      `clinic.stats.${stat.icon}.description`,
+      stat.words[locale].description,
+    ]);
+  }
   return out;
 }
 
@@ -226,6 +236,12 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
   it('scans something in every language (never vacuous)', () => {
     for (const locale of locales) {
       expect(teamStrings(locale).length).toBeGreaterThan(20);
+      // The clinic's own tiles, every one of them: a label and a sentence each.
+      expect(
+        teamStrings(locale).filter(([where]) =>
+          where.startsWith('clinic.stats.'),
+        ),
+      ).toHaveLength(clinicStats.length * 2);
       expect(messageStrings(locale).length).toBeGreaterThan(10);
       expect(reviewStrings(locale).length).toBe(reviews.length * 2);
       expect(heroStrings(locale).length).toBe(heroSlides.length * 2);

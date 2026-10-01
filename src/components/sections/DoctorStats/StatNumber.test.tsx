@@ -1,4 +1,8 @@
 import { act, render, screen } from '@testing-library/react';
+// The real stylesheet, for the one test that MEASURES the twin's box (THE
+// TWIN): tests/setup/components.ts loads no CSS globally, and the per-file
+// import is the house pattern (Card, Avatar, SpeedDial, the shell).
+import '@/styles/globals.css';
 import { hydrateRoot, type Root } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import {
@@ -51,12 +55,19 @@ const SUFFIX = '+';
  *  `atLeast` word before the page's number — never „3.000+", never the sign. */
 const SPOKEN = 'peste 3.000';
 
-/** The island's two spans — the visible count and its sr-only twin. Reached
- *  by structure: the visible one is aria-hidden on purpose and has no role. */
+/** The island's box and its two spans — the visible count and the twin laid
+ *  over it (THE TWIN). Reached by structure: the visible one is aria-hidden
+ *  on purpose and has no role. */
 const spans = (container: HTMLElement) => {
-  const [visible, twin] = [...container.children] as HTMLElement[];
-  return { visible, twin };
+  const box = container.firstElementChild as HTMLElement;
+  const [visible, twin] = [...box.children] as HTMLElement[];
+  return { box, visible, twin };
 };
+
+/** The twin's classes since 2026-10-01: the digits' own box, invisible, on
+ *  one line, clipped and unselectable — never `sr-only` again (THE TWIN). */
+const TWIN_CLASSES =
+  'absolute inset-0 overflow-hidden whitespace-nowrap opacity-0 select-none';
 
 /** One frame on the fake clock: rAF fires on 16 ms boundaries. */
 const FRAME_MS = 16;
@@ -163,13 +174,18 @@ describe('StatNumber — §16 rule 2: the static HTML prints the FINAL value', (
       <StatNumber frames={FRAMES} suffix={SUFFIX} spoken={SPOKEN} />,
     );
 
-    const { visible, twin } = spans(host);
-    expect(host.children).toHaveLength(2);
+    const { box, visible, twin } = spans(host);
+    // ONE box, the digits' own, holding the two spans (THE TWIN).
+    expect(host.children).toHaveLength(1);
+    expect(box.tagName).toBe('SPAN');
+    expect(box.className).toBe('relative inline-block');
+    expect(box.children).toHaveLength(2);
     expect(visible.tagName).toBe('SPAN');
     expect(visible).toHaveAttribute('aria-hidden', 'true');
     expect(visible.textContent).toBe(`${FINAL}${SUFFIX}`);
     expect(twin.tagName).toBe('SPAN');
-    expect(twin.className).toBe('sr-only');
+    expect(twin.className).toBe(TWIN_CLASSES);
+    expect(twin).toHaveAttribute('data-spoken', '');
     expect(twin).not.toHaveAttribute('aria-hidden');
     expect(twin.textContent).toBe(SPOKEN);
   });
@@ -521,11 +537,115 @@ describe('StatNumber — accessibility (§9)', () => {
       .getAllByText(SPOKEN)
       .filter((element) => element.closest('[aria-hidden="true"]') === null);
     expect(readable).toHaveLength(1);
-    expect(readable[0].className).toBe('sr-only');
+    expect(readable[0].className).toBe(TWIN_CLASSES);
     // „3.000+" exists ONLY inside the aria-hidden span (round 2s).
     const signed = screen.getAllByText(`${FINAL}${SUFFIX}`);
     expect(signed).toHaveLength(1);
     expect(signed[0]).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  /** The island inside a paragraph at the band's number step, centred in a
+   *  phone-wide column — the three measuring tests' one layout. */
+  const measured = () => {
+    stubReducedMotion(false);
+    const { container } = render(
+      <p style={{ fontSize: '36px', textAlign: 'center', width: '320px' }}>
+        <StatNumber frames={FRAMES} suffix={SUFFIX} spoken={SPOKEN} />
+      </p>,
+    );
+    const paragraph = container.firstElementChild as HTMLElement;
+    return { paragraph, ...spans(paragraph) };
+  };
+
+  it('lays the twin EXACTLY over the digits it speaks for, and never paints it (the a11y review, 2026-10-01)', () => {
+    // What a screen reader's cursor outlines and what VoiceOver finds under a
+    // finger is the twin's BOX, so the box must be the number's: until that
+    // day the twin was `sr-only`, a 1×1px speck. Measured in this browser
+    // project, where layout is real. The twin IS the island's box (one line
+    // tall), and the box sits on the digits: the same left edge and width,
+    // and the same vertical CENTRE — the line spreads its leading evenly above
+    // and below the glyphs' own inline box, which may be shorter or taller
+    // than the line, so edges differ and centres never do.
+    const { box, visible, twin } = measured();
+    const outer = box.getBoundingClientRect();
+    const seen = visible.getBoundingClientRect();
+    const heard = twin.getBoundingClientRect();
+    expect(seen.width).toBeGreaterThan(20);
+    for (const side of ['left', 'top', 'width', 'height'] as const) {
+      expect(heard[side], `twin ${side} = box ${side}`).toBeCloseTo(
+        outer[side],
+        0,
+      );
+    }
+    const centre = (rect: DOMRect): number => (rect.top + rect.bottom) / 2;
+    expect(
+      Math.abs(heard.left - seen.left),
+      'on the digits',
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(heard.width - seen.width),
+      'as wide as the digits',
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(centre(heard) - centre(seen)),
+      'centred on the digits',
+    ).toBeLessThanOrEqual(1);
+    const style = getComputedStyle(twin);
+    expect(style.opacity).toBe('0');
+    expect(style.overflow).toBe('hidden');
+    expect(style.userSelect).toBe('none');
+    // Still THERE for assistive technology — opacity hides nothing from it.
+    expect(style.visibility).toBe('visible');
+    expect(style.display).not.toBe('none');
+  });
+
+  it('speaks on ONE line — the twin never wraps inside the digits’ box (the Opus re-review, 2026-10-01)', () => {
+    // `sr-only` carried `white-space: nowrap`, and the overlay must keep it:
+    // the box is as wide as „3.000+", the spoken words are longer, and
+    // wrapped they stood „peste" over „3.000" — so a screen reader reading by
+    // VISUAL LINE (NVDA's mouse tracking, VoiceOver's rotor, a braille line)
+    // split the number from its word, or ran the two together. A Range over
+    // the twin's text reports one rectangle per line box it crosses: on one
+    // line they all share a top.
+    const { paragraph, visible, twin } = measured();
+    // The words DO outrun the digits — else one line would prove nothing.
+    const probe = document.createElement('span');
+    probe.style.whiteSpace = 'nowrap';
+    probe.textContent = SPOKEN;
+    paragraph.append(probe);
+    expect(
+      probe.getBoundingClientRect().width,
+      'the spoken words are wider than the digits',
+    ).toBeGreaterThan(visible.getBoundingClientRect().width);
+    probe.remove();
+
+    const range = document.createRange();
+    range.selectNodeContents(twin);
+    const tops = new Set(
+      [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+    );
+    expect(
+      [...tops],
+      'every fragment of the spoken text on one line',
+    ).toHaveLength(1);
+    expect(getComputedStyle(twin).whiteSpace).toBe('nowrap');
+  });
+
+  it('is what a finger finds on the number — it takes the pointer, above the digits (the Opus re-review, 2026-10-01)', () => {
+    // VoiceOver's touch exploration asks the engine what lies under the
+    // finger. That is the twin only while it takes pointer events and sits
+    // above the visible digits — a `pointer-events-none` or a z-index change
+    // would keep every box assertion above green while the finger fell
+    // through to the paragraph, so the platform's own hit test is asked.
+    const { twin } = measured();
+    const rect = twin.getBoundingClientRect();
+    expect(getComputedStyle(twin).pointerEvents).toBe('auto');
+    expect(
+      document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      ),
+    ).toBe(twin);
   });
 });
 

@@ -4,11 +4,14 @@ import type { ImagePath } from '../image-path/image-path';
 
 // lib/team — THE clinic's people: every doctor and every auxiliary member,
 // their pictures, their week, their courses, their numbers and their words in
-// all five languages. Site DATA in §4's foundation ring (the lib/clinic, lib/prices,
+// all five languages — and, since 2026-10-01, the numbers of the clinic as a
+// whole (`clinicStats`, the Home and Team pages' „în cifre" band). Site DATA in §4's
+// foundation ring (the lib/clinic, lib/prices,
 // lib/reviews and lib/hero-slides precedents): one file every consumer reads,
 // nothing fetched, nothing mutated, React-free (fenced by
 // tests/unit/lib-react-free.test.ts). The Team page, the per-doctor page and —
-// since 2026-09-30 — the Home page's doctors band are built from DUMB bands
+// since 2026-09-30 — the Home page's doctors band (since 2026-10-01 its
+// numbers band too) are built from DUMB bands
 // (run ledger D1): app/[locale]/team/populate.ts imports this list, picks the
 // visitor's language and hands finished strings over; no band ever sees this
 // file.
@@ -99,15 +102,16 @@ import type { ImagePath } from '../image-path/image-path';
 // at the top), so a row cannot hold a glyph component; it names which of the
 // four drawings the tile's disc shows, and the PAGE owns the map from
 // `StatIcon` to glyph — `STAT_ICONS`, a `Record<StatIcon, ReactNode>` in
-// app/[locale]/team/[slug]/stat-tiles.tsx, the ONE module the doctor page
-// and its story twin both import (G2-R2 tier 3: the two hand-twinned copies
-// became one) — exhaustive by type, so a fifth id written here is a compile
-// error there until somebody draws it. sections/DoctorStats itself takes a
-// finished ReactNode per tile and imports no glyph (its D30 paragraph),
-// which is what keeps the band DUMB; the exhaustiveness therefore rests on
-// that one app-tier annotation staying `Record` (G2-R2 tier 1, typescript
-// F2). One tile per
-// drawing: the data test holds the icons unique per doctor, because two tiles
+// app/[locale]/team/stat-tiles.tsx, the ONE module the doctor, Team and Home
+// pages and their three story twins import (G2-R2 tier 3: the two
+// hand-twinned copies became one; it moved up from [slug]/ when the Team
+// and Home pages began to draw tiles, 2026-10-01) — exhaustive by type, so a
+// fifth id written here is a compile error there until somebody draws it.
+// sections/DoctorStats itself takes a finished ReactNode per tile and imports
+// no glyph (its D30 paragraph), which is what keeps the band DUMB; the
+// exhaustiveness therefore rests on that one app-tier annotation staying
+// `Record` (G2-R2 tier 1, typescript F2). One tile per drawing: the data test
+// holds the icons unique per doctor (and in `clinicStats`), because two tiles
 // wearing one picture would be two answers to one question.
 //
 // A SENTENCE MAY CARRY THE NUMBER, AND THEN THE TWO MUST AGREE. By the owner's
@@ -382,17 +386,17 @@ export type CourseGroup = Readonly<{
 }>;
 
 /**
- * Which drawing the doctor page puts in a stat tile's disc (run ledger D30,
- * D32) — an ID, never a component: lib is React-free, so the PAGE owns the
- * map from these four to its glyphs (`STAT_ICONS` in
- * app/[locale]/team/[slug]/stat-tiles.tsx, shared by the page and its story
- * twin), exhaustively; the band takes a finished ReactNode. A fifth id is a compile error in that map
- * before it is ever a tile.
+ * Which drawing a stat tile's disc shows (run ledger D30, D32) — an ID, never
+ * a component: lib is React-free, so the PAGES own the map from these four to
+ * their glyphs (`STAT_ICONS` in app/[locale]/team/stat-tiles.tsx, shared by
+ * the doctor, Team and Home pages and their three story twins),
+ * exhaustively; the band takes a finished ReactNode. A fifth id is a compile
+ * error in that map before it is ever a tile.
  */
 export type StatIcon = 'experience' | 'patients' | 'courses' | 'interventions';
 
 /** The translated part of one stat tile — every locale, or it does not compile. */
-export type DoctorStatWords = Readonly<{
+export type StatWords = Readonly<{
   /**
    * The tile's title, sentence case („Ani de experiență"). Never the number —
    * the band prints that on its own line (the header's A DOCTOR'S NUMBERS).
@@ -407,19 +411,22 @@ export type DoctorStatWords = Readonly<{
 }>;
 
 /**
- * One tile of the doctor page's „în cifre" band (run ledger D30, D32): the
- * lib/prices row shape once more — the FACT once (`value`, `suffix`), the
- * finished words in all five languages beside it.
+ * One tile of an „în cifre" band (run ledger D30, D32): the lib/prices row
+ * shape once more — the FACT once (`value`, `suffix`), the finished words in
+ * all five languages beside it. A doctor's rows are `Doctor.stats` (his page);
+ * the clinic's own are `clinicStats` below (the Home and Team pages, owner
+ * 2026-10-01).
+ * Named for what it is, not whose it is: until that day it was `DoctorStat`.
  */
-export type DoctorStat = Readonly<{
-  /** Which of the four drawings sits in the tile's disc — unique per doctor. */
+export type Stat = Readonly<{
+  /** Which of the four drawings sits in the tile's disc — unique per list. */
   icon: StatIcon;
   /** The final number, an integer ≥ 0 (the band counts up to it, D31). */
   value: number;
   /** Printed after the number — "+" for "at least"; absent for an exact count. */
   suffix?: '+';
   /** The tile's title and its one sentence, all five languages. */
-  words: Readonly<Record<Locale, DoctorStatWords>>;
+  words: Readonly<Record<Locale, StatWords>>;
 }>;
 
 /** A member of the auxiliary staff: one portrait, one position, five languages. */
@@ -454,7 +461,7 @@ export type Doctor = Readonly<{
    * The TYPE allows none, like `courses`; the data test demands at least one
    * of every shipped doctor, each drawing at most once.
    */
-  stats: readonly DoctorStat[];
+  stats: readonly Stat[];
   /** Name, position, philosophy and the about paragraphs in all five locales. */
   words: Readonly<Record<Locale, DoctorWords>>;
 }>;
@@ -2079,6 +2086,128 @@ export const doctors: readonly Doctor[] = [
           'La formazione continua comprende corsi di chirurgia piezoelettrica e di aumento della cresta ossea, oltre che di lettura della TAC dentale. Per i trattamenti che comprendono anche lavori protesici, il piano viene definito insieme ai colleghi di protesi, in modo che ogni fase prepari la successiva.',
           'Il giorno dell’intervento il paziente riceve indicazioni scritte per le cure a casa e il numero della clinica per qualsiasi domanda. Il controllo dopo l’intervento si fissa di solito tra i sette e i dieci giorni successivi, a seconda del tipo di intervento.',
         ],
+      },
+    },
+  },
+];
+
+/**
+ * THE CLINIC'S OWN NUMBERS — the „în cifre" band of the Home and Team pages
+ * (owner, 2026-10-01, verbatim: "i want it on home page too with just 3
+ * components. experience, patients and nr of procedures" · "same component
+ * as on main page with the stats on the team page between map and helping
+ * staff"). The doctor page's band, on
+ * the page ground, over three tiles: a doctor's row shape (`Stat`), three of
+ * his four drawings, and the very words his tiles wear — the owner's round-2f
+ * sentences as round 2s rewrote them for CMSR — because they were already
+ * written in the clinic's own voice („Punem grija …", "We put care …"), so
+ * the band says the same thing on every page. Display order is this list's,
+ * and the TYPE is the owner's "just 3": a tuple of exactly three rows, so a
+ * fourth (which would also switch the band's row shape — DoctorStats'
+ * `rowsFor`) is a compile error here, the DoctorTeam two-member tuple's
+ * precedent.
+ *
+ * TODO(owner): THE THREE NUMBERS ARE PLACEHOLDERS. No clinic-wide count exists
+ * anywhere in the repository or on the old site, so each is a round "at
+ * least" chosen not to contradict the doctors' own placeholder rows: the
+ * years at least the longest-serving doctor's (16+), the procedures under
+ * what the six doctors' rows add up to (11.900). Replace them from the
+ * clinic's records — and the patients sentence's number with its row:
+ * tests/unit/team-data.test.ts holds a number in a description to its row's
+ * `value`, in every language. The
+ * EN/DE/FR/IT words are the doctors' tiles' drafts (§15.17), flagged with them.
+ */
+export const clinicStats: readonly [Stat, Stat, Stat] = [
+  {
+    icon: 'experience',
+    value: 16,
+    suffix: '+',
+    words: {
+      ro: {
+        label: 'Ani de experiență',
+        description: 'Punem grija, expertiza și empatia în fiecare detaliu.',
+      },
+      en: {
+        label: 'Years of experience',
+        description: 'We put care, expertise and empathy into every detail.',
+      },
+      de: {
+        label: 'Jahre Erfahrung',
+        description:
+          'Wir legen Sorgfalt, Fachwissen und Einfühlungsvermögen in jedes Detail.',
+      },
+      fr: {
+        label: 'Années d’expérience',
+        description:
+          'Nous mettons le soin, l’expertise et l’empathie dans chaque détail.',
+      },
+      it: {
+        label: 'Anni di esperienza',
+        description: 'Mettiamo cura, competenza ed empatia in ogni dettaglio.',
+      },
+    },
+  },
+  {
+    icon: 'patients',
+    value: 8000,
+    suffix: '+',
+    words: {
+      ro: {
+        label: 'Pacienți',
+        description:
+          'Peste 8000 de zâmbete îngrijite cu dedicare și profesionalism.',
+      },
+      en: {
+        label: 'Patients',
+        description:
+          'More than 8000 smiles cared for with dedication and professionalism.',
+      },
+      de: {
+        label: 'Patienten',
+        description:
+          'Über 8000 Lächeln, mit Hingabe und Professionalität betreut.',
+      },
+      fr: {
+        label: 'Patients',
+        description:
+          'Plus de 8000 sourires soignés avec dévouement et professionnalisme.',
+      },
+      it: {
+        label: 'Pazienti',
+        description:
+          'Oltre 8000 sorrisi curati con dedizione e professionalità.',
+      },
+    },
+  },
+  {
+    icon: 'interventions',
+    value: 11000,
+    suffix: '+',
+    words: {
+      ro: {
+        label: 'Intervenții',
+        description:
+          'Atenție la detalii, tehnologii moderne și o abordare personalizată pentru fiecare pacient.',
+      },
+      en: {
+        label: 'Procedures',
+        description:
+          'Attention to detail, modern technology and a personalised approach for every patient.',
+      },
+      de: {
+        label: 'Eingriffe',
+        description:
+          'Aufmerksamkeit für Details, moderne Technologien und ein individueller Ansatz für jeden Patienten.',
+      },
+      fr: {
+        label: 'Interventions',
+        description:
+          'Le souci du détail, des technologies modernes et une approche personnalisée pour chaque patient.',
+      },
+      it: {
+        label: 'Interventi',
+        description:
+          'Attenzione ai dettagli, tecnologie moderne e un approccio personalizzato per ogni paziente.',
       },
     },
   },

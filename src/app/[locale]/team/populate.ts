@@ -16,14 +16,16 @@ import {
   type AboutSegment,
   type AuxiliaryMember,
   type Doctor,
+  type Stat,
   type StatIcon,
 } from '@/lib/team/team';
 
 // app/[locale]/team/populate — THE walk from lib/team's people to the finished
 // props of the pages that show them — the Team page, every doctor page and,
-// since 2026-09-30, the Home page's doctors band — in ONE language. Pure: a
-// locale, a couple of callbacks and (for tests) a list go in, plain objects
-// come out. JSX-free and
+// since 2026-09-30, the Home page's doctors band (and since 2026-10-01 the
+// clinic's numbers band on Home and Team, `populateStats` over lib/team's
+// `clinicStats`) — in ONE language. Pure: a locale, a couple of callbacks and
+// (for tests) a list go in, plain objects come out. JSX-free and
 // next-intl-free, no DOM — React reaches it only through the sections' prop
 // types it already imports (`DoctorShowcaseDoctor['about']`,
 // `DoctorIntroCredo['body']`); the `react` specifier itself is gone (G2-R2
@@ -59,10 +61,10 @@ import {
 //     Component (those modules await next-intl/server, which no browser runner
 //     executes). A module both import is what keeps each walk written ONCE
 //     instead of twinned by hand and left to drift — and ./populate.test.ts
-//     then exercises both without rendering anything at all. The doctor
-//     page's one step that IS JSX — a stat id becoming its glyph — follows
-//     the same argument into a module of its own, ./[slug]/stat-tiles.tsx,
-//     because this file builds no element (G2-R2 tier 3).
+//     then exercises both without rendering anything at all. The one step
+//     that IS JSX — a stat id becoming its glyph, on the doctor, Team and
+//     Home pages — follows the same argument into a module of its own,
+//     ./stat-tiles.tsx, because this file builds no element (G2-R2 tier 3).
 //
 // ── WHY CALLBACKS AND NOT A `t` (run ledger D1's second half). `renderQuote`
 // and `closedLabel` are the two places this module would otherwise have to
@@ -153,15 +155,17 @@ export type DoctorPageContent = Readonly<{
    *  and the band then renders nothing. */
   courses: readonly CourseGroup[];
   /** sections/DoctorStats — one row per tile (D32), the WORDS in this language
-   *  and the drawing as an ID: ./[slug]/stat-tiles.tsx maps it to a glyph
+   *  and the drawing as an ID: ./stat-tiles.tsx maps it to a glyph
    *  (lib is React-free, the band takes a ReactNode, and this file builds no
    *  element), and the page formats the number and hands the tiles over. */
-  stats: readonly DoctorStatContent[];
+  stats: readonly StatContent[];
 }>;
 
 /** One stat tile's content for ONE language — lib/team's row with its words
- *  picked; the icon stays an id for the page to draw (D30/D32). */
-export type DoctorStatContent = Readonly<{
+ *  picked; the icon stays an id for the page to draw (D30/D32). A doctor's
+ *  row or the clinic's, so it is named for what it is: `DoctorStatContent`
+ *  until 2026-10-01, beside lib/team's `DoctorStat` → `Stat`. */
+export type StatContent = Readonly<{
   icon: StatIcon;
   value: number;
   suffix?: string;
@@ -302,18 +306,9 @@ export function populateDoctorPage(
       // BCP-47 tag to `Intl` here, which our five plain codes already are.
       rows: formatHoursRows(doctor.hours, locale, options.closedLabel),
     },
-    // THE NUMBERS pass through as numbers — the band's island counts up to
-    // them and the page's `format` (Intl, §8.3) prints them; the words are this
-    // language's, the icon an id ./[slug]/stat-tiles.tsx turns into a glyph
-    // (D30/D32). A row without a suffix carries no `suffix` KEY, which is what
-    // lets that module spread the row whole.
-    stats: doctor.stats.map((stat) => ({
-      icon: stat.icon,
-      value: stat.value,
-      ...(stat.suffix === undefined ? {} : { suffix: stat.suffix }),
-      label: stat.words[locale].label,
-      description: stat.words[locale].description,
-    })),
+    // THE NUMBERS — his own rows, through the one stats walk below (the Home
+    // page's band walks the clinic's rows through the same function).
+    stats: populateStats(locale, doctor.stats),
     // THE YEARS BECOME LABELS HERE, and nowhere else (D15, D17). lib/team's
     // `coursesByYear` groups the rows — newest year first, the file's order
     // inside a year — and hands each year back as the NUMBER it is; the band
@@ -326,4 +321,32 @@ export function populateDoctorPage(
       courses,
     })),
   };
+}
+
+/**
+ * One list of „în cifre" rows → the tiles' content for ONE language: a
+ * doctor's own (`Doctor.stats`, through `populateDoctorPage` above) or the
+ * clinic's (lib/team's `clinicStats`, the band on the Home and Team pages —
+ * owner 2026-10-01: "i want it on home page too with just 3 components" ·
+ * "same component as on main page with the stats on the team page"). One
+ * walk for every band, so no two can word a row differently.
+ *
+ * THE NUMBERS pass through as numbers — the band's island counts up to them
+ * and the page's `format` (Intl, §8.3) prints them; the words are this
+ * language's, the icon an id ./stat-tiles.tsx turns into a glyph (D30/D32). A
+ * row without a suffix carries no `suffix` KEY, which is what lets that module
+ * spread the row whole. Order passes through unchanged: display order is the
+ * list's.
+ */
+export function populateStats(
+  locale: Locale,
+  stats: readonly Stat[],
+): readonly StatContent[] {
+  return stats.map((stat) => ({
+    icon: stat.icon,
+    value: stat.value,
+    ...(stat.suffix === undefined ? {} : { suffix: stat.suffix }),
+    label: stat.words[locale].label,
+    description: stat.words[locale].description,
+  }));
 }

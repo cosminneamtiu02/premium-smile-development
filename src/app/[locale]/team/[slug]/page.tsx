@@ -13,7 +13,7 @@ import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale } from '@/i18n/locales';
 import { doctors, findDoctor } from '@/lib/team/team';
 import { populateDoctorPage } from '../populate';
-import { toStatTiles } from './stat-tiles';
+import { toStatTiles } from '../stat-tiles';
 
 // THE DOCTOR PAGE — one per person, at `/{locale}/team/{id}/` (run ledger D3),
 // built to the owner's 2026-09-21 dispatch: „Each doctor will have his own
@@ -45,7 +45,7 @@ import { toStatTiles } from './stat-tiles';
 // the person — and the bands receive finished strings. The mapping itself
 // lives in ../populate.ts, beside the Team page's (its header argues why it is
 // neither in lib/team nor inline here), and its one JSX step — a stat id
-// becoming its glyph — in ./stat-tiles.tsx (whose header argues why that is
+// becoming its glyph — in ../stat-tiles.tsx (whose header argues why that is
 // not populate.ts); this file is the wiring. Every eyebrow and
 // title is a `team.doctor.*` key (D20); the one that needs the person — the
 // about band's „Despre {name}" — takes him as an ICU ARGUMENT, the name the
@@ -257,7 +257,7 @@ export default async function DoctorPage({
           TintedBand ground as the profile. The numbers come through as
           numbers — the island counts up to them — and are printed by
           `Intl.NumberFormat` in the visitor's language (§8.3), never by the
-          band; the icon ids become glyphs in ./stat-tiles.tsx, the one
+          band; the icon ids become glyphs in ../stat-tiles.tsx, the one
           mapping this page and its twin share (G2-R2 tier 3). */}
       <DoctorStats
         eyebrow={t('doctor.stats.eyebrow')}

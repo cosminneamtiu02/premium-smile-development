@@ -35,9 +35,10 @@ const meta = {
         'band',
         'page',
         'hero',
+        'slogan',
       ] satisfies HeadingSize[],
       description:
-        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's one container-responsive row, joined 2026-09-26 (D48, see Band) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid slogan step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19. Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's one container-responsive row, joined 2026-09-26 (D48, see Band) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     tone: {
       control: 'select',
@@ -46,11 +47,12 @@ const meta = {
         'inverse',
         'inverse-stroked',
         'inverse-outlined',
+        'inverse-aura',
         'accent',
         'accent-idle',
       ] satisfies HeadingTone[],
       description:
-        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'accent' = the lilac accent-decorative ink, ALWAYS bold — the year labels over a doctor's courses (sections/DoctorCourses, 2026-09-25): 4.44:1 on the page ground is large-text contrast only, and bold is what makes the 20px title step large · 'accent-idle' = the same bold in ink-muted, accent's REST twin — the course timeline's grey years at rest (2026-09-26): the pair differs in the ink alone, so a year switching between them never reflows. Joined with sections/Hero; the default stays 'default' forever",
+        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'inverse-aura' = the outlined face (the plain weight) plus a lilac HALO — two centred em-scaled text-shadows mixed from the display lilac — the old page's slogan as the owner sees it and the Hero's default face since 2026-10-01 · 'accent' = the lilac accent-decorative ink, ALWAYS bold — the year labels over a doctor's courses (sections/DoctorCourses, 2026-09-25): 4.44:1 on the page ground is large-text contrast only, and bold is what makes the 20px title step large · 'accent-idle' = the same bold in ink-muted, accent's REST twin — the course timeline's grey years at rest (2026-09-26): the pair differs in the ink alone, so a year switching between them never reflows. Joined with sections/Hero; the default stays 'default' forever",
     },
     asChild: {
       control: false,
@@ -221,6 +223,8 @@ export const PageStep: Story = {
  * line follows the controls, the German line is pinned to 'hero'. The fixtures
  * are the old site's own slogans. 'stress-320': a 32px serif line in a 256px
  * column is the wrap case, and the step's floor is what this width proves.
+ * THE h1 STEP of §15.24 since 2026-09-26 (the doctor page's name, the 404
+ * title); the opener's own reshape is SloganStep, beside it.
  */
 export const HeroStep: Story = {
   tags: ['stress-320'],
@@ -236,6 +240,56 @@ export const HeroStep: Story = {
       </Heading>
     </div>
   ),
+};
+
+/**
+ * The Home opener's slogan step (owner, 2026-10-01: "leave on phone as is,
+ * on tablet is perfect, but adapt text component raports in sizing for
+ * laptop and desktop as on tablet"): `clamp(2rem, max(1rem + 3.5vw,
+ * 5.5833vw), 6.7rem)` — hero's curve to the tablet (32px at the 320px stress
+ * width, 42.88px at 768), the tablet's own 5.58 % of the viewport from there
+ * (71.5px at 1280, 107.2px at 1920, where the cap holds). A step BESIDE
+ * `hero`, not `hero` reshaped: since §15.24 `hero` is the h1 step of every
+ * page, and a doctor's name at 107px in DoctorIntro's 28rem column is not
+ * what the owner pointed at (the atom's header has the differential). Same
+ * dual-line shape as HeroStep — the Romanian line follows the controls, the
+ * German line is pinned to 'slogan' — on the clinic's own first slogan
+ * (lib/hero-slides) and its German twin; 'stress-320' for HeroStep's reason.
+ * The play reads the curve OFF THE ENGINE at whatever width the story runs
+ * — the one proof that the nested `max()` reached the browser as valid CSS
+ * (an arbitrary value Tailwind failed to normalise would leave the step at
+ * the body's 18px, and no class assertion can see that).
+ */
+export const SloganStep: Story = {
+  tags: ['stress-320'],
+  args: {
+    size: 'slogan',
+    children: 'Bine ai venit! Te așteptăm cu drag.',
+  },
+  render: (args) => (
+    <div className="flex flex-col gap-4">
+      <Heading {...args} />
+      <Heading size="slogan" lang="de">
+        Herzlich willkommen! Wir freuen uns auf Sie.
+      </Heading>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // vw counts the scrollbar gutter, so innerWidth is the right ruler; the
+    // root is 16px (globals.css keeps html at the browser default, §7).
+    const line = canvas.getByText(
+      'Herzlich willkommen! Wir freuen uns auf Sie.',
+    );
+    const vw = window.innerWidth;
+    const expected = Math.min(
+      Math.max(32, 16 + 0.035 * vw, 0.055833 * vw),
+      6.7 * 16,
+    );
+    await expect(parseFloat(getComputedStyle(line).fontSize)).toBeCloseTo(
+      expected,
+      0,
+    );
+  },
 };
 
 /**
@@ -331,6 +385,60 @@ export const OutlinedTone: Story = {
       </div>
     </div>
   ),
+};
+
+/**
+ * The owner's own description of the old page's slogan, made a face of its
+ * own (2026-10-01, the hero-aura lane: "white on interior and has a lila aura
+ * shadow as top bar around letters and with that lilla contour and i think it
+ * is in bold" — then, on the pack: "drop the bold."): OutlinedTone's white,
+ * accent-stroked letterforms at the plain weight plus a lilac HALO — two
+ * centred text-shadows mixed from the display lilac,
+ * 0.28em at 60 % and 0.08em at 40 %, in em so the glow keeps its share of the
+ * letter from a phone's 32px to a desktop's 107px (the wearer is the `slogan`
+ * step; the atom's header has the comparison). The Hero's DEFAULT face since
+ * that day; the fixtures are the clinic's own first slogan (lib/hero-slides)
+ * and its German twin. Over the §15.1 scrim like its siblings — the one
+ * ground axe can measure — with StrokedTone's color-contrast exemption for
+ * StrokedTone's reason: axe reads the stroke's lilac as the foreground. The
+ * play reads the halo off the engine. The wrapper owns the spacing (§6.4).
+ */
+export const AuraTone: Story = {
+  tags: ['stress-320'],
+  parameters: {
+    a11y: { config: { rules: [{ id: 'color-contrast', enabled: false }] } },
+  },
+  args: {
+    size: 'slogan',
+    tone: 'inverse-aura',
+    children: 'Bine ai venit! Te așteptăm cu drag.',
+  },
+  render: (args) => (
+    <div className="bg-page">
+      <div className="flex flex-col gap-4 bg-scrim p-6">
+        <Heading {...args} />
+        <Heading size="slogan" tone="inverse-aura" lang="de">
+          Herzlich willkommen! Wir freuen uns auf Sie.
+        </Heading>
+      </div>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // Two centred layers, the wide one first, both a fixed share of the
+    // letter: 0.28em and 0.08em of whatever size the step resolves to here.
+    const slogan = canvas.getByText('Bine ai venit! Te așteptăm cu drag.');
+    const style = getComputedStyle(slogan);
+    await expect(Number(style.fontWeight)).toBeLessThan(600); // the bold dropped
+    const fontSize = parseFloat(style.fontSize);
+    const layers = style.textShadow.split(/,(?![^(]*\))/).map((s) => s.trim());
+    await expect(layers).toHaveLength(2);
+    const blurs = layers.map((layer) =>
+      parseFloat(/(\d+(?:\.\d+)?)px$/.exec(layer)?.[1] ?? 'NaN'),
+    );
+    await expect(blurs[0]).toBeCloseTo(0.28 * fontSize, 0);
+    await expect(blurs[1]).toBeCloseTo(0.08 * fontSize, 0);
+    for (const layer of layers) await expect(layer).toMatch(/ 0px 0px /);
+  },
 };
 
 /**

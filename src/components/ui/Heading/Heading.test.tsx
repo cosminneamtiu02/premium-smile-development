@@ -36,8 +36,21 @@ const PAGE_CLASSES = 'font-display text-4xl text-ink-strong';
 // `lg:` self-scaler can return under a different spelling. `/tight` is the
 // step's own line-height (an arbitrary size carries none), not an extra
 // utility — the header argues it; equality here keeps it exactly that.
+// THE h1 STEP since §15.24 (the doctor page's name, the 404 title) — which is
+// why the opener's 2026-10-01 reshape joined BESIDE it (next) and this string
+// is byte-identical to the day it was measured.
 const HERO_CLASSES =
   'font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight text-ink-strong';
+
+// I1-slogan · the Home opener's slogan step, joined on the owner's 2026-10-01
+// word ("leave on phone as is, on tablet is perfect, but adapt text component
+// raports in sizing for laptop and desktop as on tablet"): one expression in
+// two stretches — `hero`'s curve to the tablet (its floor, its slope), the
+// tablet's own ratio from it (`5.5833vw` = 42.88 / 768) — held at 6.7rem, the
+// 1920px value. Pinned byte-exactly like its elders, and pinned AGAINST
+// `hero` below: the first stretch must stay `hero`'s own.
+const SLOGAN_CLASSES =
+  'font-display text-[clamp(2rem,max(1rem+3.5vw,5.5833vw),6.7rem)]/tight text-ink-strong';
 
 // I1-band · the h2 step (the doctor-pages run's D48, 2026-09-26 — §15.24's
 // "next order of heading height" under the h1): 30px on a column narrower than
@@ -56,6 +69,7 @@ const expectedClasses: Record<HeadingSize, string> = {
   section: SECTION_CLASSES,
   page: PAGE_CLASSES,
   hero: HERO_CLASSES,
+  slogan: SLOGAN_CLASSES,
   band: BAND_CLASSES,
 };
 
@@ -184,6 +198,51 @@ describe('Heading — the hero step (the fluid slogan size, 2026-09-19)', () => 
   });
 });
 
+describe('Heading — the slogan step (the Home opener’s, 2026-10-01)', () => {
+  it('renders size="slogan" wearing exactly the slogan classes on a plain <p>', () => {
+    // The measuring consumer's own fixture: the clinic's first slogan
+    // (lib/hero-slides, Romanian with diacritics — §15.7), on the <p> host
+    // the Hero's slides use (never the page's h1, which stays outside the
+    // ring).
+    render(
+      <Heading size="slogan">Bine ai venit! Te așteptăm cu drag.</Heading>,
+    );
+    const slogan = screen.getByText('Bine ai venit! Te așteptăm cu drag.');
+    expect(slogan.tagName).toBe('P');
+    expect(slogan.className).toBe(SLOGAN_CLASSES);
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+  });
+
+  it('runs in two stretches — hero’s curve to the tablet, the tablet’s own ratio from it — and leaves hero byte-identical', () => {
+    // The owner's "leave on phone as is, on tablet is perfect" is the first
+    // stretch: hero's floor and hero's slope, read OUT OF HERO_CLASSES rather
+    // than re-typed, so the two curves cannot drift apart below the tablet;
+    // "as on tablet" for laptop and desktop is the second, 42.88 / 768 =
+    // 5.5833 % of the viewport; the cap is the 1920px value (6.7rem =
+    // 107.2px). The SloganStep story's play is where the ENGINE's reading of
+    // the curve is pinned (a nested max() Tailwind failed to normalise would
+    // be invisible to a class assertion).
+    const curveOf = (classes: string): string =>
+      /text-\[(.+?)\]\/tight/.exec(classes)?.[1] ?? '';
+    const [, floor, slope, cap] =
+      /^clamp\((.+?),(.+?),(.+?)\)$/.exec(curveOf(HERO_CLASSES)) ?? [];
+    expect([floor, slope, cap]).toEqual(['2rem', '1rem+3.5vw', '4.5rem']);
+    expect(curveOf(SLOGAN_CLASSES)).toBe(
+      `clamp(${floor},max(${slope},5.5833vw),6.7rem)`,
+    );
+    expect(42.88 / 768).toBeCloseTo(0.055833, 6);
+    expect(0.055833 * 1920).toBeCloseTo(6.7 * 16, 0);
+    // Everything but the curve is hero's, token for token.
+    expect(
+      SLOGAN_CLASSES.replace(curveOf(SLOGAN_CLASSES), curveOf(HERO_CLASSES)),
+    ).toBe(HERO_CLASSES);
+  });
+
+  it('carries no viewport prefix either — one curve, never a staircase', () => {
+    expect(SLOGAN_CLASSES).not.toMatch(/\b(sm|md|lg|xl|2xl):/);
+  });
+});
+
 describe('Heading — the band step (the h2 step, D48, 2026-09-26)', () => {
   // A token that carries a variant: `@md:text-4xl`, `sm:text-4xl`. The tone
   // rows' arbitrary properties (`[-webkit-text-stroke:…]`) open with a bracket
@@ -271,6 +330,12 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     // The stroke alone on the plain weight (2026-09-21, the Hero's third face).
     'inverse-outlined':
       'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill]',
+    // The old page's slogan as the owner sees it (2026-10-01): the outlined
+    // face — the plain weight, his "drop the bold." on the pack — plus a
+    // lilac halo, two centred em-scaled text-shadows mixed from the display
+    // lilac. The Hero's default face.
+    'inverse-aura':
+      'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill] [text-shadow:0_0_0.28em_color-mix(in_srgb,var(--color-accent-decorative)_60%,transparent),0_0_0.08em_color-mix(in_srgb,var(--color-accent-decorative)_40%,transparent)]',
     // The lilac year labels (2026-09-25, the doctor-pages run's D16): the
     // accent ink with its weight — 4.44:1 on the page ground is large-text
     // contrast only, and bold is what makes the 20px title step large.
@@ -287,6 +352,7 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     | 'inverse'
     | 'inverse-stroked'
     | 'inverse-outlined'
+    | 'inverse-aura'
     | 'accent'
     | 'accent-idle'
   >();
@@ -306,6 +372,33 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
       );
     },
   );
+
+  it('tone "inverse-aura" is the outlined face plus EXACTLY one token — a centred, em-scaled halo in the display lilac (2026-10-01)', () => {
+    // The owner's description, decoded: "white on interior" = the inverse
+    // ink · "that lilla contour" = the 2px stroke, at the plain weight since
+    // his "drop the bold." on the pack = 'inverse-outlined' to the letter ·
+    // "a lila aura shadow … around letters" = the one token this row adds.
+    // Pinned as a RELATION so the two faces can never drift apart: every
+    // token of the stroked face is worn, and the only new one is a
+    // text-shadow of two centred layers, both in em (the share of the letter,
+    // not a px cloud), both mixed from the display lilac — never a pasted
+    // rgb, so §15.1's hue confirm re-tints the halo with the aura token.
+    const outlined = expectedInk['inverse-outlined'].split(' ');
+    const aura = expectedInk['inverse-aura'].split(' ');
+    expect(aura.slice(0, outlined.length)).toEqual(outlined);
+    expect(aura).not.toContain('font-bold');
+    const [halo, ...rest] = aura.slice(outlined.length);
+    expect(rest).toEqual([]);
+    expect(halo).toMatch(/^\[text-shadow:/);
+    const layers = halo.slice('[text-shadow:'.length, -1).split('),');
+    expect(layers).toHaveLength(2);
+    for (const layer of layers) {
+      expect(layer).toMatch(
+        /^0_0_0\.\d+em_color-mix\(in_srgb,var\(--color-accent-decorative\)_\d+%,transparent\)?$/,
+      );
+    }
+    expect(halo).not.toMatch(/\brgba?\(|#[0-9a-f]{3,6}\b/i); // mixed from the token, never pasted
+  });
 
   it('leaves every elder byte-identical: the bare call is tone="default"', () => {
     // The tone axis joined AFTER four steps had shipped with their ink baked
@@ -421,7 +514,7 @@ describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // Record row (the Eyebrow pin's growth-direction twin; runs at typecheck,
   // costs nothing at runtime).
   expectTypeOf<HeadingSize>().toEqualTypeOf<
-    'title' | 'section' | 'band' | 'page' | 'hero'
+    'title' | 'section' | 'band' | 'page' | 'hero' | 'slogan'
   >();
 
   it.each(Object.keys(expectedClasses) as HeadingSize[])(

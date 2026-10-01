@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect } from 'storybook/test';
 import {
   Button,
   type ButtonMotion,
@@ -43,8 +44,9 @@ const meta = {
     },
     size: {
       control: 'radio',
-      options: ['md', 'lg', 'xl'] satisfies ButtonSize[],
-      description: 'Box scale — md ≥44px, lg ≥56px, xl ≥64px (hero)',
+      options: ['md', 'lg', 'xl', 'hero'] satisfies ButtonSize[],
+      description:
+        'Box scale — md ≥44px, lg ≥56px, xl ≥64px, hero = the lg box to the Laptop checkpoint (1536px), scaled with the viewport from there (the Home opener’s two calls to action; see HeroSize)',
     },
     asChild: {
       control: false,
@@ -71,7 +73,47 @@ export const Ghost: Story = {
   args: { variant: 'ghost', children: 'Închide' },
 };
 
-/** The three box scales side by side (gap owned by the parent, §6.4). */
+/**
+ * The fluid size (2026-10-01, the hero-aura lane — owner: "buttons should
+ * also expand retract in accord to adjusting of current tab for all screens
+ * … corellated size wise in expanding or retracting", then, on the first
+ * cut's 140px boxes, "horribly large … i need them raport wise as they would
+ * look on 1500x1063 aproxmiatley as screen size"): the lg box — 56 / 28 /
+ * 18px — up to the Laptop checkpoint, 1536px, then scaled by the viewport
+ * over 1536 — 70 / 35 / 22.5px from 1920 on — the ratio the lg box makes
+ * with the opener's slogan at the checkpoint, kept as both grow; on every
+ * phone, the tablet and the notebook it IS lg. Both tones, the pair the Hero
+ * mounts. The play reads the three measures off the engine at the width the
+ * story runs — the proof the clamps parsed (an arbitrary value Tailwind
+ * refused would leave the atom's base); at the UI tier's 1280 and on the
+ * Vitest canvas that is the lg floor, so the growth is the Pages/Home 1920
+ * frames' to show. 'stress-320': the floors, at the phone width. The gap is
+ * the story's (§6.4).
+ */
+export const HeroSize: Story = {
+  tags: ['stress-320'],
+  args: { size: 'hero', children: 'Programează o consultație' },
+  render: (args) => (
+    <div className="flex flex-wrap items-start gap-4">
+      <Button {...args} />
+      <Button {...args} variant="outline">
+        Vezi serviciile
+      </Button>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', {
+      name: 'Programează o consultație',
+    });
+    const style = getComputedStyle(button);
+    const factor = Math.min(Math.max(1, window.innerWidth / 1536), 1.25);
+    await expect(parseFloat(style.fontSize)).toBeCloseTo(18 * factor, 0);
+    await expect(parseFloat(style.paddingLeft)).toBeCloseTo(28 * factor, 0);
+    await expect(parseFloat(style.minHeight)).toBeCloseTo(56 * factor, 0);
+  },
+};
+
+/** The three fixed box scales side by side (gap owned by the parent, §6.4). */
 export const Sizes: Story = {
   render: (args) => (
     <div className="flex flex-wrap items-start gap-4">

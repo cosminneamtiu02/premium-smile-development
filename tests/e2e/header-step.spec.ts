@@ -4,22 +4,23 @@ import { expect, type Page, test } from '@playwright/test';
 // maintain at least a little space between 'premium smile' and first button
 // of menu … if not fit due to thinning web tab or screen size, switch to
 // dropdown menu"). sections/Header's breakpoint is a container step measured
-// on the BAR, not the window — 60rem of content box since the header-nav-gap
-// lane, the smallest whole rem that keeps a German gap of 4rem at the flip
-// (Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block carries the
+// on the BAR, not the window — 62rem of content box since 2026-10-01 (60rem
+// from the header-nav-gap lane of 2026-09-26 until the owner's sizes grew the
+// brand to 270.1px), the smallest whole rem that keeps a German gap of 4rem at
+// the flip (Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block carries the
 // arithmetic). The pill's side margins are 10vw each and `vw` counts the
 // scrollbar gutter while the containing block does not, so in a window V wide
 // the bar's content box is 0.8 × V − gutter − 2px of borders: the step lands
-// at ≈1221px with the 15px classic gutter Chromium reserves
-// (`scrollbar-gutter: stable`), ≈1203 without one. The two windows below
-// straddle it with real margins on BOTH sides, gutter or no gutter: at 1180
-// the bar is 927–942px (18–33px under the step), at 1240 it is 975–990px
+// at ≈1261px with the 15px classic gutter Chromium reserves
+// (`scrollbar-gutter: stable`), ≈1243 without one. The two windows below
+// straddle it with real margins on BOTH sides, gutter or no gutter: at 1220
+// the bar is 959–974px (18–33px under the step), at 1280 it is 1007–1022px
 // (15–30px over) — so neither an engine's scrollbar width nor the pill's 2px
-// of borders can move the answer (G2, 2026-09-26: the first cut sat at 1200,
-// which is 2px under the step on a scrollbar-less engine, and those 2px were
-// the borders). The third window is the project's own laptop, where the row
-// is comfortably centred. Both locales the bar calibrates against run:
-// Romanian, the default, and German, the longest (§8.4).
+// of borders can move the answer (G2, 2026-09-26: the first cut sat 2px under
+// the step on a scrollbar-less engine, and those 2px were the borders). The
+// third window is the project's own laptop, where the row is comfortably
+// centred. Both locales the bar calibrates against run: Romanian, the default,
+// and German, the longest (§8.4).
 //
 // Nothing here is a screenshot; the assertions are geometry and DOM, the
 // price-menu spec's idiom (playwright.e2e.config.ts says why this suite is
@@ -28,8 +29,8 @@ import { expect, type Page, test } from '@playwright/test';
 /** 4rem — the floor the step was chosen for (Header.tsx). */
 const GAP = 64;
 /** Below → the burger; above → the row (the header comment has the margins). */
-const BELOW = 1180;
-const ABOVE = 1240;
+const BELOW = 1220;
+const ABOVE = 1280;
 
 interface Bar {
   readonly rowShown: boolean;
@@ -56,9 +57,11 @@ const readBar = (page: Page): Promise<Bar> =>
     // The gap is measured from what the lockup PAINTS — the right edge of its
     // last child, the name — never from the anchor's own box: WebKit sizes
     // that box from the artwork's natural width (301.5px around the 258.5px
-    // the demo cat's lockup painted, measured 2026-09-26; the clinic's
-    // near-square mark makes the lockup ~222px since 2026-10-01 and the
-    // German gap at the step ~104px — Header.tsx) and Firefox lets the brand's cell span
+    // the demo cat's lockup painted, measured 2026-09-26; at the owner's sizes
+    // of 2026-10-01 — the clinic's mark at 68.85% of the row, the name at
+    // 30px, sections/Wordmark — the lockup is ~270px and the German gap at the
+    // step ~56px, under the floor until the owner rules on the fitting —
+    // Header.tsx, THE BRAND GREW) and Firefox lets the brand's cell span
     // its whole track, so a box edge would misreport the air between "Smile"
     // and the first link. Chromium is the only engine this suite runs today;
     // the measurement is engine-proof anyway.

@@ -49,9 +49,9 @@ import { Header } from './Header';
 // ── 3. Every story PINS ITS OWN VIEWPORT — the MenuOpen precedent, extended
 // to all four when the bar became a floating pill (owner, 2026-08-16), and
 // worn by the fifth. The breakpoint measures the BAR, and the pill's side
-// margins mean the row appears only once the canvas is ≈1220px+ (bar =
-// canvas − the scrollbar gutter − 2×10vw − 2px ≥ 60rem, the bar's step since
-// 2026-09-26 — Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"). A manager
+// margins mean the row appears only once the canvas is ≈1260px+ (bar =
+// canvas − the scrollbar gutter − 2×10vw − 2px ≥ 62rem, the bar's step since
+// 2026-10-01, 60rem from 2026-09-26 — Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"). A manager
 // canvas narrowed by the sidebar and addons panel sits right in that band —
 // the Notebook pin itself is 1280, only ~60px past it — so an unpinned
 // row-proving play would throw
@@ -144,6 +144,54 @@ const expectContactAtItsFloor = async (contact: HTMLElement) => {
 };
 
 /**
+ * THE BAR'S LOCKUP AT THE OWNER'S SIZES (2026-10-01: "make logo in top bar
+ * 15% smaller", "make the logo 10% smaller again", "make the text 50% bigger
+ * than it is now", then "update also in footer") — sections/Wordmark carries
+ * them (its THE OWNER'S SIZES block) and Header.tsx hands it the whole row, so
+ * in the bar the mark is 68.85% of the row (90% × 85% × 90%) and the name
+ * Heading's `section` step, 1.875rem — and below the Wordmark's `@max-sm` step
+ * (a pill under 24rem: a phone up to ~482px wide, the 390 smartphone pin
+ * included) the mark is 30.6% of the row and the name the old 20px, 1.25rem
+ * (the phone fitting, 2026-10-01). Measured off the layout as RATIOS of the
+ * row and the root, so the pin holds at any root font size and at every width
+ * the visual runner samples — which step applies is read off the pill itself,
+ * the box the container query measures. And the smaller mark must not have
+ * moved anything: the mark and the name both sit on the row's centre line.
+ */
+const expectMarkAtTopBarSize = async (bar: HTMLElement): Promise<void> => {
+  const row = bar.querySelector(':scope > div');
+  const box = row?.firstElementChild;
+  const mark = box?.querySelector('img');
+  const name = box?.querySelector('span');
+  if (!row || !box || !mark || !name) {
+    throw new Error(
+      'expectMarkAtTopBarSize: the bar has no brand box (row → box → the ' +
+        "lockup's <img> and name) — Header.tsx or sections/Wordmark changed " +
+        'shape.',
+    );
+  }
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const phone = bar.clientWidth < 24 * rem;
+  const share = phone ? 0.306 : 0.6885;
+  const r = row.getBoundingClientRect();
+  await expect(box.getBoundingClientRect().height).toBeCloseTo(r.height, 3);
+  const m = mark.getBoundingClientRect();
+  await expect(m.height / r.height).toBeCloseTo(share, 3);
+  await expect(parseFloat(getComputedStyle(name).fontSize) / rem).toBeCloseTo(
+    phone ? 1.25 : 1.875,
+    3,
+  );
+  const centre = r.top + r.height / 2;
+  const n = name.getBoundingClientRect();
+  await expect(Math.abs(m.top + m.height / 2 - centre)).toBeLessThanOrEqual(
+    0.5,
+  );
+  await expect(Math.abs(n.top + n.height / 2 - centre)).toBeLessThanOrEqual(
+    0.5,
+  );
+};
+
+/**
  * The everyday picture, Romanian, on `/ro/services`.
  *
  * Proves the whole contract in one frame at each sampled width: at 390 the
@@ -173,6 +221,7 @@ export const Default: Story = {
     await expectContactAtItsFloor(
       canvas.getByRole('button', { name: ro.common.actions.contact }),
     );
+    await expectMarkAtTopBarSize(canvas.getByRole('banner'));
   },
 };
 
@@ -229,6 +278,9 @@ export const MenuOpen: Story = {
     // findBy* waits — the panel mounts and animates in over 300ms.
     await canvas.findByRole('navigation', { name: ro.common.menu.label });
     await expect(burger).toHaveAttribute('aria-expanded', 'true');
+    // The bar keeps its brand while the panel is open (BRAND + ✕) — and at
+    // this story's phone width that brand is past the Wordmark's tighten step.
+    await expectMarkAtTopBarSize(canvas.getByRole('banner'));
   },
 };
 
@@ -270,7 +322,7 @@ export const NonRomanianLocale: Story = {
  * with room to spare, and nothing may wrap, clip or push the CTA off the edge.
  * This is the proof far from the step; AtTheStep below is the proof AT it.
  * If German ever stops fitting there, the number moves (Header.tsx carries
- * the arithmetic that put it at 60rem) — never the architecture, and never
+ * the arithmetic that put it at 62rem) — never the architecture, and never
  * without the planning loop.
  */
 export const GermanStress: Story = {
@@ -295,7 +347,7 @@ export const GermanStress: Story = {
 };
 
 /**
- * German, on `/de/services`, with the bar's content box held at 60rem + 4px —
+ * German, on `/de/services`, with the bar's content box held at 62rem + 4px —
  * THE PROOF AT THE FLIP (header-nav-gap lane, the owner's ask, 2026-09-26:
  * "it should maintain at least a little space between 'premium smile' and
  * first button of menu, like idk, 70% of the width of the menu button …").
@@ -303,35 +355,36 @@ export const GermanStress: Story = {
  * The narrowest bar that ever shows the row, in the language that makes the
  * row widest: this is where the brand-to-first-link gap sits at its FLOOR.
  * Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block puts the step at
- * 60rem so that German keeps ≥ 4rem (64px — ~70% of the 94px "Startseite")
- * there; at this story's 964px bar the expected gap was
- * (932 − 279.3) / 2 − 258.5 ≈ 67.85px with the demo cat (row = bar − the
- * `px-4`; nav 279.3; brand 258.5) and is ≈ 104.4px since the clinic's
- * near-square mark (2026-10-01: brand ≈ 221.9 = 71.2 + 12 + 138.8). The step
- * stayed and the brand shrank — Header.tsx, THE BRAND SHRANK, records why the
- * number was not lowered with it.
+ * 62rem so that German keeps ≥ 4rem (64px — ~70% of the 94px "Startseite")
+ * there; at this story's 996px bar the expected gap is
+ * (964 − 279.3) / 2 − 270.1 ≈ 72.2px (row = bar − the `px-4`; nav 279.3;
+ * the brand at the owner's sizes of 2026-10-01, 270.1). At the old 60rem
+ * step (a 964px bar) it was ≈ 67.85px with the demo cat's 258.5px brand,
+ * ≈ 104.4px with the clinic's mark at the full row and ≈ 56.25px at the
+ * owner's sizes — under the floor, which is why the step moved (Header.tsx,
+ * THE BRAND GREW).
  *
  * HOW THE FRAME REACHES THE STEP at any window width: the pill's side margins
  * are `clamp(1rem, 10vw, 12.5rem)` each (ui/Container's `containerClasses`),
- * so a box of 60rem + 6px + twice that clamp leaves the bar's border box at
- * 60rem + 6px and its CONTENT box at exactly 60rem + 4px — four pixels above
+ * so a box of 62rem + 6px + twice that clamp leaves the bar's border box at
+ * 62rem + 6px and its CONTENT box at exactly 62rem + 4px — four pixels above
  * the step, so sub-pixel rounding can never drop it under. The wrapper sits
  * INSIDE the shared Ground, so the page ground is the other stories'. At the
  * 390 phone width the `100%` branch of the `min()` wins and the frame is the
  * ordinary phone — the burger, as it must be. The Sections/* tier photographs
- * 390 + 1536; at 1536 the wrapper is 60rem + 6px + 307.2px ≈ 1273px, so that
+ * 390 + 1536; at 1536 the wrapper is 62rem + 6px + 307.2px ≈ 1305px, so that
  * frame IS the step.
  *
  * The play measures, it does not read classes back: the row is drawn (the
  * current link is reachable by role, which a display:none row is not), the
  * bar really is at the step, the gap is within [4rem, 7rem] — the owner's
  * floor, and a ceiling that proves this frame is AT the step and not past
- * it: the ~222px brand leaves ≈ 104px here, 7rem (112px) is the first whole
- * rem above that, and a wider bar adds a pixel of gap for every two of bar,
- * so a frame even 16px past the flip would breach it (5rem was the ceiling
- * for the demo cat's 67.85) — the bar never scrolls sideways, and the nav
- * still sits on the bar's centre line — at the step each side track is
- * ≥ 324px against the ~222px brand, so exact centring holds here too.
+ * it (set for the clinic's mark at the full row, ≈ 104.4px here, a wider bar
+ * adding a pixel of gap for every two of bar; 5rem was the ceiling for the
+ * demo cat's 67.85; ≈ 72.2px is expected at the owner's sizes and this 62rem
+ * frame) — the bar never scrolls sideways, and the nav still sits on the
+ * bar's centre line: at the step each side track is ≥ 340px against the
+ * 270.1px brand, so exact centring holds here too.
  */
 export const AtTheStep: Story = {
   globals: { locale: 'de', viewport: { value: 'notebook' } },
@@ -340,7 +393,7 @@ export const AtTheStep: Story = {
   },
   render: () => (
     <Ground>
-      <div className="mx-auto w-[min(100%,calc(60rem+6px+clamp(2rem,20vw,25rem)))]">
+      <div className="mx-auto w-[min(100%,calc(62rem+6px+clamp(2rem,20vw,25rem)))]">
         <Header />
       </div>
     </Ground>
@@ -365,10 +418,10 @@ export const AtTheStep: Story = {
     const bar = canvas.getByRole('banner');
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     // The frame IS the step: the bar's content box (no padding on the
-    // <header>, so clientWidth) sits 0–8px above 60rem — the wrapper's
+    // <header>, so clientWidth) sits 0–8px above 62rem — the wrapper's
     // arithmetic, which a change to the pill's margins would silently void.
-    await expect(bar.clientWidth - 60 * rem).toBeGreaterThanOrEqual(0);
-    await expect(bar.clientWidth - 60 * rem).toBeLessThanOrEqual(8);
+    await expect(bar.clientWidth - 62 * rem).toBeGreaterThanOrEqual(0);
+    await expect(bar.clientWidth - 62 * rem).toBeLessThanOrEqual(8);
 
     // The brand corner is sections/Wordmark's lockup: an <a> around the
     // artwork <img> and the name. Found through the <img> — which Wordmark's
@@ -399,9 +452,9 @@ export const AtTheStep: Story = {
     const [first] = within(nav).getAllByRole('link');
     const gap = first.getBoundingClientRect().left - brandRight;
     // ≥ 4rem is the owner's floor; ≤ 7rem proves this frame really is AT the
-    // step rather than comfortably past it (≈ 104px expected since the
-    // clinic's mark, 2026-10-01 — the doc comment has the arithmetic; 5rem
-    // was the ceiling for the demo cat's ≈ 67.85px).
+    // step rather than comfortably past it (the doc comment has the
+    // arithmetic: ≈ 72.2px at the owner's sizes since the step moved to
+    // 62rem, 2026-10-01; 5rem was the ceiling for the demo cat's ≈ 67.85px).
     await expect(gap).toBeGreaterThanOrEqual(4 * rem);
     await expect(gap).toBeLessThanOrEqual(7 * rem);
 

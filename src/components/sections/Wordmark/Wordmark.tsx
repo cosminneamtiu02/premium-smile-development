@@ -65,7 +65,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // artwork stays inline (the burger morph, the currentColor glyphs) — and the
 // file's own reasons: it is fetched once and cached across every page, the
 // two shells carry no path data in their HTML, and a vector draws crisp at
-// the 72px the header asks for and at any density or zoom. The optimizer
+// the 55px the header asks for and at any density or zoom. The optimizer
 // never touches it: next-image-export-optimizer lists PNG/GIF/JPG/JPEG/AVIF/
 // WEBP and nothing else, so the ONE file serves as a plain static asset in all
 // four paths (dev, vitest, storybook, build) — which is the whole problem the
@@ -98,9 +98,11 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // otherwise paint a renamed clinic wrong without a sound.
 // CONTRAST, MEASURED (WCAG 2.2 relative luminance, sRGB): the grey reads
 // 3.00:1 on --surface white and 2.85:1 on --page, the lilac 4.02:1 and 3.82:1
-// — all four under §9's 4.5:1 for text at the `title` step (20px regular is
-// not "large text"; bold at 20px would lift the bar to 3:1, and the grey
-// would still miss it on the page ground). It is legal because of WCAG 2.2
+// — all four under §9's 4.5:1 for body-size text. At the `section` step the
+// name wears since 2026-10-01 (30px regular, "large text") the bar is 3:1:
+// the lilac clears it on both grounds, the grey reaches it only on pure white
+// (3.00:1) and misses it on the page ground and on the bar's 95% glass, which
+// reads ~#f2f2f2 over the Hero (~2.7:1). It is legal because of WCAG 2.2
 // SC 1.4.3's own clause — "Text that is part of a logo or brand name has no
 // minimum contrast requirement" (SC 1.4.11 exempts the mark's colours the
 // same way: a logo's particular presentation is essential) — and these two
@@ -120,9 +122,12 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // §15.1's `--accent-decorative` #7a6d9c ("pending hue confirm vs the real
 // logo") is a different lavender — re-setting that role, and the ribbon's
 // #8377a3, to the logo's hue repaints tints, auras and keywords across the
-// site and was NOT done here (§15.28 has the numbers); a favicon and the OG
-// share image (§15.6's other two items) are the natural next use of the
-// mark, not built in this lane.
+// site and was NOT done here (§15.28 has the numbers). THE FAVICON LANDED
+// 2026-10-01 (owner: "use the logo from top bar also in the tab"): this very
+// file is the browser tab's icon — src/app/icon.svg is a byte copy of it and
+// src/app/favicon.ico is rasterised from it (CLAUDE.md §15.31; the copy is
+// pinned by tests/unit/logotype-census.test.ts, so a re-cut mark that forgets
+// the tab fails there). The OG share image is §15.6's last open item.
 //
 // NO `loading` attribute, i.e. the HTML default of EAGER, and that is a
 // decision rather than an omission: the SAL badge is `lazy` because it sits at
@@ -165,46 +170,65 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // `@container` div under Footer's THE GUTTER BOX comment) — so this component
 // reacts to the box it was handed rather than to the window, and the Storybook
 // decorator reproduces that box on purpose.
-// THE NUMBERS ARE MEASURED, not guessed — RE-DERIVED 2026-10-01 for the 5rem
-// row both consumers give the lockup since 2026-09-04 (the first derivation
-// was written against 4rem) and for the near-square mark — and the TIGHTEST
-// CELL IN THE REPO sets them. The Header hands this component the pill row
-// minus its 1rem padding, its 1rem row gap and the 2.75rem burger: 203px at
-// the 390 phone width, 147.00px at the 320 stress width (measured in the
-// Storybook runner, whose scrollbar makes both the pessimistic figures — a
-// real phone is ~15px wider). Against that, the name is 138.75px on one line
-// at text-xl and 83.70px when it wraps to its longest word (87.36 by G2's
-// stricter reading), and the mark is 0.99:1, so it costs almost exactly its
-// height in width. SUB-PIXEL arithmetic, because that is the scale this fits
-// in (F11):
-//   · FULL SIZE — 90% of the 5rem row is a 72px mark, 71.17px wide, and with
-//     `gap-3` and the name the lockup is ~222px (the demo cat's 1.49:1 made
-//     it 258.5, the number sections/Header's step arithmetic was measured
-//     against — Header.tsx records the new one beside it);
-//   · BELOW `@max-xs` (a 20rem container: the pill at any phone width, and the
-//     Footer's gutter box likewise) — gap-2 and a 40% mark (32px tall, 31.63
-//     wide) bring the one-line lockup to ~178.4px against the 203px cell at
-//     390: ONE LINE with ~24.6px to spare. (A 360px window offers 179px, so
-//     there the name sits on the edge of wrapping — either way is inside the
-//     row, see the next bullet.) Staying on one line at 390 is fb-207 read
-//     literally: the header brand of the time was one 139×28 line, and
-//     wrapping it at the phone width would be precisely the changed aspect
-//     that ruling forbids;
-//   · AT 320 nothing keeps it on one line — 178.4 against a 147.00px cell —
-//     so the name WRAPS to two 28px lines inside the 5rem row, „Premium"
-//     over „Smile", each in its colour. The floor that has to fit is the
-//     MIN-CONTENT sum: 31.63 mark + 8 gap + 83.70 longest word = 123.33, i.e.
-//     23.67px of real slack. THIS WRAP WAS A PROMISE THE HEADER BROKE until
+// THE NUMBERS ARE MEASURED, not guessed — RE-DERIVED 2026-10-01 for the
+// clinic's near-square mark and again the same evening for THE OWNER'S SIZES
+// below — and the TIGHTEST CELL IN THE REPO sets them. The Header hands this
+// component the pill row minus its 1rem padding and the 2.75rem burger, and
+// NO row gap: the row wore `gap-4` from 2026-08-17 until the shell mount took
+// it off on 2026-09-04 (#69) — the `gap-4` left in the bar sits inside the
+// right cell, around a Contact box that is display:none below the bar's step —
+// so this paragraph's 203 / 147, right when written, went stale that day, and
+// the story harness with it. MEASURED on the built export (Chromium, Firefox,
+// WebKit): on a phone (overlay scrollbars, no gutter) the cell is 0.8 ×
+// viewport − 78px — 234 at 390, 178 at 320; in a runner with Chromium's 15px
+// classic gutter, 219 and 163. The mark is 0.99:1, so it costs almost exactly
+// its height in width. SUB-PIXEL arithmetic, because that is the scale this
+// fits in (F11):
+//   · FULL SIZE — a 3.4425rem mark (55.08px, 54.44 wide), `gap-3` and the
+//     name at Heading's `section` step (30px; 203.7px on one line, not 1.5 ×
+//     the 20px name's 138.75: the face has an optical-size axis) make a
+//     270.1px lockup (72px and ~222 with the 20px name until 2026-10-01; the
+//     demo cat's 1.49:1 made it 258.5 — Header.tsx records each beside its
+//     step arithmetic);
+//   · BELOW `@max-sm` (a 24rem container — the bar's pill on a phone up to
+//     ~482px wide, the Footer's gutter box up to ~480px) — `gap-2`, a 1.53rem
+//     mark (24.47px, 24.19 wide) and the name back at the 20px `title` size
+//     (`@max-sm:text-xl`) make a 170.9px one-line lockup, which a phone's bar
+//     holds on ONE line from a ~311px viewport — fb-207's one line at 390, with
+//     room — and the Footer always. The step was `@max-xs` (20rem) until
+//     2026-10-01: with the 30px name that threshold left the large iPhones
+//     (403–435px) a 55px mark beside a wrapped two-line name;
+//   · AT 320 — the floor that has to fit is the MIN-CONTENT sum: 24.19 mark +
+//     8 gap + 83.70 for „Premium" = 115.89 against the runner's 163px cell (a
+//     phone's 178 keeps one line), so in the runner the two 28px lines,
+//     „Premium" over „Smile", each in its colour, stand inside the 5rem row.
+//     THIS WRAP WAS A PROMISE THE HEADER BROKE until
 //     2026-10-01: its brand cell wore `whitespace-nowrap` at every width, so
 //     the one-line name overflowed its cell and „Smile" was painted 32px under
 //     the burger at 320 (measured on develop; flagged by the real-clinic-data
 //     lane on 2026-09-30). The nowrap now lives at the bar's step only, where
 //     the grid needs it (Header.tsx, the brand cell), and the phone wraps as
 //     this arithmetic always said.
-// The two percentages are the owner's lever: the mark being square, 90% and
-// 40% are what the demo cat wore, kept so the lockup's height did not move —
-// a bigger mark in the pill is one number here, re-measured in
-// Wordmark.stories.tsx.
+// THE OWNER'S SIZES (2026-10-01, in four words through one evening, each
+// verbatim): "make logo in top bar 15% smaller", then "make the logo 10%
+// smaller again" and "make the text 50% bigger than it is now", then "update
+// also in footer. now it looks sensational" — and, on the two fittings those
+// left open, "whatever, do your thing". The mark was 90% of the 5rem box (40%
+// below the step), what the demo cat wore; it is 90% × 85% × 90% of it,
+// 3.4425rem (1.53rem below the step), spelled as a FIXED rem rather than a
+// share of the box, and with `max-w-none`: Tailwind's preflight gives every
+// <img> `max-width: 100%`, which makes it COMPRESSIBLE (CSS Sizing 3 — its
+// min-content contribution is ZERO), so until then no grid could see the mark
+// (measured in all three engines: the lockup's min-content was its text
+// alone) and the Header's `1fr` side track could squeeze the brand under the
+// nav — WCAG 1.4.12's text spacing did, in German, just above the bar's step.
+// With both, the min-content is the whole lockup, and a squeezed track pushes
+// the nav right instead (Header.tsx, THE BRAND GREW). The name moved from
+// Heading's `title` step to its `section` step, 20px → 30px, and keeps the
+// 20px below the step (the phone fitting). The first two words were the top
+// bar's alone and were built in the Header's box for an hour; the fourth made
+// them the lockup's look everywhere, so they live HERE, in both instances at
+// once (fb-205), re-measured in Wordmark.stories.tsx and Header.stories.tsx.
 //
 // ── CONSUMER PRECONDITION, stated because it fails QUIETLY. The step above
 // resolves against the NEAREST ANCESTOR with `container-type` — both consumers
@@ -214,7 +238,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // never matches: it renders full-size at every width, including 320, where the
 // lockup then does not fit. Nothing throws and nothing logs. If a third
 // consumer ever needs to be independent of its ancestors, the recorded option
-// is a NAMED container (`@container/pill` on the consumer, `@max-xs/pill:`
+// is a NAMED container (`@container/pill` on the consumer, `@max-sm/pill:`
 // here) — deliberate, greppable, and still zero JavaScript. Not done today:
 // two consumers, both already containers, and an unused name is a lie about
 // what the code needs.
@@ -268,8 +292,8 @@ const [FIRST_WORD, SECOND_WORD] = brandWords(clinic.name);
 export interface WordmarkProps {
   /**
    * The left half of the lockup — §8.1's "props with defaults" shape (D11):
-   * both consumers stay `<Wordmark />`, and a re-cut of the mark is one edit
-   * to the default here or one prop at a call site.
+   * both consumers render the mark by default, and a re-cut of the mark is
+   * one edit to the default here or one prop at a call site.
    */
   artwork?: WordmarkArtwork;
 }
@@ -280,10 +304,13 @@ export function Wordmark({
   return (
     // NO outer margin, and no width of its own: the CONSUMER owns the box
     // (§6.4/§6.8) — the Header hands it a `self-stretch` cell in the pill row,
-    // the Footer a centred `h-20` box. `h-full` is how both of those become
-    // the ruler the percentage-sized artwork resolves against. Both rulers are
+    // the Footer a centred `h-20` box. `h-full` makes both of those the box the
+    // mark and the name are centred in (the mark itself is a fixed rem since
+    // 2026-10-01 — it no longer resolves against the box). Both boxes are
     // 5rem since 2026-09-04 (the owner's uniform bar height); fb-205 is the
-    // standing rule that they must agree, so they move together or not at all.
+    // standing rule that they must agree, so they move together or not at all
+    // — which is why the owner's sizes of 2026-10-01 live HERE (THE OWNER'S
+    // SIZES, above), not in either consumer's box.
     // THE ONE SUPPRESSED RULE, and the one place it is honest to suppress it:
     // jsx-a11y/anchor-is-valid says an anchor must be keyboard accessible, and
     // it is exactly right — which is why this element is inert (D9 above).
@@ -291,19 +318,20 @@ export function Wordmark({
     // real link to nowhere, and a <button> would promise an action there is
     // none of.
     // eslint-disable-next-line jsx-a11y/anchor-is-valid
-    <a className="flex h-full items-center gap-3 @max-xs:gap-2">
+    <a className="flex h-full items-center gap-3 @max-sm:gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={artwork.src}
         alt=""
         width={artwork.width}
         height={artwork.height}
-        className="h-[90%] w-auto @max-xs:h-[40%]"
+        className="h-[3.4425rem] w-auto max-w-none @max-sm:h-[1.53rem]"
       />
-      {/* The name through ui/Heading's `title` step — `font-display text-xl
-          text-ink-strong`, the string the Header used to spell inline on its
-          brand anchor — plus the host's own `hyphens-none` (merged last by
-          asChild, §6.8). asChild because Heading answers "how big is this
+      {/* The name through ui/Heading's `section` step — `font-display
+          text-3xl text-ink-strong`, 30px, half again the `title` step (20px)
+          it wore until the owner's "make the text 50% bigger than it is now"
+          (2026-10-01, THE OWNER'S SIZES above) — plus the host's own
+          `hyphens-none` (merged last by asChild, §6.8). asChild because Heading answers "how big is this
           title" and never "which element is it": the host is a <span>, an
           inline generic that claims no outline slot — a mark repeated in the
           shell of every route must not (the Header's C2 rule, the Footer's
@@ -313,8 +341,8 @@ export function Wordmark({
           text is DATA from lib/clinic/clinic.ts (§10.1), never a message key,
           so a rename is one edit there — and a build failure here until this
           file is revisited (`brandWords`). */}
-      <Heading asChild>
-        <span className="hyphens-none">
+      <Heading asChild size="section">
+        <span className="hyphens-none @max-sm:text-xl">
           <span data-logotype="" className="text-brand-grey">
             {FIRST_WORD}
           </span>{' '}

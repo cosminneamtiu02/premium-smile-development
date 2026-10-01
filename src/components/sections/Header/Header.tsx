@@ -52,8 +52,9 @@ import { NavMenu } from './NavMenu';
 //   the bar's Contact trigger  opens the one dialog the provider renders
 //
 // ── THE BREAKPOINT IS A CONTAINER STEP, never a media query (§6.5), and
-// since 2026-09-26 a MEASURED one: `@min-[60rem]:`, Tailwind v4's arbitrary
-// container variant — it compiles to `@container (width >= 60rem)`.
+// since 2026-09-26 a MEASURED one — `@min-[60rem]:` then, `@min-[62rem]:`
+// since 2026-10-01 (THE BRAND GREW, below) — Tailwind v4's arbitrary
+// container variant: it compiles to `@container (width >= 62rem)`.
 // `@container` marks the bar as the thing measured. The step is spelled in
 // THREE files — this one, HeaderNav.tsx (the row) and NavMenu.tsx (the
 // burger) — and nowhere else; prose calls it "the bar's step". Header.test.tsx
@@ -108,9 +109,12 @@ import { NavMenu } from './NavMenu';
 //      406.8 — the artwork at its natural 256px — so the left track floors at
 //      407px, the nav is pushed ≥ 100px right of centre and the CTA overflows
 //      the pill at windows under ~1180px.
+// (2026-10-01: with the mark a fixed rem and `max-w-none`, the plain `1fr`
+// auto floor counts the artwork in all three engines — measured — so neither
+// is needed; THE BRAND GREW below has the numbers.)
 //
-// The proofs: the AtTheStep story (German, the bar's content box held at 60rem
-// + 4px — the gap at its floor) and GermanStress (German at 1536). Move the
+// The proofs: the AtTheStep story (German, the bar's content box held at the
+// step + 4px — the gap at its floor) and GermanStress (German at 1536). Move the
 // NUMBER if the brand or German ever outgrows it — re-run the arithmetic
 // above, never the architecture, and never without the planning loop.
 // THE BRAND SHRANK, THE NUMBER STAYED (2026-10-01, the wordmark-brand lane):
@@ -124,6 +128,23 @@ import { NavMenu } from './NavMenu';
 // row instead of the burger on ~80px of laptop widths), a behaviour change
 // the owner did not ask for with the logo; recorded in §15.28 as his lever,
 // not taken. The step is safe where it is: a wider gap, never a narrower.
+// AND THE BRAND GREW THE SAME EVENING (sections/Wordmark's THE OWNER'S SIZES:
+// the mark smaller, the name half again bigger): the lockup MEASURES 270.1px
+// (54.44 + 12 + 203.7 — the 30px name is narrower than 1.5 × the 20px one,
+// the face having an optical-size axis), which left German 56.25px at a 60rem
+// step — under the 4rem floor — and, under WCAG 1.4.12's text-spacing
+// overrides, „Smile" and „Startseite" OVERLAPPING just above it (−13.8px of
+// ink at a 1225px window, −7.8 at 1240, measured). So the NUMBER moved, on
+// the owner's "whatever, do your thing" (2026-10-01): a bar ≥ 2 × (270.1 + 64)
+// + 279.3 + 32 = 979.5px → 62rem, the smallest whole rem past it. At the step
+// German keeps 70.6px (Chromium, measured; Firefox and WebKit, whose bars are
+// 15px wider at the same window, more), the flip moves from ≈1221px to
+// ≈1261px of window, and the 1280 Notebook keeps the row (its bar is 1007px).
+// And the brand stopped being invisible to the grid the same day: the mark is
+// a fixed rem with `max-w-none` (RECORDED TRADE-OFF, at the row), so under the
+// text-spacing overrides the brand's track floors at its real width and the
+// nav moves a few pixels right instead of under it — measured in Chromium,
+// Firefox and WebKit: no box overlaps anywhere, no ink closer than 1px.
 //
 // THE COUPLED SPELLINGS — one number, every place it is written. Move the step
 // and ALL of these move in the same change-set:
@@ -134,8 +155,8 @@ import { NavMenu } from './NavMenu';
 //                        BurgerToggle.tsx spell no container step at all;
 //   Header.test.tsx      `STEP` — the constant the token tests and "the bar's
 //                        step is ONE number in three files" fence read;
-//   Header.stories.tsx   AtTheStep — its wrapper's `calc(60rem+6px+…)` and
-//                        its play's `60 * rem` (the "frame IS the step"
+//   Header.stories.tsx   AtTheStep — its wrapper's `calc(62rem+6px+…)` and
+//                        its play's `62 * rem` (the "frame IS the step"
 //                        check) and the gap bounds that follow from the step;
 //   tests/e2e/           header-step.spec.ts — `BELOW` / `ABOVE`, the windows
 //                        derived from the step (KNOWN CONSEQUENCE below);
@@ -237,10 +258,11 @@ export function Header(): ReactElement {
     // measures the BAR, not the window, so the burger → row flip happens
     // where the BAR reaches the step. In a window V wide the bar's content
     // box is V − the scrollbar gutter − 2 × 10vw − 2px of borders (`vw`
-    // counts the gutter, the containing block does not), so 60rem arrives at
-    // 0.8 × V − gutter − 2 ≥ 960: ≈ 1221px with the 15px classic gutter
-    // `scrollbar-gutter: stable` reserves in the Chromium measured, ≈ 1203
-    // with none (header-nav-gap lane, 2026-09-26 — it was ≈ 985 at 48rem).
+    // counts the gutter, the containing block does not), so 62rem arrives at
+    // 0.8 × V − gutter − 2 ≥ 992: ≈ 1261px with the 15px classic gutter
+    // `scrollbar-gutter: stable` reserves in the Chromium measured, ≈ 1243
+    // with none (it was ≈ 1221 / ≈ 1203 at 60rem from 2026-09-26, the
+    // header-nav-gap lane, and ≈ 985 at 48rem before that).
     // DELIBERATE: a 1024px landscape tablet and the small laptops under
     // ~1220px now get the burger, because at those widths the row did not
     // fit — German overlapped the brand in every window under ~1055. The
@@ -326,8 +348,9 @@ export function Header(): ReactElement {
           already narrow it, and the old bar ran brand-to-CTA across its full
           width. All sizing in rem so browser zoom and user font settings
           behave (§7).
-          ── THE GRID STARTS AT THE BAR'S STEP (`@min-[60rem]:` since
-          2026-09-26 — `@3xl` before; the file header argues the number), AND
+          ── THE GRID STARTS AT THE BAR'S STEP (`@min-[62rem]:` since
+          2026-10-01, `@min-[60rem]:` from 2026-09-26, `@3xl` before; the
+          file header argues the number), AND
           THE COLUMNS ARE PLACED EXPLICITLY.
           Both halves were measured, not guessed (2026-09-04): a grid at EVERY
           width, with auto-placement, broke the phone in two ways at once.
@@ -367,21 +390,28 @@ export function Header(): ReactElement {
           `whitespace-nowrap` made the nav give up exact centring first. Three
           engines say otherwise. `1fr` is `minmax(auto,1fr)`, and the auto floor
           is the brand's MIN-CONTENT — 150.8px in Chromium, Firefox and WebKit
-          alike, where the lockup is 258.5px wide: the artwork counts for ZERO
-          there, because its width comes from a percentage HEIGHT (`h-[90%]` of
-          the `h-full` anchor), which is cyclic while intrinsic sizes are
-          computed. So the side tracks stay EQUAL and the nav stays on the
-          centre line down to a 150.8px track; below the brand's real width the
-          nowrap lockup does not break, it OVERFLOWS its track and the brand
-          slides UNDER the nav (the file header's 985px window). Nothing in the
-          grid can floor the track at the whole lockup across engines (the
-          header's two mechanisms not taken), so the guarantee is the STEP:
-          past `@min-[60rem]:` each side track is at least 324.35px (German)
-          against the 258.5px brand, and the gap between them is ≥ 4rem.
+          alike, where the lockup was 258.5px wide: the artwork counted for
+          ZERO there. (The reason recorded then was its percentage HEIGHT;
+          measured on 2026-10-01 it is preflight's `max-width: 100%`, which
+          makes an <img> COMPRESSIBLE — its min-content contribution zero
+          whatever its height — so a fixed height alone changed nothing.) So
+          the side tracks stayed EQUAL and the nav on the centre line down to
+          the text's own width; below the brand's real width the nowrap lockup
+          did not break, it OVERFLOWED its track and slid UNDER the nav (the
+          file header's 985px window). SINCE 2026-10-01 THE MARK COUNTS: a
+          fixed rem height with `max-w-none` (sections/Wordmark, THE OWNER'S
+          SIZES) makes the brand's min-content the whole lockup, so a track
+          squeezed below it is FLOORED there and the nav moves right of centre
+          rather than under the brand (measured under WCAG 1.4.12's
+          text-spacing overrides at the step: the left track 321.7px, the nav
+          7px right of centre, no overlap — Chromium; Firefox and WebKit never
+          squeeze there). The STEP is still what keeps the owner's air: past
+          `@min-[62rem]:` each side track is at least 340.35px (German)
+          against the 270.1px brand, a gap ≥ 4rem (70.6px measured).
           Where the row is shown, the two side tracks are equal and the nav
           sits on the screen's centre line exactly (1536, Chromium: side
           tracks of ~450px German, ~474 Romanian — measured). */}
-      <div className="flex h-20 items-center px-4 @min-[60rem]:grid @min-[60rem]:grid-rows-1 @min-[60rem]:grid-cols-[1fr_auto_1fr]">
+      <div className="flex h-20 items-center px-4 @min-[62rem]:grid @min-[62rem]:grid-rows-1 @min-[62rem]:grid-cols-[1fr_auto_1fr]">
         {/* The brand corner — now ONE component shared with the Footer
             (sections/Wordmark, built to the owner-approved contract
             .claude/plans/brand-lockup-contract.plan.md v2, fb-200…fb-208).
@@ -389,13 +419,13 @@ export function Header(): ReactElement {
             logo swap was two edits that could disagree; it is one now.
             THE WRAPPER IS THIS SECTION OWNING THE BOX (§6.4/§6.8), not
             decoration: the row is `items-center`, which centres its children
-            rather than stretching them, while the lockup's hairline bar and its
-            artwork are sized in PERCENTAGES of the row height — `self-stretch`
-            is what hands them the full 5rem to be a percentage of. Everything
-            else in this file was untouched by THAT swap (fb-207): the pill
-            chrome, the `group/bar` name, the single-menu rule, the row (h-16
-            then, h-20 since the owner's 2026-09-04 uniform-height ask — the
-            lockup follows it for free, which is the point of `self-stretch`).
+            rather than stretching them, while the lockup's artwork is sized as
+            a PERCENTAGE of the box it is handed — `self-stretch` is what hands
+            it the full 5rem to be a percentage of. Everything else in this
+            file was untouched by THAT swap (fb-207): the pill chrome, the
+            `group/bar` name, the single-menu rule, the row (h-16 then, h-20
+            since the owner's 2026-09-04 uniform-height ask — the lockup
+            follows it for free, which is the point of `self-stretch`).
             WHAT THE SWAP REMOVES, deliberately rather than by accident: the
             home LINK and its `brand.ariaLabel`. D9 (fb-200 — "make it
             clickable, but don't implement go-to-a-page yet") makes the
@@ -408,40 +438,52 @@ export function Header(): ReactElement {
         {/* CELL 1 — `justify-self-start` states the intent the old flex order
             gave implicitly. `self-stretch` still overrides the grid's
             `items-center` for this one cell, which is what hands the lockup the
-            full row height its percentage-sized artwork needs — and it now
-            follows the h-20 step for free. */}
-        {/* `self-stretch` is what hands the lockup the full row height its
-            percentage-sized artwork needs — and the step's `grid-rows-1` on the
-            row is what makes that height DEFINITE once the row is a grid. Measured
-            the hard way (2026-09-04): a grid's implicit row is content-sized,
-            so stretching into it gives a height that percentages cannot resolve
-            against — `h-[90%]` on the Wordmark's artwork fell back to `auto`,
-            the image rendered at its intrinsic 256×171, and the brand burst out
-            of the pill. `grid-rows-1` compiles to a single `minmax(0,1fr)` row,
-            which inside this definite-height box is a definite 5rem — the
-            same thing a flex line gave for free.
-            `whitespace-nowrap` keeps the lockup on one line IN THE GRID: the
+            full row height its percentage-sized artwork needs — and it follows
+            the h-20 step for free.
+            THE MARK'S SIZE IS NOT THIS CELL'S (owner, 2026-10-01). Two words
+            that evening made the bar's mark smaller and its name bigger — "make
+            logo in top bar 15% smaller", "make the logo 10% smaller again",
+            "make the text 50% bigger than it is now" — and for an hour this
+            cell carried them as a shorter box (85%, then 76.5% of the row) plus
+            a name-size prop. Then "update also in footer": the look became the
+            lockup's own, so sections/Wordmark carries it (its THE OWNER'S
+            SIZES block) and this cell is back to the whole row. In the bar the
+            mark is 55.1px (24.5 below the Wordmark's phone step) and the name
+            30px, the lockup 270.1px wide at the row; the file header's step
+            arithmetic follows it.
+            `self-stretch` resolves only because the row's height is DEFINITE:
+            `h-20` on the flex row, and once the row is a grid the step's
+            `grid-rows-1`. Measured the hard way (2026-09-04): a grid's implicit
+            row is content-sized, so stretching into it gives a height that
+            percentages cannot resolve against — `h-[90%]` on the Wordmark's
+            artwork fell back to `auto`, the image rendered at its intrinsic
+            256×171, and the brand burst out of the pill. `grid-rows-1` compiles
+            to a single `minmax(0,1fr)` row, which inside this definite-height
+            box is a definite 5rem — the same thing a flex line gave for free. */}
+        {/* `whitespace-nowrap` keeps the lockup on one line IN THE GRID: the
             side tracks are `1fr` = `minmax(auto,1fr)`, and for wrappable text
             that auto floor is the longest WORD, so a squeezed track would
             break the brand mid-word (measured: "Pre-mium Smi-le" at 390
             before the grid was scoped to the bar's step). WHAT NOWRAP DOES
             NOT DO, measured 2026-09-26: it does not floor the track at the
             whole lockup — the brand's min-content ignores the
-            percentage-height artwork, so a squeezed track OVERFLOWS instead
+            artwork until 2026-10-01, so a squeezed track OVERFLOWED instead
             (the grid's RECORDED TRADE-OFF above). The bar's step is what
             keeps every shown track wider than the brand.
             AT THE STEP ONLY, since 2026-10-01 (the wordmark-brand lane).
             Below it this row is flex and the cell is exactly as wide as the
-            burger leaves it — 147px at 320 (§7's stress width) against a
-            one-line lockup of ~178px — so the name MUST be free to wrap
-            there, which is what sections/Wordmark's D10 arithmetic has always
+            burger leaves it — 163px at 320 (§7's stress width, with a 15px
+            scrollbar gutter) and 219px at 390, against a one-line lockup of
+            170.9px at the Wordmark's phone sizes (the 20px name kept below
+            its step, 2026-10-01) — so at 320 the name MUST be free to wrap,
+            which is what sections/Wordmark's D10 arithmetic has always
             promised (two 28px lines inside the 5rem row). An unconditional
             nowrap made that impossible: the one-line name overflowed its
             cell and „Smile" was painted 32px under the burger at 320
             (measured on develop's preview; flagged by the real-clinic-data
             lane on 2026-09-30, fixed here). The grid's reason for nowrap
             starts where the grid starts, so the class now wears the step. */}
-        <div className="flex self-stretch @min-[60rem]:col-start-1 @min-[60rem]:justify-self-start @min-[60rem]:whitespace-nowrap">
+        <div className="flex self-stretch @min-[62rem]:col-start-1 @min-[62rem]:justify-self-start @min-[62rem]:whitespace-nowrap">
           <Wordmark />
         </div>
 
@@ -472,7 +514,7 @@ export function Header(): ReactElement {
             this opener into wearing an anchor's clothes again.
 
             WHY THE VISIBILITY LIVES ON A WRAPPER AND NOT ON THE BUTTON.
-            Passing `hidden @min-[60rem]:inline-flex` as the atom's className
+            Passing `hidden @min-[62rem]:inline-flex` as the atom's className
             does not work, and fails SILENTLY: ui/Button's own base sets
             `inline-flex`, so two `display` utilities of equal specificity
             (0,1,0) end up in one class list and the winner is decided by their
@@ -482,7 +524,7 @@ export function Header(): ReactElement {
             then fixed, 2026-08-13; TextButton.tsx's header carries the same
             warning about same-property utilities).
             So the SECTION owns the box (§6.4/§6.8 — the parent owns placement)
-            and the atom keeps its own display: `hidden @min-[60rem]:flex` is
+            and the atom keeps its own display: `hidden @min-[62rem]:flex` is
             the breakpoint (below the bar's step the panel's own full-width
             Contact takes over, fb-151), and `flex` at the step — not `block` —
             because a flex container gives its single item no baseline
@@ -509,8 +551,8 @@ export function Header(): ReactElement {
             auto margin is explicitly cancelled there, because inside a track it
             would absorb the free space itself and make `justify-self` a no-op.
             Together they are what NavMenu's own `ml-auto` used to buy. */}
-        <div className="ml-auto flex items-center gap-4 @min-[60rem]:col-start-3 @min-[60rem]:ml-0 @min-[60rem]:justify-self-end">
-          <div className="hidden @min-[60rem]:flex group-has-[#header-menu]/bar:hidden">
+        <div className="ml-auto flex items-center gap-4 @min-[62rem]:col-start-3 @min-[62rem]:ml-0 @min-[62rem]:justify-self-end">
+          <div className="hidden @min-[62rem]:flex group-has-[#header-menu]/bar:hidden">
             {/* LILAC, WIDER, JUMPING (owner, the evening of 2026-10-01 — the
                 reversal of his own morning rule "contact button MUST STAY
                 GREEN AS IT MUST JUMP INTO YOUR EYES", verbatim: "also paint

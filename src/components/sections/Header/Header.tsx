@@ -206,11 +206,17 @@ export function Header(): ReactElement {
     // never compose <Container> without restructuring, because sticky, z-50,
     // the glass and the bar's own container step all ride this one element.
     // One definition, two consumption modes; the Footer takes the box, the
-    // Header takes the number. rounded-lg = 8px — the old bar's own
-    // radius, kept ROUNDER than the §15.1 control default on the owner's
-    // explicit ask (2026-08-16): the PILL and its panel wear 8px, controls
-    // keep their 6px, and both numbers live on Tailwind's untouched scale;
-    // the border now runs all the way round; and the glass is STATIC —
+    // Header takes the number. rounded-soft = 1rem — THE SOFT CORNER (owner
+    // 2026-10-01, §15.29: "that rounded corner effect that the doctor card
+    // from old webpage has … the top bar"): the old site's CARD radius, the
+    // one token `--radius-soft` the personnel card, ui/TextButton and the
+    // contact dialog wear too, worn by the PILL and, matching it, by
+    // NavMenu's panel. It replaces the old bar's own 8px (rounded-lg, kept
+    // rounder than the control default on the owner's 2026-08-16 ask); the
+    // bar's CONTROLS keep §15.1's 6px — the Contact ui/Button and the burger
+    // (GlyphButton `square`) — while the nav's TextButtons take the soft
+    // corner on their own box (visible on their focus ring); the border still
+    // runs all the way round; and the glass is STATIC —
     // bg-surface/95 + backdrop-blur, one state, because the JS half of D1
     // stands: no scroll listener, no height animation, no chrome that watches
     // the window. THE AURA IS WHAT CHANGED, and only that (board
@@ -265,7 +271,7 @@ export function Header(): ReactElement {
       className={cx(
         'group/bar sticky top-4 z-50',
         containerClasses,
-        'mt-4 rounded-lg border border-line-subtle shadow-aura bg-surface/95 backdrop-blur-md backdrop-saturate-150',
+        'mt-4 rounded-soft border border-line-subtle shadow-aura bg-surface/95 backdrop-blur-md backdrop-saturate-150',
       )}
     >
       {/* ── THE ROW: h-20 (5rem) AT EVERY WIDTH (owner, 2026-09-04: "make top

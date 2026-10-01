@@ -147,17 +147,20 @@ const linkName = (label: string, name = DOCTOR_NAME): string =>
 // contiguous geometry string, so spelling it here — even inside a test — would
 // turn that src-wide fence red. Joining the tokens produces the same expected
 // value while this file never contains the fenced spelling.
-/** ui/Card's `cardClasses` — the geometry, the tone clock, the one tint —
- *  which every tone row follows. */
+/** ui/Card's geometry, corner row, tone clock and one tint — the bytes every
+ *  tone row follows (its `cardGeometry` + `cornerClasses` + `cardClock`). */
 const CARD_BASE = [
   '@container',
   'flex',
   'flex-col',
   'gap-3',
-  'rounded-md',
+  // THE CORNER (owner 2026-10-01, §15.29): ui/Card's `corners="soft"` row on
+  // BOTH kinds — the old doctor card's rounded-2xl, the 1rem token — in the
+  // slot where every other card's `rounded-md` stands: the one moved token.
+  'rounded-soft',
   // The TONE CROSSFADE utilities (ui/Card rework, reviews-deck run 2026-09-10):
   // paint fades on the shared --fade clock, geometry never moves. Part of the
-  // atom's own `cardClasses`, so a consumer's byte-pin carries them too.
+  // atom's own `cardClock`, so a consumer's byte-pin carries them too.
   '[--fade:400ms]',
   'transition-[background-color,border-color]',
   'duration-(--fade)',
@@ -165,7 +168,7 @@ const CARD_BASE = [
   'motion-reduce:transition-none',
   // The ONE TINT declarations (ui/Card, owner 2026-09-12): the solid accent,
   // then the opaque 20% mix behind a @supports gate — worn by every card,
-  // read only by the `framed`/`emphasized` rows. Part of `cardClasses` too.
+  // read only by the `framed`/`emphasized` rows. Part of `cardClock` too.
   '[--card-tint:var(--color-accent-decorative)]',
   'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]',
 ];
@@ -1548,4 +1551,27 @@ describe('PersonnelCard — the heading level is an additive axis (D4, 2026-09-2
     >();
     expectTypeOf<PersonnelHeadingLevel>().toEqualTypeOf<2 | 3>();
   });
+});
+
+describe('PersonnelCard — THE CORNER (owner 2026-10-01, §15.29)', () => {
+  it.each([
+    ['doctor', renderDoctor],
+    ['auxiliary', renderAuxiliary],
+  ] as const)(
+    'gives a %s card the SOFT corner — the old doctor card’s rounded-2xl — and never a second radius',
+    (_kind, renderKind) => {
+      // "i want that rounded corner effect that the doctor card from old
+      // webpage has" · "doctor cards mean also personell cards": ui/Card's
+      // `corners="soft"` on BOTH kinds — `rounded-soft`, the 1rem token the
+      // Header pill, ui/TextButton and ui/Modal wear too — in place of the 6px
+      // `rounded-md` every other card keeps. Exactly ONE `rounded-*` on the
+      // root: two would leave the stylesheet's order to pick the corner.
+      const { container } = renderKind();
+
+      const rounded = tokensOf(cardOf(container)).filter((t) =>
+        /^rounded-/.test(t),
+      );
+      expect(rounded).toEqual(['rounded-soft']);
+    },
+  );
 });

@@ -17,7 +17,8 @@
    LOCKED (§15.1): cta #008854 · anchor #00A968 · star #D4AF37 (amended 2026-09-12, was #B29126) ·
    accent-decorative #7A6D9C (large display text ≥3:1 + graphics ONLY — the
    a11y addon polices misuse) · scrim floor 0.55 · body base 1.125rem ·
-   component default radius 6px (= rounded-md; scale untouched) · font tokens
+   component default radius 6px (= rounded-md; scale untouched — plus ONE ADDED
+   step, --radius-soft 1rem, the old site's card corner, §15.29) · font tokens
    named display/body/mono, never --font-sans.
    ADDED (D56, the doctor-pages run, owner 2026-09-26): accent-strong — accent
    ink for body-size text (≥4.5:1), the 18th semantic role; its charter and its
@@ -129,6 +130,32 @@
      tests/unit/aura-token.test.ts pins this value and the consumer census. */
   --shadow-aura: 0 8px 22px
     color-mix(in srgb, var(--accent-decorative) 40%, transparent);
+
+  /* THE SOFT CORNER — the old site's CARD radius: `rounded-2xl` on its doctor
+     card, its staff card and its review card, which is Tailwind's 2xl step,
+     1rem = 16px, on a radius scale that site never overrode (read in its
+     index.css, not assumed). Imported on the owner's word (2026-10-01: "i
+     want that rounded corner effect that the doctor card from old webpage
+     has … implemented in all mentioned parts") for FOUR wearers and nothing
+     else: ui/Card's `corners="soft"` row (sections/PersonnelCard, both
+     kinds), the Header pill with NavMenu's panel, ui/TextButton's box and
+     ui/Modal's box — the contact dialog. §15.1's 6px default (rounded-md)
+     still holds for every other corner on the site: ui/Button, GlyphButton's
+     square, the price, review, credo and schedule cards, the language
+     banner's toast, the map frame — the price cards by the owner's taste: the
+     soft corner was put on the services page on his "apply to all cards on
+     services page too" and taken off the same evening ("i liked card from
+     before better for services. it looked perfect."). ONE token rather than
+     four spellings of `rounded-2xl`, so
+     `rounded-2xl`, so the wearers cannot drift and the number is dialled in
+     one place; the default radius scale stays untouched (§3) — this is an
+     ADDITION to the `--radius-*` namespace, from which Tailwind mints
+     `rounded-soft`, `rounded-b-soft` and every other side and corner form.
+     rem, not px (§7): the corner scales with the root, as the old site's
+     did. tests/unit/soft-corner-census.test.ts pins this value and counts
+     the wearers. Declared BEFORE the keyframes below for the aura's own
+     reason: aura-token.test.ts reads this block up to its first `}`. */
+  --radius-soft: 1rem;
 
   /* THE POP — the "jump at you" the owner asked of the current year on a
      doctor's course timeline (2026-09-26, the doctor-pages run's round 2g,

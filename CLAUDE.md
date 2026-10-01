@@ -493,6 +493,14 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    old site's exact `#8377a3` fails there with its number. **The owner's lever:** the exact
    old value is one line in globals.css plus an exception in that test — an AA failure on the
    site's navigation, to be recorded here as the owner's call if taken.
+   **Radius amended 2026-10-01 (owner, soft-corners lane — "i want that rounded corner
+   effect that the doctor card from old webpage has … implemented in all mentioned
+   parts"):** the 6px default STANDS for every control and card, and the site gains a
+   SECOND, named corner — `--radius-soft` = **1rem**, the old site's own `rounded-2xl` card
+   radius — worn by exactly four parts: sections/PersonnelCard (both kinds, through
+   ui/Card's new `corners="soft"` situation), the Header pill with NavMenu's panel,
+   ui/TextButton's box and ui/Modal's box (the contact dialog). The services page's cards
+   wore it for an hour and went back to 6px on the owner's taste. Item 29 is the record.
 2. Hosting & environments — **environments decided:** GitHub Environments `development`
    (auto-deploys every push to `develop` to a staging URL that is **always noindex** via the
    `STAGING=1` build flag) and `production` (deploys from `main` only, **required-reviewer
@@ -2536,6 +2544,59 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     every cell with the shell moves (the brand corner is on every page) — Sections/Wordmark (5), Sections/Header
     (8), Sections/Footer (8), Sections/Hero (the Header above the band), Pages/* in both languages; the darwin
     re-record is the owner's, on the owner's machine (§15.7).
+29. **The soft corner — ON THE OWNER'S WORD (2026-10-01, verbatim: "refactor on docotr cards, top bar and
+    TEXT buttons, contact us modal. take a look at old webpage. i want that rounded corner effect that the
+    doctor card from old webpage has … so i want round corner from that card. the aspect and ratio or idk
+    how to call it implemented in all mentioned parts" · "doctor cards mean also personell cards"; lane
+    `rework/soft-corners`):** the old site's doctor card was `rounded-2xl` — Tailwind's 2xl step, **1rem**,
+    on a radius scale that repo never overrode (its `@theme` holds no `--radius-*`; read, not assumed) — as
+    were its staff card and its review card; its top bar was `rounded-lg` (8px), its buttons `rounded`
+    (4px), its desktop nav anchors square boxes with an underline. That 1rem ships as ONE token,
+    **`--radius-soft`** in globals.css' `@theme` (an ADDITION to the `--radius-*` namespace; the default
+    scale stays untouched — §3), minting `rounded-soft`, `rounded-b-soft` and the other side and corner
+    forms, and it is worn by exactly the four parts the owner named: (1) **the personnel card, both
+    kinds** — ui/Card gains a SECOND situation axis, `corners: 'house' | 'soft'` (default `house` = the
+    §15.1 6px `rounded-md`), a lookup like `tone`, emitted in the slot where `rounded-md` always stood so
+    every card that does not ask is byte-identical (the atom's recorded "A RADIUS PROP" rejection is
+    re-written as the fired trigger: the premise "one value for the whole site" fell on the owner's word;
+    a KNOB — `radius={16}` — stays refused); sections/PersonnelCard passes `corners="soft"` for the doctor
+    and the auxiliary alike; the portrait's own 12px (ui/Image `framed`) is untouched — the old staff card
+    paired a 16px card with a 12px picture frame too; (2) **the top bar** — the Header pill `rounded-lg` →
+    `rounded-soft`, and NavMenu's panel with it (the two glass cards have matched since 2026-08-16); the
+    bar's CONTROLS keep 6px (the Contact ui/Button, the burger's GlyphButton `square`); (3) **the TEXT
+    buttons** — ui/TextButton's box wears `rounded-soft`: a chrome-less control has no ground and no border,
+    so TODAY THE CORNER SHOWS ON THE FOCUS RING ALONE (an outline follows `border-radius` in every current
+    engine) and on any future hover ground (fb-126's "bordered look" variant) — recorded plainly, the
+    owner's to widen; (4) **the contact modal** — ui/Modal's box `rounded-lg` → `rounded-soft` and its body
+    `rounded-b-lg` → `rounded-b-soft` (the body reaches the box's bottom edge; square, it would paint over a
+    rounded box's lower corners from inside); ContactModal composes it unchanged. **(5) THE SERVICES PAGE,
+    TRIED AND REVERTED THE SAME EVENING:** on the owner's "apply to all cards on services page too",
+    sections/PriceList's menu card (`PriceMenu`) and its eleven `CategoryCard`s passed `corners="soft"` —
+    built, gated, measured (zero tolerance: exactly Sections/PriceList 12 + Pages/Services 12 cells moved,
+    the armed glow's `::before` layer and the keyboard arrival ring following the corner by construction),
+    shown on the preview — and taken off again on his look: "ngl i liked cared fro before better for
+    services. it looked perfect." A card KIND's corner is TASTE, chosen per kind and recorded, never
+    inferred from a neighbour: the price cards keep §15.1's 6px, the census's askers list names
+    PersonnelCard alone, and CategoryCard.test / PriceList.test now PIN the house corner on the menu and
+    on every category card with the owner's words, so a later "to match" needs a new word. NOT changed,
+    each one class
+    away, the owner's calls: the LanguageBanner toast (the third member of the old `rounded-lg` overlay
+    family — it keeps 8px and its header says so), ui/Button (the Contact button, „Mai multe despre mine",
+    the hero CTAs — 6px), the burger, the review / price / credo / schedule cards (6px — the reviews deck's
+    idle FRAME the doctor card borrowed keeps its 6px; the price cards by the taste decision above), the
+    map frame. **Guards:** ui/Card's fence
+    (`tests/unit/card-single-spelling.test.ts`) is re-keyed to the geometry's four utilities
+    `@container flex flex-col gap-3` with the old dossier shape `flex flex-col gap-3 rounded-md` fenced to
+    Card.test.tsx's byte-pin alone; NEW `tests/unit/soft-corner-census.test.ts` pins the value inside
+    `@theme` (1rem, one spelling), counts each wearer's wear outside prose (Card 1 · TextButton 1 · Header 1 ·
+    NavMenu 1 · Modal 1 + 1 bottom), sweeps src for a fifth wearer and for a second asker of `corners="soft"`,
+    and proves its stripper has teeth; Card.test (the axis: default byte-identical, soft in the geometry's
+    slot on every tone, exactly ONE `rounded-*` per corner × tone, 16px / 6px computed, the armed glow's
+    layer inheriting 16px, `corners="round"` refused at compile time), PersonnelCard.test (both kinds, one
+    radius), TextButton.test, Header.test (pill + panel one token, the burger 6px), Modal.test (box + body,
+    16px computed). **Overlap, recorded:** the uncommitted `rework/text-button-lavender` lane edits
+    TextButton's `base` (its colours), Header.test and globals.css too — whichever merges second rebases;
+    the hunks are adjacent lines, not the same ones. **Evidence at READY:** see the lane's PR.
 
 ## 16. Build-time vs runtime contract
 

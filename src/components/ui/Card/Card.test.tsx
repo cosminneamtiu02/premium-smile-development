@@ -13,6 +13,7 @@ import {
   Card,
   type CardProps,
   type CardTone,
+  type CardCorners,
 } from './Card';
 import source from './Card.tsx?raw';
 
@@ -36,7 +37,7 @@ const RO_BODY = 'Evaluare completă a danturii și plan de tratament.';
 
 // THE surface, in canonical order and in one contiguous piece — the
 // independent byte-pin (the ui/Eyebrow RECIPE convention): written out here
-// rather than imported from the component, so a silent edit to `cardClasses`
+// rather than imported from the component, so a silent edit to the atom's constants (`cardGeometry`, `cornerClasses`, `cardClock`)
 // or to a tone row fails HERE instead of quietly re-defining what the test
 // compares against. Every card in every future section wears these bytes.
 // The clock joined the geometry on 2026-09-10 (owner D1b — Card.tsx's TONE
@@ -53,7 +54,7 @@ const RO_BODY = 'Evaluare completă a danturii și plan de tratament.';
 // THE TINT'S TWO DECLARATIONS (owner 2026-09-12 — Card.tsx's ONE TINT
 // paragraph): the solid accent every engine understands, then the opaque 20%
 // mix over the surface behind a `@supports` gate. They are part of
-// `cardClasses`, so EVERY card emits them and every byte-pin below carries
+// `cardClock`, so EVERY card emits them and every byte-pin below carries
 // them — a bare `surface` card included, which never reads the value.
 const TINT_DECLARATION =
   '[--card-tint:var(--color-accent-decorative)] ' +
@@ -257,6 +258,113 @@ describe('Card — THE surface definition', () => {
     // (1 + 24 four times). The two widths ARE the claim.
     expect(borders.get('framed')).toBe(3);
     expect(borders.get('surface')).toBe(1);
+  });
+});
+
+describe('Card — THE CORNER AXIS (owner 2026-10-01, §15.29)', () => {
+  // The union pinned like `tone`'s: widening it to `string` would keep every
+  // Record compiling with stale rows while `cornerClasses[x]` went undefined.
+  expectTypeOf<CardCorners>().toEqualTypeOf<'house' | 'soft'>();
+
+  /** ui/Card's `cornerClasses`, spelled out (the byte-pin convention above):
+   *  `house` = §15.1's 6px default, `soft` = the old site's card corner — the
+   *  `--radius-soft` token, 1rem, in globals.css. A Record, so a third
+   *  situation cannot ship without a pin. */
+  const CORNER_CLASSES: Record<CardCorners, string> = {
+    house: 'rounded-md',
+    soft: 'rounded-soft',
+  };
+
+  /** The geometry with the corner swapped — every other byte untouched. */
+  const geometryWith = (corner: CardCorners): string =>
+    GEOMETRY.replace('rounded-md', CORNER_CLASSES[corner]);
+
+  it('defaults to the house corner — a bare <Card> is byte-identical to before the axis', () => {
+    // §6.6: growth adds a situation; it never moves what every existing card
+    // already looks like. DEFAULT_CARD above is the pre-axis spelling, and
+    // the explicit `house` is the same bytes.
+    const bare = render(<Card>{RO_TITLE}</Card>);
+    expect(screen.getByText(RO_TITLE).className).toBe(DEFAULT_CARD);
+    bare.unmount();
+    render(<Card corners="house">{RO_TITLE}</Card>);
+    expect(screen.getByText(RO_TITLE).className).toBe(DEFAULT_CARD);
+  });
+
+  it.each(Object.keys(TONE_CLASSES) as CardTone[])(
+    'tone "%s" takes the soft corner in the geometry’s own slot, its row untouched',
+    (tone) => {
+      // Emitted where `rounded-md` always stood: only that one utility moves,
+      // so a consumer pinning its card's bytes sees exactly one token change
+      // (PersonnelCard.test.tsx's CARD_BASE is that consumer).
+      render(
+        <Card tone={tone} corners="soft">
+          {RO_TITLE}
+        </Card>,
+      );
+      expect(screen.getByText(RO_TITLE).className).toBe(
+        `${geometryWith('soft')} ${TONE_CLASSES[tone]}`,
+      );
+    },
+  );
+
+  it.each(
+    (Object.keys(CORNER_CLASSES) as CardCorners[]).flatMap((corner) =>
+      (Object.keys(TONE_CLASSES) as CardTone[]).map(
+        (tone) => [corner, tone] as const,
+      ),
+    ),
+  )(
+    '"%s" corner on tone "%s" carries exactly ONE rounded-* utility',
+    (corner, tone) => {
+      // Two `rounded-*` on one element would leave the stylesheet's order to
+      // pick the corner (Card.tsx's className paragraph) — the reason the
+      // radius rides a lookup instead of a base string plus an override.
+      render(
+        <Card tone={tone} corners={corner}>
+          {RO_TITLE}
+        </Card>,
+      );
+      const rounded = tokensOf(screen.getByText(RO_TITLE)).filter((t) =>
+        /^rounded-/.test(t),
+      );
+      expect(rounded).toEqual([CORNER_CLASSES[corner]]);
+    },
+  );
+
+  it('resolves the soft corner to the token’s 1rem and the house corner to 6px — computed, not claimed', () => {
+    // globals.css is loaded in this suite (the sum-rule test measures padding
+    // through it), so the corner can be read back from the engine: 16px at
+    // the 16px root for `soft` — the old doctor card's rounded-2xl — and
+    // §15.1's 6px for `house`. rem, so browser zoom scales it with the rest.
+    const soft = render(<Card corners="soft">{RO_TITLE}</Card>);
+    expect(
+      getComputedStyle(screen.getByText(RO_TITLE)).borderTopLeftRadius,
+    ).toBe('16px');
+    soft.unmount();
+    render(<Card>{RO_TITLE}</Card>);
+    expect(
+      getComputedStyle(screen.getByText(RO_TITLE)).borderTopLeftRadius,
+    ).toBe('6px');
+  });
+
+  it('lets the armed glow follow the corner — the layer inherits the radius', () => {
+    // `before:rounded-[inherit]` on the glow layer: a soft card's glow rounds
+    // at 1rem too, read back through the pseudo-element.
+    render(
+      <Card corners="soft" aura="current" data-current="">
+        {RO_TITLE}
+      </Card>,
+    );
+    const layer = getComputedStyle(screen.getByText(RO_TITLE), '::before');
+    expect(layer.borderTopLeftRadius).toBe('16px');
+  });
+
+  it('rejects a corner outside the lookup — situations join by decision, never at a call site', () => {
+    const round = (
+      // @ts-expect-error — 'round' is not a CardCorners
+      <Card corners="round">{RO_TITLE}</Card>
+    );
+    expect(round).toBeTruthy();
   });
 });
 
@@ -1088,7 +1196,7 @@ describe('Card — the rejected axes, pinned at the type level', () => {
     expectTypeOf<CardProps>().not.toHaveProperty('padding');
   });
 
-  it('has no paint axis beyond `tone` — no background, border or radius knob', () => {
+  it('has no paint KNOB — no background, border or radius number (the corner is a situation, `corners`)', () => {
     expectTypeOf<CardProps>().not.toHaveProperty('background');
     expectTypeOf<CardProps>().not.toHaveProperty('border');
     expectTypeOf<CardProps>().not.toHaveProperty('radius');
@@ -1117,6 +1225,7 @@ describe('Card — the rejected axes, pinned at the type level', () => {
     expectTypeOf<CardProps>().toHaveProperty('children');
     expectTypeOf<CardProps>().toHaveProperty('tone');
     expectTypeOf<CardProps>().toHaveProperty('aura');
+    expectTypeOf<CardProps>().toHaveProperty('corners');
   });
 });
 
@@ -1140,12 +1249,15 @@ describe('Card — the zero-island invariant (source guard)', () => {
 
   it('spells the card geometry exactly ONCE in its own source', () => {
     // The FILE-LOCAL half of the promotion's residue check, counted on the
-    // RAW source: this file spells the signature once, in `cardClasses`, and
+    // RAW source: this file spells the signature once, in `cardGeometry`, and
     // its own header prose deliberately writes those utilities apart (with
     // separators) so discussing the geometry can never redden the guard. This
     // counter cannot see any other file — the src-WIDE half, "no second
-    // spelling anywhere", is tests/unit/card-single-spelling.test.ts.
-    expect(source.split('flex flex-col gap-3 rounded-md').length - 1).toBe(1);
+    // spelling anywhere", is tests/unit/card-single-spelling.test.ts. Since
+    // the corner axis (§15.29) the signature is the geometry's FOUR utilities
+    // alone: `rounded-md` rides the `corners` lookup and is composed at render.
+    expect(source.split('@container flex flex-col gap-3').length - 1).toBe(1);
+    expect(source).not.toContain('flex flex-col gap-3 rounded-md');
   });
 });
 

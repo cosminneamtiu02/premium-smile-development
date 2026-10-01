@@ -10,6 +10,7 @@ import {
   Card,
   type CardProps,
   type CardTone,
+  type CardCorners,
 } from './Card';
 
 // EIGHT stories, and the count is the honest one: the four tones, the two
@@ -89,12 +90,20 @@ const TONE_OPTIONS = {
   framed: 'framed',
 } satisfies { [K in CardTone]: K };
 
+/** The corner control's options — the same keyed shape, for the same reason:
+ *  a third corner situation reaches the panel in the commit that adds its row. */
+const CORNER_OPTIONS = {
+  house: 'house',
+  soft: 'soft',
+} satisfies { [K in CardCorners]: K };
+
 const meta = {
   title: 'UI/Card',
   component: Card,
   parameters: { layout: 'fullscreen' },
   args: {
     tone: 'surface',
+    corners: 'house',
     aura: false,
     children: 'Evaluare completă a danturii și plan de tratament.',
   },
@@ -104,6 +113,12 @@ const meta = {
       options: Object.values(TONE_OPTIONS),
       description:
         'Named SITUATIONS, never CSS knobs: surface = the default card on a page band (border-line-subtle on bg-surface) · tinted = the quiet card that sits ON a surface band (transparent border, bg-page) · emphasized = the selected row: its ground is the framed row’s own border colour (`--card-tint`, accent-decorative at 20% over the surface — the old site’s rgb(229 228 236); owner 2026-09-12) · framed = the old site’s review-card frame, 3px of accent-decorative on surface paint (owner fb-423). Every row spends the same 25px per side on border width + padding — 1 + 24, or 3 + 22 for framed — so switching tone never moves content by a pixel',
+    },
+    corners: {
+      control: 'inline-radio',
+      options: Object.values(CORNER_OPTIONS),
+      description:
+        'WHICH CORNER the card wears — a situation, like tone: house = §15.1’s 6px default (rounded-md), every card on the site · soft = the old site’s card corner, its doctor card’s rounded-2xl, 1rem — the ONE token --radius-soft the Header pill, ui/TextButton and ui/Modal wear as well (owner 2026-10-01, §15.29). Chosen per card KIND in the section that composes it: sections/PersonnelCard passes soft for both of its kinds, and no other card wears it until a decision says so (the services page’s cards tried it for an hour and went back to house on the owner’s taste)',
     },
     aura: {
       control: 'boolean',
@@ -385,6 +400,19 @@ export const Tones: Story = {
  */
 export const WithAura: Story = {
   args: { aura: true },
+  render: renderServiceTier,
+};
+
+/**
+ * THE SOFT CORNER (owner 2026-10-01, §15.29): the old site's card radius — its
+ * doctor card's `rounded-2xl`, 1rem — as the atom's second corner situation,
+ * shown on the `framed` tone because that pairing IS the personnel card
+ * (sections/PersonnelCard passes both). Every other card on the site keeps the
+ * 6px `house` corner; the Header pill, ui/TextButton and ui/Modal wear the same
+ * token, so this frame is also what the contact dialog's corners look like.
+ */
+export const SoftCorners: Story = {
+  args: { tone: 'framed', corners: 'soft' },
   render: renderServiceTier,
 };
 

@@ -250,7 +250,10 @@ const layerClasses =
 // THE BOX (D17) — the white panel, the layer's only child.
 //
 // The look (ex-D4, unchanged by the split): the menu panel's own clothes —
-// `rounded-lg border border-line-subtle bg-surface` (NavMenu.tsx) — so the site
+// `rounded-soft border border-line-subtle bg-surface` (NavMenu.tsx; the SOFT
+// CORNER since 2026-10-01, §15.29 — the owner named the contact dialog among
+// his four parts, and the token is the panel's too, so the two glass boxes
+// still round alike) — so the site
 // has ONE overlay language, plus `shadow-xl`. The shadow is invisible over the
 // scrim and exists for dimBackdrop={false}, where a white panel would otherwise
 // sit on the off-white page with a hairline between them.
@@ -264,7 +267,7 @@ const layerClasses =
 // what turns the excess into layer scroll instead of lost content.
 const boxClasses =
   '@container m-auto shrink-0 ' +
-  'rounded-lg border border-line-subtle bg-surface text-ink shadow-xl ' +
+  'rounded-soft border border-line-subtle bg-surface text-ink shadow-xl ' +
   // `break-words` (overflow-wrap: break-word) is INHERITED by everything the
   // consumer nests, and it is load-bearing, not polish: the panel is a
   // hard-edged overflow-hidden box, so one unbreakable word wider than it —
@@ -357,8 +360,9 @@ const barClasses =
 const slotClasses =
   'flex min-h-11 min-w-0 flex-1 flex-wrap items-center gap-3 [&>*]:min-w-0';
 // The body's padding is the same in both modes — P left/right/bottom, G on top
-// (D5). `rounded-b-lg` matches the panel's own corners, since this container
-// reaches the bottom edge of the box.
+// (D5). `rounded-b-soft` matches the panel's own corners (the SOFT CORNER,
+// §15.29), since this container reaches the bottom edge of the box — a square
+// body would paint over a rounded box's lower corners from inside.
 //
 // The focus ring lives here, in BOTH modes (G2). It is obviously needed in the
 // scrollable one, where this container really is a tab stop; the reason it is
@@ -376,7 +380,7 @@ const slotClasses =
 // clipped on three of its four edges and reads as a stray 2px line under the
 // title.
 const contentBase =
-  'rounded-b-lg px-4 pb-4 pt-3 @md:px-6 @md:pb-6 @md:pt-4 @2xl:px-8 @2xl:pb-8 ' +
+  'rounded-b-soft px-4 pb-4 pt-3 @md:px-6 @md:pb-6 @md:pt-4 @2xl:px-8 @2xl:pb-8 ' +
   'focus-visible:outline-2 focus-visible:outline-focus ' +
   'focus-visible:-outline-offset-2';
 

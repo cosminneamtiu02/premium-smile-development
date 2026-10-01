@@ -458,11 +458,28 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // did, the INSET's arithmetic is untouched and every number D7 and THE INSET
 // record still holds. The Doctor stories measure the 3px, and the 25px from
 // the card's edge to its content on every side.
+// THE CORNER — the owner, 2026-10-01, verbatim: "i want that rounded corner
+// effect that the doctor card from old webpage has … the aspect and ratio or
+// idk how to call it implemented in all mentioned parts", and "doctor cards
+// mean also personell cards". The old doctor card (and the old staff card)
+// were `rounded-2xl` — Tailwind's 2xl step, 1rem, on an untouched radius
+// scale — so BOTH kinds pass ui/Card's `corners="soft"`, the atom's second
+// corner situation over the ONE token `--radius-soft` the Header pill,
+// NavMenu's panel, ui/TextButton and ui/Modal wear as well (§15.29). Every
+// other card on the site keeps the 6px `house` corner (the services page's
+// cards tried the soft one for an hour on his "apply to all cards on services
+// page too" and went back on his "i liked card from before better for
+// services. it looked perfect."); the reviews deck's idle card, whose FRAME
+// this card borrowed, keeps its 6px — the owner named four parts, and this is
+// one of them. The portrait's own 12px
+// (ui/Image `framed`, its D3) is untouched: the old staff card paired its
+// 16px card with a 12px picture frame, the same pair as here.
 // THE LEVERS, one token each: the card's tone (TONE's doctor row, `framed` ↔
 // `surface`) · the link's face (`solid` ↔ `outline`) · its cap (`max-w-md`,
 // 28rem — 24rem was "not wide enough", the whole text box "too wide") · the
 // picture's width (`w-72`, with `sizes`) · the name's step on level 3
-// (NAME_STEP's doctor row) · the phone order (the two `flex-col-reverse`).
+// (NAME_STEP's doctor row) · the phone order (the two `flex-col-reverse`) ·
+// the corner (`corners`, `soft` ↔ `house`, THE CORNER — both kinds at once).
 //
 // ── D18 · THE EAGER PATH — a band asks, the card never guesses (the
 // doctor-showcase lane, 2026-09-30). A card does not know where it sits on a
@@ -749,10 +766,11 @@ export function PersonnelCard({
   );
 
   return (
-    <Card asChild tone={TONE[kind]}>
+    <Card asChild tone={TONE[kind]} corners="soft">
       {/* The <article> IS the card (Card D2 / ui/slot.ts): the tone's paint
           and padding — framed for a doctor, surface for a tile (THE FRAME) —
-          and the @container context land on the element this section chose,
+          the soft corner both kinds wear (THE CORNER) and the @container
+          context land on the element this section chose,
           so there is no wrapper div between a grid's <li> and its content,
           and `aria-labelledby` stays on the thing being named. */}
       <article {...rest} aria-labelledby={headingId} className={className}>

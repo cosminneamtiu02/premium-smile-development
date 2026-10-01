@@ -19,8 +19,9 @@ import { slotClone } from '../slot';
 // spellings of one idea; this file is the reply.
 //
 // ── WHAT THIS ATOM OWNS: the paint (a background and a border — 1px on the
-// flat rows, 3px for `framed`), the corner radius (§15.1's 6px default), the
-// inner padding, the inner COLUMN —
+// flat rows, 3px for `framed`), the corner radius (§15.1's 6px default, or
+// the old site's 1rem card corner through `corners="soft"` — THE CORNER AXIS
+// below, owner 2026-10-01), the inner padding, the inner COLUMN —
 // children stack vertically with one rhythm between them — and the
 // `@container` context that stack is measured against.
 //
@@ -47,9 +48,15 @@ import { slotClone } from '../slot';
 //     different inset; never as a row of `tone`, which would couple paint to
 //     inset and make every future combination a new row. One lane's wish is
 //     not a second measurement.
-//   · A RADIUS PROP — ui/Image's D3 reasoning, inherited: the radius is
-//     internal to the look, one value for the whole site, and a per-call knob
-//     turns a design decision into call-site variance.
+//   · A RADIUS KNOB — ui/Image's D3 reasoning, inherited: a per-call number
+//     turns a design decision into call-site variance. What the atom HAS
+//     since 2026-10-01 is not a knob but a second SITUATION, `corners`
+//     (`house` | `soft`, THE CORNER AXIS below): the premise "one value for
+//     the whole site" fell on the owner's word — "i want that rounded corner
+//     effect that the doctor card from old webpage has" — and the personnel
+//     card wears the old site's 1rem corner while every other card keeps the
+//     6px default (§15.29). A row joins that lookup by decision, never a
+//     `radius={…}` prop.
 //   · TEXT COLOUR — ink is inherited from the body, so a card reads the same
 //     wherever it lands and a section can still tone individual lines through
 //     ui/Text (§6.1: closed system, no styling of other people's insides).
@@ -117,12 +124,15 @@ import { slotClone } from '../slot';
 // one moves nothing by a pixel and a framed card in a grid row keeps its text
 // edges aligned with its neighbours' — the property the old repo's cards did
 // not have. It also explains why the PADDING lives in the rows rather than in
-// `cardClasses`: a row that had to correct the shared `p-6` would emit a
+// the shared geometry: a row that had to correct the shared `p-6` would emit a
 // second `p-*` on the same element, and which of the two wins is decided by
 // their order in the compiled sheet, not by the code — a coin toss. One
 // padding utility per rendered card, chosen by the row, and the question never
-// arises. (Radius stays `rounded-md`: the old review card's 16px corner is NOT
-// imported, §15.1's 6px default holds for every card on the site.)
+// arises. The radius rides the same rule — one `rounded-*` per rendered card,
+// chosen by the `corners` row (THE CORNER AXIS below): `rounded-md` for every
+// card on the site, the old site's 16px only where a section asks for `soft`
+// (owner 2026-10-01, §15.29 — until that day the old review card's 16px was
+// deliberately NOT imported, and this sentence said so).
 // (2) EMPHASIS IS FILL AND BORDER COLOUR, NOT THICKNESS — with exactly one
 // owner-decided exception, `framed` (fb-423, pack round 1: "the old website
 // had also a thicker border on the review card. I liked that very much"). For
@@ -338,7 +348,7 @@ import { slotClone } from '../slot';
 // the same shade as the border of the non-current card" — which is also the
 // old site's own arithmetic, measured: idle frame `3px rgb(229 228 236)`,
 // selected ground `rgb(229 228 236)`, the SAME colour). `--card-tint` is
-// spelled ONCE, in `cardClasses`, as `--accent-decorative` mixed at 20% over
+// spelled ONCE, in `cardClock`, as `--accent-decorative` mixed at 20% over
 // the surface — what the old site's rgb(229 228 236) is (its accent at ~20%
 // over white) — and both rows READ it: `framed` as its 3px border,
 // `emphasized` as its ground AND its 1px border (a border the colour of the
@@ -373,6 +383,11 @@ export type CardTone = 'surface' | 'tinted' | 'emphasized' | 'framed';
  *  card's element carries CARD_CURRENT_ATTRIBUTE, faded in and out. */
 export type CardAura = boolean | 'current';
 
+/** WHICH CORNER a card wears — a named situation, like `tone`:
+ *  `house` = §15.1's 6px default (`rounded-md`, every card on the site) ·
+ *  `soft` = the old site's card corner, `--radius-soft` 1rem (§15.29). */
+export type CardCorners = 'house' | 'soft';
+
 /** The attribute `aura="current"` answers to: PRESENT while the card is the
  *  current one, ABSENT otherwise. Exported so that whoever STAMPS the
  *  attribute on the DOM imports the name instead of retyping it
@@ -400,6 +415,11 @@ type CardOwnProps = {
    *  and faded in and out on the card's own --fade clock (owner 2026-09-29).
    *  @default false */
   aura?: CardAura;
+  /** WHICH CORNER this card wears — chosen per card KIND in its section, like `aura`:
+   *  `house` = the 6px default every card wears · `soft` = the old site's 1rem card corner
+   *  (owner 2026-10-01: sections/PersonnelCard, both kinds; the Header pill, ui/TextButton
+   *  and ui/Modal wear the same token, §15.29). @default 'house' */
+  corners?: CardCorners;
   /** THE MARK `aura="current"` answers to, when a client component renders it
    *  as a prop: the EMPTY STRING while the card is current, `undefined`
    *  otherwise — `data-current={isCurrent ? '' : undefined}`. Every other
@@ -414,21 +434,51 @@ type CardOwnProps = {
 export type CardProps = CardOwnProps &
   Omit<ComponentProps<'div'>, keyof CardOwnProps>; // React 19: ref is a prop
 
-// THE card surface's geometry AND the tone clock — ONE spelling in src/ (fence
-// test: tests/unit/card-single-spelling.test.ts pins the first literal's four
-// utilities as a contiguous signature, so keep them contiguous). Not exported.
+// THE card surface's geometry — ONE spelling in src/ (fence test:
+// tests/unit/card-single-spelling.test.ts pins this literal's four utilities
+// as a contiguous signature, so keep them contiguous). Not exported.
 // The PADDING is not here: it rides each tone row, so a rendered card carries exactly one
 // `p-*` utility and a thicker frame can compensate its own border (see below) — and it is
 // deliberately NOT on the transition list, which is what keeps the content still through a
-// tone swap (the TONE CROSSFADE paragraph above).
-const cardClasses =
-  '@container flex flex-col gap-3 rounded-md ' +
+// tone swap (the TONE CROSSFADE paragraph above). The RADIUS is not here either, for the
+// padding's own reason: it rides the `corners` row below, so a rendered card carries exactly
+// one `rounded-*` utility — never two of one property left to the sheet's order to settle.
+const cardGeometry = '@container flex flex-col gap-3';
+
+// THE CORNER AXIS (owner 2026-10-01: "i want that rounded corner effect that
+// the doctor card from old webpage has … implemented in all mentioned parts";
+// §15.29). Situations, never CSS knobs — `house` is §15.1's 6px default, worn
+// by every card on the site; `soft` is the old site's card corner, the
+// `rounded-2xl` its doctor, staff and review cards wore, imported as the ONE
+// token `--radius-soft` (1rem, globals.css) that the Header pill, NavMenu's
+// panel, ui/TextButton and ui/Modal wear too, so the four cannot drift. A
+// section chooses per card KIND (sections/PersonnelCard passes `soft` for
+// both of its kinds); no other card wears it until a decision says so — and
+// one decision went the other way the same evening: the services page's
+// menu and category cards wore it for an hour ("apply to all cards on
+// services page too") and lost it on the owner's "i liked card from before
+// better for services. it looked perfect." A card KIND's corner is taste,
+// chosen per kind and recorded (§15.29), never inferred from a neighbour.
+// Emitted right after the geometry, where `rounded-md` always stood, so every
+// card that does not ask keeps its class string byte for byte — the
+// consumers' pins (ReviewCard, CategoryCard, CredoCard, ScheduleCard) never
+// noticed the axis arrive. The glow's `before:rounded-[inherit]` follows
+// whichever corner the card wears. tests/unit/soft-corner-census.test.ts
+// counts this file's one spelling of the token among the wearers.
+const cornerClasses: Record<CardCorners, string> = {
+  house: 'rounded-md',
+  soft: 'rounded-soft',
+};
+
+// THE TONE CLOCK and THE TINT, worn after the corner. The clock: the two
+// paint properties on the shared 400ms --fade (the TONE CROSSFADE paragraph
+// above). THE TINT (the ONE TINT paragraph above): the solid accent first —
+// the fallback every engine understands — then the opaque 20% mix over the
+// surface wherever color-mix exists. Declared on every card so the two rows
+// below can read ONE value; a row that never uses it costs nothing.
+const cardClock =
   '[--fade:400ms] transition-[background-color,border-color] ' +
   'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
-  // THE TINT (the ONE TINT paragraph above): the solid accent first — the
-  // fallback every engine understands — then the opaque 20% mix over the
-  // surface wherever color-mix exists. Declared on every card so the two
-  // rows below can read ONE value; a row that never uses it costs nothing.
   '[--card-tint:var(--color-accent-decorative)] ' +
   'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]';
 
@@ -486,18 +536,22 @@ function glowClasses(
 export function Card({
   asChild = false,
   tone = 'surface',
+  corners = 'house',
   aura = false,
   className,
   children,
   ...rest
 }: CardProps): ReactElement {
   // §6.8 merge order: the atom's own classes first, the caller's className
-  // LAST — the geometry, then the tone row, then the optional glow. A
-  // deterministic convention the tests pin, NOT a cascade mechanism (see the
-  // className paragraph above: attribute order never decides CSS specificity,
-  // which is precisely why the paint and the padding are props).
+  // LAST — the geometry, the corner, the clock and tint, then the tone row,
+  // then the optional glow. A deterministic convention the tests pin, NOT a
+  // cascade mechanism (see the className paragraph above: attribute order
+  // never decides CSS specificity, which is precisely why the paint, the
+  // padding and the corner are props).
   const own = cx(
-    cardClasses,
+    cardGeometry,
+    cornerClasses[corners],
+    cardClock,
     toneClasses[tone],
     ...glowClasses(aura, tone),
     className,

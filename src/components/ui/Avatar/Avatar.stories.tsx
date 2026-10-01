@@ -65,11 +65,13 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * The letters face — the one most Romanian reviews will actually wear.
- * `bg-cta` + `text-ink-inverse` is the site's CTA pair (owner D3), measured at
- * 4.52:1 for white on `#008854`, which clears §9's 4.5:1 for normal text with
- * nothing to spare; the old site's lavender ground is gone because
- * `--accent-decorative` is licensed for ≥3:1 display text and graphics only
- * (§15.1), and two 16px letters are neither.
+ * `bg-accent` + `text-ink-inverse` is the menu buttons' lavender ROLE (owner
+ * 2026-10-01, reversing D3's CTA green: "the circle of persons initials to be
+ * in lilla, not in current green"), measured at 5.06:1 for white on `#746894`
+ * — more room than the green's 4.52:1 — which clears §9's 4.5:1 for normal
+ * text. D3 had no such role to choose from: in 2026-09-10's vocabulary the
+ * only lavender was `--accent-decorative`, licensed for ≥3:1 display text and
+ * graphics only (§15.1), and two 16px letters are neither.
  *
  * Type lowercase into the `initials` control and watch it still render
  * uppercase: the shouting is `text-transform`, never a `toUpperCase()` call,

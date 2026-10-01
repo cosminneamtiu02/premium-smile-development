@@ -191,7 +191,7 @@ export const Romanian: Story = {
     });
     await expect(heading.tagName).toBe('H1');
     // The opener: a named carousel region wearing its localized role word,
-    // its first slide the one showing, its beads named like their slides.
+    // ONE slide showing, its beads named like their slides.
     const hero = canvas.getByRole('region', { name: ro.home.hero.region });
     await expect(hero).toHaveAttribute(
       'aria-roledescription',
@@ -199,8 +199,17 @@ export const Romanian: Story = {
     );
     // Under the pill: the band's top edge is the viewport's (round 2).
     await expect(hero.getBoundingClientRect().top).toBe(0);
+    // WHICH slide is showing is the clock's, not this play's: the ring's
+    // first dwell is 1.5 s (§15.21 round 5) and it runs while `settled`
+    // above waits for every picture on the page, so on a loaded machine the
+    // ring has moved on by the time this line runs and slide 1 is `inert`,
+    // out of the accessibility tree (measured 2026-10-01: three pre-push
+    // runs on a machine at load average ~12 failed exactly here and nowhere
+    // else; alone the story passes every time). The start at slide 1 is
+    // Hero.test.tsx's pin; here it is enough that exactly one slide is
+    // reachable, named like its bead.
     await expect(
-      canvas.getByRole('group', { name: 'Imaginea 1 din 3' }),
+      canvas.getByRole('group', { name: /^Imaginea [1-3] din 3$/ }),
     ).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: ro.home.hero.contact }),

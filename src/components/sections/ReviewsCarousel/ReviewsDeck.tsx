@@ -535,11 +535,15 @@ export function ReviewsDeck({
           visitor meets the controls before the reviews), row 2 in the
           picture (owner D12: the buttons sit under the deck). Each press
           steps, and the ring goes on a full interval later (nothing stops
-          it for good — 2026-09-20). */}
+          it for good — 2026-09-20). Both discs wear ui/GlyphButton's LAVENDER
+          family since 2026-10-01 (`tone="accent"` — the owner: "round
+          scrolling buttons from reviews, the left and right ones" lilac like
+          the menu buttons; they still FILL on hover, the atom's own mirror). */}
       {isCarousel && (
         <div className="row-start-2 flex justify-center gap-3">
           <GlyphButton
             variant="outline"
+            tone="accent"
             aria-label={labels.previous}
             onClick={rotation.prev}
           >
@@ -547,6 +551,7 @@ export function ReviewsDeck({
           </GlyphButton>
           <GlyphButton
             variant="outline"
+            tone="accent"
             aria-label={labels.next}
             onClick={rotation.next}
           >

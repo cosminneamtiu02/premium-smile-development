@@ -431,8 +431,9 @@ export const Morph: Story = {
 /**
  * NO PHOTOGRAPH — the face of a reviewer whose Google picture is only a
  * generated letter (lib/reviews carries no picture for them): two capitals on
- * the site's CTA green, the same 3rem circle the picture fills, so the header
- * row does not move when a reviewer has no portrait.
+ * the menu buttons' lavender (owner 2026-10-01 — the CTA green until then),
+ * the same 3rem circle the picture fills, so the header row does not move
+ * when a reviewer has no portrait.
  *
  * The letters are DECORATION (`aria-hidden`): the name is printed in the
  * caption below, and a disc that announced it again would make every

@@ -566,8 +566,15 @@ export function NavMenu(): ReactElement {
               menu's unlock has already put '' back by the time the modal saves
               it. Header.test.tsx pins the whole chain in "hands the panel over
               to the ContactModal in ONE commit". */}
+          {/* LILAC since the evening of 2026-10-01, with the bar's Contact —
+              the same control, one look (the owner's reversal of his morning
+              "MUST STAY GREEN": "also paint the contact button from top bar a
+              lilla …"; Header.tsx carries the whole record). It does NOT
+              jump: a full-width row growing past the panel's padding reads
+              as a glitch, and the panel is the phone's — a touch surface. */}
           <ContactModalTrigger
             variant="solid"
+            tone="accent"
             className="w-full"
             onClick={close}
           >

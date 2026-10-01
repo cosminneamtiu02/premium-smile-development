@@ -22,15 +22,20 @@ import { Image } from '../Image/Image';
 // section chooses between — a chooser at the call site would let the two
 // shapes drift the way the old repo's did.
 //
-// ── WHY THE GREEN GROUND (owner D3). The letters sit on `bg-cta` +
-// `text-ink-inverse`, the site's CTA pair, NOT the old site's lavender
-// `bg-accent`: in this vocabulary `--accent-decorative` is licensed for large
-// display text and graphics at ≥3:1 only (§15.1), and two 16px letters are
-// neither. The cta pair is measured — white over #008854 is 4.52:1, the same
-// number Button.tsx records for its outline rest face (contrast is symmetric),
-// which clears §9's 4.5:1 for normal text with nothing to spare. Read that as
-// a fence: this face may not be lightened, and a smaller letter step would
-// need a re-measure, not an opinion.
+// ── WHY THE LAVENDER GROUND (owner, 2026-10-01 — "on review cards i want the
+// circle of persons initials to be in lilla, not in current green" —
+// REVERSING D3's green). The letters sit on `bg-accent` + `text-ink-inverse`:
+// the menu buttons' lavender ROLE (#746894, minted the same day — globals.css
+// carries its charter), i.e. the old site's lavender letters ground back on an
+// AA-passing shade. D3 (2026-09-10) had chosen the site's CTA pair instead
+// because the only lavender in the vocabulary then was `--accent-decorative`,
+// licensed for large display text and graphics at ≥3:1 only (§15.1), and two
+// 16px letters are neither. The accent pair is measured — white over #746894
+// is 5.06:1, MORE room than the green's 4.52:1 — which clears §9's 4.5:1 for
+// normal text. Read that as a fence still: this face may not be lightened,
+// and a smaller letter step would need a re-measure, not an opinion.
+// tests/unit/accent-census.test.ts names this atom as a wearer of the role and
+// sections/ReviewCard as its one renderer.
 //
 // ── THE LETTERS ARE DECORATION (D-A1, §9). The reviewer's name is printed by
 // the card two lines below, so a disc that announced it again would make every
@@ -161,14 +166,14 @@ const avatarDisc =
 // not JavaScript's (the Turkish dotted-i is the classic burn). `select-none`
 // keeps a drag across the card from selecting two letters that are not text.
 const avatarLetters =
-  'bg-cta text-base font-semibold text-ink-inverse uppercase select-none';
+  'bg-accent text-base font-semibold text-ink-inverse uppercase select-none';
 
 // The photograph. `size-full` fills the circle the host already measured;
 // `object-cover` crops the overflow instead of distorting a face;
 // `rounded-full` re-rounds the img itself so the 1px ring follows the circle
 // rather than a square hidden under it. The ring is on the PICTURE only
 // (owner D-A4, the old site's split): it separates a light photo edge from a
-// light card, which a solid green disc does not need.
+// light card, which a solid lavender disc does not need.
 const avatarPicture =
   'size-full rounded-full border border-line-subtle object-cover';
 

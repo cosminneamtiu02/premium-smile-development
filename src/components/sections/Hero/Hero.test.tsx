@@ -556,11 +556,53 @@ describe('Hero — the two calls to action', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('the services link is a plain locale anchor wearing the outline face', () => {
+  it('the services link is a plain locale anchor wearing the outline face — lilac border and label on the white box, the DARKER grey on hover, the top bar’s aura, the jump (owner, 2026-10-01)', () => {
     mount();
     const link = screen.getByRole('link', { name: LABELS.services });
     expect(link).toHaveAttribute('href', SERVICES_HREF);
-    expect(link.className).toContain('border-cta');
+    const tokens = link.className.split(/\s+/);
+    // ui/Button's outline face in its LAVENDER family: the border and the
+    // label in `accent`, the box still white ("but not background color"),
+    // the hover the grey ("should still turn current slight gray") — ONE
+    // STEP DARKER since the evening ("on hover of vezi serviciile i want
+    // little darker shade of gray"): `line`, not `line-subtle`, on hover and
+    // on press — with the label one step darker.
+    expect(tokens).toEqual(
+      expect.arrayContaining([
+        'border-accent',
+        'text-accent',
+        'bg-surface',
+        'hover:bg-line',
+        'hover:text-accent-strong',
+        'active:bg-line',
+      ]),
+    );
+    expect(tokens.filter((t) => /cta|line-subtle/.test(t))).toEqual([]);
+    // The old page's lilac glow around this one button — the top bar's own
+    // token, through className (tests/unit/aura-token.test.ts counts it).
+    expect(tokens).toContain('shadow-aura');
+    // …and the old page's jump on hover (the atom's `motion="jump"`; the
+    // jump census names this file twice).
+    expect(tokens).toContain('hover:scale-105');
+    expect(link).not.toHaveAttribute('motion');
+  });
+
+  it('the contact button wears the solid face in the lavender family, still drains to white on hover, and jumps (owner, 2026-10-01)', () => {
+    mount();
+    const trigger = screen.getByRole('button', { name: LABELS.contact });
+    const tokens = trigger.className.split(/\s+/);
+    expect(tokens).toEqual(
+      expect.arrayContaining([
+        'bg-accent',
+        'text-ink-inverse',
+        'hover:bg-surface',
+        'hover:text-accent',
+        'hover:scale-105',
+      ]),
+    );
+    expect(tokens.filter((t) => /cta/.test(t))).toEqual([]);
+    // …and no aura on this one: the owner asked for it on „Vezi serviciile".
+    expect(tokens).not.toContain('shadow-aura');
   });
 
   it('both sit in one wrapping row that shares the width equally', () => {

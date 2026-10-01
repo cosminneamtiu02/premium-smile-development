@@ -261,6 +261,51 @@ describe('FloatingActions — the WhatsApp disc (fb-353)', () => {
 });
 
 describe('FloatingActions — the call CTA', () => {
+  it('keeps BOTH corner discs on the green solid face — never the lavender the Footer’s discs wear (owner, 2026-10-01)', () => {
+    // The day the Footer's four discs, the reviews deck's chevrons and the map
+    // band's row discs turned lilac, the owner: "do not modify at least yet
+    // the hovering buttons from bottom right". ui/GlyphButton's `tone` axis
+    // defaults to the green CTA family and these two say nothing — pinned, so
+    // a sweep that recolours "every disc" fails here by name.
+    const { write, call } = mount();
+    for (const disc of [write, call]) {
+      const tokens = disc.className.split(/\s+/);
+      expect(tokens).toEqual(
+        expect.arrayContaining([
+          'bg-cta',
+          'text-ink-inverse',
+          'hover:bg-surface',
+        ]),
+      );
+      expect(tokens.filter((t) => t.includes('accent'))).toEqual([]);
+      expect(disc).not.toHaveAttribute('tone');
+    }
+  });
+
+  it('gives BOTH corner discs the old site’s jump on hover — the one movement the owner brought back, a motion axis and not a colour (2026-10-01)', () => {
+    // "call hover button in bottom right and whatsapp button … to have that
+    // jump at you animation on hover. this should not affect buttons from
+    // footer" — ui/GlyphButton's `motion="jump"` (its THE JUMP): the 105 %
+    // pop on its own 200ms clock, back to rest on press, never under reduced
+    // motion. The aura rides the scale; no shadow utility grows with it.
+    const { write, call } = mount();
+    for (const disc of [write, call]) {
+      const tokens = disc.className.split(/\s+/);
+      expect(tokens).toEqual(
+        expect.arrayContaining([
+          'hover:scale-105',
+          'active:scale-100',
+          'motion-reduce:hover:scale-100',
+          'shadow-aura',
+        ]),
+      );
+      expect(tokens.filter((t) => /^(hover|active):shadow-/.test(t))).toEqual(
+        [],
+      );
+      expect(disc).not.toHaveAttribute('motion');
+    }
+  });
+
   it('is a LINK to the single-source clinic number (§10.1), named in Romanian', () => {
     mount();
     const link = screen.getByRole('link', { name: ro.common.actions.call });

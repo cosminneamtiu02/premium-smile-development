@@ -58,12 +58,21 @@ import { cx } from '@/lib/cx/cx';
 //      product of the promotion. Geometry: identical to the old band from
 //      480px up; below that the floor is 16px instead of 48px, which is the
 //      margin every other band on the site already wears.
-//   2. The disc's colours. The old disc was the old palette's accent; every
-//      disc on this site is the green CTA family (§15.1 locked palette — the
-//      lavender is decorative only), and its hover face is the mirror law of
-//      PR #80 (solid DRAINS to outline's rest face). No `hover:scale-105` and
-//      no shadow pop either: fb-49/fb-50 removed both site-wide, because
-//      "jumps at you" was two extra animations on top of the colour fade.
+//   2. The disc's colours. The old disc was the old palette's accent; from
+//      2026-09-09 to 2026-10-01 every disc on this site was the green CTA
+//      family, and since 2026-10-01 these two wear ui/GlyphButton's LAVENDER
+//      family (`tone="accent"` — the `accent` role of the menu buttons, the
+//      old accent's AA-passing shade; the owner: "buttons for location and
+//      phone next to the map" lilac). The hover face is still the mirror law
+//      of PR #80 (solid DRAINS to outline's rest face), in that family. No
+//      `hover:scale-105` and no shadow pop either: fb-49/fb-50 removed both
+//      site-wide, because "jumps at you" was two extra animations on top of
+//      the colour fade — and when the owner brought the growth half back the
+//      evening of 2026-10-01 (the atoms' opt-in `motion="jump"`, six named
+//      buttons: the Hero's pair, the doctor card's link, the bar's Contact,
+//      the corner's two discs), these two row discs were not on his list and
+//      hold still; tests/unit/jump-census.test.ts pins this file among the
+//      still ones.
 //   3. The row text size. The old row read 16px on phones and 18px from `sm:`
 //      up; the body base here is 1.125rem site-wide (§15.1), so `text-base`
 //      already IS the old `sm:text-lg` — at every width, phones included.
@@ -107,8 +116,9 @@ type ContactRowProps = {
   external?: boolean;
 };
 
-// KEEP-IN-SYNC with ui/GlyphButton `variantClasses.solid` (its `hover:` +
-// `active:` members): the same five values, spelled with the `group-` prefix so
+// KEEP-IN-SYNC with ui/GlyphButton `variantClasses.solid.accent` (its `hover:`
+// + `active:` members — the LAVENDER cell since 2026-10-01): the same five
+// values, spelled with the `group-` prefix so
 // the DISC flips when the whole ROW is hovered or pressed — the old site's own
 // mechanism (owner fb-413, board D6 round 3). Zero runtime cost: a hover colour
 // is a CSS rule the browser applies itself, not JavaScript, so the band's
@@ -121,8 +131,8 @@ type ContactRowProps = {
 // that test fails and these words move with it. GlyphButton.tsx points back
 // here from its `variantClasses` comment.
 const ROW_HOVER =
-  'group-hover:bg-surface group-hover:text-cta group-hover:inset-ring-cta ' +
-  'group-active:bg-cta-hover group-active:text-ink-inverse group-active:duration-0';
+  'group-hover:bg-surface group-hover:text-accent group-hover:inset-ring-accent ' +
+  'group-active:bg-accent-strong group-active:text-ink-inverse group-active:duration-0';
 
 /**
  * One row = ONE anchor (the old site's single click target: disc and text are
@@ -182,6 +192,7 @@ function ContactRow({
       <GlyphButton
         asChild
         variant="solid"
+        tone="accent"
         aria-label={label}
         className={cx('shadow-aura', ROW_HOVER)}
       >

@@ -979,13 +979,14 @@ describe('Header — the brand and the two Contact links', () => {
     expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
   });
 
-  it('keeps BOTH Contact buttons on the green solid face, never the menu lavender (owner, 2026-10-01)', async () => {
-    // The owner, the day the menu links turned lavender (ui/TextButton's
-    // `accent` role): "contact button MUST STAY GREEN AS IT MUST JUMP INTO
-    // YOUR EYES". The site's one conversion goal is a call (§1), so the CTA
-    // keeps the green family (§15.1) while the quiet menu controls around it
-    // wear the lavender — the difference between the two IS the point, and
-    // this pin is what stops a later "make the bar match" edit from erasing it.
+  it('wears the lavender solid face on BOTH Contact buttons — the owner’s own reversal of his morning rule (2026-10-01)', async () => {
+    // The morning the menu links turned lavender the owner pinned the CTA
+    // green — "contact button MUST STAY GREEN AS IT MUST JUMP INTO YOUR EYES"
+    // — and this test pinned both Contact buttons to ui/Button's green face.
+    // The same evening he reversed it himself: "also paint the contact button
+    // from top bar a lilla and make it wider, more seszable and adjust to
+    // widest language form". So the pin flips, in the bar and in the panel
+    // (the same control, one look): the lavender family, no green token left.
     const user = userEvent.setup();
     const { burger, panel, barCta, messages } = mount();
     const bar = barCta();
@@ -997,10 +998,55 @@ describe('Header — the brand and the two Contact links', () => {
 
     for (const cta of [bar, panelCta]) {
       expect(classesOf(cta)).toEqual(
-        expect.arrayContaining(['bg-cta', 'text-ink-inverse']),
+        expect.arrayContaining([
+          'bg-accent',
+          'text-ink-inverse',
+          'hover:bg-surface',
+          'hover:text-accent',
+        ]),
       );
-      expect(classesOf(cta).filter((c) => c.includes('accent'))).toEqual([]);
+      expect(classesOf(cta).filter((c) => /cta/.test(c))).toEqual([]);
+      expect(cta).not.toHaveAttribute('tone');
     }
+  });
+
+  it('the bar’s Contact is the md box under a 10rem floor with the old site’s jump; the panel’s stays full-width and still', async () => {
+    // "make it wider, more seszable and adjust to widest language form" —
+    // and, on the look, "i wanted the contact button wider just, not also
+    // taller": the md face (44px, the row's own height; the lg face was
+    // tried and taken off) under a `min-w-40` floor the section owns (§6.8,
+    // §8.4) — 10rem, measured against the widest of the five labels
+    // („Contatti", 66.4px at 18px medium, + 2 × 20px of padding = 106.4px
+    // natural), so every language renders the SAME box; Header.tsx
+    // carries the arithmetic and the stories' plays measure the floor. The
+    // jump ("contact button in top bar, to have that jump at you animation
+    // on hover") is ui/Button's `motion="jump"`; the panel's full-width
+    // Contact wears neither the floor nor the jump — a row that grows past
+    // its panel's padding reads as a glitch on a touch surface.
+    const user = userEvent.setup();
+    const { burger, panel, barCta, messages } = mount();
+    const bar = classesOf(barCta());
+    expect(bar).not.toContain('min-h-14');
+    expect(bar).toEqual(
+      expect.arrayContaining([
+        'min-h-11',
+        'min-w-40',
+        'hover:scale-105',
+        'active:scale-100',
+        'motion-reduce:hover:scale-100',
+      ]),
+    );
+    expect(bar).not.toContain('w-full');
+    expect(barCta()).not.toHaveAttribute('motion');
+
+    await user.click(burger());
+    const panelCta = classesOf(
+      within(panel() as HTMLElement).getByRole('button', {
+        name: messages.actions.contact,
+      }),
+    );
+    expect(panelCta).toContain('w-full');
+    expect(panelCta.filter((c) => /scale-|--jump|min-w-/.test(c))).toEqual([]);
   });
 
   it('never puts a display utility in the CTA atom own class list', () => {

@@ -458,7 +458,10 @@ export function Footer(): ReactElement {
               number to the dialler, it does not navigate — _blank would orphan
               a blank tab), while wa.me IS external navigation and travels with
               target=_blank + rel="noopener noreferrer" like its row-mates.
-              GlyphButton outline is the atom's own "socials" bundle; asChild
+              GlyphButton outline is the atom's own "socials" bundle — in its
+              LAVENDER family since 2026-10-01 (`tone="accent"`: the owner,
+              "all round glyph buttons from the footer" lilac like the menu
+              buttons, while the fixed corner's discs stay green); asChild
               makes each <a> the control, so this emits no <button> anywhere in
               the section. The glyphs stay UNLABELLED: a labelled glyph inside
               an asChild anchor double-announces (ui/GlyphButton's children
@@ -477,6 +480,7 @@ export function Footer(): ReactElement {
                 key={entry.name}
                 asChild
                 variant="outline"
+                tone="accent"
                 size="md"
                 aria-label={t(entry.labelKey, { name: clinic.name })}
               >
@@ -489,6 +493,7 @@ export function Footer(): ReactElement {
             <GlyphButton
               asChild
               variant="outline"
+              tone="accent"
               size="md"
               aria-label={t('footer.contactWhatsapp', { name: clinic.name })}
             >
@@ -504,6 +509,7 @@ export function Footer(): ReactElement {
             <GlyphButton
               asChild
               variant="outline"
+              tone="accent"
               size="md"
               aria-label={t('footer.contactPhone', { name: clinic.name })}
             >

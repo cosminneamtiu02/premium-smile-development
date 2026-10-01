@@ -739,10 +739,12 @@ export const Doctor: Story = {
 
     const link = await expectTheLink(card, PROFILES.elena, 'Dr. Elena Marin');
     // The face, measured rather than read off a class list: the old services
-    // button's SOLID face (D17) — filled with --cta (#008854), no border of
-    // its own.
+    // button's SOLID face (D17), filled with --cta (#008854) until 2026-10-01
+    // and with the menu buttons' lavender --accent (#746894) since — ui/Button's
+    // `accent` family, the owner: "all 'mai multe despre mine' buttons from the
+    // doctor cards" lilac — no border of its own.
     await expect(getComputedStyle(link).backgroundColor).toBe(
-      'rgb(0, 136, 84)',
+      'rgb(116, 104, 148)',
     );
     // ≥44px for a primary action (§9); `lg` is 56px of min-height.
     await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(

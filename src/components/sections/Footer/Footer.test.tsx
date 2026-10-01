@@ -597,6 +597,31 @@ describe('Footer — row 3, the legal strip', () => {
     ]);
   });
 
+  it('dresses all four discs in GlyphButton’s outline face in the lavender family (owner, 2026-10-01)', () => {
+    // "all round glyph buttons from the footer" turn lilac like the menu
+    // buttons — the fixed corner's discs do not (FloatingActions.test.tsx).
+    // Token contract: the atom's outline bundle in its `accent` family, read
+    // off every anchor of the strip; never a green token.
+    const { footer } = mount();
+    const strip = footer().querySelector(
+      '[data-footer-socials]',
+    ) as HTMLElement;
+    const discs = Array.from(strip.querySelectorAll('a'));
+    expect(discs).toHaveLength(4);
+    for (const disc of discs) {
+      expect(classesOf(disc)).toEqual(
+        expect.arrayContaining([
+          'border-accent',
+          'text-accent',
+          'bg-surface',
+          'hover:bg-accent',
+          'hover:text-ink-inverse',
+        ]),
+      );
+      expect(classesOf(disc).filter((c) => /cta/.test(c))).toEqual([]);
+    }
+  });
+
   it('names both contact discs per locale, never a hardcoded word', () => {
     const { messages } = mount('de');
 

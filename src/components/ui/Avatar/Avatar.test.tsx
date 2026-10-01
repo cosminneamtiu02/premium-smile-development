@@ -62,8 +62,12 @@ const PHOTO_ALT = 'Portret pacient, fotografie de profil';
 // component's constants, which an import would happily follow.
 const DISC =
   'inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full';
+// The ground is the menu buttons' lavender `accent` role since 2026-10-01
+// (owner: "the circle of persons initials to be in lilla, not in current
+// green"; D3's CTA green until then) — white on it 5.06:1, measured in
+// tests/unit/accent-census.test.ts from the token's own line.
 const LETTERS =
-  'bg-cta text-base font-semibold text-ink-inverse uppercase select-none';
+  'bg-accent text-base font-semibold text-ink-inverse uppercase select-none';
 const PICTURE = 'size-full rounded-full border border-line-subtle object-cover';
 
 const tokensOf = (element: Element) =>
@@ -150,7 +154,7 @@ describe('Avatar — one shape, two faces', () => {
   });
 
   it('emits the disc recipe ALONE on the picture face — no ground, no ink', () => {
-    // The green face is the fallback's face. Painting it behind a photograph
+    // The lavender face is the fallback's face. Painting it behind a photograph
     // would show as a coloured rim wherever `object-cover` leaves a hairline.
     const { container } = render(
       <Avatar initials={RO_INITIALS} src={PHOTO} alt="" />,
@@ -164,7 +168,7 @@ describe('Avatar — one shape, two faces', () => {
     );
     const picture = within(container).getByRole('img', { name: PHOTO_ALT });
     // The ring is on the PICTURE only — it separates a light photo edge from a
-    // light card, which a solid green disc does not need.
+    // light card, which a solid lavender disc does not need.
     expect(picture.className).toBe(PICTURE);
     expect(picture).toHaveAttribute('width', '48');
     expect(picture).toHaveAttribute('height', '48');

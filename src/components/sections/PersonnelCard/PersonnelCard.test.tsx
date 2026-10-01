@@ -1,7 +1,11 @@
 import { createRef, type Ref } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Button, type ButtonVariant } from '@/components/ui/Button/Button';
+import {
+  Button,
+  type ButtonTone,
+  type ButtonVariant,
+} from '@/components/ui/Button/Button';
 import { Image } from '@/components/ui/Image/Image';
 import { Keyword } from '@/components/ui/Keyword/Keyword';
 import type { ImagePath } from '@/lib/image-path/image-path';
@@ -202,15 +206,20 @@ const ARTWORK_RECIPE = 'h-auto max-w-full object-contain';
 
 /**
  * ui/Button's own face, read off a rendered button rather than retyped: the
- * link wears the old services button's solid `lg` face (D17), so the pin has
+ * link wears the old services button's solid `lg` face (D17) in the atom's
+ * LAVENDER family (`tone="accent"`, owner 2026-10-01), so the pin has
  * to FOLLOW the atom — a solid variant re-tuned in ui/Button must move this
  * card's link with it, and a card that quietly stopped composing the atom must
  * fail here. Rendered and unmounted inside the helper so nothing of it
  * survives into the assertion's DOM.
  */
-const buttonFace = (variant: ButtonVariant): string => {
+const buttonFace = (variant: ButtonVariant, tone: ButtonTone): string => {
   const { container, unmount } = render(
-    <Button variant={variant} size="lg">
+    // `motion="jump"` — the doctor card's link jumps on hover (owner,
+    // 2026-10-01: "more about me button in doctor card, to have that jump at
+    // you animation on hover"); the face below is what the link must start
+    // with, jump included.
+    <Button variant={variant} tone={tone} motion="jump" size="lg">
       {variant}
     </Button>,
   );
@@ -258,7 +267,7 @@ const doctorRows = (side: PersonnelSide) => ({
   picture: `${PICTURE} ${COLUMN[side].block} ${PHOTO_CELL}`,
   pair: `${DOCTOR_PAIR} ${COLUMN[side].block} ${BOTTOM}`,
   quote: `${QUOTE} ${COLUMN[side].words} ${TEXT_CELL}`,
-  link: `${buttonFace('solid')} ${ACTION} ${COLUMN[side].words} ${BOTTOM}`,
+  link: `${buttonFace('solid', 'accent')} ${ACTION} ${COLUMN[side].words} ${BOTTOM}`,
 });
 
 const tokensOf = (element: Element) =>
@@ -1116,16 +1125,23 @@ describe('PersonnelCard — the doctor’s ONE link (D15, D17)', () => {
     expect(screen.queryAllByRole('button')).toHaveLength(0);
   });
 
-  it('wears the old services button’s solid `lg` face, then its width and its cell', () => {
-    // "i want the button that was befroe vezi servicii" (D17). The face is
-    // DERIVED from a rendered ui/Button, so a variant re-tuned in the atom
-    // moves this card with it instead of turning a stale copy red; the card's
-    // own four utilities ride after it (ui/slot.ts merges the child's last).
+  it('wears the old services button’s solid `lg` face in the lavender family, then its width and its cell', () => {
+    // "i want the button that was befroe vezi servicii" (D17), lilac since
+    // 2026-10-01 ("all 'mai multe despre mine' buttons from the doctor cards").
+    // The face is DERIVED from a rendered ui/Button, so a variant re-tuned in
+    // the atom moves this card with it instead of turning a stale copy red;
+    // the card's own four utilities ride after it (ui/slot.ts merges the
+    // child's last).
     renderDoctor();
 
     const tokens = tokensOf(theLink());
-    expect(theLink().className.startsWith(buttonFace('solid'))).toBe(true);
+    expect(theLink().className.startsWith(buttonFace('solid', 'accent'))).toBe(
+      true,
+    );
     expect(tokens).not.toContain('border-cta');
+    // The lavender family, never the green — the owner's word for THIS button.
+    expect(tokens).toContain('bg-accent');
+    expect(tokens.filter((t) => /cta/.test(t))).toEqual([]);
     // As wide as the words up to 28rem, centred under them (the stories
     // measure it) — and a label that wraps stays centred (ui/Button).
     for (const token of ['mx-auto', 'w-full', 'max-w-md', 'text-center']) {

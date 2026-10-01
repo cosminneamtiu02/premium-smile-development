@@ -337,17 +337,20 @@ describe('ClinicLocation — the discs are DECORATION, painted by ui/GlyphButton
     expect(within(band()).queryAllByRole('button')).toHaveLength(0);
   });
 
-  it('wears GlyphButton’s solid face verbatim, plus the aura', () => {
+  it('wears GlyphButton’s solid face in the lavender family verbatim, plus the aura', () => {
     // The atom's real bundle, rendered right here: the expectation is DERIVED,
     // never typed, so a solid-variant edit lands in this assertion instead of
-    // drifting silently apart from the section.
+    // drifting silently apart from the section. The family is the LAVENDER
+    // one since 2026-10-01 (the owner: "buttons for location and phone next
+    // to the map" lilac, like the menu buttons) — the reference is cut from
+    // that cell, and a drift back to the green fails below by name.
     const { band } = mount();
     const disc = band().querySelector(
       'span[aria-hidden="true"]',
     ) as HTMLElement;
 
     render(
-      <GlyphButton variant="solid" aria-label="x">
+      <GlyphButton variant="solid" tone="accent" aria-label="x">
         <Phone />
       </GlyphButton>,
     );
@@ -355,6 +358,8 @@ describe('ClinicLocation — the discs are DECORATION, painted by ui/GlyphButton
 
     expect(reference.length).toBeGreaterThan(0);
     expect(classesOf(disc)).toEqual(expect.arrayContaining(reference));
+    expect(classesOf(disc)).toContain('bg-accent');
+    expect(classesOf(disc).filter((c) => /cta/.test(c))).toEqual([]);
     // FloatingActions' precedent: the static aura composes into the atom's own
     // box-shadow through className (§6.8) and holds still while the hairline
     // lerps. Numerically the old site's `shadow-cta`.
@@ -374,7 +379,7 @@ describe('ClinicLocation — the discs are DECORATION, painted by ui/GlyphButton
     const disc = link.querySelector('span[aria-hidden="true"]') as HTMLElement;
 
     render(
-      <GlyphButton variant="solid" aria-label="x">
+      <GlyphButton variant="solid" tone="accent" aria-label="x">
         <Phone />
       </GlyphButton>,
     );

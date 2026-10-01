@@ -511,7 +511,42 @@ export function Header(): ReactElement {
             Together they are what NavMenu's own `ml-auto` used to buy. */}
         <div className="ml-auto flex items-center gap-4 @min-[60rem]:col-start-3 @min-[60rem]:ml-0 @min-[60rem]:justify-self-end">
           <div className="hidden @min-[60rem]:flex group-has-[#header-menu]/bar:hidden">
-            <ContactModalTrigger variant="solid">
+            {/* LILAC, WIDER, JUMPING (owner, the evening of 2026-10-01 — the
+                reversal of his own morning rule "contact button MUST STAY
+                GREEN AS IT MUST JUMP INTO YOUR EYES", verbatim: "also paint
+                the contact button from top bar a lilla and make it wider,
+                more seszable and adjust to widest language form" · "contact
+                button in top bar, to have that jump at you animation on
+                hover"). `tone="accent"` is ui/Button's lavender family, the
+                menu buttons' own hue; the box is the atom's `md` — 44px, the
+                row's own height since the bar was built, WIDER ONLY: the
+                `lg` face was tried for "more seszable" and taken off the
+                same evening on the owner's look ("it's jsut too high th
+                button. i wanted the contact button wider just, not also
+                taller"); `motion="jump"` the old site's 105 % pop on hover
+                (the scaled box, 168 × 46px, stays inside the row and its
+                16px side padding — nothing clips). THE WIDTH is the
+                section's (§6.8 — the parent owns sizing; §8.4 — min-width on
+                buttons for text expansion): `min-w-40`, 10rem, the SAME box
+                in every language, measured on the built page at the label's
+                18px medium — „Contact" 63.6px (ro/en/fr), „Kontakt" 65.3,
+                „Contatti" 66.4, the widest — plus the md face's 2 × 20px of
+                padding = 106.4px natural, so the floor binds everywhere with
+                ≥ 26.8px of slack a side, and a sixth language up to ~120px
+                of label still fits without the box changing. The Header
+                stories' Default and GermanStress plays pin the box to the
+                floor in RO and DE; the floor is one token, the owner's lever.
+                The panel's full-width Contact (NavMenu.tsx) wears the lilac
+                too — the same control, one look — and NOT the jump: a
+                full-width row that grows past its panel's padding on hover
+                reads as a glitch, and a phone's panel is a touch surface
+                (tests/unit/jump-census.test.ts pins both). */}
+            <ContactModalTrigger
+              variant="solid"
+              tone="accent"
+              motion="jump"
+              className="min-w-40"
+            >
               {t('actions.contact')}
             </ContactModalTrigger>
           </div>

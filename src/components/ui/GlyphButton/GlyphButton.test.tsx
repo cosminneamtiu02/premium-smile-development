@@ -2,10 +2,13 @@ import { createRef, type ReactElement, type Ref } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { Button } from '../Button/Button';
 import {
   GlyphButton,
+  type GlyphButtonMotion,
   type GlyphButtonShape,
   type GlyphButtonSize,
+  type GlyphButtonTone,
   type GlyphButtonVariant,
 } from './GlyphButton';
 
@@ -55,43 +58,90 @@ const shapeTokens: Record<GlyphButtonShape, string[]> = {
   square: ['rounded-md'], // the Header burger — 6px, the §15.1 default radius
 };
 
-const requiredTokens: Record<GlyphButtonVariant, string[]> = {
+// The two colour FAMILIES (the 2026-10-01 tone axis), closed like the other
+// three tables: a third family joins every derived matrix below the moment
+// the file typechecks.
+const tones = Object.keys({
+  cta: true,
+  accent: true,
+} satisfies Record<GlyphButtonTone, true>) as GlyphButtonTone[];
+
+const requiredTokens: Record<
+  GlyphButtonVariant,
+  Record<GlyphButtonTone, string[]>
+> = {
   // solid MIRRORS outline since the socials'-hover rework (owner 2026-09-06):
   // hover face = outline's rest face (surface ground, cta glyph, a 1px cta
   // inset-ring hairline standing in for the border), press face = outline's
   // press face. Byte-parity with Button's solid — one mirror language, the
   // same discipline as the ghost pair below; Button.test.tsx carries the
-  // reasoned twin of this table.
-  solid: [
-    'bg-cta',
-    'text-ink-inverse',
-    'inset-ring',
-    'inset-ring-transparent',
-    'hover:bg-surface',
-    'hover:text-cta',
-    'hover:inset-ring-cta',
-    'active:bg-cta-hover',
-    'active:text-ink-inverse',
-  ],
-  outline: [
-    'border-cta',
-    'bg-surface',
-    'text-cta',
-    'hover:bg-cta',
-    'hover:text-ink-inverse',
-    'active:bg-cta-hover',
-    'active:text-ink-inverse',
-  ],
+  // reasoned twin of this table. The lavender cells (owner 2026-10-01) are
+  // the same faces with the family's three substitutions — cta → accent,
+  // cta-hover → accent-strong, the hairline → inset-ring-accent — and
+  // nothing else (derived in the families describe below).
+  solid: {
+    cta: [
+      'bg-cta',
+      'text-ink-inverse',
+      'inset-ring',
+      'inset-ring-transparent',
+      'hover:bg-surface',
+      'hover:text-cta',
+      'hover:inset-ring-cta',
+      'active:bg-cta-hover',
+      'active:text-ink-inverse',
+    ],
+    accent: [
+      'bg-accent',
+      'text-ink-inverse',
+      'inset-ring',
+      'inset-ring-transparent',
+      'hover:bg-surface',
+      'hover:text-accent',
+      'hover:inset-ring-accent',
+      'active:bg-accent-strong',
+      'active:text-ink-inverse',
+    ],
+  },
+  outline: {
+    cta: [
+      'border-cta',
+      'bg-surface',
+      'text-cta',
+      'hover:bg-cta',
+      'hover:text-ink-inverse',
+      'active:bg-cta-hover',
+      'active:text-ink-inverse',
+    ],
+    accent: [
+      'border-accent',
+      'bg-surface',
+      'text-accent',
+      'hover:bg-accent',
+      'hover:text-ink-inverse',
+      'active:bg-accent-strong',
+      'active:text-ink-inverse',
+    ],
+  },
   // The quiet tone, byte-identical to Button's ghost bundle so the two atoms
   // speak one ghost language: transparent at rest, dim tray on hover — and
   // the tray is line-subtle, NOT raised (#ffffff would be invisible on the
-  // white surface). ink over #e9e6e2 = 11.9:1, measured in Button.tsx.
-  ghost: [
-    'bg-transparent',
-    'text-ink',
-    'hover:bg-line-subtle',
-    'active:bg-line-subtle',
-  ],
+  // white surface). ink over #e9e6e2 = 11.9:1, measured in Button.tsx. It
+  // paints with ink, not with a family: both cells are the one bundle.
+  ghost: {
+    cta: [
+      'bg-transparent',
+      'text-ink',
+      'hover:bg-line-subtle',
+      'active:bg-line-subtle',
+    ],
+    accent: [
+      'bg-transparent',
+      'text-ink',
+      'hover:bg-line-subtle',
+      'active:bg-line-subtle',
+    ],
+  },
 };
 
 // With box-shadow on the fade clock, every box-shadow-painting utility is an
@@ -104,18 +154,34 @@ const legitimateRingTokens = new Set([
   'inset-ring',
   'inset-ring-transparent',
   'hover:inset-ring-cta',
+  // …and the hairline's lavender twin (the 2026-10-01 tone axis).
+  'hover:inset-ring-accent',
 ]);
 
-// The full variant × shape matrix, DERIVED — never hand-listed: a hand list
-// silently missed outline·square and would let a future bundle ship unswept
-// (G2 finding, 2026-08-06). Because both source tables are Record<Union, …>,
-// a 4th variant or 3rd shape joins the sweep the moment the file typechecks.
+// The full variant × shape × tone matrix, DERIVED — never hand-listed: a hand
+// list silently missed outline·square and would let a future bundle ship
+// unswept (G2 finding, 2026-08-06). Because all three source tables are
+// Record<Union, …>, a 4th variant, a 3rd shape or a 3rd family joins the sweep
+// the moment the file typechecks.
 const motionCases = (
   Object.keys(requiredTokens) as GlyphButtonVariant[]
 ).flatMap((variant) =>
-  (Object.keys(shapeTokens) as GlyphButtonShape[]).map(
-    (shape): [GlyphButtonVariant, GlyphButtonShape] => [variant, shape],
+  (Object.keys(shapeTokens) as GlyphButtonShape[]).flatMap((shape) =>
+    tones.map(
+      (tone): [GlyphButtonVariant, GlyphButtonShape, GlyphButtonTone] => [
+        variant,
+        shape,
+        tone,
+      ],
+    ),
   ),
+);
+
+/** Every variant in every family — the colour-pair sweep. */
+const colourCases = (
+  Object.keys(requiredTokens) as GlyphButtonVariant[]
+).flatMap((variant) =>
+  tones.map((tone): [GlyphButtonVariant, GlyphButtonTone] => [variant, tone]),
 );
 
 describe('GlyphButton — element & semantics', () => {
@@ -551,9 +617,15 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
   const tokensOf = (
     variant: GlyphButtonVariant = 'solid',
     shape: GlyphButtonShape = 'round',
+    tone: GlyphButtonTone = 'cta',
   ) => {
     const cls = classesOf(
-      <GlyphButton aria-label="Sună clinica" variant={variant} shape={shape}>
+      <GlyphButton
+        aria-label="Sună clinica"
+        variant={variant}
+        shape={shape}
+        tone={tone}
+      >
         {GLYPH}
       </GlyphButton>,
     );
@@ -584,9 +656,9 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
   });
 
   it.each(motionCases)(
-    'nothing moves and nothing jumps — %s · %s (D2: no scale-105, no shadow pop)',
-    (variant, shape) => {
-      const { cls, tokens } = tokensOf(variant, shape);
+    'nothing moves and nothing jumps — %s · %s · %s (D2: no scale-105, no shadow pop)',
+    (variant, shape, tone) => {
+      const { cls, tokens } = tokensOf(variant, shape, tone);
       // The old icon-button grew on hover and swapped shadows — the owner cut
       // BOTH (fb-49/fb-50). Banned by pattern, never as a list of spellings —
       // and since box-shadow joined the fade clock for solid's inset-ring
@@ -648,39 +720,44 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
     expect(cls).not.toMatch(/outline-none|outline-hidden/);
   });
 
-  it.each(Object.keys(requiredTokens) as GlyphButtonVariant[])(
-    'variant %s carries its exact AA-checked color pair',
-    (variant) => {
-      const { tokens } = tokensOf(variant);
+  it.each(colourCases)(
+    'variant %s · tone %s carries its exact AA-checked color pair',
+    (variant, tone) => {
+      const { tokens } = tokensOf(variant, 'round', tone);
       // Positive coverage: the glyph paints with currentColor, so `text-*` is
       // what colors the icon in every state — dropping text-ink-inverse from
       // solid would leave a green-on-green glyph with the suite still green.
-      for (const required of requiredTokens[variant]) {
+      // The lavender pairs are MEASURED in tests/unit/accent-census.test.ts.
+      for (const required of requiredTokens[variant][tone]) {
         expect(tokens).toContain(required);
       }
     },
   );
 
-  it("solid and outline are hover-mirrors — each hover face is the other's rest face", () => {
-    // THE 2026-09-06 LAW as a DERIVED relation on this atom too (G2 react
-    // LOW, 2026-09-06: a single-atom mirror pin would let a GlyphButton-only
-    // edit break cross-atom parity with a green suite). Variant-distinctive
-    // rest color tokens are computed by set difference — shared base tokens
-    // cancel — and each must reappear hover:-prefixed on the other side.
-    // Button.test.tsx carries the derived twin of this relation.
-    const solid = tokensOf('solid').tokens;
-    const outline = tokensOf('outline').tokens;
-    const restColors = (tokens: string[], other: string[]) =>
-      tokens.filter((t) => /^(bg|text)-/.test(t) && !other.includes(t));
-    const solidRest = restColors(solid, outline);
-    const outlineRest = restColors(outline, solid);
-    // Guard the derivation itself: an over-aggressive filter returning []
-    // would pass the loops below while proving nothing.
-    expect(solidRest).not.toHaveLength(0);
-    expect(outlineRest).not.toHaveLength(0);
-    for (const rest of solidRest) expect(outline).toContain(`hover:${rest}`);
-    for (const rest of outlineRest) expect(solid).toContain(`hover:${rest}`);
-  });
+  it.each(tones)(
+    "solid and outline are hover-mirrors — each hover face is the other's rest face (%s)",
+    (tone) => {
+      // THE 2026-09-06 LAW as a DERIVED relation on this atom too (G2 react
+      // LOW, 2026-09-06: a single-atom mirror pin would let a GlyphButton-only
+      // edit break cross-atom parity with a green suite). Variant-distinctive
+      // rest color tokens are computed by set difference — shared base tokens
+      // cancel — and each must reappear hover:-prefixed on the other side.
+      // Button.test.tsx carries the derived twin of this relation; both
+      // families obey it — the lavender one since 2026-10-01.
+      const solid = tokensOf('solid', 'round', tone).tokens;
+      const outline = tokensOf('outline', 'round', tone).tokens;
+      const restColors = (tokens: string[], other: string[]) =>
+        tokens.filter((t) => /^(bg|text)-/.test(t) && !other.includes(t));
+      const solidRest = restColors(solid, outline);
+      const outlineRest = restColors(outline, solid);
+      // Guard the derivation itself: an over-aggressive filter returning []
+      // would pass the loops below while proving nothing.
+      expect(solidRest).not.toHaveLength(0);
+      expect(outlineRest).not.toHaveLength(0);
+      for (const rest of solidRest) expect(outline).toContain(`hover:${rest}`);
+      for (const rest of outlineRest) expect(solid).toContain(`hover:${rest}`);
+    },
+  );
 
   it('ghost really rests transparent — bg-transparent is its only plain bg', () => {
     // A ground painted at rest would make ghost a second solid: the tray must
@@ -694,6 +771,226 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
     const { tokens } = tokensOf();
     expect(tokens).toContain('disabled:pointer-events-none');
     expect(tokens).toContain('disabled:opacity-50');
+  });
+});
+
+describe('GlyphButton — the two colour families (owner, 2026-10-01)', () => {
+  // "all round glyph buttons from the footer … round scrolling buttons from
+  // reviews … buttons for location and phone next to the map" turn lilac,
+  // "but do not modify at least yet the hovering buttons from bottom right" —
+  // the `tone` axis: the SAME bundles, cut from the green CTA family (the
+  // default, the corner's) or from the menu buttons' lavender
+  // (GlyphButton.tsx's THE TWO FAMILIES). Token contract, as above.
+  const familyOf = (
+    variant: GlyphButtonVariant,
+    tone?: GlyphButtonTone,
+  ): string =>
+    classesOf(
+      <GlyphButton aria-label="Sună clinica" variant={variant} tone={tone}>
+        {GLYPH}
+      </GlyphButton>,
+    );
+
+  it.each(Object.keys(requiredTokens) as GlyphButtonVariant[])(
+    '%s defaults to the green: a call site that says nothing is byte-identical to tone="cta"',
+    (variant) => {
+      expect(familyOf(variant)).toBe(familyOf(variant, 'cta'));
+    },
+  );
+
+  it('ghost paints with ink and ignores the family', () => {
+    expect(familyOf('ghost', 'accent')).toBe(familyOf('ghost', 'cta'));
+  });
+
+  it.each(['solid', 'outline'] as const)(
+    "%s: the lavender bundle is the green bundle with the family's three substitutions and nothing else",
+    (variant) => {
+      // DERIVED, never a third list: translate the green cell token by token
+      // — cta-hover → accent-strong FIRST (it contains `cta`), then cta →
+      // accent — and the result must equal the lavender cell exactly, so a
+      // fourth substitution cannot hide in the requiredTokens table.
+      const green = familyOf(variant, 'cta').split(/\s+/);
+      const lavender = familyOf(variant, 'accent').split(/\s+/);
+      const translated = green.map((t) =>
+        t
+          .replace(/-cta-hover(?![\w-])/g, '-accent-strong')
+          .replace(/-cta(?![\w-])/g, '-accent'),
+      );
+      expect(lavender).toEqual(translated);
+      expect(lavender).not.toEqual(green);
+      expect(lavender.filter((t) => /cta/.test(t))).toEqual([]);
+      expect(green.filter((t) => /accent/.test(t))).toEqual([]);
+    },
+  );
+
+  it('never reaches the DOM as an attribute — on a button or on an asChild link', () => {
+    render(
+      <GlyphButton aria-label="Sună clinica" tone="accent">
+        {GLYPH}
+      </GlyphButton>,
+    );
+    expect(screen.getByRole('button')).not.toHaveAttribute('tone');
+    render(
+      <GlyphButton
+        asChild
+        variant="outline"
+        tone="accent"
+        aria-label="Deschide profilul Instagram"
+      >
+        <a href="https://example.com/instagram">{GLYPH}</a>
+      </GlyphButton>,
+    );
+    const link = screen.getByRole('link', {
+      name: 'Deschide profilul Instagram',
+    });
+    expect(link).not.toHaveAttribute('tone');
+    // The family rides onto the child with the rest of the circle's clothes.
+    expect(link.className.split(/\s+/)).toContain('border-accent');
+  });
+});
+
+describe('GlyphButton — the jump (owner, 2026-10-01)', () => {
+  // "call hover button in bottom right and whatsapp button … to have that
+  // jump at you animation on hover. this should not affect buttons from
+  // footer" — the `motion` axis, Button's cell for cell (GlyphButton.tsx's
+  // THE JUMP paragraph points at Button.tsx's reasoning): the old round
+  // button's hover:scale-105 on its own 200ms clock, opt-in, the fade and
+  // every bundle untouched. Token contract, as above; the whole
+  // variant × shape × tone matrix is swept, derived from the tables.
+  const tokensOf = (
+    motion: GlyphButtonMotion | undefined,
+    variant: GlyphButtonVariant,
+    shape: GlyphButtonShape,
+    tone: GlyphButtonTone,
+  ): string[] =>
+    classesOf(
+      <GlyphButton
+        aria-label="Sună clinica"
+        variant={variant}
+        shape={shape}
+        tone={tone}
+        motion={motion}
+      >
+        {GLYPH}
+      </GlyphButton>,
+    )
+      .split(/\s+/)
+      .filter(Boolean);
+  const STILL = [
+    'transition-[background-color,color,box-shadow]',
+    'duration-(--fade)',
+    'ease-in-out',
+  ];
+  const JUMP = [
+    '[--jump:200ms]',
+    '[transition-property:background-color,color,box-shadow,scale]',
+    '[transition-duration:var(--fade),var(--fade),var(--fade),var(--jump)]',
+    '[transition-timing-function:ease-in-out,ease-in-out,ease-in-out,ease-out]',
+    'hover:scale-105',
+    'active:scale-100',
+    'motion-reduce:hover:scale-100',
+  ];
+  const sorted = (tokens: string[]) => [...tokens].sort();
+
+  it.each(motionCases)(
+    '%s · %s · %s: a call site that says nothing is byte-identical to motion="still", which holds still',
+    (variant, shape, tone) => {
+      const still = tokensOf('still', variant, shape, tone);
+      expect(tokensOf(undefined, variant, shape, tone)).toEqual(still);
+      for (const t of STILL) expect(still).toContain(t);
+      expect(
+        still.filter((t) =>
+          /scale|--jump|transition-(property|duration|timing)/.test(t),
+        ),
+      ).toEqual([]);
+    },
+  );
+
+  it.each(motionCases)(
+    '%s · %s · %s: the jump swaps the still trio for the two-clock lists and the scale pair — nothing else changes',
+    (variant, shape, tone) => {
+      const still = tokensOf('still', variant, shape, tone);
+      const jump = tokensOf('jump', variant, shape, tone);
+      expect(sorted(jump)).toEqual(
+        sorted([...still.filter((t) => !STILL.includes(t)), ...JUMP]),
+      );
+      for (const t of [
+        '[--fade:400ms]',
+        'active:duration-0',
+        'motion-reduce:transition-none',
+      ]) {
+        expect(jump).toContain(t);
+      }
+      // The old pop's shadow half stays cut; scale is the one movement, in
+      // exactly three spellings; no shorthand, no second clock utility.
+      expect(jump.filter((t) => /(^|:)(inset-)?shadow(-|$)/.test(t))).toEqual(
+        [],
+      );
+      expect(
+        jump.filter((t) => /(^|:)(animate|translate|rotate|skew)-/.test(t)),
+      ).toEqual([]);
+      expect(sorted(jump.filter((t) => /(^|:)scale-/.test(t)))).toEqual([
+        'active:scale-100',
+        'hover:scale-105',
+        'motion-reduce:hover:scale-100',
+      ]);
+      expect(jump.join(' ')).not.toMatch(
+        /transition-all|transition-transform|transition-colors/,
+      );
+      expect(
+        jump.filter(
+          (t) =>
+            !t.startsWith('[') &&
+            /(^|:)(duration|ease)-/.test(t) &&
+            t !== 'active:duration-0',
+        ),
+      ).toEqual([]);
+    },
+  );
+
+  it('is Button’s jump, byte for byte — the two atoms share ONE cell (KEEP-IN-SYNC)', () => {
+    // The cross-atom pin the two `motionClasses` tables promise each other:
+    // every token that spells a clock or the scale must agree, so an edit to
+    // one atom's cell fails here until the other follows.
+    const clockTokens = (cls: string) =>
+      sorted(
+        cls.split(/\s+/).filter((t) => /scale|--jump|transition-/.test(t)),
+      );
+    const disc = classesOf(
+      <GlyphButton aria-label="Sună clinica" motion="jump">
+        {GLYPH}
+      </GlyphButton>,
+    );
+    const { unmount } = render(<Button motion="jump">Contact</Button>);
+    const button = screen.getByRole('button').className;
+    unmount();
+    expect(clockTokens(disc)).toEqual(clockTokens(button));
+    expect(clockTokens(disc)).toContain('hover:scale-105');
+    // …and so does the still trio, on both atoms' default.
+    const stillDisc = classesOf(
+      <GlyphButton aria-label="Sună clinica">{GLYPH}</GlyphButton>,
+    );
+    const still = render(<Button>Contact</Button>);
+    const stillButton = screen.getByRole('button').className;
+    still.unmount();
+    expect(clockTokens(stillDisc)).toEqual(clockTokens(stillButton));
+  });
+
+  it('never reaches the DOM as an attribute — on a button or on an asChild link, which jumps too', () => {
+    render(
+      <GlyphButton aria-label="Sună clinica" motion="jump">
+        {GLYPH}
+      </GlyphButton>,
+    );
+    expect(screen.getByRole('button')).not.toHaveAttribute('motion');
+    render(
+      <GlyphButton asChild motion="jump" aria-label="Sună acum">
+        <a href="tel:+40770162765">{GLYPH}</a>
+      </GlyphButton>,
+    );
+    const link = screen.getByRole('link', { name: 'Sună acum' });
+    expect(link).not.toHaveAttribute('motion');
+    expect(link.className.split(/\s+/)).toContain('hover:scale-105');
   });
 });
 

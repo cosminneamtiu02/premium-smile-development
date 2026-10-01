@@ -423,10 +423,14 @@ function discContent(
 // It stays SpeedDial's OWN constant rather than moving into ui/disc.ts — the
 // KEEP-IN-SYNC convention Button and GlyphButton already use for --fade
 // (fb-44): two independent files that agree on purpose, so changing the
-// system's feel is a deliberate multi-file edit and never a drift. The clock,
-// the easing, the press snap and the reduced-motion escape hatch all come from
-// discBase.
-const discTransition = 'transition-[background-color,color]';
+// system's feel is a deliberate multi-file edit and never a drift. The clock's
+// NUMBER, the press snap and the reduced-motion escape hatch come from
+// discBase; the duration and the easing that read the clock ride THIS line
+// since 2026-10-01 — the same two tokens discBase carried for every disc until
+// GlyphButton's opt-in jump needed its own transition longhands (ui/disc.ts
+// says why; zero pixels moved here).
+const discTransition =
+  'transition-[background-color,color] duration-(--fade) ease-in-out';
 
 // EVERY stem disc, in every tone (D5, REVERSED by the owner at the Storybook
 // review on 2026-08-27: "i do not like the new animation … drop it and use just

@@ -112,6 +112,16 @@ const CONSUMERS = [
     '../../src/components/sections/ClinicLocation/ClinicLocation.tsx',
     2,
   ],
+  // The Hero's services link joined on the owner's 2026-10-01 "old see our
+  // services button on the auto scrolling page has also a little lilla aura
+  // around it … same aura as on top bar": ONE className on the outline
+  // ui/Button (the lavender family) — the contact trigger beside it wears
+  // none, which Hero.test.tsx pins.
+  [
+    'Hero.tsx (the services link, through ui/Button)',
+    '../../src/components/sections/Hero/Hero.tsx',
+    1,
+  ],
 ] as const;
 
 describe('the aura token (header-aura board, fb-359)', () => {

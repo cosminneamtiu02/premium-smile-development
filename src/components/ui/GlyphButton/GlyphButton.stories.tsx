@@ -4,8 +4,10 @@ import { Phone } from '@/assets/glyphs/Phone';
 import { Tiktok } from '@/assets/glyphs/Tiktok';
 import {
   GlyphButton,
+  type GlyphButtonMotion,
   type GlyphButtonShape,
   type GlyphButtonSize,
+  type GlyphButtonTone,
   type GlyphButtonVariant,
 } from './GlyphButton';
 
@@ -29,6 +31,8 @@ const meta = {
     children: <Phone />,
     'aria-label': 'Sună clinica',
     variant: 'solid',
+    tone: 'cta',
+    motion: 'still',
     shape: 'round',
     size: 'md',
   },
@@ -38,6 +42,18 @@ const meta = {
       options: ['solid', 'outline', 'ghost'] satisfies GlyphButtonVariant[],
       description:
         'Named color pair — solid = filled call CTA, drains on hover / outline = socials, fills on hover / ghost = quiet, dim tray on hover',
+    },
+    tone: {
+      control: 'radio',
+      options: ['cta', 'accent'] satisfies GlyphButtonTone[],
+      description:
+        'The colour family — cta, the green of the one conversion goal (the default, the fixed corner’s) / accent, the menu buttons’ lavender (the Footer’s discs, the reviews deck’s chevrons, the map band’s row discs — owner 2026-10-01); ghost ignores it',
+    },
+    motion: {
+      control: 'radio',
+      options: ['still', 'jump'] satisfies GlyphButtonMotion[],
+      description:
+        'What moves on hover — still, nothing (the default) / jump, the old round button’s 105 % pop on its own 200ms clock, Button’s cell byte for byte (the fixed corner’s two discs alone — owner 2026-10-01); hover the canvas to see it',
     },
     shape: {
       control: 'radio',
@@ -229,4 +245,62 @@ export const IconSizePrecedence: Story = {
  */
 export const HoverSolid: Story = {
   tags: ['pin-hover'],
+};
+
+/**
+ * THE LAVENDER FAMILY (owner, 2026-10-01): the same bundles cut from the menu
+ * buttons' `accent` role — GlyphButton.tsx's THE TWO FAMILIES, Button.tsx's
+ * measured pairs. Accent is the map band's two row discs (solid); AccentOutline
+ * the Footer's four discs and the reviews deck's chevrons (outline). The
+ * corner's call and WhatsApp discs stay on Default's green, on the owner's
+ * word.
+ */
+export const Accent: Story = {
+  args: { tone: 'accent' },
+};
+
+export const AccentOutline: Story = {
+  args: {
+    tone: 'accent',
+    variant: 'outline',
+    children: <Instagram />,
+    'aria-label': 'Deschide profilul Instagram',
+  },
+};
+
+/**
+ * THE JUMP (owner, 2026-10-01: "call hover button in bottom right and
+ * whatsapp button … to have that jump at you animation on hover. this should
+ * not affect buttons from footer"): `motion="jump"`, Button's cell byte for
+ * byte — the old round button's hover:scale-105 on its own 200ms clock, worn
+ * by the fixed corner's two green discs and nothing else. HOVER IT in the
+ * workbench; the net runs under reduced motion, where the disc holds still by
+ * rule, so this frame would only repeat the lg green disc's pixels:
+ * 'no-visual'.
+ */
+export const Jump: Story = {
+  tags: ['no-visual'],
+  args: { motion: 'jump', size: 'lg' },
+};
+
+/**
+ * The lavender pair's hover END states, pinned as real pixels ('pin-hover',
+ * as HoverSolid above): the solid disc drains to the white face with a lilac
+ * glyph and hairline — AccentOutline's rest face; the outline disc FILLS
+ * lavender with a white glyph — Accent's rest face (this atom's two-way
+ * mirror).
+ */
+export const HoverAccent: Story = {
+  tags: ['pin-hover'],
+  args: { tone: 'accent' },
+};
+
+export const HoverAccentOutline: Story = {
+  tags: ['pin-hover'],
+  args: {
+    tone: 'accent',
+    variant: 'outline',
+    children: <Instagram />,
+    'aria-label': 'Deschide profilul Instagram',
+  },
 };

@@ -112,20 +112,28 @@ import { clinic } from '@/lib/clinic/clinic';
 //
 // §6.8 boundary: placement arrives from HERE as className (the parent owns
 // spacing and positioning), never as a restyle of an atom's internals. The
-// colors are the atoms' own — `variant="solid"` IS the look. Since 2026-10-01
-// ui/GlyphButton also has a colour FAMILY axis (`tone`), and these two discs
-// deliberately say nothing and keep the green CTA family: the owner, the day
-// the Footer's discs turned lilac — "do not modify at least yet the hovering
-// buttons from bottom right" (FloatingActions.test.tsx pins it; the day he
-// wants them lilac is one prop per disc). What they DO wear since that
-// evening is the atom's `motion="jump"` — the old round button's 105 % pop on
-// hover, back on the owner's word ("call hover button in bottom right and
-// whatsapp button … to have that jump at you animation on hover. this should
-// not affect buttons from footer"): a MOTION axis, not a colour, so the green
-// pin above stands; the aura below rides the scale with the disc (the old
-// shadow-cta-lg growth is not ported — ui/GlyphButton's contract);
-// tests/unit/jump-census.test.ts names the two beside the Hero's pair, the
-// doctor card's link and the Header's bar Contact.
+// colors are the atoms' own — `variant="solid"` IS the look, and
+// `tone="accent"` picks the family it is cut from: ui/GlyphButton's LAVENDER
+// (its THE TWO FAMILIES — the green faces with cta → accent, cta-hover →
+// accent-strong, the hairline → inset-ring-accent), the family the Footer's
+// discs, the map band's row discs and the Header's Contact wear. The corner
+// held the green longest. The day the Footer's discs turned lilac the owner
+// kept it back — "do not modify at least yet the hovering buttons from bottom
+// right" — and that evening turned it: "i thaught i told you to refactor the
+// whatsapp and call buttons to be lilla too", choosing THIS pair over the
+// contact dialog's two buttons, which stay green (ui/Button's default
+// family). The white glyph reads 5.06:1 on the lavender (4.52:1 on the green
+// it replaced); FloatingActions.test.tsx pins the face, and
+// tests/unit/accent-census.test.ts names this file a caller and measures the
+// face against every band it floats over — the discs are `fixed`, so the
+// whole page passes under them. They also wear the atom's `motion="jump"` —
+// the old round button's 105 % pop on hover, back on the owner's word ("call
+// hover button in bottom right and whatsapp button … to have that jump at you
+// animation on hover. this should not affect buttons from footer"): a MOTION
+// axis, orthogonal to the colour; the aura below rides the scale with the
+// disc (the old shadow-cta-lg growth is not ported — ui/GlyphButton's
+// contract); tests/unit/jump-census.test.ts names the two beside the Hero's
+// pair, the doctor card's link and the Header's bar Contact.
 //
 // Both controls sit 1rem above the bottom edge PLUS the device's safe-area
 // inset, and every `scroll-padding-bottom` step adds the same inset back, so
@@ -265,6 +273,7 @@ export function FloatingActions(): ReactElement {
       <GlyphButton
         asChild
         variant="solid"
+        tone="accent"
         motion="jump"
         shape="round"
         size="lg"
@@ -290,6 +299,7 @@ export function FloatingActions(): ReactElement {
       <GlyphButton
         asChild
         variant="solid"
+        tone="accent"
         motion="jump"
         shape="round"
         size="lg"

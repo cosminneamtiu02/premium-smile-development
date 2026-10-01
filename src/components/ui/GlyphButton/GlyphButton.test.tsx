@@ -776,11 +776,13 @@ describe('GlyphButton — one calm color fade (fb-44: Button’s clock)', () => 
 
 describe('GlyphButton — the two colour families (owner, 2026-10-01)', () => {
   // "all round glyph buttons from the footer … round scrolling buttons from
-  // reviews … buttons for location and phone next to the map" turn lilac,
-  // "but do not modify at least yet the hovering buttons from bottom right" —
-  // the `tone` axis: the SAME bundles, cut from the green CTA family (the
-  // default, the corner's) or from the menu buttons' lavender
-  // (GlyphButton.tsx's THE TWO FAMILIES). Token contract, as above.
+  // reviews … buttons for location and phone next to the map" turn lilac —
+  // and, that evening, the fixed corner's two, held back that morning ("do
+  // not modify at least yet the hovering buttons from bottom right") until
+  // "i thaught i told you to refactor the whatsapp and call buttons to be
+  // lilla too". The `tone` axis: the SAME bundles, cut from the green CTA
+  // family (the default) or from the menu buttons' lavender (GlyphButton.tsx's
+  // THE TWO FAMILIES). Token contract, as above.
   const familyOf = (
     variant: GlyphButtonVariant,
     tone?: GlyphButtonTone,

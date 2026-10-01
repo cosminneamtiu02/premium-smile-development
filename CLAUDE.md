@@ -482,7 +482,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    seszable and adjust to widest language form"):** both of the Header's Contact buttons wear
    ui/Button's lavender `accent` family since — the bar's under a 10rem floor, wider only, and with
    the old site's hover jump — and `Header.test.tsx` pins the lilac; the green CTA family keeps the
-   fixed corner's two discs, the dialog's buttons and the language bulb. The old top bar's own `--accent` is `#8377a3`
+   dialog's buttons and the language bulb (under its flag) — the fixed corner's two discs followed
+   the Contact into the lilac later that evening (§15.30 round 4). The old top bar's own `--accent` is `#8377a3`
    (top-bar.tsx: `text-accent`, `after:bg-accent`); MEASURED, it reads 4.09:1 on white and
    3.89:1 on `--page` — under the 4.5:1 an 18px medium label owes SC 1.4.3, and the
    current-page label is a resting state, so axe would fail every story that shows one. The
@@ -2895,8 +2896,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     more room than the green's 4.52 (the one consumer is sections/ReviewCard) — and, since round
     3 below, the Header's Contact button in the bar and in the panel. **Who does NOT,
     pinned:** the fixed corner's
-    call and WhatsApp discs ("do not modify at least yet …" — FloatingActions.test.tsx) · the
-    contact dialog's buttons · the burger. On the Hero's dark veil the outline's lavender border
+    call and WhatsApp discs ("do not modify at least yet …" — FloatingActions.test.tsx; lilac since
+    round 4, below) · the contact dialog's buttons · the burger. On the Hero's dark veil the outline's lavender border
     reads 1.75:1 against the worst-case photograph (the green read 1.57:1): the control's boundary
     is its white box, unchanged. Stories: UI/Button and UI/GlyphButton each gain Accent ·
     AccentOutline · HoverAccent · HoverAccentOutline (the last two `pin-hover`). No reviewer round
@@ -2949,7 +2950,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     full-width Contact turns lilac with it — the same control, one look — and does not jump.
     `Header.test.tsx`'s green pin flipped to the lilac; `tests/unit/accent-census.test.ts` names
     Header.tsx and NavMenu.tsx as callers on the glass floor. Still green: the fixed corner's two
-    discs (their colour; they jump), the dialog's two buttons, the language bulb. Visual, MEASURED
+    discs (their colour, until round 4; they jump), the dialog's two buttons, the language bulb. Visual, MEASURED
     (the lane differential against pristine develop f6981af, 447 cells): 109 move — the 103 of
     rounds 1–2 plus Sections/Header's six (AtTheStep · Default · GermanStress · NonRomanianLocale at
     1536, where the bar shows the Contact; MenuOpen at both widths, the panel's) — 0 undeclared, 0
@@ -2964,6 +2965,41 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     so their frames would only repeat the rest frames' pixels. Gates at READY: prettier · eslint ·
     tsc clean; vitest 3348/3348 (141 files; develop stood at 3143); e2e 118 passed, 36 skipped;
     build-storybook and `next build` green. No reviewer round was run; the owner's call stands.
+    **Round 4 (owner, later the same evening, 2026-10-01, verbatim: "i thaught i told you to refactor
+    the whatsapp and call buttons to be lilla too" — and, asked which pair, "Bottom-right corner
+    discs" over the contact dialog's two buttons; lane `rework/call-whatsapp-lilac`):** the record had
+    held the corner back — the morning's list said "do not modif yat least yet the hovering buttons
+    from bottom right", and round 3 gave the two discs the jump, not the colour — so this sentence is
+    the word the "at least yet" waited for. `sections/FloatingActions` passes `tone="accent"` on both
+    discs, one prop each, the path its own comment named; the jump, the aura, the placement and the
+    size steps are unchanged. The face: lilac at rest under the white glyph, 5.06:1 (the green read
+    4.52:1); on hover the white face with a lilac glyph and hairline; the deep violet on press, white
+    9.34:1 — measured on the built page too (rest: an rgb(116,104,148) face, white glyph; hover: a white
+    face, lilac glyph and hairline, scale 1.05). The discs are `fixed`, so every band scrolls under
+    them, and the face's EDGE (SC 1.4.11's 3:1) gains on every ground: `--page` 4.81:1 (the green
+    4.29), white 5.06 (4.52), and the doctor pages' 30 % tint 3.31:1, where the green read 2.96:1 —
+    under 3:1, unnoticed until this lane measured it. `tests/unit/accent-census.test.ts` names
+    FloatingActions.tsx its eighth `tone="accent"` caller, measures the face against those three
+    grounds in a new `it`, and keeps ContactModal.tsx as the one file that must say nothing;
+    `FloatingActions.test.tsx`'s green pin flipped to the lilac. STILL GREEN, and why: the contact
+    dialog's two buttons (ui/Button's default family — the owner's pick passed them over) and the
+    language bulb's fill under its flag (not named; the opaque flag hides its colour and its scrim
+    answers no hover — but an artless bulb would now be green beside lilac discs, and ui/SpeedDial has
+    no lavender tone: the owner's lever, recorded in LanguageSwitcher.tsx and its test, whose "parity
+    with the call disc" title is reworded). CONSEQUENCE, recorded: no ui/GlyphButton call site wears
+    `cta` any more (the burger is ghost), so the atom's green family is its DEFAULT with only its
+    stories and tests as readers — kept, Button's twin, whose green the dialog's buttons wear; the
+    GlyphButton `Jump` story wears `tone: 'accent'` like its only wearers (`no-visual`, no cell).
+    Visual, MEASURED (the lane differential against pristine develop b3461c8, 456 cells): exactly the
+    eight Sections/FloatingActions cells move — Default at 390 / 1536, Clearance320 and GermanOpen at
+    320 / 390 / 1536 (~4 000 px at the phone widths, 6 825 at 1536: the two discs) — 448 identical, 0
+    undeclared, 0 flaky; no other story renders the corner (the `[locale]` layout mounts it on every
+    page). The eight darwin baselines are recorded in the lane under classic scrollbars (the 15px
+    gutter measured first) and verified 8/8. Gates at READY: prettier · eslint · tsc clean; vitest 142 files / 3 409 tests with the
+    optimizer variants hidden (the CI rehearsal); build-storybook and `next build` green; e2e not run
+    (no spec covers the corner). No reviewer round was run — the #120/#124 recolour precedent; from
+    this evening every reviewer runs on Opus unless the owner explicitly says otherwise (his rule, set
+    in the flows on branch `chore/reviewers-on-opus`).
 
 ## 16. Build-time vs runtime contract
 

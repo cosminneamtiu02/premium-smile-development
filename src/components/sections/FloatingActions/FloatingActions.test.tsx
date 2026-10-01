@@ -261,23 +261,31 @@ describe('FloatingActions — the WhatsApp disc (fb-353)', () => {
 });
 
 describe('FloatingActions — the call CTA', () => {
-  it('keeps BOTH corner discs on the green solid face — never the lavender the Footer’s discs wear (owner, 2026-10-01)', () => {
-    // The day the Footer's four discs, the reviews deck's chevrons and the map
-    // band's row discs turned lilac, the owner: "do not modify at least yet
-    // the hovering buttons from bottom right". ui/GlyphButton's `tone` axis
-    // defaults to the green CTA family and these two say nothing — pinned, so
-    // a sweep that recolours "every disc" fails here by name.
+  it('dresses BOTH corner discs in the lavender solid face — the Footer discs’ family, on the owner’s word (2026-10-01)', () => {
+    // Held back that morning, the day the Footer's four discs, the reviews
+    // deck's chevrons and the map band's row discs turned lilac — "do not
+    // modify at least yet the hovering buttons from bottom right" — and
+    // turned that evening: "i thaught i told you to refactor the whatsapp and
+    // call buttons to be lilla too", the owner's pick of THIS pair over the
+    // contact dialog's two buttons, which stay green. ui/GlyphButton's
+    // `tone="accent"` cuts the SAME solid face from the lavender: lilac at
+    // rest under the white glyph, draining to the white face with a lilac
+    // glyph and hairline on hover, the deep violet on press. No green token
+    // survives on either disc, and the prop never reaches the DOM.
     const { write, call } = mount();
     for (const disc of [write, call]) {
       const tokens = disc.className.split(/\s+/);
       expect(tokens).toEqual(
         expect.arrayContaining([
-          'bg-cta',
+          'bg-accent',
           'text-ink-inverse',
           'hover:bg-surface',
+          'hover:text-accent',
+          'hover:inset-ring-accent',
+          'active:bg-accent-strong',
         ]),
       );
-      expect(tokens.filter((t) => t.includes('accent'))).toEqual([]);
+      expect(tokens.filter((t) => t.includes('cta'))).toEqual([]);
       expect(disc).not.toHaveAttribute('tone');
     }
   });

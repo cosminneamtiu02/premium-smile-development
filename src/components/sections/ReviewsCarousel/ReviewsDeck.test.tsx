@@ -337,6 +337,24 @@ describe('ReviewsDeck — no rotation control, on the owner’s word (2026-09-12
     expect(CODE).not.toMatch(/rotationControl|\bpause:|\bplay:/);
   });
 
+  it('dresses prev and next in GlyphButton’s outline face in the lavender family (owner, 2026-10-01)', () => {
+    // "round scrolling buttons from reviews, the left and right ones" turn
+    // lilac like the menu buttons; they still FILL on hover (the atom's own
+    // mirror). Token contract, never a green token.
+    const { prev, next } = mount();
+    for (const control of [prev(), next()]) {
+      const tokens = control.className.split(/\s+/);
+      expect(tokens).toEqual(
+        expect.arrayContaining([
+          'border-accent',
+          'text-accent',
+          'hover:bg-accent',
+        ]),
+      );
+      expect(tokens.filter((t) => /cta/.test(t))).toEqual([]);
+    }
+  });
+
   it('opens the live region polite in the SERVER html', () => {
     // The construction snapshot is idle/not-started, which is exactly what
     // getServerSnapshot freezes — nothing is moving in the static export, so

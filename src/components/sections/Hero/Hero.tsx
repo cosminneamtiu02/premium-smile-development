@@ -709,13 +709,46 @@ export function Hero({
             ground; no bottom padding, so the block the two spacers centre
             ends at the buttons' own edge. Contact opens the one dialog;
             services is a plain locale anchor wearing the outline face
-            (§15.13). */}
+            (§15.13). BOTH IN ui/Button's LAVENDER FAMILY since 2026-10-01
+            (`tone="accent"`, the atom's THE TWO FAMILIES — the owner, on the
+            menu buttons' lilac: "programeaza o consultatie button … at rest.
+            when on hover it muat still turn white" · "vezi serviciile button
+            border and text at rest, but not background color and on hover it
+            should still turn current slight gray" — and, that evening, "on
+            hover of vezi serviciile i want little darker shade of gray": the
+            lavender outline greys to `line`, one step under the green's
+            `line-subtle`, the atom's declared fourth substitution). The
+            services link also wears the top bar's `shadow-aura` through
+            className (the owner, the same day: "old see our services button
+            on the auto scrolling page has also a little lilla aura around it
+            … same aura as on top bar"), the FloatingActions/ClinicLocation
+            precedent — the ring and shadow layers compose into ONE
+            box-shadow, and the outline sets no shadow layer of its own, so
+            the static glow holds still while the colours fade
+            (tests/unit/aura-token.test.ts counts the wear). BOTH JUMP
+            (`motion="jump"`, the atom's THE JUMP — the owner, the same
+            evening: "like in old webpage i want the book consultation, see
+            our services … to have that jump at you animation on hover"): the
+            old site's 105 % pop on its own 200ms clock, the aura scaling
+            with the box; tests/unit/jump-census.test.ts names the wearers. */}
         <Container className="relative z-10 col-start-1 row-start-3 pt-2">
           <div className="flex max-w-3xl flex-wrap gap-3 *:grow *:basis-64">
-            <ContactModalTrigger variant="solid" size="lg">
+            <ContactModalTrigger
+              variant="solid"
+              tone="accent"
+              motion="jump"
+              size="lg"
+            >
               {labels.contact}
             </ContactModalTrigger>
-            <Button variant="outline" size="lg" asChild>
+            <Button
+              variant="outline"
+              tone="accent"
+              motion="jump"
+              size="lg"
+              asChild
+              className="shadow-aura"
+            >
               <a href={servicesHref}>{labels.services}</a>
             </Button>
           </div>

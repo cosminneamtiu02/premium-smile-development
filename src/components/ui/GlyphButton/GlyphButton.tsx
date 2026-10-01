@@ -28,6 +28,8 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // bundle here, where they would break the one-animation hover contract below.
 
 export type GlyphButtonVariant = 'solid' | 'outline' | 'ghost';
+export type GlyphButtonTone = 'cta' | 'accent';
+export type GlyphButtonMotion = 'still' | 'jump';
 export type GlyphButtonShape = 'round' | 'square';
 export type GlyphButtonSize = 'md' | 'lg';
 
@@ -45,6 +47,22 @@ type GlyphButtonOwnProps = {
    * Borders live INSIDE a bundle (only outline has one), never on the shape.
    */
   variant?: GlyphButtonVariant;
+  /**
+   * The colour FAMILY the bundle is cut from (THE TWO FAMILIES below): `cta`,
+   * the green of the one conversion goal — THE DEFAULT, every call site that
+   * says nothing — or `accent`, the lavender the menu buttons wear, chosen
+   * per call site on the owner's word (2026-10-01). ghost paints with ink and
+   * ignores it. Orthogonal to variant, shape and size.
+   */
+  tone?: GlyphButtonTone;
+  /**
+   * What MOVES on hover — Button's axis, cell for cell (its THE JUMP): `still`
+   * — THE DEFAULT, nothing moves — or `jump`, the old round button's pop
+   * brought back for the fixed corner's two discs alone (owner, 2026-10-01):
+   * the circle scales to 105 % on its own 200ms ease-out clock, back to rest
+   * on press, never under reduced motion. Orthogonal to the other three axes.
+   */
+  motion?: GlyphButtonMotion;
   /**
    * Geometry ONLY — the radius, nothing else: round = the circle (call CTA,
    * socials) · square = the 6px-radius cell (the Header burger). Orthogonal to
@@ -84,8 +102,14 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // reasoning and the owner decisions behind it, canvas fb-37/fb-38). Exactly
 // ONE animation: the colors fade on one shared clock, --fade ease-in-out, so
 // in and out mirror each other. Nothing moves — the old round button's
-// hover:scale-105 growth and its shadow-cta → shadow-cta-lg pop are both gone
-// (fb-49/fb-50, plan D2/D5); "jumps at you" was two extra animations.
+// hover:scale-105 growth and its shadow-cta → shadow-cta-lg pop were both cut
+// (fb-49/fb-50, plan D2/D5); "jumps at you" was two extra animations. SINCE
+// 2026-10-01 the growth half is back as an OPT-IN axis, `motion="jump"`, on
+// the owner's word ("call hover button in bottom right and whatsapp button …
+// to have that jump at you animation on hover. this should not affect
+// buttons from footer"): the fixed corner's two discs wear it, nothing else
+// does, and the shadow half stays cut — the cell is Button's, byte for byte
+// (`motionClasses` below; Button.tsx's THE JUMP has the reasoning).
 // KEEP IN SYNC with Button's --fade (fb-44): 400ms here and 400ms there is
 // deliberate — the two files are independent on purpose (plan D7), so
 // changing the system's feel is a multi-file edit, never a drift. Button.tsx
@@ -137,44 +161,101 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // ZERO-PIXEL refactor: the token SET below is identical to the one this atom
 // emitted before, only the file the strings are DEFINED in moved. What stays
 // here on purpose: `group`, the disabled state, the radius (shape is this
-// atom's axis alone) and the transition list — exactly three properties,
-// border-color pointedly absent, so the outline's border never moves and the
-// focus ring never joins the clock.
+// atom's axis alone) and — in `motionClasses` since 2026-10-01 — the
+// transition list: exactly three properties at rest, border-color pointedly
+// absent, so the outline's border never moves and the focus ring never joins
+// the clock; four under `jump`, where `scale` joins on its own clock.
 const base =
-  'group ' +
-  discBase +
-  ' disabled:pointer-events-none disabled:opacity-50 ' +
-  'transition-[background-color,color,box-shadow]';
+  'group ' + discBase + ' disabled:pointer-events-none disabled:opacity-50';
+
+// THE JUMP — Button's `motionClasses`, byte for byte (KEEP-IN-SYNC: edit both
+// or GlyphButton.test's cross-atom pin fails). `still` is this atom's own
+// three-property fade list with the clock's duration and easing — the two
+// tokens ui/disc.ts carried for every disc until 2026-10-01, when they moved
+// to each atom's own transition line so that the jump cell could spell BOTH
+// clocks as per-property lists without a second `duration-*` utility fighting
+// it for the same property (SpeedDial's `discTransition` took the same two
+// tokens; zero pixels moved). The ring's --fade number, the press snap and the
+// reduced-motion escape stay in discBase.
+const motionClasses: Record<GlyphButtonMotion, string> = {
+  still:
+    'transition-[background-color,color,box-shadow] duration-(--fade) ease-in-out',
+  jump:
+    '[--jump:200ms] ' +
+    '[transition-property:background-color,color,box-shadow,scale] ' +
+    '[transition-duration:var(--fade),var(--fade),var(--fade),var(--jump)] ' +
+    '[transition-timing-function:ease-in-out,ease-in-out,ease-in-out,ease-out] ' +
+    'hover:scale-105 active:scale-100 motion-reduce:hover:scale-100',
+};
 
 // Named bundles, not four free color props: every rest AND hover pair is
 // measured once, so §9 holds by construction and no call site can invent an
 // illegal combination (plan §4a). A new look = a new variant, verified once.
+// ── THE TWO FAMILIES (owner, 2026-10-01 — Button.tsx's paragraph of the same
+// name carries the measured contrast record; this atom cuts the SAME faces
+// with the SAME three substitutions: cta → accent, cta-hover → accent-strong,
+// the hairline → inset-ring-accent). `cta` is the DEFAULT, every call site
+// that says nothing byte-identical to before the axis existed. `accent` is
+// worn, each on the owner's word, by the Footer's four discs and the reviews
+// deck's prev/next (outline — which FILLS lavender on hover, this atom's own
+// two-way mirror) and by the map band's two row discs (solid, through
+// ClinicLocation's `ROW_HOVER`). NOT by the fixed corner's call and WhatsApp
+// discs ("do not modify at least yet the hovering buttons from bottom
+// right") and not by the Header's burger (ghost paints with ink):
+// tests/unit/accent-census.test.ts names every wearer with its ground, and
+// FloatingActions.test.tsx pins the corner green.
 // KEEP-IN-SYNC (ClinicLocation board D6, 2026-09-09): sections/ClinicLocation's
-// `ROW_HOVER` spells solid's `hover:`/`active:` members with the `group-`
-// prefix — a decorative disc (this atom in asChild mode) driven by the ROW
-// link around it, the old site's whole-row hover. ClinicLocation.test.tsx
-// derives its expectation from a rendered instance of THIS bundle, so editing
-// solid's hover face fails that test until the section moves with it.
-const variantClasses: Record<GlyphButtonVariant, string> = {
-  // Rest→hover DRAINS to outline's rest face; the press re-fills deep green
-  // (the 2026-09-06 mirror law — see the contract above and Button.tsx).
-  // Byte-identical to Button's solid, like the ghost pair below.
-  solid:
-    'bg-cta text-ink-inverse inset-ring inset-ring-transparent ' +
-    'hover:bg-surface hover:text-cta hover:inset-ring-cta ' +
-    'active:bg-cta-hover active:text-ink-inverse',
-  outline:
-    'border border-cta bg-surface text-cta ' +
-    'hover:bg-cta hover:text-ink-inverse ' +
-    'active:bg-cta-hover active:text-ink-inverse',
-  // The quiet tone — byte-identical to Button's ghost bundle, on purpose: the
-  // two atoms speak ONE ghost language, so a ghost square beside a ghost text
-  // button reads as one control strip. CONSTRAINT: the hover tray is
-  // `bg-line-subtle`, never `bg-raised` — --raised is #ffffff, i.e. an
-  // invisible tray on the white surface. ink over #e9e6e2 = 11.9:1; the full
-  // contrast record lives in Button.tsx. Rest is transparent, so ghost's REST
-  // contrast belongs to the parent: light grounds only.
-  ghost: 'bg-transparent text-ink hover:bg-line-subtle active:bg-line-subtle',
+// `ROW_HOVER` spells solid's `hover:`/`active:` members — the ACCENT cell's,
+// since 2026-10-01 — with the `group-` prefix: a decorative disc (this atom
+// in asChild mode) driven by the ROW link around it, the old site's whole-row
+// hover. ClinicLocation.test.tsx derives its expectation from a rendered
+// instance of THIS bundle, so editing that cell's hover face fails that test
+// until the section moves with it.
+// The quiet tone paints with ink, not with a family: ONE bundle, both cells
+// (GlyphButton.test pins the equality) — byte-identical to Button's ghost,
+// on purpose: the two atoms speak ONE ghost language, so a ghost square
+// beside a ghost text button reads as one control strip. CONSTRAINT: the
+// hover tray is `bg-line-subtle`, never `bg-raised` — --raised is #ffffff,
+// i.e. an invisible tray on the white surface. ink over #e9e6e2 = 11.9:1; the
+// full contrast record lives in Button.tsx. Rest is transparent, so ghost's
+// REST contrast belongs to the parent: light grounds only.
+const ghost =
+  'bg-transparent text-ink hover:bg-line-subtle active:bg-line-subtle';
+
+// Every cell a LITERAL class string (Button.tsx says why: Tailwind's scanner
+// reads complete utilities only).
+const variantClasses: Record<
+  GlyphButtonVariant,
+  Record<GlyphButtonTone, string>
+> = {
+  // Rest→hover DRAINS to outline's rest face; the press re-fills deep green —
+  // deep violet in the lavender family (the 2026-09-06 mirror law — see the
+  // contract above and Button.tsx). Byte-identical to Button's solid cells,
+  // like the ghost pair.
+  solid: {
+    cta:
+      'bg-cta text-ink-inverse inset-ring inset-ring-transparent ' +
+      'hover:bg-surface hover:text-cta hover:inset-ring-cta ' +
+      'active:bg-cta-hover active:text-ink-inverse',
+    accent:
+      'bg-accent text-ink-inverse inset-ring inset-ring-transparent ' +
+      'hover:bg-surface hover:text-accent hover:inset-ring-accent ' +
+      'active:bg-accent-strong active:text-ink-inverse',
+  },
+  // Rest→hover FILLS with solid's rest face (the two-way mirror this atom
+  // keeps — fb-38, unchanged; Button's outline greys instead since
+  // 2026-09-20); the press is solid's press.
+  outline: {
+    cta:
+      'border border-cta bg-surface text-cta ' +
+      'hover:bg-cta hover:text-ink-inverse ' +
+      'active:bg-cta-hover active:text-ink-inverse',
+    accent:
+      'border border-accent bg-surface text-accent ' +
+      'hover:bg-accent hover:text-ink-inverse ' +
+      'active:bg-accent-strong active:text-ink-inverse',
+  },
+  ghost: { cta: ghost, accent: ghost },
 };
 
 // Geometry, split out of `base` so the two faces cannot drift into two atoms:
@@ -211,6 +292,8 @@ const sizeClasses: Record<GlyphButtonSize, string> = {
 
 export function GlyphButton({
   variant = 'solid',
+  tone = 'cta',
+  motion = 'still',
   shape = 'round',
   size = 'md',
   asChild = false,
@@ -221,7 +304,8 @@ export function GlyphButton({
 }: GlyphButtonProps): ReactElement {
   const ownClasses = cx(
     base,
-    variantClasses[variant],
+    motionClasses[motion],
+    variantClasses[variant][tone],
     shapeClasses[shape],
     sizeClasses[size],
     className,

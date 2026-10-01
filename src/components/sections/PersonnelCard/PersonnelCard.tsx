@@ -384,7 +384,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     `actions` and its type are gone (§6.6: a breaking change, every usage
 //     moves with it). It goes to the doctor's own page, labelled in his own
 //     voice („Mai multe despre mine", handed over finished, §8.1), on the old
-//     services button's solid `lg` face. The services link left the card: this
+//     services button's solid `lg` face — in ui/Button's LAVENDER family since
+//     2026-10-01 (`tone="accent"`, the atom's THE TWO FAMILIES; the owner:
+//     "all 'mai multe despre mine' buttons from the doctor cards" lilac, like
+//     the menu buttons). The services link left the card: this
 //     button is now the only way to a doctor's page (the §15.23 SC 2.4.5
 //     record stands).
 //   · THE PICTURE is the transparent CUTOUT the doctor page's opener shows —
@@ -475,7 +478,8 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // (ui/Image `framed`, its D3) is untouched: the old staff card paired its
 // 16px card with a 12px picture frame, the same pair as here.
 // THE LEVERS, one token each: the card's tone (TONE's doctor row, `framed` ↔
-// `surface`) · the link's face (`solid` ↔ `outline`) · its cap (`max-w-md`,
+// `surface`) · the link's face (`solid` ↔ `outline`) and its colour family
+// (`accent` ↔ `cta`) · its cap (`max-w-md`,
 // 28rem — 24rem was "not wide enough", the whole text box "too wide") · the
 // picture's width (`w-72`, with `sizes`) · the name's step on level 3
 // (NAME_STEP's doctor row) · the phone order (the two `flex-col-reverse`) ·
@@ -811,8 +815,21 @@ export function PersonnelCard({
               </blockquote>
               {/* The anchor names ITSELF first and the heading second, so the
                   accessible name is „Mai multe despre mine Dr. Elena Marin"
-                  while the visible words stay exactly the label (D15). */}
-              <Button variant="solid" size="lg" asChild>
+                  while the visible words stay exactly the label (D15). The
+                  face is ui/Button's lavender solid (owner 2026-10-01) and it
+                  JUMPS on hover — `motion="jump"`, the old site's 105 % pop,
+                  the owner the same evening: "more about me button in doctor
+                  card, to have that jump at you animation on hover". The box
+                  grows 5 % inside the inset's lanes (≥ 1.5rem of air a side,
+                  11px of growth at the 28rem cap), never past the card's
+                  frame; tests/unit/jump-census.test.ts names the wearers. */}
+              <Button
+                variant="solid"
+                tone="accent"
+                motion="jump"
+                size="lg"
+                asChild
+              >
                 <a
                   id={linkId}
                   aria-labelledby={`${linkId} ${headingId}`}

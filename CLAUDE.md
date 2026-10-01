@@ -402,7 +402,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorShowcase** (the doctors band, right under the Hero since 2026-09-30 — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys; its place on this page is the planner's pick, a lever — §15.25) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner | `home` |
+| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'hero'/'inverse' over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link — both in ui/Button's lilac `accent` family since 2026-10-01, the services link under the top bar's aura and greying one step darker on hover, both with the old site's hover jump (§15.30 round 3) —, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorShowcase** (the doctors band, right under the Hero since 2026-09-30 — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys; its place on this page is the planner's pick, a lever — §15.25) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner | `home` |
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven category cards, of which ONLY the one the visitor is at wears the aura, faded in and out over 400ms — round 4, 2026-09-29; every card wore it from 2026-09-14 until then; "at" is THE READING LINE since round 5, the same day: a card lights as its top crosses the middle of the clear part of the window, the first card at the top of the page, and a menu click brings a card that fits to that middle, with no focus ring for a pointer — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` on its link in BOTH directions, scroll and click, and — round 4 — by a `data-current` mark the island stamps on the card that link points at) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
 | Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button; the FIRST card's picture preloads on this page, its LCP element. The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30 — `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))`; until then it also held the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step, an `align: start \| center \| end` axis for the words' seat beside the photo — the page passes `lowered`, the top seat dropped 7rem — 3rem on the owner's "push this a bit more down" of 2026-09-25, halved to 1.5rem on his "push it a little more upwards" of 2026-09-26, then 7rem (20 % of the figure's box at 1280) on his "push like 20% more down just the textual part" the same evening, round 2l, one token to dial; the band's own rhythm halved the same day (round 2j, "it starts height wise too low … also the image, so the whole thing") and the words track widened to ⅔ of the row for a BIGGER credo card, its quote on `text-xl`; then, in round 2k the same day, the picture ~30 % larger, the two columns content-sized and CENTRED in the row with the words capped at 28rem (a narrower, taller card — "70% as wide … and taller rather", "left and right they have same as much space"), and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred ("name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the deep violet `accent-strong` (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Excelență confirmată în timp” centred over a lead sentence and four tiles: a light disc with a green line glyph, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the sr-only twin SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
@@ -469,14 +469,20 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    **Menu-button lavender — the 20th role (2026-10-01, owner, verbatim: "refactor on all menu
    buttons. i need them not to be that green. i want them to be same color as in old website
    on the same top bar buttons"; lane `rework/text-button-lavender`):** `--accent` = `#746894`,
-   a NEW semantic role worn by `ui/TextButton` alone — its hover label, current-page label and
+   a NEW semantic role worn by `ui/TextButton` alone (alone until later that day — §15.30 gives the
+   two button atoms an `accent` FAMILY, worn per call site on the owner's word) — its hover label, current-page label and
    2px underline, still ONE colour (the old top bar's single-`accent` unity, 2026-08-06) — so
    every menu button turns lavender at once: the Header's row and burger panel, the Footer's
    links, the price menu's categories. **The Contact button stays GREEN** (the owner, the same
    day, after a lavender Contact was tried on the preview and reverted: "contact button MUST STAY
    GREEN AS IT MUST JUMP INTO YOUR EYES") — the CTA keeps the green family while the quiet menu
    controls around it wear the lavender, and `Header.test.tsx` pins both of the Header's Contact
-   buttons to ui/Button's solid green face. The old top bar's own `--accent` is `#8377a3`
+   buttons to ui/Button's solid green face. **REVERSED BY THE OWNER THE SAME EVENING (§15.30
+   round 3, verbatim: "also paint the contact button from top bar a lilla and make it wider, more
+   seszable and adjust to widest language form"):** both of the Header's Contact buttons wear
+   ui/Button's lavender `accent` family since — the bar's under a 10rem floor, wider only, and with
+   the old site's hover jump — and `Header.test.tsx` pins the lilac; the green CTA family keeps the
+   fixed corner's two discs, the dialog's buttons and the language bulb. The old top bar's own `--accent` is `#8377a3`
    (top-bar.tsx: `text-accent`, `after:bg-accent`); MEASURED, it reads 4.09:1 on white and
    3.89:1 on `--page` — under the 4.5:1 an 18px medium label owes SC 1.4.3, and the
    current-page label is a resting state, so axe would fail every story that shows one. The
@@ -798,7 +804,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     recipe copied verbatim, the shared-shell extraction stays armed for the Hero frame) · `sections/ReviewCard`
     (props-in, zero keys) · NEW atoms `ui/Avatar` (picture via ui/Image OR two capital letters — the `Initials` and
     `Rating` value types live in React-free `lib/initials` + `lib/rating` (mechanics both the atoms and the data list
-    import; type + guard written once) and make a third letter or a `4.3` a COMPILE error in the data list; ground `cta`;
+    import; type + guard written once) and make a third letter or a `4.3` a COMPILE error in the data list; ground `cta` (→ the lavender `accent` role on 2026-10-01, §15.30);
     the Modal carve-out keeps it `ui/`) and `ui/StarRating` (eleven half-step values; ONE `Star` glyph painted three
     ways — a filled `Star` and its stroked twin `StarOutline` drawn on top of every slot, so empty is HOLLOW and the
     state is shape, not colour (G2 a11y); interim geometry = the old site's polygon until the owner's SVG lands) ·
@@ -2597,6 +2603,113 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     16px computed). **Overlap, recorded:** the uncommitted `rework/text-button-lavender` lane edits
     TextButton's `base` (its colours), Header.test and globals.css too — whichever merges second rebases;
     the hunks are adjacent lines, not the same ones. **Evidence at READY:** see the lane's PR.
+
+30. **The lilac buttons — ON THE OWNER'S WORD (2026-10-01, verbatim: "take latest develpment. there
+    is a set of buttons i need you to make lilla, like the one that the latest menu buttons are.
+    those are: -all "mai multe despre mine" buttons from the doctor cards. -all round glyph buttons
+    from the footer but do not modif yat least yet the hovering buttons from bottom right
+    -programeaza o consultatie button from auto scrolling with images and slides component at rest.
+    when on hover it muat still turn white. -vezi serviciile button border ant text at rest, but not
+    background color and on hover it should still turn current slight gray -round scrolling buttons
+    from reviews, the left and right ones. -buttons for location and phone next to the map" — and,
+    mid-lane: "old see our services button on the auto scrolling page has also a little lilla aura
+    around it. i want it implemented on the sliding window with images on home page at see our
+    services … same aura as on top bar aura"; lane `rework/buttons-lavender`):** `ui/Button` and
+    `ui/GlyphButton` gain a `tone: 'cta' | 'accent'` axis — the colour FAMILY a face is cut from,
+    orthogonal to `variant` (and to GlyphButton's `shape` / `size`), default `'cta'`, so every call
+    site that says nothing is byte-identical. The `accent` family is the SAME bundles with three
+    substitutions and nothing else — `cta → accent`, `cta-hover → accent-strong`, the hairline
+    `→ inset-ring-accent` — which both atoms' tests DERIVE from the green cells rather than list a
+    third time; ghost paints with ink and ignores the axis (one bundle, both cells, pinned equal).
+    Hover contract, `--fade` clock, press snap and mirror law unchanged: Button's outline still
+    GREYS (the label one step darker for the green's own reason — `accent` reads 4.07:1 on
+    `line-subtle`, under 4.5:1, `accent-strong` 7.51:1; the border stays `accent`, 4.07:1 ≥ 3:1),
+    GlyphButton's outline still FILLS. Measured (WCAG 2.2): white on `accent` 5.06:1 (the green
+    4.52), white on `accent-strong` 9.34:1 (6.60), `accent` on white / `--page` 5.06 / 4.81 —
+    `tests/unit/accent-census.test.ts` computes them from the tokens' own lines, and now names FIVE
+    wearers (TextButton 3 · Button 5 · GlyphButton 6 · ClinicLocation's `ROW_HOVER` 2 · Avatar 1)
+    and the five files that pass `tone="accent"`, each with its ground. **Who wears it, each on the owner's
+    word:** PersonnelCard's doctor link (solid) · the Hero's contact trigger (solid — drains to white
+    on hover) and services link (outline — lilac border and label on the white box, the grey on
+    hover, AND the top bar's `--shadow-aura` through className, the one Button to wear it;
+    `tests/unit/aura-token.test.ts` counts the wear) · the Footer's four discs (outline) · the
+    reviews deck's prev/next (outline) · the map band's two row discs (solid, `ROW_HOVER`
+    re-spelled to the accent cell — its KEEP-IN-SYNC test derives from that cell) · and, after the
+    pack ("i forhot to mention. also on review cards i want the circle of persons initials to be in
+    lilla, not in current green"), the GROUND of `ui/Avatar`'s initials disc, `bg-cta` → `bg-accent`
+    — the avatar board's D3 reversed with a role it did not have: white on #746894 reads 5.06:1,
+    more room than the green's 4.52 (the one consumer is sections/ReviewCard) — and, since round
+    3 below, the Header's Contact button in the bar and in the panel. **Who does NOT,
+    pinned:** the fixed corner's
+    call and WhatsApp discs ("do not modify at least yet …" — FloatingActions.test.tsx) · the
+    contact dialog's buttons · the burger. On the Hero's dark veil the outline's lavender border
+    reads 1.75:1 against the worst-case photograph (the green read 1.57:1): the control's boundary
+    is its white box, unchanged. Stories: UI/Button and UI/GlyphButton each gain Accent ·
+    AccentOutline · HoverAccent · HoverAccentOutline (the last two `pin-hover`). No reviewer round
+    was run — PR #120's recolour precedent; the owner's call. Evidence at READY and the visual
+    manifest: see the lane's PR.
+    **Round 3 (owner, the same evening, 2026-10-01, verbatim: "like in old webpage i want the book
+    consultation, see our services, call hover button in bottom right and whatsapp button, contact
+    button in top bar, more about me button in doctor card, to have that jump at you animation on
+    hover. this should not affect buttons from footer. on hover of vezi serviciile i want little
+    darker shade of gray. also paint the contact button from top bar a lilla and make it wider,
+    more seszable and adjust to widest language form" — the same lane, still uncommitted):**
+    (1) **THE JUMP.** `ui/Button` and `ui/GlyphButton` gain a SECOND axis, `motion: 'still' |
+    'jump'`, default `'still'` (every elder byte-identical): `jump` is the old site's
+    `hover:scale-105 active:scale-100` — the growth half of the pop fb-49/fb-50 cut on 2026-08-05
+    (the GlyphButton board's D2), back for SIX buttons on the owner's word — on ITS OWN clock,
+    `--jump` 200ms ease-out (the old site's numbers), beside the colours' `--fade` 400ms ease-in-out,
+    spelled as per-property lists on the three transition longhands (one `duration-*` utility would
+    give the scale the fade's 400ms, and a swell is not a jump; two utilities on one property are
+    decided by the sheet's order — Header.tsx's `display` lesson — so the jump cell carries no
+    `transition-[…]` / `duration-*` / `ease-*` utility at all, and `ui/disc.ts` handed its
+    `duration-(--fade) ease-in-out` pair to each disc atom's own transition line, GlyphButton's
+    `motionClasses.still` and SpeedDial's `discTransition`, zero pixels moved). The press snaps the
+    box back to rest; under reduced motion the box never moves (`motion-reduce:hover:scale-100`).
+    The pop's OTHER half — the glow's growth, `shadow-cta` → `shadow-cta-lg` — is NOT ported: shadow
+    utilities stay banned in every bundle, and a consumer's static `shadow-aura` simply scales with
+    the box. Wearers, each `motion="jump"` on the owner's list and nothing else —
+    `tests/unit/jump-census.test.ts` names the Hero's two calls to action, the doctor card's link,
+    the Header's bar Contact and, through ui/GlyphButton, the fixed corner's call and WhatsApp
+    discs, and pins the Footer's discs ("this should not affect buttons from footer"), the reviews
+    deck's prev/next, the map band's row discs, the burger panel's full-width Contact (a row that
+    grows past its panel's padding reads as a glitch on a touch surface) and the dialog's buttons
+    STILL; GlyphButton.test pins the two atoms' jump cells byte-identical. (2) **THE DARKER GREY.**
+    `ui/Button`'s outline ACCENT cell greys to `--line` #d8d4cf on hover and press, one step under
+    the green cell's `--line-subtle` #e9e6e2 — the family's declared FOURTH substitution (Button.test's
+    derivation names it, scoped to outline). The green cell cannot follow: `cta-hover` reads 4.47:1 on
+    `--line`, under SC 1.4.3's 4.5:1, while `accent-strong` reads 6.33:1 there and the `accent` border
+    3.43:1 (SC 1.4.11's 3:1); `accent` itself reads 3.43:1 on `--line`, so the hover label still
+    darkens one step (accent-census measures all of it from the tokens' own lines). (3) **THE
+    CONTACT BUTTON, LILAC — THE OWNER'S OWN REVERSAL.** §15.1's rider of that morning ("contact
+    button MUST STAY GREEN AS IT MUST JUMP INTO YOUR EYES") is reversed by the owner's evening
+    sentence above: the bar's Contact is `<ContactModalTrigger variant="solid" tone="accent"
+    motion="jump" className="min-w-40">` — lilac, the atom's `md` face (44px, the row's own height
+    — the `lg` face was tried for "more seszable" and taken off on the owner's look the same
+    evening: "it's jsut too high th button. i wanted the contact button wider just, not also
+    taller"), jumping, under a 10rem floor the section owns (§6.8, §8.4), MEASURED on the built
+    page at the label's 18px medium: „Contact" 63.6px (ro/en/fr) · „Kontakt" 65.3 · „Contatti"
+    66.4, the widest, + 2 × 20px of padding = 106.4px natural, so the floor binds in every language
+    and all five render the SAME 160 × 44px box with ≥ 26.8px of slack a side (the Header stories' Default and
+    GermanStress plays pin the box to the floor; the floor is one token, the lever). The panel's
+    full-width Contact turns lilac with it — the same control, one look — and does not jump.
+    `Header.test.tsx`'s green pin flipped to the lilac; `tests/unit/accent-census.test.ts` names
+    Header.tsx and NavMenu.tsx as callers on the glass floor. Still green: the fixed corner's two
+    discs (their colour; they jump), the dialog's two buttons, the language bulb. Visual, MEASURED
+    (the lane differential against pristine develop f6981af, 447 cells): 109 move — the 103 of
+    rounds 1–2 plus Sections/Header's six (AtTheStep · Default · GermanStress · NonRomanianLocale at
+    1536, where the bar shows the Contact; MenuOpen at both widths, the panel's) — 0 undeclared, 0
+    errors; the bar's Contact is ~6.4k px of each Header cell (re-shot after the height came off —
+    the same 109-cell set, cell for cell), Pages/Home and Pages/Team carry it too, Sections/Hero's
+    thirteen with them (the Header above the band). The DARKER GREY the net CANNOT SEE: UI/Button's
+    HoverAccentOutline passes unchanged because #e9e6e2 → #d8d4cf sits under Playwright's 0.2 YIQ
+    per-pixel threshold (the aura's own note, §15.20 round 4) — measured on the built page instead
+    (rgb(216,212,207) on hover), and the darwin record at the seal must use
+    `--update-snapshots=all`, which rewrites a cell the default mode would skip. The two new `Jump`
+    stories are `no-visual` — the net runs under reduced motion, where the box holds still by rule,
+    so their frames would only repeat the rest frames' pixels. Gates at READY: prettier · eslint ·
+    tsc clean; vitest 3348/3348 (141 files; develop stood at 3143); e2e 118 passed, 36 skipped;
+    build-storybook and `next build` green. No reviewer round was run; the owner's call stands.
 
 ## 16. Build-time vs runtime contract
 

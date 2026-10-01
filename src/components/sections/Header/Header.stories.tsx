@@ -119,12 +119,37 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
+ * THE CONTACT'S FLOOR (owner, 2026-10-01: "also paint the contact button from
+ * top bar a lilla and make it wider, more seszable and adjust to widest
+ * language form") — Header.tsx carries the arithmetic: the bar's Contact is
+ * ui/Button's md face — 44px, the row's own height; "wider just, not also
+ * taller" — under a 10rem `min-w-40` the section owns, measured so that the
+ * widest of the five labels („Contatti", 66.4px at 18px medium, plus 2 × 20px
+ * of padding = 106.4px natural) sits inside it with slack. So in EVERY
+ * language the box is exactly the floor, 10rem × 2.75rem; a label that
+ * outgrew it — a longer sixth language, a bigger face — would widen the box
+ * past 10rem and fail here, in Romanian below and in German further down.
+ * Widths are text widths, so the fonts first — AtTheStep's idiom: load()
+ * rejects on a 404, ready resolves on a failure too, check() is the premise.
+ */
+const expectContactAtItsFloor = async (contact: HTMLElement) => {
+  const FONT = '1rem "Source Serif 4 SB"';
+  await expect(await document.fonts.load(FONT)).not.toHaveLength(0);
+  await document.fonts.ready;
+  await expect(document.fonts.check(FONT)).toBe(true);
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const box = contact.getBoundingClientRect();
+  await expect(box.width).toBeCloseTo(10 * rem, 0);
+  await expect(box.height).toBeCloseTo(2.75 * rem, 0);
+};
+
+/**
  * The everyday picture, Romanian, on `/ro/services`.
  *
  * Proves the whole contract in one frame at each sampled width: at 390 the
  * links are gone and the burger is the only control; at 1536 the full row is
- * on one line — brand, three links with Servicii underlined, green Contact
- * button — and no burger. Both variants are in the HTML at both widths; the
+ * on one line — brand, three links with Servicii underlined, the lilac
+ * Contact button on its 10rem floor (44px, wider only) — and no burger. Both variants are in the HTML at both widths; the
  * container query decides which is drawn (the bar's step, §6.5).
  *
  * The play function is the standing proof that the underline is REAL, i.e.
@@ -145,6 +170,9 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('link', { name: ro.common.nav.home }),
     ).not.toHaveAttribute('aria-current');
+    await expectContactAtItsFloor(
+      canvas.getByRole('button', { name: ro.common.actions.contact }),
+    );
   },
 };
 
@@ -259,6 +287,10 @@ export const GermanStress: Story = {
     // sideways (§7 — nothing may require horizontal scrolling).
     const bar = canvas.getByRole('banner');
     await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth);
+    // „Kontakt" sits in the same 10rem box as „Contact" does.
+    await expectContactAtItsFloor(
+      canvas.getByRole('button', { name: de.common.actions.contact }),
+    );
   },
 };
 

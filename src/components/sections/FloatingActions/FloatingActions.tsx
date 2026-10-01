@@ -112,8 +112,20 @@ import { clinic } from '@/lib/clinic/clinic';
 //
 // §6.8 boundary: placement arrives from HERE as className (the parent owns
 // spacing and positioning), never as a restyle of an atom's internals. The
-// colors are the atoms' own — `variant="solid"` IS the look, and no color prop
-// exists to pass (Wave-1 constraint).
+// colors are the atoms' own — `variant="solid"` IS the look. Since 2026-10-01
+// ui/GlyphButton also has a colour FAMILY axis (`tone`), and these two discs
+// deliberately say nothing and keep the green CTA family: the owner, the day
+// the Footer's discs turned lilac — "do not modify at least yet the hovering
+// buttons from bottom right" (FloatingActions.test.tsx pins it; the day he
+// wants them lilac is one prop per disc). What they DO wear since that
+// evening is the atom's `motion="jump"` — the old round button's 105 % pop on
+// hover, back on the owner's word ("call hover button in bottom right and
+// whatsapp button … to have that jump at you animation on hover. this should
+// not affect buttons from footer"): a MOTION axis, not a colour, so the green
+// pin above stands; the aura below rides the scale with the disc (the old
+// shadow-cta-lg growth is not ported — ui/GlyphButton's contract);
+// tests/unit/jump-census.test.ts names the two beside the Hero's pair, the
+// doctor card's link and the Header's bar Contact.
 //
 // Both controls sit 1rem above the bottom edge PLUS the device's safe-area
 // inset, and every `scroll-padding-bottom` step adds the same inset back, so
@@ -253,6 +265,7 @@ export function FloatingActions(): ReactElement {
       <GlyphButton
         asChild
         variant="solid"
+        motion="jump"
         shape="round"
         size="lg"
         aria-label={t('actions.whatsapp')}
@@ -277,6 +290,7 @@ export function FloatingActions(): ReactElement {
       <GlyphButton
         asChild
         variant="solid"
+        motion="jump"
         shape="round"
         size="lg"
         aria-label={t('actions.call')}

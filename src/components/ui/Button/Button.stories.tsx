@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Button, type ButtonSize, type ButtonVariant } from './Button';
+import {
+  Button,
+  type ButtonMotion,
+  type ButtonSize,
+  type ButtonTone,
+  type ButtonVariant,
+} from './Button';
 
 // One story per meaningful state (§13). Demo values are Romanian with
 // diacritics; DE-longest + pseudo-locale are dedicated stress variants
@@ -12,6 +18,8 @@ const meta = {
   args: {
     children: 'Programează o consultație',
     variant: 'solid',
+    tone: 'cta',
+    motion: 'still',
     size: 'md',
   },
   argTypes: {
@@ -19,7 +27,19 @@ const meta = {
       control: 'radio',
       options: ['solid', 'outline', 'ghost'] satisfies ButtonVariant[],
       description:
-        'Visual tone — solid CTA, drains on hover / outlined, fills on hover / quiet',
+        'The face — solid, drains on hover / outlined, greys on hover / quiet',
+    },
+    tone: {
+      control: 'radio',
+      options: ['cta', 'accent'] satisfies ButtonTone[],
+      description:
+        'The colour family — cta, the green of the one conversion goal (the default) / accent, the menu buttons’ lavender (owner 2026-10-01); ghost paints with ink and ignores it',
+    },
+    motion: {
+      control: 'radio',
+      options: ['still', 'jump'] satisfies ButtonMotion[],
+      description:
+        'What moves on hover — still, nothing (the default) / jump, the old site’s 105 % pop on its own 200ms clock (the Hero’s pair, the doctor card’s link, the bar’s Contact — owner 2026-10-01); hover the canvas to see it',
     },
     size: {
       control: 'radio',
@@ -160,4 +180,67 @@ export const HoverSolid: Story = {
 export const HoverOutline: Story = {
   tags: ['pin-hover'],
   args: { variant: 'outline', children: 'Vezi serviciile' },
+};
+
+/**
+ * THE LAVENDER FAMILY (owner, 2026-10-01: "a set of buttons i need you to
+ * make lilla, like the one that the latest menu buttons are"): the same faces
+ * cut from the menu buttons' `accent` role — Button.tsx's THE TWO FAMILIES
+ * carries the measured pairs. Accent is the doctor card's „Mai multe despre
+ * mine" and the Hero's contact trigger; AccentOutline the Hero's „Vezi
+ * serviciile" — lilac border and label on the white box.
+ */
+export const Accent: Story = {
+  args: { tone: 'accent', size: 'lg', children: 'Mai multe despre mine' },
+};
+
+export const AccentOutline: Story = {
+  args: {
+    tone: 'accent',
+    variant: 'outline',
+    size: 'lg',
+    children: 'Vezi serviciile',
+  },
+};
+
+/**
+ * The lavender pair's hover END states, pinned as real pixels ('pin-hover',
+ * as HoverSolid/HoverOutline above): solid drains to the white face with a
+ * lilac label and hairline — the owner's "when on hover it must still turn
+ * white" — and outline greys, the label one step darker (accent-strong) —
+ * "on hover it should still turn current slight gray".
+ */
+export const HoverAccent: Story = {
+  tags: ['pin-hover'],
+  args: { tone: 'accent', size: 'lg', children: 'Programează o consultație' },
+};
+
+export const HoverAccentOutline: Story = {
+  tags: ['pin-hover'],
+  args: {
+    tone: 'accent',
+    variant: 'outline',
+    size: 'lg',
+    children: 'Vezi serviciile',
+  },
+};
+
+/**
+ * THE JUMP (owner, 2026-10-01: "like in old webpage i want the book
+ * consultation, see our services, call hover button in bottom right and
+ * whatsapp button, contact button in top bar, more about me button in doctor
+ * card, to have that jump at you animation on hover"): `motion="jump"`, the
+ * old site's hover:scale-105 on its own 200ms ease-out clock beside the 400ms
+ * colour fade (Button.tsx's THE JUMP). HOVER IT in the workbench — the net
+ * runs every story under reduced motion, where the box holds still by rule,
+ * so this frame would only repeat Accent's pixels: 'no-visual'.
+ */
+export const Jump: Story = {
+  tags: ['no-visual'],
+  args: {
+    tone: 'accent',
+    motion: 'jump',
+    size: 'lg',
+    children: 'Programează o consultație',
+  },
 };

@@ -323,9 +323,28 @@
      bar buttons"). THE CHARTER: the lavender a QUIET control turns — the one
      colour of ui/TextButton's hover label, current-page label and underline
      (the Header's menu row and panel, the Footer's links, the price menu's
-     categories). NEVER the Contact button beside them, which stays the green
-     CTA (owner, the same day: "contact button MUST STAY GREEN AS IT MUST JUMP
-     INTO YOUR EYES" — Header.test.tsx pins both of the Header's). The old top
+     categories) — and, since later the same day, the `accent` FAMILY of
+     ui/Button and ui/GlyphButton (their THE TWO FAMILIES: the same faces with
+     cta → accent, cta-hover → accent-strong, the hairline → inset-ring-accent),
+     worn per call site on the owner's word by the doctor card's one link, the
+     Hero's two calls to action, the Footer's four discs, the reviews deck's
+     prev/next and the map band's two row discs — and, the same day, the GROUND
+     of ui/Avatar's initials disc on the review cards, white letters on it
+     (the old site's lavender letters ground, back on an AA-passing shade;
+     CLAUDE.md §15.30) — and, since that evening, the Header's Contact button
+     in the bar and in the phone's panel: pinned GREEN that morning on the
+     owner's "contact button MUST STAY GREEN AS IT MUST JUMP INTO YOUR EYES",
+     and turned on his own reversal — "also paint the contact button from top
+     bar a lilla and make it wider, more seszable and adjust to widest
+     language form" (Header.test.tsx pins the lilac on both). Not the fixed
+     corner's two discs ("do not modify at least yet the hovering buttons
+     from bottom right" — FloatingActions.test.tsx) and not the dialog's own
+     two buttons. As an outline's hover GROUND the lavender family greys to
+     --line, not --line-subtle (the owner, the same evening: "on hover of
+     vezi serviciile i want little darker shade of gray"): --accent-strong
+     reads 6.33:1 on it and the --accent border 3.43:1; the green cell keeps
+     --line-subtle because --cta-hover would read 4.47:1 on --line, under
+     4.5:1 (tests/unit/accent-census.test.ts measures all three). The old top
      bar painted all three with its own `--accent`,
      rgb(131 119 163) = #8377a3 (top-bar.tsx: `text-accent`, `after:bg-accent`)
      — which reads 4.09:1 on white and 3.89:1 on --page, under the 4.5:1 an
@@ -344,7 +363,15 @@
      #f2f2f2 · 4.76:1 on the open panel's #f8f8f8 · 4.81:1 on --page · 5.06:1
      on --surface white · the same as the 2px underline, whose SC 1.4.11 bar
      is 3:1 · 2.93:1 against --ink, the resting label it takes over from on
-     hover (the green it replaces read 2.24:1 there).
+     hover (the green it replaces read 2.24:1 there) · AS A BUTTON FACE
+     (2026-10-01): white ink on it 5.06:1, its inset hairline 5.06:1 on
+     --surface, its border 4.81:1 over --page; as an outline's hover label it
+     would read 3.43:1 on --line (4.07:1 on --line-subtle), under 4.5:1, so
+     that label darkens to --accent-strong (6.33:1 on --line, 7.51:1 on
+     --line-subtle) while the border stays (3:1 cleared at 3.43:1) — the
+     green's own cta → cta-hover step; the press face is white on
+     --accent-strong, 9.34:1 (tests/unit/accent-census.test.ts measures all of
+     it from these lines).
      NOT FOR THE TINT: 3.32:1 on sections/TintedBand's 30% lilac ground.
      Dark grounds are outside the charter.
      Beside its siblings: --accent-decorative (#7a6d9c) is the display and

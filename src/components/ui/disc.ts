@@ -29,13 +29,22 @@
  *   on the same 400ms (see Card.tsx's TONE CROSSFADE paragraph; the clock is
  *   shared, its property list is not). Here it comes with `active:duration-0`
  *   snapping press feedback and `motion-reduce:transition-none` giving clean
- *   snaps to anyone who asked for less motion (§9).
+ *   snaps to anyone who asked for less motion (§9). The NUMBER only: the
+ *   `duration-(--fade) ease-in-out` pair that reads it rode here until
+ *   2026-10-01 and now sits on each atom's own transition line (GlyphButton's
+ *   `motionClasses.still`, SpeedDial's `discTransition` — the same two tokens
+ *   on the same elements, zero pixels), because GlyphButton's opt-in JUMP
+ *   spells two clocks as per-property lists on the transition longhands, and
+ *   a `duration-*` utility beside such a list would fight it for one property
+ *   (Button.tsx's THE JUMP).
  *
- * What is deliberately NOT in here: the `transition-[…]` PROPERTY LIST. Each
+ * What is deliberately NOT in here: the `transition-[…]` PROPERTY LIST (and,
+ * since the jump, its duration and easing). Each
  * atom names its own — GlyphButton fades background-color, color and
- * box-shadow (exactly three; the third exists for solid's inset-ring
+ * box-shadow (exactly three at rest; the third exists for solid's inset-ring
  * hairline, the 2026-09-06 mirror law, while border-color stays out so
- * outline's border can never move), and SpeedDial's list is still the bare
+ * outline's border can never move — and `scale` joins as a fourth under
+ * `motion="jump"`), and SpeedDial's list is still the bare
  * color pair since the owner reversed D5's border-color + box-shadow creep
  * (2026-08-27). The corner auras therefore freeze by TWO different
  * mechanisms, and the difference matters to any future lane: the bulb's
@@ -52,7 +61,7 @@
 export const discBase =
   'inline-flex shrink-0 items-center justify-center ' +
   'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
-  '[--fade:400ms] duration-(--fade) ease-in-out active:duration-0 motion-reduce:transition-none';
+  '[--fade:400ms] active:duration-0 motion-reduce:transition-none';
 
 /**
  * The square box, in rem so browser zoom scales the whole control (§7).

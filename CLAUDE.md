@@ -1605,7 +1605,19 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     owner named the buttons). MEASURED on the built export (RO, classic scrollbars): 378 × 56 with an 18px label
     at 1280, 1500 and 1536; 472 × 70 with a 22.5px label at 1920 and beyond; 294 × 56 at 768 and 297 × 56 stacked
     at 390 — as before. For the record, the old site's pair at 1500 was 376 × 64 with a 20px label under a 72px
-    heading. RECORDED, the owner's calls: the cap at the 1920
+    heading. (5) ON THE FLOOR — ROUND 12e (the owner, on PR #125: "checks failing"): CI's Default play read
+    131px between the first slogan and the buttons where round 9 pins 24. The slides' words are stacked in ONE
+    grid cell as tall as the tallest slogan, each aligned to its TOP; round 12's larger, uncapped slogan lays the
+    first Romanian slogan on ONE line from 1024px up while the other two take two, so it stood a line higher than
+    „right above the buttons" — 72 / 90 / 104 / 107 / 134px at 1024 / 1280 / 1500 / 1536 / 1920, and it jumped at
+    every change (measured on the built export; German wraps all three alike). The row now wears `md:items-end`:
+    from the tablet up every slogan's last line sits the round-9 24px above the buttons whatever its line count,
+    and the play checks every slide's box on the row's floor, its block top read off the row itself. It passed on
+    this machine only because it measured before Source Serif 4 had arrived (`font-display: block` lays text out
+    in the fallback serif, which wrapped the first slogan onto two lines): the play now loads the real face
+    first, DoctorIntro's recipe, and turned red here with CI's 131 before the fix. BELOW THE TABLET NOTHING MOVED
+    (the owner: "leave on phone as is"); a 40px float there predates this lane (Romanian at 360 and 390, German at
+    320) — dropping `md:` is the lever. RECORDED, the owner's calls: the cap at the 1920
     value (a wider screen stops scaling there, as the gutter stops at 12.5rem); the halo's two numbers, the
     three motion numbers and the buttons' three clamps with their anchor (each a one-line lever in the atom or
     the band; the anchor is the 1536 in six slopes — the atom's three, the row's three); the

@@ -305,6 +305,22 @@ describe('Hero — the region and its slides (lib/rotation’s markup duties)', 
     );
   });
 
+  it('from the tablet up every slide’s words sit on the row’s floor, and the phone keeps its old alignment (round 12e)', () => {
+    // The stacked slides share one grid cell as tall as the tallest slogan.
+    // Aligned to its top, a slogan with fewer lines floated a line above the
+    // buttons — the first Romanian slogan from 1024px up once round 12
+    // enlarged it (CI's Default play: 131px where round 9 pins 24). The
+    // engine's reading is that play; this pins the one token and its scope.
+    mount();
+    const row = screen.getByText(WORDS[0].title).parentElement?.parentElement
+      ?.parentElement?.parentElement;
+    const tokens = (row?.className ?? '').split(' ');
+    expect(tokens).toContain('grid');
+    expect(tokens).toContain('md:items-end');
+    // Below the tablet nothing changed (the owner: "leave on phone as is").
+    expect(tokens).not.toContain('items-end');
+  });
+
   it('wears the border alone on slogan="outlined" (owner, round 8)', () => {
     render(
       <Providers>

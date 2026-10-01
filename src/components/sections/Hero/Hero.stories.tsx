@@ -110,6 +110,25 @@ function labelsIn(locale: StoryLocale): HeroLabels {
   };
 }
 
+/**
+ * THE REAL FACE BEFORE ANY MEASURE (the CI failure of 2026-10-01): the
+ * Storybook face is `font-display: block`, so a play that measures right
+ * after the render lays the slogan out in the FALLBACK serif until
+ * Source Serif 4 arrives — and whether it has arrived depends on which
+ * stories ran before in the same browser. Measured: the fallback wrapped the
+ * first slogan onto two lines at 1536 locally (the gap read 24) where CI,
+ * the font already loaded, laid it on one (131). `load()` fetches the exact
+ * face the element asks for — DoctorIntro's `expectNameOnOneLine` recipe.
+ */
+const loadFace = async (element: HTMLElement): Promise<void> => {
+  const style = getComputedStyle(element);
+  await document.fonts.load(
+    `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+    element.textContent ?? '',
+  );
+  await document.fonts.ready;
+};
+
 const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
   await expect(band.scrollWidth).toBeLessThanOrEqual(band.clientWidth);
   await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
@@ -212,12 +231,18 @@ export const Default: Story = {
     // services link's bottom edge, the median sits at 58 % of the screen's
     // height — ±3px for the rounding of two shared spacers.
     const slogan = canvas.getByText(heroSlides[0].words.ro.title);
+    await loadFace(slogan);
     // The aura face, by default: stroked at the plain weight, its own halo.
     await expect(slogan.className).not.toContain('font-bold');
     await expect(slogan.className).toContain('text-stroke');
     await expect(slogan.className).toContain('text-shadow:');
-    const wordsRow = slogan.parentElement?.parentElement;
-    if (!wordsRow) throw new Error('the words Container is missing');
+    // The words ROW — the stacked slides' one cell, as tall as the tallest
+    // slogan — is the block's top: slogan → wrapper → Container → slide →
+    // row. (Until round 12e this read the first slide's Container, which
+    // equalled the row only while that slide was the tallest.)
+    const wordsRow =
+      slogan.parentElement?.parentElement?.parentElement?.parentElement;
+    if (!wordsRow) throw new Error('the words row is missing');
     const services = canvas.getByRole('link', { name: ro.home.hero.services });
     const blockTop = wordsRow.getBoundingClientRect().top;
     const blockBottom = services.getBoundingClientRect().bottom;
@@ -229,6 +254,18 @@ export const Default: Story = {
           slogan.getBoundingClientRect().bottom,
       ),
     ).toBe(24);
+    // EVERY slide's words on the row's floor (round 12e): at this width the
+    // first slogan takes one line and the other two take two, so a slide
+    // aligned to the row's top would float a line above the buttons. The
+    // slide boxes are never translated (their Containers are), so their
+    // edges are the layout's.
+    const rowBottom = wordsRow.getBoundingClientRect().bottom;
+    const slideBoxes = [...wordsRow.children];
+    await expect(slideBoxes).toHaveLength(3);
+    for (const box of slideBoxes)
+      await expect(
+        Math.abs(box.getBoundingClientRect().bottom - rowBottom),
+      ).toBeLessThanOrEqual(0.5);
     await expect(
       Math.abs((blockTop + blockBottom) / 2 - window.innerHeight * 0.58),
     ).toBeLessThanOrEqual(3);

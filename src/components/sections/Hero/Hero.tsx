@@ -147,7 +147,9 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //   · A MINIMUM, never a fixed height, and every text box in NORMAL FLOW:
 //     four grid rows — a `minmax(8rem, 1fr)` spacer that is the picture
 //     alone (row 1), the slides' WORDS stacked in one cell (row 2, each
-//     `[grid-area:1/1]`, so the row is as tall as the tallest slogan), the
+//     `[grid-area:1/1]`, so the row is as tall as the tallest slogan — and,
+//     from the tablet up, every slide's words SIT ON THAT ROW'S FLOOR, the
+//     THE SLIDES comment in the markup), the
 //     buttons (row 3) and a second spacer, `minmax(9rem, 1fr)` (row 4). THE
 //     TWO SPACERS SHARE THE SLACK EQUALLY, so the block they enclose — the
 //     slogan, the two buttons — has its MEDIAN ON THE SCREEN'S
@@ -731,10 +733,22 @@ export function Hero({
         {/* THE SLIDES — their words in row 2, stacked in one cell; their
             pictures escape to the whole stage. 'off' while the band moves on
             its own, 'polite' once it stops: from then on a change means the
-            visitor asked for it. */}
+            visitor asked for it. ON THE FLOOR from the tablet up
+            (`md:items-end`, round 12e): the row is as tall as the tallest
+            slogan, and a shorter one used to sit at its TOP — a line above
+            the others. Measured on the built export once round 12 enlarged
+            and uncapped the slogan: in Romanian from 1024px up the first
+            slogan takes one line where the other two take two, so it stood
+            72–134px higher than „right above the buttons" (104 on the
+            owner's 1500 window) and jumped at every change; CI's Default
+            play caught it. Bottom-aligned, every slogan's last line sits
+            the round-9 24px above the buttons, whatever its line count.
+            Below the tablet the phone stays as it is (the owner: "leave on
+            phone as is"): a 40px float there predates this lane (Romanian
+            at 360 and 390, German at 320) — dropping `md:` is the lever. */}
         <div
           aria-live={isCarousel ? liveRegion(status) : undefined}
-          className="col-start-1 row-start-2 grid"
+          className="col-start-1 row-start-2 grid md:items-end"
         >
           {slides.map((slide, index) => {
             const current = index === shown;

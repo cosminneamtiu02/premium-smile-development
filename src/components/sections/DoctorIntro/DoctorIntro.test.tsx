@@ -6,7 +6,6 @@ import { Image } from '@/components/ui/Image/Image';
 import { Keywords, type KeywordSegment } from '@/components/ui/Keyword/Keyword';
 import {
   DoctorIntro,
-  type DoctorIntroAlign,
   type DoctorIntroCredo,
   type DoctorIntroPhoto,
   type DoctorIntroProps,
@@ -34,10 +33,11 @@ import source from './DoctorIntro.tsx?raw';
 // no stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
 // this repo follows. What needs real CSS — where the picture sits relative to
-// the words, what `align` actually moves, that the pair really stands centred
-// above the picture in the stack and the two columns really sit centred in
-// the row (D51) — is asserted one tier up, in DoctorIntro.stories.tsx's play
-// functions, which measure the rendered boxes.
+// the words, that the pair really stands centred above the picture in the
+// stack, and that beside it the picture really takes its third of the column
+// and grows down to the words' floor while the card centres under the name on
+// the name's own left edge (D62–D64) — is asserted one tier up, in
+// DoctorIntro.stories.tsx's play functions, which measure the rendered boxes.
 //
 // ── HARNESS NOTE — why a `process` shim, copied verbatim from
 // PersonnelCard.test.tsx with its reason (which took it from Image.test.tsx).
@@ -112,26 +112,46 @@ const EYEBROW_RECIPE =
  *  credo card's aura (D61) is not cut by the next band. Below the step ONE
  *  `minmax(0,1fr)` track (2026-09-27, CI on PR #110: an implicit `auto`
  *  track grew to the picture box's 20rem min-content and overflowed the
- *  column — DoctorIntro.tsx's THE STACKED TRACK paragraph); at the step,
- *  two CONTENT-SIZED tracks centred in the row (D51b — they were ⅓ ‖ ⅔
- *  under D43b), the picture's with a zero floor, `minmax(0,auto)`, for the
- *  same reason just above the step (the same paragraph). */
+ *  column — DoctorIntro.tsx's THE STACKED TRACK paragraph); at the step D62's
+ *  two containers across the whole column, spaced by D63 — `--picture`, a
+ *  third of the column, as the first track with a zero floor for the same
+ *  reason, the words in the rest with an `auto` one — never narrower than
+ *  their longest unbreakable run (the Opus a11y review) — a sixth of the
+ *  column for the gap
+ *  clamped to 3rem–10.5rem, and an inset of 15 % of the page gutter before
+ *  the picture. Every token before the first `@3xl:` is the one it was before
+ *  D62 — the phone and the tablet byte-identical. */
 const GRID =
-  'grid grid-cols-[minmax(0,1fr)] gap-8 pt-6 pb-8 @lg:py-8 @3xl:grid-cols-[minmax(0,auto)_auto] @3xl:justify-center @3xl:gap-12 @3xl:py-10';
-/** The picture TIED TO THE COLUMN (D51a, "like 30% larger all around", the
- *  coordinator's ruling): round 2j's ⅓-track picture × 1.3 — `(100cqi − 3rem)
- *  × 0.4333`, 0.4333 = 1.3 / 3 — capped at 36rem. Round 1's
- *  `@3xl:justify-self-center` left with the stretched tracks: a
- *  content-sized track IS the box. */
-const PHOTO_WIDE = '@3xl:max-w-[min(36rem,calc((100cqi-3rem)*0.4333))]';
-const PHOTO_BOX = `mx-auto w-full max-w-xs @3xl:mx-0 ${PHOTO_WIDE} @3xl:self-end`;
-/** `display: contents` below the step (D51c: the column dissolves so the pair
- *  can climb above the picture), a 28rem flex column from it (D51b: `w-md` —
- *  a definite width, because ui/Card's inline-size containment gives an auto
- *  track nothing to size by — widened only by a longer name token,
- *  `min-w-min`). Every token after the first is `@3xl:`. */
+  'grid grid-cols-[minmax(0,1fr)] gap-8 pt-6 pb-8 @lg:py-8 @3xl:[--picture:min(calc(100cqi/3),var(--cutout-width))] @3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)] @3xl:gap-x-[clamp(3rem,calc(100cqi/6),10.5rem)] @3xl:py-10 @3xl:ps-[min(1.875cqi,1.875rem)]';
+/** The picture's container: below the step capped at 20rem and centred in the
+ *  column, exactly as before D62; at the step the whole first track — the cap
+ *  lifted — the positioned box the cutout is drawn into (D64): stretched to the
+ *  row and never shorter than the cutout at its third. */
+const PHOTO_BOX =
+  'mx-auto w-full max-w-xs @3xl:relative @3xl:min-h-[calc(var(--picture)*var(--cutout-ratio))] @3xl:max-w-none @3xl:self-stretch';
+/** The cutout itself (D64): below the step ui/Image's `artwork` recipe,
+ *  spelled by the band (the test that wears it DERIVES that half from the
+ *  atom); from it, out of flow — as tall as its container, as wide as its own
+ *  proportion makes that up to 1.4 × the track, centred on the track and
+ *  standing on its floor. */
+const CUTOUT =
+  'h-auto max-w-full object-contain @3xl:absolute @3xl:bottom-0 @3xl:left-1/2 @3xl:h-full @3xl:w-auto @3xl:max-w-[140%] @3xl:-translate-x-1/2 @3xl:object-bottom';
+/** The words' container: `display: contents` below the step (D51c: the
+ *  column dissolves so the pair can climb above the picture), a flex COLUMN
+ *  from it (D62: the second track, stretched to the row's height, holding the
+ *  pair over the bottom container) — inset 1.5rem, the ONE left edge of the
+ *  pair and the card, padded down a ninth of the column (D64), and positioned
+ *  so it paints above the cutout should they ever meet. Every token after the
+ *  first is `@3xl:`. */
 const WORDS =
-  'contents @3xl:flex @3xl:w-md @3xl:min-w-min @3xl:flex-col @3xl:gap-6';
+  'contents @3xl:relative @3xl:flex @3xl:flex-col @3xl:ps-6 @3xl:pt-[calc(100cqi/9)]';
+/** D62's BOTTOM container — the philosophy's: `display: contents` below the
+ *  step, so the card and the slot are still the stack's own grid items; from
+ *  it, the rest of the row's height (`flex-1`), one 36rem track on its left
+ *  edge (D63), the content centred in its height over 1.5rem above and
+ *  below. */
+const BOTTOM =
+  'contents @3xl:grid @3xl:flex-1 @3xl:grid-cols-[minmax(0,36rem)] @3xl:content-center @3xl:gap-6 @3xl:py-6';
 /** The title pair reads BACKWARDS on purpose: the <h1> is first in the DOM and
  *  the eyebrow paints above it (the band's THE HEADING IS THE PAGE'S <h1>
  *  paragraph, G2 a11y 2026-09-21). Below the step it climbs above the picture
@@ -141,22 +161,9 @@ const PAIR =
 /** The two lines' own placement row, identical on both (D51c + §15.14's
  *  rider): centred ON THE ELEMENT in the stack, `start` beside the picture
  *  (§15.15 b — the utility on the element, the re-assertion `text-start`),
- *  and never broken at a syllable. */
-const LINE = 'text-center hyphens-none @3xl:text-start';
-
-/** The three rows of the band's ALIGN table (D6) — the growth gate's other
- *  half: a value added to the union without a row here fails to compile, and a
- *  row silently changed fails right below. */
-const SELF: Record<DoctorIntroAlign, string> = {
-  start: '@3xl:self-start',
-  // The fourth seat (round 2e; 1.5rem under D38; 7rem since D54 — 20 % of the
-  // 555px figure at 1280): the top seat plus a 7rem drop — two tokens, still
-  // exactly ONE of them a `self-*`.
-  lowered: '@3xl:self-start @3xl:pt-28',
-  center: '@3xl:self-center',
-  end: '@3xl:self-end',
-};
-const ALIGNS = ['start', 'lowered', 'center', 'end'] as const;
+ *  never broken at a syllable, and balanced beside the picture when a line
+ *  wraps (D62 — the stack wraps as it always did). */
+const LINE = 'text-center hyphens-none @3xl:text-start @3xl:text-balance';
 
 const tokensOf = (element: Element) =>
   element.className.split(/\s+/).filter(Boolean);
@@ -177,8 +184,9 @@ const stripComments = (code: string): string =>
 
 const CODE = stripComments(source);
 
-/** The four boxes, reached by structure because none of them carries a role:
- *  section → Container → the grid → the picture's box and the words' column. */
+/** The boxes, reached by structure because none of them carries a role:
+ *  section → Container → the grid → the picture's box and the words'
+ *  container → the pair and D62's bottom container. */
 const bandOf = (container: HTMLElement): HTMLElement =>
   container.firstElementChild as HTMLElement;
 const containerOf = (container: HTMLElement): HTMLElement =>
@@ -191,6 +199,9 @@ const wordsOf = (container: HTMLElement): HTMLElement =>
   gridOf(container).children[1] as HTMLElement;
 const pairOf = (container: HTMLElement): HTMLElement =>
   wordsOf(container).children[0] as HTMLElement;
+/** D62's bottom container — the words' SECOND block, the card's parent. */
+const bottomOf = (container: HTMLElement): HTMLElement =>
+  wordsOf(container).children[1] as HTMLElement;
 /** The credo card — found by its ROLE, because unlike the boxes above it has
  *  one: a <section> named by its own <h2> (D12). */
 const credoOf = (): HTMLElement =>
@@ -198,10 +209,12 @@ const credoOf = (): HTMLElement =>
 
 /**
  * ui/Image's `artwork` row, DERIVED FROM THE ATOM instead of retyped: render
- * one and read the class back off the element. The contract asks for the
- * derivation on purpose — an edit to the atom's variant table then moves this
- * expectation with it, while a band that quietly stopped passing
- * `variant="artwork"` (or started passing `framed`) still fails here.
+ * one and read the class back off the element. Since D64 the band takes
+ * `variant="plain"` and spells the geometry itself, so this is what its
+ * STACKED half must equal, token for token — an edit to the atom's variant
+ * table then moves the expectation with it, and a band whose phone geometry
+ * drifted from the recipe fails here (DoctorIntro.tsx's THE CUTOUT
+ * paragraph).
  */
 const artworkRecipe = (): string => {
   const { container, unmount } = render(
@@ -219,7 +232,6 @@ const artworkRecipe = (): string => {
 };
 
 type Placement = {
-  align?: DoctorIntroAlign;
   className?: string;
   children?: ReactNode;
 };
@@ -422,16 +434,51 @@ describe('DoctorIntro — the cutout, decorative by construction', () => {
     expect(cutout.getAttribute('srcset')).toContain('nextImageExportOptimizer');
   });
 
-  it('wears ui/Image’s artwork recipe, derived from the atom itself', () => {
+  it('wears ui/Image’s artwork recipe below the step — derived from the atom — and its own geometry from it (D64)', () => {
     // The whole figure always visible, never upscaled, no blur ghost behind
     // the transparency — ui/Image D4. `framed` would crop the cutout into a
-    // box and round its corners, i.e. undo "no background" entirely.
+    // box and round its corners, i.e. undo "no background" entirely. Since
+    // D64 the band owns the geometry (`variant="plain"`, the atom's rule for
+    // a consumer whose geometry differs), so the recipe is pinned as the
+    // STACKED half of the band's own class string, and every other token is
+    // the step's.
     const recipe = artworkRecipe();
     const { container } = mount();
 
-    expect(within(container).getByRole('presentation').className).toBe(recipe);
+    const cutout = within(container).getByRole('presentation');
+    expect(cutout.className).toBe(CUTOUT);
+    expect(
+      tokensOf(cutout).filter((token) => !token.startsWith('@3xl:')),
+    ).toEqual(recipe.split(' '));
     expect(recipe).toContain('object-contain');
     expect(photoBoxOf(container).className).toBe(PHOTO_BOX);
+  });
+
+  it('keeps the blur ghost out of the transparency — `placeholder="empty"` is the band’s own now', () => {
+    // `artwork` brought `placeholder="empty"` as its default; `plain` brings
+    // the repo-wide blur (ui/Image D4, second half), so the band passes the
+    // empty one itself. DIFFERENTIAL on one file, ui/Image's own recipe: the
+    // same cutout through a bare `plain` Image DOES paint a blur (an inline
+    // background-image on the <img>), the band's does not. Read synchronously
+    // right after render — the optimizer's 404 in this runner later clears
+    // the blur at a macrotask boundary (Image.test.tsx's placeholder note), so
+    // no `await` may stand between the render and the reads.
+    const { container: bare } = render(
+      <Image
+        src={PHOTO.src}
+        width={PHOTO.width}
+        height={PHOTO.height}
+        alt=""
+      />,
+    );
+    const { container } = mount();
+
+    const blurred = (bare.querySelector('img') as HTMLImageElement).style
+      .backgroundImage;
+    expect(blurred).toContain('cutout-1');
+    expect(
+      within(container).getByRole('presentation').style.backgroundImage,
+    ).toBe('');
   });
 
   it('preloads at high priority — the doctor page’s LCP element (§10.6)', () => {
@@ -444,36 +491,99 @@ describe('DoctorIntro — the cutout, decorative by construction', () => {
     expect(cutout).not.toHaveAttribute('loading', 'lazy');
   });
 
-  it('declares the two boxes the layout actually gives it (sizes)', () => {
-    // Beside the words the box is its own formula spelled in vw on a
-    // 0.8 × viewport column (D51a): 1.3 × the old ⅓ track, (80vw − 3rem) ×
-    // 0.4333, capped at 36rem (from ~1720px) — and the row's remainder after
-    // the words' 28rem and the 3rem gap, 80vw − 31rem, which is the smaller
-    // just above the step (below ~1050px). Stacked it is 20rem; 60rem is the
-    // viewport at which `@3xl` fires here (48rem of column over the 2×10vw
-    // gutter), not a second breakpoint, because a `sizes` hint cannot be a
-    // container query. The `min()` is the G2 react principle: a flat cap
-    // would overstate the box on every laptop.
+  it('declares the boxes the layout actually gives it (sizes)', () => {
+    // Beside the words the box is D64's CAP spelled in vw: the cutout grows to
+    // at most 1.4 × the picture's third, 7/15 of the column — 0.8 × the
+    // viewport under the 10vw gutter, the viewport less 25rem from a 125rem
+    // window, where the gutter's 12.5rem cap binds. The cap and not the third,
+    // because at a laptop width the cutout IS grown and a hint at the third
+    // would fetch a file the browser then stretches (DoctorIntro.tsx's sizes
+    // paragraph). Stacked it is 20rem; 60rem is the viewport at which `@3xl`
+    // fires here (48rem of column over the 2×10vw gutter), not a second
+    // breakpoint, because a `sizes` hint cannot be a container query. The
+    // hint follows the box (the G2 react principle): a flat width would
+    // overstate it on every laptop.
     const { container } = mount();
 
     expect(within(container).getByRole('presentation')).toHaveAttribute(
       'sizes',
-      '(min-width: 60rem) min(36rem, calc((80vw - 3rem) * 0.4333), calc(80vw - 31rem)), 20rem',
+      '(min-width: 125rem) calc((100vw - 25rem) * 7 / 15), (min-width: 60rem) calc(80vw * 7 / 15), 20rem',
     );
+  });
+
+  it('derives the `sizes` numbers from the gutter, the step and the cap — never a second spelling of them', () => {
+    // The hint restates facts that live elsewhere (the Opus TypeScript
+    // review): ui/Container's gutter — `clamp(…,10vw,12.5rem)` a side, so
+    // the column is 80vw while 10vw binds and the viewport less 25rem from
+    // the 125rem window where 12.5rem does — the `@3xl` step (48rem of
+    // column → a 60rem window under the 10vw gutter), and the cutout's cap
+    // over its share of the column (`max-w-[140%]` of a third → 7/15). Each
+    // number is read off its source here, so an edit to the gutter, the
+    // third or the cap that forgot the hint fails by name.
+    const { container } = mount();
+    const cutout = within(container).getByRole('presentation');
+
+    const gutter = /clamp\([\d.]+rem,([\d.]+)vw,([\d.]+)rem\)/.exec(
+      containerClasses,
+    );
+    const cap = /@3xl:max-w-\[(\d+)%\]/.exec(cutout.className);
+    const third = /--picture:min\(calc\(100cqi\/(\d+)\)/.exec(
+      gridOf(container).className,
+    );
+    const hint =
+      /^\(min-width: ([\d.]+)rem\) calc\(\(100vw - ([\d.]+)rem\) \* (\d+) \/ (\d+)\), \(min-width: ([\d.]+)rem\) calc\(([\d.]+)vw \* (\d+) \/ (\d+)\), 20rem$/.exec(
+        cutout.getAttribute('sizes') ?? '',
+      );
+    if (!gutter || !cap || !third || !hint)
+      throw new Error('DoctorIntro test: a source of the sizes hint moved');
+
+    const vw = Number(gutter[1]);
+    const maxRem = Number(gutter[2]);
+    const share = Number(cap[1]) / 100 / Number(third[1]);
+    const [fixedWindow, fixedLess, n1, d1, stepWindow, columnVw, n2, d2] = hint
+      .slice(1)
+      .map(Number);
+    expect(fixedWindow).toBe(maxRem / (vw / 100));
+    expect(fixedLess).toBe(2 * maxRem);
+    expect(stepWindow).toBe(48 / ((100 - 2 * vw) / 100));
+    expect(columnVw).toBe(100 - 2 * vw);
+    expect(n1 / d1).toBeCloseTo(share, 9);
+    expect(n2 / d2).toBeCloseTo(share, 9);
+  });
+
+  it('keeps the phone’s small files in the srcset — no `vw` after a space in sizes', () => {
+    // MEASURED 2026-10-01 (DoctorIntro.tsx's EVERY `vw` HERE FOLLOWS A `(`):
+    // Next's srcset builder reads a `vw` term that follows a space as a floor
+    // on the picture's width and drops every file under 640px × that share.
+    // D62's first `sizes` did exactly that — the 16–384px files left, and a
+    // phone's 20rem box fetched the 640px one. The 384px file is the one a
+    // 320px box takes at DPR 1, so its presence is the pin.
+    const { container } = mount();
+
+    const srcset =
+      within(container).getByRole('presentation').getAttribute('srcset') ?? '';
+    expect(srcset).toMatch(/-opt-384\.\w+ 384w/);
+    expect(
+      within(container).getByRole('presentation').getAttribute('sizes'),
+    ).not.toMatch(/(^|\s)(1?\d?\d)vw/);
   });
 });
 
-describe('DoctorIntro — the words column and the align axis (D6, D12)', () => {
-  it('puts the credo card in the words column, right under the pair', () => {
-    // "in that empty space next to photo below [the heading]" (D12): the card
-    // is the column's SECOND block, so it shares the <h1>'s column and left
-    // edge and the column's `gap-6` sets it one step below the name.
+describe('DoctorIntro — the words’ container: the pair over the bottom container (D12, D62)', () => {
+  it('puts the credo card in the BOTTOM container, right under the pair', () => {
+    // "in that empty space next to photo below [the heading]" (D12), in the
+    // owner's two containers one above the other (D62): the pair is the
+    // words' FIRST block and the bottom container the second, the card first
+    // inside it — so the card shares the <h1>'s left edge and stands under it.
     const { container } = mount();
 
     const words = wordsOf(container);
+    const bottom = bottomOf(container);
     const credo = credoOf();
+    expect(words.children).toHaveLength(2);
     expect(words.children[0]).toBe(pairOf(container));
-    expect(words.children[1]).toBe(credo);
+    expect(words.children[1]).toBe(bottom);
+    expect(bottom.children[0]).toBe(credo);
     expect(credo.tagName).toBe('SECTION');
     expect(
       screen
@@ -490,19 +600,19 @@ describe('DoctorIntro — the words column and the align axis (D6, D12)', () => 
     expect(quote.textContent).toBe(CREDO_BODY);
   });
 
-  it('renders children inside the words column, AFTER the card', () => {
+  it('renders children in the bottom container, AFTER the card', () => {
     const { container } = mount({
       children: <p>Membru al Colegiului Medicilor Dentiști.</p>,
     });
 
-    const words = wordsOf(container);
+    const bottom = bottomOf(container);
     const slot = screen.getByText('Membru al Colegiului Medicilor Dentiști.');
-    expect(words).toContainElement(slot);
-    // PAIR → CARD → SLOT, in that DOM order (D12).
-    expect(words.children).toHaveLength(3);
-    expect(words.children[0]).toBe(pairOf(container));
-    expect(words.children[1]).toBe(credoOf());
-    expect(words.children[2]).toBe(slot);
+    expect(wordsOf(container)).toContainElement(slot);
+    // PAIR → CARD → SLOT, in that DOM order (D12) — the card and the slot
+    // together in the bottom container, centred in its height as one block.
+    expect(bottom.children).toHaveLength(2);
+    expect(bottom.children[0]).toBe(credoOf());
+    expect(bottom.children[1]).toBe(slot);
     expect(
       credoOf().compareDocumentPosition(slot) &
         Node.DOCUMENT_POSITION_FOLLOWING,
@@ -510,121 +620,324 @@ describe('DoctorIntro — the words column and the align axis (D6, D12)', () => 
     expect(credoOf()).not.toContainElement(slot);
   });
 
-  it('renders the pair and the card alone when the slot is left empty', () => {
+  it('renders the card alone when the slot is left empty', () => {
     // The slot is optional and the owner has not yet said what goes in it —
     // an empty one must add no box, or the `gap-6` would open under nothing.
     const { container } = mount();
 
-    expect(wordsOf(container).children).toHaveLength(2);
-    expect(wordsOf(container).children[1]).toBe(credoOf());
+    expect(bottomOf(container).children).toHaveLength(1);
+    expect(bottomOf(container).children[0]).toBe(credoOf());
   });
 
-  it('takes exactly ONE @3xl:self-* token, one per align value — and `lowered` its 7rem drop', () => {
-    for (const align of ALIGNS) {
-      const { container, unmount } = mount({ align });
+  it('wears D62–D64’s class strings on the two containers — no seat of their own', () => {
+    // The `align` axis (D6) left with D62 and does not come back as a
+    // `self-*` seat: the words' container stretches with the row, and its
+    // only paddings are D64's two — the 1.5rem inset the pair and the card
+    // share, and the name's ninth of the column from the top. The card
+    // centres in the rest, whatever the name's length.
+    const { container } = mount();
 
-      const words = wordsOf(container);
-      expect(words.className).toBe(`${WORDS} ${SELF[align]}`);
-      expect(
-        tokensOf(words).filter((token) => token.startsWith('@3xl:self-')),
-      ).toEqual(
-        SELF[align]
-          .split(' ')
-          .filter((token) => token.startsWith('@3xl:self-')),
-      );
-      // Only the fourth seat pads the column (round 2e), and only at the step.
-      expect(tokensOf(words).some((token) => /^@3xl:pt-/.test(token))).toBe(
-        align === 'lowered',
-      );
-      expect(tokensOf(words).some((token) => /^pt-/.test(token))).toBe(false);
-      unmount();
-    }
+    const words = wordsOf(container);
+    expect(words.className).toBe(WORDS);
+    expect(bottomOf(container).className).toBe(BOTTOM);
+    expect(tokensOf(words).some((token) => /self-/.test(token))).toBe(false);
+    expect(
+      tokensOf(words).filter((token) =>
+        /(^|:)p(bs|be|[xysetrbl])?-/.test(token),
+      ),
+    ).toEqual(['@3xl:ps-6', '@3xl:pt-[calc(100cqi/9)]']);
   });
 
-  it('defaults to start — including for an explicit align={undefined}', () => {
-    // A page computing `align` from data may hand over undefined on purpose;
-    // that is the default row, not a fourth state (the PersonnelCard `side`
-    // precedent).
-    const { container: bare } = mount();
-    expect(wordsOf(bare).className).toBe(`${WORDS} ${SELF.start}`);
+  it('puts the picture BEFORE the words in the DOM', () => {
+    // Reading order is "who, then which words": the picture is decorative,
+    // the <h1> is the first thing named.
+    const { container } = mount();
 
-    const { container: explicit } = mount({ align: undefined });
-    expect(wordsOf(explicit).className).toBe(`${WORDS} ${SELF.start}`);
-  });
-
-  it('puts the picture BEFORE the words in the DOM, at every align', () => {
-    // Reading order is "who, then which words" whichever way the row is
-    // aligned: `align` moves a box inside its row and never the document.
-    for (const align of ALIGNS) {
-      const { container, unmount } = mount({ align });
-
-      const grid = gridOf(container);
-      expect(grid.children).toHaveLength(2);
-      expect(grid.children[0]).toContainElement(
-        within(container).getByRole('presentation'),
-      );
-      expect(grid.children[1]).toBe(wordsOf(container));
-      unmount();
-    }
+    const grid = gridOf(container);
+    expect(grid.children).toHaveLength(2);
+    expect(grid.children[0]).toContainElement(
+      within(container).getByRole('presentation'),
+    );
+    expect(grid.children[1]).toBe(wordsOf(container));
   });
 });
 
-describe('DoctorIntro — the opener re-proportioned (D51)', () => {
-  it('centres two content-sized tracks at the step instead of stretching two fractions (D51b)', () => {
-    // "left and right they have same as much space": content-sized tracks
-    // (an `auto` ceiling on both) under `justify-content: center` never grow,
-    // so the free space falls outside the pair — the geometry itself is
-    // measured in the stories. The picture's track has a ZERO FLOOR,
-    // `minmax(0,auto)` (2026-09-27): just above the step the picture box's
-    // min-content must never hold the row wider than the column, so there
-    // the picture gives way and the words keep their 28rem (DoctorIntro.tsx's
-    // THE STACKED TRACK paragraph). The one fraction left in the row is BELOW
-    // the step: the stacked column's `minmax(0,1fr)` (CI on PR #110), which
-    // the `@3xl` tracks replace — so the no-fraction guard reads the step's
-    // tokens only.
+describe('DoctorIntro — the laptop and desktop opener as two containers (D62–D64)', () => {
+  it('gives the picture ONE third of the column and the words the rest — the picture’s track floored at zero, the words’ at their longest run (D63)', () => {
+    // "disregard before mentioned sizings in contaners, procentages etc":
+    // D62's 35 ‖ 65 `fr` shares gave way to ONE number, `--picture` — a third
+    // of ui/Container's column, `cqi` because the Container is the nearest
+    // size container — as the first track, and the words in whatever is left.
+    // The picture's track and the stacked one have a ZERO floor
+    // (`minmax(0,…)`), because a track's default floor is its item's
+    // min-content and the picture's would bring the <img>'s 900px width
+    // attribute into it; the words' track an `auto` one, so a name's longest
+    // unbreakable run is never squeezed past the column's edge and the
+    // picture's track gives way instead (the Opus a11y review — DoctorIntro.tsx's
+    // THE STACKED TRACK paragraph). The geometry is measured in the stories.
     const { container } = mount();
 
     const tokens = tokensOf(gridOf(container));
     expect(tokens).toContain('grid-cols-[minmax(0,1fr)]');
-    expect(tokens).toContain('@3xl:grid-cols-[minmax(0,auto)_auto]');
-    expect(tokens).toContain('@3xl:justify-center');
+    expect(tokens).toContain(
+      '@3xl:[--picture:min(calc(100cqi/3),var(--cutout-width))]',
+    );
+    expect(tokens).toContain(
+      '@3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)]',
+    );
+    expect(tokens).not.toContain('@3xl:justify-center');
+    // Exactly two track lists — the stack's and the row's, so D62's `fr`
+    // shares or a third spelling cannot slip in — and each track's FLOOR read
+    // off the component: zero for the stack and the picture, `auto` for the
+    // words.
+    const lists = tokens.filter((t) => t.includes('grid-cols-'));
+    expect(lists).toEqual([
+      'grid-cols-[minmax(0,1fr)]',
+      '@3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)]',
+    ]);
     expect(
-      tokens.some(
-        (token) => token.startsWith('@3xl:') && /fr[)_\]]/.test(token),
+      lists.map((list) =>
+        list
+          .slice(list.indexOf('[') + 1, -1)
+          .split('_')
+          .map((track) => track.slice('minmax('.length, track.indexOf(','))),
       ),
-    ).toBe(false);
+    ).toEqual([['0'], ['0', 'auto']]);
   });
 
-  it('gives the words a definite 28rem column and the picture a column-tied width (D51a, D51b)', () => {
-    // `w-md`, never a mere `max-w-md`: ui/Card contains its own inline size,
-    // so an auto track under a cap would shrink to the NAME (measured: 388px
-    // for „Dr. Elena Marin" at 1280) and the card with it. `min-w-min` lets a
-    // name token wider than 28rem widen the column instead of overflowing it.
+  it('spaces the two containers by the column — the inset before the picture, the gap after it (D63)', () => {
+    // "15% extra space on ledft side of picture and 250% more space between
+    // photo and right container": the inset is 15 % of the page gutter the
+    // column stands in (10vw ≈ 12.5cqi, capped at 12.5rem), the gap D62's
+    // 3rem three and a half times over — 10.5rem — reached by a sixth of the
+    // column and never below 3rem. Column-relative, so both shrink with a
+    // narrow laptop instead of crowding it.
     const { container } = mount();
 
-    const words = tokensOf(wordsOf(container));
-    expect(words).toContain('@3xl:w-md');
-    expect(words).toContain('@3xl:min-w-min');
-    expect(words.some((token) => /max-w-/.test(token))).toBe(false);
-    const picture = tokensOf(photoBoxOf(container));
-    // 1.3 × the old ⅓ track, measured +30 % at 1280 and 1536 (the fixed
-    // `max-w-lg` of the first cut gave +60 % / +32 % / +14 %).
-    expect(picture).toContain(PHOTO_WIDE);
-    expect(picture).not.toContain('@3xl:max-w-md');
-    expect(picture).not.toContain('@3xl:max-w-lg');
-    expect(picture.some((token) => /justify-self/.test(token))).toBe(false);
+    const tokens = tokensOf(gridOf(container));
+    expect(tokens).toContain('@3xl:ps-[min(1.875cqi,1.875rem)]');
+    expect(tokens).toContain('@3xl:gap-x-[clamp(3rem,calc(100cqi/6),10.5rem)]');
+    expect(tokens).not.toContain('@3xl:gap-12');
   });
 
-  it('dissolves the words column below the step and lifts the pair above the picture (D51c)', () => {
-    // `contents` first and every other token `@3xl:`, so below the step the
-    // column is no box at all and its blocks are the grid's own items; the
-    // pair takes `-order-1` there and gives it back at the step.
-    const { container } = mount({ align: 'lowered' });
+  it('stretches the picture’s container to the row, never shorter than the cutout at its third (D64)', () => {
+    // "both large containers share same floor": the picture's container is a
+    // grid item stretched to the row — `self-stretch`, where D62 centred it —
+    // and its floor height is the cutout at its third: `--picture` times the
+    // photo's own height ÷ width, which rides in on the grid as
+    // `--cutout-ratio` (from the PROP, so a cutout of another proportion
+    // keeps its own). So the row is the taller of the words and the picture at
+    // its third, as before D64. `relative` makes it the box the cutout is
+    // drawn into.
+    const { container } = mount();
 
-    const [first, ...others] = tokensOf(wordsOf(container));
-    expect(first).toBe('contents');
-    expect(others.length).toBeGreaterThan(0);
-    for (const token of others) expect(token.startsWith('@3xl:')).toBe(true);
+    const picture = tokensOf(photoBoxOf(container));
+    expect(photoBoxOf(container).className).toBe(PHOTO_BOX);
+    for (const token of [
+      '@3xl:relative',
+      '@3xl:self-stretch',
+      '@3xl:max-w-none',
+      '@3xl:min-h-[calc(var(--picture)*var(--cutout-ratio))]',
+    ])
+      expect(picture).toContain(token);
+    expect(picture.some((token) => /self-(center|start|end)/.test(token))).toBe(
+      false,
+    );
+    expect(gridOf(container).style.getPropertyValue('--cutout-ratio')).toBe(
+      String(PHOTO.height / PHOTO.width),
+    );
+    // …and its own width, the cap on `--picture` (the Opus React review: a
+    // third of an ultrawide column would draw the file larger than it is).
+    expect(gridOf(container).style.getPropertyValue('--cutout-width')).toBe(
+      `${PHOTO.width}px`,
+    );
+
+    // Another proportion, its own ratio — never a hard-coded 4/3.
+    const { container: wide } = render(
+      <DoctorIntro
+        name={NAME}
+        position={POSITION}
+        photo={{ src: PHOTO.src, width: 1000, height: 1250 }}
+        credo={CREDO}
+      />,
+    );
+    expect(gridOf(wide).style.getPropertyValue('--cutout-ratio')).toBe('1.25');
+    expect(gridOf(wide).style.getPropertyValue('--cutout-width')).toBe(
+      '1000px',
+    );
+  });
+
+  it('draws the cutout OUT OF FLOW — as tall as the row, centred, on the floor, at most 1.4 × its third (D64)', () => {
+    // "image is separated as asset and has to adjust height wise": out of the
+    // row's sizing (`absolute`), so the words alone decide whether the row is
+    // taller than the picture at its third — a picture whose width followed
+    // the row's height while the words' width followed the picture's would be
+    // a loop no CSS layout closes. Inside its container: the full height,
+    // the width its proportion makes of that, centred (D62's "centered in
+    // it"), its bottom on the floor, never wider than 1.4 × the track, past
+    // which `object-contain` + `object-bottom` stand the figure on the floor.
+    const { container } = mount();
+
+    const cutout = tokensOf(within(container).getByRole('presentation'));
+    for (const token of [
+      '@3xl:absolute',
+      '@3xl:bottom-0',
+      '@3xl:left-1/2',
+      '@3xl:-translate-x-1/2',
+      '@3xl:h-full',
+      '@3xl:w-auto',
+      '@3xl:max-w-[140%]',
+      '@3xl:object-bottom',
+      'object-contain',
+    ])
+      expect(cutout).toContain(token);
+    // Positioned but never LAYERED: it overlaps no word by construction (the
+    // cap's arithmetic in DoctorIntro.tsx's D64 paragraph), so no z-index —
+    // and the words' container is positioned too and LATER in the DOM, so
+    // were they ever to meet, the words would paint over the figure (the Opus
+    // a11y review's belt), again without a z-index on either.
+    expect(cutout.some((token) => /(^|:)-?z-/.test(token))).toBe(false);
+    const words = tokensOf(wordsOf(container));
+    expect(words).toContain('@3xl:relative');
+    expect(words.some((token) => /(^|:)-?z-/.test(token))).toBe(false);
+    expect(
+      photoBoxOf(container).compareDocumentPosition(wordsOf(container)) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('gives the bottom container the rest of the height and the card one 36rem track, centred (D62, D63)', () => {
+    // "philosophy has to have same space between it and headings and eyebrow
+    // contianer as to bottom of container it is within": the bottom container
+    // grows into what the pair leaves (`flex-1`), is a grid with ONE explicit
+    // track — 36rem since D63's "like 30% wider" (28rem × 1.3 ≈ 36.4), on the
+    // left edge, because an explicit track is never stretched — and centres
+    // its content in its height over 1.5rem above and below (`content-center`
+    // + `py-6`), so the space over the card always equals the space under it.
+    const { container } = mount();
+
+    const bottom = tokensOf(bottomOf(container));
+    for (const token of [
+      '@3xl:grid',
+      '@3xl:flex-1',
+      '@3xl:grid-cols-[minmax(0,36rem)]',
+      '@3xl:content-center',
+      '@3xl:py-6',
+    ]) {
+      expect(bottom).toContain(token);
+    }
+    // The words' container is the flex COLUMN that hands it that height.
+    const words = tokensOf(wordsOf(container));
+    expect(words[0]).toBe('contents');
+    expect(words).toContain('@3xl:flex');
+    expect(words).toContain('@3xl:flex-col');
+  });
+
+  it('puts the pair and the card on ONE left edge — the words’ container’s own inset (D64)', () => {
+    // "heading and filozofie have to have same offset": D63's 1.5rem moved
+    // from the bottom container up to the words' container, so the pair and
+    // the card start on one line. Neither carries a start inset of its own
+    // any more — a second one would split the edge again.
+    const { container } = mount();
+
+    expect(tokensOf(wordsOf(container))).toContain('@3xl:ps-6');
+    // The pair and the bottom container carry no inset at all — no side and
+    // no all-round padding or margin that would move a start edge.
+    const ANY = /(^|:)-?[pm]([xsl]|bs|be)?-/;
+    for (const box of [pairOf(container), bottomOf(container)]) {
+      expect(tokensOf(box).some((token) => ANY.test(token))).toBe(false);
+    }
+    // The card keeps ui/Card's own all-round inset (its `framed` padding,
+    // CredoCard.test.tsx's business) and adds no START-side one.
+    const START = /(^|:)-?([pm][xs]|pl|ml)-/;
+    expect(tokensOf(credoOf()).some((token) => START.test(token))).toBe(false);
+  });
+
+  it('starts the name a ninth of the column under the row’s top — read off the column, never the picture (D64)', () => {
+    // "heading soes not have to stay at middle of card. currrent positioning
+    // is good": D63's quarter of the picture's height is a ninth of the
+    // column for the 3:4 cutout, so the name stays where the owner approved
+    // it — spelled from the column alone, because the picture's height now
+    // follows the words', and a padding read off the picture would be a loop.
+    const { container } = mount();
+
+    const padding = tokensOf(wordsOf(container)).filter((token) =>
+      token.startsWith('@3xl:pt-'),
+    );
+    expect(padding).toEqual(['@3xl:pt-[calc(100cqi/9)]']);
+    expect(padding[0]).not.toMatch(/--picture|--cutout-ratio/);
+  });
+
+  it('keeps every class BELOW the step what it was — the phone and the tablet byte-identical', () => {
+    // "on phone and tablet it's perfect how they behave and look now, so i
+    // want to mentain that": D62–D64 are spelled in `@3xl:` tokens only. Every
+    // token WITHOUT that prefix, element by element, is the pre-D62 string —
+    // written out here so a stray base utility fails by name, the cutout's
+    // included: since D64 the band spells it, and below the step it is still
+    // `artwork`'s three utilities. The one new element, the bottom container,
+    // is `contents` and nothing else below the step, so the card and the slot
+    // are still the stack's own grid items. The grid's one inline style is
+    // `--cutout-ratio`, a custom property that no rule below the step reads.
+    const { container } = mount();
+
+    const base = (element: Element): string[] =>
+      tokensOf(element).filter((token) => !token.startsWith('@3xl:'));
+    const heading = screen.getByRole('heading', { level: 1, name: NAME });
+    const position = screen.getByText(POSITION);
+    expect(base(gridOf(container))).toEqual([
+      'grid',
+      'grid-cols-[minmax(0,1fr)]',
+      'gap-8',
+      'pt-6',
+      'pb-8',
+      '@lg:py-8',
+    ]);
+    expect(base(photoBoxOf(container))).toEqual([
+      'mx-auto',
+      'w-full',
+      'max-w-xs',
+    ]);
+    expect(base(within(container).getByRole('presentation'))).toEqual([
+      'h-auto',
+      'max-w-full',
+      'object-contain',
+    ]);
+    const inline = gridOf(container).style;
+    expect(Array.from(inline)).toEqual(['--cutout-ratio', '--cutout-width']);
+    expect(base(wordsOf(container))).toEqual(['contents']);
+    expect(base(bottomOf(container))).toEqual(['contents']);
+    expect(base(pairOf(container))).toEqual([
+      '-order-1',
+      'flex',
+      'flex-col-reverse',
+      'items-center',
+      'gap-2',
+    ]);
+    expect(base(heading)).toEqual([
+      ...HERO_STEP.split(' '),
+      'text-center',
+      'hyphens-none',
+    ]);
+    expect(base(position)).toEqual([
+      ...EYEBROW_RECIPE.split(' '),
+      'text-center',
+      'hyphens-none',
+    ]);
+  });
+
+  it('dissolves the words’ two boxes below the step and lifts the pair above the picture (D51c)', () => {
+    // `contents` first and every other token `@3xl:`, on the words' container
+    // AND on D62's bottom container, so below the step neither is a box at all
+    // and their blocks are the grid's own items; the pair takes `-order-1`
+    // there and gives it back at the step.
+    const { container } = mount();
+
+    for (const box of [wordsOf(container), bottomOf(container)]) {
+      const [first, ...others] = tokensOf(box);
+      expect(first).toBe('contents');
+      expect(others.length).toBeGreaterThan(0);
+      for (const token of others) expect(token.startsWith('@3xl:')).toBe(true);
+    }
 
     const pair = tokensOf(pairOf(container));
     expect(pair).toContain('-order-1');
@@ -658,9 +971,10 @@ describe('DoctorIntro — the opener re-proportioned (D51)', () => {
   it('centres the two lines ON THE ELEMENTS, never through a wrapper (§15.15 b)', () => {
     // The eyebrow and the <h1> are the ONLY elements in the band's own
     // markup that set a text alignment — each its own `text-center` with the
-    // `@3xl:text-start` re-assertion. The wrappers may centre BOXES
-    // (`items-center` on the pair) but never text, and the credo card's
-    // justified quote is CredoCard.test.tsx's business.
+    // `@3xl:text-start` re-assertion, and D62's `@3xl:text-balance` beside it.
+    // The wrappers may centre BOXES (`items-center` on the pair,
+    // `content-center` on the bottom container) but never text, and the credo
+    // card's justified quote is CredoCard.test.tsx's business.
     const { container } = mount();
 
     const heading = screen.getByRole('heading', { level: 1, name: NAME });
@@ -668,6 +982,7 @@ describe('DoctorIntro — the opener re-proportioned (D51)', () => {
     for (const line of [heading, position]) {
       expect(tokensOf(line)).toContain('text-center');
       expect(tokensOf(line)).toContain('@3xl:text-start');
+      expect(tokensOf(line)).toContain('@3xl:text-balance');
     }
     const ALIGNMENT = /^(@\w+:)?text-(center|start|end|left|right|justify)$/;
     for (const element of [
@@ -689,7 +1004,7 @@ describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () 
     // Container variants (@lg:, @3xl:) are the allowed shape: they measure the
     // COLUMN, which is what makes the same band right on a phone and on a
     // 1920 desktop without the band ever seeing the window.
-    const { container } = mount({ align: 'center' });
+    const { container } = mount();
 
     for (const element of [
       bandOf(container),
@@ -811,15 +1126,13 @@ describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () 
 });
 
 describe('DoctorIntro — type-level pins', () => {
-  it('pins the axis and the two names the band refuses', () => {
-    // The ALIGN Record gates widening at the source — these pins close the
-    // other direction: a refactor that rebuilt the props onto a plain
-    // intersection would compile, keep every render test green, and silently
-    // reopen the naming hole. Erased to no-ops at runtime; they fail at
-    // `tsc --noEmit` time, naming the property.
-    expectTypeOf<DoctorIntroAlign>().toEqualTypeOf<
-      'start' | 'lowered' | 'center' | 'end'
-    >();
+  it('pins the two names the band refuses — and the axis D62 retired', () => {
+    // A refactor that rebuilt the props onto a plain intersection would
+    // compile, keep every render test green, and silently reopen the naming
+    // hole; and the `align` axis (D6) left whole with D62, so a prop of that
+    // name coming back is a decision, not a drift. Erased to no-ops at
+    // runtime; they fail at `tsc --noEmit` time, naming the property.
+    expectTypeOf<DoctorIntroProps>().not.toHaveProperty('align');
     expectTypeOf<DoctorIntroProps>().not.toHaveProperty('aria-label');
     expectTypeOf<DoctorIntroProps>().not.toHaveProperty('aria-labelledby');
   });
@@ -833,7 +1146,6 @@ describe('DoctorIntro — type-level pins', () => {
     expectTypeOf<DoctorIntroProps>().toHaveProperty('position');
     expectTypeOf<DoctorIntroProps>().toHaveProperty('photo');
     expectTypeOf<DoctorIntroProps>().toHaveProperty('credo');
-    expectTypeOf<DoctorIntroProps>().toHaveProperty('align');
     expectTypeOf<DoctorIntroProps>().toHaveProperty('children');
     expectTypeOf<DoctorIntroProps>().toHaveProperty('className');
   });
@@ -848,7 +1160,7 @@ describe('DoctorIntro — type-level pins', () => {
     expectTypeOf<DoctorIntroProps['credo']>().toEqualTypeOf<DoctorIntroCredo>();
   });
 
-  it('refuses the shapes the Omits and the union exist to refuse', () => {
+  it('refuses the shapes the Omits and the retired axis exist to refuse', () => {
     // Never rendered: these exist so `tsc --noEmit` fails if the surface
     // loosens. @ts-expect-error is itself an error when the line compiles, so
     // both directions are covered (the ui/GlyphButton precedent). PERSON is
@@ -861,10 +1173,13 @@ describe('DoctorIntro — type-level pins', () => {
       credo: CREDO,
     };
 
-    // @ts-expect-error — 'middle' is not a DoctorIntroAlign (D6)
-    const middling: DoctorIntroProps = { ...PERSON, align: 'middle' };
+    // @ts-expect-error — the band has no seat to choose since D62 (D6 retired)
+    const seated: DoctorIntroProps = { ...PERSON, align: 'lowered' };
+    // A real path and no size, declared apart (the WORDLESS note below), so
+    // the line under the directive fails for the missing size alone.
+    const SIZELESS = { src: PHOTO.src };
     // @ts-expect-error — the intrinsic size is the reserved box (§11)
-    const flatPhoto: DoctorIntroProps = { ...PERSON, photo: { src: 'x' } };
+    const flatPhoto: DoctorIntroProps = { ...PERSON, photo: SIZELESS };
     // @ts-expect-error — the band is generic; a name would make it a region
     const named: DoctorIntroProps = { ...PERSON, 'aria-label': 'x' };
     // @ts-expect-error — same, from the other attribute
@@ -888,7 +1203,7 @@ describe('DoctorIntro — type-level pins', () => {
     const bodiless: DoctorIntroProps = { ...PERSON, credo: WORDLESS };
 
     expect([
-      middling,
+      seated,
       flatPhoto,
       named,
       labelled,

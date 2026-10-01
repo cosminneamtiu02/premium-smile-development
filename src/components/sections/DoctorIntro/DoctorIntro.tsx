@@ -1,4 +1,9 @@
-import type { ComponentPropsWithRef, ReactElement, ReactNode } from 'react';
+import type {
+  ComponentPropsWithRef,
+  CSSProperties,
+  ReactElement,
+  ReactNode,
+} from 'react';
 import { Container } from '@/components/ui/Container/Container';
 import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
 import { Heading } from '@/components/ui/Heading/Heading';
@@ -18,7 +23,10 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // and heading, heading is the dr name full name and on the eyebrow dr
 // specialty like medic specialist in chirurgie bmf … the image doctor has no
 // background … idk yet if i should place [the words] sticky to the top of
-// respective div next to image, center or bottom."
+// respective div next to image, center or bottom." Its laptop and desktop
+// arrangement has been the owner's own since 2026-10-01 — D62 to D64 below:
+// two containers across the whole column, a third of it for the picture and
+// the rest for the words, the picture grown down to the words' floor.
 //
 // ── NO OLD COUNTERPART. The owner named jonaclinic.ro/en/despre-noi/
 // drdan-boariu as the SHAPE he wants, and the old repo never had a per-doctor
@@ -54,65 +62,43 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // region inside the band is the credo card's, named by its own <h2> (D12
 // below) — a named piece of the band, not the band.
 //
-// ── D6 · THE `align` AXIS EXISTS BECAUSE THE OWNER IS STILL DECIDING: "idk
+// ── D6 · THE `align` AXIS — RETIRED BY D62 (2026-10-01). It existed because
+// the owner was still deciding where the words sit beside the picture: "idk
 // yet if i should place [the words] sticky to the top of respective div next
-// to image, center or bottom". It moves the words' column inside the row at
-// the wide step — and only there, because below the step the column
-// dissolves into the one-column stack (D51c, below), where there is no row
-// left to align in. The default is 'start', the arrangement the referenced
-// page uses; the three stories exist so the owner can compare the faces in
-// the workbench and name one. When he does, the prop STAYS (a page that
-// wants one doctor's words centred is then one prop away) and the page
-// simply stops passing it.
-//   THE FOURTH SEAT, `lowered` (round 2e, 2026-09-25 — the owner, on the
-//   round-2 page: "push this a bit more down", pointing at the name, the
-//   specialty and the credo card): the `start` seat dropped by 7rem —
-//   `@3xl:self-start @3xl:pt-28`, D54 (round 2l, 2026-09-26, the owner: "push
-//   like idk, 20% more down just textual part next to image in doctor hero
-//   section. i'll adjust if needed"). THE ARITHMETIC: 20 % of D51a's figure
-//   at 1280 (555px) is 111px, and the spacing scale's nearest step is
-//   `pt-28` = 112px; the figure grows with the column and the drop does not,
-//   so the same 7rem is 17 % of 1536's 673px figure and 15 % of 1920's 768px.
-//   THE LEVER is that ONE token: the owner dials the seat by moving `pt-28`
-//   along the spacing scale — the picture, the band's rhythm, the stacked
-//   branch and the other three seats never read it. MEASURED in Chromium (the
-//   story runner, its 15px scrollbar included): band top → words column 40px
-//   and band top → specialty 152px at 1280, 1536 and 1920 (40 + 112; 64
-//   under D38); the demo doctor's column 506 / 517 / 610px beside the 555 /
-//   673 / 768px figure, so the figure stays the tall item and the band keeps
-//   D51's 635 / 753 / 848px.
-//   THE COLUMN CAN NOW OUTGROW THE FIGURE, because the padding is part of it.
-//   The figure then still stands on the row's floor (`self-end`), so it moves
-//   DOWN by the overshoot and the band grows with it. The German three-line
-//   stress name does it at 1280 — 546 + 112 = 658px beside 555: figure top
-//   40 → 143px, band 635 → 738, the feet at 98 + 143 + 555 = 796px of the
-//   800px window (the pill's flow box above, D51a) — and at 1536 (692 beside
-//   673: figure top 58px, band 772); at 1920 it fits (700 beside 768). Among
-//   the SHIPPED pages (the clinic's six real doctors, measured 2026-09-30 on
-//   the built export) MOST do it at 1280: 19 of the 30 doctor × language
-//   pages, by 19px (ro „Dr. Malea (Sabău) Oana Bianca", 574 beside 555) to
-//   75px (fr „Dr Ivașcu-Zugravu Cătălina", a two-line name over the credo card,
-//   630 beside 555 — figure top 115px); at 1536 nine do, by 11 to 67px (the
-//   three-line names of Malea and Ivașcu-Zugravu); at 1920 none, the closest
-//   20px inside. Recorded for the owner, not changed: the levers are the
-//   `lowered` seat's 7rem and the words column's 28rem cap. The plays measure
-//   the row from the grid's content box, so they hold either way.
-//   HISTORY: 3rem (`pt-12`) in round 2e; HALVED to 1.5rem (`pt-6`) in round
-//   2g, 2026-09-26, the owner: "push it a little more upwards … but not too
-//   much so that at rest it is not covered by the top bar" — the pill is IN
-//   FLOW above this band, so no seat can sit under it at rest, at any drop
-//   (D38). Still not `center`: centring hands the seat to the words' height,
-//   which moves with every name and language (for the demo doctor ~80px at
-//   1280 and ~134 at 1536, from round 2k's measures, and nothing once the
-//   words are the taller item), where the ask is a distance the owner dials.
-//   The page passes it; the Lowered story shows it beside the other three,
-//   and `start` stays the default so a bare <DoctorIntro> is unchanged (§6.6).
+// to image, center or bottom" — `start` (the default, the referenced page's
+// arrangement), `center`, `end`, and the fourth seat `lowered`, which the
+// page passed: the top seat dropped 3rem in round 2e ("push this a bit more
+// down"), 1.5rem in round 2g (D38, "push it a little more upwards"), 7rem in
+// round 2l (D54, "push like idk, 20% more down just textual part"). Each
+// value was one `@3xl:self-*` token that moved the words' column inside the
+// row. D62 answers the question with a STRUCTURE instead of a seat — the
+// eyebrow and the name TOP the words' container and the credo card centres in
+// the height they leave — so no value had anything left to move, and the
+// axis left whole rather than staying as dead API (§6.6: the prop, its
+// table, its three stories — Centered, Lowered, Bottom — and the page's
+// `align="lowered"`, in one change). The name's height beside the picture
+// is one token again since D63: the words' container's top padding (D64
+// spells it), the kind D54's `pt-28` was.
 //
-// ── THE CUTOUT, AND WHY IT IS `artwork`. The owner's picture has no
-// background, and ui/Image's `artwork` recipe is the one built for exactly
-// that (its D4): `h-auto max-w-full object-contain` shows the whole figure,
-// never upscales it past its intrinsic size, and `placeholder="empty"` keeps
-// a blur ghost out of the transparent corners the design depends on.
+// ── THE CUTOUT: ui/Image's `artwork` RECIPE IN THE STACK, THE BAND'S OWN
+// GEOMETRY BESIDE THE WORDS (D64). The owner's picture has no background, and
+// ui/Image's `artwork` recipe is the one built for exactly that (its D4):
+// `h-auto max-w-full object-contain` shows the whole figure, never upscales
+// it past its intrinsic size, and `placeholder="empty"` keeps a blur ghost
+// out of the transparent corners the design depends on. From the step the
+// figure must do what no variant does — stand on the row's floor and grow
+// with the row's height (D64) — so the band takes `variant="plain"` and owns
+// the geometry, the atom's own rule for a consumer whose geometry differs
+// (Image.tsx's merge-order note: className positions, it never out-styles a
+// variant). It spells the recipe's three utilities itself as the stacked
+// geometry, `artwork`'s `placeholder="empty"` as an explicit prop, and its
+// `@3xl:` tokens after them; DoctorIntro.test.tsx DERIVES the stacked half
+// from the atom's `artwork` row, so the stack is the variant to the byte.
+// Beside the words the cutout is as tall as the row and never past its file:
+// the picture's track is capped at the cutout's own width (D63), so where the
+// picture sets the row the cutout is at most its intrinsic size (953px tall at
+// 2560, 1200 from a ~3115px window up), and where the words set it the row is
+// a laptop's ~600–750px.
 // `framed` — PersonnelCard's portrait recipe — would crop the cutout into a
 // 3:4 box and give it the atom's 12px radius, i.e. the opposite of "outside
 // of the card, on transparent background". `photo` carries the path PLUS the
@@ -134,7 +120,7 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // ── IT IS THE DOCTOR PAGE'S LCP ELEMENT (§10.6), so it preloads at high
 // priority — sections/Hero's first slide, one band shape over. It is the only
 // picture above the fold on that page, and every portrait further down stays
-// lazy, so nothing competes with it. `sizes` states the two boxes the layout
+// lazy, so nothing competes with it. `sizes` states the boxes the layout
 // actually hands it, so the browser fetches a variant for the hole instead of
 // assuming 100vw and downloading the widest file (§10.6, ui/Image's G2 a11y
 // A5 note). The 60rem in it is the ONE place a media query stands in for the
@@ -144,32 +130,43 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // `@3xl` fires here under an overlay scrollbar (a classic one moves the
 // step — the one window below) — 48rem of column plus the gutter's 2×10vw,
 // i.e. column = 0.8 × viewport.
-//   THE WIDE BRANCH IS `min(36rem, calc((80vw - 3rem) * 0.4333),
-//   calc(80vw - 31rem))`, NOT A FLAT 36rem (G2 react, 2026-09-21 — the
-//   principle; D51a, 2026-09-26 — the numbers). It is the picture box's own
-//   formula (below) spelled in vw, the column being 0.8 × viewport: the
-//   column-tied width, 1.3 × round 2j's ⅓ track (`(100cqi − 3rem) × 0.4333`),
-//   capped at 36rem, and — the third term — what the row leaves after the
-//   words' 28rem and the 3rem gap, which is the SMALLER of the two just above
-//   the step (below a ~1050px viewport). The cap binds from ~1720px. MEASURED
-//   in Chromium (the story runner, whose canvas carries a 15px classic
-//   scrollbar that `vw` counts and the column does not — so the hint runs a
-//   few px generous, never short, wherever the row stands): 1000 → 289px
-//   (hint 304), 1100 → 354 (hint 361), 1280 → 416, 1536 → 505, 1760 / 1920
-//   → 576, the cap. THE ONE WINDOW WHERE IT IS SHORT (G2 tier 2, react,
-//   2026-09-26 — recorded, no second breakpoint): with a classic scrollbar
-//   the `@3xl` step fires at ~979px of viewport while the `(min-width:
-//   60rem)` branch fires at 960, so between 960 and 979 the hint says
-//   272–287px for a picture rendered stacked at 320px; only DPR 1.25 picks a
-//   different `srcset` candidate there (384 vs 640, a ~4 % upscale), and
-//   every other DPR lands on the same file. A flat 36rem would overstate the
-//   box by up to 304px through the 960–1720px band, and the two-term
-//   spelling by up to ~40px just above the step. Math functions
-//   are legal in a `sizes` source-size value, and the CAP still tells the
-//   scanner the box stops growing. (Round 2j's `min(28rem, calc((80vw - 3rem)
-//   / 3))` described the ⅓ track D51b retired; a German name token that
-//   widens the words column past 28rem narrows the picture by a few pixels
-//   only where the row binds, inside the scrollbar's slack.)
+//   THE TWO WIDE BRANCHES ARE D64's CAP spelled in viewport units: beside
+//   the words the cutout grows to at most 1.4 × the picture's third, i.e.
+//   7/15 of ui/Container's column — `calc(80vw * 7 / 15)` while the gutter
+//   is 10vw (the column 0.8 × the viewport), `calc((100vw - 25rem) * 7 /
+//   15)` from a 125rem = 2000px window, where the gutter's 12.5rem cap binds
+//   and the column is the viewport less 25rem. The CAP and not the third, on
+//   purpose: at a laptop width the cutout IS grown (449px wide at 1280
+//   against a 336px third — D64's table), and a hint at the third would
+//   fetch a file the browser then stretches. Where it is not grown (a
+//   desktop, the picture the taller container) the hint runs up to 40 %
+//   generous, which at DPR 2 changes nothing — every box from ~415px up
+//   takes the same full-size file, because the variants past 828px are the
+//   900px original (the optimizer never enlarges) — and at DPR 1 costs one
+//   step of the width ladder. Both branches also run a few px generous
+//   because `vw` counts a classic scrollbar's 15px and the column does not.
+//   Math functions are legal in a `sizes` source-size value.
+//   EVERY `vw` HERE FOLLOWS A `(`, NEVER A SPACE — load-bearing, MEASURED
+//   2026-10-01: Next's srcset builder (next/dist/shared/lib/get-img-props'
+//   `getWidths`) scans `sizes` with `/(^|\s)(1?\d?\d)vw/` and reads every
+//   match as a FLOOR on the picture's width, dropping every file under 640px
+//   × that share from the srcset. D62's first spelling, `calc((max(80vw,
+//   100vw - 25rem) - 3rem) * 0.35)`, put a space before `100vw`: the 16–384px
+//   files left the srcset, a phone's 320px box fetched the 640px file, and
+//   its rounded ratio moved the stacked picture 0.2px. DoctorIntro.test.tsx
+//   pins the 384px file in the srcset. (History: D51a's centred pair spelled it
+//   `min(36rem, calc((80vw - 3rem) * 0.4333), calc(80vw - 31rem))` — the
+//   column-tied picture under its 36rem cap; G2 react, 2026-09-21, the
+//   principle that the hint follows the box rather than a flat width.)
+//   THE ONE WINDOW WHERE IT IS WRONG (G2 tier 2, react, 2026-09-26 — recorded
+//   again for D64, no second breakpoint): with a classic scrollbar the `@3xl`
+//   step fires at ~979px of viewport while the `(min-width: 60rem)` branch
+//   fires at 960, so between 960 and 979 the hint says ~358–365px for a
+//   picture rendered stacked at 320px — GENEROUS since D64, where D62's 35 %
+//   share had it short. At DPR 1 to 1.5 the browser picks the very file the
+//   320px box asks for (384, 640, 640), at DPR 2 one step larger (750 for
+//   640). Moving the condition to the classic step instead would make the
+//   overlay-scrollbar window the wrong one — a lever, not taken.
 //
 // ── THE HEADING IS THE PAGE'S <h1>, AND THIS BAND OWNS IT. A doctor page has
 // exactly one outline root and it is the doctor's name; the Team page's
@@ -188,6 +185,15 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // `hyphens-none` on both lines: the site-wide `hyphens: auto` (§15.14) is for
 // PROSE, and neither a person's name nor a medical title may break at a
 // syllable — they wrap between words or not at all.
+// `@3xl:text-balance` on both lines (D62): beside the picture a line that
+// wraps is BALANCED, so a name too long for one line of the words' container
+// breaks where its two halves come out even — „Dr. Malea (Sabău)" over „Oana
+// Bianca", where a greedy fill would strand „Bianca" alone under „Dr. Malea
+// (Sabău) Oana" — and a two-line specialty does not end on one word. A name
+// that fits keeps its one line: balancing only chooses WHERE a wrap falls,
+// never whether one happens. The `@3xl:` prefix keeps the stacked branch's
+// wrapping exactly what it was. An engine without `text-wrap: balance`
+// (Safari before 17.5) simply wraps greedily.
 //   THE <h1> COMES FIRST IN THE DOM, and the eyebrow paints above it through
 //   `flex-col-reverse` on the pair (G2 a11y, 2026-09-21 — this SUPERSEDES the
 //   contract's DOM sketch, which had the eyebrow first in both orders). The
@@ -226,22 +232,24 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // band's gaps is measured there), the named region, the <h2> through
 // SectionHeading, the CSS quote marks, the justified quote (D22) and its
 // `text-xl` step (D43b) — is argued in CredoCard.tsx's header. What THIS
-// file decides is only where the card stands: inside the words column,
-// between the pair and the slot, so beside the picture it shares the
-// column's width and left edge with the <h1> and the column's `gap-6` puts it
-// one step below the name; in the stack it follows the PICTURE instead,
-// across the column's full width, the grid's `gap-8` above it (D51c:
-// "filozofia mea sits well below photo"). The outline that results is h1
-// (the name) → h2 (the credo) — one level, no gap (§9) — in both
-// arrangements, because neither moves a node in the DOM.
+// file decides is only where the card stands: beside the picture in the
+// words' BOTTOM container (D62), up to 36rem wide (D63) on the left edge it
+// shares with the name (D64), and centred in the height the name leaves; in
+// the stack it follows the PICTURE instead, across the column's
+// full width, the grid's `gap-8` above it (D51c: "filozofia mea sits well
+// below photo"). The outline that results is h1 (the name) → h2 (the credo)
+// — one level, no gap (§9) — in both arrangements, because neither moves a
+// node in the DOM.
 //
 // ── THE SLOT STAYS `children`, AND IT RENDERS AFTER THE CARD. The owner has
 // not said what else stands under the name; the WithActions story shows one
 // candidate — the Hero's two calls to action — without this band deciding for
-// him. Whatever arrives is the CONSUMER's markup, so its text alignment is the
-// consumer's too (§15.15 b's per-element canon: a <p> dropped in here inherits
-// the globals' `start`); the band adds no prose rule and no wrapper-level
-// blanket centring, which that canon bars in every spelling.
+// him. Beside the picture it shares the bottom container with the card (D62):
+// the card and the slot are centred TOGETHER in the height the name leaves,
+// `gap-6` between them. Whatever arrives is the CONSUMER's markup, so its text
+// alignment is the consumer's too (§15.15 b's per-element canon: a <p> dropped
+// in here inherits the globals' `start`); the band adds no prose rule and no
+// wrapper-level blanket centring, which that canon bars in every spelling.
 //
 // ── THE STEP, MEASURED AGAINST THE COLUMN. `@3xl` is 48rem of ui/Container's
 // box — a ~960px viewport — the same step ClinicLocation and PriceList flip
@@ -251,44 +259,22 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // step, one above the other below it. At §7's sampling points: 390 → 312px of
 // column and 768 → 614px are the stacked arrangement, 1280 → 1024px, 1536 →
 // 1228px and 1920 → 1536px are the row.
-//   BESIDE, the two tracks are CONTENT-SIZED (`minmax(0,auto) auto` — the
-//   picture's with a zero floor since 2026-09-27, THE STACKED TRACK
-//   paragraph below) and the pair of
-//   them is centred in the row (`justify-content: center`, D51b below): the
-//   picture's track is its own box — the column-tied width of D51a wherever
-//   the row has room, whatever is left just above the step — and the words'
-//   track is the words column's 28rem. With `center` the tracks never stretch (only
-//   `normal`/`stretch` grow auto tracks), so the free space falls OUTSIDE the
-//   pair, equally on both sides. The picture STANDS ON THE ROW'S FLOOR
-//   (`@3xl:self-end`) whatever the words do, because a cutout is a person
-//   standing and a person standing floats only by accident. (Round 1's
-//   `@3xl:justify-self-center` is gone with the stretched tracks: a
-//   content-sized track IS the picture's box, so there was nothing left in
-//   it to centre — the centring moved to the pair.)
+//   BESIDE is D62's two containers across the whole column, spaced by D63
+//   and standing on D64's one floor — their own paragraphs below.
 //   STACKED (D51c below), the words column dissolves (`display: contents`) and
-//   its blocks join the grid as items of their own: the pair climbs above the
+//   its blocks join the grid as items of their own — the bottom container
+//   too, so the card and the slot are the grid's own items, exactly as they
+//   were before D62 gave them a box of their own beside the picture: the
+//   pair climbs above the
 //   picture (`-order-1`), centred; the picture follows, capped at 20rem and
 //   centred in the column — at every phone width the column is narrower than
 //   that cap, so the figure fills it, and at the 320px stress width 241px of
 //   column (the runner's scrollbar included) still hold the whole figure with
 //   nothing scrolling sideways (§7, §9); then the credo card across the full
-//   column, then the slot — the grid's `gap-8` between all of them.
-//   THE PICTURE IS THE TALL ITEM at every laptop width (MEASURED in Chromium
-//   after D51, the story runner's 15px scrollbar included — figure ‖ words
-//   column, `lowered` excluded): 1280 → 555 ‖ 394px, 1536 → 673 ‖ 405, 1920
-//   → 768 ‖ 498 (the name wraps to two lines in the 28rem column there), so
-//   `align` has room to move the words — with the least of it at 1280, where
-//   a three-line German name makes the column 546px beside the 555px figure
-//   (and `lowered`'s 7rem tips that case over — D54, the FOURTH SEAT).
-//   Just above the step the figure's track is only ~290px wide and ~385 tall
-//   (a 1000px viewport, measured) while the words column keeps its 28rem and
-//   ~382px of height, so the column can be the taller item — and once it is,
-//   it IS the row, the
-//   `align` values coincide (bar `lowered`'s own 7rem of padding), and the
-//   figure still stands on the floor. That is the axis running out of room,
-//   not a fifth state. The band owns its own `py` on container steps (the
-//   PAGE-BAND RECIPE's rule 3, in Container.tsx's header) and no outer margin
-//   at all — the page owns the rhythm between its bands (§6.4).
+//   column, then the slot — the grid's `gap-8` between all of them. The band
+//   owns its own `py` on container steps (the PAGE-BAND RECIPE's rule 3, in
+//   Container.tsx's header) and no outer margin at all — the page owns the
+//   rhythm between its bands (§6.4).
 //
 // ── THE STACKED TRACK IS `minmax(0,1fr)`, NEVER `auto` (2026-09-27, CI on PR
 // #110, Linux Chromium). Below the step the grid had no template, so its one
@@ -320,33 +306,36 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // `grid-cols-[minmax(0,1fr)]` makes the column exactly the Container's width
 // whatever any item's min-content, so `w-full` on the picture's box resolves
 // against the column and `max-w-xs` caps it only where the column is WIDER
-// than 20rem (a tablet). At the step the two-track
-// `@3xl:grid-cols-[minmax(0,auto)_auto]` replaces it — a compile probe of
-// this repo's own stylesheet emits the base rule among the utilities and the
-// `@3xl` rule after it, inside its container query, at equal specificity, so
-// the step's tracks win.
-//   THE STEP'S PICTURE TRACK HAD THE SAME FLOOR, AND GOT THE SAME CURE (the
-//   coordinator's ruling, the same day). As `auto auto`, the picture's track
-//   kept its min-content under the CI model (a static probe of this band's
-//   structure, the stylesheet compiled from globals.css): the `cqi` cap, up to
-//   0.4333 × (column − 3rem), beside the 28rem words and the 3rem gap — three
-//   widths that only fit from a ~52.4rem column. The centred pair overflowed
-//   both sides by 18.6px at a 985px window, 15.2 at 1000, 9.7 at 1024 and 3.8
-//   at 1050, and fit from 1070; and that window, from the step to ~1070px, is
-//   photographed by NO frame (§13: sections at 390 + 1536, pages at 320 · 390
-//   · 768 · 1280 · 1536 · 1920; the plays run at 390, 1280 and 1536).
-//   `minmax(0,auto)` gives the picture's track a zero floor and keeps `auto`
-//   as its ceiling, so under `justify-content: center` it still never
-//   stretches, and where the row is short the PICTURE gives way (the words
-//   keep their definite 28rem): the probe kept every one of those widths
-//   inside the column, and MEASURED it identical to the old tracks — box for
-//   box, the tracks, the picture's box and the edges read back equal to the
-//   tenth of a pixel — at every width sampled, 985 · 1000 · 1024 · 1050 ·
-//   1070 · 1100 · 1280, and the stacked 390 · 320 — on this workstation's
-//   Chromium, which already kept the picture out (picture track 277 / 289 /
-//   308.2 / 329 / 343.6 / 354 / 416.4px either way). What the stories' plays
-//   already expect beside the picture — its track = min(cap, what the row
-//   leaves after the words and the gap) — is now what the tracks guarantee.
+// than 20rem (a tablet). At the step D63's two tracks,
+// `@3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)]`, replace it — a
+// compile probe of this repo's own stylesheet emits the base rule among the
+// utilities and the `@3xl` rule after it, inside its container query, at
+// equal specificity, so the step's tracks win.
+//   THE PICTURE'S TRACK KEEPS A ZERO FLOOR, THE WORDS' AN `auto` ONE (D62,
+//   D63; the words' floor from the Opus a11y review, 2026-10-01). A track's
+//   default floor is `auto` — its item's min-content — and the picture's
+//   item would bring the `<img>`'s 900px width attribute into it exactly as
+//   above (the coordinator's ruling of 2026-09-27 gave D51's content-sized
+//   picture track `minmax(0,auto)` for that reason), so the picture's is
+//   `minmax(0,var(--picture))`: its third, exact wherever the words fit, and
+//   never wider. Since D64 the cutout is out of that track's flow from the
+//   step (absolutely placed), so its zero floor now guards the track against
+//   whatever in-flow child arrives there next. The words' track is
+//   `minmax(auto,1fr)`: what is left, and never less than the pair's longest
+//   unbreakable run plus the 1.5rem inset (the bottom container's one track
+//   and ui/Card's inline-size containment add nothing to that floor). At the
+//   step's narrowest — a ~979px window: a 768px column, a 256px third, a
+//   128px gap, a 14px inset — the pair has ~346px, about seven `hero` ems
+//   (50px type there), a little more up to a ~1390px window; lib/team's data
+//   test allows a name token of sixteen characters, a ceiling written for
+//   the 320px phone. Such a name (none ships: the longest run is eight,
+//   „Cătălina", and a hyphen breaks „Ivașcu-Zugravu") would have crossed the
+//   words' right edge into the gutter from the step to ~1390px, further
+//   under SC 1.4.12's letter spacing. With the `auto` floor the PICTURE's
+//   track gives way instead — the cutout's cap is a share of its own track,
+//   so D64's no-overlap arithmetic still holds — and at every width a real
+//   name meets, the floor (~240px at 1280) sits far under the track (~490px),
+//   so it moves no pixel. The `AtTheStep` story pins the give.
 //
 // ── D43a · THE RHYTHM HALVED (owner, 2026-09-26, round 2j: "it starts height
 // wise too low. i need you to push it higher … with the above section
@@ -356,15 +345,19 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // finding), so the band's own top padding IS the air between the header and
 // the figure's crown; halving it lifts the WHOLE opener — picture, specialty,
 // name, card — by the same 24 / 32 / 40px, and nothing can slide under the
-// pill because nothing here is positioned. The bottom padding halves with
+// pill: the boxes positioned here since D64 — the cutout, its container and
+// the words' container, all `relative`/`absolute` with no z-index — start on
+// the row's top inside the band's own padding and stay in their row, and a
+// scroll that brings them under the sticky pill paints them beneath the
+// pill's own z-50 layer. The bottom padding halves with
 // it: the recipe's `py` is one rhythm, and the next band's own top padding
-// still stands between this figure's feet and the lilac fade. The `lowered`
-// seat (`@3xl:pt-6` then, D38; `pt-28` since D54) is untouched — it moves the
-// words INSIDE the row, this moves the row. MEASURED at 1280 / 1536 / 1920:
-// band top → figure top 80 → 40px, band top → specialty 104 → 64px (152 since
-// D54), band height 672 → 507, 757 →
-// 598, 757 → 677 (the ⅓ track shortens the figure too). D51 keeps both tops
-// exactly (40 and 64px) and grows the figure DOWNWARD: 635 / 753 / 848px.
+// still stands between this figure's feet and the lilac fade. D62–D64 left
+// it alone: the row starts 40px under the band's top at every laptop and
+// desktop width — the picture's box on that line, the specialty a ninth of
+// the column under it (D63, D64). MEASURED at 1280 /
+// 1536 / 1920 when it was halved: band top → figure top 80 → 40px, band top
+// → specialty 104 → 64px, band height 672 → 507, 757 → 598, 757 → 677 (the
+// ⅓ track shortens the figure too).
 //   D61 · THE PHONE FLOOR IS ONE STEP TALLER (round 2r, 2026-09-26): `pt-6
 //   pb-8 @lg:py-8 @3xl:py-10` — the TOP keeps D43a's 24px on every phone (the
 //   owner's "push it higher" is untouched), only the BOTTOM below `@lg` grows
@@ -378,76 +371,35 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   `@lg` up nothing changes: `@lg:py-8` and `@3xl:py-10` come later in the
 //   sheet than the base `pt-6`/`pb-8` and win at their steps.
 //
-// ── D43b · THE WORDS TOOK ⅔ OF THE ROW — SUPERSEDED BY D51b (round 2k, the
-// next paragraph); kept as the history the numbers there are measured
-// against. The owner, round 2j: "put a bigger card for filozofia mea"; the
-// tracks were `minmax(0,1fr)` ‖ `minmax(0,2fr)`. MEASURED: the picture box 384 → 320px at 1280, 448 →
-// 389 at 1536 (the 28rem cap stopped binding there), 448 at 1920 (the cap
-// still binds, the track is 491); the credo card 577 → 641, 700 → 777, 884
-// → 982px wide. The figure shrinks by what the card gains, which is the
-// trade the ask implies; `sizes` follows (the IT IS THE DOCTOR PAGE'S LCP
-// paragraph above). The card's type and inset are argued in CredoCard.tsx's
-// D43b paragraph — in short: the quote steps up to `text-xl`, and the inset
-// is ui/Card's to grow, not this band's.
+// ── D43b · THE WORDS TOOK ⅔ OF THE ROW — SUPERSEDED BY D51b, and D51b by D62;
+// kept as history. The owner, round 2j: "put a bigger card for filozofia
+// mea"; the tracks were `minmax(0,1fr)` ‖ `minmax(0,2fr)`. MEASURED: the
+// picture box 384 → 320px at 1280, 448 → 389 at 1536 (the 28rem cap stopped
+// binding there), 448 at 1920 (the cap still binds, the track is 491); the
+// credo card 577 → 641, 700 → 777, 884 → 982px wide. The card's type and
+// inset are argued in CredoCard.tsx's D43b paragraph — in short: the quote
+// steps up to `text-xl`, and the inset is ui/Card's to grow, not this band's.
 //
 // ── D51 · THE OPENER RE-PROPORTIONED (owner, 2026-09-26, round 2k — three
-// asks; D51 in round 2's ledger is the anchor other files cite, §17.7):
-//   (a) "i want the photo to be like 30% larger all around. top start of
-//   general section should remain the same, so do not push it upwards": the
-//   picture box is round 2j's ⅓-track picture × 1.3, TIED TO THE COLUMN —
-//   `@3xl:max-w-[min(36rem,calc((100cqi-3rem)*0.4333))]`, where `100cqi` is
-//   ui/Container's width (the nearest `@container`; the Container has no
-//   padding, so it IS the column) and 0.4333 = 1.3 / 3 — capped at 36rem
-//   (1.3 × 28rem = 36.4, the scale's nearest step), and under (b)'s
-//   content-sized tracks limited only by what the row leaves just above the
-//   step. The coordinator's ruling on this builder's first cut: a FIXED cap
-//   (`max-w-lg`, 32rem) could not do it, because the old box grew with its
-//   track and a cap does not — it measured +60 % / +32 % / +14 % at 1280 /
-//   1536 / 1920. The column-tied width MEASURES, against round 2j's box:
-//   1280 → 320 × 427 → 416 × 555 (+30.0 %), 1536 → 389 × 518 → 505 × 673
-//   (+30.0 %), 1920 → 448 × 597 → 576 × 768 (+28.6 %, the 36rem cap). THE
-//   TOP DOES NOT MOVE: the band's rhythm is D43a's, untouched, so the crown
-//   still sits 40px under the band's top and the specialty 64px (`lowered`
-//   under D38; 152px since D54);
-//   the figure grows downward and the band with it, 507 / 598 / 677 → 635 /
-//   753 / 848px. THE FEET CLEAR THE FIRST SCREEN at both laptop screens §7
-//   samples, under the pill's 98px flow box (Header.tsx's mount contract —
-//   nothing stands between the pill and this band on the doctor page):
-//   98 + 595 = 693px of an 800px-tall 1280 window, the band's bottom at 733;
-//   98 + 713 = 811px of an 864px-tall 1536 window, the band's bottom at 851;
-//   98 + 808 = 906px of a 1080px-tall 1920 window.
+// asks; D51 in round 2's ledger is the anchor other files cite, §17.7). (a)
+// and (b) are SUPERSEDED BY D62 for the arrangement beside the picture; (c),
+// the stacked order, is the phone and the tablet as they still are.
+//   (a) "i want the photo to be like 30% larger all around": the picture box
+//   was round 2j's ⅓-track picture × 1.3, tied to the column —
+//   `@3xl:max-w-[min(36rem,calc((100cqi-3rem)*0.4333))]`, capped at 36rem —
+//   and MEASURED 416 × 555 at 1280, 505 × 673 at 1536 and 576 × 768 at 1920.
 //   (b) "the philosophy card should be like 70% as wide as it is now and
-//   taller rather" + "… left and right they have same as much space":
-//   `@3xl:grid-cols-[auto_auto] @3xl:justify-center` (the picture's track
-//   `minmax(0,auto)` since 2026-09-27) — the tracks no longer
-//   stretch to the gutters and the free space splits evenly outside the pair
-//   (MEASURED, left ‖ right: 48.3 ‖ 48.3px at 1280, 106.3 ‖ 106.3 at 1536,
-//   224.5 ‖ 224.5 at 1920). The words column is
-//   28rem and the pair and the card share it: 448px = 70 % of round 2j's
-//   641px card at 1280 (58 % of 777 at 1536, 46 % of 982 at 1920), so the
-//   quote wraps to five lines and the card grows TALLER by itself — 214 /
-//   214 / 186px → 266px at all three.
-//     `@3xl:w-md`, NOT A MERE `max-w-md` CAP — measured: an auto track sizes
-//     to its item's max-content, and ui/Card's `@container` (inline-size
-//     containment) contributes NOTHING to that, so under a cap alone the
-//     column shrank to the NAME's width — 388px at 1280 for „Dr. Elena
-//     Marin", ~314 for a short name — and the card with it. A definite 28rem
-//     is the width the ask names, whatever the name.
-//     `@3xl:min-w-min` — measured too: at the `hero` step a German name
-//     token outgrows 28rem („Schwarzenbeck-" = 460px at 1536, 475 at 1920;
-//     hyphenation is off on purpose), so the column widens to the name's
-//     longest unbreakable line instead of letting the <h1> overflow it; the
-//     card follows and the pair stays centred (100.4 ‖ 100.4px at 1536).
-//     Every name that fits keeps exactly 28rem — the contract's `max-w-md`,
-//     corrected on measurement and kept on the coordinator's ruling.
-//     THE PRICE, STATED AND PINNED: the name shares the card's 28rem, so at
-//     the `hero` step a name of ~15 characters is close to one line —
-//     „Dr. Elena Marin" measures 388px at 1280 and 445.2 of 448 at 1536 (one
-//     line each; two at 1920's 72px), „Dr. Andrei Șerban" 443.8 at 1280 (one
-//     line) and two lines at 1536. The stories' Default and Notebook plays
-//     assert the stories' demo doctor on ONE line at 1536 and 1280, so a
-//     font-rendering drift that wraps her name fails a play instead of
-//     slipping into a baseline.
+//   taller rather" + "… left and right they have same as much space": two
+//   CONTENT-SIZED tracks centred in the row (`@3xl:grid-cols-[auto_auto]
+//   @3xl:justify-center`, the picture's track `minmax(0,auto)` from
+//   2026-09-27), the free space outside the pair (48.3 / 106.3 / 224.5px a
+//   side at 1280 / 1536 / 1920), and a definite 28rem words column
+//   (`@3xl:w-md`, widened only by a name token wider still, `@3xl:min-w-min`)
+//   shared by the name and the card. THE CARD'S 28rem SURVIVED D62 as the
+//   bottom container's one track, until D63 widened it to 36rem. What did
+//   not survive D62 is the NAME sharing it: at the `hero` step „Dr. Malea (Sabău) Oana Bianca" took three
+//   lines in it at 1366, 1536 and 1920 — the owner's "i want eyebrow and
+//   heading to be way wider".
 //   (c) "on tablet/phone screens i want name and speciality of doctor to
 //   appear above the photo and to be centered, not left based … filozofia mea
 //   sits well below photo": D21's stacked branch reordered. The words column
@@ -462,6 +414,171 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   picture / card: 390 → 24 · 124 · 552px, 768 → 32 · 146 · 604; the stack
 //   8px taller than round 2j's (the grid's `gap-8` now stands where the
 //   column's `gap-6` stood, above the card).
+//
+// ── D62 · THE LAPTOP AND DESKTOP OPENER AS TWO CONTAINERS (owner, 2026-10-01,
+// verbatim: "on phone and tablet it's perfect how they behave and look now,
+// so i want to mentain that, but the issue is desktop and laptop looks. i
+// want this organization. one big container on the area where the hero is.
+// in it there are another 2 containers. one handles the image. the image
+// container takes up about 35% of the left side of the large container and
+// imag esits centered in it and on bigger screen or on tab adjustment it
+// adjusts in width with the container. the other container that takes up
+// 65% of the large container also coordinates with the image container and
+// wit hthe dimentions of the stuff within it in function of the width and is
+// also split into 2 containers that sit one above the other. the top one
+// handles the heading and eyebrow and bottom one handles the "philosophy". i
+// want eyebrow and heading to be way wider and allow for a further extention
+// potentialli in a single line on longest example if possible of "Dr. Malea
+// (Sabău) Oana Bianca" on heading and fallback on 2 rows of the heading when
+// not wide enough, maybe 3. philosophy has to have same space between it and
+// headings and eyebrow contianer as to bottom of container it is within. so
+// eyebr. and heading container can adjust in height in function of width,
+// philosop. contaier adjusts with it in avalable height and leaves if there
+// is space equally below and above it in container. both heading and
+// philosophy are sticky to left side of respective containers"). From the
+// `@3xl` step only: every class below it is the one it was, so a phone and a
+// tablet are byte-identical. D62 is the STRUCTURE — the two containers and
+// what each holds; the numbers that space them are D63's and the floor they
+// share is D64's (both below). Its first numbers, 35 ‖ 65 of what a 3rem gap
+// left, lasted one round.
+//   THE BIG CONTAINER is the grid itself, across ui/Container's WHOLE column:
+//   two tracks and no free space outside them (D51b's `@3xl:justify-center`
+//   left with its content-sized tracks).
+//   THE PICTURE'S CONTAINER is the first track, the picture's box: `w-full`
+//   of it, `@3xl:max-w-none` lifting the stacked 20rem cap, the cutout
+//   centred on it ("imag esits centered in it … adjusts in width with the
+//   container").
+//   THE WORDS' CONTAINER is the second track, a flex column stretched to the
+//   row's height (a grid item's default stretch), holding the owner's two
+//   containers one above the other. THE TOP ONE is the pair — eyebrow over
+//   name — as wide as the words' content box, both lines start-aligned on its
+//   left edge and wrapping only where the row runs out (balanced when they
+//   do — the header's THE HEADING paragraph). THE BOTTOM ONE takes the rest
+//   of the height (`@3xl:flex-1`) and is a one-track grid — the card's track,
+//   on the container's left edge (an explicit track is never stretched, so
+//   it stays at the start) — whose content is CENTRED in its height
+//   (`@3xl:content-center`) over 1.5rem of padding above and below
+//   (`@3xl:py-6`, the old `gap-6` between the name and the card). So the
+//   space between the name's container and the card always EQUALS the space
+//   between the card and the row's floor, and is never less than 1.5rem
+//   ("leaves if there is space equally below and above it"). Below the step
+//   the bottom container is `display: contents` like the words' container,
+//   which is what keeps the stack's grid items — and so the phone and the
+//   tablet — exactly what they were.
+//
+// ── D63 · THE SPACING AND THE CARD (owner, 2026-10-01, the two rounds after
+// D62's — verbatim: "push this [the specialty, the name and the card] more
+// to the right. ialso want a little more distance but like 15% extra space
+// on ledft side of picture and 250% more space between photo and right
+// container. disregard before mentioned sizings in contaners, procentages
+// etc and find best practices to adapt as described. al also want headin and
+// eyebrow to start around middle of picture?" — then: "i need heading and
+// eyebrow at media artitmetica compared to where it was before. make
+// filozofia mea card stay a little more to the right and like 30% wider").
+// D62's shares and its 3rem gap gave way to numbers read off ui/Container's
+// column — `cqi`, because the Container is the nearest size container, so
+// the grid's own tokens resolve against its width:
+//   THE INSET, `@3xl:ps-[min(1.875cqi,1.875rem)]` — "15 % extra space on the
+//   left side of the picture", taken as 15 % of the page GUTTER the column
+//   already stands in (10vw ≈ 12.5cqi, capped at 12.5rem): 18.9 / 22.2 /
+//   28.5px at 1280 / 1500 / 1920.
+//   THE PICTURE'S ONE WIDTH, `--picture`: a third of the column and the first
+//   track — one number the cutout's floor (D64) reads as well — so the
+//   picture keeps one proportion of the page at every width, where D62's
+//   shares bent with the gap. Capped at the cutout's OWN width, which rides
+//   in on the grid as `--cutout-width` from `photo.width` (the Opus React
+//   review): past a ~3115px window a third of the column outgrows the 900px
+//   file, and a 3440px ultrawide would draw it at 1008 × 1344 — enlarged, the
+//   soft edge `artwork`'s "never upscaled" promise exists to rule out. Under
+//   the cap nothing moves; over it the picture keeps its file's size and the
+//   words take the rest.
+//   THE GAP, `@3xl:gap-x-[clamp(3rem,calc(100cqi/6),10.5rem)]` — "250 % more
+//   space between photo and right container": D62's 3rem three and a half
+//   times over, 10.5rem = 168px, which a sixth of the column reaches at a
+//   ~1280px window; under it the gap shrinks with the column (134px at 1024)
+//   and never below D62's 3rem.
+//   THE CARD, the bottom container's one track `minmax(0,36rem)` — "like 30 %
+//   wider": 28rem × 1.3 ≈ 36.4, the nearest rem — taking what the words
+//   leave under it: 363px at 1024, 462 at 1280, 506 at 1366, 576 from 1500
+//   up. "A little more to the right" was 1.5rem, which D64 gave the name too.
+//   And the name's height: "middle of the picture", then "media aritmetica" —
+//   the mean of develop's top and that middle, a quarter of the way down the
+//   picture — which D64 spells from the column alone.
+//   THE CARD'S TITLE FOLLOWS ITS WIDTH: „Filozofia mea" wears SectionHeading's
+//   container-responsive `band` step, which answers to ui/Card's own
+//   `@container` (§15.24) — 36px once the card's content box reaches 28rem,
+//   a card of ~498px. MEASURED on the built page: 30px at 1024 and 1280
+//   (363 / 462px cards), 36px from 1366 up (506 / 545 / 576px). That is the
+//   "wider words column" road of the owner's open call on the card's size
+//   (G2-R2 tier 1, react F1 — ui/Heading's `'band' JOINED` paragraph), taken
+//   by the owner's wider card rather than by a title seam.
+//
+// ── D64 · ONE FLOOR, ONE LEFT EDGE (owner, 2026-10-01, the fourth round —
+// verbatim: "actually heading and filozofie have to have same offset. and
+// heading soes not have to stay at middle of card. currrent positioning is
+// good, but at same time image is separated as asset and has to adjust
+// height wise while both large containers share same floor"; on the result:
+// "for the moment it feels perfect").
+//   ONE LEFT EDGE: D63's 1.5rem moved from the bottom container up to the
+//   words' container (`@3xl:ps-6`), so the specialty, the name and the card
+//   start on one line, 1.5rem in from the words' track — the card where D63
+//   put it and the name joining it, the reading of "same offset" that keeps
+//   the card's "a little more to the right" (the other reading, the card back
+//   on the name's old edge, is the same token one box down).
+//   THE NAME'S HEIGHT, OFF THE COLUMN: `@3xl:pt-[calc(100cqi/9)]` on the
+//   words' container — D63's quarter of the picture's height, which for the
+//   3:4 cutout every lib/team doctor ships (the team-data test) is a ninth of
+//   the column to the pixel, so "current positioning is good" holds at every
+//   width. It is spelled from the column alone because the picture's height
+//   now FOLLOWS the words' (below), and a padding read off it would be a
+//   loop.
+//   ONE FLOOR — "image is separated as asset": the picture's container
+//   stretches to the row (`@3xl:self-stretch`) and is never shorter than the
+//   cutout at its third (`@3xl:min-h-[calc(var(--picture)*var(--cutout-ratio))]`,
+//   the photo's own height ÷ width riding in on the grid as
+//   `--cutout-ratio`), so the row is the TALLER of the words and the picture
+//   at its third, as before D64. The cutout then leaves the row's sizing
+//   (`@3xl:absolute`) and is drawn into the container it is given: as tall as
+//   it (`@3xl:h-full`), as wide as its own proportion makes that
+//   (`@3xl:w-auto`), centred on it (`@3xl:left-1/2 @3xl:-translate-x-1/2` —
+//   D62's "centered in it", the growth shared by the inset and the gap) and
+//   standing on its floor (`@3xl:bottom-0`). Where the words are the taller
+//   container the figure GROWS until its feet stand on their floor; where
+//   the picture is the taller one nothing moves.
+//   WHY OUT OF FLOW: a picture whose width followed the row's height while
+//   the words' width followed the picture's would be a loop no CSS layout
+//   closes (grid's re-resolution of its columns runs once, and not alike in
+//   every engine). Out of flow, the picture's TRACK keeps its third and the
+//   words keep their width — the card keeps its 36rem — and only the
+//   figure's box spills past its track, into the inset and the gap.
+//   THE CAP, `@3xl:max-w-[140%]`: the box never wider than 1.4 × its third,
+//   so its spill is at most a fifth of the third a side, a fifteenth of the
+//   column (54px at 1024, 67 at 1280) — short of the words wherever the gap
+//   is wider than that, i.e. on every column up to 2520px (a ~2900px window;
+//   on a column that wide the picture is the taller container and spills
+//   nothing), and short of the window's edge, whose gutter alone is at least
+//   98px from the step up. Past
+//   the cap (the 1024 window under a three-line name) `object-contain` fits
+//   the figure into the capped box and `@3xl:object-bottom` stands it on the
+//   floor, with air above its crown. By that arithmetic the box overlaps
+//   no word, and the words' container is `@3xl:relative` as the belt (the
+//   Opus a11y review): a positioned box paints above the in-flow content it
+//   overlaps, and of two positioned boxes the later in the DOM paints on
+//   top, so were a future spacing ever to let the figure reach the words,
+//   the words would paint over it — with no `z-index` and no pixel moved
+//   today, and the figure never takes a pointer the words need.
+//   MEASURED on the built page (the longest name the clinic ships, Romanian,
+//   classic scrollbar): the cutout 449 × 598 at 1280 (1.33 × its 336px
+//   third), 463 × 617 at 1366, 445 × 593 at 1500, 450 × 599 at 1536; at 1920
+//   and 2560 the picture is the taller container (507 × 676, 715 × 953) and
+//   the card stands centred under the name, 42.5 and 191.5px above and
+//   below; at 1024 the cap binds — 375 × 500 on the floor, 146px of air
+//   above. At every width the cutout's bottom, its container's and the
+//   words' are ONE line, 0px apart; the phone and the tablet pixel-identical
+//   to develop (320 / 390 / 768, five pages each). The demo figure's
+//   shoulders reach up to ~17px past the column's left edge at 1024–1366,
+//   where the top bar's edge stands — the owner's look, approved at 1280 and
+//   1500.
 //
 // ── D43c · TWO EYEBROWS, ONE SIZE — MEASURED, NOT ASSUMED. The owner asked
 // (2026-09-26) why „În cuvintele mele" reads larger than „Medic specialist
@@ -507,9 +624,6 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // becomes `body`, never the shape. DoctorIntro.test.tsx pins the re-export
 // line.
 
-/** Where the words sit beside the picture at the wide step (D6). */
-export type DoctorIntroAlign = 'start' | 'lowered' | 'center' | 'end';
-
 /**
  * The cutout file: a path under public/images/ plus its INTRINSIC pixel size —
  * the optimizer's srcset input and the reserved box (§11, zero layout shift).
@@ -551,11 +665,6 @@ type DoctorIntroOwnProps = Readonly<{
    * they are CSS, in the document's language.
    */
   credo: DoctorIntroCredo;
-  /** Where the words sit beside the picture at the wide step: the row's top,
-   *  7rem under it (`lowered`, round 2e — 1.5rem under D38, 7rem since D54),
-   *  its middle, or its floor.
-   *  @default 'start' */
-  align?: DoctorIntroAlign;
   /**
    * Free slot AFTER the credo card — the owner is still deciding what else
    * goes here (the WithActions story shows one candidate). Its own text
@@ -579,32 +688,11 @@ export type DoctorIntroProps = DoctorIntroOwnProps &
     keyof DoctorIntroOwnProps | 'aria-label' | 'aria-labelledby'
   >;
 
-// Record<> rather than a ternary — ui/Heading's growth gate, the one the whole
-// repo uses: widening DoctorIntroAlign cannot compile until this table names
-// the new value, where a ternary would map anything new onto the start row in
-// silence. Every row is a single `@3xl:self-*` token, because the axis moves
-// the words INSIDE the row and changes nothing else — not the tracks, not the
-// picture, not the gap. Every row is `@3xl:`-prefixed on purpose: below the
-// step the words column is `display: contents` (D51c), a box that no longer
-// exists, so a seat there would have nothing to seat.
-const ALIGN: Record<DoctorIntroAlign, string> = {
-  start: '@3xl:self-start',
-  // The top seat dropped 7rem (D54: 20 % of the figure at 1280; 1.5rem under
-  // D38, 3rem in round 2e) — the padding rides the words column itself, so
-  // the figure keeps its floor and, while the column stays the shorter item,
-  // the row keeps its height (D6's FOURTH SEAT). `pt-28` is the owner's one
-  // lever: move it along the spacing scale and nothing else changes.
-  lowered: '@3xl:self-start @3xl:pt-28',
-  center: '@3xl:self-center',
-  end: '@3xl:self-end',
-};
-
 export function DoctorIntro({
   name,
   position,
   photo,
   credo,
-  align = 'start',
   className,
   children,
   ...rest
@@ -617,69 +705,99 @@ export function DoctorIntro({
     // (§6.8), so a page's placement utility wins where placement is allowed.
     <section {...rest} className={cx('bg-page', className)}>
       <Container>
-        {/* The rhythm box AND the row, one element: the band's own stepped
-            `py` (the recipe's rule 3 — halved in round 2j, D43a, untouched by
-            D51; below `@lg` the floor is `pb-8`, one step above the top, for
-            the credo card's aura — D61, the header's D43a paragraph) plus, at
-            the step, two CONTENT-SIZED tracks centred in the row (D51b).
-            Below the step ONE `minmax(0,1fr)` track, the column's width
-            exactly — never an `auto` track the picture's box can widen (the
-            header's THE STACKED TRACK paragraph, 2026-09-27).
-            `gap-8` is the section owning ALL child spacing (§6.4) — below
-            the step between all four stacked items (D51c); the children keep
-            no outer margins of their own. */}
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 pt-6 pb-8 @lg:py-8 @3xl:grid-cols-[minmax(0,auto)_auto] @3xl:justify-center @3xl:gap-12 @3xl:py-10">
-          {/* THE PICTURE'S BOX. Stacked: capped at 20rem and centred in the
-              column, under the pair (D51c). Beside: round 2j's ⅓ track ×
-              1.3, tied to the column through `cqi` and capped at 36rem
-              (D51a) — its track IS its box, since the tracks are
-              content-sized — standing on the row's floor (see the header). */}
-          <div className="mx-auto w-full max-w-xs @3xl:mx-0 @3xl:max-w-[min(36rem,calc((100cqi-3rem)*0.4333))] @3xl:self-end">
+        {/* THE BIG CONTAINER (D62, D63): the rhythm box AND the row, one
+            element — the band's own stepped `py` (the recipe's rule 3; halved
+            in round 2j, D43a; below `@lg` the floor is `pb-8`, one step above
+            the top, for the credo card's aura — D61) plus, at the step, the
+            owner's two containers (D62) spaced by D63: an inset of 15 % of the
+            page gutter before the picture, the picture's ONE width
+            (`--picture`, a third of the column, never wider than the cutout's
+            own file) as the first track, the 1/6-of-the-column gap clamped to
+            3rem–10.5rem, and the words in whatever is left — the picture's
+            track with a zero floor, the words' never narrower than their
+            longest unbreakable run (the header's THE STACKED TRACK
+            paragraph). The cutout's own proportion rides in as
+            `--cutout-ratio` (height ÷ width), which the picture's container
+            reads for its floor height (D64), and its own width as
+            `--cutout-width`, the cap on `--picture` (D63). Below the step ONE
+            `minmax(0,1fr)` track, the column's width exactly — never an
+            `auto` track the picture's box can widen (the header's THE STACKED
+            TRACK paragraph, 2026-09-27) — and no `@3xl:` token reaches it;
+            the two variables are set there but read by `@3xl:` tokens alone.
+            `gap-8` is the section owning ALL child spacing (§6.4) — below the
+            step between all four stacked items (D51c); the children keep no
+            outer margins of their own. */}
+        <div
+          className="grid grid-cols-[minmax(0,1fr)] gap-8 pt-6 pb-8 @lg:py-8 @3xl:[--picture:min(calc(100cqi/3),var(--cutout-width))] @3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)] @3xl:gap-x-[clamp(3rem,calc(100cqi/6),10.5rem)] @3xl:py-10 @3xl:ps-[min(1.875cqi,1.875rem)]"
+          style={
+            {
+              '--cutout-ratio': photo.height / photo.width,
+              '--cutout-width': `${photo.width}px`,
+            } as CSSProperties
+          }
+        >
+          {/* THE PICTURE'S CONTAINER. Stacked: capped at 20rem and centred
+              in the column, under the pair (D51c), the cutout in ui/Image's
+              `artwork` recipe, spelled here because the band owns the
+              geometry beside the words (the header's THE CUTOUT paragraph).
+              Beside (D62–D64): the whole first track, the cap lifted,
+              stretched to the row and never shorter than the cutout at its
+              third — and the cutout drawn into it out of flow: as tall as
+              the row, as wide as its proportion makes that (up to 1.4 × the
+              track), centred on the track and standing on the floor the
+              words stand on (D64). */}
+          <div className="mx-auto w-full max-w-xs @3xl:relative @3xl:min-h-[calc(var(--picture)*var(--cutout-ratio))] @3xl:max-w-none @3xl:self-stretch">
             <Image
-              variant="artwork"
               src={photo.src}
               width={photo.width}
               height={photo.height}
               alt=""
+              placeholder="empty"
               preload
               fetchPriority="high"
-              sizes="(min-width: 60rem) min(36rem, calc((80vw - 3rem) * 0.4333), calc(80vw - 31rem)), 20rem"
+              sizes="(min-width: 125rem) calc((100vw - 25rem) * 7 / 15), (min-width: 60rem) calc(80vw * 7 / 15), 20rem"
+              className="h-auto max-w-full object-contain @3xl:absolute @3xl:bottom-0 @3xl:left-1/2 @3xl:h-full @3xl:w-auto @3xl:max-w-[140%] @3xl:-translate-x-1/2 @3xl:object-bottom"
             />
           </div>
-          {/* THE WORDS: PAIR → CARD → SLOT (D12). Beside the picture it is a
-              28rem flex column (D51b — `w-md`, widened only by a name token
-              that is wider still, `min-w-min`): `gap-6` between the three
-              blocks, the card stretching to the column's width (a flex
-              COLUMN item — ui/Card D3), so the pair and the card share one
-              width and one left edge. Below the step it is `contents` (D51c):
-              the box dissolves and its three blocks become the grid's own
-              items, so the pair can climb above the picture while the card
-              stays after it. ALIGN's rows are all `@3xl:`, so the seat
-              exists only where the column does.
+          {/* THE WORDS' CONTAINER: PAIR → CARD → SLOT (D12). Beside the
+              picture (D62) the second track, a flex column as tall as the row
+              holding the owner's two containers — the pair on top, the
+              bottom container under it taking the rest of the height — inset
+              1.5rem, the ONE left edge the pair and the card share (D64),
+              padded down by a ninth of the column, D63's quarter of the
+              picture's height spelled from the column alone (D64), and
+              positioned — `relative`, no z-index — so it paints above the
+              cutout should the two ever meet (D64's cap paragraph). Below the
+              step it is
+              `contents` (D51c), and so is the bottom container: both boxes
+              dissolve and their blocks become the grid's own items, so the
+              pair can climb above the picture while the card stays after it.
               THE PAIR IS `flex-col-reverse`: the <h1> comes FIRST in the DOM
-              and the eyebrow paints above it (see the header's THE HEADING IS
-              THE PAGE'S <h1> paragraph); `-order-1` lifts it above the
+              and the eyebrow paints above it (see the header's THE HEADING
+              IS THE PAGE'S <h1> paragraph); `-order-1` lifts it above the
               picture in the stack, `items-center` centres its two boxes
               there, and each line centres its own text ON THE ELEMENT
-              (§15.15 b), back to `start` beside the picture. */}
-          <div
-            className={cx(
-              'contents @3xl:flex @3xl:w-md @3xl:min-w-min @3xl:flex-col @3xl:gap-6',
-              ALIGN[align],
-            )}
-          >
+              (§15.15 b), back to `start` — and balanced — beside the
+              picture. */}
+          <div className="contents @3xl:relative @3xl:flex @3xl:flex-col @3xl:ps-6 @3xl:pt-[calc(100cqi/9)]">
             <div className="-order-1 flex flex-col-reverse items-center gap-2 @3xl:order-none @3xl:items-start">
               <Heading size="hero" asChild>
-                <h1 className="text-center hyphens-none @3xl:text-start">
+                <h1 className="text-center hyphens-none @3xl:text-start @3xl:text-balance">
                   {name}
                 </h1>
               </Heading>
-              <Eyebrow className="text-center hyphens-none @3xl:text-start">
+              <Eyebrow className="text-center hyphens-none @3xl:text-start @3xl:text-balance">
                 {position}
               </Eyebrow>
             </div>
-            <CredoCard {...credo} />
-            {children}
+            {/* THE BOTTOM CONTAINER (D62, D63): the rest of the row's
+                height, one 36rem track on its left edge, the card (and a
+                slot) centred in that height over 1.5rem above and below — so
+                the space over the card equals the space under it. */}
+            <div className="contents @3xl:grid @3xl:flex-1 @3xl:grid-cols-[minmax(0,36rem)] @3xl:content-center @3xl:gap-6 @3xl:py-6">
+              <CredoCard {...credo} />
+              {children}
+            </div>
           </div>
         </div>
       </Container>

@@ -113,11 +113,12 @@ const framedAuraCard = (): string =>
  * from it), so a card that composes SectionHeading must follow it without an
  * edit — while a card that stopped composing it, or dressed its own <h2>,
  * still fails. The nearest container of THIS card's title is ui/Card's own
- * `@container`, and the card's content box is 398px at DoctorIntro's `@3xl`
- * (28rem less `framed`'s 25px a side), so „Filozofia mea" reads 30px beside
- * the picture and 36px stacked full-width on a tablet — recorded, not changed
- * here: owner decision 1 of G2 tier 1 (fold-tier1.md), argued in
- * ui/Heading's `'band' JOINED` paragraph. The never-vacuous guard in the test
+ * `@container`, so „Filozofia mea" reads 36px wherever the card's content
+ * box reaches 28rem — a card of ~498px — and 30px under that: since
+ * DoctorIntro's D63 (a 36rem track beside the picture) that is 30px at 1024
+ * and 1280 and 36px from 1366 up, and 36px stacked full-width on a tablet as
+ * before (ui/Heading's `'band' JOINED` paragraph; owner decision 1 of G2
+ * tier 1, fold-tier1.md). The never-vacuous guard in the test
  * pins that what is read back really IS one of ui/Heading's rows, not an
  * empty or foreign string.
  */
@@ -358,8 +359,10 @@ describe('CredoCard — ui/Card’s framed surface in its aura (D12, D61)', () =
   });
 
   it('owns no outer margin and no width of its own (§6.4)', () => {
-    // It fills the words column it is placed in (ui/Card D3 — a flex COLUMN
-    // item stretches), and the column is the band's business.
+    // It fills the box it is placed in (ui/Card D3 — beside the picture a
+    // grid item of the band's bottom container, whose one track gives it its
+    // width; in the stack an item of the one-column grid), and that box is
+    // the band's business.
     const { container } = renderCard();
 
     const tokens = tokensOf(cardOf(container));

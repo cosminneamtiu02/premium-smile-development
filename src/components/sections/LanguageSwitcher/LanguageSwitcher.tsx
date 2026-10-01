@@ -217,6 +217,16 @@ export function LanguageSwitcher({
         // cta pair, so an unflagged fallback and the transition family stay the
         // matched corner pair the owner asked for. The rest-colour argument
         // above is history; the bundle is still the right one.
+        //
+        // THE PAIR ITSELF ENDED (owner, 2026-10-01): the call and WhatsApp
+        // discs this bulb was matched to wear ui/GlyphButton's LAVENDER family
+        // since "i thaught i told you to refactor the whatsapp and call
+        // buttons to be lilla too" (FloatingActions). The bulb was not named
+        // and keeps `cta`: under the flag the fill is not seen and the bulb's
+        // scrim answers no hover, so nothing a visitor sees here changed — but
+        // an ARTLESS bulb would now be green beside two lilac discs.
+        // ui/SpeedDial has no lavender tone; giving it one is the owner's
+        // lever, not built.
         tone="cta"
       />
     </nav>

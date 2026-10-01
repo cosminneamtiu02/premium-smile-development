@@ -461,8 +461,9 @@ export function Footer(): ReactElement {
               GlyphButton outline is the atom's own "socials" bundle — in its
               LAVENDER family since 2026-10-01 (`tone="accent"`: the owner,
               "all round glyph buttons from the footer" lilac like the menu
-              buttons, while the fixed corner's discs stay green); asChild
-              makes each <a> the control, so this emits no <button> anywhere in
+              buttons; the fixed corner's two discs followed that evening);
+              asChild makes each <a> the control, so this emits no <button>
+              anywhere in
               the section. The glyphs stay UNLABELLED: a labelled glyph inside
               an asChild anchor double-announces (ui/GlyphButton's children
               doc), and every anchor is already named from its ICU message with

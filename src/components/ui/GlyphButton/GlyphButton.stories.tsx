@@ -47,7 +47,7 @@ const meta = {
       control: 'radio',
       options: ['cta', 'accent'] satisfies GlyphButtonTone[],
       description:
-        'The colour family — cta, the green of the one conversion goal (the default, the fixed corner’s) / accent, the menu buttons’ lavender (the Footer’s discs, the reviews deck’s chevrons, the map band’s row discs — owner 2026-10-01); ghost ignores it',
+        'The colour family — cta, the green of the one conversion goal (the default; no disc on the site wears it since the fixed corner turned) / accent, the menu buttons’ lavender (the Footer’s discs, the reviews deck’s chevrons, the map band’s row discs, the fixed corner’s two — owner 2026-10-01); ghost ignores it',
     },
     motion: {
       control: 'radio',
@@ -273,14 +273,16 @@ export const AccentOutline: Story = {
  * whatsapp button … to have that jump at you animation on hover. this should
  * not affect buttons from footer"): `motion="jump"`, Button's cell byte for
  * byte — the old round button's hover:scale-105 on its own 200ms clock, worn
- * by the fixed corner's two green discs and nothing else. HOVER IT in the
- * workbench; the net runs under reduced motion, where the disc holds still by
- * rule, so this frame would only repeat the lg green disc's pixels:
+ * by the fixed corner's two discs and nothing else, lavender since the same
+ * evening ("i thaught i told you to refactor the whatsapp and call buttons to
+ * be lilla too"), so the story wears `tone: 'accent'` like them. HOVER IT in
+ * the workbench; the net runs under reduced motion, where the disc holds
+ * still by rule, so a frame would show a still disc and never the jump:
  * 'no-visual'.
  */
 export const Jump: Story = {
   tags: ['no-visual'],
-  args: { motion: 'jump', size: 'lg' },
+  args: { tone: 'accent', motion: 'jump', size: 'lg' },
 };
 
 /**

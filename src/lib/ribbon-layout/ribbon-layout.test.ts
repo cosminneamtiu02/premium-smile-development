@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { gaugeRule, lanes, UNIT_PX } from '../ribbon-model/ribbon-model.ts';
+import { gaugeRule, UNIT_PX } from '../ribbon-model/ribbon-model.ts';
 import {
   measureColumn,
   placeColumn,
@@ -231,10 +231,12 @@ describe('placeColumn — the numbers the model takes, one card at a time', () =
     expect(placed[2].input.boxes[0].x).toBeCloseTo(2.5, 12);
   });
 
-  it('measures G to the next card’s top, and gives the last card the tail’s room — the tail ends in the air (fb-504)', () => {
+  it('measures G to the next card’s top, and gives the last card none — null: the ribbon tucks under it (lib/ribbon-model’s THE TUCK)', () => {
     const placed = placeColumn([measured(0), measured(700)]);
     expect(placed[0].input.G).toBeCloseTo((700 - 504) / UNIT_PX, 12);
-    expect(placed[1].input.G).toBe(lanes(gaugeRule(10.09)).gap / UNIT_PX);
+    expect(placed[1].input.G).toBeNull();
+    // A column of one card: it is the first and the last.
+    expect(placeColumn([measured(0)])[0].input.G).toBeNull();
   });
 
   it('hands each card’s own rect through — it places the card’s ribbon', () => {

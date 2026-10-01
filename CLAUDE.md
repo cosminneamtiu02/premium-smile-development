@@ -97,7 +97,7 @@ src/
     scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic, on ONE of three lines: the landing line (the default — where a fragment jump rests), the viewport's centre (`line: 'middle'` — the doctor page's timeline, round 2k) or THE READING LINE (`line: 'reading'` — the price menu, 2026-09-29: the middle of the CLEAR area, bent at both ends of the page so every target has a turn, every target's landing planned by lib/reading-line and WRITTEN as its `scroll-margin-top`, the module's one write) + bottom rule + top fallback (`topFallback: 'first' | 'none'` — the named trigger fired by the doctor page's timeline, 2026-09-26) + click pin, which judges only a page that has stopped (THE START GRACE, 2026-09-29) (React-free; price-list pack round 2, 2026-09-14)
     reading-line/reading-line.ts  # THE arithmetic of the reading line: where a jump to each target comes to rest (centred when it fits the clear area, on its old ceiling when it does not), landings kept inside the page and apart by a share of each target's size, and the probe the walk measures — numbers in, numbers out, no DOM (price-list round 5, 2026-09-29)
     sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a link the KEYBOARD focused reveals its edge — a pointer's focus is never answered, 2026-09-29 (React-free; price-menu-pin lane, 2026-09-18)
-    ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; its side wave SMOOTH beside a keep-out — no corner, no ruler line (§15.26 round 2) — and its top run A LOW RIPPLE — three normal-distribution bumps, a valley, a crest, a valley, their depth and height shares of the run and capped by the lane's room and the top edge's headroom (round 3, 2026-10-01: the top wave, "too much" to the owner, is history); six frozen reference cards beside it, re-written from the module in both rounds (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
+    ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; its side wave SMOOTH beside a keep-out — no corner, no ruler line (§15.26 round 2) — and its top run A LOW RIPPLE — three normal-distribution bumps, a valley, a crest, a valley, their depth and height shares of the run and capped by the lane's room and the top edge's headroom (round 3, 2026-10-01: the top wave, "too much" to the owner, is history); and the LAST card's tail TUCKED under its bottom edge — `G: null`, the side wave straight down, the hook's circle, over the bottom edge at the top's 35° and onto the back (round 5, 2026-10-01: the hanging tail, fb-504, is history); six frozen reference cards beside it, re-written from the module in both rounds (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
     ribbon-layout/ribbon-layout.ts  # the page → the model's numbers: stations and their keep-out blocks found by `data-ribbon-keepout` MARKERS, never by their place in the markup; a keep-out is WHAT IS PAINTED (the element's box and its contents'), a marker that paints nothing is skipped; the portrait's inset; every second card mirrored (§15.26)
     ribbon-paint/ribbon-paint.ts  # numbers → pixels on the ordinary 2D canvas: the strip, the light, additive blending, the plane cut at the card's front face — what is deeper is not painted — and, since round 3 (2026-10-01), THE SHADOW, painted under the ribbon as one path's drop shadow, never a CSS filter on the canvas (§15.26)
     ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's line — a card's centre a QUARTER of the screen above its bottom since round 4 (the screen's centre until then), a card taller than the screen its top the same quarter under the top — and the end-of-page rule, the FIRST card drawn without its head (round 4), the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
@@ -2520,7 +2520,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     NO LOOPS (the same annotation) · the hook sits lower ("place it lower a bit. like 100% lower", fb-492) ·
     the entry sways ("must also be superficially waive, so not a straight line, make it a little wayvy",
     fb-494) · the phone is BOLDER ("b all day here, looks way better", fb-501) · the tail "ends in the air all
-    day" (fb-504; the planner's tucked tail was rejected) · ONE look ("looks perfect now, I do not need
+    day" (fb-504; the planner's tucked tail was rejected — REVERSED by the owner on 2026-10-01, round 5 below:
+    the tail tucks under the last card, the first card's start turned upside down) · ONE look ("looks perfect now, I do not need
     alternatives or rebuilds", fb-505) · NO DOT on the ribbon (fb-475, the connector's board) · colours
     `--ribbon-light` `#8377a3` and `--ribbon-dark` `#2d263c`, both from the old site's palette, raw tokens
     with NO utility name (nothing paints with a class; the painter reads them) — ONE colour since round 2,
@@ -2810,6 +2811,80 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `--update-snapshots=all` and verified 74/74 on a second run — not left stale, because the DoctorShowcase and
     Home baselines were hours old (#124, #125); Pages/Team's twelve also absorb #124's lilac button, which had
     left them stale. The linux set is CI's (`visual-baseline.yml`). **Evidence at READY:** see the lane's PR.
+    **Round 5 (owner, the same day, 2026-10-01 — verbatim: "one thing i'd refactor about the ribbon. as on the
+    first card of the list where it starts from behind the card, i want the ribbon to also end on the last card
+    behind the bottom side of the last card tucked in behind it, not just hanging as it is now." · "you have an
+    example for tucked in behind card on first card where it comes from behind the card"; lane
+    `refactor/ribbon-tucked-tail`):** **THE TUCK** — the owner's own reversal of fb-504. Under the LAST card
+    there is no next card, so `lib/ribbon-layout` gives it `G: null` (until that day the lanes' gap, where the
+    tail hung) and `lib/ribbon-model` ends its chain the way a card's top edge is crossed, turned upside down:
+    the side wave runs STRAIGHT DOWN its lane; the ribbon turns towards the card's middle until it heads β below
+    the horizontal (`tuck`), goes over the bottom edge at β — the 35° of every crossing of the top edge —
+    (`bfold1`), across the bottom face (`bcross`) and onto the back (`bfold2`), where the chain ends out of sight
+    (the nine atoms unchanged — a tenth, `tuckOut`, had no reader and left at the review). It is NOT the consult's option B of 2026-09-29 (straight
+    down and over the edge square — a flat cut seen from the front, the look the owner turned down then). **THE
+    TURN IS THE HOOK'S CIRCLE** (`R_1`, 0.5 k), not the lead's 0.9 k: under a card there is no lane, only the
+    card's own bottom padding (1.5rem and its border, 25px), which keeps its px while the ribbon grows with the
+    column. MEASURED on the built Team and Home pages, Romanian and German, every 8px of window from 320 to
+    2 560 — through the drawing's own guard arithmetic: the 0.9 k turn makes the guard withhold the whole
+    ribbon on 66 of 564 windows measured every 16px, the first at 1 232px (up to 2.3px into the last row's
+    margin; some 13px into a block filling the content box at the widest gauges), while the hook's circle keeps
+    at least 4.5px of air beyond the words' 4px margin on all 1 124 windows measured every 8px. Also measured and set aside: 55° and 90° crossings (safe, steeper —
+    90° IS option B), and drifting the side wave towards the card's edge to make the 0.9 k turn fit (it rode the
+    wave's last outward hump up to 1.5px off the card). No new number: BETA and R_1 are the design's own.
+    Everything above the side wave is unchanged (pinned: the chain down to `d`, and the twist); a last card must
+    be taller than about 2.8 k (223px at a laptop's gauge — the real doctor card is ~550px), and a shorter one
+    is refused by name, which the guard turns into no ribbon. **PINNED:** the six recorded cards rebuilt AS the
+    last card pass every "the path is sound" property (continuity, no kink, the width across the travel, hidden
+    pieces within 0.056 k — the bottom crossing reaches 0.05594 k, exactly the top's: the same bend — no
+    keep-out entered) and the smooth-beside-a-keep-out pair; the tuck's shape on those six and the four pinned
+    layouts (the wave straight down; the turn π/2 − β on 0.5 k; the 35° crossing towards the middle, 0.074 k
+    inside the edge; the end on the back, where the chain closes); TUCKED — no point more than 0.056 k under the
+    card's bottom edge; THE MOST A CARD CAN HOLD — a block filling the content box down to its bottom padding,
+    entered by no part of the ribbon at every 8px of column from 241 to 2 145, in four bands; THE TUCK'S LIMIT
+    (below), by name; and a browser pin on the stand-in column — the ribbon's own lowest row lies at the last
+    card's edge and within the curl, and below it only the shadow. Each pin was MUTATION-CHECKED: the turn on
+    the 0.9 k circle fails 17 tests (the block sweep and the limit among them); a hanging tail puts the ribbon's
+    own lowest row 54–57px past the browser pin's reach, and a ribbon that stops above the edge (no tuck) fails
+    it from the other side, 15–38px short. `lib/ribbon-draw` changes two comments
+    and no code — a card's stretch ends where its chain ends, behind the card. **THE TAIL ROOM, REMOVED** (the
+    owner, shown the tuck: "remove that space"): ui/Ribbon's column kept `60px + 1rem` under the last card —
+    the room the tail hung in — and now keeps only what the tuck needs, its curl (0.056 k) and its shadow
+    (0.03 k down, blurred 0.04 k): `pb-[calc(0.13*var(--ribbon-k)_+_8px)]`, the 8px for the tile's 2px margin,
+    the shadow's floors and a pixel of rounding — about 13px on a phone, 18px at a 1280 laptop, 30px at the
+    widest column, where it was 76px — so everything under the doctors band, on Home and on the Team page,
+    moves up by 46 to 64px; every tile still lies inside the ribbon's box (Ribbon.test.tsx, six widths), and
+    `tests/unit/ribbon-lanes-sync.test.ts` holds the room against the model's own curl and lib/ribbon-draw's
+    `shadowOf` and `TILE_MARGIN` (exported for it) at every gauge of the 320–2 560 windows. The head room above the
+    first card stays as round 4 left it. **G2, on the owner's word ("run opus reviews by my review
+    methodology") — `react-reviewer`, `typescript-reviewer` and `a11y-architect`, each on Opus, read-only:**
+    three times APPROVE WITH CHANGES, no critical and no high finding; FOLDED — the dead `tuckOut` atom (it had
+    no reader), `validate` letting a null through for any field but G, a test literal that made Tailwind ship
+    the old `60px + 1rem` rule as dead CSS (a class-like string in any scanned file is a class), the shadow's
+    numbers retyped in two tests (now read), the pixel pin's lower bound met by the shadow alone (now the
+    ribbon's own row, alpha ≥ 200), the as-last twins printing the records' "tail in the air", three
+    pre-existing stale comments, and every number in a comment re-measured to the reviewers' figures. **THE
+    TUCK'S LIMIT, RECORDED — the owner's call:** the turn needs the last card taller than about 2.8 k, and the
+    gauge grows with the column (ui/Container has no width cap) while a doctor card hardly grows, so MEASURED on
+    the built Team page the last card falls under it from a window of about 3 400 CSS px — an ultrawide screen at
+    100 % — where the guard withholds the whole ribbon (32 of 84 windows from 2 560 to 3 840 refused; the hanging
+    tail drew on all 84); a test pins the boundary by name (3 328 holds, 3 840 refused). Levers: the page-scale
+    lane's 64rem column cap (in flight — it keeps k near 1.2 and the limit never comes), a fallback in the model
+    for a card too short (a smaller turn, or the hanging tail there), or a cap on the gauge. THE OWNER, the same
+    day: "Do nothing now" — the page-scale lane's cap is the lever, and nothing else is built. Near the limit the
+    side wave grows very short and its joint can kink at sub-pixel scale (informational: up to the 2 560 window
+    real cards stay ≥ 1.3 units above it). **RECORDED from the accessibility review, the owner's calls, no AA
+    failure:** on the Team page the gap from the last doctor card to the first staff tile is now SMALLER than
+    the gap between two doctors (61 against 98px at a 390 phone, 98 against 140 at 1280), so the two groups can
+    read as one where the ribbon is absent (forced colours, print, a withheld column, before a stretch is
+    drawn) — levers: the staff tiles' heading (§15.25's recorded one string ×5) or a bottom padding on the
+    Team page's doctors band alone — the owner: "i'll get to that later"; and, older than this lane (#124's
+    hover jump), a full-width stacked "Mai
+    multe despre mine" grows 5 % on hover into the side lane, where its edge and ring can slide a few px under
+    the side wave (SC 2.4.11 still met) — growing its keep-out by the jump is the lever. **Visual:** the cells whose ribbon reaches a last card change — every
+    `ui/ribbon/*` story, Sections/DoctorShowcase, Pages/Home and Pages/Team (the last two also move below the
+    band) — and nothing else, by construction (`lib/ribbon-*` and ui/Ribbon's one class string are the only
+    runtime code that moved). **Evidence at READY:** see the lane's PR.
 
 27. **The clinic's real data — ON THE OWNER'S WORD (2026-09-30, verbatim: "find everywhere in the page where
     the page has data about the clininc ,that is not photos and add those ones … tell me if i skipped any" ·

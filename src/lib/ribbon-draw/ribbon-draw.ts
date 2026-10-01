@@ -213,7 +213,8 @@ import {
 // cards, both mirrors, found 0.5685 k at the least). The HEAD — the drop-in
 // and the hook, over the card's own top corner — is painted on the canvas
 // BEFORE this card's; the BODY — from the hand-over to the next card's
-// drop-in — on this card's. So canvas i holds card i's body and card i+1's
+// drop-in, or on the last card to its tuck behind its bottom edge — on this
+// card's. So canvas i holds card i's body and card i+1's
 // head: every visible run, a side wave into the next card's drop-in
 // included, lies on ONE canvas, where the additive blend closes its seams
 // (lib/ribbon-paint), and two canvases meet only behind a card, where
@@ -236,7 +237,11 @@ import {
 // was 4 to 15 % of the whole). The model still builds every card's whole
 // chain (lib/ribbon-model's record stands, and the hidden S is laid from the
 // entry's end); the head is simply never painted, and the room ui/Ribbon
-// keeps above the first card is the band's air. REPAINT: a tile's picture is
+// keeps above the first card is the band's air. The column's OTHER END is the
+// model's, not this module's: the last card's ribbon tucks under it
+// (lib/ribbon-model's THE TUCK, 2026-10-01), so its stretch ends behind the
+// card as card 0's begins there, and nothing here treats it apart.
+// REPAINT: a tile's picture is
 // rebuilt from `drawn` whenever a card on it moves — cleared, each half's
 // drawn range painted, and ONE shadow of
 // all of it laid under — so the shadow is never a filter's afterthought and
@@ -312,10 +317,10 @@ export const DPR_CAP = 2;
 const END_PX = 2;
 /** How deep a strip may reach into a keep-out before the guard refuses the column, in card units (0.1 px). */
 const GUARD_DEPTH = 0.001;
-/** The px a tile keeps around its strip, beyond the shadow's reach. */
-const TILE_MARGIN = 2;
-/** THE SHADOW's offset down and blur, in CSS px, for the gauge k (the prototype's drop-shadow). */
-const shadowOf = (k: number) => ({
+/** The px a tile keeps around its strip, beyond the shadow's reach — read by ui/Ribbon's tests, whose tail room must hold it. */
+export const TILE_MARGIN = 2;
+/** THE SHADOW's offset down and blur, in CSS px, for the gauge k (the prototype's drop-shadow) — read by ui/Ribbon's tests, whose tail room must hold it. */
+export const shadowOf = (k: number) => ({
   dy: Math.max(1, 3 * k),
   blur: Math.max(1.5, 4 * k),
 });

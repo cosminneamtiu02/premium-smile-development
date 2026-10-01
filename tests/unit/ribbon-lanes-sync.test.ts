@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  shadowOf,
+  TILE_MARGIN,
+} from '../../src/lib/ribbon-draw/ribbon-draw.ts';
+import {
   buildCard,
   gaugeRule,
   lanes,
@@ -71,23 +75,51 @@ describe('ui/Ribbon’s CSS spells lib/ribbon-model’s rule (KEEP IN SYNC)', ()
     }
   });
 
-  it('keeps the ribbon’s head and tail room: the drop-in starts k above the first card, the tail ends in the air under the last', () => {
-    // The model's own geometry, on the approved desktop card: where the
-    // ribbon begins over the card's top edge, and — under the LAST card,
-    // whose gap is the lanes' own — where it ends under the bottom one.
-    const W = 10.09;
-    const k = gaugeRule(W);
-    const H = 5;
-    const model = buildCard({ W, H, G: lanes(k).gap / UNIT_PX, k, boxes: [] });
-    const head = (model.evaluate(0).z - H / 2) * UNIT_PX;
-    const tail = -(model.evaluate(1).z + H / 2) * UNIT_PX;
-    expect(head).toBeCloseTo(k * UNIT_PX, 9);
-    expect(tail).toBeCloseTo(lanes(k).gap - k * UNIT_PX, 9);
-    // …and the column's padding makes room for both, each with 1rem more
-    // for a tile's margin and the shadow.
-    expect(source).toContain('pt-[calc(var(--ribbon-k)_+_1rem)]');
-    expect(source).toContain(
-      `pb-[calc(${px(lanes(k).gap - k * UNIT_PX)}_+_1rem)]`,
+  it('keeps the ribbon’s head room — the drop-in’s measure above the first card — and a tail room that is only the tuck under the last: its curl and its shadow', () => {
+    // The model's own geometry. Every card's chain still begins k above it
+    // (the drop-in — never drawn on the first card since 2026-10-01,
+    // lib/ribbon-draw), and the head room keeps that measure.
+    const desktop = gaugeRule(10.09);
+    const model = buildCard({
+      W: 10.09,
+      H: 5,
+      G: lanes(desktop).gap / UNIT_PX,
+      k: desktop,
+      boxes: [],
+    });
+    expect((model.evaluate(0).z - 2.5) * UNIT_PX).toBeCloseTo(
+      desktop * UNIT_PX,
+      9,
     );
+    expect(source).toContain('pt-[calc(var(--ribbon-k)_+_1rem)]');
+    // The LAST card (G null) ends tucked under its own bottom edge
+    // (lib/ribbon-model's THE TUCK): its lowest point is the bend's curl, and
+    // lib/ribbon-draw grows the last tile past it by its margin, the shadow's
+    // blur and its offset, and rounds up a pixel (`shadowOf`, TILE_MARGIN —
+    // read here, never retyped). The tail room `0.13 × --ribbon-k + 8px`
+    // holds that at every gauge from the 320 window's column to the 2 560
+    // window's (ui/Ribbon/Ribbon.test.tsx measures the real tiles at six).
+    expect(source).toContain('pb-[calc(0.13*var(--ribbon-k)_+_8px)]');
+    for (let W = 2.41; W <= 21.45; W += 0.5) {
+      const k = gaugeRule(W);
+      const H = 6;
+      const last = buildCard({ W, H, G: null, k, boxes: [] });
+      let lowest = Infinity;
+      for (let i = 0; i <= 4_000; i++) {
+        for (const v of [0, 0.5, 1]) {
+          lowest = Math.min(lowest, last.surface(i / 4_000, v)[2]);
+        }
+      }
+      const curl = (-H / 2 - lowest) * UNIT_PX;
+      expect(curl, `${W} units`).toBeLessThan(0.056 * k * UNIT_PX);
+      const { dy, blur } = shadowOf(k);
+      const reach = curl + TILE_MARGIN + blur + dy + 1;
+      expect(reach, `${W} units`).toBeLessThanOrEqual(0.13 * k * UNIT_PX + 8);
+    }
+    // ONE bottom padding on the column: the room the tail HUNG in until
+    // 2026-10-01 (60px + 1rem) is gone — the owner: "remove that space". (Not
+    // spelled out here: a class-like string in any scanned file is a class
+    // Tailwind ships.)
+    expect(source.match(/\bpb-\[/g)).toHaveLength(1);
   });
 });

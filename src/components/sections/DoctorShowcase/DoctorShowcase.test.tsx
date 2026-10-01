@@ -1109,6 +1109,21 @@ const touchScreen = async (on: boolean): Promise<void> => {
     'Emulation.setTouchEmulationEnabled',
     on ? { enabled: true, maxTouchPoints: 5 } : { enabled: false },
   );
+  // THE DEVICE, SETTLED: the protocol answers before the frame's media
+  // queries are evaluated again — at once on macOS, a frame or more later on
+  // CI's Linux Chromium, where the next case drew its band before the pointer
+  // was fine again (2026-10-01: the REFERENCE case read the regime off). So
+  // the switch is not done until the query itself says so, bounded.
+  await expect
+    .poll(
+      () =>
+        realMatchMedia(on ? '(pointer: coarse)' : '(pointer: fine)').matches,
+      {
+        timeout: 5_000,
+        interval: 16,
+      },
+    )
+    .toBe(true);
 };
 
 /** ui/Container's gutter per side at this window, read off a probe wearing
@@ -1737,55 +1752,6 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
     expect(rootRem()).toBe(16);
   });
 
-  it('turns the regime OFF on a TOUCH screen at any width — a 1300px column plain, an 1800px one uncapped: the owner’s “Touch devices unchanged” (D10, THE GATES)', async () => {
-    // Chromium's own touch emulation (`touchScreen`): the primary pointer
-    // turns coarse, `scalable:` stops matching, and the band is today's at
-    // every width — no design pixel, no remap, no cap, the theme's sizes, the
-    // unscaled card two-column wherever its own flip puts it.
-    await touchScreen(true);
-    try {
-      expect(
-        realMatchMedia('(pointer: coarse)').matches,
-        'a touch screen',
-      ).toBe(true);
-      expect(realMatchMedia('(pointer: fine)').matches).toBe(false);
-      for (const width of [1300, 1800]) {
-        const scene = renderColumn(width);
-        try {
-          const at = `${width}px, touch`;
-          expect(remapped(scene.rhythm), at).toBe(false);
-          expect(
-            getComputedStyle(scene.rhythm).getPropertyValue('--scale-px'),
-            at,
-          ).toBe('1px');
-          exact(
-            scene.rhythm.getBoundingClientRect().width,
-            width,
-            `${at}: no cap`,
-          );
-          for (const card of scene.cards) {
-            const { inset, grid, picture, quote, name } = partsOf(card);
-            expect(getComputedStyle(grid).display, at).toBe('grid');
-            exact(lengthOf(quote, 'font-size'), 18, `${at}: the quote`);
-            exact(
-              lengthOf(name, 'font-size'),
-              contentWidth(inset) >= 28 * 16 ? 36 : 30,
-              `${at}: the name`,
-            );
-            exact(picture.getBoundingClientRect().width, 288, `${at}: picture`);
-          }
-        } finally {
-          scene.unmount();
-        }
-      }
-    } finally {
-      await touchScreen(false);
-    }
-    expect(realMatchMedia('(pointer: fine)').matches, 'the mouse, back').toBe(
-      true,
-    );
-  });
-
   it('draws the REFERENCE column — 1106px, the owner’s 1401 window — as the band he approved: a design pixel IS a CSS pixel', async () => {
     // The numbers measured on develop's export at the 1401 × 1063 window
     // (D10): the quote 18, a doctor's name and the band's title 36, the
@@ -1937,5 +1903,56 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
       }
       scene.unmount();
     }
+  });
+
+  // LAST in the group, on purpose: it is the one case that changes the
+  // device, and nothing measured after it can inherit its pointer.
+  it('turns the regime OFF on a TOUCH screen at any width — a 1300px column plain, an 1800px one uncapped: the owner’s “Touch devices unchanged” (D10, THE GATES)', async () => {
+    // Chromium's own touch emulation (`touchScreen`): the primary pointer
+    // turns coarse, `scalable:` stops matching, and the band is today's at
+    // every width — no design pixel, no remap, no cap, the theme's sizes, the
+    // unscaled card two-column wherever its own flip puts it.
+    await touchScreen(true);
+    try {
+      expect(
+        realMatchMedia('(pointer: coarse)').matches,
+        'a touch screen',
+      ).toBe(true);
+      expect(realMatchMedia('(pointer: fine)').matches).toBe(false);
+      for (const width of [1300, 1800]) {
+        const scene = renderColumn(width);
+        try {
+          const at = `${width}px, touch`;
+          expect(remapped(scene.rhythm), at).toBe(false);
+          expect(
+            getComputedStyle(scene.rhythm).getPropertyValue('--scale-px'),
+            at,
+          ).toBe('1px');
+          exact(
+            scene.rhythm.getBoundingClientRect().width,
+            width,
+            `${at}: no cap`,
+          );
+          for (const card of scene.cards) {
+            const { inset, grid, picture, quote, name } = partsOf(card);
+            expect(getComputedStyle(grid).display, at).toBe('grid');
+            exact(lengthOf(quote, 'font-size'), 18, `${at}: the quote`);
+            exact(
+              lengthOf(name, 'font-size'),
+              contentWidth(inset) >= 28 * 16 ? 36 : 30,
+              `${at}: the name`,
+            );
+            exact(picture.getBoundingClientRect().width, 288, `${at}: picture`);
+          }
+        } finally {
+          scene.unmount();
+        }
+      }
+    } finally {
+      await touchScreen(false);
+    }
+    expect(realMatchMedia('(pointer: fine)').matches, 'the mouse, back').toBe(
+      true,
+    );
   });
 });

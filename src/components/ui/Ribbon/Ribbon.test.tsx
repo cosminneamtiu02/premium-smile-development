@@ -523,11 +523,20 @@ describe('ui/Ribbon — inside a scaled design, the reference ribbon scaled (THE
   // hairline above them. The probe takes it off both columns: what is left of
   // a card is theme lengths, which scale exactly — and then so must the
   // ribbon, which is what is tested here.
+  // THE TEXT, LINEAR: Source Serif 4's optical sizes set a larger text a little
+  // narrower per em, and Linux draws glyph advances a little differently from
+  // macOS — so the ×1.5 column's quote could wrap a line differently from the
+  // plain one's (CI, 2026-10-01: station 1 42px taller at the 599 column,
+  // exactly one 27px line). The probe pins both columns' text to linear widths
+  // — optical sizing off, geometric precision on — so the cards scale exactly
+  // on every platform, and the ribbon, which is what is tested here, with them.
   let hairlineOff: HTMLStyleElement | undefined;
 
   beforeAll(() => {
     hairlineOff = document.createElement('style');
-    hairlineOff.textContent = '[data-scale-probe] article { border-width: 0 }';
+    hairlineOff.textContent =
+      '[data-scale-probe] article { border-width: 0 } ' +
+      '[data-scale-probe] * { font-optical-sizing: none; text-rendering: geometricPrecision }';
     document.head.append(hairlineOff);
   });
 

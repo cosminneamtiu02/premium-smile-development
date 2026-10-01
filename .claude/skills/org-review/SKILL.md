@@ -34,9 +34,10 @@ annotates.
 3. **Dispatch `react-org-reviewer`** (Agent tool) with: the file list, the
    §4/§6/§16 constraints, the comment-convention note, and the explicit
    instruction that "already correct, here is why" is a valid per-item answer.
-   The agent is Fable-pinned in its frontmatter (owner routing rule: Fable
-   reviews, Opus builds) — never pass a model override. Run it blind: do not
-   show it your own conclusions.
+   The agent is Opus-pinned in its frontmatter (owner routing rule,
+   2026-10-01: every reviewer on Opus) — pass a model override only on the
+   owner's explicit word (a Fable run is his to ask for). Run it blind: do
+   not show it your own conclusions.
 4. **Verify every agent claim against the code** before it reaches the owner.
    A finding neither pass can ground in a file/line/grep does not ship.
 5. **Compose the board** at `.claude/plans/<target>-org-review.plan.md`, in
@@ -77,7 +78,7 @@ annotates.
 
 ## Related
 
-- Agent: `react-org-reviewer` (Fable-pinned, structure only) — bugs and types
+- Agent: `react-org-reviewer` (Opus-pinned, structure only) — bugs and types
   stay with `react-reviewer` + `typescript-reviewer` at the same review step.
 - Eval: `.claude/evals/org-review.md` — the executed Header ground truth;
   re-run it after any edit to this skill or the agent.

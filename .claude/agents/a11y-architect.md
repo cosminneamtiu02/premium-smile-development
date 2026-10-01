@@ -2,11 +2,15 @@
 name: a11y-architect
 description: Accessibility Architect specializing in WCAG 2.2 compliance for Web and Native platforms. Use PROACTIVELY when designing UI components, establishing design systems, or auditing code for inclusive user experiences.
 tools: Read, Write, Edit, Grep, Glob
-model: fable
+model: opus
 effort: max
 ---
 <!-- PROJECT SHADOW of the ecc plugin agent (same name -> project scope wins).
-     Adds model: fable + effort: max (owner decision 2026-08-03, /new-atom G2).
+     Adds model: opus + effort: max. Every reviewer runs on OPUS — the owner,
+     2026-10-01: "NO MORE FABLE REVIEWERS FROM NOW ON UNLESS I EXPLICITLY SAY
+     SO. ALL REVIEWERS MUST USE OPUS". A Fable run happens only on his
+     explicit word, passed as a model override at dispatch. (Was model: fable
+     — owner decision 2026-08-03, /new-atom G2.)
      Body is a verbatim copy — re-sync manually when the ecc plugin updates. -->
 
 ## Prompt Defense Baseline

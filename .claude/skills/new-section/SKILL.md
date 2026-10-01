@@ -21,14 +21,20 @@ that calls `t()` (§8.1) — atoms stay locale-agnostic.
 strings (§8.10 — translations are owner-authored) · point-and-approve the pack · say
 "commit it" per lane · merge the PR.
 
-### Model routing (owner rule: Fable coordinates/reviews, Opus builds)
+### Model routing (owner rule: Opus reviews and builds — 2026-10-01)
+
+**Every reviewer runs on Opus.** The owner, 2026-10-01: "NO MORE FABLE REVIEWERS FROM NOW ON
+UNLESS I EXPLICITLY SAY SO. ALL REVIEWERS MUST USE OPUS" — the earlier "Fable coordinates/
+reviews" routing is history. A Fable review happens only on his explicit word in the current
+conversation, passed as a model override at dispatch.
 
 Planning and judgment run in the **main loop**: N0–N2, every canvas interaction, G2
 finding-verification, V, N4, N5. The mechanical build **N3 is dispatched in ONE Agent call**
 to `section-builder` (`.claude/agents/section-builder.md`, pinned `model: opus`). On return
 the main loop **re-runs G1 itself** (trust but verify). G2 reviewers = the project-shadow
 agents `react-reviewer` + `typescript-reviewer`, plus `a11y-architect` for anything
-stateful/interactive (dispatch the UNSCOPED names — project scope beats plugin). Consult
+stateful/interactive (dispatch the UNSCOPED names — project scope beats plugin; each is
+pinned `model: opus` + `effort: max`, and the dispatch passes `model: "opus"` too). Consult
 `ecc:react-patterns` + `ecc:frontend-a11y` while shaping the contract (preventive, not a
 substitute for the gate).
 
@@ -72,7 +78,7 @@ Contract friction returns to this loop — never into improvised code.
 (includes the translation-parity test) · `npm run build-storybook` · axe = 0 · literal-string
 sweep of the section's JSX (zero hardcoded user-facing strings, §17.4). Red → `/debug-deep`.
 
-### G2 · AGENT GATE *(reviewers = Fable @ max effort)*
+### G2 · AGENT GATE *(reviewers = Opus @ max effort — Fable only on the owner's explicit word)*
 As in `/new-atom`: verify findings before applying; CRITICAL/HIGH → back to N3 scope.
 Pack-annotation loops re-run G2 only when the diff touches types/logic.
 

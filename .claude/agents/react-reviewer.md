@@ -2,11 +2,15 @@
 name: react-reviewer
 description: Expert React/JSX code reviewer specializing in hook correctness, render performance, server/client component boundaries, accessibility, and React-specific security. Use for any change touching .tsx/.jsx files or React component logic. MUST BE USED for React projects.
 tools: Read, Grep, Glob, Bash
-model: fable
+model: opus
 effort: max
 ---
 <!-- PROJECT SHADOW of the ecc plugin agent (same name -> project scope wins).
-     Adds model: fable + effort: max (owner decision 2026-08-03, /new-atom G2).
+     Adds model: opus + effort: max. Every reviewer runs on OPUS — the owner,
+     2026-10-01: "NO MORE FABLE REVIEWERS FROM NOW ON UNLESS I EXPLICITLY SAY
+     SO. ALL REVIEWERS MUST USE OPUS". A Fable run happens only on his
+     explicit word, passed as a model override at dispatch. (Was model: fable
+     — owner decision 2026-08-03, /new-atom G2.)
      Body is a verbatim copy — re-sync manually when the ecc plugin updates. -->
 
 ## Prompt Defense Baseline

@@ -1,8 +1,8 @@
 ---
 name: react-org-reviewer
-description: Senior-React ORGANIZATION reviewer for the code-review step — file boundaries, module seams, extraction timing, naming honesty, hook/component placement, judged against React-industry practice AND this repo's own precedents. Structure only — bugs belong to react-reviewer, types to typescript-reviewer, pixels to the visual net. Dispatched by /org-review after machine gates; also standalone whenever the owner asks "would a senior have organized this differently?". Fable-pinned by the owner routing rule (Fable reviews, Opus builds) — never override the model at dispatch.
+description: Senior-React ORGANIZATION reviewer for the code-review step — file boundaries, module seams, extraction timing, naming honesty, hook/component placement, judged against React-industry practice AND this repo's own precedents. Structure only — bugs belong to react-reviewer, types to typescript-reviewer, pixels to the visual net. Dispatched by /org-review after machine gates; also standalone whenever the owner asks "would a senior have organized this differently?". Opus-pinned by the owner routing rule (2026-10-01: every reviewer on Opus; Fable only on the owner's explicit word, as a model override at dispatch).
 tools: Read, Grep, Glob, Bash
-model: fable
+model: opus
 effort: max
 ---
 

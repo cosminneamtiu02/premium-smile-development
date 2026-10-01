@@ -1587,3 +1587,30 @@ describe('PriceList — dumb by construction', () => {
     expect(CODE).not.toMatch(/arrival/i);
   });
 });
+
+describe('PriceList — every card of the page keeps the HOUSE corner (owner 2026-10-01, §15.28)', () => {
+  // The soft 1rem corner (ui/Card's `corners="soft"`, the personnel card's)
+  // was put on the menu card and on each of the eleven category cards on the
+  // owner's "apply to all cards on services page too", and taken off the same
+  // evening on his "i liked card from before better for services. it looked
+  // perfect." So every card here wears ui/Card's default `rounded-md`, and
+  // exactly ONE `rounded-*` (a second would leave the stylesheet's order to
+  // pick the corner). These pins turn red if the soft corner comes back here
+  // without a new word from the owner.
+  const rounded = (element: Element): string[] =>
+    tokensOf(element).filter((t) => /^rounded-/.test(t));
+
+  it('on the jump menu’s card', () => {
+    mount();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    expect(rounded(menu)).toEqual(['rounded-md']);
+  });
+
+  it('on every category card', () => {
+    mount();
+    for (const category of CATEGORIES) {
+      const card = screen.getByRole('region', { name: category.name });
+      expect(rounded(card), category.name).toEqual(['rounded-md']);
+    }
+  });
+});

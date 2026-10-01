@@ -59,10 +59,12 @@ const QUIET_RING = 'not-data-[arrival=keyboard]:focus-visible:outline-hidden';
 /** The island's stamp on a card the keyboard jumped to — its attribute. */
 const ARRIVAL = 'data-arrival';
 
-/** ui/Card's own surface, ARMED with the glow (`aura="current"`), DERIVED from
- *  a rendered card rather than retyped — so an edit to the atom's geometry,
- *  tone rows or glow layer lands in these assertions instead of drifting
- *  silently away from this section. */
+/** ui/Card's own surface, ARMED with the glow (`aura="current"`) and on the
+ *  HOUSE corner (the atom's default — the soft corner of §15.28 was tried on
+ *  this page and reverted on the owner's taste, 2026-10-01), DERIVED from a
+ *  rendered card rather than retyped — so an edit to the atom's geometry,
+ *  corner rows, tone rows or glow layer lands in these assertions instead of
+ *  drifting silently away from this section. */
 const cardSurface = (): string => {
   const { container, unmount } = render(<Card aura="current" />);
   const own = (container.firstElementChild as HTMLElement).className;
@@ -87,6 +89,21 @@ describe('CategoryCard — the card IS the section (ui/Card asChild)', () => {
     // element's own are the scroll rider and, since 2026-09-29, the quiet
     // ring (THE RING IS THE KEYBOARD'S).
     expect(card.className).toBe(`${cardSurface()} scroll-mt-10 ${QUIET_RING}`);
+  });
+
+  it('keeps the HOUSE corner — the owner’s taste (2026-10-01, §15.28)', () => {
+    // The soft 1rem corner (`corners="soft"`) was put on this card on the
+    // owner's "apply to all cards on services page too" and taken off the
+    // same evening on his "i liked card from before better for services. it
+    // looked perfect." So the card wears ui/Card's default `rounded-md`, and
+    // exactly ONE `rounded-*` (a second would leave the stylesheet's order to
+    // pick the corner). This pin turns red if someone re-applies the soft
+    // corner here without a new word from the owner.
+    const { container } = render(<CategoryCard {...CATEGORY} />);
+    const rounded = tokensOf(cardOf(container)).filter((t) =>
+      /^rounded-/.test(t),
+    );
+    expect(rounded).toEqual(['rounded-md']);
   });
 
   it('is ARMED with the glow and wears none of its own (owner 2026-09-29)', () => {

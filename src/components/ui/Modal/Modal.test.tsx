@@ -656,6 +656,27 @@ describe('Modal — the container is the BOX, not the layer (§6.5, D17)', () =>
   });
 });
 
+describe('Modal — THE SOFT CORNER (owner 2026-10-01, §15.28)', () => {
+  it('rounds the BOX with the one token the pill and the personnel card wear, and the body’s bottom with it', () => {
+    // "that rounded corner effect that the doctor card from old webpage has …
+    // contact us modal": `rounded-soft` on the box — 1rem, `--radius-soft` in
+    // globals.css, NavMenu's panel's own corner since the same day — and
+    // `rounded-b-soft` on the body, which reaches the box's bottom edge and
+    // would otherwise square off a rounded panel's lower corners from inside.
+    render(<Host />);
+    expect(panelBox()).toHaveClass('rounded-soft');
+    expect(panelBox()).not.toHaveClass('rounded-lg');
+    expect(contentRegion()).toHaveClass('rounded-b-soft');
+    expect(contentRegion()).not.toHaveClass('rounded-b-lg');
+    // Computed, not claimed: the token resolves to 16px at the 16px root —
+    // 1rem, so browser zoom scales the corner with everything else (§7).
+    expect(getComputedStyle(panelBox()).borderTopLeftRadius).toBe('16px');
+    expect(getComputedStyle(contentRegion()).borderBottomLeftRadius).toBe(
+      '16px',
+    );
+  });
+});
+
 describe('Modal — the scrim (D14)', () => {
   it('paints the shared token by default', () => {
     render(<Host />);

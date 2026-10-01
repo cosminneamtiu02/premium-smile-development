@@ -322,6 +322,20 @@ describe('TextButton — the D5 motion exception (owner-approved)', () => {
     expect(cls).not.toMatch(/outline-none|outline-hidden/);
   });
 
+  it('wears the SOFT corner on its box — the ring, and any future ground, follow it (§15.28)', () => {
+    // owner 2026-10-01: "that rounded corner effect that the doctor card from
+    // old webpage has … TEXT buttons" — `rounded-soft`, the 1rem token the
+    // personnel card, the Header pill and the contact dialog wear. A quiet
+    // control has no ground and no border, so today the corner shows on the
+    // focus ring alone (an outline follows border-radius in every current
+    // engine); the box is what a future ground would inherit it from. ONE
+    // `rounded-*` and never a second — the stylesheet's order must not pick.
+    const { tokens } = tokensOf();
+    expect(tokens.filter((t) => /^rounded-/.test(t))).toEqual(['rounded-soft']);
+    // …and the underline stays a straight rule: nothing clips it to the corner.
+    expect(tokens).not.toContain('overflow-hidden');
+  });
+
   it('owns no outer margin (§6.4) and no fixed width (§8.4)', () => {
     const { tokens } = tokensOf();
     // DE runs +30–35% longer than RO: a width here would clip or overflow.

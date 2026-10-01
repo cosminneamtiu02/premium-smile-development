@@ -623,12 +623,31 @@ describe('Header — the panel hangs off the bar and survives a short screen', (
         'absolute',
         'inset-x-0',
         'top-full',
-        'rounded-lg',
+        'rounded-soft',
       ]),
     );
     // `fixed` would need viewport arithmetic and a magic bar height; the
     // anchored panel follows the bar wherever it goes.
     expect(classes).not.toContain('fixed');
+  });
+
+  it('shares the SOFT CORNER with the bar — one token on the pill and its panel (§15.28)', async () => {
+    // owner 2026-10-01: "that rounded corner effect that the doctor card from
+    // old webpage has … the top bar". Both wear `rounded-soft` — the old
+    // site's 1rem card corner, ONE token in globals.css — so the two glass
+    // cards can never round differently; the bar's CONTROLS keep §15.1's 6px
+    // (the burger's `rounded-md` square; the Contact ui/Button likewise).
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    const pill = document.querySelector('header');
+    if (!pill) throw new Error('no <header> rendered — the pill is gone');
+    expect(classesOf(pill)).toContain('rounded-soft');
+    expect(classesOf(pill)).not.toContain('rounded-lg');
+    expect(classesOf(burger())).toContain('rounded-md');
+
+    await user.click(burger());
+    expect(classesOf(panel() as Element)).toContain('rounded-soft');
+    expect(classesOf(panel() as Element)).not.toContain('rounded-lg');
   });
 
   it('caps its height at the dynamic viewport and scrolls internally (B2)', async () => {

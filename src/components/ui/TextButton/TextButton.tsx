@@ -95,8 +95,20 @@ export type TextButtonProps = TextButtonOwnProps &
 // `py-2` above exist so a wrapped two-line label still has an honest height
 // (§8.4). KEEP-IN-SYNC with ui/Button, which carries the same class for the
 // same owner rule.
+// THE CORNER (owner 2026-10-01, §15.28: "that rounded corner effect that the
+// doctor card from old webpage has … implemented in all mentioned parts" —
+// the TEXT buttons among them): the box wears `rounded-soft`, the ONE token
+// (1rem, globals.css) the personnel card, the Header pill and the contact
+// dialog wear. A chrome-less control has no ground and no border to round, so
+// today the corner shows on exactly one thing — the focus ring, which follows
+// `border-radius` in every current engine — and it is what any future ground
+// (fb-126's "bordered look would be a new variant on THIS atom") inherits.
+// The underline pseudo-element is a straight 2px rule pinned to the box's
+// bottom edge; nothing clips it to the corner (no overflow-hidden here). ONE
+// `rounded-*` on the box and never a second (ui/Card's own rule: two of one
+// property would leave the stylesheet's order to pick the corner).
 const base =
-  'relative inline-flex min-h-11 items-center justify-center ' +
+  'relative inline-flex min-h-11 items-center justify-center rounded-soft ' +
   'px-2 py-2 text-lg font-medium hyphens-none ' +
   'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +

@@ -497,6 +497,11 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
     };
   }, [current]);
 
+  // THE HOUSE CORNER STAYS (owner 2026-10-01, §15.28): the soft 1rem corner
+  // was put on this card and on every category card on his "apply to all
+  // cards on services page too", and taken off the same evening on his "i
+  // liked card from before better for services. it looked perfect." — taste,
+  // recorded; `corners="soft"` is one word away on both call sites.
   return (
     <Card asChild aura>
       {/* The <nav> IS the card (ui/slot.ts): the surface lands on the

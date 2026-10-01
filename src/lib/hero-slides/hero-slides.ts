@@ -21,41 +21,54 @@ import type { ImagePath } from '../image-path/image-path';
 // AN ARRAY, NOT AN OBJECT KEYED BY ID: the ring's order is designed here —
 // the first row is the LCP picture and the slide the page opens on.
 //
-// WHERE THE WORDS COME FROM. The three slides, their Romanian and their
-// English are the old site's own (`home.hero.slides.{calm,team,result}` in
-// apps/frontend/src/i18n/locales/{ro,en}/common.json, read 2026-09-19); the
-// `team` slogan carried a forced line break there (`\n` + whitespace-pre-line),
-// dropped here — the new stage wraps where the column says, not where a
-// string does. THE OTHER THREE LANGUAGES ARE DRAFTS (§15.17): written by
-// Claude on the owner's dispatch and FLAGGED FOR THE OWNER'S CONFIRMATION,
-// the reviews/prices lanes' shape. The old site had no supporting line; a
-// drafted `text` line rode each row from 2026-09-19 (the owner's „image,
-// text and stuff") until the owner STRUCK IT ENTIRELY on 2026-09-21 (round 8:
-// "remove all text … leave it blank on every slide … remove the whole thing
-// that holds that text and replace with empty space") — the field is gone
-// from this type, the populator and the band, and the band keeps the line's
-// height as a blank spacer so the slogan keeps its distance from the
-// buttons. The old `result` slogan
-// („ca într-un studio de lux") is the owner's own wording, kept verbatim,
-// but note it against the CMSR rule this file otherwise follows: descriptive,
-// never superlative, never a promise.
+// THE PICTURES ARE THE CLINIC'S OWN (owner, 2026-10-01: "refactor on images
+// in the auto scrolling component on main page … use the following … in
+// downloads under POZE CLINICA"): three photographs from his folder, in his
+// order — `_DSF3109-HDR.jpg` the lobby, `_DSF2784-HDR.jpg` a treatment room,
+// `_DSF2694.jpg` the handpieces on the unit's arm (his list said `-HDR` for
+// the third; the folder has it without, and he confirmed it is the tools).
+// Each was re-encoded for the repository by the lane, never committed raw:
+// 1920 × 1280 — the largest `deviceSizes` width in next.config, and the
+// optimizer never makes a variant wider than that, so a wider source would
+// only bloat the repository and the export — progressive JPEG at quality 82,
+// the EXIF orientation baked in and every other tag dropped (camera model,
+// timestamps; the originals carried both), pixels already sRGB. The band
+// shows them `grayscale blur-xs` at 80 % over the page ground: the grey look
+// is the band's, the files stay in colour. They live in public/images/hero/,
+// the convention tests/unit/hero-slides-data.test.ts enforces since the day
+// they arrived; the lane deleted the two synthetic demo scenes (hero-team,
+// hero-result) and left `public/images/demo/hero-calm.jpg` in place as the
+// Image atom's demo photograph (ui/Image, ui/Avatar and ReviewCard fixtures
+// read it; it has nothing to do with this band any more).
+//
+// WHERE THE WORDS COME FROM. Every slogan and every alt below is a DRAFT by
+// Claude in ALL FIVE languages, written on the owner's dispatch of 2026-10-01
+// ("paired text wise, idk, you decide on the text. these sound kind of
+// pretentious, make them sound friendlier") and FLAGGED FOR THE OWNER'S
+// CONFIRMATION (§15.17) — the old site's own slogans („O clinică
+// stomatologică modernă pentru toată familia", „O echipă care ascultă, pe
+// limba ta", „Tratamente realizate ca într-un studio de lux") left with the
+// demo pictures on that word. Each slogan is paired to its picture: a welcome
+// on the lobby, the visit explained step by step on the treatment room, the
+// hands and their tools on the handpieces. The register is each message
+// file's own — ro „tu", en "you", de „Sie", fr « vous », it «tu». The rules
+// every shipped string on this site follows are MACHINE-CHECKED for this
+// list: CMSR (tests/unit/cmsr-scan.test.ts walks these rows since this lane —
+// no superlative, no guarantee, no result claim; „mâini blânde" describes a
+// manner, not an outcome) and D-DASH (no dash inside a sentence; the data
+// test). The French exclamation carries a narrow no-break space (U+202F)
+// before the „!", the language's own typography, so a phone never breaks the
+// mark onto its own line. The old `\n` line break and the drafted `text` line
+// of the 2026-09 rounds are history: the column decides where a slogan wraps,
+// and the band keeps the struck line's room above the slogan.
 //
 // A slide's accessible NAME is not authored here: lib/rotation's law names a
 // slide and its bead by ONE ICU string, „{index} din {total}"
 // (`home.hero.slide`), which the page formats — so a screen reader hears the
-// position, and the data carries only what the visitor reads.
-//
-// PICTURES are `public/images/demo/hero-*.jpg` UNTIL THE OWNER'S PHOTOGRAPHS
-// LAND (§11) — and their `alt` describes THOSE pictures, not the scenes the
-// real photographs will show (the old site's alts travel in each row's TODO): hero-calm.jpg is the Image lane's committed demo photograph;
-// hero-team.jpg and hero-result.jpg are synthetic scenes generated for this
-// lane (no people, nothing to license, obviously placeholders). The site's own
-// go in public/images/hero/ BY CONVENTION, which tests/unit/
-// hero-slides-data.test.ts will enforce the day a non-demo path appears; the
-// TYPE (lib/image-path) stops at §11's folder so a demo picture needs no cast.
-// Every picture is 1600 × 1200 — the band renders them `fill` + `object-cover`
-// at `sizes="100vw"`, so the ratio only decides how much a portrait phone
-// crops from the sides.
+// position, and the data carries only what the visitor reads. The `alt` is
+// what the PICTURE shows (SC 1.1.1), never the slogan again: a screen reader
+// reads the slogan from its <p>, so an alt that repeated it would say the
+// same words twice (pinned by the data test).
 
 /** The translated part of one slide — every locale, or it does not compile. */
 export type HeroSlideWords = Readonly<{
@@ -78,99 +91,89 @@ export type HeroSlideEntry = Readonly<{
  * The opener's ring, in display order. Add or reorder rows HERE — the type
  * refuses a missing language, and tests/unit/hero-slides-data.test.ts pins
  * what a cast could smuggle past the compiler (empty strings, a duplicate id,
- * a picture that does not exist on disk).
+ * a picture that does not exist on disk or is narrower than the optimizer's
+ * largest variant, a slogan word that cannot fit a 320px column).
+ *
+ * TODO(owner): confirm the five-language slogans and alts below (Claude's
+ * drafts, 2026-10-01) — or rewrite them; the Romanian line is what the
+ * visitor in Sibiu reads first.
  */
 export const heroSlides: readonly HeroSlideEntry[] = [
   {
-    id: 'calm',
-    // TODO(owner): the alt below describes the DEMO picture (a dental examination close-up — the Image lane’s committed demo photograph),
-    // because an alt must describe what is shown (SC 1.1.1, G2 a11y
-    // 2026-09-19). The old site's own alt, to restore WITH the real
-    // photograph it was written for: „Cabinet de tratament liniștit cu lumină naturală" /
-    // "Calm treatment room with natural light".
-    picture: { src: '/images/demo/hero-calm.jpg' },
+    id: 'lobby',
+    picture: { src: '/images/hero/lobby.jpg' },
     words: {
       ro: {
-        alt: 'Examinare stomatologică, prim-plan',
-        title: 'O clinică stomatologică modernă pentru toată familia',
+        alt: 'Sala de așteptare a clinicii, cu fotolii galbene și o ușă deschisă spre un cabinet',
+        title: 'Bine ai venit! Te așteptăm cu drag.',
       },
       en: {
-        alt: 'Dental examination, close-up',
-        title: 'A modern dental practice for the whole family',
+        alt: 'The clinic’s waiting room, with yellow armchairs and an open door to a treatment room',
+        title: 'Welcome! We look forward to seeing you.',
       },
       de: {
-        alt: 'Zahnärztliche Untersuchung, Nahaufnahme',
-        title: 'Eine moderne Zahnklinik für die ganze Familie',
+        alt: 'Das Wartezimmer der Klinik mit gelben Sesseln und einer offenen Tür zu einem Behandlungszimmer',
+        title: 'Herzlich willkommen! Wir freuen uns auf Sie.',
       },
       fr: {
-        alt: 'Examen dentaire, gros plan',
-        title: 'Un cabinet dentaire moderne pour toute la famille',
+        alt: 'La salle d’attente de la clinique, avec des fauteuils jaunes et une porte ouverte sur un cabinet de soins',
+        title: 'Bienvenue ! Nous avons hâte de vous accueillir.',
       },
       it: {
-        alt: 'Visita odontoiatrica, primo piano',
-        title: 'Uno studio dentistico moderno per tutta la famiglia',
+        alt: 'La sala d’attesa della clinica, con poltrone gialle e una porta aperta su una sala di trattamento',
+        title: 'Ti diamo il benvenuto! Ti aspettiamo con piacere.',
       },
     },
   },
   {
-    id: 'team',
-    // TODO(owner): the alt below describes the DEMO picture (three abstract silhouettes — a synthetic scene generated for this lane),
-    // because an alt must describe what is shown (SC 1.1.1, G2 a11y
-    // 2026-09-19). The old site's own alt, to restore WITH the real
-    // photograph it was written for: „Medic primitor salutând un pacient la recepție" /
-    // "Friendly clinician greeting a patient at reception".
-    picture: { src: '/images/demo/hero-team.jpg' },
+    id: 'treatment-room',
+    picture: { src: '/images/hero/treatment-room.jpg' },
     words: {
       ro: {
-        alt: 'Trei siluete stilizate într-o încăpere luminoasă',
-        title: 'O echipă care ascultă, pe limba ta',
+        alt: 'Cabinet de tratament, cu scaunul stomatologic și, pe perete, un ecran cu o radiografie panoramică',
+        title: 'Ne facem timp să îți explicăm fiecare pas.',
       },
       en: {
-        alt: 'Three stylised silhouettes in a bright room',
-        title: 'A team that listens, in your language',
+        alt: 'A treatment room with the dental chair and, on the wall, a screen showing a panoramic X-ray',
+        title: 'We take the time to explain every step.',
       },
       de: {
-        alt: 'Drei stilisierte Silhouetten in einem hellen Raum',
-        title: 'Ein Team, das zuhört – in Ihrer Sprache',
+        alt: 'Ein Behandlungszimmer mit dem Behandlungsstuhl und, an der Wand, einem Bildschirm mit einem Panoramaröntgenbild',
+        title: 'Wir nehmen uns Zeit und erklären jeden Schritt.',
       },
       fr: {
-        alt: 'Trois silhouettes stylisées dans une pièce lumineuse',
-        title: 'Une équipe à l’écoute, dans votre langue',
+        alt: 'Une salle de soins avec le fauteuil dentaire et, au mur, un écran affichant une radiographie panoramique',
+        title: 'Nous prenons le temps de vous expliquer chaque étape.',
       },
       it: {
-        alt: 'Tre sagome stilizzate in una stanza luminosa',
-        title: 'Un team che ascolta, nella tua lingua',
+        alt: 'Una sala di trattamento con la poltrona odontoiatrica e, alla parete, uno schermo con una radiografia panoramica',
+        title: 'Ci prendiamo il tempo di spiegarti ogni passaggio.',
       },
     },
   },
   {
-    id: 'result',
-    // TODO(owner): the alt below describes the DEMO picture (a stylised smile emblem — a synthetic scene generated for this lane),
-    // because an alt must describe what is shown (SC 1.1.1, G2 a11y
-    // 2026-09-19). The old site's own alt, to restore WITH the real
-    // photograph it was written for: „Pacient zâmbind încrezător după tratament" /
-    // "Patient smiling confidently after treatment".
-    picture: { src: '/images/demo/hero-result.jpg' },
+    id: 'instruments',
+    picture: { src: '/images/hero/instruments.jpg' },
     words: {
       ro: {
-        alt: 'Emblemă stilizată a unui zâmbet',
-        title: 'Tratamente realizate ca într-un studio de lux',
+        alt: 'Prim-plan cu instrumentele suspendate pe brațul unității dentare',
+        title: 'Instrumente moderne, mâini blânde.',
       },
       en: {
-        alt: 'Stylised emblem of a smile',
-        title: 'Treatments crafted like a luxury studio',
+        alt: 'Close-up of the handpieces hanging from the dental unit’s arm',
+        title: 'Modern instruments, gentle hands.',
       },
       de: {
-        alt: 'Stilisiertes Emblem eines Lächelns',
-        title: 'Behandlungen wie in einem exklusiven Studio',
+        alt: 'Nahaufnahme der Handstücke am Arm der Behandlungseinheit',
+        title: 'Moderne Instrumente, behutsame Hände.',
       },
       fr: {
-        alt: 'Emblème stylisé d’un sourire',
-        title: 'Des soins réalisés comme dans un studio de luxe',
+        alt: 'Gros plan sur les instruments suspendus au bras de l’unité de soins',
+        title: 'Des instruments modernes, des mains douces.',
       },
       it: {
-        alt: 'Emblema stilizzato di un sorriso',
-        title: 'Trattamenti realizzati come in uno studio di lusso',
+        alt: 'Primo piano degli strumenti appesi al braccio del riunito',
+        title: 'Strumenti moderni, mani delicate.',
       },
     },
   },

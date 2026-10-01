@@ -45,8 +45,9 @@ import { populateHero } from './populate';
 // rotation's law ("one static h1, outside the slides"; a per-slide h1 would
 // replace the page's only heading every seven seconds) and the Services
 // page's own shape. The slogans inside the band are display text on a <p>.
-// `home.hero.subtitle` is no longer rendered anywhere — it was the stub's
-// second line; the key stays in the five files until the owner strikes it.
+// `home.hero.subtitle`, the stub's second line, was STRUCK from the five
+// files on 2026-10-01 (the hero-photos lane, the owner's "discard dead
+// code"): nothing had rendered it since the band arrived.
 //
 // No `params` plumbing: the locale reaches next-intl through the [locale]
 // root param (src/i18n/request.ts, §15.16) — `getLocale` reads it.

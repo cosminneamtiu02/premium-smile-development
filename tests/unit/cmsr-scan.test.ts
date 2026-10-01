@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { heroSlides } from '../../src/lib/hero-slides/hero-slides';
 import { reviews } from '../../src/lib/reviews/reviews';
 import { auxiliaries, doctors } from '../../src/lib/team/team';
 import { locales, type Locale } from '../../src/i18n/locales';
@@ -25,15 +26,17 @@ import ro from '../../src/messages/ro.json';
 // WHAT IT SCANS: every string a language ships for the team — lib/team's
 // positions, philosophy, biography paragraphs, course lines and stat words
 // (never the NAMES, which are proper nouns) — and every value under the `team`
-// namespace of the five message files. WHY THAT SCOPE: the doctor pages are
-// where a clinic talks about itself; it is the scope the owner named. Widening
-// it to lib/prices, lib/hero-slides and the other namespaces is one more entry
-// in SOURCES below — a deliberate act, because the older copy (the hero's
-// slogans are the old site's own words) must be read first, not machine-red
-// overnight. The first such entry came with the real Google reviews
-// (2026-09-30): their TITLES are written by the clinic, and their QUOTES are
-// the patients' words with every banned phrase cut on the owner's choice — so
-// both are read like every other clinic string.
+// namespace of the five message files — and, since two lanes a day apart, two
+// more lists. The real Google reviews (2026-09-30): their TITLES are written
+// by the clinic, and their QUOTES are the patients' words with every banned
+// phrase cut on the owner's choice — so both are read like every other clinic
+// string. And every slogan and alt lib/hero-slides ships (2026-10-01, the
+// hero-photos lane: the scan widened the day the opener's copy was rewritten,
+// so the new drafts were gated before they shipped). WHY THAT SCOPE: the
+// doctor pages, the reviews and the opener are where a clinic talks about
+// itself. Widening it to lib/prices and the other namespaces is one more entry
+// in SOURCES below — a deliberate act, because older copy must be read first,
+// not machine-red overnight.
 //
 // WHAT COUNTS: one pattern list per language, HARD — a hit fails the suite.
 // The lists are deliberately narrow (a wound-healing course is not a cure
@@ -165,6 +168,14 @@ function teamStrings(locale: Locale): readonly [string, string][] {
   return out;
 }
 
+/** Every string lib/hero-slides ships for one language: each slide's slogan and its alt. */
+function heroStrings(locale: Locale): readonly [string, string][] {
+  return heroSlides.flatMap((slide): [string, string][] => [
+    [`${slide.id}.alt`, slide.words[locale].alt],
+    [`${slide.id}.title`, slide.words[locale].title],
+  ]);
+}
+
 /**
  * The Google reviews — the TITLE (the clinic's own words: the one
  * characteristic a review is about) AND the quoted TEXT. The CMSR guide
@@ -189,6 +200,7 @@ const SOURCES: readonly [
   ['lib/team', teamStrings],
   ['messages team.*', messageStrings],
   ['lib/reviews', reviewStrings],
+  ['lib/hero-slides', heroStrings],
 ];
 
 function hits(locale: Locale, text: string): readonly string[] {
@@ -196,7 +208,7 @@ function hits(locale: Locale, text: string): readonly string[] {
   return PATTERNS[locale].filter((p) => p.test(text)).map(String);
 }
 
-describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages say', () => {
+describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages, the reviews and the opener say', () => {
   it.each(locales)('%s: every shipped string passes the scan', (locale) => {
     const offenders: string[] = [];
     for (const [source, read] of SOURCES) {
@@ -216,6 +228,7 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
       expect(teamStrings(locale).length).toBeGreaterThan(20);
       expect(messageStrings(locale).length).toBeGreaterThan(10);
       expect(reviewStrings(locale).length).toBe(reviews.length * 2);
+      expect(heroStrings(locale).length).toBe(heroSlides.length * 2);
     }
   });
 

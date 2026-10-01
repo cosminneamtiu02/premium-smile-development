@@ -484,8 +484,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    seszable and adjust to widest language form"):** both of the Header's Contact buttons wear
    ui/Button's lavender `accent` family since — the bar's under a 10rem floor, wider only, and with
    the old site's hover jump — and `Header.test.tsx` pins the lilac; the green CTA family keeps the
-   dialog's buttons and the language bulb (under its flag) — the fixed corner's two discs followed
-   the Contact into the lilac later that evening (§15.30 round 4). The old top bar's own `--accent` is `#8377a3`
+   language bulb (under its flag) — the fixed corner's two discs followed the Contact into the lilac
+   later that evening (§15.30 round 4), and the contact dialog's two buttons last, that night
+   (round 5). The old top bar's own `--accent` is `#8377a3`
    (top-bar.tsx: `text-accent`, `after:bg-accent`); MEASURED, it reads 4.09:1 on white and
    3.89:1 on `--page` — under the 4.5:1 an 18px medium label owes SC 1.4.3, and the
    current-page label is a resting state, so axe would fail every story that shows one. The
@@ -3166,7 +3167,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     3 below, the Header's Contact button in the bar and in the panel. **Who does NOT,
     pinned:** the fixed corner's
     call and WhatsApp discs ("do not modify at least yet …" — FloatingActions.test.tsx; lilac since
-    round 4, below) · the contact dialog's buttons · the burger. On the Hero's dark veil the outline's lavender border
+    round 4, below) · the contact dialog's buttons (lilac since round 5) · the burger. On the Hero's dark veil the outline's lavender border
     reads 1.75:1 against the worst-case photograph (the green read 1.57:1): the control's boundary
     is its white box, unchanged. Stories: UI/Button and UI/GlyphButton each gain Accent ·
     AccentOutline · HoverAccent · HoverAccentOutline (the last two `pin-hover`). No reviewer round
@@ -3219,7 +3220,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     full-width Contact turns lilac with it — the same control, one look — and does not jump.
     `Header.test.tsx`'s green pin flipped to the lilac; `tests/unit/accent-census.test.ts` names
     Header.tsx and NavMenu.tsx as callers on the glass floor. Still green: the fixed corner's two
-    discs (their colour, until round 4; they jump), the dialog's two buttons, the language bulb. Visual, MEASURED
+    discs (their colour, until round 4; they jump), the dialog's two buttons (until round 5), the language bulb. Visual, MEASURED
     (the lane differential against pristine develop f6981af, 447 cells): 109 move — the 103 of
     rounds 1–2 plus Sections/Header's six (AtTheStep · Default · GermanStress · NonRomanianLocale at
     1536, where the bar shows the Contact; MenuOpen at both widths, the panel's) — 0 undeclared, 0
@@ -3249,15 +3250,17 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     4.29), white 5.06 (4.52), and the doctor pages' 30 % tint 3.31:1, where the green read 2.96:1 —
     under 3:1, unnoticed until this lane measured it. `tests/unit/accent-census.test.ts` names
     FloatingActions.tsx its eighth `tone="accent"` caller, measures the face against those three
-    grounds in a new `it`, and keeps ContactModal.tsx as the one file that must say nothing;
-    `FloatingActions.test.tsx`'s green pin flipped to the lilac. STILL GREEN, and why: the contact
-    dialog's two buttons (ui/Button's default family — the owner's pick passed them over) and the
+    grounds in a new `it`, and keeps ContactModal.tsx as the one file that must say nothing (until
+    round 5); `FloatingActions.test.tsx`'s green pin flipped to the lilac. STILL GREEN, and why: the
+    contact dialog's two buttons (ui/Button's default family — the owner's pick passed them over;
+    lilac since round 5) and the
     language bulb's fill under its flag (not named; the opaque flag hides its colour and its scrim
     answers no hover — but an artless bulb would now be green beside lilac discs, and ui/SpeedDial has
     no lavender tone: the owner's lever, recorded in LanguageSwitcher.tsx and its test, whose "parity
     with the call disc" title is reworded). CONSEQUENCE, recorded: no ui/GlyphButton call site wears
     `cta` any more (the burger is ghost), so the atom's green family is its DEFAULT with only its
-    stories and tests as readers — kept, Button's twin, whose green the dialog's buttons wear; the
+    stories and tests as readers — kept, Button's twin, whose green the dialog's buttons wore until
+    round 5; the
     GlyphButton `Jump` story wears `tone: 'accent'` like its only wearers (`no-visual`, no cell).
     Visual, MEASURED (the lane differential against pristine develop b3461c8, 456 cells): exactly the
     eight Sections/FloatingActions cells move — Default at 390 / 1536, Clearance320 and GermanOpen at
@@ -3269,6 +3272,61 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     (no spec covers the corner). No reviewer round was run — the #120/#124 recolour precedent; from
     this evening every reviewer runs on Opus unless the owner explicitly says otherwise (his rule, set
     in the flows on branch `chore/reviewers-on-opus`).
+    **Round 5 (owner, later that night, 2026-10-01, two messages, verbatim: "idk if this was
+    implemented but on the modal with contact opened from the contact button i need the 2 buttons
+    for calling by phone and contatcatine pe whatsap to be also lilla at standstill" · "so all is
+    green there rurn to liliac or however it is called."; lane `rework/contact-dialog-lilac`):** it
+    was not implemented — round 4's pick passed the dialog's pair over — so this is the word the
+    record was waiting for. `sections/ContactModal` passes `tone="accent"` on its two channel
+    controls (solid, `lg`, across the rail's full width), one prop each, and those two props ARE "all
+    is green there": the ✕ is a ghost GlyphButton in ink, the focus ring `--focus` ink, the scrim
+    black, and both glyphs paint `currentColor`. No jump — not asked, and
+    `tests/unit/jump-census.test.ts` keeps the dialog still. The face, from the tokens: lilac at rest
+    under the white label and glyph, 5.06:1 (the green read 4.52:1); on hover the white face with a
+    lilac label (5.06:1) and hairline; the deep violet on press, white 9.34:1 (the green's 6.60:1);
+    the face's edge on the dialog's white box 5.06:1 (SC 1.4.11). MEASURED on the built pages too,
+    /ro/ at 1280 × 800 and /de/ at 390 × 844: rest rgb(116,104,148) under a white label and glyph,
+    hover a white face with a lilac label, glyph and 1px inset hairline, press rgb(75,58,134) — no
+    console error, no navigation. `ContactModal.test.tsx` pins the lilac in a new `it` (the corner's
+    shape: the accent tokens, no `cta` token, no `tone` in the DOM); `tests/unit/accent-census.test.ts`
+    names ContactModal.tsx its ninth `tone="accent"` caller, with its ground, and its stays-green
+    loop — the Header's two files, then the corner, then the dialog alone — went with its last
+    member. The stories' stand-in opener behind the dialog (`ContactModal.stories.tsx`'s Ground)
+    wears the lilac too, as every opener on the site does — a green one there would have shown the
+    dialog's page a colour the site no longer has (G2 react). CONSEQUENCE, recorded: since that
+    night no page the site ships wears ui/Button's green family — the atom's DEFAULT stays (every
+    elder byte-identical), read only by story and test code (ui/Ribbon's stand-in fixture among
+    it): GlyphButton's state since round 4. A FACT, NOT A RULE: nothing refuses a new green call
+    site; a census `it` that would (every shipped non-ghost button atom passing `tone="accent"`) is
+    the owner's call. The green LEFT on the site, outside the dialog and not asked: the language
+    bulb's fill under its flag (ui/SpeedDial has no lavender tone) and the language-suggestion
+    banner's accept link (`text-cta`, a text link).
+    Visual, MEASURED (the lane differential against pristine develop 04599e1, 457 cells, private port
+    6141): exactly seven cells move — Sections/ContactModal Default at 320 / 390 / 1536 and German
+    Stress at 390 / 1536, 24k–41k px each (the two faces; the stand-in opener behind the scrim moves
+    by less than the net's per-pixel threshold), and Closed at 390 / 1536, ~4k px each (the stand-in
+    opener) — and 450 are identical: 0 undeclared. At ZERO tolerance (the pass before the stand-in
+    turned) nine more cells differed by 1–9 px, all in the harness's known flicker families (the
+    open language dial, SpeedDial's disc, the price list's glow and the Services page that carries
+    it); the pristine build, re-shot against its own reference, differed in six of them — a
+    different set on every shoot. The seven darwin cells are recorded in the lane under classic
+    scrollbars (the 15px gutter measured off the body's width first) and verified 7/7. Gates at READY: prettier · eslint · tsc clean; vitest 142
+    files / 3632 tests with the optimizer variants hidden (the CI rehearsal); build-storybook and
+    `next build` green; e2e not run (no spec covers the dialog).
+    G2 on OPUS, on the owner's word ("run whatever you feel you have to run with opus"): react and
+    typescript APPROVE WITH CHANGES, a11y APPROVE — 0 critical, 0 high; one medium (a stale "green
+    `tel:` control" in Header.tsx's comment) and the lows folded in one round (the "only readers"
+    wording, the stand-in opener, `tone` after `variant` like the other eight callers, a stale
+    GlyphButton story note, two reflows); a computed-colour assertion was declined (a resting
+    pointer flips the face to hover — the class pin is the corner's and the Header's shape, and the
+    darwin cells pin the paint). RECORDED, pre-existing, the a11y reviewer's: the 400ms hover
+    crossfade passes through 1:1 at its midpoint (the label under 4.5:1 for ~294ms, the green's
+    ~380ms; no resting state under 5.06:1, keyboard and touch never see it); in forced colours both
+    controls show as link text with no box — ui/Button's parked `forced-colors:border` (§15.23,
+    §15.25), now on the dialog's conversion controls too (BACKLOG.md, entry 2). ADVISORY, the
+    owner's: the lilac is as light as the green but about half as colourful (OKLCH chroma 0.069
+    against 0.129) — more contrast, less pop, and "call the clinic" now shares its colour with the
+    secondary controls; the hover's hairline is 1px.
 
 31. **The logo's sizes and the tab icon — ON THE OWNER'S WORD (2026-10-01, four messages, verbatim: "use the logo
     from top bar also in the tab. and make logo in top bar 15% smaller" · "make the logo 10% smaller again and make
@@ -3438,3 +3496,8 @@ resizing, server rendering, client-side routing / link prefetching, analytics.
    anchors** — constant names, comment headings, fb-/D-numbers — never bare line numbers,
    which drift with every edit to the target file. A lane that resolves a promised follow-up
    updates the promising comment in the same lane.
+8. *(Added 2026-10-01, owner: "create also in this pr a list with stuff to do later")* Work
+   deliberately left for later is listed in **`BACKLOG.md`** at the root — today the cookie
+   consent for the map, a complete accessibility re-run on the finished site and the
+   privacy/cookie policy page. Read it before planning launch work. An entry leaves the list in
+   the lane that does the work, and a new one joins it on the owner's word.

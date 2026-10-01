@@ -80,10 +80,15 @@ const Ground = (): ReactElement => (
     </p>
     <div>
       {/* The label is the CONSUMER's (§8.1 at the trigger): the same
-          `common.actions.contact` string the Header's interim phone link wears
-          today — i.e. the control this section will replace — read straight
-          from the JSON the way the Footer's stories read theirs. */}
-      <ContactModalTrigger>{ro.common.actions.contact}</ContactModalTrigger>
+          `common.actions.contact` string the Header's Contact button wears,
+          read straight from the JSON the way the Footer's stories read
+          theirs. And the Header's face: ui/Button's lavender `tone`, as every
+          opener on the site has worn since 2026-10-01 (CLAUDE.md §15.30) — a
+          green stand-in here would show the dialog's page a colour the site
+          no longer has (G2 react, the dialog's lilac lane). */}
+      <ContactModalTrigger tone="accent">
+        {ro.common.actions.contact}
+      </ContactModalTrigger>
     </div>
   </main>
 );
@@ -140,7 +145,7 @@ const expectNoVerticalScroll = async (layer: HTMLElement): Promise<void> => {
 
 /**
  * THE picture: the dialog open, in Romanian — the title in the bar naming both
- * channels, then two titled groups, each a green control with its caption under
+ * channels, then two titled groups, each a lilac control with its caption under
  * it (hours for the call, a reply promise for WhatsApp), with „sau" between
  * them at 27px — one step under the panel's own title, which wears
  * ui/Heading's `section` step (30px) since 2026-09-26 (CLAUDE.md §15.24); it
@@ -273,8 +278,8 @@ export const GermanStress: Story = {
     // THE RAIL, in the language that DEFINES its width: both controls are grid
     // items on one column, so the German WhatsApp label sets the width of the
     // call button here — and, through the 24.5rem floor measured off it, of
-    // every other locale's pair too. A ragged pair of different-width green
-    // blocks is what this catches, in the picture AND here, to the pixel; the
+    // every other locale's pair too. A ragged pair of different-width blocks
+    // is what this catches, in the picture AND here, to the pixel; the
     // cross-locale half of the claim is pinned in the interaction suite, which
     // can mount two languages at one viewport.
     const call = canvas.getByRole('link', { name: clinic.phoneDisplay });

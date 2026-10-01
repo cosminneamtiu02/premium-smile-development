@@ -178,8 +178,17 @@ export type ButtonProps = ButtonOwnProps &
 // and the owner reversed his own rule in the evening — "also paint the
 // contact button from top bar a lilla and make it wider, more seszable and
 // adjust to widest language form" (Header.tsx carries the width; Header.test
-// pins the lilac now). NOT the contact dialog's own two buttons: the green is
-// what the CTA family is still FOR.
+// pins the lilac now) — and, last, the contact dialog's own two buttons
+// (sections/ContactModal, solid), named by the owner later that night: "on
+// the modal with contact opened from the contact button i need the 2 buttons
+// for calling by phone and contatcatine pe whatsap to be also lilla at
+// standstill" — "so all is green there rurn to liliac" (ContactModal.test.tsx
+// pins the lilac). So, since that night, no page the site ships wears the
+// GREEN family: it stays the DEFAULT — every elder byte-identical, `cta` what a
+// call site gets by saying nothing — read only by story and test code
+// (ui/Ribbon's stand-in fixture among it); ui/GlyphButton reached the same
+// state when the corner turned. A FACT, not a rule: nothing refuses a new
+// green call site (a census guard that would is the owner's call).
 // Contrast record for the lavender, measured (WCAG 2.2 relative luminance):
 // solid rest = white on accent #746894 → 5.06:1 (SC 1.4.3 for the 18px
 // medium label; the green reads 4.52:1); solid hover = outline's rest face,

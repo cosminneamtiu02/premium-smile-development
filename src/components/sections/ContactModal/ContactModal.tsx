@@ -198,7 +198,7 @@ import { useContactModal } from './useContactModal';
 // climbs to ui/ however often it is reused. The moment a THIRD consumer
 // outside this file wants it, that is a contract conversation, not an export.
 //
-// ── THE RAIL, and why both green controls are the same width. The two groups
+// ── THE RAIL, and why both controls are the same width. The two groups
 // sit on ONE grid whose width is `fit-content`: the widest thing in either
 // group decides the column, and every child stretches to it. So the pair reads
 // as one stack of equal blocks in all five languages without a single fixed
@@ -539,8 +539,30 @@ export function ContactModal(): ReactElement {
               `w-full` takes the rail's width so both controls match. A label
               that wraps stays centred by the ATOM (ui/Button's `text-center`,
               since 2026-09-30 — the WhatsApp control's note below has the
-              history); this number never wraps at any width the site serves. */}
-          <Button asChild variant="solid" size="lg" className="w-full">
+              history); this number never wraps at any width the site serves.
+              LILAC SINCE 2026-10-01, BOTH CONTROLS (owner, that night: "on the
+              modal with contact opened from the contact button i need the 2
+              buttons for calling by phone and contatcatine pe whatsap to be
+              also lilla at standstill", then "so all is green there rurn to
+              liliac"). `tone="accent"` cuts the same solid face from
+              ui/Button's lavender family (its THE TWO FAMILIES): the lilac
+              ground under the white label and glyph at rest — 5.06:1, where
+              the green read 4.52:1 — draining to the white face with a lilac
+              label and hairline on hover, the deep violet on press (9.34:1).
+              These two were ALL the green this dialog had: the ✕ is a ghost
+              GlyphButton in ink, the focus ring is ink, the scrim is black and
+              both glyphs paint `currentColor`. They were also the last of
+              ui/Button's green faces on the site — the Header's Contact and
+              the corner's discs had turned earlier that night (CLAUDE.md
+              §15.30) — and they still hold still: no `motion="jump"` was
+              asked for here (tests/unit/jump-census.test.ts keeps them still). */}
+          <Button
+            asChild
+            variant="solid"
+            tone="accent"
+            size="lg"
+            className="w-full"
+          >
             <a href={`tel:${clinic.phone}`}>
               <Phone />
               {clinic.phoneDisplay}
@@ -592,7 +614,7 @@ export function ContactModal(): ReactElement {
             the caption trap, one element further out.
             HIDDEN IN THE SHORT-VIEWPORT STATE (owner decision, 2026-09-05): on
             a phone held sideways the flourish yields to the never-scroll rule.
-            Nothing is lost — two stacked green controls under one title that
+            Nothing is lost — two stacked controls under one title that
             already names both channels read as alternatives without a word
             between them, and the word costs 32px there (its own line; the
             rail gap it would add is 0 since 2026-09-26) where that state has
@@ -610,10 +632,12 @@ export function ContactModal(): ReactElement {
               digits-only `whatsapp` field (never the E.164 spelling with its
               plus). wa.me IS external navigation, so unlike tel: it travels
               with target=_blank + rel="noopener noreferrer" (PR #68's law, the
-              other half of it). Same solid/lg clothes as the call: the owner's
-              v4 picture is two equal green blocks, not a primary and a
-              runner-up. The glyph stays UNLABELLED so the link's accessible
-              name is exactly the visible label (SC 2.5.3).
+              other half of it). Same solid/lg clothes as the call, and the
+              same lilac `tone` (the call's note has the owner's words): the
+              owner's v4 picture is two equal blocks, not a primary and a
+              runner-up — green ones until 2026-10-01. The glyph stays
+              UNLABELLED so the link's accessible name is exactly the visible
+              label (SC 2.5.3).
               A LABEL THAT WRAPS STAYS CENTRED (owner, 2026-09-05: "on
               Kontaktieren Sie uns über WhatsApp i want the text centered when
               it goes on 2 lines"). `justify-center` on the atom's flex line
@@ -624,7 +648,13 @@ export function ContactModal(): ReactElement {
               until 2026-09-30, when the doctor card's label wrapped too and
               the class moved INTO ui/Button's base row — the atom's now, for
               every button. */}
-          <Button asChild variant="solid" size="lg" className="w-full">
+          <Button
+            asChild
+            variant="solid"
+            tone="accent"
+            size="lg"
+            className="w-full"
+          >
             <a
               href={`https://wa.me/${clinic.whatsapp}`}
               target="_blank"

@@ -33,8 +33,13 @@ import { describe, expect, it } from 'vitest';
 // later that evening: held back that morning — "do not modify at least yet
 // the hovering buttons from bottom right" — they turned on "i thaught i told
 // you to refactor the whatsapp and call buttons to be lilla too", the owner's
-// pick of the corner pair over the contact dialog's, which stays green;
-// FloatingActions.test.tsx pins the lilac.)
+// pick of the corner pair over the contact dialog's; FloatingActions.test.tsx
+// pins the lilac. And the dialog's own two followed later that night, named
+// at last: "on the modal with contact opened from the contact button i need
+// the 2 buttons for calling by phone and contatcatine pe whatsap to be also
+// lilla at standstill" — "so all is green there rurn to liliac";
+// ContactModal.test.tsx pins the lilac. No page the site ships wears either
+// button atom's green family since.)
 //
 // THE VALUE IS MEASURED HERE TOO. The ratios are computed from the tokens' own
 // lines in globals.css, so a later edit to the value — the old site's exact
@@ -145,6 +150,11 @@ const ACCENT_TONE_CALLERS: Readonly<Record<string, string>> = {
   // the evening of 2026-10-01. `fixed`: every band scrolls under them.
   'components/sections/FloatingActions/FloatingActions.tsx':
     'every band, under `fixed` — the two discs on their own lavender face',
+  // The contact dialog's call and WhatsApp controls (solid, lg, the rail's
+  // full width) — the last of the site's green ui/Button faces, named by the
+  // owner later that night. The face's edge meets the dialog's white box.
+  'components/sections/ContactModal/ContactModal.tsx':
+    'bg-surface — the dialog’s white box, ui/Modal; the two controls on their own lavender face',
 };
 
 /** The lilac band and every band that composes it — where the role fails. */
@@ -261,16 +271,11 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
       expect(source, `${file} — ${ground}`).not.toContain('--tint');
       expect(source, `${file} — ${ground}`).not.toMatch(/TintedBand/);
     }
-    // The file that stays GREEN says nothing of the family: the contact
-    // dialog's own two buttons — never asked, and passed over by name the
-    // evening the corner turned (the owner chose the corner pair). The
-    // Header's two files and FloatingActions left this list that evening, on
-    // the owner's words recorded above.
-    for (const file of ['components/sections/ContactModal/ContactModal.tsx']) {
-      expect(PASSES_ACCENT_TONE.test(stripComments(read(file))), file).toBe(
-        false,
-      );
-    }
+    // (Until the night of 2026-10-01 a loop here pinned the files that stayed
+    // GREEN to saying nothing of the family — the Header's two, then the
+    // corner, then the contact dialog alone. Each left it on the owner's own
+    // words, recorded above; the dialog was the last, so the loop went with
+    // it. The closed list above is the whole pin now.)
   });
 
   it('grounds the initials disc through the named renderer only', () => {

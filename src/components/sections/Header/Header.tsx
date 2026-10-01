@@ -498,10 +498,11 @@ export function Header(): ReactElement {
         {/* The bar CTA — the site's one conversion goal (§1). Since the
             ContactModal wiring it is a real <button> that summons the site's
             ONE dialog, not an <a href="tel:"> that dials straight out. The
-            number did not disappear, it moved one press away: the dialog asks
-            the question and answers it in three lines — title, lead, and the
-            green `tel:` control carrying clinic.phoneDisplay (ContactModal.tsx,
-            owner trim 2026-08-28). So THIS control performs an action in place
+            number did not disappear, it moved one press away: the dialog's
+            title names both channels and the panel offers them — the `tel:`
+            control carrying clinic.phoneDisplay, then the WhatsApp conversation
+            (ContactModal.tsx: the owner's 2026-08-28 trim, two channels since
+            2026-09-04). So THIS control performs an action in place
             instead of navigating, which is what makes a button the honest
             element (§9), and the anchor that dials is the one inside the panel.
             The LABEL is untouched: t('actions.contact'), the very key the

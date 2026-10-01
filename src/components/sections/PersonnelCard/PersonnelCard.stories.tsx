@@ -720,19 +720,18 @@ export const Doctor: Story = {
 
     const keyword = quote.querySelector('b') as HTMLElement;
     const keywordStyle = getComputedStyle(keyword);
-    // --accent-strong (#4b3a86, a deep lilac) at 650, upright, no underline: hue
-    // AND a little weight, the owner's "use a darker lilla and just a little
-    // bold and drop italic" (D56, over D55's italic and D52's one round at 700),
-    // then "add just a little more bold and underline them maybe" (D59: 650,
-    // between D56's 600 and the 700 that was too bold, plus a thin underline in
-    // the keyword's own violet — dropped after one look by D60, "remove the
-    // underline", the 650 and the violet kept), the value deepened from
-    // #655885 by D57 ("a
-    // more seeable one … make it just jump at you more") — darker and more
-    // saturated, so the keyword now reads darker than the quote around it, and
-    // further off it since D58 lightened that quote's ink (1.89:1 between the
-    // two, was 1.27:1).
-    await expect(keywordStyle.color).toBe('rgb(75, 58, 134)');
+    // --accent (#746894), the lavender of this card's own „Mai multe despre
+    // mine" link at rest, at 650, upright, no underline — the owner,
+    // 2026-10-02: "i want that highlighted text to actually be the color of
+    // the current mai multe despre mine button" (the link's face is measured
+    // below and the two are pinned EQUAL there). The weight is D59's ("add
+    // just a little more bold and underline them maybe": 650, between D56's
+    // 600 and the 700 that was too bold), its thin underline dropped after one
+    // look by D60 ("remove the underline"). From D56 to that day the ink was
+    // --accent-strong, a deep violet (#4b3a86 since D57's "make it just jump
+    // at you more"), 1.89:1 darker than the faint quote; the lavender has the
+    // quote's own lightness (1.02:1), so hue and weight carry the cue.
+    await expect(keywordStyle.color).toBe('rgb(116, 104, 148)');
     await expect(keywordStyle.fontWeight).toBe('650');
     await expect(keywordStyle.fontStyle).toBe('normal');
     await expect(keywordStyle.textDecorationLine).toBe('none');
@@ -745,6 +744,13 @@ export const Doctor: Story = {
     // doctor cards" lilac — no border of its own.
     await expect(getComputedStyle(link).backgroundColor).toBe(
       'rgb(116, 104, 148)',
+    );
+    // …and that face is the key words' ink above, by the owner's sentence
+    // ("the color of the current mai multe despre mine button"). Both read
+    // --accent today; pinned as a RELATION as well, so a later recolour of
+    // either one cannot quietly part them (§4's KEEP-IN-SYNC row).
+    await expect(keywordStyle.color).toBe(
+      getComputedStyle(link).backgroundColor,
     );
     // ≥44px for a primary action (§9); `lg` is 56px of min-height.
     await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(

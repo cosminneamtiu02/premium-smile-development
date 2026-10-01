@@ -227,8 +227,12 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //                    you make the faint text lighter") added the 19th semantic
 //                    role, --ink-faint #766f69: 4.94:1 on the surface, still
 //                    AA for body text (§9), and 1.89:1 against the keyword's
-//                    --accent-strong where muted gave 1.27:1 — the wash reads
-//                    lighter and the keywords stand further off it. Its
+//                    --accent-strong of the day where muted gave 1.27:1 —
+//                    the wash read lighter and the keywords stood further off
+//                    it (since 2026-10-02 the key words wear THIS card's
+//                    button lavender, --accent, at the faint quote's own
+//                    lightness, 1.02:1 — hue and weight carry them; ui/Keyword's
+//                    THE NUMBERS). Its
 //                    charter and numbers sit on the token in globals.css; its
 //                    consumers are this quote and DoctorIntro's CredoCard
 //                    alone, and it is NOT for the lilac tint (3.24:1 there).
@@ -285,12 +289,16 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // keyword's own violet, the owner's "maybe": the recipe became `font-[650]
 // underline decoration-1 underline-offset-2 text-accent-strong`; and D60
 // (owner: "remove the underline") dropped that underline after one look, the
-// 650 and the violet kept — the recipe is now `font-[650] text-accent-strong`.
-// Ink-only → bold → italic → lilac → a deeper lilac → a touch heavier and
-// underlined → the underline gone, one day. Because the recipe lives in that
-// one file and the value in the token, this card's quote and the doctor
-// page's credo card both show it with no edit here. D58 then moved the OTHER
-// side of that contrast — the quote's own ink, lightened to --ink-faint (D8).
+// 650 and the violet kept — `font-[650] text-accent-strong`. Ink-only → bold →
+// italic → lilac → a deeper lilac → a touch heavier and underlined → the
+// underline gone, one day. Because the recipe lives in that one file and the
+// value in the token, this card's quote and the doctor page's credo card both
+// show it with no edit here. D58 then moved the OTHER side of that contrast —
+// the quote's own ink, lightened to --ink-faint (D8). And on 2026-10-02 the
+// violet itself gave way to THIS CARD'S BUTTON's lavender (owner: "i want
+// that highlighted text to actually be the color of the current mai multe
+// despre mine button") — the recipe is now `font-[650] text-accent`, the key
+// words at the faint quote's own lightness, set apart by hue and weight.
 // Nothing about this card changed with any of these moves: `about` is still a ReactNode, so the
 // band hands over either `t.rich('members.elena.about', { k: (chunks) =>
 // <Keyword>{chunks}</Keyword> })` or a <Keywords segments={…} /> built from

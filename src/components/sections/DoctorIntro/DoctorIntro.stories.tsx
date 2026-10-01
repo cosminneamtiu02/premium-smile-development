@@ -4,23 +4,28 @@ import { Button } from '@/components/ui/Button/Button';
 import { Keywords, type KeywordSegment } from '@/components/ui/Keyword/Keyword';
 import {
   DoctorIntro,
-  type DoctorIntroAlign,
   type DoctorIntroCredo,
   type DoctorIntroPhoto,
 } from './DoctorIntro';
 
-// EIGHT stories — seven photographed and one play-only — and the count is the
-// honest one: the everyday opener, the three other answers to the question
-// the owner has not yet decided ("top, center or bottom", plus the `lowered`
-// seat the page passes), one filled slot so he can see what the band looks
-// like with something after the credo card, the two expansion stresses, and
-// the everyday opener once more at 1280 for its PLAY alone (`Notebook`, tagged
-// `no-visual`, so the pixel net never photographs it: D51's one-line pin on
-// the demo doctor's name at the second laptop width). The photographed export
+// SEVEN stories — four photographed and three play-only — and the count is the
+// honest one: the everyday opener, one filled slot so he can see what the band
+// looks like with something after the credo card, the two expansion stresses,
+// and three frames for their PLAYS alone, tagged `no-visual` so the pixel net
+// never photographs them: the everyday opener at 1280 (`Notebook`, where the
+// words set the row and the cutout GROWS to their floor) and at 1920
+// (`Desktop`, where the picture at its third sets it and nothing grows) — the
+// two branches of D64's one floor, each pinned once — and the German stress
+// in a column just past the step (`AtTheStep`), where the words' room is
+// tightest and the picture's track must give way to the name.
+// The three frames that answered the owner's "top, center or bottom" question
+// — Centered, Lowered and Bottom — left with the `align` axis itself (D62,
+// 2026-10-01: the name tops the words' container and the card centres in the
+// rest, so there is no seat left to choose). The photographed export
 // NAMES are load-bearing — each one names a baseline file
-// (`sections-doctorintro--default`, `sections-doctorintro--centered`, …) — so
-// renaming or adding an export re-records pictures; this list IS the section's
-// contribution to the run's visual manifest. The `Sections/*` title prefix
+// (`sections-doctorintro--default`, `sections-doctorintro--with-actions`, …) —
+// so renaming or adding an export re-records pictures; this list IS the
+// section's contribution to the run's visual manifest. The `Sections/*` title prefix
 // routes every one of them to 390 + 1536 (tests/visual/stories.spec.ts, §13);
 // the 'stress-320' tag adds the accessibility width to the three whose layout
 // has something to say there (a 256px column around a 900×1200 cutout and a
@@ -58,7 +63,9 @@ import {
 //     attribute (ReviewCard's D6);
 //   · the viewport pin, because this band CHANGES SHAPE with the column it is
 //     handed: picture beside words from `@3xl` = 48rem of ui/Container's box
-//     (the two centred in the row, D51b), and below it one above the other —
+//     (two containers across the whole column, the picture's third and the
+//     words' rest — D62 to D64), and below it
+//     one above the other —
 //     the name and specialty centred on top, then the picture, then the credo
 //     card (D51c, the owner's adaptability rule as reordered in round 2k). A
 //     manager canvas narrowed
@@ -74,8 +81,9 @@ import {
 // parent because ui/Card contains its own inline size, while THIS component IS
 // the band — its own full-bleed <section> with its own ui/Container and its
 // own `py` (the PAGE-BAND RECIPE in Container.tsx's header). The credo card
-// inside it is a ui/Card too, and it gets its width from the band's words
-// column, a flex COLUMN (ui/Card D3). Wrapping the band in a second band would
+// inside it is a ui/Card too, and it gets its width from the band itself —
+// beside the picture the bottom container's one track (D62, D63), in the
+// stack the grid's one column (ui/Card D3). Wrapping the band in a second band would
 // put the story's ground and the band's gutters on two different rulers, which
 // is also why `layout: 'fullscreen'` is not optional here: Storybook's default
 // canvas padding would falsify the measurement.
@@ -100,18 +108,6 @@ const CUTOUTS = {
   elena: { src: '/images/demo/cutout-1.png', width: 900, height: 1200 },
   friederike: { src: '/images/demo/cutout-2.png', width: 900, height: 1200 },
 } satisfies Record<string, DoctorIntroPhoto>;
-
-/** The control's options, derived from a keyed object rather than typed as an
- *  array (the Card.stories `TONE_OPTIONS` reasoning): `satisfies { [K in
- *  DoctorIntroAlign]: K }` refuses to compile while a member is MISSING, which
- *  a `satisfies DoctorIntroAlign[]` array cannot see — it only catches a wrong
- *  one. */
-const ALIGN_OPTIONS = {
-  start: 'start',
-  lowered: 'lowered',
-  center: 'center',
-  end: 'end',
-} satisfies { [K in DoctorIntroAlign]: K };
 
 /**
  * THE CREDO FIXTURES (D12) — the eyebrow and title the page's
@@ -213,18 +209,12 @@ const meta = {
     photo: {
       control: false,
       description:
-        'The cutout: a path under public/ plus its INTRINSIC pixel size, which is the optimizer’s srcset input and the reserved box (§11, zero layout shift). Transparent ground, shown whole through ui/Image’s `artwork` variant, and `alt=""` by construction — the `<h1>` beside it IS the identity (PersonnelCard D3). Not a live control: a text knob over a file path would only ever produce a broken image',
+        'The cutout: a path under public/ plus its INTRINSIC pixel size, which is the optimizer’s srcset input and the reserved box (§11, zero layout shift). Transparent ground, shown whole — ui/Image’s `artwork` recipe in the stack, and beside the words drawn as tall as the row and standing on the words’ floor (D64) — and `alt=""` by construction — the `<h1>` beside it IS the identity (PersonnelCard D3). Not a live control: a text knob over a file path would only ever produce a broken image',
     },
     credo: {
       control: false,
       description:
         'REQUIRED (D12) — the credo card under the name: `{ eyebrow, title, body }`. The card is ui/Card’s `framed` tone (the reviews deck’s idle card) in ui/Card’s `aura`, the Header pill’s lavender glow (D61), a region named by its `<h2>` (the title, through SectionHeading), and `body` — a ReactNode carrying ui/Keyword’s fragments — quoted in the document’s own marks by CSS, justified (D22) at `text-xl` (D43b). Not a live control: the body is JSX',
-    },
-    align: {
-      control: 'inline-radio',
-      options: Object.values(ALIGN_OPTIONS),
-      description:
-        'Where the words sit beside the picture at the wide step (D6) — the question the owner is still deciding ("top, center or bottom"). Default `start`. It moves the words’ column — the name AND the credo card — inside the row and NOTHING else: below the step the picture is on top and the words are under it, where there is no axis to align on',
     },
     children: {
       control: false,
@@ -265,9 +255,16 @@ const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
  * picture BOX's, not its pixels (CI measured the 320px overflow with exactly
  * that errored image). Whether the pixels arrive is the visual net's
  * business, not the plays'. `complete` is polled (`waitFor`) rather than read
- * once, because ui/Image answers an error by swapping to the original file:
- * a picture caught between the two sources settles on the next poll. Never
- * vacuous: the frame must hold at least one picture.
+ * once, because ui/Image answers an error by swapping to the original file —
+ * but that swap is React's, and an errored picture already reads `complete`
+ * before it, so the poll does NOT wait for the fallback (the Opus React
+ * review: a 3s-late fallback was still loading when a play finished). The
+ * plays hold anyway because the box they measure does not depend on the
+ * pixels: Chromium keeps the width/height attributes' proportion on an
+ * `<img>` that is loading, falling back or broken (D64's out-of-flow cutout
+ * is sized from the row and that proportion alone). A change of engine or
+ * of the cutout's CSS that made the box follow the pixels would need a real
+ * wait here. Never vacuous: the frame must hold at least one picture.
  */
 const picturesSettled = async (canvasElement: HTMLElement): Promise<void> => {
   const pictures = [...canvasElement.querySelectorAll('img')];
@@ -286,6 +283,21 @@ const picturesSettled = async (canvasElement: HTMLElement): Promise<void> => {
  *  these assertions survive a visitor who changed it. */
 const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/** The REAL face, before a play measures anything a line of text sizes: a
+ *  play can start before Source Serif 4 has arrived (`font-display: block`
+ *  lays the words out in the fallback serif, which wraps differently), and
+ *  `document.fonts.ready` can resolve before the element's face was even
+ *  requested — `load()` asks for the exact face the element wears (PR #125's
+ *  lesson; the Opus React and TypeScript reviews). */
+const realFace = async (element: HTMLElement): Promise<void> => {
+  const style = getComputedStyle(element);
+  await document.fonts.load(
+    `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+    element.textContent ?? '',
+  );
+  await document.fonts.ready;
+};
 
 /** The band root, and the two boxes inside it — reached by structure because
  *  neither the grid nor its two children carries a role of its own. Below the
@@ -396,90 +408,80 @@ const sitsBeside = (band: HTMLElement): boolean =>
   (band.firstElementChild as HTMLElement).getBoundingClientRect().width >=
   48 * rem();
 
+/** The width of every line box a text element is laid out in — a Range over
+ *  its contents yields one client rect per line. */
+const lineWidthsOf = (element: HTMLElement): number[] => {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return Array.from(range.getClientRects(), (rect) => rect.width);
+};
+
+/** The cutout's proportion, width ÷ height — the inverse of the
+ *  `--cutout-ratio` the band hands the CSS — read off the photo's INTRINSIC
+ *  size, which the <img> carries as its width and height attributes (§11),
+ *  never off its loaded pixels, which the Vitest run in CI does not always
+ *  have (`picturesSettled`). A missing attribute is a NAMED failure: `0`
+ *  over a number, or a number over `0` (Infinity), never a quiet pass. */
+const proportionOf = (cutout: HTMLImageElement): number => {
+  const proportion =
+    Number(cutout.getAttribute('width')) /
+    Number(cutout.getAttribute('height'));
+  if (!Number.isFinite(proportion) || proportion <= 0)
+    throw new Error('DoctorIntro story: the cutout has no intrinsic size');
+  return proportion;
+};
+
+/** The picture's track as D63 sizes it: a third of the column, capped at
+ *  the cutout's own width (its `width` attribute — the file's intrinsic
+ *  size, §11), so the file is never drawn past its pixels. */
+const thirdOf = (column: number, cutout: HTMLImageElement): number =>
+  Math.min(column / 3, Number(cutout.getAttribute('width')));
+
 /**
- * What each `align` value means as GEOMETRY rather than as a class name (D6),
- * expressed as the top edge the words' column should land on. A Record for the
- * same reason the component has one: a fourth value cannot be added to the
- * union without this table naming what it would look like.
- *
- * The row's box is the GRID's content box (its border box minus the band's
- * `py`), not either item's: the grid has one row at the step, so that box IS
- * the row whichever item is taller. The picture is the taller one at the
- * laptop widths the plays run (555 / 673 / 768px since D51a, against ~394–580
- * of words), but only by 9px beside a three-line German name at 1280, and
- * just above the step the words overtake it (the band header's THE STEP
- * paragraph) — as does `lowered`'s 7rem of padding beside a name that wraps
- * at 1280 (D54, the header's FOURTH SEAT) — and a play that read the row off
- * the picture would call that the wrong seat, where it is only the axis
- * running out of room.
+ * WHICH CONTAINER SET THE ROW (D64), beside the words: the picture's
+ * container at exactly the cutout's height at its third — `min-h`'s floor —
+ * means the PICTURE did and the words stretched to it; anything taller means
+ * the WORDS did and the cutout grew to their floor. The two plays that pin a
+ * branch (`Notebook`, `Desktop`) assert it outright, so neither branch of
+ * `expectArrangement` below goes unwalked.
  */
-const EXPECTED_TOP: Record<
-  DoctorIntroAlign,
-  (words: DOMRect, row: DOMRect) => number
-> = {
-  start: (_words, row) => row.top,
-  // The column's BOX still starts on the row's top — the 7rem drop (D54) is
-  // the column's own padding, which the pair check below reads (round 2e).
-  lowered: (_words, row) => row.top,
-  center: (words, row) => row.top + (row.height - words.height) / 2,
-  end: (words, row) => row.bottom - words.height,
-};
-
-/** How far under the column's top edge the eyebrow/name pair begins: 7rem
- *  for the `lowered` seat (its `@3xl:pt-28`, D54 — 3rem in round 2e, 1.5rem
- *  under D38), nothing for the other three. */
-const PAIR_DROP: Record<DoctorIntroAlign, () => number> = {
-  start: () => 0,
-  lowered: () => 7 * rem(),
-  center: () => 0,
-  end: () => 0,
+const pictureSetsTheRow = (band: HTMLElement): boolean => {
+  const { picture } = boxesOf(band);
+  const cutout = picture.querySelector('img');
+  if (!cutout) throw new Error('DoctorIntro story: the cutout is missing');
+  const column = (
+    band.firstElementChild as HTMLElement
+  ).getBoundingClientRect();
+  return (
+    Math.abs(
+      picture.getBoundingClientRect().height -
+        thirdOf(column.width, cutout) / proportionOf(cutout),
+    ) <= 1
+  );
 };
 
 /**
- * The widest LINE the name and the specialty actually laid out — what the
- * words column's `@3xl:min-w-min` (D51b) widens to when a name token is wider
- * than 28rem („Schwarzenbeck-" at the `hero` step on a laptop). Read off the
- * text's own line fragments (a Range's client rects, one per line), never off
- * the elements' boxes, which fill the column by construction.
- */
-const widestLine = (...elements: HTMLElement[]): number => {
-  let widest = 0;
-  for (const element of elements) {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    for (const rect of range.getClientRects()) {
-      widest = Math.max(widest, rect.width);
-    }
-  }
-  return widest;
-};
-
-/**
- * D51 · THE DEMO DOCTOR'S NAME ON ONE LINE at the two laptop widths — the
- * coordinator's ruling on the measured margin: in the shared 28rem column
- * „Dr. Elena Marin" fills 388px at 1280 and 445.2 of 448 at 1536 (the `hero`
- * step's 60.8 / 69.76px), so a font-rendering drift of 3px would wrap her
- * name silently into a baseline. Both readings, so neither can be vacuous:
- * the text's own line fragments (a Range's client rects, one per line) and
- * the element's height against ONE line box. Only asked where it is a
- * promise — beside the picture, at a viewport no wider than 1536: from ~1600
- * the step reaches its 72px and the name wraps by design (measured, 1920).
+ * THE DEMO DOCTOR'S NAME ON ONE LINE beside the picture — D51's pin, kept
+ * through D62–D64: in the pair's room (the words' track less D64's 1.5rem)
+ * „Dr. Elena Marin" fills ~388 / 445 / 460px of ~462 / 594 / 793px at 1280 /
+ * 1536 / 1920 (the `hero` step's 60.8 / 69.76 / 72px; the classic
+ * scrollbar's column), so her name reads on
+ * ONE line at every laptop and desktop width, and a drift that wrapped it
+ * fails a play instead of slipping into a baseline. Both readings, so
+ * neither can be vacuous: the text's own line fragments (a Range's client
+ * rects, one per line) and the element's height against ONE line box. (Until
+ * D62 the pin stopped at 1536: in the old shared 28rem column the 72px step
+ * wrapped her name by design.)
  */
 const expectNameOnOneLine = async (
   band: HTMLElement,
   name: HTMLElement,
 ): Promise<void> => {
-  if (!sitsBeside(band) || window.innerWidth > 1536) return;
-  // The REAL face first: a play can start before Source Serif 4 has arrived,
-  // and the fallback serif is wider — it wraps the name for a reason that is
-  // not the layout's (measured: two line fragments in the file's first story,
-  // one after the load). `load()` fetches the exact face the <h1> asks for.
-  const style = getComputedStyle(name);
-  await document.fonts.load(
-    `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
-    name.textContent ?? '',
-  );
-  await document.fonts.ready;
+  if (!sitsBeside(band)) return;
+  // The REAL face first: the fallback serif is wider and wraps the name for a
+  // reason that is not the layout's (measured: two line fragments in the
+  // file's first story, one after the load).
+  await realFace(name);
   const range = document.createRange();
   range.selectNodeContents(name);
   await expect(range.getClientRects()).toHaveLength(1);
@@ -493,22 +495,27 @@ const expectNameOnOneLine = async (
 
 /**
  * The arrangement contract in one place, in the branch the measured column
- * actually puts us in — the owner's adaptability rule (D21) as round 2k
- * re-proportioned it (D51): beside the picture at the step, the picture and a
- * 28rem words column centred in the row; below it one above the other, the
- * name and specialty centred on top, then the picture, then the credo card.
- * In BOTH branches the card follows the name in the DOM and on screen, inside
- * the words column's markup (D12).
+ * actually puts us in — the owner's adaptability rule (D21): below the step
+ * one above the other (D51c — the phone and the tablet exactly as they were
+ * before D62), the name and specialty centred on top, then the picture, then
+ * the credo card; at the step D62's two containers across the WHOLE column,
+ * spaced by D63 — the inset, the picture's third, the gap, the words in the
+ * rest — and standing on D64's one floor: the name a ninth of the column down
+ * on the left edge it shares with the card, the card centred in the height
+ * left under it, and the cutout drawn as tall as the row, centred on its
+ * third and standing where the words end. In BOTH branches the card follows
+ * the name in the DOM and on screen, inside the words' markup (D12).
  */
 const expectArrangement = async (
   band: HTMLElement,
-  align: DoctorIntroAlign,
   credo: HTMLElement,
 ): Promise<void> => {
   const { picture, words } = boxesOf(band);
   const name = band.querySelector('h1') as HTMLElement;
   const specialty = name.nextElementSibling as HTMLElement;
   const pair = name.parentElement as HTMLElement;
+  // D62's BOTTOM CONTAINER: the card's parent, the pair's next sibling.
+  const philosophy = credo.parentElement as HTMLElement;
   const pictureBox = picture.getBoundingClientRect();
   const nameBox = name.getBoundingClientRect();
   const pairBox = pair.getBoundingClientRect();
@@ -520,10 +527,12 @@ const expectArrangement = async (
   await expect(pairBox.height).toBeGreaterThan(0);
   await expect(credoBox.height).toBeGreaterThan(0);
 
-  // THE MARKUP IS ONE SHAPE AT EVERY WIDTH: the pair first in the words
-  // column, the card after it, and the card painted under the name.
+  // THE MARKUP IS ONE SHAPE AT EVERY WIDTH: the pair first in the words'
+  // container, the bottom container after it with the card first inside,
+  // and the card painted under the name.
   await expect(words.firstElementChild).toBe(pair);
-  await expect(words).toContainElement(credo);
+  await expect(pair.nextElementSibling).toBe(philosophy);
+  await expect(philosophy.firstElementChild).toBe(credo);
   await expect(credoBox.top).toBeGreaterThanOrEqual(nameBox.bottom);
 
   const column = (
@@ -537,8 +546,7 @@ const expectArrangement = async (
   // derived from the measured column like the split itself: 1.5rem below
   // `@lg` (32rem of column), 2rem from it, 2.5rem from `@3xl` — top and
   // bottom alike from `@lg` up, the band's own `py` (the PAGE-BAND RECIPE's
-  // rule 3). D51 left it alone: "top start of general section should remain
-  // the same".
+  // rule 3). D51 and D62 left it alone.
   // D61's ONE RIDER: below `@lg` the BOTTOM is 2rem, not 1.5 (`pb-8`) — the
   // credo card is the stack's last item and its aura reaches ~32px below it,
   // which the next band would otherwise cut (CredoCard.tsx's D61 paragraph);
@@ -559,6 +567,10 @@ const expectArrangement = async (
     // column is no box at all, the pair climbs above the figure, the card
     // stays under it.
     await expect(getComputedStyle(words).display).toBe('contents');
+    // D62 gave the card a box of its own beside the picture — and below the
+    // step it dissolves as well, so the card (and a slot) are still the
+    // stack's own grid items: the phone and the tablet as they were.
+    await expect(getComputedStyle(philosophy).display).toBe('contents');
     await expect(pairBox.bottom).toBeLessThanOrEqual(pictureBox.top);
     await expect(pictureBox.bottom).toBeLessThanOrEqual(credoBox.top);
     // THE ONE TRACK NEVER OUTGROWS THE COLUMN (2026-09-27, CI on PR #110 —
@@ -579,7 +591,8 @@ const expectArrangement = async (
     }
     // THE PAIR CENTRED: each line's box on the column's centre, and each
     // line's own text centred ON THE ELEMENT (§15.15 b) — a wrapped
-    // specialty at 320 centres line by line.
+    // specialty at 320 centres line by line, wrapping as it always did (D62's
+    // balancing is the step's alone).
     const middle = (column.left + column.right) / 2;
     for (const line of [specialty, name]) {
       const box = line.getBoundingClientRect();
@@ -587,6 +600,7 @@ const expectArrangement = async (
         Math.abs((box.left + box.right) / 2 - middle),
       ).toBeLessThanOrEqual(1);
       await expect(getComputedStyle(line).textAlign).toBe('center');
+      await expect(getComputedStyle(line).textWrapStyle).toBe('auto');
     }
     // The figure centred in the column (capped at 20rem) — and at every
     // phone width, where the column is narrower than that cap, filling it.
@@ -608,98 +622,148 @@ const expectArrangement = async (
     return;
   }
 
-  // At the step — BESIDE: the figure, then the words column.
+  // At the step — BESIDE, D62's two containers ("one big container … in it
+  // there are another 2 containers"), spaced by D63 and standing on D64's
+  // one floor. The words' container is a flex column.
   const wordsBox = words.getBoundingClientRect();
   await expect(getComputedStyle(words).display).toBe('flex');
-  await expect(pictureBox.right).toBeLessThanOrEqual(wordsBox.left);
-  // D51b · THE PAIR OF COLUMNS CENTRED IN THE ROW ("left and right they have
-  // same as much space"): the space before the figure equals the space after
-  // the words.
-  await expect(
-    Math.abs(pictureBox.left - column.left - (column.right - wordsBox.right)),
-  ).toBeLessThanOrEqual(1);
-  // D51b · THE WORDS COLUMN IS 28rem ("like 70% as wide as it is now") — or,
-  // for a name token wider still, exactly that token's line (`min-w-min`) —
-  // and the pair and the card share it, on one left edge.
-  await expect(
-    Math.abs(
-      wordsBox.width - Math.max(28 * rem(), widestLine(name, specialty)),
-    ),
-  ).toBeLessThanOrEqual(1);
-  await expect(Math.abs(pairBox.width - wordsBox.width)).toBeLessThanOrEqual(1);
-  await expect(Math.abs(credoBox.width - wordsBox.width)).toBeLessThanOrEqual(
-    1,
-  );
-  for (const line of [specialty, name]) {
-    await expect(getComputedStyle(line).textAlign).toBe('start');
-    await expect(
-      Math.abs(line.getBoundingClientRect().left - wordsBox.left),
-    ).toBeLessThanOrEqual(1);
-  }
-  await expect(Math.abs(credoBox.left - wordsBox.left)).toBeLessThanOrEqual(1);
-  // D51a · THE FIGURE IS ITS TRACK, and its track is round 2j's ⅓-track
-  // picture × 1.3, tied to the column — (column − 3rem) × 0.4333, capped at
-  // 36rem ("like 30% larger all around", the coordinator's ruling) — or what
-  // the row leaves after the words and the gap, whichever is smaller. Read
-  // off the engine's resolved track list and gap, never assumed from the
+  await expect(getComputedStyle(words).flexDirection).toBe('column');
+  // D63 · THE SPACING, read off the column — `cqi` resolves against
+  // ui/Container, whose border box IS the column: the inset before the
+  // picture (15 % of the gutter, capped at 1.875rem), the picture's ONE
+  // width (a third), the gap (a sixth, clamped to 3rem–10.5rem), and the
+  // words in the rest, to the column's right edge. Never assumed from the
   // pinned width.
-  const [pictureTrack, wordsTrack] = gridStyle.gridTemplateColumns
-    .split(' ')
-    .map((track) => parseFloat(track));
-  const gap = parseFloat(gridStyle.columnGap);
-  await expect(pictureTrack).toBeGreaterThan(0);
-  await expect(Math.abs(pictureBox.width - pictureTrack)).toBeLessThanOrEqual(
+  const cutout = picture.querySelector('img');
+  if (!cutout) throw new Error('DoctorIntro story: the cutout is missing');
+  const inset = Math.min(0.01875 * column.width, 1.875 * rem());
+  // A third of the column, never wider than the cutout's own file (D63).
+  const third = thirdOf(column.width, cutout);
+  // The clamp's 3rem floor never binds from the step up (a sixth of a 48rem
+  // column is 8rem) and the inset's 1.875rem cap only past a ~2030px window,
+  // which no sampled width reaches — both spelled as the class spells them,
+  // and the class itself is pinned token for token by the unit suite.
+  const gap = Math.min(Math.max(3 * rem(), column.width / 6), 10.5 * rem());
+  await expect(
+    Math.abs(parseFloat(gridStyle.paddingLeft) - inset),
+  ).toBeLessThanOrEqual(0.5);
+  await expect(
+    Math.abs(parseFloat(gridStyle.columnGap) - gap),
+  ).toBeLessThanOrEqual(0.5);
+  await expect(
+    Math.abs(pictureBox.left - column.left - inset),
+  ).toBeLessThanOrEqual(1);
+  // The picture's THIRD — or less, where the words' `auto` floor claims the
+  // difference (DoctorIntro.tsx's THE STACKED TRACK paragraph): checked
+  // below, once the pair is measured, that only an unbreakable run did.
+  await expect(pictureBox.width).toBeLessThanOrEqual(third + 1);
+  await expect(
+    Math.abs(wordsBox.left - pictureBox.right - gap),
+  ).toBeLessThanOrEqual(1);
+  await expect(Math.abs(wordsBox.right - column.right)).toBeLessThanOrEqual(1);
+  // THE ROW is the grid's content box, and D64's ONE FLOOR: both containers
+  // span it top to bottom, and it is the TALLER of the words and the picture
+  // at its third (the picture's container never falls under that height).
+  const gridBox = grid.getBoundingClientRect();
+  const rowTop = gridBox.top + parseFloat(gridStyle.paddingTop);
+  const rowBottom = gridBox.bottom - parseFloat(gridStyle.paddingBottom);
+  await expect(rowBottom - rowTop).toBeGreaterThan(0);
+  for (const box of [pictureBox, wordsBox]) {
+    await expect(Math.abs(box.top - rowTop)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(box.bottom - rowBottom)).toBeLessThanOrEqual(1);
+  }
+  const proportion = proportionOf(cutout);
+  await expect(pictureBox.height).toBeGreaterThanOrEqual(
+    third / proportion - 1,
+  );
+  // THE CUTOUT — "separated as asset … adjust height wise": out of flow,
+  // as tall as its container (the row), as wide as its proportion makes
+  // that up to 1.4 × the third, centred on the third, its bottom on the
+  // floor the words stand on — and never reaching them.
+  const drawn = cutout.getBoundingClientRect();
+  await expect(getComputedStyle(cutout).position).toBe('absolute');
+  await expect(getComputedStyle(cutout).objectPosition).toBe('50% 100%');
+  await expect(Math.abs(drawn.height - pictureBox.height)).toBeLessThanOrEqual(
     1,
   );
-  await expect(Math.abs(wordsTrack - wordsBox.width)).toBeLessThanOrEqual(1);
   await expect(
     Math.abs(
-      pictureTrack -
-        Math.min(
-          36 * rem(),
-          (column.width - 3 * rem()) * 0.4333,
-          column.width - gap - wordsTrack,
-        ),
+      drawn.width -
+        Math.min(pictureBox.height * proportion, 1.4 * pictureBox.width),
     ),
   ).toBeLessThanOrEqual(1);
-  // THE ROW is the grid's content box (see EXPECTED_TOP). The figure stands
-  // on its floor whatever the words do, and the words sit where `align` says.
-  const gridBox = grid.getBoundingClientRect();
-  const row = new DOMRect(
-    gridBox.left,
-    gridBox.top + parseFloat(gridStyle.paddingTop),
-    gridBox.width,
-    gridBox.height -
-      parseFloat(gridStyle.paddingTop) -
-      parseFloat(gridStyle.paddingBottom),
-  );
-  await expect(row.height).toBeGreaterThan(0);
+  await expect(Math.abs(drawn.bottom - rowBottom)).toBeLessThanOrEqual(1);
   await expect(
-    Math.abs(row.height - Math.max(pictureBox.height, wordsBox.height)),
+    Math.abs(
+      (drawn.left + drawn.right) / 2 - (pictureBox.left + pictureBox.right) / 2,
+    ),
   ).toBeLessThanOrEqual(1);
-  await expect(Math.abs(pictureBox.bottom - row.bottom)).toBeLessThanOrEqual(1);
+  await expect(drawn.right).toBeLessThan(wordsBox.left);
+  // THE TOP CONTAINER: the pair on the words' left edge 1.5rem in — the ONE
+  // left edge it shares with the card (D64) — as wide as what that leaves
+  // ("way wider"), a ninth of the column under the row's top (D64's spelling
+  // of D63's quarter of the picture); both lines start-aligned ("sticky to
+  // left side"), never past the right edge, and balanced when they wrap.
+  const edge = wordsBox.left + 1.5 * rem();
+  await expect(Math.abs(pairBox.left - edge)).toBeLessThanOrEqual(1);
+  if (pictureBox.width < third - 1) {
+    // THE GIVE: the picture's track yielded, which only the words' floor —
+    // their longest unbreakable run — can make it do, so a line of the pair
+    // now fills the pair's room edge to edge.
+    const widest = Math.max(...[name, specialty].flatMap(lineWidthsOf));
+    await expect(widest).toBeGreaterThanOrEqual(pairBox.width - 1);
+  }
+  await expect(Math.abs(pairBox.right - wordsBox.right)).toBeLessThanOrEqual(1);
   await expect(
-    Math.abs(wordsBox.top - EXPECTED_TOP[align](wordsBox, row)),
+    Math.abs(pairBox.top - rowTop - column.width / 9),
   ).toBeLessThanOrEqual(1);
-  // The pair (eyebrow over name) starts on the column's top edge — or, for
-  // the `lowered` seat, 7rem under it (round 2e: "push this a bit more
-  // down"; round 2g: "push it a little more upwards"; D54: "20% more down").
+  for (const line of [specialty, name]) {
+    const box = line.getBoundingClientRect();
+    await expect(getComputedStyle(line).textAlign).toBe('start');
+    await expect(getComputedStyle(line).textWrapStyle).toBe('balance');
+    await expect(Math.abs(box.left - edge)).toBeLessThanOrEqual(1);
+    await expect(box.right).toBeLessThanOrEqual(wordsBox.right + 1);
+  }
+  // THE BOTTOM CONTAINER: everything under the pair, down to the row's
+  // floor; the card on the same left edge, 36rem wide where the words leave
+  // that much and their whole width where they do not (D63); and the card —
+  // with a slot under it, if any — CENTRED in that height: the same space
+  // above as below ("same space between it and headings and eyebrow
+  // contianer as to bottom of container it is within"), never under 1.5rem,
+  // and exactly 1.5rem wherever the words, not the picture, set the row.
+  const philosophyBox = philosophy.getBoundingClientRect();
+  await expect(getComputedStyle(philosophy).display).toBe('grid');
   await expect(
-    Math.abs(pairBox.top - wordsBox.top - PAIR_DROP[align]()),
+    Math.abs(philosophyBox.top - pairBox.bottom),
   ).toBeLessThanOrEqual(1);
+  await expect(
+    Math.abs(philosophyBox.bottom - wordsBox.bottom),
+  ).toBeLessThanOrEqual(1);
+  await expect(
+    Math.abs(credoBox.width - Math.min(36 * rem(), wordsBox.right - edge)),
+  ).toBeLessThanOrEqual(1);
+  await expect(Math.abs(credoBox.left - edge)).toBeLessThanOrEqual(1);
+  const last = (
+    philosophy.lastElementChild as HTMLElement
+  ).getBoundingClientRect();
+  const above = credoBox.top - pairBox.bottom;
+  const below = rowBottom - last.bottom;
+  await expect(Math.abs(above - below)).toBeLessThanOrEqual(1);
+  await expect(above).toBeGreaterThanOrEqual(1.5 * rem() - 0.5);
+  if (!pictureSetsTheRow(band))
+    await expect(Math.abs(above - 1.5 * rem())).toBeLessThanOrEqual(1);
 };
 
 /**
  * THE EVERYDAY OPENER — the doctor page's first screen, Romanian, at the
- * laptop width the §13 matrix samples: the cutout (1.3 × round 2j's, tied to
- * the column — D51a) standing on the row's floor beside a 28rem words
- * column, the name on ONE line in it (the play's D51 pin), the two centred in
- * the row
- * with equal space either side (D51b), the specialty over the name, the words
- * pinned to the TOP of the row (`align="start"`, the arrangement the page the
- * owner referenced uses and this band's default). The doctor page itself
- * passes `lowered` — this frame with the words 7rem lower (D54, the Lowered
- * story below).
+ * laptop width the §13 matrix samples, in D62's two containers across the
+ * whole column (the owner, 2026-10-01: "one big container … in it there are
+ * another 2 containers"), spaced by D63 and standing on D64's one floor: the
+ * cutout centred on the picture's third, as tall as the row and standing
+ * where the words end; beside it the specialty over the name a ninth of the
+ * column down — the name on ONE line (the play's pin) — and under them the
+ * rest of the height, where the credo card stands up to 36rem wide on the
+ * name's own left edge with the SAME space above it as below it.
  *
  * **What to look at (round 2): the framed card UNDER THE NAME** — the reviews
  * deck's idle card (its 3px lavender frame on white) in the Header pill's
@@ -710,13 +774,11 @@ const expectArrangement = async (
  * „ascultarea" in the darker key-word ink. It fills the space beside the
  * figure that the name alone used to leave empty, JUSTIFIED like the roster
  * card's quote (D22) and one type step larger than it (D43b: the quote
- * `text-xl`) — and since round 2k NARROWER AND TALLER (D51b, the owner's
- * "like 70% as wide as it is now and taller rather": 28rem, five lines where
- * round 2j's ⅔ track set three). The band's rhythm is round 2j's (D43a: 40px
- * above the figure at this width), untouched by D51.
- *
- * All the controls that can move the band are live here, `align` included, so
- * the owner can flip the three answers in one frame before naming one.
+ * `text-xl`) — narrower and taller since round 2k (D51b's 28rem), and since
+ * D63 up to 36rem again, the owner's "like 30% wider", its title on the
+ * `band` step's 36px wherever the card is ~498px or wider (§15.24). The
+ * band's rhythm is round 2j's (D43a: 40px above the row at this width),
+ * untouched by D51 and D62–D64.
  *
  * **1536 · 390 · 320 (`stress-320`):** the split, the stack, and the stack at
  * the accessibility width, where 256px of column has to hold a 900×1200 figure,
@@ -741,6 +803,7 @@ export const Default: Story = {
       level: 1,
       name: 'Dr. Elena Marin',
     });
+    await realFace(heading);
     const band = bandOf(heading);
 
     const eyebrow = canvas.getByText('Medic specialist ortodonție');
@@ -801,7 +864,7 @@ export const Default: Story = {
     // The one-line pin FIRST: it waits for the real face, so every
     // measurement after it reads the layout the visitor gets.
     await expectNameOnOneLine(band, heading);
-    await expectArrangement(band, 'start', credo);
+    await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },
 };
@@ -811,19 +874,26 @@ export const Default: Story = {
  * tagged `no-visual` so the pixel net never photographs it (the Sections/*
  * matrix samples 390 + 1536; tests/visual/stories.spec.ts skips the tag): it
  * exists because the Vitest storybook project honours the viewport pin, and
- * 1280 is where D51's figure is smallest beside the 28rem column (416 × 555)
- * and where the demo doctor's name must still read on ONE line (388px of
- * 448, measured). The whole Default play runs here — the arrangement, the
- * eyebrows, the generated quote marks and the one-line pin.
+ * 1280 is the narrowest laptop the §7 matrix samples: the picture's third is
+ * at its smallest there and the words are the TALLER container (the demo
+ * doctor's pair over a card the 36rem track cannot reach), so it is the width
+ * where the WORDS set the row and the cutout GROWS to their floor (D64) — the
+ * branch the play asserts outright, so `expectArrangement`'s growth formula
+ * is walked at a sampled width. The whole Default play runs here — the
+ * arrangement, the eyebrows, the generated quote marks and the one-line pin.
  *
  * PLUS ONE BELT (2026-09-27, DoctorIntro.tsx's THE STACKED TRACK paragraph):
- * the row never holds the grid wider than its box, and the pair's OUTER
- * edges — the picture's left, the words' right — sit inside the column. It
- * passes at 1280 either way (48.3px of free space each side, measured): the
- * widths where it would bite, from the step to ~1070px, have no frame and no
- * play, and the `minmax(0,auto)` picture track is what keeps them honest.
- * This pin is there so that a track edit which makes the row outgrow the
- * column at a sampled width fails a play instead of landing in a baseline.
+ * the row never holds the grid wider than its box, and the two containers'
+ * OUTER edges — the picture's left, the words' right — sit inside the column.
+ * D63's inset and tracks fill the column exactly, so at every width this is
+ * the edge the arrangement already pins; the picture's zero floor and the
+ * words' `auto` one (never under their longest unbreakable run) are what keep
+ * it true from the step up, where no frame and no play look. The
+ * GROWN cutout spills past its track (D64) — into the inset and the gap, out
+ * of flow — and the grid still scrolls nowhere: a box out of flow that
+ * crosses the grid's start edge adds nothing a scrollbar could reach. This
+ * pin is there so that a track edit which makes the row outgrow the column at
+ * a sampled width fails a play instead of landing in a baseline.
  */
 export const Notebook: Story = {
   ...Default,
@@ -842,8 +912,10 @@ export const Notebook: Story = {
     const grid = containerBox.firstElementChild as HTMLElement;
     const column = containerBox.getBoundingClientRect();
     const { picture, words } = boxesOf(band);
-    // Never vacuous: the belt is about the ROW, so the row must be on.
+    // Never vacuous: the belt is about the ROW, so the row must be on — and
+    // at this width the WORDS set it, so the cutout has grown (D64).
     await expect(sitsBeside(band)).toBe(true);
+    await expect(pictureSetsTheRow(band)).toBe(false);
     await expect(grid.scrollWidth).toBeLessThanOrEqual(grid.clientWidth);
     await expect(picture.getBoundingClientRect().left).toBeGreaterThanOrEqual(
       column.left - 0.5,
@@ -855,85 +927,114 @@ export const Notebook: Story = {
 };
 
 /**
- * THE SECOND ANSWER — the words CENTRED on the figure's height
- * (`align="center"`). One of the three frames that exist so the owner can
- * choose ("idk yet if i should place [the words] sticky to the top of
- * respective div next to image, center or bottom"); nothing else about the
- * band changes, which is the whole point of an axis that moves one box — and
- * the box it moves now carries the credo card with the name.
- *
- * Below the step this story is byte-identical in arrangement to `Default` —
- * the centred name on top, the figure, the card (D51c) — and the derived
- * assertion says so at whatever width it is rendered.
+ * THE EVERYDAY OPENER AT 1920 — PLAY ONLY, `no-visual` like `Notebook`, at
+ * §7's Desktop width: the OTHER branch of D64's one floor. Here the picture
+ * at its third (507 × 676px on a 1920 window's column under a classic
+ * scrollbar) is taller than the words — the demo doctor's one-line name over
+ * a card the 36rem track holds in three lines — so the PICTURE sets the row: the cutout keeps exactly its third and
+ * nothing grows, the words' container stretches to the picture's floor, and
+ * the card stands centred in the height the name leaves with MORE than the
+ * minimum 1.5rem above and below. The whole Default play runs first (the
+ * arrangement's own formula covers both branches); this one asserts the
+ * branch, so a change that made the words outgrow the picture on a desktop —
+ * a taller name step, a narrower track — fails a play instead of moving a
+ * frame nobody samples.
  */
-export const Centered: Story = {
-  globals: { locale: 'ro', viewport: { value: 'laptop' } },
-  args: { align: 'center' },
-  // The alignment IS the subject of this frame — a live knob here would just
-  // turn it back into the story above.
-  argTypes: { align: { control: false } },
-  play: async ({ canvas, canvasElement }) => {
-    await picturesSettled(canvasElement);
-    const band = bandOf(
-      canvas.getByRole('heading', { level: 1, name: 'Dr. Elena Marin' }),
-    );
-    const credo = await credoOf(canvasElement, 'Filozofia mea', 'ortodonție');
+export const Desktop: Story = {
+  ...Default,
+  tags: ['no-visual'],
+  globals: { locale: 'ro', viewport: { value: 'desktop' } },
+  play: async (context) => {
+    await Default.play?.(context);
 
-    await expectArrangement(band, 'center', credo);
-    await expectNoSidewaysScroll(band);
+    const band = bandOf(
+      context.canvas.getByRole('heading', {
+        level: 1,
+        name: 'Dr. Elena Marin',
+      }),
+    );
+    await expect(sitsBeside(band)).toBe(true);
+    await expect(pictureSetsTheRow(band)).toBe(true);
+    const { picture } = boxesOf(band);
+    const cutout = picture.querySelector('img');
+    if (!cutout) throw new Error('DoctorIntro story: the cutout is missing');
+    // Nothing grew: the cutout is its third, edge to edge.
+    await expect(
+      Math.abs(
+        cutout.getBoundingClientRect().width -
+          picture.getBoundingClientRect().width,
+      ),
+    ).toBeLessThanOrEqual(1);
+    // The card has room to spare, and shares it equally (the arrangement
+    // checked the equality; the spare room is this branch's own fact).
+    const credo = context.canvas.getByRole('region', { name: 'Filozofia mea' });
+    const pair = band.querySelector('h1')?.parentElement;
+    if (!pair) throw new Error('DoctorIntro story: the name lost its pair');
+    await expect(
+      credo.getBoundingClientRect().top - pair.getBoundingClientRect().bottom,
+    ).toBeGreaterThan(1.5 * rem() + 1);
   },
 };
 
 /**
- * THE FOURTH SEAT — the top seat dropped by 7rem (`align="lowered"`, D54,
- * round 2l, 2026-09-26: the owner's "push like idk, 20% more down just
- * textual part next to image … i'll adjust if needed"; 3rem in round 2e, on
- * his "push this a bit more down" at the name, the specialty and the credo
- * card, and 1.5rem under D38). 7rem is 20 % of the figure at 1280 (555px)
- * and 17 % of this frame's 673px at 1536; the owner dials it through the one
- * `pt-28` token. The page passes this one. What to look at: the eyebrow
- * starts 112px under the figure's crown (152px under the band's top), the
- * credo card follows the name down, and the figure's floor and the row's
- * height are untouched — the demo doctor's column (517px here) stays inside
- * the figure. A column that outgrows the figure (a three-line name at 1280)
- * would push the figure down with it; DoctorIntro.tsx's FOURTH SEAT
- * paragraph has those numbers, and the play reads the row off the grid, so
- * it holds either way.
+ * AT THE STEP, WITH THE LONGEST NAME — PLAY ONLY, `no-visual` (the Opus a11y
+ * review, 2026-10-01): the narrowest column the row ever gets is the step's
+ * own, and the words' room is tightest there. The German stress's name and
+ * card, beside the picture in a column 4px over 48rem — the band in a
+ * 64.25rem wrapper at §7's Notebook viewport, where ui/Container's 10vw
+ * margins leave 772px: the Header `AtTheStep` story's device. At this
+ * viewport's `hero` step (60.8px) „Schwarzenbeck-" alone is wider than the
+ * words' share of that column, so the words' `auto` floor must take what
+ * it needs and the PICTURE's track give way (DoctorIntro.tsx's THE STACKED
+ * TRACK paragraph) — the play asserts the give itself, then the whole
+ * arrangement: every line of the pair inside the words' right edge, which
+ * is the column's, and nothing scrolling sideways. Without the floor the
+ * name would cross into the gutter; the play turns red on `minmax(0,1fr)`.
  */
-export const Lowered: Story = {
-  globals: { locale: 'ro', viewport: { value: 'laptop' } },
-  args: { align: 'lowered' },
-  argTypes: { align: { control: false } },
-  play: async ({ canvas, canvasElement }) => {
-    await picturesSettled(canvasElement);
-    const band = bandOf(
-      canvas.getByRole('heading', { level: 1, name: 'Dr. Elena Marin' }),
-    );
-    const credo = await credoOf(canvasElement, 'Filozofia mea', 'ortodonție');
-
-    await expectArrangement(band, 'lowered', credo);
-    await expectNoSidewaysScroll(band);
+export const AtTheStep: Story = {
+  tags: ['no-visual'],
+  globals: { locale: 'de', viewport: { value: 'notebook' } },
+  args: {
+    name: 'Dr. Friederike Schwarzenbeck-Hoffmann',
+    position: 'Fachzahnärztin für Kieferorthopädie',
+    photo: CUTOUTS.friederike,
+    credo: CREDOS.de,
+    lang: 'de',
   },
-};
-
-/**
- * THE THIRD ANSWER — the words sitting on the row's FLOOR beside the figure
- * (`align="end"`), so the credo card's bottom edge lines up with the feet
- * rather than the name with the head. The last of the three the owner
- * compares.
- */
-export const Bottom: Story = {
-  globals: { locale: 'ro', viewport: { value: 'laptop' } },
-  args: { align: 'end' },
-  argTypes: { align: { control: false } },
+  render: (args) => (
+    <div className="w-[64.25rem]">
+      <DoctorIntro {...args} />
+    </div>
+  ),
   play: async ({ canvas, canvasElement }) => {
     await picturesSettled(canvasElement);
-    const band = bandOf(
-      canvas.getByRole('heading', { level: 1, name: 'Dr. Elena Marin' }),
+    const heading = canvas.getByRole('heading', {
+      level: 1,
+      name: 'Dr. Friederike Schwarzenbeck-Hoffmann',
+    });
+    // The REAL face first: the give is a question of the name's width.
+    await realFace(heading);
+    const band = bandOf(heading);
+    const credo = await credoOf(
+      canvasElement,
+      'Meine Philosophie',
+      'Behandlungsschwerpunkte',
     );
-    const credo = await credoOf(canvasElement, 'Filozofia mea', 'ortodonție');
-
-    await expectArrangement(band, 'end', credo);
+    // Never vacuous: the row is on, just past the step…
+    const column = (
+      band.firstElementChild as HTMLElement
+    ).getBoundingClientRect();
+    await expect(sitsBeside(band)).toBe(true);
+    await expect(column.width).toBeLessThan(49 * rem());
+    // …and the picture's track really gave way to the name.
+    const { picture } = boxesOf(band);
+    await expect(picture.getBoundingClientRect().width).toBeLessThan(
+      column.width / 3 - 1,
+    );
+    await expect(heading.getBoundingClientRect().right).toBeLessThanOrEqual(
+      column.right + 1,
+    );
+    await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },
 };
@@ -945,7 +1046,12 @@ export const Bottom: Story = {
  * bases side by side wherever ~33rem of column exists, each on its own full
  * width below that), AFTER the credo card (D12: pair → card → slot). Face for
  * face with the band at the top of the Home page, which is the point: the
- * doctor page should not invent a third button look.
+ * doctor page should not invent a third button look. Beside the picture the
+ * row shares D62's bottom container with the card — in its track of up to
+ * 36rem (D63), where the two 16rem bases sit side by side once the track
+ * passes ~33rem (a window of ~1400px and up, this story's 1536 among them)
+ * and stack below that — and the card and the row are centred TOGETHER in
+ * the height the name leaves.
  *
  * Both are plain `<a href>` wearing ui/Button through `asChild` — every
  * internal navigation on this site is a full document load (§15.13). The
@@ -961,7 +1067,6 @@ export const Bottom: Story = {
  */
 export const WithActions: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
-  argTypes: { align: { control: false } },
   render: (args) => (
     <DoctorIntro {...args}>
       <div className="flex max-w-3xl flex-wrap gap-3 *:grow *:basis-64">
@@ -980,6 +1085,7 @@ export const WithActions: Story = {
       level: 1,
       name: 'Dr. Elena Marin',
     });
+    await realFace(heading);
     const band = bandOf(heading);
     const { words } = boxesOf(band);
     const credo = await credoOf(canvasElement, 'Filozofia mea', 'ortodonție');
@@ -996,7 +1102,7 @@ export const WithActions: Story = {
       credo.getBoundingClientRect().bottom,
     );
 
-    await expectArrangement(band, 'start', credo);
+    await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },
 };
@@ -1033,9 +1139,9 @@ export const WithActions: Story = {
  * than the column and every stacked item, the picture first, inside it,
  * measured once the cutout has settled (the CI finding on PR #110; the
  * PseudoLocale frame walks the same pin). At 1536 (the visual net's other width) the same play
- * walks the row, where „Schwarzenbeck-" is wider than the 28rem words column
- * at the `hero` step and the column widens to it (`min-w-min`, D51b) rather
- * than letting the name overflow.
+ * walks the row, where the name is too long for one line of the pair's room
+ * at the `hero` step and wraps there, balanced, between words or
+ * at the surname's own hyphen — never through a syllable.
  */
 export const GermanLongest: Story = {
   tags: ['stress-320'],
@@ -1047,13 +1153,13 @@ export const GermanLongest: Story = {
     credo: CREDOS.de,
     lang: 'de',
   },
-  argTypes: { align: { control: false } },
   play: async ({ canvas, canvasElement }) => {
     await picturesSettled(canvasElement);
     const heading = canvas.getByRole('heading', {
       level: 1,
       name: 'Dr. Friederike Schwarzenbeck-Hoffmann',
     });
+    await realFace(heading);
     const band = bandOf(heading);
     const credo = await credoOf(
       canvasElement,
@@ -1067,7 +1173,7 @@ export const GermanLongest: Story = {
     const label = within(credo).getByText('In meinen Worten');
     await expect(label).toBeVisible();
     await expectEyebrowsMatch(specialty, label);
-    await expectArrangement(band, 'start', credo);
+    await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },
 };
@@ -1098,12 +1204,14 @@ export const PseudoLocale: Story = {
     position: 'Médíç špéçíálíšť órťódóñțíé ···········',
     credo: CREDOS.pseudo,
   },
-  argTypes: { align: { control: false } },
   play: async ({ canvas, canvasElement }) => {
     await picturesSettled(canvasElement);
-    const band = bandOf(
-      canvas.getByRole('heading', { level: 1, name: 'Dr. Éléñá Máríñ ······' }),
-    );
+    const heading = canvas.getByRole('heading', {
+      level: 1,
+      name: 'Dr. Éléñá Máríñ ······',
+    });
+    await realFace(heading);
+    const band = bandOf(heading);
     const credo = await credoOf(
       canvasElement,
       'Fílóžófíá méá ······',
@@ -1117,7 +1225,7 @@ export const PseudoLocale: Story = {
     const label = within(credo).getByText('Îñ çúvíñťélé mélé ·······');
     await expect(label).toBeVisible();
     await expectEyebrowsMatch(specialty, label);
-    await expectArrangement(band, 'start', credo);
+    await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },
 };

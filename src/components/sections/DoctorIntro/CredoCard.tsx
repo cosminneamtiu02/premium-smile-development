@@ -54,13 +54,17 @@ import { Card } from '@/components/ui/Card/Card';
 //   differs from the --page ground #faf9f7): the token is `0 8px 22px`, so
 //   the glow reaches ~16px above the box, ~24px to either side and ~32px
 //   below it.
-//   BESIDE THE PICTURE (`@3xl`): the pair above the card stands across the
-//   words column's `gap-6` = 24px (clears the 16px), the picture across the
-//   row's `@3xl:gap-12` = 48px (clears the 24px), and the band's bottom edge
-//   lies 89px under the card at 1280 and 96px at 1536 (the figure is the
-//   tall item; `@3xl:py-10` = 40px is the floor whenever the words are). The
-//   one neighbour INSIDE the glow is a FILLED slot, 24px under the card
-//   across the same `gap-6` — the WithActions story; the page passes none.
+//   BESIDE THE PICTURE (`@3xl`, DoctorIntro's D62–D64): the pair above the
+//   card stands across the bottom container's top padding, `py-6` = 24px
+//   (clears the 16px); the picture's track ends a whole gap away —
+//   `clamp(3rem, a sixth of the column, 10.5rem)`, 128–168px — plus the
+//   words' 1.5rem inset, and even the cutout grown to its cap stays ~100px
+//   clear of the card at the step (clears the 24px); and the band's bottom
+//   edge lies 64px under the card wherever the words set the row (the bottom
+//   container's 24px + `@3xl:py-10`'s 40px — 1280, the Notebook story),
+//   more wherever the picture does (82.5px at 1920). The one neighbour INSIDE
+//   the glow is a FILLED slot, 24px under the card across the bottom
+//   container's `gap-6` — the WithActions story; the page passes none.
 //   STACKED: the picture above crosses the grid's `gap-8` = 32px and a filled
 //   slot below would cross the same 32px (both clear); the gutter beside the
 //   card is ui/Container's `clamp(1rem, 10vw, 12.5rem)`, 32px at 320 (clears
@@ -119,13 +123,17 @@ import { Card } from '@/components/ui/Card/Card';
 //                    the same size on both surfaces; the doctor's own page now
 //                    gives them the larger voice, and the doctor card keeps
 //                    its 18px. (A plain <p> and not ui/Text either way: that
-//                    atom's steps stop at 16px.) MEASURED at 1280 / 1536 /
-//                    1920 in Chromium: five lines at all three — the card
-//                    266px tall and 448px wide since D51b (the owner's "like
-//                    70% as wide as it is now and taller rather": a 28rem
-//                    words column); it was three, three, two lines, 214 /
-//                    214 / 186px tall and 641 / 777 / 982px wide under
-//                    D43b's ⅔ track, and 577 / 700 / 884 before that.
+//                    atom's steps stop at 16px.) MEASURED in Chromium on the
+//                    built page (the clinic's first doctor, Romanian): four
+//                    lines at 1280 and three at 1536 and 1920 — the card 462
+//                    / 576 / 576px wide and 238 / 214 / 214px tall — since
+//                    DoctorIntro's D63 widened its track to 36rem (the
+//                    owner's "like 30% wider", 2026-10-01). Under D51b's
+//                    28rem column it was five lines, 266px tall and 448px
+//                    wide at all three (the demo doctor's words); under
+//                    D43b's ⅔ track three, three, two lines, 214 / 214 /
+//                    186px tall and 641 / 777 / 982px wide; 577 / 700 / 884
+//                    before that.
 //   text-ink-faint   THE DOCTOR QUOTES' OWN INK — D58 (round 2o, 2026-09-26,
 //                    the owner: "what if you make the faint text lighter").
 //                    Built in PersonnelCard D8's "relatively washed or ghost"
@@ -177,15 +185,17 @@ import { Card } from '@/components/ui/Card/Card';
 // from the source text, because no runtime assertion can see either.
 //
 // ── THE CARD OWNS NO WIDTH AND NO OUTER MARGIN (§6.4). It fills whatever
-// the band places it in — beside the picture a flex COLUMN item of the 28rem
-// words column, in the stack a grid item of the one-column grid (D51c); both
+// the band places it in — beside the picture a grid item of the band's bottom
+// container, whose ONE explicit track is `minmax(0,36rem)` (DoctorIntro.tsx's
+// D62 and D63), in the stack a grid item of the one-column grid (D51c); both
 // stretch (ui/Card D3), and there is no flex ROW here, so none of the atom's
-// collapse cases applies — and the band's gap (`gap-6` in the column, `gap-8`
-// in the stack) owns the space above it. Its OWN intrinsic width is nothing
-// at all: ui/Card's `@container` contains its inline size, which is exactly
-// why the band gives the column a definite 28rem rather than a cap (D51b in
-// DoctorIntro.tsx). A caller's className is placement only, merged
-// caller-last by ui/slot.ts.
+// collapse cases applies — and the band owns the space above it (the bottom
+// container's 1.5rem beside the picture, `gap-8` in the stack). Its OWN
+// intrinsic width is nothing at all: ui/Card's `@container` contains its
+// inline size, which is exactly why the band hands it an explicit TRACK, sized
+// from the room the words leave and never from the card's content — the
+// choice D51b's definite 28rem column made before it. A caller's className is
+// placement only, merged caller-last by ui/slot.ts.
 //
 // ── D43b · "A BIGGER CARD" GROWS BY ITS WIDTH AND ITS TYPE, NOT BY ITS INSET.
 // The owner's ask (2026-09-26) is answered in three places, none of them an
@@ -196,9 +206,13 @@ import { Card } from '@/components/ui/Card/Card';
 // SectionHeading's own step (D47's `page`, builder A1's lane) — until D48's
 // container-responsive `band` and D51b's 28rem column put it back at 30px
 // beside the picture: the step answers to ui/Card's own `@container`, whose
-// content box is 398px there, so it reads 36px only stacked full-width on a
+// content box was 398px there, so it read 36px only stacked full-width on a
 // tablet (recorded, not changed: owner decision 1 of G2 tier 1,
-// fold-tier1.md). The card's INNER ROOM — `framed`'s 3px + 22px per side —
+// fold-tier1.md) — until DoctorIntro's D63 track (36rem, the owner's "like
+// 30% wider", 2026-10-01) took it back to 36px beside the picture wherever the
+// card is ~498px or wider: MEASURED on the built page, 30px at 1024 and 1280
+// (363 / 462px cards) and 36px from 1366 up (506 / 545 / 576px) — the "wider
+// words column" road of that open call. The card's INNER ROOM — `framed`'s 3px + 22px per side —
 // does NOT move, because ui/Card offers no padding axis: its header rejects
 // per-side padding outright (D5) and names the one way in, a `density` axis
 // of its own that joins when a SECOND proven card kind measures a different

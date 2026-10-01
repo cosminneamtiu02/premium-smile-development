@@ -250,7 +250,7 @@ export const HeroStep: Story = {
  * width, 42.88px at 768), the tablet's own 5.58 % of the viewport from there
  * (71.5px at 1280, 107.2px at 1920, where the cap holds). A step BESIDE
  * `hero`, not `hero` reshaped: since §15.24 `hero` is the h1 step of every
- * page, and a doctor's name at 107px in DoctorIntro's 28rem column is not
+ * page, and a doctor's name at 107px in DoctorIntro's words column is not
  * what the owner pointed at (the atom's header has the differential). Same
  * dual-line shape as HeroStep — the Romanian line follows the controls, the
  * German line is pinned to 'slogan' — on the clinic's own first slogan

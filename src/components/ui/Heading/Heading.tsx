@@ -92,7 +92,7 @@ import { slotClone } from '../slot';
 // either way, since the max of two continuous terms is continuous.
 // WHY A STEP BESIDE `hero` AND NOT `hero` RESHAPED: `hero` stopped being
 // the slogan's alone on 2026-09-26 — §15.24 made it THE h1 step, worn by
-// the doctor page's name (sections/DoctorIntro, inside a 28rem words
+// the doctor page's name (sections/DoctorIntro, then inside a 28rem words
 // column) and the 404 title. The lane's first differential reshaped `hero`
 // itself and moved 22 cells the owner never pointed at — Pages/Doctor,
 // Sections/DoctorIntro and Pages/NotFound at 1280 and above, a doctor's
@@ -243,16 +243,17 @@ import { slotClone } from '../slot';
 // everywhere). Two cards rest at 30px beside wider neighbours, RECORDED: the
 // price menu's „Categorii" (its `minmax(15rem,1fr)` track, 190px of content
 // at 1280 — "one step under", PriceMenu.tsx's THE TITLE'S STEP IS `band`
-// paragraph) and the credo card's „Filozofia mea" at DoctorIntro's `@3xl`
-// (the words column is `@3xl:w-md`, 28rem → 398px of content; the
-// `@3xl:min-w-min` widening for a long German name, 475px at most as
-// measured there, stays under 498). Below that step the credo card stacks at
-// the column's full width, so it reads 36px from a ~623px viewport to the
-// ~960px split — a 768px tablet: 614px of column, 564px of content — and
-// 30px on every laptop and desktop: the INVERSE of the page's other h2s. The
-// credo card's size is the owner's open call (G2-R2 tier 1, react F1) — a
-// `size` seam on SectionHeading or a wider words column are the roads; no
-// atom change serves either.
+// paragraph) at every laptop width, and the credo card's „Filozofia mea" on
+// the narrower laptops only: beside the picture at DoctorIntro's `@3xl` its
+// words column was `@3xl:w-md` (28rem → 398px of content, 30px everywhere)
+// until DoctorIntro's D63 gave the card a track of up to 36rem (2026-10-01,
+// the owner's "like 30% wider") — MEASURED on the built page, 30px at 1024 and
+// 1280 (313 / 412px of content) and 36px from ~1366 up (456px and more). Stacked at the column's full width it reads 36px from a
+// ~623px viewport to the ~960px split — a 768px tablet: 614px of column, 564px
+// of content — as before. Its size was the owner's open call (G2-R2 tier 1,
+// react F1), with a `size` seam on SectionHeading or a wider words column as
+// the roads; the owner's wider card took the second, and no atom change
+// served it.
 // Why a container step does not reopen the self-scaling `title` refused: that
 // refusal was of VIEWPORT prefixes — an atom guessing its width from a screen
 // it cannot see. `@md:` queries the NEAREST ANCESTOR container — the band's

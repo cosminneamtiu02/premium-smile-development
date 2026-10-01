@@ -137,7 +137,7 @@ const DOCTOR = firstDoctor();
 
 /** KEEP-IN-SYNC twin of ./page.tsx — see this file's header. Every comment
  *  justifying this markup lives in that file (why the opener owns the <h1>,
- *  why `align` is the `lowered` seat, why the about title takes the name as
+ *  why it no longer passes an `align` seat, why the about title takes the name as
  *  an argument, the `isLocale` narrowing); duplicating the arguments here
  *  would give them two homes and no owner. */
 function DoctorPageBands(): ReactElement {
@@ -160,7 +160,6 @@ function DoctorPageBands(): ReactElement {
         name={page.intro.name}
         position={page.intro.position}
         photo={page.intro.photo}
-        align="lowered"
         credo={
           // Checked against the band's public shape here, where the literal is
           // spelled (G2-R2 tier 2, typescript F5): the populator hands over only
@@ -250,6 +249,18 @@ const rem = (): number =>
  * ask for every picture first.
  */
 const settled = async (root: HTMLElement): Promise<void> => {
+  // The page's NAME first, in its real face: `document.fonts.ready` can
+  // resolve before the heading's face was even requested, and the opener's
+  // boxes — read before `expectNameLines` runs — follow how the name wraps
+  // (the Opus React and TypeScript reviews; PR #125's lesson).
+  const name = root.querySelector('h1');
+  if (name) {
+    const style = getComputedStyle(name);
+    await document.fonts.load(
+      `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+      name.textContent ?? '',
+    );
+  }
   await document.fonts.ready;
   await Promise.all(
     Array.from(root.querySelectorAll('img')).map((img) =>
@@ -313,8 +324,9 @@ const parentOf = (element: Element): HTMLElement => {
 };
 
 // ── WHAT THE FOUR `expect…` HELPERS BELOW RE-DERIVE, ON PURPOSE. Each one
-// measures more than its D21 verdict: the opener's 28rem cap and centring, the
-// schedule card's 20rem and its vertical middle, the timeline's gap, line and
+// measures more than its D21 verdict: the opener's third, floor and shared
+// left edge (D62–D64; this lane re-spelled them here, as the cost below
+// says), the schedule card's 20rem and its vertical middle, the timeline's gap, line and
 // rest paint, the tiles' grid. Those are section pins the bands' own suites
 // already hold; they are spelled again here because the owner asked for
 // page-level proof of rounds 2e–2k on the page as it ships. The cost is
@@ -324,18 +336,71 @@ const parentOf = (element: Element): HTMLElement => {
 // a "not collapsed" check.
 
 /**
- * THE OPENER (D12, D21, D51). Beside: the cutout's box ends before the name
- * begins, the credo card stands under the name on the name's left edge (the
- * words column's next block), the words column is capped at 28rem, and the
- * PAIR — picture + words — is CENTRED in the column: as much space left of
- * the picture as right of the words (round 2k, the owner's "left and right
- * they have same as much space"). Stacked (round 2k, D51c): the NAME comes
- * FIRST, centred, then the picture, then the card — the owner's "name and
- * speciality … above the photo and … centered" on a phone or tablet.
+ * THE NAME'S LINES (D62, the owner, 2026-10-01: "in a single line on longest
+ * example if possible of "Dr. Malea (Sabău) Oana Bianca" on heading and
+ * fallback on 2 rows of the heading when not wide enough, maybe 3"). ONE line
+ * wherever the name's one-line width fits the room the pair is given,
+ * otherwise two or three — never more. The one-line width is the text's own,
+ * read with wrapping switched off for one synchronous read (the style is put
+ * back before anything paints). The REAL face first: `settled()`'s
+ * `document.fonts.ready` can resolve before the heading's face was even asked
+ * for, and the fallback serif wraps differently (PR #125's lesson). Measured
+ * on the built page since D64: the longest name the clinic ships is three
+ * lines from the step (~979px) to ~1100px, two from ~1180px to 1920 and one
+ * at 2560. Returns WHICH branch ran, so a story can say which it expects —
+ * the Romanian story's laptop pin wraps (the Opus TypeScript review: a
+ * branch no story names is a branch no story can lose).
+ */
+type NameLines = 'one' | 'wrapped';
+
+const expectNameLines = async (
+  heading: HTMLElement,
+  room: number,
+): Promise<NameLines> => {
+  const style = getComputedStyle(heading);
+  await document.fonts.load(
+    `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+    heading.textContent ?? '',
+  );
+  await document.fonts.ready;
+  const range = document.createRange();
+  range.selectNodeContents(heading);
+  const lines = new Set(
+    Array.from(range.getClientRects(), (rect) => Math.round(rect.top)),
+  ).size;
+  heading.style.whiteSpace = 'nowrap';
+  const oneLine = range.getBoundingClientRect().width;
+  heading.style.whiteSpace = '';
+  await expect(oneLine).toBeGreaterThan(0);
+  if (oneLine <= room) {
+    await expect(lines).toBe(1);
+    return 'one';
+  }
+  await expect(lines).toBeGreaterThanOrEqual(2);
+  await expect(lines).toBeLessThanOrEqual(3);
+  return 'wrapped';
+};
+
+/**
+ * THE OPENER (D12, D21, D62–D64). Beside — D62's two containers across the
+ * WHOLE column (owner, 2026-10-01), spaced by D63 and on D64's one floor: the
+ * picture's container a third of the column, after an inset of 15 % of the
+ * gutter, and the words' container to the column's right edge; ONE floor
+ * under both, the cutout drawn as tall as the row (up to 1.4 × its third
+ * wide), centred on its third and standing where the words end; the name and
+ * the credo card on ONE left edge 1.5rem into the words, the name on as few
+ * lines as fit (`expectNameLines`) and the card up to 36rem wide with as much
+ * space above it as below it. (Until D62: a centred pair, as much space left
+ * of the picture as right of the words — round 2k's "left and right they
+ * have same as much space".) Stacked (round 2k, D51c, unchanged since): the
+ * NAME comes FIRST, centred, then the picture, then the card — the owner's
+ * "name and speciality … above the photo and … centered" on a phone or
+ * tablet.
  */
 const expectOpener = async (
   heading: HTMLElement,
   credo: HTMLElement,
+  nameLines?: NameLines,
 ): Promise<Branch> => {
   const band = heading.closest('section');
   const cutout = band?.querySelector('img');
@@ -350,14 +415,79 @@ const expectOpener = async (
   await expect(card.height).toBeGreaterThan(0);
 
   if (sitsBeside(heading)) {
-    await expect(picture.right).toBeLessThanOrEqual(name.left);
-    await expect(card.top).toBeGreaterThanOrEqual(name.bottom);
-    await expect(Math.abs(card.left - name.left)).toBeLessThanOrEqual(1);
-    await expect(card.width).toBeLessThanOrEqual(28 * rem() + 1);
-    const wordsRight = Math.max(name.right, card.right);
+    // The two containers, reached through the boxes this play already holds:
+    // the cutout's parent is the picture's, the name's grandparent the words'
+    // (the name → the eyebrow-and-name pair → the words' container).
+    const pair = parentOf(heading).getBoundingClientRect();
+    const words = parentOf(parentOf(heading)).getBoundingClientRect();
+    const box = parentOf(cutout).getBoundingClientRect();
+    const edge = words.left + 1.5 * rem();
+    // D63: the inset, the picture's third, the words to the column's edge.
     await expect(
-      Math.abs(picture.left - column.left - (column.right - wordsRight)),
+      Math.abs(
+        box.left -
+          column.left -
+          Math.min(0.01875 * column.width, 1.875 * rem()),
+      ),
     ).toBeLessThanOrEqual(1);
+    // The picture's third — or less, where the words' `auto` floor (a name's
+    // longest unbreakable run) claims the difference; then that run fills the
+    // pair's room (the band's THE STACKED TRACK paragraph).
+    // (A third of the column, never wider than the cutout's own file — D63.)
+    const third = Math.min(
+      column.width / 3,
+      Number(cutout.getAttribute('width')),
+    );
+    await expect(box.width).toBeLessThanOrEqual(third + 1);
+    if (box.width < third - 1) {
+      const range = document.createRange();
+      range.selectNodeContents(heading);
+      const widest = Math.max(
+        ...Array.from(range.getClientRects(), (rect) => rect.width),
+      );
+      await expect(widest).toBeGreaterThanOrEqual(pair.width - 1);
+    }
+    await expect(Math.abs(words.right - column.right)).toBeLessThanOrEqual(1);
+    // D64: ONE floor under the two containers and the cutout, the cutout as
+    // tall as the row, as wide as its proportion makes that (capped at 1.4 ×
+    // its third), centred on its third — and never reaching the name.
+    const proportion =
+      Number(cutout.getAttribute('width')) /
+      Number(cutout.getAttribute('height'));
+    if (!Number.isFinite(proportion) || proportion <= 0)
+      throw new Error('doctor story: the cutout has no intrinsic size');
+    await expect(Math.abs(box.bottom - words.bottom)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(picture.bottom - box.bottom)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(picture.height - box.height)).toBeLessThanOrEqual(1);
+    await expect(
+      Math.abs(
+        picture.width - Math.min(box.height * proportion, 1.4 * box.width),
+      ),
+    ).toBeLessThanOrEqual(1);
+    await expect(
+      Math.abs((picture.left + picture.right) / 2 - (box.left + box.right) / 2),
+    ).toBeLessThanOrEqual(1);
+    await expect(picture.right).toBeLessThan(name.left);
+    // D64: the name and the card on ONE left edge, the name a ninth of the
+    // column under the row's top; D63: the card up to 36rem wide, centred in
+    // the height the name leaves.
+    await expect(Math.abs(name.left - edge)).toBeLessThanOrEqual(1);
+    await expect(Math.abs(card.left - edge)).toBeLessThanOrEqual(1);
+    // …and the name never crosses the words' right edge, which is the
+    // column's (the Opus a11y review: the line count alone cannot see it).
+    await expect(name.right).toBeLessThanOrEqual(words.right + 1);
+    await expect(
+      Math.abs(pair.top - words.top - column.width / 9),
+    ).toBeLessThanOrEqual(1);
+    await expect(card.top).toBeGreaterThanOrEqual(name.bottom);
+    await expect(
+      Math.abs(card.width - Math.min(36 * rem(), words.right - edge)),
+    ).toBeLessThanOrEqual(1);
+    await expect(
+      Math.abs(card.top - pair.bottom - (words.bottom - card.bottom)),
+    ).toBeLessThanOrEqual(1);
+    const lines = await expectNameLines(heading, pair.width);
+    if (nameLines) await expect(lines).toBe(nameLines);
     return 'beside';
   }
   // Stacked: name → picture → card, the name centred on the column — and the
@@ -600,6 +730,9 @@ const playPage =
     words: PageWords,
     locale: Locale,
     pinned: Branch,
+    // Beside the picture, how the name must lay out at the story's pin — so
+    // the branch `expectNameLines` took is a stated fact, never a silent one.
+    nameLines?: NameLines,
   ): NonNullable<Story['play']> =>
   async ({ canvas, canvasElement }) => {
     const doctor = DOCTOR.words[locale];
@@ -797,7 +930,7 @@ const playPage =
     // in, and all four the SAME branch: they stand in one gutter, so they
     // must flip at one width.
     const branches = [
-      await expectOpener(heading, credo),
+      await expectOpener(heading, credo, nameLines),
       await expectProfile(about, paragraphs, schedule),
       await expectCourses(years),
       await expectStats(tiles),
@@ -826,9 +959,12 @@ const playPage =
  * copy, so a font or shaping regression has somewhere to show), pinned to the
  * LAPTOP width, where every side-by-side arrangement is on (D21).
  *
- * What to look at: the cutout standing on the band's floor with the specialty
- * and the name beside it, seated 7rem under the column's top (the `lowered`
- * seat, D54), and under the name the framed „Filozofia mea" card — the reviews
+ * What to look at: the opener's two containers (D62–D64) — the cutout on
+ * the left third of the column, grown down to the words' floor; beside it the
+ * specialty and the name a ninth of the column down (the longest name the
+ * clinic ships, on two balanced lines at this width), and under the name, on
+ * the name's own left edge and centred in the height left beside the
+ * picture, the framed „Filozofia mea" card — the reviews
  * deck's idle card, under the price cards' lavender glow since round 2r (D61)
  * — quoting the doctor in Romanian marks („…”) with the key words at weight 650 in
  * the deep violet accent-strong (D60); the lavender band fading in and out of the page ground with
@@ -852,6 +988,8 @@ export const Romanian: Story = {
     },
     'ro',
     'beside',
+    // The longest name the clinic ships, on two balanced lines at 1536.
+    'wrapped',
   ),
 };
 

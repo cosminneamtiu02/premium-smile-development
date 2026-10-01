@@ -211,16 +211,16 @@ export default async function DoctorPage({
           <h1> is therefore an `sr-only` element of the page's own. Here the
           name IS the opener's biggest line, so §9's one outline root and the
           visible title are the same element. The credo card under it is
-          REQUIRED (D12) and carries the outline's first <h2>. `align` is the
-          `lowered` seat — the top seat dropped 7rem since round 2l (D54; 3rem
-          in round 2e, 1.5rem in round 2h), the owner's one lever on where the
-          words start beside the picture; DoctorIntro's stories show the four
-          seats side by side. */}
+          REQUIRED (D12) and carries the outline's first <h2>. On a laptop or a
+          desktop the band lays the name over the card beside a picture that
+          takes a third of the column and grows down to the words' floor
+          (D62–D64, 2026-10-01) — which retired the `align="lowered"` seat this
+          page passed since round 2l (D54): the band places the name itself
+          now, and the card centres in the height left under it. */}
       <DoctorIntro
         name={page.intro.name}
         position={page.intro.position}
         photo={page.intro.photo}
-        align="lowered"
         credo={
           // Checked against the band's public shape here, where the literal is
           // spelled (G2-R2 tier 2, typescript F5): the populator hands over only

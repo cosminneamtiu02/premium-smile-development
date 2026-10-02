@@ -6,7 +6,11 @@ import {
 } from 'react';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
-import { Container } from '@/components/ui/Container/Container';
+import {
+  Container,
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
@@ -37,9 +41,10 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // other headings nad eyebrows on main page and without this: [the lead] so
 // dorp that part" — and, minutes later: "i realised now i want same
 // component as on main page with the stats on the team page between map and
-// helping staff"). The same band, three props apart, each with the doctor
-// page's answer as its default — so that page's call did not change by a
-// character (§6.6); Home and Team pass the same three answers:
+// helping staff"). The same band, three props apart — four since 2026-10-02,
+// `scaled` below — each with the doctor page's answer as its default, so that
+// page's call did not change by a character (§6.6); Home and Team pass the
+// same answers:
 //   · `ground` — 'tint' (TintedBand, the GROUND paragraph) or 'page': the
 //     shape of every other band on those two pages (DoctorShowcase,
 //     TeamRoster, ClinicLocation, ReviewsCarousel — Container.tsx's page-BAND
@@ -49,13 +54,85 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //   · `align` — 'center' or 'start', sections/SectionHeading's own two
 //     answers, so the eyebrow and the title stand where every neighbouring
 //     band's do;
-//   · `lead` — optional; Home and Team pass none, and then no <p> renders.
+//   · `lead` — optional; Home and Team pass none, and then no <p> renders;
+//   · `scaled` — false (the doctor page) or true: Home and Team draw the band
+//     in THE BAND SCALE, the next paragraph.
 // Everything else — the rhythm box, the tiles, the island, the way every
-// string arrives — is one code path on all three pages. There the three tiles
-// are the clinic's OWN numbers (lib/team's `clinicStats`), drawn by the doctor
-// page's glyph map and worded like his tiles; the pages decide that, and this
-// band still knows no doctor and no clinic. Three tiles have a row of their
-// own (the STEPS paragraph's last bullet).
+// string arrives — is one code path on all three pages (`scaled` adds classes
+// to two of its boxes and nothing else). There the three tiles are the
+// clinic's OWN numbers (lib/team's `clinicStats`), drawn by the doctor page's
+// glyph map and worded like his tiles; the pages decide that, and this band
+// still knows no doctor and no clinic. Three tiles have a row of their own
+// (the STEPS paragraph's last bullet).
+//
+// ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — ui/Container's THE BAND
+// SCALE). The owner, verbatim: "i want first of all in the section in numbers
+// to take as a reference the point for the "Experience confirmed over time"
+// section a point in which headings and eyebrows of "The specialists we are
+// proud of" and "Experience confirmed over time" are the same in size or
+// height. I want both section to in parallel on widening of screen to be
+// responsive and adapt in parallel, so headings and eyebrows grow together,
+// always have same size and extremley important for headings and eyebrows,
+// same offset always. i want also the components of the section "Experience
+// confirmed over time" to be responsive. so from sam starting point of
+// height, go with that and i want the section to also mentain same reports
+// and adapt in height and width. so these 2 should go together always in size
+// and width, but i repeat. on phone and tablet it looks perfect atm, so do not
+// touch those."
+// THE REFERENCE POINT is his 1401 window, the width at which the doctors band
+// (sections/DoctorShowcase's D10) is drawn at its own size: its design pixel
+// is a CSS pixel at that window's 1106px column. There the two openers agree —
+// MEASURED on develop's build, both read 36px / 14px (the <h2>, the eyebrow)
+// — and they agree at every width below the step, where neither band scales.
+// Above it they parted, because the doctors band scaled and this one stayed in
+// rem: at an 1882 window the doctors <h2> read 48.5 beside this band's 36, and
+// at 2560 the doctors opener sat at x 504.5, capped and centred, against this
+// band's 200, the column's edge. `scaled`, which Home and Team pass, puts
+// ui/Container's two band-scale strings on the RHYTHM box (its recipe rule 5),
+// so this band draws in the very pixel the doctors band draws in — the column
+// ÷ 1106, on a laptop or desktop column of max(56rem, 896px) — caps at the
+// same 96rem column and centres in it on the same left edge. One SIZE and one
+// OFFSET for the two openers at every laptop and desktop width, by
+// construction rather than by matching numbers; and the band's height and
+// width follow the column with them ("mentain same reports"), every theme
+// length inside it a design length.
+//   · THE TILES' ZOOM. The owner, verbatim: "Some other text that should
+//     always mentain a ratio of 1 to 1 is for example from this "Înainte de
+//     orice lucrare protetică verific sănătatea gingiei, pentru că pe ea se
+//     sprijină tot restul. Planul îl stabilim împreună, iar fiecare etapă o
+//     explic înainte să începem." and this "Peste 8000 de zâmbete îngrijite cu
+//     dedicare și profesionalism." but raporst between  this "Peste 8000 de
+//     zâmbete îngrijite cu dedicare și profesionalism."and this "Ani de
+//     experiență" and this"11.000+" and svg in circle as they are now ar
+//     eperfect. so they should be mentained in the responsiveness createing
+//     process." The first sentence is a doctor card's quote —
+//     sections/PersonnelCard's QUOTE, `text-lg`, 18 of the doctors band's
+//     design pixels; the second is a tile's sentence, ui/Text's `text-base`,
+//     16. So the WHOLE TILE draws at 9/8 of the band's pixel: the list wears
+//     `bandScaleClasses` a second time with `TILE_ZOOM` beside it, computing
+//     its pixel afresh from the same column (ui/Container's THE ZOOM says why
+//     a box cannot multiply the pixel it inherits). A tile's sentence is then
+//     16 × 9/8 = 18 design pixels, the doctor card's quote at every width; the
+//     label 22.5, the number 40.5, the disc 126 with its glyph 54, the gaps
+//     alike — every ratio INSIDE a tile is today's, the ones the owner called
+//     perfect. The opener keeps the band's own pixel, so its <h2> and its
+//     eyebrow stay the doctors band's.
+//   · WHAT STAYS UNSCALED. The doctor page: `scaled` is false by default
+//     (§6.6), because that page's other bands do not scale yet and its
+//     headings must stay one size with theirs. Every phone and every tablet:
+//     below the step, on every touch device and in an engine that cannot
+//     register custom properties nothing is declared and nothing remapped,
+//     every pixel as before — the owner's "on phone and tablet it looks
+//     perfect atm". The list's `--band-zoom` is inert there: its one reader is
+//     the pixel declaration the same gates hold back.
+//   · WHAT DOES NOT MOVE INSIDE IT. The container steps (the STEPS paragraph)
+//     still read ui/Container's column in plain rem — Tailwind writes a
+//     container query's size into the sheet as a number, so the remap never
+//     reaches it — and the regime starts at a column of max(56rem, 896px),
+//     past the widest of them (`@3xl`, 48rem), so a row there is always the
+//     count's widest: three across for three tiles, the four-column grid for
+//     any other count. A border stays in px (globals.css's THE DESIGN SCALE):
+//     the disc's 1px ring is a hairline at every width.
 //
 // ── D30 · DUMB, PROPS-IN, ZERO KEYS — the PriceList/Hero/DoctorProfile shape
 // (the round-1 ledger's D1). Every string arrives FINISHED and translated:
@@ -126,8 +203,10 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // the first box inside it, because an element cannot query its own size (the
 // Container cannot carry its own container-stepped `py`): `py-12 @lg:py-16
 // @3xl:py-20`, DoctorCourses' rhythm — and the Home and Team bands' — so the
-// bands around it breathe alike. NO OUTER MARGIN (§6.4): the page owns the
-// space between bands.
+// bands around it breathe alike. On Home and Team the same box is where THE
+// BAND SCALE rides (ui/Container's recipe rule 5), so on a laptop or desktop
+// its `py` is drawn in the band's design pixel, as its neighbours' is. NO
+// OUTER MARGIN (§6.4): the page owns the space between bands.
 //
 // ── THE OPENER IS CENTRED BY DEFAULT, AND EVERY CENTRING IS PER ELEMENT
 // (§15.15 b, the text-align board). sections/SectionHeading `align="center"`
@@ -141,10 +220,12 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // The <li> centres its children as BOXES (`items-center`) and never as text —
 // no wrapper-level blanket, `[&_p]:` spellings included. The suite walks every
 // element and pins exactly where `text-center` lives. The opener's column is
-// capped at `max-w-3xl` (48rem) on both alignments, and centred with
-// `mx-auto` only when the band is: the lead is one long sentence, and at the
-// laptop's 1229px column it would otherwise run ~130 characters wide — far
-// past a comfortable measure for §1's older reader.
+// capped at `max-w-3xl` (48rem — 768 design pixels inside THE BAND SCALE,
+// which remaps the `--container-*` widths with every other theme length) on
+// both alignments, and centred with `mx-auto` only when the band is: the lead
+// is one long sentence, and at the laptop's 1229px column it would otherwise
+// run ~130 characters wide — far past a comfortable measure for §1's older
+// reader.
 //
 // ── THE TITLE NEVER SPLITS A WORD (the Opus a11y review of 2026-10-01,
 // folded on the owner's delegation: "fix howver you fell like with that
@@ -192,8 +273,9 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     The suite pins the DOM order and the two order tokens;
 //     DoctorStats.stories.tsx's plays read the painted order off the engine
 //     (the number's bottom at or above the <h3>'s top).
-//   · THE DISC — a 7rem circle (`size-28`), `bg-surface` white with a
-//     `border-line` ring, the glyph at 3rem through the README's
+//   · THE DISC — a 7rem circle (`size-28`; 126 design pixels on Home and Team
+//     inside THE BAND SCALE, the tiles' 9/8), `bg-surface` white with a
+//     `border-line` ring, the glyph at 3rem (54 there) through the README's
 //     parent-owns-geometry rule (`[&_svg]:size-12`, which outranks the
 //     glyph's own size class by specificity) in `text-accent-decorative` —
 //     LILAC since 2026-10-01 (the owner: "paint it's svgs lilla"; the green
@@ -222,20 +304,26 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     (36px, ink-strong — display text; a stat is not a heading OF anything,
 //     so it takes the look and not the outline), `tabular-nums` so the digits
 //     keep their width while they count, `text-center`. Inside it the island.
-//     THE ONE LEVER: 36px is the `page` step; the reference's number is
-//     ~48px. A bigger number is a NEW Heading step, and ui/Heading grows one
-//     step per measured consumer (its header) — this band would be that
-//     consumer. Not built without the owner's word.
-//   · THE LABEL — an <h3> on ui/Heading's `title` step (20px) through
-//     `asChild`, `text-center hyphens-none`: a title breaks between words,
-//     never inside one (the §15.14 rider's reasoning for control labels,
-//     applied to a one- or two-word heading). The outline: page <h1> (the
-//     doctor's name on his page; the page's own `sr-only` <h1> on Home and
-//     Team) → this band's <h2> → one <h3> per tile, no gaps (§9).
-//   · THE DESCRIPTION — ui/Text `tone="muted"` (a <p>), `text-center` through
-//     the className merge (§6.8: it lands on the host element). Measured ink
-//     on the tint: `ink-muted` 4.8:1, `ink-strong` 11.7:1 (TintedBand's D23
-//     paragraph), both over §9's 4.5:1.
+//     On Home and Team inside THE BAND SCALE the step is 36 × 9/8 = 40.5
+//     design pixels: 40.5 × s, s the band's design pixel (40.5px at the
+//     owner's 1401 window). THE ONE LEVER: 36px is the `page` step; the
+//     reference's number is ~48px. A bigger number is a NEW Heading step, and
+//     ui/Heading grows one step per measured consumer (its header) — this
+//     band would be that consumer. Not built without the owner's word — and
+//     on 2026-10-02 he called the tile's proportions perfect as they are (THE
+//     BAND SCALE's zoom bullet).
+//   · THE LABEL — an <h3> on ui/Heading's `title` step (20px; 22.5 design
+//     pixels inside THE BAND SCALE) through `asChild`, `text-center
+//     hyphens-none`: a title breaks between words, never inside one (the
+//     §15.14 rider's reasoning for control labels, applied to a one- or
+//     two-word heading). The outline: page <h1> (the doctor's name on his
+//     page; the page's own `sr-only` <h1> on Home and Team) → this band's
+//     <h2> → one <h3> per tile, no gaps (§9).
+//   · THE DESCRIPTION — ui/Text `tone="muted"` (a <p> on its `text-base`,
+//     16px — 18 design pixels inside THE BAND SCALE, a doctor card's quote),
+//     `text-center` through the className merge (§6.8: it lands on the host
+//     element). Measured ink on the tint: `ink-muted` 4.8:1, `ink-strong`
+//     11.7:1 (TintedBand's D23 paragraph), both over §9's 4.5:1.
 //
 // ── THE STEPS, MEASURED ON ui/Container's COLUMN (§6.5 — no media query in
 // this file). At §7's sampling points the column is 256 (320) · 312 (390) ·
@@ -255,7 +343,9 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     the third tile alone on a row with half the band empty beside it.
 // Any other count keeps the four-tile steps, the rest of the row empty: the
 // grid does not stretch tiles over columns' worth of width it was not
-// measured for.
+// measured for. Inside THE BAND SCALE no step moves (that paragraph's last
+// bullet); only the gap does, `gap-8` drawn at the tiles' 9/8 — 36 design
+// pixels.
 //
 // ── NO TOKEN MAY PUSH THE PAGE SIDEWAYS (§7 — found by the PseudoLocale
 // story, measured on round 2f's lead: its 70-character run of `·` padding,
@@ -280,9 +370,9 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //
 // ── NO EMPTY STATE. `tiles` empty is a page bug, not a state: lib/team's
 // data test pins at least one stat per doctor (D32) and the clinic's three,
-// so this band renders what it is given; its only branches are the three
-// settings of the SECOND AND THIRD PAGES paragraph. Tiles are keyed by
-// their `id`, never an index.
+// so this band renders what it is given; its only branches are the four
+// settings of the SECOND AND THIRD PAGES paragraph (`scaled` the fourth).
+// Tiles are keyed by their `id`, never an index.
 //
 // ── Server-safe and zero-JS apart from the island: no 'use client', ONE hook
 // (the server-safe useId, for the heading's id), no state, no handler. The
@@ -349,6 +439,21 @@ type DoctorStatsOwnProps = Readonly<{
    * page"). The tiles stay centred either way.
    */
   align?: DoctorStatsAlign;
+  /**
+   * Draws the band in THE BAND SCALE (the header's paragraph of that name;
+   * ui/Container's THE BAND SCALE; CLAUDE.md §15.32): on a laptop or desktop
+   * column of max(56rem, 896px) the band takes the design pixel every scaled
+   * band on its page takes — the column ÷ 1106, capped at a 96rem column and
+   * centred past it — so its eyebrow and <h2> are the doctors band's size and
+   * stand on the doctors band's left edge at every width; and the tiles draw
+   * at 9/8 of that pixel (`TILE_ZOOM`), so a tile's sentence reads a doctor
+   * card's quote size. Home and Team pass it. FALSE by default (§6.6): the
+   * doctor page's other bands do not scale yet and its headings must stay one
+   * size with theirs, so that page's call did not change by a character.
+   * Below the step, on every touch device and in an engine that cannot
+   * register custom properties it changes no pixel.
+   */
+  scaled?: boolean;
   /** The tiles, 1..n, in the page's order (four on every doctor, three on
    *  the clinic's band). */
   tiles: readonly DoctorStatTile[];
@@ -493,6 +598,23 @@ function rowsFor(count: number): string {
   return count === 3 ? '@xl:grid-cols-3' : '@md:grid-cols-2 @3xl:grid-cols-4';
 }
 
+/**
+ * THE TILES' ZOOM (the header's THE BAND SCALE, its zoom bullet): worn by the
+ * list beside `bandScaleClasses`, only when the band is `scaled`. It sets the
+ * multiple ui/Container's pixel declaration reads (`--band-zoom`, its THE
+ * ZOOM), so the list computes its design pixel afresh from the column at 9/8
+ * of the band's, and every tile draws at 9/8: its sentence, ui/Text's 16, at
+ * 18 design pixels — a doctor card's quote — with every ratio inside it as it
+ * is. 1.125 = 18 / 16, the quote over the sentence. Inert outside the regime:
+ * its one reader is the pixel declaration the same gates hold back. The list
+ * must keep ui/Container as its nearest size container (THE ZOOM's
+ * precondition — no `@container` between them, which today none is): inside
+ * another container the gate would read that box and the zoom would do
+ * nothing. One whole static string, because Tailwind reads class names from
+ * source text.
+ */
+const TILE_ZOOM = '[--band-zoom:1.125]';
+
 export function DoctorStats({
   eyebrow,
   title,
@@ -502,6 +624,7 @@ export function DoctorStats({
   atLeast,
   ground = 'tint',
   align = 'center',
+  scaled = false,
   className,
   ...rest
 }: DoctorStatsProps): ReactElement {
@@ -511,8 +634,16 @@ export function DoctorStats({
   const content = (
     // The rhythm box — band-owned `py` on container steps (the header's
     // GROUND paragraph), and the gap between the opener and the tiles. The
-    // same box, the same steps, on both grounds.
-    <div className="flex flex-col gap-10 py-12 @lg:py-16 @3xl:py-20">
+    // same box, the same steps, on both grounds; `scaled`, it also wears
+    // ui/Container's band-scale column and pixel, in that order (the header's
+    // THE BAND SCALE; ui/Container's recipe rule 5).
+    <div
+      className={cx(
+        'flex flex-col gap-10 py-12 @lg:py-16 @3xl:py-20',
+        scaled && bandColumnClasses,
+        scaled && bandScaleClasses,
+      )}
+    >
       {/* THE OPENER — capped as a BOX, centred as one only when the band is
           (`mx-auto`); each text centres itself (the header's CENTRING
           paragraph). */}
@@ -540,10 +671,17 @@ export function DoctorStats({
           paragraph). `role="list"` is load-bearing in WebKit (the header's
           TILES paragraph). Each tile's DOM is disc → label → number →
           description, painted disc → number → label → description (the
-          header's ORDER bullet). */}
+          header's ORDER bullet). `scaled`, the list wears the band-scale
+          pixel a second time with the zoom beside it, and every tile draws at
+          9/8 of the band's pixel (`TILE_ZOOM`, the header's zoom bullet). */}
       <ul
         role="list"
-        className={cx('grid gap-10 @3xl:gap-8', rowsFor(tiles.length))}
+        className={cx(
+          'grid gap-10 @3xl:gap-8',
+          rowsFor(tiles.length),
+          scaled && bandScaleClasses,
+          scaled && TILE_ZOOM,
+        )}
       >
         {tiles.map((tile) => (
           <li key={tile.id} className="flex flex-col items-center gap-4">

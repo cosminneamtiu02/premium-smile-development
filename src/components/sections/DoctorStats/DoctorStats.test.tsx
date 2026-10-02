@@ -16,7 +16,11 @@ import { ToothCheck } from '@/assets/glyphs/ToothCheck';
 import { Trophy } from '@/assets/glyphs/Trophy';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
-import { containerClasses } from '@/components/ui/Container/Container';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from '@/components/ui/Container/Container';
 import { Heading } from '@/components/ui/Heading/Heading';
 import { Text } from '@/components/ui/Text/Text';
 import {
@@ -58,9 +62,10 @@ import source from './DoctorStats.tsx?raw';
 //
 // ── THE SECOND PAGE (owner, 2026-10-01 — DoctorStats.tsx's SECOND PAGE
 // paragraph): the same band on Home and on the Team page, three settings
-// apart — `ground="page"`, `align="start"`, no `lead` — over THREE tiles. Each
-// setting is pinned on its own below; the defaults are pinned to the doctor
-// page's markup to the byte (`ground="tint" align="center"` renders exactly
+// apart — `ground="page"`, `align="start"`, no `lead` — over THREE tiles, and
+// a fourth since 2026-10-02, `scaled` (the next paragraph). Each setting is
+// pinned on its own below; the defaults are pinned to the doctor page's markup
+// to the byte (`ground="tint" align="center" scaled={false}` renders exactly
 // what no setting renders, so that page's call did not move, §6.6); and what
 // stands INSIDE the ground — the rhythm box, the opener, the tiles — is held
 // to be one code path on both grounds. HOME_TILES is TILES without the courses
@@ -69,6 +74,20 @@ import source from './DoctorStats.tsx?raw';
 // glyphs are LILAC since that day (the owner: "paint it's svgs lilla"): the
 // disc's pin below wears `text-accent-decorative`, and no `text-cta` may come
 // back anywhere in the band.
+//
+// ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — DoctorStats.tsx's
+// paragraph of that name): Home and Team draw the band in the doctors band's
+// design pixel on a laptop or desktop. Pinned here as TOKENS, three ways: OFF
+// by default — no gated class and no zoom anywhere, the rhythm box and the
+// list carrying today's strings, `scaled={false}` the absent prop to the byte;
+// ON — ui/Container's two strings on the rhythm box (its recipe rule 5) and
+// its pixel a second time on the list with the band's own zoom beside it; and
+// NOTHING ELSE — take those tokens back off the two boxes and the scaled band
+// IS the unscaled one, to the byte. ui/Container's strings are imported,
+// never retyped (the atom-derived rule above, and tests/unit/design-scale's
+// one spelling); the zoom is the band's own string and written out. What the
+// engine makes of them — every size the design pixel's multiple, the tiles at
+// 9/8 — is DoctorStats.stories.tsx's `expectBandScale`.
 
 const EYEBROW = 'În cifre';
 const TITLE = 'Experiență confirmată în timp';
@@ -165,6 +184,29 @@ const TILE = 'flex flex-col items-center gap-4';
 const DISC =
   '-order-2 flex size-28 items-center justify-center rounded-full border border-line bg-surface text-accent-decorative [&_svg]:size-12';
 
+// ── THE BAND SCALE's tokens (2026-10-02, §15.32). ui/Container's two strings
+// arrive by import; the zoom is the band's OWN class and is written out.
+/** The tiles' zoom — DoctorStats.tsx's TILE_ZOOM: 9/8 = 18 / 16, a doctor
+ *  card's quote over a tile's sentence. */
+const ZOOM = '[--band-zoom:1.125]';
+/** What `scaled` appends to the rhythm box, after its own classes: the band
+ *  scale's column, then its pixel (ui/Container's recipe rule 5). */
+const RHYTHM_SCALE = `${bandColumnClasses} ${bandScaleClasses}`;
+/** …and to the list, after its own: the pixel once more, then the zoom. */
+const LIST_SCALE = `${bandScaleClasses} ${ZOOM}`;
+/** The rhythm box of a `scaled` band — Home's and the Team page's. */
+const RHYTHM_SCALED = `${RHYTHM_BOX} ${RHYTHM_SCALE}`;
+/** Every token the scale may put on an element — from both of ui/Container's
+ *  strings and the zoom. Some are not the scale's alone (`mx-auto` also
+ *  centres the opener box), so the "off" pins below read the GATED tokens and
+ *  the zoom, never `mx-auto`. */
+const SCALE_TOKENS = `${RHYTHM_SCALE} ${ZOOM}`.split(/\s+/);
+/** The tokens only the scale ever puts down: the ones behind its gate, and
+ *  the zoom. */
+const GATED_TOKENS = SCALE_TOKENS.filter(
+  (token) => token.startsWith('scalable:') || token === ZOOM,
+);
+
 const tokensOf = (element: Element): string[] =>
   (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
 
@@ -212,14 +254,15 @@ const renderBand = (
     />,
   );
 
-/** The band's three settings (the header's SECOND PAGE), each passed ONLY
- *  when its key is present — so `{}` is the doctor page's call minus its lead,
- *  and `{ ground: 'page', align: 'start', tiles: HOME_TILES }` is Home's. */
+/** The band's four settings (the header's SECOND PAGE and BAND SCALE), each
+ *  passed ONLY when its key is present — so `{}` is the doctor page's call
+ *  minus its lead, and HOME below is Home's. */
 type Settings = Placement &
   Readonly<{
     ground?: DoctorStatsGround;
     align?: DoctorStatsAlign;
     lead?: string;
+    scaled?: boolean;
     tiles?: readonly DoctorStatTile[];
   }>;
 
@@ -236,10 +279,12 @@ const renderSettings = ({ tiles = TILES, ...settings }: Settings = {}) =>
   );
 
 /** The band exactly as Home and the Team page mount it: the page ground, the
- *  opener at the start, no lead, three tiles. */
+ *  opener at the start, no lead, three tiles — and, since 2026-10-02, in THE
+ *  BAND SCALE (`scaled`, §15.32). */
 const HOME = {
   ground: 'page',
   align: 'start',
+  scaled: true,
   tiles: HOME_TILES,
 } as const satisfies Settings;
 
@@ -287,6 +332,36 @@ const contentHtml = (container: HTMLElement): string => {
   if (!rhythm) throw new Error('no rhythm box around the band’s <h2>');
   const copy = rhythm.cloneNode(true) as HTMLElement;
   copy.querySelector('h2')?.removeAttribute('id');
+  return copy.outerHTML;
+};
+
+/**
+ * A `scaled` band's content with THE BAND SCALE taken back OFF it — the rhythm
+ * box's two strings and the list's pixel and zoom — so it can be held to the
+ * byte against an unscaled band's `contentHtml`. Each addition must stand at
+ * the END of its box's class list, where lib/cx appends it; a box that does
+ * not end in it is named rather than stripped.
+ */
+const unscaledContentHtml = (container: HTMLElement): string => {
+  const rhythm =
+    container.querySelector('h2')?.parentElement?.parentElement?.parentElement;
+  if (!rhythm) throw new Error('no rhythm box around the band’s <h2>');
+  const copy = rhythm.cloneNode(true) as HTMLElement;
+  copy.querySelector('h2')?.removeAttribute('id');
+  const list = copy.querySelector('ul');
+  if (!list) throw new Error('no list in the band');
+  for (const [box, added] of [
+    [copy, RHYTHM_SCALE],
+    [list, LIST_SCALE],
+  ] as const) {
+    const classes = box.getAttribute('class') ?? '';
+    if (!classes.endsWith(` ${added}`)) {
+      throw new Error(
+        `the ${box.tagName} does not end in the band scale’s tokens: “${classes}”`,
+      );
+    }
+    box.setAttribute('class', classes.slice(0, -(added.length + 1)));
+  }
   return copy.outerHTML;
 };
 
@@ -492,10 +567,12 @@ describe('DoctorStats — composes sections/TintedBand on the default ground, th
 });
 
 describe('DoctorStats — the defaults ARE the doctor page (§6.6)', () => {
-  it('renders `ground="tint" align="center"` byte for byte as no setting at all — that page’s call did not move', () => {
+  it('renders `ground="tint" align="center" scaled={false}` byte for byte as no setting at all — that page’s call did not move', () => {
     // renderToString IS the static export's render, and it numbers useId by
     // the tree's shape, so two identical trees print identical ids: the
-    // comparison is the whole server HTML, every byte of it.
+    // comparison is the whole server HTML, every byte of it. `scaled` joined
+    // the defaults on 2026-10-02 (THE BAND SCALE), false like the doctor
+    // page's call.
     const doctorPage = {
       eyebrow: EYEBROW,
       title: TITLE,
@@ -507,7 +584,12 @@ describe('DoctorStats — the defaults ARE the doctor page (§6.6)', () => {
 
     expect(
       renderToString(
-        <DoctorStats {...doctorPage} ground="tint" align="center" />,
+        <DoctorStats
+          {...doctorPage}
+          ground="tint"
+          align="center"
+          scaled={false}
+        />,
       ),
     ).toBe(renderToString(<DoctorStats {...doctorPage} />));
   });
@@ -515,9 +597,11 @@ describe('DoctorStats — the defaults ARE the doctor page (§6.6)', () => {
   it.each(ALIGNS)(
     'lays ONE content on both grounds — the rhythm box, the opener and the tiles do not know where they stand (align %s)',
     (align) => {
-      // The header's SECOND PAGE paragraph: "Everything else … is one code
-      // path on both pages." The ground is the only difference between the
-      // two shapes; what it holds is the same markup to the byte.
+      // The header's SECOND AND THIRD PAGES paragraph: "Everything else … is
+      // one code path on all three pages." The ground is the only difference
+      // between the two shapes; what it holds is the same markup to the byte
+      // (`scaled` left out on both — this suite's BAND SCALE describe holds
+      // each scaled band to its unscaled twin, on both grounds).
       const tint = renderSettings({ ground: 'tint', align, lead: LEAD });
       const page = renderSettings({ ground: 'page', align, lead: LEAD });
 
@@ -553,7 +637,10 @@ describe('DoctorStats — the PAGE ground, Home’s and the Team page’s (owner
     expect(column.className).toBe(containerClasses);
     expect(column.children).toHaveLength(1);
     expect(column.firstElementChild).toBe(rhythmOf());
-    expect(rhythmOf().className).toBe(RHYTHM_BOX);
+    // Home's band is `scaled`: the band scale rides the rhythm box, never
+    // ui/Container itself (its recipe rule 5; this suite's BAND SCALE
+    // describe pins the rest).
+    expect(rhythmOf().className).toBe(RHYTHM_SCALED);
     expect(rhythmOf().children).toHaveLength(2);
     expect(rhythmOf().lastElementChild).toBe(screen.getByRole('list'));
 
@@ -1088,6 +1175,142 @@ describe('DoctorStats — the rows, by count (`rowsFor`, the header’s STEPS pa
   );
 });
 
+describe('DoctorStats — THE BAND SCALE, Home’s and the Team page’s (2026-10-02, §15.32)', () => {
+  /** ui/Container's column — the rhythm box's parent, on either ground. */
+  const columnIn = (container: HTMLElement): HTMLElement => {
+    const column = container.querySelector('ul')?.parentElement?.parentElement;
+    if (!column) throw new Error('no column above the band’s rhythm box');
+    return column;
+  };
+
+  it.each(GROUNDS)(
+    'is OFF by default on the %s ground — the rhythm box and the list carry today’s strings, and no element carries a gated class or the zoom (§6.6)',
+    (ground) => {
+      // Both lists: the doctor page's four and the clinic's three.
+      for (const tiles of [TILES, HOME_TILES]) {
+        const { container, unmount } = renderSettings({
+          ground,
+          tiles,
+          lead: LEAD,
+        });
+
+        expect(rhythmOf().className).toBe(RHYTHM_BOX);
+        expect(screen.getByRole('list').className).toBe(
+          tiles.length === 3 ? THREE_TILE_GRID : FOUR_TILE_GRID,
+        );
+        expect(columnIn(container).className).toBe(containerClasses);
+        for (const element of [
+          bandOf(container),
+          ...container.querySelectorAll('*'),
+        ]) {
+          for (const token of tokensOf(element)) {
+            expect(GATED_TOKENS).not.toContain(token);
+          }
+        }
+        unmount();
+      }
+    },
+  );
+
+  it('renders `scaled={false}` byte for byte as no `scaled` at all — on Home’s shape too, so the default is the doctor page’s answer whatever else is set', () => {
+    const home = {
+      eyebrow: EYEBROW,
+      title: TITLE,
+      tiles: HOME_TILES,
+      format: RO,
+      atLeast: AT_LEAST,
+      ground: 'page',
+      align: 'start',
+    } as const;
+
+    expect(renderToString(<DoctorStats {...home} scaled={false} />)).toBe(
+      renderToString(<DoctorStats {...home} />),
+    );
+  });
+
+  it.each(GROUNDS)(
+    'puts ui/Container’s column and pixel on the rhythm box when `scaled`, after its own classes — on the %s ground (ui/Container’s recipe rule 5)',
+    (ground) => {
+      const { container } = renderSettings({ ground, scaled: true });
+
+      expect(rhythmOf().className).toBe(RHYTHM_SCALED);
+      // …and nothing on ui/Container itself: the column stays the gutter
+      // and the container context every step reads.
+      expect(columnIn(container).className).toBe(containerClasses);
+    },
+  );
+
+  it.each([
+    ['three', HOME_TILES, THREE_TILE_GRID],
+    ['four', TILES, FOUR_TILE_GRID],
+  ] as const)(
+    'draws %s tiles at 9/8 when `scaled` — the list wears the pixel a second time with the zoom beside it, its own steps unchanged',
+    (_, tiles, grid) => {
+      renderSettings({ ground: 'page', scaled: true, tiles });
+
+      expect(screen.getByRole('list').className).toBe(`${grid} ${LIST_SCALE}`);
+    },
+  );
+
+  it('puts the zoom on the LIST alone, and the pixel on exactly two boxes — the opener keeps the band’s own pixel, the doctors band’s', () => {
+    const { container } = renderSettings(HOME);
+    const every = [bandOf(container), ...container.querySelectorAll('*')];
+    const pixel = bandScaleClasses.split(/\s+/);
+
+    expect(every.filter((element) => tokensOf(element).includes(ZOOM))).toEqual(
+      [screen.getByRole('list')],
+    );
+    expect(
+      every.filter((element) =>
+        pixel.every((token) => tokensOf(element).includes(token)),
+      ),
+    ).toEqual([rhythmOf(), screen.getByRole('list')]);
+    // The column — the cap and the centring — is the rhythm box's alone. (In
+    // Home's start-aligned shape, that is: a CENTRED opener box wears its own
+    // `mx-auto`, the CENTRING paragraph's.)
+    const column = bandColumnClasses.split(/\s+/);
+    expect(
+      every.filter((element) =>
+        tokensOf(element).some((token) => column.includes(token)),
+      ),
+    ).toEqual([rhythmOf()]);
+  });
+
+  it.each([
+    [
+      'on the tint, centred, with a lead',
+      { ground: 'tint', align: 'center', lead: LEAD },
+    ],
+    ['on the tint, at the start', { ground: 'tint', align: 'start' }],
+    [
+      'on the page ground, centred, with a lead',
+      { ground: 'page', align: 'center', lead: LEAD },
+    ],
+    [
+      'in Home’s and the Team page’s shape',
+      { ground: 'page', align: 'start', tiles: HOME_TILES },
+    ],
+  ] as const)(
+    'changes NOTHING ELSE %s — the two boxes’ additions taken off, the scaled band is the unscaled one to the byte',
+    (_, settings) => {
+      const plain = renderSettings(settings);
+      const scaled = renderSettings({ ...settings, scaled: true });
+
+      expect(unscaledContentHtml(scaled.container)).toBe(
+        contentHtml(plain.container),
+      );
+      // …and the band's outer and ui/Container are untouched: the scale
+      // rides the rhythm box, never a box above it.
+      expect(bandOf(scaled.container).className).toBe(
+        bandOf(plain.container).className,
+      );
+      expect(columnIn(scaled.container).className).toBe(
+        columnIn(plain.container).className,
+      );
+    },
+  );
+});
+
 describe('DoctorStats — countFrames, the count as strings (D31 friction)', () => {
   it('makes 46 frames: 0 first, format(value) last', () => {
     const frames = countFrames(3000, RO);
@@ -1221,9 +1444,16 @@ describe('DoctorStats — container steps only, one island (§6.5, §16)', () =>
     ['the doctor page', { lead: LEAD }],
     ['Home and the Team page', HOME],
   ] as const)(
-    'carries no media queries anywhere — those are the page’s (%s)',
+    'carries no viewport media query anywhere — a width is a container step, and the one media feature it reads, the band scale’s pointer gate, rides in ui/Container’s strings alone (%s)',
     (_, settings) => {
+      // Since 2026-10-02 (THE BAND SCALE) a `scaled` band wears `scalable:`
+      // — globals.css's variant, `@media (pointer: fine)` inside an
+      // `@supports`: it asks WHICH INPUT the visitor has, never how wide the
+      // window is, and it arrives only through ui/Container's two strings.
+      // The width side of the scale is a container step (`@4xl`,
+      // `@min-[896px]` — the `@` is the container's), as every step here.
       const { container } = renderSettings(settings);
+      let gated = 0;
 
       for (const element of [
         bandOf(container),
@@ -1231,9 +1461,24 @@ describe('DoctorStats — container steps only, one island (§6.5, §16)', () =>
       ]) {
         for (const token of tokensOf(element)) {
           expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
-          expect(token).not.toMatch(/(min|max)-\[/);
+          // Tailwind's arbitrary VIEWPORT variants, `min-[…]:` and
+          // `max-[…]:` — never the container's own `@min-[…]:`.
+          expect(token).not.toMatch(/(^|:)(min|max)-\[/);
+          if (token.includes('scalable:')) {
+            expect(SCALE_TOKENS).toContain(token);
+            gated += 1;
+          }
         }
       }
+      // Not vacuous: Home's band wears the gate as often as the two boxes'
+      // additions carry it — the rhythm box's column and pixel, the list's
+      // pixel again (five tokens today, counted off ui/Container's own
+      // strings); the doctor page's wears it nowhere.
+      const worn = `${RHYTHM_SCALE} ${LIST_SCALE}`
+        .split(/\s+/)
+        .filter((token) => token.startsWith('scalable:')).length;
+      expect(worn).toBeGreaterThan(0);
+      expect(gated).toBe('scaled' in settings ? worn : 0);
     },
   );
 
@@ -1251,10 +1496,35 @@ describe('DoctorStats — container steps only, one island (§6.5, §16)', () =>
     expect([...new Set(hooks)]).toEqual(['useId(']);
   });
 
+  it('takes THE BAND SCALE from ui/Container by import — its two strings named there, nothing of the scale spelled here (§15.32)', () => {
+    // The band names exactly three things from the Container module: the
+    // atom and its two band-scale strings. Its own code spells no gated
+    // class, no design pixel and no remap: those live in ui/Container and
+    // globals.css alone (tests/unit/design-scale.test.ts holds the whole
+    // repository to that); the zoom, TILE_ZOOM, is the one scale string that
+    // is the band's.
+    const names =
+      /^import\s*\{([^}]*)\}\s*from\s*'@\/components\/ui\/Container\/Container';/m
+        .exec(CODE)?.[1]
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .toSorted();
+    expect(names).toEqual([
+      'Container',
+      'bandColumnClasses',
+      'bandScaleClasses',
+    ]);
+    expect(CODE).not.toMatch(/scalable:|design-scale|--scale-px/);
+    expect(CODE.match(/--band-zoom/g)).toHaveLength(1);
+  });
+
   it('imports react, TintedBand, SectionHeading, Container, Heading, Text, lib/cx and ./StatNumber — nothing else', () => {
     // ui/Container and lib/cx arrived with the PAGE ground (2026-10-01): the
     // other Home bands' outer is a <section> around ui/Container, and the
-    // settings assemble the opener's, the lead's and the list's classes.
+    // settings assemble the opener's, the lead's and the list's classes. The
+    // Container module also hands over THE BAND SCALE's two strings since
+    // 2026-10-02 (the test above) — the same specifier.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -1334,9 +1604,15 @@ describe('DoctorStats — type-level pins', () => {
     >();
   });
 
-  it('pins the three settings of the SECOND PAGE: an optional lead, two grounds, two alignments', () => {
+  it('pins the four settings of the SECOND PAGE and THE BAND SCALE: an optional lead, two grounds, two alignments, an optional flag', () => {
     expectTypeOf<DoctorStatsProps>().toHaveProperty('ground');
     expectTypeOf<DoctorStatsProps>().toHaveProperty('align');
+    expectTypeOf<DoctorStatsProps>().toHaveProperty('scaled');
+    // `scaled` is an OPTIONAL flag since 2026-10-02 — the doctor page passes
+    // none, and false is its answer.
+    expectTypeOf<DoctorStatsProps['scaled']>().toEqualTypeOf<
+      boolean | undefined
+    >();
     // `lead` is OPTIONAL since 2026-10-01 — Home passes none.
     expectTypeOf<DoctorStatsProps['lead']>().toEqualTypeOf<
       string | undefined
@@ -1369,6 +1645,7 @@ describe('DoctorStats — type-level pins', () => {
       ...leadless,
       ground: 'page',
       align: 'start',
+      scaled: true,
     };
 
     expect([leadless, home]).toHaveLength(2);
@@ -1417,6 +1694,8 @@ describe('DoctorStats — type-level pins', () => {
     const ended: DoctorStatsProps = { ...BAND, align: 'end' };
     // @ts-expect-error — a lead is a finished sentence or nothing, never a flag
     const flagged: DoctorStatsProps = { ...BAND, lead: false };
+    // @ts-expect-error — the scale is a flag; the tiles' 9/8 is the band's own, never a caller's number
+    const zoomed: DoctorStatsProps = { ...BAND, scaled: 1.125 };
 
     expect([
       nested,
@@ -1428,6 +1707,7 @@ describe('DoctorStats — type-level pins', () => {
       tinted,
       ended,
       flagged,
-    ]).toHaveLength(9);
+      zoomed,
+    ]).toHaveLength(10);
   });
 });

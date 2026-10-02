@@ -51,8 +51,22 @@ import { toStatTiles } from './stat-tiles';
 // same on Home, where it cannot be an <h1>. §9's one outline root and the SEO
 // lane's outline still need the element, so it stays, in the page's markup,
 // with the words the tab title shows: h1 (the page) → h2 (the band) → h3 (each
-// doctor) → h2 (each staff tile) → h2 (the numbers) → h3 (each tile) → h2 (the
-// map).
+// doctor) → h2 (the staff band, since 2026-10-02) → h3 (each staff tile) → h2
+// (the numbers) → h3 (each tile) → h2 (the map).
+//
+// ── EVERY BAND DRAWS IN ONE SCALE, AND THE STAFF HAVE A TITLE (2026-10-02,
+// CLAUDE.md §15.32 — owner, verbatim: "the other page you have to implement
+// the same thing once done is the team page. there you have little work. you
+// hav eto create an eyebrow and headline for the 3 cars with helping staff").
+// On a laptop or desktop all four bands draw in ui/Container's THE BAND SCALE,
+// so every eyebrow and <h2> on the page is one size and one offset: the
+// doctors band always, the staff band always (its one page), the numbers and
+// the map because this page passes `scaled` (the doctor page mounts both and
+// leaves it off until its own bands scale). The staff band's eyebrow and
+// title are `team.roster.*` — Claude's drafts in all five languages, flagged
+// for the owner (§15.17) — and its tiles keep one width: 18rem on phones and
+// tablets, a third of the scaled column on a laptop or desktop
+// (sections/TeamRoster's D9).
 //
 // ── `isLocale` IS THE NARROWING, not a guard against reality: next-intl hands
 // back a plain `string`, and `words[locale]` on a `Record<Locale, …>` refuses
@@ -133,13 +147,21 @@ export default async function TeamPage() {
         title={t('showcase.title')}
         doctors={doctors}
       />
-      <TeamRoster members={populateTeamRoster(locale)} />
+      {/* THE STAFF, titled since 2026-10-02 (the header's ONE SCALE
+          paragraph): the band's own eyebrow and <h2>, the tiles <h3>s. */}
+      <TeamRoster
+        eyebrow={t('roster.eyebrow')}
+        title={t('roster.title')}
+        members={populateTeamRoster(locale)}
+      />
       {/* THE CLINIC'S NUMBERS — the Home page's band, prop for prop (owner,
           2026-10-01: "same component as on main page with the stats on the
           team page between map and helping staff"): the page ground, the
           eyebrow and title at the start, no lead, lib/team's three
-          `clinicStats` tiles. The words are the doctor page's own keys. */}
+          `clinicStats` tiles. The words are the doctor page's own keys.
+          `scaled`, like every band on this page. */}
       <DoctorStats
+        scaled
         ground="page"
         align="start"
         eyebrow={t('doctor.stats.eyebrow')}
@@ -150,8 +172,8 @@ export default async function TeamPage() {
       />
       {/* The map closes every page of this run — the owner's „add at the end
           the map so i can test how it goes back and forth on the page". It
-          reads lib/clinic itself and takes nothing from here. */}
-      <ClinicLocation />
+          reads lib/clinic itself and takes only `scaled` from here. */}
+      <ClinicLocation scaled />
     </>
   );
 }

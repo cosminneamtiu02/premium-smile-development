@@ -48,6 +48,18 @@ import { populateHero } from './populate';
 // ServicesTeaser and CTABanner still slot around them in their own lanes
 // (§14).
 //
+// EVERY BAND UNDER THE HERO DRAWS IN ONE SCALE (2026-10-02, CLAUDE.md
+// §15.32 — owner, verbatim: "i need you to take whole of home page from the
+// sliding window with photos downwards … headings and eyebrows grow together,
+// always have same size and extremley important for headings and eyebrows,
+// same offset always"). On a laptop or desktop the doctors band was drawn in
+// its own design pixel and the three bands around it in rem; now all four
+// draw in ui/Container's THE BAND SCALE — the doctors band always, the numbers
+// and the map because this page passes `scaled` (the doctor page mounts both
+// bands too and leaves it off until its own bands scale), the reviews deck's
+// opener alone because the deck itself is not to be touched (the owner: "you
+// will not touch under any circumstance"). Phones and tablets: unchanged.
+//
 // THIS PAGE IS THE HERO'S ONE POPULATOR (the services page's precedent):
 // sections/Hero is a DUMB band — no keys, no data, no `t()` — so the page
 // narrows the locale, walks lib/hero-slides for that language through
@@ -114,8 +126,10 @@ export default async function HomePage() {
           uses. The words are the doctor page's own keys, so the band reads
           the same on every page that carries it (the showcase's precedent).
           FIRST under the Hero, before the doctors — the owner's order, the
-          header's opening paragraph. */}
+          header's opening paragraph. `scaled`: one size and one offset with
+          every band under the Hero (the header's ONE SCALE paragraph). */}
       <DoctorStats
+        scaled
         ground="page"
         align="start"
         eyebrow={tt('doctor.stats.eyebrow')}
@@ -129,7 +143,7 @@ export default async function HomePage() {
         title={tt('showcase.title')}
         doctors={doctors}
       />
-      <ClinicLocation />
+      <ClinicLocation scaled />
       <ReviewsCarousel />
     </>
   );

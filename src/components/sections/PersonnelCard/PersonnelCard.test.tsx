@@ -219,9 +219,9 @@ const FRAMED_ROW = [
 const CARD_SURFACE = [...CARD_BASE, ...SURFACE_ROW].join(' ');
 const CARD_FRAMED = [...CARD_BASE, ...FRAMED_ROW].join(' ');
 
-/** ui/Heading's `title` step (its sizeClasses table). */
-const TITLE_STEP = 'font-display text-xl text-ink-strong';
-/** ui/Heading's `band` step (its sizeClasses table, run D48). */
+/** ui/Heading's `band` step (its sizeClasses table, run D48) — every person's
+ *  name since 2026-10-02, both kinds, both levels (D4, §15.32). Its `title`
+ *  step left this file that day with the auxiliary's level-3 cell. */
 const BAND_STEP = 'font-display text-3xl @md:text-4xl text-ink-strong';
 /** ui/Eyebrow's RECIPE constant. */
 const EYEBROW_RECIPE =
@@ -636,14 +636,17 @@ describe('PersonnelCard — the portrait, decorative by construction (D3)', () =
     );
   });
 
-  it('declares its box with sizes="12rem" so the browser picks a small variant', () => {
+  it('declares its box with sizes — the 12rem cell, and its scaled share on a laptop or desktop — so the browser picks the right variant', () => {
     // Without it the browser assumes 100vw and downloads the 1080px file for a
-    // 192px hole — a §10.6 Core-Web-Vitals concern, not a nicety.
+    // 192px hole — a §10.6 Core-Web-Vitals concern, not a nicety. Since
+    // 2026-10-02 the staff band draws the tile in the band scale on a mouse
+    // or trackpad (§15.32), so from a 70rem window the cell is ≈ 14vw (D19's
+    // last paragraph; tests/unit/design-scale.test.ts derives the number).
     const { container } = renderAuxiliary();
 
     expect(within(container).getByRole('presentation')).toHaveAttribute(
       'sizes',
-      '12rem',
+      '(min-width: 70rem) and (pointer: fine) 14vw, 12rem',
     );
   });
 
@@ -660,15 +663,18 @@ describe('PersonnelCard — the portrait, decorative by construction (D3)', () =
 });
 
 describe('PersonnelCard — the name, the position, the block (D4–D6)', () => {
-  it('renders the name as an <h3> in ui/Heading’s title step, unhyphenatable', () => {
+  it('renders the name as an <h3> in ui/Heading’s band step, unhyphenatable — the level is the outline’s, the look is the name’s (D4, 2026-10-02)', () => {
     renderAuxiliary();
 
     const heading = screen.getByRole('heading', { level: 3, name: AUX_NAME });
     expect(heading.tagName).toBe('H3');
     // The atom's row first, this section's one placement utility last: a
     // person's name never breaks at a syllable (§15.14's rider), it wraps
-    // between words.
-    expect(heading.className).toBe(`${TITLE_STEP} hyphens-none`);
+    // between words. The row is `band` at this default level since
+    // 2026-10-02 (§15.32): the Team page's staff band gained its own <h2>, so
+    // its tiles are <h3>s here — and the owner wants their names at 30px, the
+    // size they wore as <h2>s. Until that day it was `title`, 20px.
+    expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
     // Ș ș Ț ț ă â î survive the whole chain — queried by TEXT, because a role
     // query would still match a mangled name.
     expect(screen.getByText(AUX_NAME).textContent).toBe(AUX_NAME);
@@ -876,10 +882,11 @@ const expectWordsAt = (
 };
 
 /** The band's design pixel at its OWN STEP — a column of max(56rem, 896px),
- *  896px at this runner's 16px root, over the 1106 it is drawn for
- *  (sections/DoctorShowcase's STEP and REFERENCE): the narrowest the band
- *  ever scales, 0.81 — at ANY root, since the step's px floor (G2, R6) —
- *  where ¾ of a step is 2.43px, no whole pixel. */
+ *  896px at this runner's 16px root, over the 1106 it is drawn for (the STEP
+ *  and REFERENCE of ui/Container's THE BAND SCALE since 2026-10-02, argued in
+ *  sections/DoctorShowcase's D10): the narrowest a band ever scales, 0.81 —
+ *  at ANY root, since the step's px floor (G2, R6) — where ¾ of a step is
+ *  2.43px, no whole pixel. */
 const DESIGN_PX_AT_STEP = 896 / 1106;
 
 /** The band's design pixel at the owner's own 1401px window under a classic
@@ -1825,12 +1832,13 @@ describe('PersonnelCard — the heading level is an additive axis (D4, 2026-09-2
   });
 
   it('renders an <h2> for headingLevel={2}, still naming the article by it', () => {
-    // The Team page's case: cards directly under the page <h1>, where a
-    // level-3 title would skip a level (§9). The element AND the step change
-    // (§15.24, 2026-09-26, amended the same day by run D45 and again by run
-    // D48: a level-2 name wears Heading's `band` step — 30px under the
-    // card's 28rem container step, 36px from it, never over the h1's phone
-    // floor) — the id and the aria-labelledby pair stay exactly as they are.
+    // Cards directly under a page <h1>, where a level-3 title would skip a
+    // level (§9) — the Team page's staff tiles until 2026-10-02, when their
+    // band gained an <h2> of its own. The ELEMENT changes and nothing else:
+    // the step is `band` at both levels since that day (§15.32; at level 3 it
+    // had been `title`), 30px under the card's 28rem container step, 36px
+    // from it, never over the h1's phone floor — and the id and the
+    // aria-labelledby pair stay exactly as they are.
     const { container } = render(
       <PersonnelCard
         kind="auxiliary"
@@ -1848,10 +1856,49 @@ describe('PersonnelCard — the heading level is an additive axis (D4, 2026-09-2
     expect(screen.getByRole('article', { name: AUX_NAME })).toBe(
       cardOf(container),
     );
-    expect(heading.className).toBe(
-      'font-display text-3xl @md:text-4xl text-ink-strong hyphens-none',
-    );
+    expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
   });
+
+  it.each([
+    ['auxiliary', 2],
+    ['auxiliary', 3],
+    ['doctor', 2],
+    ['doctor', 3],
+  ] as const)(
+    'keeps the name on the band step for the %s kind at level %i — ONE look at either level, for both kinds (D4, 2026-10-02)',
+    (kind, level) => {
+      // NAME_STEP stays a table, so a cell can move again on the owner's
+      // word; this pins all four as they stand. "i have attatched the sizes i
+      // want for responsiveness to be mentained in desired screens": the
+      // staff tiles keep their 30px names at level 3, beside the doctors'.
+      const name = kind === 'doctor' ? DOCTOR_NAME : AUX_NAME;
+      render(
+        kind === 'doctor' ? (
+          <PersonnelCard
+            kind="doctor"
+            name={DOCTOR_NAME}
+            position={DOCTOR_ROLE}
+            photo={CUTOUT}
+            about={ABOUT}
+            profile={PROFILE}
+            headingLevel={level}
+          />
+        ) : (
+          <PersonnelCard
+            kind="auxiliary"
+            name={AUX_NAME}
+            position={AUX_ROLE}
+            photo={PHOTO}
+            headingLevel={level}
+          />
+        ),
+      );
+
+      const heading = screen.getByRole('heading', { level, name });
+      expect(heading.tagName).toBe(`H${level}`);
+      expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
+    },
+  );
 
   it('offers exactly 2 | 3 — the union is the growth gate', () => {
     expectTypeOf<PersonnelCardProps['headingLevel']>().toEqualTypeOf<

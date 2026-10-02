@@ -34,6 +34,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // The auxiliary kind is byte-identical to before both. On 2026-10-01 D19
 // records the doctors band's SCALE, which this card follows with no prop of
 // its own — two spellings moved for it (THE INSET and the cutout's `sizes`).
+// On 2026-10-02 (CLAUDE.md §15.32) a person's name took ONE step at either
+// heading level, for both kinds — the auxiliary's level-3 cell moved from
+// `title` to `band` (D4) — and the scale D19 follows became every band's
+// (ui/Container's THE BAND SCALE), the staff tiles' band among them.
 //
 // ── NO OLD COUNTERPART, deliberately. The owner's brief opens with "do not
 // inspire yourself from the old website, as this will be a new card", so the
@@ -101,36 +105,51 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // purpose: eslint-config-next maps <Image> to img for jsx-a11y/alt-text and a
 // spread does not satisfy that rule (the ui/Image test fixtures' note) — the
 // right enforcement for this atom, so it is honoured rather than disabled.
-// `sizes` tells the browser the box — `12rem` for the auxiliary's cell; for
-// the doctor's, `18rem`, and `21vw` from a 70rem window on a mouse or
-// trackpad, where the doctors band draws the card at its own scale (D17's
-// THE PICTURE'S `sizes`, D19) — so it picks a small variant on a 2× screen
-// instead of the 1080px one (Image's own G2 a11y A5 note).
+// `sizes` tells the browser the box — `12rem` for the auxiliary's cell, and
+// since 2026-10-02 `14vw` from a 70rem window on a mouse or trackpad, where
+// the staff band draws the tile in the band scale (PORTRAIT_SIZES, D19's last
+// paragraph); for the doctor's, `18rem`, and `21vw` from a 70rem
+// window on a mouse or trackpad, where the doctors band draws the card at its
+// own scale (D17's THE PICTURE'S `sizes`, D19) — so it picks a small variant
+// on a 2× screen instead of the 1080px one (Image's own G2 a11y A5 note).
 //
 // ── D4 · THE NAME. `Heading` on a REAL heading through asChild, for BOTH
-// kinds. An auxiliary's name wears THE STEP OF ITS LEVEL (owner 2026-09-26,
-// CLAUDE.md §15.24: one size per outline level app-wide, the doctor page's):
-// `band` for `headingLevel` 2 — the Team page's tiles straight under its h1 —
-// and `title` (20px), this repo's card-title step (the service tier in
-// Card.stories), for the default 3. A DOCTOR's name wears `band` at BOTH
-// levels since D17 — the look the owner approved on the stand-in, an exception
-// to the per-level rule that §15.24 records — while its ELEMENT still follows
-// `headingLevel`. `band` is ui/Heading's one container-responsive row (run
-// D48, its header): 30px on a column narrower than the container's 28rem
-// `@md` step, 36px from it — and the container it reads is THIS CARD (its own
-// `@container`, ui/Card) or, for a doctor, the INSET inside it (D17), never
-// the screen. So a doctor card is wider than 28rem from a tablet up (36px)
-// and narrower on a phone (30px, under the hero h1's 32px floor), while an
-// auxiliary card in TeamRoster's `minmax(16rem, 1fr)` grid can be narrower
-// than 28rem on a laptop too (30px there). Level 2 wore `section` (30px) for
-// one morning, then `page` (36px) for an hour: the same day the owner asked
-// for every page <h2> one step larger (run D45, §15.24 amended;
-// sections/SectionHeading moved with it), and D48 replaced it because a FIXED
-// 36px outranked the h1's 32px floor on phones. Before that day the name wore
-// `title` at both levels. The NAME_STEP table (kind × level) holds all four
-// answers in one place, so the doctor's exception is one cell to move. The
-// atom answers "how big is this title" and never "which element is it", which
-// is why the outline slot stays this section's decision.
+// kinds — and ONE STEP for both, at either level: a person's name wears
+// `band`, a doctor's and an auxiliary's alike, at `headingLevel` 2 and at the
+// default 3. THE LEVEL IS THE OUTLINE'S, NEVER THE LOOK'S (2026-10-02,
+// CLAUDE.md §15.32): the element follows `headingLevel`, the size does not.
+// `band` is ui/Heading's one container-responsive row (run D48, its header):
+// 30px on a column narrower than the container's 28rem `@md` step, 36px from
+// it — and the container it reads is THIS CARD (its own `@container`,
+// ui/Card) or, for a doctor, the INSET inside it (D17), never the screen. So
+// a doctor card is wider than 28rem from a tablet up (36px) and narrower on a
+// phone (30px, under the hero h1's 32px floor), while an auxiliary tile in
+// TeamRoster's grid can be narrower than 28rem on a laptop too (30px there).
+// THE HISTORY, short. From 2026-09-26 an auxiliary's name wore THE STEP OF
+// ITS LEVEL (§15.24: one size per outline level app-wide, the doctor page's)
+// — `band` at 2, the Team page's tiles straight under its h1, and `title`
+// (20px), this repo's card-title step, at the default 3 — while a doctor's
+// wore `band` at both from D17 on, the look the owner approved on the
+// stand-in. (Level 2 wore `section` for one morning and `page` for an hour —
+// run D45 — before run D48 made it `band`, a fixed 36px having outranked the
+// h1's 32px floor on phones; before 2026-09-26 the name wore `title` at both
+// levels.) On 2026-10-02 sections/TeamRoster — the auxiliary tile's one page —
+// opened with an eyebrow and an <h2> of its own (the owner: "create an eyebrow
+// and headline for the 3 cars with helping staff"), so its tiles became
+// <h3>s, and the per-level rule would have dropped their names to 20px; the
+// owner wants them at the sizes of his screenshot, 30px ("i have attatched
+// the sizes i want for responsiveness to be mentained in desired screens").
+// So the auxiliary's level-3 cell moved to `band`: the tiles' names keep, at
+// level 3, the very classes they wore at level 2 — on a phone or a tablet
+// the size they had, on a laptop or a desktop that size in the band's design
+// pixel (D19's last paragraph) — and the only frames this cell moves are the
+// default-level auxiliary stories in PersonnelCard.stories.tsx. §15.24's
+// per-level sentence is superseded for a person's name.
+// The NAME_STEP table (kind × level) stays a TABLE although its four cells
+// now hold one answer: any cell can move again on the owner's word, and a
+// third kind or level cannot compile until it names its step. The atom
+// answers "how big is this title" and never "which element is it", which is
+// why the outline slot stays this section's decision.
 // `hyphens-none` on the heading: the site-wide `hyphens: auto` (§15.14) is for
 // PROSE, and a person's name must never break at a syllable — it still wraps
 // between words when the box demands it. The `id` lands on the heading and the
@@ -142,14 +161,17 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // 2026-09-21 `headingLevel` (2 | 3) is an ADDITIVE axis with that default
 // pinned (§6.6): the trigger this paragraph used to record ("the first page
 // that nests cards under a sub-heading") fired in its INVERTED form on the
-// doctor-pages run — sections/TeamRoster is the first page that puts the
+// doctor-pages run — sections/TeamRoster was the first page that put the
 // cards DIRECTLY under the page's <h1> (run D10 struck the sub-headings), where
 // a level-3 title skips a level (§9's "logical heading order"; axe's
 // heading-order rule fired on every roster story before the prop existed), so
-// that band passes 2. A Record<PersonnelHeadingLevel, 'h2' | 'h3'> growth gate
-// picks the element — SectionHeading's ELEMENT precedent — so a widened union
-// cannot compile until it names its tag; a level BELOW 3 is not offered
-// (a card under an h3 sub-heading would be the day to add 4, additively).
+// that band passed 2 — until 2026-10-02, when its own <h2> put its tiles back
+// at the default. No band passes 2 since; the axis stays, additive and with
+// its default pinned, for the next page that puts cards straight under an h1.
+// A Record<PersonnelHeadingLevel, 'h2' | 'h3'> growth gate picks the element —
+// SectionHeading's ELEMENT precedent — so a widened union cannot compile until
+// it names its tag; a level BELOW 3 is not offered (a card under an h3
+// sub-heading would be the day to add 4, additively).
 //
 // ── D5 · THE POSITION. ui/Eyebrow — the only consumer of the §3 mono token —
 // so the uppercase is CSS and the string stays sentence case (Ș/Ț case mapping
@@ -165,8 +187,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // longer than the content box (21 mono characters at 320's 206px; 16 in a
 // 162px grid track) protrudes into the padding instead of breaking. No fixture
 // reaches it and no page-level scroll follows; the page lane keeps it that way
-// by giving grid tracks a 16rem floor (`minmax(16rem, 1fr)`) rather than by
-// letter-level emergency breaks inside a person's title. Since 2026-09-21 the
+// by giving the tiles a floor — `minmax(16rem, 1fr)` tracks until 2026-10-02,
+// since then sections/TeamRoster's FIXED 18rem tiles (its D9), 16rem at the
+// 320 stress width — rather than by letter-level emergency breaks inside a
+// person's title. Since 2026-09-21 the
 // ceiling is ENFORCED on the data rather than merely recorded here:
 // tests/unit/team-data.test.ts measures the longest unbreakable run of every
 // `position` in every locale against those 21 characters (and of every `name`
@@ -478,7 +502,8 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // `(min-width: 70rem) and (pointer: fine) 21vw, 18rem`. Where the doctors
 // band scales — on a mouse or trackpad, in an engine that registers custom
 // properties, from a column of max(56rem, 896px): the three gates of
-// sections/DoctorShowcase's THE SCALE (its D10) — it draws this card at
+// ui/Container's THE BAND SCALE (`bandScaleClasses` since 2026-10-02, §15.32;
+// argued in sections/DoctorShowcase's D10, THE SCALE) — it draws this card at
 // column / 1106 of its reference, the column counted up to its 96rem cap, so
 // the 18rem cell is 288 × column / 1106 px; with ui/Container's 10vw gutters
 // a 56rem column is a 70rem window (overlay scrollbars) and the cell ≈ 0.208
@@ -509,10 +534,13 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // (70 = 56 / 0.8), but under a SMALLER one the band's step holds at its 896px
 // floor while `70rem` comes earlier — at a 14px font from a 980px window,
 // where the band waits for 1120 — and in between a mouse is told 21vw of an
-// 18rem cell, up to 18 % under at that font. KEEP IN SYNC with the band's
-// REFERENCE (1106px), STEP (max(56rem, 896px)), CAP (96rem) and pointer gate:
-// every number here is derived from them, and tests/unit/design-scale.test.ts
-// reads CUTOUT_SIZES' exact string.
+// 18rem cell, up to 18 % under at that font. KEEP IN SYNC with the band
+// scale's REFERENCE (1106px), STEP (max(56rem, 896px)) and CAP (96rem) —
+// spelled since 2026-10-02 in ui/Container's `bandScaleClasses` and
+// `bandColumnClasses` (THE BAND SCALE, §15.32) — and with its pointer gate,
+// globals.css's THE SCALABLE VARIANT: every number here is derived from them,
+// and tests/unit/design-scale.test.ts reads CUTOUT_SIZES' exact string beside
+// them.
 // THE SPACE BEFORE `21vw` IS LOAD-BEARING: next/image (get-img-props,
 // getWidths) reads the smallest `vw` share it finds at the start or after a
 // space — `(^|\s)(1?\d?\d)vw` — and keeps only the candidates of at least
@@ -604,7 +632,8 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // unchanged". The card OWNS NO SCALE, and that is the decision: it is drawn
 // in the theme's units — the spacing step and the text, container and radius
 // steps — and sections/DoctorShowcase redraws those units for its own box
-// where its three gates hold (its D10): a mouse or trackpad device
+// where its three gates hold (its D10; since 2026-10-02 through ui/Container's
+// THE BAND SCALE, this paragraph's last part): a mouse or trackpad device
 // (`pointer: fine`), an engine that registers custom properties (both
 // globals.css's THE SCALABLE VARIANT) and a column of max(56rem, 896px). One
 // design pixel is then column / 1106 of a CSS pixel (1106px: the band's
@@ -617,7 +646,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // (its SUM RULE) — while nothing in this file names the band. The scale
 // follows the band's own container, so the owner's "smaller … different
 // container" keeps the ratios wherever the band goes. Everywhere else the
-// card is drawn at the theme's own units, exactly as before: outside the
+// card is drawn at the theme's own units, exactly as before: outside a scaled
 // band, under its step, in an engine that cannot register custom properties,
 // and on a TOUCH screen at any width — every phone and every tablet, upright
 // or sideways, the owner's answer above. Two things are not lengths of the
@@ -646,6 +675,27 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // cutout's `sizes`, which must name the scaled cell where the band scales it
 // and the 18rem cell everywhere else, its pointer condition the band's own
 // (D17's THE PICTURE'S `sizes`, CUTOUT_SIZES).
+// SINCE 2026-10-02 THE SCALE IS EVERY BAND'S (§15.32). The owner, that day:
+// "i want both section to in parallel on widening of screen to be responsive
+// and adapt in parallel, so headings and eyebrows grow together". The regime
+// left the doctors band for ui/Container's THE BAND SCALE — `bandScaleClasses`
+// and `bandColumnClasses`, worn on the rhythm box of every band below the Home
+// hero and of every band of the Team page — so the STAFF band,
+// sections/TeamRoster, draws in the doctors band's design pixel, and an
+// AUXILIARY tile there follows it exactly as a doctor card does: no prop, no
+// edit here, every theme length of the tile at once — the portrait's `w-48`
+// cell, the name's `band` step (30 design pixels on a tile, the owner's — D4),
+// the gaps, the padding, the soft corner. The card still names no band and
+// owns no scale. ONE HINT HAD TO FOLLOW, and does (the planner's call, the
+// same day): the portrait's `sizes` (D3, PORTRAIT_SIZES). Inside the scaled
+// staff band the cell is 192 design pixels — ≈ 155.5px at the band's step,
+// 192 at the owner's 1401 window, ≈ 266.7 at the cap — so with the old
+// `12rem` alone a 2× screen above the 1401 window fetched the 384w file for a
+// box that can want 533 device pixels (× 1.39 at the cap; a 1× screen's 256w
+// file fell ≈ 4 % short). It now has CUTOUT_SIZES' own shape — the cell's
+// share of the window, ceil(100 × 192 × 0.8 / 1106) = 14vw, from the same
+// 70rem window behind the same pointer condition, `12rem` the fallback — and
+// tests/unit/design-scale.test.ts derives the string like the cutout's.
 //
 // ── D12–D14 live where they belong rather than here: the fixtures and the
 // stories in PersonnelCard.stories.tsx (synthetic portraits and cutouts, no
@@ -661,7 +711,9 @@ export type PersonnelKind = 'auxiliary' | 'doctor';
 export type PersonnelSide = 'start' | 'end';
 
 /** The card title's heading level (D4): 3 under a band's h2 (the default), 2
- *  when the cards sit directly under a page's h1 (the Team page). */
+ *  when the cards sit directly under a page's h1 (the Team page's staff tiles
+ *  did until 2026-10-02). The ELEMENT follows it; the step does not
+ *  (NAME_STEP). */
 export type PersonnelHeadingLevel = 2 | 3;
 
 /**
@@ -769,16 +821,18 @@ export type PersonnelCardProps = (AuxiliaryProps | DoctorProps) &
     | keyof PersonnelCardBaseProps
   >;
 
-/** The name's Heading step, kind × level (D4, §15.24): an auxiliary's follows
- *  the outline level — the doctor page's h2 / h3 sizes, app-wide — and a
- *  doctor's is `band` at both (D17, the owner-approved look). `band` is read
- *  against the nearest container (run D48). A Record of Records, so neither a
- *  third kind nor a third level compiles until it names its step. */
+/** The name's Heading step, kind × level (D4): `band` in every cell since
+ *  2026-10-02 — a person's name has ONE look at either level, for both kinds,
+ *  and the level is the outline's alone (§15.32, superseding §15.24's
+ *  per-level rule for a name; the auxiliary's level 3 was `title` until
+ *  then). `band` is read against the nearest container (run D48). A Record of
+ *  Records, so neither a third kind nor a third level compiles until it names
+ *  its step — and any one cell can move again on the owner's word. */
 const NAME_STEP: Record<
   PersonnelKind,
   Record<PersonnelHeadingLevel, HeadingSize>
 > = {
-  auxiliary: { 2: 'band', 3: 'title' },
+  auxiliary: { 2: 'band', 3: 'band' },
   doctor: { 2: 'band', 3: 'band' },
 };
 
@@ -849,10 +903,20 @@ const PICTURE = 'w-72 max-w-full';
  *  the cell the doctors band scales, ≈ 21vw; everywhere else, every touch
  *  screen at any width included, the 18rem cell. The space before `21vw` is
  *  load-bearing — next/image reads the share from it and drops only the
- *  candidates no box of this card can use. KEEP IN SYNC with
- *  sections/DoctorShowcase's THE SCALE (its reference, its step and its
- *  gates); tests/unit/design-scale.test.ts reads this exact string. */
+ *  candidates no box of this card can use. KEEP IN SYNC with ui/Container's
+ *  THE BAND SCALE — `bandScaleClasses`: its REFERENCE 1106, its 56rem step
+ *  and its `scalable:` gate (promoted 2026-10-02 from sections/DoctorShowcase's
+ *  D10, where they are argued; §15.32); tests/unit/design-scale.test.ts reads
+ *  this exact string and those numbers there. */
 const CUTOUT_SIZES = '(min-width: 70rem) and (pointer: fine) 21vw, 18rem';
+
+/** The auxiliary portrait's `sizes` (D3, D19's last paragraph) — CUTOUT_SIZES'
+ *  shape for the tile's 12rem cell: from a 70rem window on a mouse or trackpad
+ *  the staff band draws the tile in the band scale, the cell ≈ 14vw (ceil(100
+ *  × 192 × 0.8 / 1106)); everywhere else the 12rem cell. The space before
+ *  `14vw` is load-bearing for CUTOUT_SIZES' reason. KEEP IN SYNC with
+ *  ui/Container's THE BAND SCALE; tests/unit/design-scale.test.ts derives it. */
+const PORTRAIT_SIZES = '(min-width: 70rem) and (pointer: fine) 14vw, 12rem';
 
 /** Row 1: the picture on its row's floor — the waist right above the name,
  *  however tall the words run — centred in its column (D17). */
@@ -1003,7 +1067,7 @@ export function PersonnelCard({
                   width={photo.width}
                   height={photo.height}
                   alt=""
-                  sizes="12rem"
+                  sizes={PORTRAIT_SIZES}
                 />
               </div>
               {/* The name and the position travel together (D6): one box —

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { createTranslator } from 'next-intl';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { reviews as REAL } from '@/lib/reviews/reviews';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
@@ -64,6 +64,20 @@ import { REVIEWS_NOW } from './ReviewsCarousel.fixtures';
 // the card's share of the screen, both neighbours peeking, both edges cut, no
 // sideways page scroll) at whatever width the runner opens the story, and the
 // baselines then photograph it at 390 and 1536.
+//
+// ── AND, SINCE 2026-10-02, A THIRD: MEASURE THE OPENER AGAINST THE DECK
+// (ReviewsCarousel.tsx's THE OPENER'S SCALE; CLAUDE.md §15.32). On a laptop
+// or a desktop the band's eyebrow and h2 draw in the design pixel every band
+// under the Home hero shares — s = min(column, 96rem) / 1106, the eyebrow
+// 14 × s and the h2 36 × s, on the left edge every band shares — while the
+// deck keeps its rem sizes. `expectOpenerScale` reads the column off
+// ui/Container and the pointer and the engine off the browser, and asserts
+// whichever branch it finds itself in, never the pinned width (the
+// DoctorShowcase stories' THE SCALE, IN EVERY PLAY): in the Vitest storybook
+// project Chromium's pointer is fine, so Default at the laptop width asserts
+// the scale, and GermanStress at the phone width the rem band — nothing
+// declared, the theme's steps. In both, the deck's region carries no design
+// pixel and its first card's body text is the theme's 16px.
 //
 // ── THE ENVIRONMENT IS THE REAL ONE, deliberately: the band owns lib/clock's
 // numbers and does not forward the env seam (functions cannot cross a
@@ -223,6 +237,131 @@ const expectFannedStage = async (root: HTMLElement): Promise<void> => {
   );
 };
 
+/** The root's font size in px — what a rem resolves to in this document. */
+const rem = (): number =>
+  parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/** A computed length of an element, in px. */
+const px = (element: Element, property: string): number =>
+  parseFloat(getComputedStyle(element).getPropertyValue(property));
+
+/**
+ * ui/Container's THE BAND SCALE, written out (its numbers are argued in
+ * sections/DoctorShowcase's D10): the REFERENCE column, where the design pixel
+ * is a CSS pixel; the CAP, in rem of the root (1536px at the default 16px, a
+ * 1920 window's column); and THE STEP's two halves, `@4xl`'s 56rem and the
+ * floor's 896px.
+ */
+const REFERENCE = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/** `actual` within `tolerance` of `expected`, saying which length it was. */
+const near = async (
+  actual: number,
+  expected: number,
+  tolerance: number,
+  label: string,
+): Promise<void> => {
+  await expect(
+    Math.abs(actual - expected),
+    `${label}: ${actual} against ${expected}`,
+  ).toBeLessThanOrEqual(tolerance);
+};
+
+/**
+ * THE OPENER'S SCALE, MEASURED (ReviewsCarousel.tsx's header; §15.32) — at
+ * whatever width the runner opens the story, the branch read off the browser
+ * and never off the pinned viewport: the column off ui/Container (the band's
+ * first box; it has no padding, so its box IS the `100cqw` the design pixel
+ * reads), the two gates off the engine — a fine primary pointer, and the
+ * relative colour syntax that rides with registered custom properties
+ * (globals.css's THE SCALABLE VARIANT).
+ *   · IN THE REGIME — both gates and a column of max(56rem, 896px) — the
+ *     opener box's design pixel is s = min(column, CAP) / REFERENCE, and the
+ *     eyebrow reads 14 × s and the h2 36 × s, to 0.05px: the sizes of every
+ *     band under the Home hero at this width.
+ *   · ELSEWHERE the box declares nothing — its `--scale-px` is the registered
+ *     1px — and the two read the theme's steps: the eyebrow 0.875rem, the h2
+ *     ui/Heading's `band`, 1.875rem on a column under 28rem and 2.25rem from
+ *     it.
+ *   · IN BOTH, the opener box spans its column — capped at 96rem and centred
+ *     wherever the gates hold (the cap rides `scalable:` alone), never shrunk
+ *     to its text — and the eyebrow and the h2 start on its left edge, the one
+ *     every band shares. And the DECK, the opener box's sibling, inherits no
+ *     design pixel: its region's `--scale-px` is 1px and its first card's body
+ *     text the theme's 1rem, 16px at the default root, at every width.
+ * Font SIZES and box edges only, so no face needs loading first: no length
+ * measured here depends on how wide a glyph is.
+ */
+const expectOpenerScale = async (
+  band: HTMLElement,
+  words: Readonly<{ eyebrow: string; region: string }>,
+): Promise<void> => {
+  const column = band.firstElementChild;
+  const opener = column?.firstElementChild?.firstElementChild;
+  if (!(column instanceof HTMLElement) || !(opener instanceof HTMLElement)) {
+    throw new Error('ReviewsCarousel story: the band lost its opener box');
+  }
+  const eyebrow = within(opener).getByText(words.eyebrow);
+  const heading = within(opener).getByRole('heading', { level: 2 });
+  const deck = within(band).getByRole('region', { name: words.region });
+  const body = deck.querySelector('blockquote p');
+  if (body === null) {
+    throw new Error('ReviewsCarousel story: the first card lost its body text');
+  }
+
+  const columnBox = column.getBoundingClientRect();
+  const gated =
+    window.matchMedia('(pointer: fine)').matches &&
+    CSS.supports('color', 'rgb(from red r g b)');
+  const scaled =
+    gated && columnBox.width >= Math.max(STEP_REM * rem(), STEP_FLOOR);
+
+  // ONE LEFT EDGE: the box spans its column, capped and centred where the
+  // gates hold, and the eyebrow and the h2 start where it starts.
+  const span = gated
+    ? Math.min(columnBox.width, CAP_REM * rem())
+    : columnBox.width;
+  const edge = columnBox.left + (columnBox.width - span) / 2;
+  const openerBox = opener.getBoundingClientRect();
+  await near(openerBox.width, span, 0.5, 'the opener box’s width');
+  await near(openerBox.left, edge, 0.5, 'the opener box’s left edge');
+  await near(eyebrow.getBoundingClientRect().left, edge, 0.5, 'the eyebrow');
+  await near(heading.getBoundingClientRect().left, edge, 0.5, 'the title');
+
+  // ONE SIZE: the design pixel's, or the theme's.
+  if (scaled) {
+    const s = Math.min(columnBox.width, CAP_REM * rem()) / REFERENCE;
+    await near(px(opener, '--scale-px'), s, 0.0001, 'the design pixel');
+    await near(px(eyebrow, 'font-size'), 14 * s, 0.05, 'the eyebrow’s size');
+    await near(px(heading, 'font-size'), 36 * s, 0.05, 'the title’s size');
+  } else {
+    await expect(getComputedStyle(opener).getPropertyValue('--scale-px')).toBe(
+      '1px',
+    );
+    await near(
+      px(eyebrow, 'font-size'),
+      0.875 * rem(),
+      0.05,
+      'the eyebrow’s size, unscaled',
+    );
+    await near(
+      px(heading, 'font-size'),
+      (columnBox.width >= 28 * rem() ? 2.25 : 1.875) * rem(),
+      0.05,
+      'the title’s size, unscaled',
+    );
+  }
+
+  // THE DECK, OUT OF REACH: no design pixel inherited, the theme's body text.
+  await expect(getComputedStyle(deck).getPropertyValue('--scale-px')).toBe(
+    '1px',
+  );
+  await near(px(body, 'font-size'), rem(), 0.05, 'the first card’s body text');
+};
+
 /**
  * The everyday picture: Romanian, the whole real list, on the laptop width the
  * §13 matrix samples.
@@ -237,6 +376,11 @@ const expectFannedStage = async (root: HTMLElement): Promise<void> => {
  * The pixel net photographs it still for another reason: its projects run
  * with reduced motion, under which lib/clock never starts the ring (the
  * header's ENVIRONMENT paragraph).
+ *
+ * At this width, on a mouse or trackpad, the eyebrow and the h2 are drawn in
+ * the design pixel every band under the Home hero shares (2026-10-02, §15.32)
+ * while the deck keeps its rem sizes — the play measures both (the header's
+ * third job).
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -277,6 +421,9 @@ export const Default: Story = {
 
     await expectFannedStage(canvasElement);
     await expectNoSidewaysScroll(band);
+    // The opener in the band scale — the eyebrow 14 × s, the h2 36 × s — and
+    // the deck out of its reach, its first card's body text still 16px.
+    await expectOpenerScale(band, ro.home.reviews);
   },
 };
 
@@ -296,6 +443,8 @@ export const Default: Story = {
  * the height for all of them (they share one grid cell, and nothing is ever
  * hidden — so the height is the same at every position of the ring), and the
  * thin rule with the name and the date sits at the same height on every card.
+ * A phone is outside the band scale (§15.32): the opener declares nothing and
+ * reads the theme's steps, which the play measures too.
  */
 export const GermanStress: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
@@ -320,6 +469,8 @@ export const GermanStress: Story = {
 
     await expectFannedStage(canvasElement);
     await expectNoSidewaysScroll(band);
+    // The phone's branch: nothing declared, the theme's steps, the deck in rem.
+    await expectOpenerScale(band, de.home.reviews);
   },
 };
 

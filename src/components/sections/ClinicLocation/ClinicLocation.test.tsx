@@ -1,8 +1,17 @@
 import type { ReactElement } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { describe, expect, it } from 'vitest';
-import { containerClasses } from '@/components/ui/Container/Container';
+import { beforeAll, describe, expect, it } from 'vitest';
+// The REAL stylesheet, compiled by the site's own Tailwind pipeline — for ONE
+// block, THE BAND SCALE at the bottom, which reads COMPUTED lengths (the
+// header below says why). tests/setup/components.ts loads no CSS globally;
+// the per-file import is the house pattern (Card, Modal, DoctorShowcase).
+import '@/styles/globals.css';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from '@/components/ui/Container/Container';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Phone } from '@/assets/glyphs/Phone';
 import { locales, type Locale } from '@/i18n/locales';
@@ -12,7 +21,7 @@ import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
 import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
-import { ClinicLocation } from './ClinicLocation';
+import { ClinicLocation, type ClinicLocationProps } from './ClinicLocation';
 import source from './ClinicLocation.tsx?raw';
 
 // sections/ClinicLocation — the interaction suite. Role-based queries on
@@ -23,10 +32,15 @@ import source from './ClinicLocation.tsx?raw';
 // the translation-parity gate, instead of silently rendering the dotted key
 // path (which is what next-intl does for a miss).
 //
-// Styles are NOT loaded in this project (tests/setup/components.ts imports no
-// stylesheet), so computed values would read back as browser defaults: the
-// utility TOKENS are the contract here, the convention every component test in
-// this repo already follows (Footer, GlyphButton, Header).
+// The utility TOKENS are the contract almost everywhere here, the convention
+// every component test in this repo follows (Footer, GlyphButton, Header). The
+// stylesheet IS loaded in this file since 2026-10-02 (the import above), and
+// the token pins neither need nor notice it: it exists for THE BAND SCALE
+// block at the bottom, because what the band's `scaled` prop and the discs'
+// DISC_SIZE buy is a RESOLVED length — the disc 44px outside the regime, 44
+// design px inside it — and a class name cannot show that. One token pin
+// reads a computed value too: the row text's 16px, whose old comment had
+// claimed 18 (the component header's OLD → NEW, item 3).
 //
 // ── THE SEAM'S CONTRACT IS THE POINT OF THE MAP BLOCK BELOW. The Google embed
 // ships UNGATED for now (board .claude/plans/clinic-location.plan.md D1, owner
@@ -46,15 +60,20 @@ const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
 /** The provider the section gets in production (app/[locale]/layout.tsx wraps
  *  the whole tree) and in Storybook (.storybook/preview.tsx decorator), so the
  *  tests mount it the same way. ClinicLocation is NOT a client component;
- *  useTranslations is isomorphic and reads this context. */
-const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
+ *  useTranslations is isomorphic and reads this context. The band's one prop
+ *  passes straight through — absent unless a case names it, which is the
+ *  doctor page's call (§15.32). */
+const Mounted = ({
+  locale,
+  ...props
+}: ClinicLocationProps & { locale: Locale }): ReactElement => (
   <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
-    <ClinicLocation />
+    <ClinicLocation {...props} />
   </NextIntlClientProvider>
 );
 
-const mount = (locale: Locale = 'ro') => {
-  const utils = render(<Mounted locale={locale} />);
+const mount = (locale: Locale = 'ro', props: ClinicLocationProps = {}) => {
+  const utils = render(<Mounted locale={locale} {...props} />);
   const messages = MESSAGES[locale].home.location;
   return {
     ...utils,
@@ -261,17 +280,22 @@ describe('ClinicLocation — the two contact rows', () => {
     expect(clinic.phoneDisplay).not.toBe(clinic.phone);
   });
 
-  it('dresses the row text at the old weight, on the section’s OWN span (D5)', () => {
+  it('dresses the row text at the old weight, on the section’s OWN span (D5) — 16px, never the 18 an old comment claimed', () => {
     // ui/Text has no medium axis and a section lane does not grow one (§6.6);
     // a section writing utilities on its own markup is lawful (§6.7) — the
-    // ContactModal's "plain <h2> wearing the dress" precedent. 18px is the
-    // §15.1 body base, i.e. the old site's `sm:text-lg` at every width.
+    // ContactModal's "plain <h2> wearing the dress" precedent. `text-base` is
+    // Tailwind's 1rem: 16px, the old row's PHONE size, at every width — the
+    // 1.125rem body base (§15.1) sits on `body` and the utility replaces it.
+    // Until 2026-10-02 this comment and the component's said 18px, "the old
+    // site's `sm:text-lg`"; the computed read below is what keeps the next
+    // reader from believing it again (the header's OLD → NEW, item 3).
     const { band } = mount();
 
     for (const text of [ADDRESS, clinic.phoneDisplay]) {
       const line = within(band()).getByText(text);
       expect(line.tagName).toBe('SPAN');
       expect(classesOf(line)).toEqual(['text-base', 'font-medium', 'text-ink']);
+      expect(getComputedStyle(line).fontSize).toBe('16px');
     }
   });
 
@@ -514,7 +538,8 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
     // An element cannot query its OWN size: the Container IS the container, so
     // stepped `py` has to sit on a child of it. The recipe's "band owns its py"
     // holds; only the element wearing it moves down one level (Footer, with a
-    // single un-stepped py-10, never needed this).
+    // single un-stepped py-10, never needed this). The band as the doctor page
+    // mounts it — no `scaled`; THE BAND SCALE block below holds the other.
     const { band } = mount();
     const rhythm = (band().firstElementChild as HTMLElement)
       .firstElementChild as HTMLElement;
@@ -559,4 +584,272 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
     expect(band().textContent).toContain(ADDRESS);
     expect(band().textContent).toContain(clinic.phoneDisplay);
   });
+});
+
+// ── THE BAND SCALE (2026-10-02, §15.32) ─────────────────────────────────────
+// The band's one prop, `scaled`, puts its rhythm box in ui/Container's two
+// band-scale strings (the component header's THE BAND SCALE). Two blocks: the
+// CLASS contract — off by default and byte-identical, on the rhythm box alone
+// when asked, the discs' DISC_SIZE in both modes — and the COMPUTED one, on
+// the real stylesheet, where the same facts become lengths. The strings
+// themselves are read from the atom's exports and never written out here:
+// their one spelling is ui/Container's, and tests/unit/design-scale.test.ts
+// fences every other (its D-LIT rule reads this file's raw text too).
+
+/** The rhythm box — the band's first box inside ui/Container, the one that
+ *  carries its `py` (board D7) and, under `scaled`, the scale. */
+const rhythmOf = (band: HTMLElement): HTMLElement =>
+  (band.firstElementChild as HTMLElement).firstElementChild as HTMLElement;
+
+/** Every element of the band, the band's own <section> included. */
+const everyElementOf = (band: HTMLElement): Element[] => [
+  band,
+  ...band.querySelectorAll('*'),
+];
+
+/** An element's classes behind globals.css's `scalable:` gate — every regime
+ *  class and the cap wear it outermost (tests/unit/design-scale.test.ts). */
+const gatedClassesOf = (el: Element): string[] =>
+  classesOf(el).filter((c) => c.startsWith('scalable:'));
+
+/** The discs' one geometric word, written out as the byte pin (the Eyebrow
+ *  RECIPE convention) — the very literal the component's DISC_SIZE carries,
+ *  so Tailwind finds no class here that the site does not already ship. */
+const DISC_SIZE = '[--disc-size:calc(var(--spacing)*11)]';
+
+describe('ClinicLocation — THE BAND SCALE, the class contract (§15.32)', () => {
+  it('is OFF by default — the doctor page’s band: three `py` tokens on the rhythm box, no gated class anywhere, and `scaled={false}` the same markup to the byte', () => {
+    // The doctor page mounts the band with no prop, and its other bands do not
+    // scale yet (§15.32) — so the default must be today's band exactly. The
+    // markup comparison is safe: nothing in the band generates an id.
+    const implicit = render(<Mounted locale="ro" />);
+    const markup = implicit.container.innerHTML;
+    const band = screen.getByRole('region', { name: ro.home.location.title });
+
+    expect(classesOf(rhythmOf(band))).toEqual([
+      'py-12',
+      '@lg:py-16',
+      '@3xl:py-20',
+    ]);
+    for (const el of everyElementOf(band)) {
+      expect(gatedClassesOf(el)).toEqual([]);
+    }
+    implicit.unmount();
+
+    const explicit = render(<Mounted locale="ro" scaled={false} />);
+    expect(explicit.container.innerHTML).toBe(markup);
+  });
+
+  it('wears BOTH strings on the rhythm box when asked — after its `py`, in the order cx() writes them, and on no other element', () => {
+    // ui/Container's recipe rule 5: the RHYTHM box, the first inside the
+    // Container — never the Container itself (an element cannot query its own
+    // size, and the regime's `@4xl` step reads the Container), never the
+    // <section> (outside the container context, the step would never match).
+    const { band } = mount('ro', { scaled: true });
+    const rhythm = rhythmOf(band());
+
+    expect(classesOf(rhythm)).toEqual([
+      'py-12',
+      '@lg:py-16',
+      '@3xl:py-20',
+      ...bandColumnClasses.split(' '),
+      ...bandScaleClasses.split(' '),
+    ]);
+    expect(gatedClassesOf(rhythm).length).toBeGreaterThan(0);
+    for (const el of everyElementOf(band())) {
+      if (el !== rhythm) expect(gatedClassesOf(el)).toEqual([]);
+    }
+  });
+
+  it('changes NOTHING else — the scaled markup is the plain one with the rhythm box’s class list swapped back', () => {
+    // The whole band follows the scale through the remapped theme, never
+    // through a second class anywhere inside it (globals.css, THE DESIGN
+    // SCALE): proven by undoing the one difference and comparing bytes.
+    const plain = render(<Mounted locale="ro" />);
+    const markup = plain.container.innerHTML;
+    plain.unmount();
+
+    const scaled = render(<Mounted locale="ro" scaled />);
+    const rhythm = rhythmOf(
+      screen.getByRole('region', { name: ro.home.location.title }),
+    );
+    const swapped = scaled.container.innerHTML.replace(
+      `class="${rhythm.getAttribute('class') ?? ''}"`,
+      'class="py-12 @lg:py-16 @3xl:py-20"',
+    );
+
+    // Never vacuous: the swap really found the scaled list.
+    expect(swapped).not.toBe(scaled.container.innerHTML);
+    expect(swapped).toBe(markup);
+  });
+
+  it('sizes each disc in the band’s own spacing step, in BOTH modes — eleven steps, the atom’s 2.75rem drawn in the band’s pixel', () => {
+    // ui/disc.ts's D16 door ("a HOST may set per screen type through
+    // className"), worn ALWAYS, so the doctor page's band and Home's can never
+    // disagree about what a disc is made of (the component's DISC_SIZE). The
+    // computed block below shows what the class buys in each mode.
+    for (const scaled of [false, true]) {
+      const { band, unmount } = mount('ro', { scaled });
+      const discs = band().querySelectorAll('span[aria-hidden="true"]');
+
+      expect(discs).toHaveLength(2);
+      for (const disc of discs) expect(classesOf(disc)).toContain(DISC_SIZE);
+      unmount();
+    }
+  });
+});
+
+// ── THE BAND SCALE, COMPUTED ────────────────────────────────────────────────
+// The same contract as lengths, on the real stylesheet (the import at the
+// top): the band in a box that hands its Container a column of exactly
+// `width` px — the gutter read off a probe wearing the real class, never
+// assumed (DoctorShowcase.test.tsx's `renderColumn`, whose block is the
+// regime's full measurement) — and every size read back from the engine. No
+// typeface is loaded, and none is needed: a font SIZE, a disc's box and the
+// map tray's 2:1 do not depend on glyph shapes (the words' WIDTHS would, and
+// nothing here reads them). Tolerance: a twentieth of a pixel — layout rounds
+// to 1/64px and a design pixel keeps its fraction.
+
+/** ui/Container's gutter per side at this window, read off a probe wearing
+ *  the real class — the clamp is spelled once, in Container.tsx. */
+const gutter = (): number => {
+  const probe = document.createElement('div');
+  probe.className = containerClasses;
+  document.body.append(probe);
+  try {
+    return parseFloat(getComputedStyle(probe).marginLeft);
+  } finally {
+    probe.remove();
+  }
+};
+
+/** THE BAND SCALE's numbers, written out (ui/Container's THE BAND SCALE —
+ *  their census is tests/unit/design-scale.test.ts): the REFERENCE column,
+ *  where a design pixel is a CSS pixel, and the CAP, 96rem, in px at this
+ *  runner's 16px root (the premise asserts the root). Spelled again on
+ *  purpose: the census holds the source, these hold what the engine does. */
+const REFERENCE = 1106;
+const CAP = 96 * 16;
+
+/** The band, Romanian, in a box whose Container gets a `width` px column. */
+const renderColumn = (width: number, scaled: boolean) => {
+  render(
+    <div style={{ width: `${width + 2 * gutter()}px` }}>
+      <Mounted locale="ro" scaled={scaled} />
+    </div>,
+  );
+  const band = screen.getByRole('region', { name: ro.home.location.title });
+  const column = band.firstElementChild as HTMLElement;
+  // The premise of every number below: the column is the width asked for.
+  expect(column.getBoundingClientRect().width).toBeCloseTo(width, 1);
+  return { band, column, rhythm: rhythmOf(band) };
+};
+
+/** What the band draws, read from the engine: the opener's two font sizes,
+ *  the rows' words', the first disc's box and its glyph's, and the map tray. */
+const sizesOf = (band: HTMLElement) => {
+  const disc = band.querySelector('span[aria-hidden="true"]') as HTMLElement;
+  const glyph = disc.querySelector('svg') as SVGElement;
+  const tray = (band.querySelector('iframe') as HTMLElement)
+    .parentElement as HTMLElement;
+  const fontSize = (el: Element): number =>
+    parseFloat(getComputedStyle(el).fontSize);
+  return {
+    title: fontSize(within(band).getByRole('heading', { level: 2 })),
+    eyebrow: fontSize(within(band).getByText(ro.home.location.eyebrow)),
+    words: fontSize(within(band).getByText(ADDRESS)),
+    disc: disc.getBoundingClientRect(),
+    glyph: glyph.getBoundingClientRect(),
+    tray: tray.getBoundingClientRect(),
+  };
+};
+
+describe('ClinicLocation — THE BAND SCALE, computed (§15.32 — the real stylesheet)', () => {
+  beforeAll(() => {
+    // THE PREMISE: this runner is a place where the regime CAN apply — a fine
+    // primary pointer and an engine that registers custom properties, the two
+    // conditions of globals.css's THE SCALABLE VARIANT — at the 16px root
+    // CAP is written at. Otherwise every case below that expects the scale
+    // would fail for a reason that reads as the band's, and every case that
+    // expects none would pass for the wrong one.
+    expect(
+      window.matchMedia('(pointer: fine)').matches,
+      'the runner’s primary pointer is fine — a mouse, as on a laptop',
+    ).toBe(true);
+    expect(
+      CSS.supports('color', 'rgb(from red r g b)'),
+      'the engine passes the registration gate (relative colour syntax)',
+    ).toBe(true);
+    expect(
+      parseFloat(getComputedStyle(document.documentElement).fontSize),
+      'the default 16px root (CAP is spelled at it)',
+    ).toBe(16);
+  });
+
+  it.each([
+    {
+      where: 'the doctor page’s band (no `scaled`) at a laptop’s column',
+      width: 1382.5,
+      scaled: false,
+    },
+    {
+      where: 'Home’s band (`scaled`) below the step',
+      width: 600,
+      scaled: true,
+    },
+  ])(
+    'declares NOTHING for $where — the theme’s sizes, the 44px disc with its 20px glyph',
+    ({ width, scaled }) => {
+      const { band, rhythm } = renderColumn(width, scaled);
+      // The registered property's initial value: nothing declared it.
+      expect(getComputedStyle(rhythm).getPropertyValue('--scale-px')).toBe(
+        '1px',
+      );
+      expect(rhythm.getBoundingClientRect().width).toBeCloseTo(width, 1);
+      const sizes = sizesOf(band);
+      expect(sizes.title).toBe(36);
+      expect(sizes.eyebrow).toBe(14);
+      expect(sizes.words).toBe(16);
+      // DISC_SIZE at the theme's 0.25rem step: 11 × 4px = 2.75rem, the atom's
+      // own fallback to the pixel — what every page drew before 2026-10-02.
+      expect(sizes.disc.width).toBe(44);
+      expect(sizes.disc.height).toBe(44);
+      expect(sizes.glyph.width).toBeCloseTo(20, 2);
+      expect(sizes.glyph.height).toBeCloseTo(20, 2);
+      expect(sizes.tray.height).toBeCloseTo(sizes.tray.width / 2, 1);
+    },
+  );
+
+  it.each([
+    { where: 'a column of 1.25 references', width: 1382.5 },
+    { where: 'a column past the cap', width: 2000 },
+  ])(
+    'draws the WHOLE band in the design pixel at $where — opener, words, discs, map, and the cap’s centring',
+    ({ width }) => {
+      const { band, column, rhythm } = renderColumn(width, true);
+      const outer = column.getBoundingClientRect();
+      const s = Math.min(outer.width, CAP) / REFERENCE;
+
+      expect(
+        parseFloat(getComputedStyle(rhythm).getPropertyValue('--scale-px')),
+      ).toBeCloseTo(s, 4);
+      // bandColumnClasses: as wide as the column up to the cap, centred past it.
+      const box = rhythm.getBoundingClientRect();
+      expect(box.width).toBeCloseTo(Math.min(outer.width, CAP), 1);
+      expect(box.left - outer.left).toBeCloseTo(
+        (outer.width - box.width) / 2,
+        1,
+      );
+      // Every length of the band, its reference × s — the discs among them,
+      // which is what DISC_SIZE is for: without it they would stay 44px here.
+      const sizes = sizesOf(band);
+      expect(sizes.title).toBeCloseTo(36 * s, 1);
+      expect(sizes.eyebrow).toBeCloseTo(14 * s, 1);
+      expect(sizes.words).toBeCloseTo(16 * s, 1);
+      expect(sizes.disc.width).toBeCloseTo(44 * s, 1);
+      expect(sizes.disc.height).toBeCloseTo(44 * s, 1);
+      expect(sizes.glyph.width).toBeCloseTo(20 * s, 1);
+      expect(sizes.tray.height).toBeCloseTo(sizes.tray.width / 2, 1);
+    },
+  );
 });

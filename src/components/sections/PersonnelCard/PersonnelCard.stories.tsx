@@ -90,7 +90,18 @@ import {
 // the border of the non current review from the review carrousel"): ui/Card's
 // `framed` tone, a 3px lavender border where the 1px hairline was, every box
 // inside exactly where it stood — the two expectNoInset plays measure both
-// halves. The auxiliary frames did not change.
+// halves. The auxiliary frames did not change then.
+//
+// ── THE THREE AUXILIARY FRAMES CHANGED on 2026-10-02 (D4, CLAUDE.md
+// §15.32): every auxiliary story here renders the DEFAULT level, 3, and a
+// level-3 name moved from ui/Heading's `title` step (20px) to `band` — 30px
+// on a card narrower than its 28rem `@md`, as every auxiliary card in these
+// frames is, 36px from it — the one step a person's name wears at either
+// level, for both kinds (the owner wants the staff tiles' names at 30px, the
+// size they wore as the Team page's <h2>s). `Default`, `AuxiliaryGrid` and
+// `PseudoLocale` re-record — 390 and 1536, and 320 for the two `stress-320`
+// ones: eight cells — and the Default play reads the size back; the three
+// doctor stories do not move.
 
 const Band = ({ children }: { children: ReactNode }): ReactElement => (
   <section className="bg-page">
@@ -186,8 +197,10 @@ const AUXILIARIES = [
   },
 ];
 
-/** The staff grid — the shape sections/TeamRoster writes around these cards,
- *  and the two lines it copies exactly. `@md`/`@3xl` measure the
+/** A staff grid for this card's own workbench — the shape sections/TeamRoster
+ *  wrote around these cards until 2026-10-02 (it lays FIXED tiles in a
+ *  wrapping row since, its D9; this grid is kept as the card's stress shape,
+ *  not as a copy of the band). `@md`/`@3xl` measure the
  *  CONTAINER column (§6.5). `role="list"` is redundant in the spec but
  *  load-bearing in WebKit, which drops list semantics from any
  *  `list-style: none` list (the ui/SpeedDial precedent, configured as an
@@ -512,7 +525,7 @@ const meta = {
     name: {
       control: 'text',
       description:
-        'The full name, finished and already translated (§8.1) — becomes the card’s real heading — an <h3> by default, an <h2> under `headingLevel={2}` (the Team page) — and, through aria-labelledby, the article’s accessible name (D4). Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
+        'The full name, finished and already translated (§8.1) — becomes the card’s real heading — an <h3> by default, an <h2> under `headingLevel={2}` (cards straight under a page’s h1), on ui/Heading’s `band` step either way — and, through aria-labelledby, the article’s accessible name (D4). Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
     },
     position: {
       control: 'text',
@@ -539,7 +552,7 @@ const meta = {
       control: 'inline-radio',
       options: [2, 3],
       description:
-        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1. The ELEMENT follows it for both kinds; an auxiliary’s step does too (§15.24, run D48: `band` at 2 — 30px on a card narrower than 28rem, 36px from it — `title` at 3), while a doctor’s name wears `band` at both (D17); the id and the aria-labelledby pair never change',
+        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1. ONLY the ELEMENT follows it: since 2026-10-02 a person’s name wears ui/Heading’s `band` step at both levels, for both kinds (§15.32 — 30px on a card narrower than 28rem, 36px from it; an auxiliary’s level 3 was `title` until then), so flipping it changes the outline and no pixel; the id and the aria-labelledby pair never change',
     },
     profile: {
       control: false,
@@ -574,10 +587,13 @@ type Story = StoryObj<typeof meta>;
  *
  * **390 · 320 (`stress-320`):** the 192px portrait inside `p-6`, with the name
  * and the position centred under it and 208px of content still fitting at the
- * accessibility width. The play reads back the three facts a picture cannot:
- * the article is NAMED by its heading, the portrait is decorative (no `img`
- * role at all — `alt=""` is the decision, D3), and there is no blockquote
- * anywhere on an auxiliary card.
+ * accessibility width. The play reads back the four facts a picture cannot:
+ * the article is NAMED by its heading; the name wears ui/Heading's `band`
+ * step at this default level 3 — 30px, the card being narrower than the 28rem
+ * `@md` the step reads against its own container (D4: the step of every
+ * person's name since 2026-10-02, `title`'s 20px until then); the portrait is
+ * decorative (no `img` role at all — `alt=""` is the decision, D3); and there
+ * is no blockquote anywhere on an auxiliary card.
  */
 export const Default: Story = {
   tags: ['stress-320'],
@@ -589,10 +605,21 @@ export const Default: Story = {
   ),
   play: async ({ canvas, canvasElement }) => {
     const card = canvas.getByRole('article', { name: AUXILIARIES[0].name });
-    await expect(
-      canvas.getByRole('heading', { level: 3, name: AUXILIARIES[0].name }),
-    ).toBeInTheDocument();
+    const heading = canvas.getByRole('heading', {
+      level: 3,
+      name: AUXILIARIES[0].name,
+    });
+    await expect(heading).toBeInTheDocument();
     await expect(canvas.getByText(AUXILIARIES[0].position)).toBeInTheDocument();
+
+    // THE NAME'S SIZE (D4, 2026-10-02): the `band` step's 1.875rem — a card
+    // inside `max-w-sm` is under its 28rem `@md` at every width, so 30px at
+    // the default root; `title` would read 1.25rem. Read in rem, so it holds
+    // at any root font size; a computed font size needs no loaded face.
+    await expect(parseFloat(getComputedStyle(heading).fontSize)).toBeCloseTo(
+      rem(1.875),
+      1,
+    );
 
     // Decorative by construction: there is no `img` role to query, so the
     // element is reached the only way it can be.

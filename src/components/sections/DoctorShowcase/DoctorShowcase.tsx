@@ -10,7 +10,11 @@ import {
   type PersonnelPhoto,
 } from '@/components/sections/PersonnelCard/PersonnelCard';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
-import { Container } from '@/components/ui/Container/Container';
+import {
+  Container,
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
 import { Ribbon, RibbonStation } from '@/components/ui/Ribbon/Ribbon';
 import { cx } from '@/lib/cx/cx';
 
@@ -26,7 +30,9 @@ import { cx } from '@/lib/cx/cx';
 // mandrim familia premium smile." The decision numbers below are that
 // contract's D1–D8 — and D9, the first screen's eager picture, added the same
 // day, and D10, THE SCALE, on 2026-10-01 — and are the anchors other files
-// cite (§17.7 — never a line number; D10's GATES among them).
+// cite (§17.7 — never a line number; D10's GATES among them, and since
+// 2026-10-02 ui/Container's THE BAND SCALE, which holds the regime D10
+// invented and cites D10 for its numbers and for what it trades).
 //
 // ── D1 · DUMB, PROPS-IN, ZERO KEYS — the PriceList / Hero / DoctorIntro shape.
 // Every string that arrives here is FINISHED: the eyebrow, the title, each
@@ -150,25 +156,54 @@ import { cx } from '@/lib/cx/cx';
 // width, 20.1 → 16.3 → 11.8 → 8.4: an ever wider card with the same small
 // things in it.
 // THE MECHANISM — ONE box: the rhythm box (RHYTHM, below) declares the
-// band's DESIGN PIXEL, `--scale-px` = min(column, CAP) / REFERENCE, and
-// wears `design-scale` (globals.css, THE DESIGN SCALE), which redraws every
-// theme length on it and inside it in that pixel — the spacing step, the
-// text, container and radius steps, the body size. Tailwind compiles each
-// utility to its theme variable, so every `p-6`, `text-lg`, `max-w-md` and
-// `rounded-soft` of the opener and of every card follows at once, and no
-// atom is told. The few lengths no theme variable carried were respelled in
-// one, each in its own file: the ribbon's (ui/Ribbon, THE UNIT:
-// `design-scale` makes its unit 100 design pixels, so the ribbon is the
-// reference ribbon, scaled — never a new ribbon for a wider column), ui/Card's
-// `framed` padding (THE SUM RULE there: the frame stays a 3px border, the
-// padding carries the step) and the doctor card's INSET, the card owning no
-// scale of its own (PersonnelCard D19). `--scale-px` is a registered length:
-// computed HERE, against ui/Container's width, and inherited as a plain
-// length — never measured again against a card, which is a container of its
-// own.
+// band's DESIGN PIXEL, `--scale-px` = min(column, CAP) / REFERENCE — times
+// `--band-zoom` since 2026-10-02, a factor nothing in this band sets, so 1
+// (THE PROMOTION, below) — and wears `design-scale` (globals.css, THE DESIGN
+// SCALE), which redraws every theme length on it and inside it in that
+// pixel — the spacing step, the text, container and radius steps, the body
+// size. Tailwind compiles each utility to its theme variable, so every
+// `p-6`, `text-lg`, `max-w-md` and `rounded-soft` of the opener and of every
+// card follows at once, and no atom is told. The few lengths no theme
+// variable carried were respelled in one, each in its own file: the
+// ribbon's (ui/Ribbon, THE UNIT: `design-scale` makes its unit 100 design
+// pixels, so the ribbon is the reference ribbon, scaled — never a new ribbon
+// for a wider column), ui/Card's `framed` padding (THE SUM RULE there: the
+// frame stays a 3px border, the padding carries the step) and the doctor
+// card's INSET, the card owning no scale of its own (PersonnelCard D19).
+// `--scale-px` is a registered length: computed HERE, against ui/Container's
+// width, and inherited as a plain length — never measured again against a
+// card, which is a container of its own.
+// THE PROMOTION (2026-10-02, CLAUDE.md §15.32) — the regime this band invented
+// is SPELLED ONCE, in ui/Container (THE BAND SCALE), the day every band below
+// the Home hero and every band of the Team page took the same scale. The
+// owner, verbatim: "i want both section to in parallel on widening of screen
+// to be responsive and adapt in parallel, so headings and eyebrows grow
+// together, always have same size and extremley important for headings and
+// eyebrows, same offset always". With the doctors band alone in a design
+// pixel, its heading drew under the rem headings around it below the 1401
+// window and over them above it (49.5px beside their 36 at 1920), and it
+// centred past the cap while theirs kept the column's edge (ui/Container's
+// THE BAND SCALE has the measurements); one pixel and one cap for every band
+// make the size and the offset one by construction.
+// ui/Container exports the rule as two strings — `bandScaleClasses`, the
+// design pixel and the remap behind the variant chain, and
+// `bandColumnClasses`, the cap and the centring — and this band WEARS both on
+// its rhythm box like the others (RHYTHM, below; ui/Container's recipe rule
+// 5) and spells none of the regime itself; tests/unit/design-scale.test.ts
+// holds the spelling to Container.tsx and every wearer to an import of it.
+// Two things came with the strings and move no pixel here: `w-full` on the
+// box (a block box is full width already — it is for a rhythm box that sits
+// in a flex column) and the zoom factor, 1 wherever no box sets it
+// (ui/Container's THE ZOOM; DoctorShowcase.test.tsx pins that nothing in this
+// band does). Everything else in D10 — the history, the measurements, the
+// numbers' arguments, the owner's recorded calls — stays this band's record,
+// and ui/Container points here for it: the trades below are the regime's, so
+// every band that wears it makes them too, each at its own sizes.
 // THE GATES — the regime applies only where ALL THREE hold. RHYTHM wears
-// them as ONE variant chain, `scalable:@4xl:@min-[896px]:`, on both of its
-// regime classes, and the first two, `scalable:`, on THE CAP:
+// them through ui/Container's two strings: ONE variant chain,
+// `scalable:@4xl:@min-[896px]:`, on both regime classes of
+// `bandScaleClasses`, and the first two, `scalable:`, on THE CAP of
+// `bandColumnClasses`:
 //   · A MOUSE OR TRACKPAD — `(pointer: fine)`, the primary pointer: a laptop
 //     or a desktop. G2 found every current iPad held sideways inside the
 //     first cut's range — 1133 to 1366px wide, the quote 14.8 to 17.8px
@@ -199,7 +234,10 @@ import { cx } from '@/lib/cx/cx';
 // properties — the band declares no design pixel, wears no remap and has no
 // cap: it is today's band, every computed length as before, rem the unit
 // (§7).
-// THE NUMBERS — one token each, and the LEVERS:
+// THE NUMBERS — one token each, and the LEVERS. Since 2026-10-02 each token
+// is spelled in ui/Container's two strings (THE PROMOTION), so a lever pulled
+// there moves every band that wears the scale at once — never this one alone,
+// which is the point of the promotion:
 //   · REFERENCE 1106 — the band's column at the owner's 1401 × 1063 window
 //     under a classic scrollbar, 1401 − 15 − 2 × 140.1 = 1105.81px (measured
 //     on develop's export): at that column a design pixel IS a CSS pixel, and
@@ -309,7 +347,9 @@ import { cx } from '@/lib/cx/cx';
 // viewport less the scrollbar and 2 × clamp(1rem, 10vw, 12.5rem); s =
 // min(column, 96rem) / 1106 from a max(56rem, 896px) column; on screen a CSS
 // px is z device px). Inside the regime the band's lengths follow its
-// column, not the root font, so:
+// column, not the root font, so — and since 2026-10-02 the same holds for
+// every band that wears ui/Container's THE BAND SCALE, each at its own sizes;
+// the figures below are this band's quote and name (THE PROMOTION):
 // (1) A BROWSER ZOOM narrows the column, in CSS px, by the very factor it
 // enlarges a CSS px (the gutter is 10vw wherever its 12.5rem cap does not
 // bind), so between the step and the cap the band's text stays the SAME size
@@ -379,14 +419,18 @@ import { cx } from '@/lib/cx/cx';
 // below ≈ 893px), and 1px over it the same card at 14.6px, its eyebrows
 // 14 → 11.3px (s = 0.810).
 // The levers, all told: REFERENCE, CAP, STEP and the gate (THE NUMBERS), a
-// cap at the reference, and a floor on the design pixel.
+// cap at the reference, and a floor on the design pixel — the first three
+// spelled in ui/Container's strings, the last two to be spelled there if
+// pulled, the gate's two conditions in globals.css — and each one, pulled,
+// the same for every band that wears the scale (THE PROMOTION).
 //
 // ── FIDELITY (§6.8). The remaining native props and `ref` land on the
 // <section>; a caller's className merges LAST (placement only). The band owns
 // no outer margin (§6.4) — the page owns the rhythm BETWEEN bands. Its own
 // shape is ui/Container's page-band recipe: the semantic full-bleed <section>
 // owns the paint (`bg-page`), the Container inside owns the width and the
-// container-query context.
+// container-query context, and the rhythm box inside that wears the recipe's
+// rule 5, THE BAND SCALE (D10's THE PROMOTION).
 
 /**
  * One doctor's card, finished: translated words, the cutout, the link already
@@ -429,24 +473,35 @@ type DoctorShowcaseOwnProps = Readonly<{
 }>;
 
 /**
- * THE RHYTHM BOX (D4, D10), ONE static string — Tailwind reads class names
- * from source text, so every class stands whole inside one literal. The band
- * top and nothing below it (D4); `mx-auto`, which centres the box only where
- * it has a maximum width; THE CAP, `scalable:` — the first two of D10's
- * GATES, a mouse or trackpad in an engine that registers custom properties —
- * on the box's maximum width, 96rem; and THE REGIME, `scalable:` and the
- * Container's `@4xl` step floored at 896px, as ONE variant chain on both of
- * its classes: the band's design pixel, min(column, CAP) / REFERENCE,
- * declared here, and every theme length on this box and inside it measured in
- * it (`design-scale`). The cap is spelled twice in this one string — in the
- * design pixel's `min()` and in the box's maximum width — and the chain twice,
- * once on each regime class; tests/unit/design-scale.test.ts holds each pair
- * equal (KEEP IN SYNC) and DoctorShowcase.test.tsx the string byte for byte.
+ * THE RHYTHM BOX (D4, D10) — the band's own rhythm, then ui/Container's two
+ * band-scale strings (D10's THE PROMOTION; ui/Container's THE BAND SCALE and
+ * its recipe rule 5, §15.32), composed once, here, at module scope. Tailwind
+ * reads class names from source text, so every class stands whole inside a
+ * string literal: the band's own in this file, the scale's in Container.tsx.
+ *   · THE BAND'S OWN: a flex column, the band top and nothing below it (D4).
+ *   · `bandColumnClasses`: `mx-auto` and `w-full`, and THE CAP behind
+ *     `scalable:` — the first two of D10's GATES, a mouse or trackpad in an
+ *     engine that registers custom properties — on the box's maximum width,
+ *     96rem, so past the cap the box centres in its column (`w-full` changes
+ *     nothing in this block flow; it is there for a rhythm box in a flex
+ *     column).
+ *   · `bandScaleClasses`: THE REGIME, `scalable:` and the Container's `@4xl`
+ *     step floored at 896px as ONE variant chain on both of its classes — the
+ *     design pixel, min(column, CAP) / REFERENCE times `--band-zoom` (1:
+ *     nothing in this band sets it), declared on this box, and every theme
+ *     length on this box and inside it measured in it (`design-scale`).
+ * The band spells none of the regime: tests/unit/design-scale.test.ts holds
+ * the two strings to their one spelling in Container.tsx (the cap twice
+ * there, KEEP IN SYNC) and DoctorShowcase.test.tsx this composition byte for
+ * byte. The classes this box wore until 2026-10-02, in a new order (an
+ * attribute's order never decides a style), plus `w-full` and the zoom
+ * factor — and neither moves a pixel.
  */
-const RHYTHM =
-  'mx-auto flex flex-col pt-12 @lg:pt-16 @3xl:pt-20 scalable:max-w-[96rem] ' +
-  'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106)] ' +
-  'scalable:@4xl:@min-[896px]:design-scale';
+const RHYTHM = cx(
+  'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20',
+  bandColumnClasses,
+  bandScaleClasses,
+);
 
 export type DoctorShowcaseProps = DoctorShowcaseOwnProps &
   // The native <section> surface, minus the band's own names and minus
@@ -486,7 +541,8 @@ export function DoctorShowcase({
       <Container>
         {/* The rhythm box — the band top and nothing below: the ribbon's own
             head and tail room are the band's air (D4) — and, wherever D10's
-            three GATES hold, the band's scale (D10). */}
+            three GATES hold, the band's scale: ui/Container's THE BAND SCALE,
+            which every band of Home and Team wears (D10's THE PROMOTION). */}
         <div className={RHYTHM}>
           <SectionHeading eyebrow={eyebrow} title={title} id={headingId} />
           {/* THE RIBBON, ROUTE B (D3): the root is the list, each station a

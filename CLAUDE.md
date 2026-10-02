@@ -63,7 +63,9 @@ decision, never a side effect. Runtime: **Node.js 24 (Active LTS)**; npm as pack
 - Tailwind **default breakpoints untouched** (sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536)
   and default spacing scale untouched. *(A scaled design remaps the UNIT, never the scale: globals.css's
   `design-scale` utility re-expresses every default length step — spacing, text, container, radius — in a
-  band's own design pixel, inside that band alone, each step keeping Tailwind's ratio; §15.25 round 2.)*
+  band's own design pixel, inside that band alone, each step keeping Tailwind's ratio; §15.25 round 2 —
+  since 2026-10-02 ONE design pixel for every band of Home and Team, spelled once in ui/Container's THE
+  BAND SCALE; §15.32.)*
 - Design tokens in `styles/globals.css`: theme-independent **primitives** in `@theme`, plus
   **semantic color tokens scoped as themes** (`:root` / `[data-theme='light']`, wired to
   utilities via `@theme inline`). **v1 ships exactly one theme: light.** Future themes remap
@@ -247,7 +249,9 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
   it keeps the proportions of the owner's 1401 window at every laptop and desktop width; on every touch
   device (a tablet held either way included), below the step, and in an engine that cannot register custom
   properties it is rem like everything else. What that costs browser zoom and the user's font size is
-  recorded in §15.25 round 2.)*
+  recorded in §15.25 round 2. Since 2026-10-02 the exception covers EVERY band under the Home hero and
+  every band of the Team page — one design pixel, ui/Container's THE BAND SCALE, so their headings are one
+  size and one offset at every laptop and desktop width — and nothing else on the site; §15.32.)*
 
 ## 8. Internationalization contract
 
@@ -412,9 +416,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 
 | Page | Sections | Namespace |
 |---|---|---|
-| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'slogan'/'inverse-aura' — the old page's stroked letters under a lilac halo at the plain weight, changing hands in a sequence instead of a dissolve, and the tablet's own ratio of the viewport from the tablet up (round 12, 2026-10-01) — over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link — both in ui/Button's lilac `accent` family since 2026-10-01, the services link under the top bar's aura and greying one step darker on hover, both with the old site's hover jump (§15.30 round 3) —, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorStats** (the clinic's NUMBERS since 2026-10-01 — the doctor page's „în cifre" band on the plain page ground (`ground="page"`: no tint, no fades), its eyebrow „În cifre" and h2 „Experiență confirmată în timp" at the START like every Home band's (`align="start"`), NO lead, and THREE tiles — lib/team's `clinicStats`: years · patients · procedures, the numbers placeholders flagged TODO(owner) — one row from the column's `@xl`, stacked below; right under the Hero, BEFORE the doctors, on the owner's word the same evening ("i need to swap these 2 sections between them … so first in cifre and then doctors" — it had stood between the doctors and the map, the planner's pick) — §15.23 round 5) · **DoctorShowcase** (the doctors band since 2026-09-30, between the numbers and the map since the owner's swap — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26) — on a laptop or desktop (a mouse or trackpad device), from a 56rem column, the whole band is ONE design scaled to its column, the proportions of the owner's 1401 window at every width up to a 1920 desktop's, while every touch device keeps it unscaled (§15.25 round 2); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys — §15.25) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner | `home` |
+| Home | **Hero** (the opener — the old site's auto-iterating photo frame as a DUMB props-in rotator on `lib/rotation` through the shared `ui/use-rotation` shell: a full-bleed stage of grey-veiled photographs UNDER the pill filling the whole first screen (`-mt-[calc(6rem+2px)]` + `min-h-svh`, the SIXTH coupled spelling — round 2), the picture zone light (the old 20 % wash back), one slogan per slide on `ui/Heading` 'slogan'/'inverse-aura' — the old page's stroked letters under a lilac halo at the plain weight, changing hands in a sequence instead of a dissolve, and the tablet's own ratio of the viewport from the tablet up (round 12, 2026-10-01) — over ONE static ground that reaches the old site's 0.40 veil at the words' own row (§15.1's rider), an eased fade into the page ground at the bottom, a ContactModalTrigger + an outline services link — both in ui/Button's lilac `accent` family since 2026-10-01, the services link under the top bar's aura and greying one step darker on hover, both with the old site's hover jump (§15.30 round 3) —, beads only — buttons with `aria-current`, no pause/play and NOTHING that stops it for good on the owner's word (a bead press buys a full interval; keyboard focus inside is the one hold; no pointer hold at all); the page is the ONE populator from `lib/hero-slides`; hero lane 2026-09-19, pack rounds 2–3 2026-09-20, §15.21) · **DoctorStats** (the clinic's NUMBERS since 2026-10-01 — the doctor page's „în cifre" band on the plain page ground (`ground="page"`: no tint, no fades), its eyebrow „În cifre" and h2 „Experiență confirmată în timp" at the START like every Home band's (`align="start"`), NO lead, and THREE tiles — lib/team's `clinicStats`: years · patients · procedures, the numbers placeholders flagged TODO(owner) — one row from the column's `@xl`, stacked below; right under the Hero, BEFORE the doctors, on the owner's word the same evening ("i need to swap these 2 sections between them … so first in cifre and then doctors" — it had stood between the doctors and the map, the planner's pick) — §15.23 round 5) · **DoctorShowcase** (the doctors band since 2026-09-30, between the numbers and the map since the owner's swap — eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over every `lib/team` doctor as the doctor card, in ONE column that the floss ribbon wraps (`ui/Ribbon`, drawn live on scroll, §15.26) — on a laptop or desktop (a mouse or trackpad device), from a 56rem column, the whole band is ONE design scaled to its column, the proportions of the owner's 1401 window at every width up to a 1920 desktop's, while every touch device keeps it unscaled (§15.25 round 2); the SAME band the Team page opens with, populated by the Team page's own walk and its `team.showcase.*` keys — §15.25) · ServicesTeaser · **ClinicLocation** (the „Ne găsești" map + contact rows — the first Home band shipped, 2026-09-09, old-site order: late on the page, before the closing band) · **ReviewsCarousel** (the „Părerea ta contează" deck — SectionHeading + ReviewCards on `lib/rotation`; second Home band, built 2026-09-10, replaces the never-built "TrustStrip (opt)"; old-site order: after ClinicLocation; MOUNTED 2026-09-20 on the owner's word — the hero lane's rounds 4–5 — first over five fabricated demo rows, and since 2026-09-30 over the clinic's OWN Google reviews from `lib/reviews` (seven rows; each card's bottom line says how long ago the review was posted, „acum 2 ani", computed at build; the card is four-fifths of a phone's stage so the longest review fits — §15.19 round 4, §15.21) · CTABanner. EVERY band under the Hero draws in ONE scale on a laptop or desktop since 2026-10-02 — ui/Container's THE BAND SCALE, one heading size and one offset for all four: the doctors band whole, the numbers band whole with its tiles at 9/8 (a tile's sentence the doctor card's quote size), the map band whole, the reviews band's opener alone (its deck untouched); §15.32 | `home` |
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven category cards, of which ONLY the one the visitor is at wears the aura, faded in and out over 400ms — round 4, 2026-09-29; every card wore it from 2026-09-14 until then; "at" is THE READING LINE since round 5, the same day: a card lights as its top crosses the middle of the clear part of the window, the first card at the top of the page, and a menu click brings a card that fits to that middle, with no focus ring for a pointer — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` on its link in BOTH directions, scroll and click, and — round 4 — by a `data-current` mark the island stamps on the card that link points at) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15) · CTABanner | `services` |
-| Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount), scaled as one design on a laptop or desktop (§15.25 round 2) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button; the FIRST card's picture preloads on this page, its LCP element. The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30 — `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))`; until then it also held the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier) · **DoctorStats** (the clinic's numbers since 2026-10-01 — the Home page's band, prop for prop, between the staff and the map: the owner, "same component as on main page with the stats on the team page between map and helping staff"; §15.23 round 5) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt) | `team` |
+| Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount), scaled as one design on a laptop or desktop (§15.25 round 2) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button; the FIRST card's picture preloads on this page, its LCP element. The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30, until then also the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier — and since 2026-10-02 a TITLED band, its own eyebrow „Echipa de sprijin" over the h2 „Oamenii fără de care nu ne-am descurca" (`team.roster.*`, Claude's drafts ×5), the tiles `<h3>`s at ONE width: 18rem on phones and tablets, a third of the scaled column on a laptop or desktop — §15.32; the `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))` are history) · **DoctorStats** (the clinic's numbers since 2026-10-01 — the Home page's band, prop for prop, between the staff and the map: the owner, "same component as on main page with the stats on the team page between map and helping staff"; §15.23 round 5) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt). EVERY band of this page draws in ONE scale on a laptop or desktop since 2026-10-02 — ui/Container's THE BAND SCALE, one heading size and one offset for all four (`scaled` on the numbers and the map); §15.32 | `team` |
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step; on a laptop and a desktop, since 2026-10-01 (§15.23 round 6), the owner's TWO CONTAINERS across the whole column — the picture's track a third of the column after an inset of 15 % of the gutter, a gap of a sixth of the column clamped to 3–10.5rem, the words in the rest: the specialty over the name a ninth of the column down and the credo card under them on ONE left edge 1.5rem into the words, the card up to 36rem wide and centred in the height the name leaves (as much space above it as below), and the cutout drawn out of flow as tall as the row, growing (centred, up to 1.4 × its third) until it stands on the words' floor, so the two containers share ONE floor — the `align` seat axis (rounds 2e–2l's `lowered`) and round 2k's centred content-sized columns retired with it; the band's own rhythm halved in round 2j ("it starts height wise too low … also the image, so the whole thing"), the credo's quote on `text-xl`; and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred (round 2k: "name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the doctor card button's lavender `accent` since 2026-10-02 (§15.1's keyword rider — "i want that highlighted text to actually be the color of the current mai multe despre mine button"; the deep violet `accent-strong` until then) (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Experiență confirmată în timp” (the reference's „Excelență" until round 2s) centred over a lead sentence and four tiles: a light disc with a line glyph — LILAC (`accent-decorative`) since 2026-10-01, the owner: "paint it's svgs lilla"; green until then —, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the twin (`sr-only` until 2026-10-01, since then an invisible copy laid exactly over the digits on one line, so a screen reader's cursor outlines the number and VoiceOver touch finds it — §15.23 round 5) SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"; a space grouping the spoken number's digits dropped since round 5 — « plus de 3000 »); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
@@ -2423,7 +2427,11 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     live on the card — so in the doctors band it is an `<h3>` at the band title's own step, 36px from a
     28rem inset and 30px on a phone: there the level is the outline's and the size is the card's. One
     cell of PersonnelCard's `NAME_STEP` table moves it back. The Team page's own `<h1>` left the `hero`
-    step the same day: it is `sr-only` now, the doctors band's `<h2>` being the visible opener.)* **A TITLE INSIDE A CARD READS ONE STEP
+    step the same day: it is `sr-only` now, the doctors band's `<h2>` being the visible opener.)* *(Amended
+    2026-10-02, §15.32: the auxiliary's per-level rule is SUPERSEDED too — the staff band gained its own
+    eyebrow and `<h2>`, its tiles became `<h3>`s, and the owner wants their names at his screenshot's 30px,
+    so a person's name wears `band` at both levels, for both kinds: the level is the outline's, never the
+    look's. Every NAME_STEP cell now says `band`; the table stays so a cell can move again.)* **A TITLE INSIDE A CARD READS ONE STEP
     UNDER A BAND TITLE (owner, 2026-09-27, accepting G2-R2 tier 1's react F1):** the `band` step answers to the
     nearest `@container`, and ui/Card is one, with 25px of border + padding per side, so a card title reaches
     36px only on a card at least 498px wide — the credo card (448px beside the picture), the 20rem schedule
@@ -2437,7 +2445,10 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the band's h2 and the doctors' h3 names read 29.2px at the step, 36 at the 1401 window and 50 past the cap,
     the eyebrows 11.3 → 14 → 19.4px, while every other band keeps the steps above — so on a 1920 desktop the
     doctors' names (49.5px) outrank the map band's h2 (36) and the staff tiles' names (30–36) by more than
-    §15.25 already recorded. The steps themselves are untouched.)*
+    §15.25 already recorded. The steps themselves are untouched.)* *(Superseded on Home and Team 2026-10-02,
+    §15.32: every band there shares the design pixel — at 1920 the map band's h2 reads 49.5px and the staff
+    tiles' names 41.3, so the doctors' h3 names EQUAL the band h2s instead of outranking them. The doctor page
+    and the Services page keep the steps above.)*
 
 25. **Doctor-showcase run — BUILT ON THE OWNER'S DISPATCH (2026-09-30; lane `rework/doctor-showcase`; no epic
     issue and no contract board — the card was approved LIVE on Storybook stories; the seal word, verbatim:
@@ -2612,7 +2623,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     lines — 226px at 390 inside the lanes — may show wide word gaps there: NOT verifiable on this
     workstation, the owner's to look at on an Android phone; the lever is `@md:text-justify` (start-aligned
     on a narrow card) · THE STAFF TILES HAVE NO GROUP LABEL, and from a ~670px window the doctors' level-3
-    names (36px) outrank the staff's level-2 names (30px); a heading over the tiles needs one string ×5 ·
+    names (36px) outrank the staff's level-2 names (30px); a heading over the tiles needs one string ×5
+    *(BUILT 2026-10-02, §15.32: the staff band's eyebrow and `<h2>` — two strings ×5 — over tiles whose names
+    are `<h3>`s, so no level-3 name outranks a level-2 one)* ·
     IN FORCED COLOURS the card's one button loses its face (measured: no border, no shadow — link-coloured
     text; the card keeps its 3px border): item 23's parked ui/Button follow-up, `forced-colors:border`,
     now on the only way to a doctor page · a WRAPPED `lg` label fills the button's 56px exactly (two
@@ -3137,7 +3150,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the gap between two doctors (61 against 98px at a 390 phone, 98 against 140 at 1280), so the two groups can
     read as one where the ribbon is absent (forced colours, print, a withheld column, before a stretch is
     drawn) — levers: the staff tiles' heading (§15.25's recorded one string ×5) or a bottom padding on the
-    Team page's doctors band alone — the owner: "i'll get to that later"; and, older than this lane (#124's
+    Team page's doctors band alone — the owner: "i'll get to that later" *(the heading TAKEN 2026-10-02,
+    §15.32: the staff band's eyebrow and `<h2>` stand between the last doctor card and the first tile)*; and,
+    older than this lane (#124's
     hover jump), a full-width stacked "Mai
     multe despre mine" grows 5 % on hover into the side lane, where its edge and ring can slide a few px under
     the side wave (SC 2.4.11 still met) — growing its keep-out by the jump is the lever. **Visual:** the cells whose ribbon reaches a last card change — every
@@ -3618,6 +3633,121 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     assertions in Wordmark.stories.tsx's Default play and Footer.stories.tsx's `expectLockupChain` (rem-relative
     sizes) — whichever merges second folds the other's numbers into its own (68.85 % of `5 * rem()`, the 30px name
     as `1.875 * rem()`).
+
+32. **The bands scale as one — Home and Team — ON THE OWNER'S WORD (2026-10-02, verbatim: "ok this is a huge
+    mission now and it is concerning laptop and desktop view of a webpage, size wise and allignment wise they are
+    perfect on phone and tablet, so do not medle there. i need you to take whole of home page from the sliding
+    window with photos downwards … I want both section to in parallel on widening of screen to be responsive and
+    adapt in parallel, so headings and eyebrows grow together, always have same size and extremley important for
+    headings and eyebrows, same offset always … the other page you have to implement the same thing once done is
+    the team page"; lane `rework/bands-scale`):** on a laptop or a desktop the doctors band was drawn in its own
+    design pixel (§15.25 round 2) while the bands around it stayed in rem, so its heading and eyebrow parted from
+    theirs above the 1401 window (MEASURED on develop's build: 48.5 / 18.9px against 36 / 14 at 1882, 49.5 against
+    36 at 1920) and its opener centred past the cap while theirs kept the column's edge (x 504.5 against 200 at
+    2560). **THE MECHANISM — THE BAND SCALE:** the doctors band's regime is promoted to ui/Container and spelled
+    there ONCE — `bandScaleClasses` (the design pixel `min(100cqw, 96rem) / 1106 × var(--band-zoom, 1)` and the
+    `design-scale` remap behind the variant chain `scalable:@4xl:@min-[896px]:`) and `bandColumnClasses` (`mx-auto
+    w-full scalable:max-w-[96rem]`) — and a band wears both on its RHYTHM box (ui/Container's recipe rule 5). Every
+    band under the Home hero and every band of the Team page then draws in ONE pixel and caps at ONE width, so every
+    eyebrow and every `<h2>` is one size and stands on one left edge at every laptop and desktop width, by
+    construction; the reference point is the owner's own 1401 window (a design pixel = a CSS pixel there, every band
+    its unscaled self, both openers 36 / 14px). Phones, every touch tablet, every window under the step and every
+    engine that cannot register custom properties: nothing declared, nothing remapped, every pixel as before (§7's
+    one exception, amended). **WHO WEARS IT:** sections/DoctorShowcase always (it invented it; D10 keeps the
+    numbers' arguments and the recorded trades); sections/DoctorStats and sections/ClinicLocation when the page
+    passes the NEW opt-in `scaled` prop — Home and Team do, the doctor page does not, because its other bands do not
+    scale yet and its headings must stay one size with them (page-twins.test.ts holds all three pages); the reviews
+    band's OPENER alone (the owner: "the reviews carrousell which you will not touch under any circumstance, it is
+    already responsive BUT it's heading and eyebrow isnt" — the opener box carries the band's top step and the gap to
+    the deck, the deck is its sibling and inherits nothing; ReviewsDeck.tsx is byte-identical); sections/TeamRoster
+    always (its one page scales). **THE NUMBERS BAND'S TILES AT 9/8 — THE ZOOM** (the owner: "Some other text that
+    should always mentain a ratio of 1 to 1 is for example from this [a doctor card's quote] and this [a tile's
+    sentence] … raporst between [the sentence] and "Ani de experiență" and "11.000+" and svg in circle as they are now
+    ar eperfect"): the tiles' list wears `bandScaleClasses` again with `--band-zoom` 1.125, so a tile is drawn at
+    9/8 of the band's pixel — its sentence (text-base, 16) is 18 design px, the doctor quote's text-lg, at every
+    width, and every ratio inside the tile is unchanged; the opener stays at the band's pixel. **THE MAP BAND, WHOLE**
+    (the owner: "the map keeps expanding and the text with adress and phone number next to it keeps remianing the
+    same … i do not want the map to be too large, the space the buttons take up too small or disproportioned" — the
+    exact shape left to the planner, "those are not clear requirements"): opener, map, rows, discs and text are one
+    design drawn at the 1401 window, so the map's share of the band never changes with the window again; the address
+    keeps text-base, 16 design px — equal to the review cards' 16px body at the reference window (the owner's "base
+    reference … 1 to 1") and growing with the map past it; the row discs follow through ui/disc.ts's host variable,
+    `--disc-size: calc(var(--spacing) * 11)` (exactly 2.75rem outside the scale). LEVERS: the address one step up
+    (text-lg, the doctor quote's size — the rows widen, the map narrows) and the map's share of the row. **THE
+    TEAM PAGE'S STAFF** (the owner: "create an eyebrow and headline for the 3 cars with helping staff … the cards
+    for helping staff are always adjusting in width. that should not happen. they should be fixed … also here
+    important for phone and tablet make them a fixed size or smth"): TeamRoster gains REQUIRED `eyebrow` / `title`
+    (`team.roster.*` — RO „Echipa de sprijin" / „Oamenii fără de care nu ne-am descurca", EN "Our support team" /
+    "The people we couldn't do without", DE „Unser Praxisteam" / „Die Menschen, ohne die es nicht ginge", FR « Notre
+    équipe de soutien » / « Les personnes sans qui nous n'y arriverions pas », IT « Il nostro staff » / « Le persone
+    senza cui non ce la faremmo » — Claude's DRAFTS in all five languages, gender-neutral on purpose, flagged,
+    §15.17) and names itself by its `<h2>`; its tiles become `<h3>`s and PersonnelCard's NAME_STEP gives an
+    auxiliary's name `band` at level 3 too, so the names keep the owner's 30px (§15.24's per-level rule superseded
+    for a name); the tiles hold ONE width — `w-72` (18rem, 288px) wherever the scale does not apply, fixed on every
+    phone from 360px (a 360 phone's column is exactly 288) and giving way only at the 320 stress width (256px, never
+    sideways), two to a row on a 768 tablet, three on an iPad held sideways; `w-88` in the scale, 352 design px,
+    three tiles filling the 1106-design-px column at every laptop and desktop width (352px at 1401, ≈ 401 at the
+    owner's ≈ 1594 window, where his screenshot showed 404) — and the staff portrait's `sizes` follows the scale
+    (`(min-width: 70rem) and (pointer: fine) 14vw, 12rem`, PersonnelCard D19, derived by the census like the doctor
+    cutout's). **MEASURED on the built export** (/ro/ and /ro/team/, Chromium, a classic scrollbar; develop's
+    build beside it): every band's `<h2>` / eyebrow 29.2 / 11.4px at a 1140 window, 32.8 / 12.8 at 1280, 36 / 14
+    at 1401, 39.5 / 15.4 at 1536, 48.5 / 18.9 at 1882, 49.5 / 19.3 at 1920 and 50 / 19.4 at 2560 — all four on
+    ONE x at every width (504.5 at 2560, centred) where develop drew the doctors band alone at those sizes and the
+    rest at 36 / 14 on x 200; a stats tile's sentence = the doctor quote at every width (14.6 / 16.4 / 18 / 19.8 /
+    24.3 / 24.8 / 25px); the map 761 × 381 at 1401 (unchanged), 1041 × 521 at 1882 (develop 1146 × 573), 1074 ×
+    537 at 2560 (develop 1800 × 900), the address 13 / 14.6 / 16 / 17.6 / 21.6 / 22 / 22.2px and the row discs 44
+    × s; the map's share of its band within two points (68.5 % to 69.9 %) where develop's ran 65.8 % to 83.9 %
+    — the typeface's optical sizing the remainder; the review cards' body 16px at every width (the deck
+    untouched); the staff tiles 288px at 390 and 768 and on both touch tablets, 285.5 / 321 / 352 / 386 / 474 /
+    484 / 489px from 1140 to 2560, their names `<h3>` at 30 × s. Unchanged: every 390 and 768 window and the 1180
+    and 1366 touch tablets on Home; no sideways scroll at any width. **GUARDS:** tests/unit/design-scale.test.ts (the regime spelled ONCE in Container.tsx, the five
+    wearers importing it, the zoom's one setter at 9/8, the one re-spelled gate chain — the staff tile's width —
+    equal to the regime's, the two picture hints derived), Container.test.tsx (the two strings' bytes, and the
+    engine measured: 36px at a 1106 column, the cap at 1536 centred, rem under the step, the zoom), page-twins.test.ts
+    (`scaled` on Home and Team, never on the doctor page, TeamRoster's two props), each band's own suite and stories,
+    and NEW tests/e2e/band-scale.spec.ts on the built export (every opener = 36 / 14 × s on one left edge at seven
+    laptop windows from 1140 to 2560, the tiles at 9/8 with the sentence equal to the quote, the map one proportion,
+    the reviews body still 16px, the staff tiles 352 × s; unchanged at 390 and 768, on two touch tablets, and the
+    staff tile at 288 on four phones and the 256px column at 320). **REVIEWS (G2 — react-reviewer,
+    typescript-reviewer and a11y-architect, all three on Opus, each MEDIUM-or-above finding handed to an Opus
+    verifier told to refute it):** three times APPROVE WITH CHANGES, 0 critical, 0 high. VERIFIED and FOLDED: the
+    staff row's `justify-between` (the first fold of the builder's 768 finding) opened a 228–319px hole between
+    two tiles on a 1024–1138px mouse window and 367–553px between a two-member staff's two tiles at every laptop
+    width — the row is START-ALIGNED now, `gap-x-5` outside the scale and the regime's `gap-x-6` inside it (D9);
+    the census's gate-chain reader missed backtick classes and a reordered chain (it reads both now, with a teeth
+    test) and the zoom had no fence (no product code but ui/Container's read and DoctorStats' one class may name
+    `--band-zoom`, an INHERITED property). The LOWs folded too: page-twins reads `scaled` as a BARE flag
+    (`scaled={false}` fails), the reviews test refuses any attribute form and any spread on the deck, THE ZOOM's
+    precondition (ui/Container the zoomed box's nearest container), stale captions and records. **EVIDENCE AT
+    READY:** prettier · eslint (one older warning, in lib/ribbon-layout, untouched) · tsc clean; vitest 143 files
+    / 3746 tests, and the same with the optimizer's variant folders hidden (CI's condition); build-storybook and
+    `next build` green; e2e 192 passed / 110 skipped (the new band-scale spec 58 of 58); the visual differential
+    at ZERO tolerance against a pristine build of develop bdb9611 (459 cells, private port): exactly the declared
+    cells move — Pages/Home at 1280 / 1536 / 1920 in both languages (its 320 / 390 / 768 frames byte-identical),
+    Pages/Team at all six widths, Sections/DoctorStats' three page-ground stories and Sections/ReviewsCarousel's
+    six at 1536, Sections/TeamRoster's two and Sections/PersonnelCard's three auxiliary stories at 320 / 390 /
+    1536, and Sections/ClinicLocation's NEW Scaled story at 390 / 1536 — plus 6 cells of 1–9 px in the harness's
+    known flicker families (SpeedDial, the language dial, the price list); DoctorShowcase and ClinicLocation's
+    existing stories byte-identical. **THE DARWIN SET, at the seal** (the owner, on the live previews, verbatim:
+    "create pr. looks great"), on develop bdb9611 itself — develop had not moved, so nothing was rebased and the
+    evidence above is the committed tree's: the 43 declared cells recorded under classic scrollbars (the 15px
+    gutter read off the body's width first; `innerWidth − clientWidth` prints 0 in either mode) and verified 43
+    of 43 — 41 re-recorded, Sections/ClinicLocation's Scaled at 390 / 1536 new — while Pages/Home's 320 / 390 /
+    768 cells, which this lane does not move, still match the baselines #135 and #137 recorded: the proof of the
+    mode. **RECORDED — the owner's calls, none built:** the regime's trades are §15.25
+    round 2's (a browser zoom inside the regime leaves text the same size on screen until the column drops under the
+    step — F94 under SC 1.4.4; the user's default font size not followed inside it; the jump at the step) and now
+    hold for every band of Home and Team — a REGRESSION from develop for the numbers band, the map band, the staff
+    band and the reviews opener, which were rem and doubled at 200 %: MEASURED by the a11y verifier, the map band's
+    address grows ×1.95 at 200 % on a 1440 screen, ×1.82 on 1536, ×1.45 on 1920 and ×1.31 on 2560 (develop ×2
+    everywhere), and a 20px default font on a 1440 laptop reads it at 16.45px where develop drew 20 — the contact
+    rows, the path to the site's one conversion goal (§1), among them. The owner's acceptance of that trade for
+    the doctors band now covers these bands too, or §15.25 round 2's levers apply (a cap at the reference keeps
+    every band at its 1401 size and lets zoom enlarge it like rem); BACKLOG.md entry 2 lists it for the launch
+    accessibility pass; the doctor page and the Services page are NOT scaled yet (the owner: "i
+    will soom send your way other pages where you have to do the same") — turning `scaled` on for the doctor page's
+    numbers and map is part of that page's lane; the uncommitted page-scale lane (`rework/page-scale`, a root
+    font-size clamp) is the other road to the same wish and must never land beside this one.
 
 ## 16. Build-time vs runtime contract
 

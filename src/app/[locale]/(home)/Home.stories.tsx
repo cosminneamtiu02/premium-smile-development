@@ -149,8 +149,10 @@ function HomePageBand(): ReactElement {
       {/* The clinic's numbers — the page's band, prop for prop: the page
           ground, the opener at the start, no lead, lib/team's `clinicStats`
           through the same walk and the same glyph map. First under the Hero,
-          before the doctors, as on the page. */}
+          before the doctors, as on the page — and `scaled`, like every band
+          under the Hero (the page's ONE SCALE paragraph, §15.32). */}
       <DoctorStats
+        scaled
         ground="page"
         align="start"
         eyebrow={tt('doctor.stats.eyebrow')}
@@ -164,7 +166,7 @@ function HomePageBand(): ReactElement {
         title={tt('showcase.title')}
         doctors={cards}
       />
-      <ClinicLocation />
+      <ClinicLocation scaled />
       {/* The page passes nothing and measures "how long ago" from the build;
           the twin pins the REAL list's story clock instead, so this baseline
           never ages (tests/unit/reviews-data.test.ts holds every real review

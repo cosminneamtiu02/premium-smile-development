@@ -85,7 +85,14 @@ Decisions still go to CLAUDE.md §15.
     the stat tiles, plus NVDA with Firefox in browse mode on a tile (§15.23 round 5);
   - the map — the corner buttons over Google's zoom controls at 320 and 390px, and the Tab order
     through Google's frame (COOKIES.md §7);
-  - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5).
+  - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5);
+  - SC 1.4.4 Resize Text on Home and Team — the band scale (CLAUDE.md §15.25 round 2, §15.32): on a
+    laptop or desktop every band there draws in a design pixel that follows its column, so a browser
+    zoom leaves its text the same size on screen until the column drops under the scale's step (the
+    map band's address at 200 %: ×1.45 on a 1920 screen, ×1.31 on 2560, against develop's ×2), and a
+    larger default font size is not followed (a 20px setting on a 1440 laptop reads the address at
+    16.45px) — so the 200 % zoom check above must test that text GROWS, not only that nothing
+    scrolls sideways. The owner's levers are in §15.25 round 2 (a cap at the reference).
 
 ## 3 · The privacy and cookie policy page
 

@@ -32,19 +32,37 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // eyebrows on main page and without this: [the lead] so dorp that part"; the
 // same band then closed the Team page's staff). The three `PageGround*`
 // stories render exactly that call — `ground="page"`, `align="start"`, NO
-// lead — over THREE tiles: this file's four without the courses tile, the
-// drawings and the order of lib/team's `clinicStats` (the pages pass the real
-// rows; a dumb band's workbench owes the data list nothing, the demo-copy
-// paragraph at the end). Their plays read off the ENGINE what the suite can
-// only read off the tokens: the eyebrow and the <h2> standing on the
-// Container column's left edge, the section painted in the page ground and
-// nothing tinted inside it, the three tiles in one row from the container's
-// `@xl` (all three across on the tablet, the narrowest named width that holds
-// them) and one above the other below it, every label whole. And every frame
-// of the band, both grounds, paints its glyphs LILAC (the owner, the same
-// day: "paint it's svgs lilla"): `expectLilacGlyphs` compares each drawing's
-// computed colour with the decorative role's own token, resolved by the
-// engine and never typed here.
+// lead, and `scaled` since 2026-10-02 (the next paragraph) — over THREE
+// tiles: this file's four without the courses tile, the drawings and the
+// order of lib/team's `clinicStats` (the pages pass the real rows; a dumb
+// band's workbench owes the data list nothing, the demo-copy paragraph at the
+// end). Their plays read off the ENGINE what the suite can only read off the
+// tokens: the eyebrow and the <h2> standing on the band column's left edge
+// (the Container's, or past THE BAND SCALE's cap the cap's, centred in it),
+// the section painted in the page ground and nothing tinted inside it, the
+// three tiles in one row from the container's `@xl` (all three across on the
+// tablet, the narrowest named width that holds them) and one above the other
+// below it, every label whole. And every frame of the band, both grounds,
+// paints its glyphs LILAC (the owner, the same day: "paint it's svgs lilla"):
+// `expectLilacGlyphs` compares each drawing's computed colour with the
+// decorative role's own token, resolved by the engine and never typed here.
+//
+// ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — DoctorStats.tsx's
+// paragraph of that name). The three `PageGround*` stories model Home and the
+// Team page, so they pass `scaled` (`HOME_ARGS`); the four tint stories and
+// `Counting` model the doctor page and do not. `expectBandScale` reads — like
+// the doctors band's own `expectScale` — the column, the pointer and the
+// engine the play runs in, never the pinned window, and asserts whichever side
+// it is on: inside the scale (a `scaled` band, a fine pointer, an engine that
+// registers custom properties, a column of max(56rem, 896px)) the opener in
+// the doctors band's design pixel, s = min(column, 96rem) / 1106, and every
+// tile at 9/8 of it; anywhere else every size the theme's, in rem. In the
+// Vitest storybook project the pointer is Chromium's fine one, so
+// `PageGround`'s laptop pin asserts the scale (and `expectScaled` that it was
+// not skipped), `Default`'s the doctor page's unscaled band at the same width,
+// and the phone and tablet pins that `scaled` changes nothing there. In the
+// pixel net the `PageGround*` frames at 1536 are drawn in the scale; every 390
+// and 320 frame, and every tint frame, is as it was.
 //
 // ── NO `ReducedMotion` STORY, by the contract's design: the preference is
 // READ in the plays of `Default` and `Counting`, each asserting whichever
@@ -524,7 +542,9 @@ const BRANCH = { 4: 'four', 3: 'three', 2: 'two', 1: 'one' } as const;
 /**
  * THE ARRANGEMENT CONTRACT (D30, D21), DERIVED from the measured list — the
  * box every `@`-variant here is read against is ui/Container's column, and
- * the list is exactly that wide (no padding between them). FRACTIONAL widths,
+ * the list is exactly that wide (no padding between them) — or, in THE BAND
+ * SCALE past a 96rem column, the cap's 96rem, which is past every step, so
+ * the branch read off it is the column's all the same. FRACTIONAL widths,
  * never clientWidth. The row width is `columnsFor`'s: four, three, two or one
  * — tiles of one row share a top (within 1px) and sit left to right without
  * overlapping; each row starts at or under the previous row's bottom; in one
@@ -683,14 +703,17 @@ const loadFace = async (element: HTMLElement): Promise<void> => {
 /**
  * THE OPENER AT THE START (owner, 2026-10-01: "left alligned as other
  * headings nad eyebrows on main page"): the eyebrow's and the <h2>'s left
- * edges stand on the Container column's left edge (within 1px), and both read
- * their lines from the start. Font-independent when it passes — a
- * start-aligned box begins at its column whatever its text measures — and not
- * vacuous: a centred opener on a laptop column puts both a few hundred pixels
- * in. The real faces load first all the same (`loadFace`): how far in a
- * centred box would sit IS a text measure, and a failure should report the
- * shipped face's number. (At a phone's column a wrapping title fills it
- * either way; the `textAlign` reads are what hold there.)
+ * edges stand on the band's own column — its rhythm box — within 1px, and
+ * both read their lines from the start. That column is the Container's, or,
+ * in THE BAND SCALE past its 96rem cap, the cap's, CENTRED in it, which the
+ * check asserts too: the one left edge every scaled band on the page shares
+ * (the owner, 2026-10-02: "same offset always"). Font-independent when it
+ * passes — a start-aligned box begins at its column whatever its text
+ * measures — and not vacuous: a centred opener on a laptop column puts both a
+ * few hundred pixels in. The real faces load first all the same (`loadFace`):
+ * how far in a centred box would sit IS a text measure, and a failure should
+ * report the shipped face's number. (At a phone's column a wrapping title
+ * fills it either way; the `textAlign` reads are what hold there.)
  */
 const expectStartAligned = async (
   band: HTMLElement,
@@ -700,7 +723,17 @@ const expectStartAligned = async (
   const kicker = within(band).getByText(eyebrow);
   await loadFace(kicker);
   await loadFace(heading);
-  const column = columnOf(heading).getBoundingClientRect();
+  const container = columnOf(heading);
+  const rhythm = container.firstElementChild;
+  if (!(rhythm instanceof HTMLElement)) {
+    throw new Error('DoctorStats story: the column lost its rhythm box');
+  }
+  const [outer, column] = [container, rhythm].map((box) =>
+    box.getBoundingClientRect(),
+  );
+  await expect(
+    Math.abs(column.left - outer.left - (outer.right - column.right)),
+  ).toBeLessThanOrEqual(1);
   for (const element of [kicker, heading]) {
     await expect(
       Math.abs(element.getBoundingClientRect().left - column.left),
@@ -778,6 +811,177 @@ const expectStackedTops = async (
   }
 };
 
+/** THE BAND SCALE's numbers (DoctorStats.tsx's paragraph of that name;
+ *  ui/Container's; born as sections/DoctorShowcase's D10), written out as the
+ *  doctors band's own play writes them: the REFERENCE column, where a design
+ *  pixel is a CSS pixel; the CAP in rem of the root (1536px at the default
+ *  16px, a 1920 window's column); THE STEP's two halves, `@4xl`'s 56rem and
+ *  the 896px floor. */
+const REFERENCE = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/** The scale's two GATES — globals.css's `scalable:` — read off the browser
+ *  the play runs in: a fine primary pointer (a mouse or a trackpad), in an
+ *  engine that registers custom properties (the relative colour syntax
+ *  shipped with `@property`). */
+const scaleGatesOpen = (): boolean =>
+  window.matchMedia('(pointer: fine)').matches &&
+  CSS.supports('color', 'rgb(from red r g b)');
+
+/** The column from which the scale applies — max(56rem, 896px). */
+const scaleStepPx = (): number => Math.max(stepPx(STEP_REM), STEP_FLOOR);
+
+/**
+ * THE BAND SCALE (2026-10-02, §15.32 — DoctorStats.tsx's paragraph), asserted
+ * where the play finds itself, the doctors band's `expectScale` recipe: the
+ * column read off ui/Container (the size container above the <h2>), the two
+ * GATES off the browser, never the pinned window. Where the band is `scaled`,
+ * the gates are open and the column is past the step, the opener draws in the
+ * doctors band's design pixel, s = min(column, 96rem) / 1106 — its <h2>
+ * 36 × s and its eyebrow 14 × s, the doctors band's own — the rhythm box is
+ * the column capped at 96rem and centred in it, and every tile draws at 9/8
+ * of s: its sentence 18 × s, HALF the <h2> (a doctor card's quote — the
+ * owner's "1 to 1"), its label 22.5 × s, its number 40.5 × s, its disc
+ * 126 × s with the glyph 54 × s; each within 0.05px. Anywhere else — the
+ * doctor page's band, never `scaled`; every phone and tablet; a coarse
+ * pointer — nothing is declared: both boxes' design pixel is the registered
+ * 1px, the rhythm box is the column, and every size is the theme's, in rem of
+ * the root (the <h2> 30 or 36 by the column's `@md`, the eyebrow 14, the
+ * sentence 16, the label 20, the number 36, the disc 112 and the glyph 48 at
+ * the 16px root). No face to load: a computed font size and a fixed box do
+ * not depend on which face has arrived. Returns whether the scale applied,
+ * for a caller that pins it (`expectScaled`).
+ */
+const expectBandScale = async (
+  band: HTMLElement,
+  eyebrow: string,
+  scaled: boolean,
+): Promise<boolean> => {
+  const heading = within(band).getByRole('heading', { level: 2 });
+  const kicker = within(band).getByText(eyebrow);
+  const list = within(band).getByRole('list');
+  const container = columnOf(heading);
+  const rhythm = container.firstElementChild;
+  if (!(rhythm instanceof HTMLElement)) {
+    throw new Error('DoctorStats story: the column lost its rhythm box');
+  }
+  const near = async (
+    actual: number,
+    expected: number,
+    label: string,
+    tolerance = 0.05,
+  ): Promise<void> => {
+    await expect(
+      Math.abs(actual - expected),
+      `${label}: ${actual} against ${expected}`,
+    ).toBeLessThanOrEqual(tolerance);
+  };
+  const sizeOf = (element: Element): number =>
+    parseFloat(getComputedStyle(element).fontSize);
+  const pixelOf = (element: Element): string =>
+    getComputedStyle(element).getPropertyValue('--scale-px').trim();
+  // Each tile's five measured parts, reached by what they are: the disc as
+  // the tile's aria-hidden child and its glyph inside it, the label by role,
+  // the number by its twin (`numbersOf`), the sentence as the tile's last
+  // child (the DOM order the suite pins).
+  const numbers = numbersOf(band);
+  const parts = tilesOf(band).map((tile, index) => {
+    const disc = [...tile.children].find(
+      (child) => child.getAttribute('aria-hidden') === 'true',
+    );
+    const glyph = disc?.querySelector('svg');
+    const sentence = tile.lastElementChild;
+    if (!disc || !glyph || !sentence) {
+      throw new Error('DoctorStats story: a tile lost its disc or sentence');
+    }
+    return {
+      disc: disc.getBoundingClientRect().width,
+      glyph: glyph.getBoundingClientRect().width,
+      label: sizeOf(within(tile).getByRole('heading', { level: 3 })),
+      number: sizeOf(numbers[index].number),
+      sentence: sizeOf(sentence),
+    };
+  });
+  await expect(parts.length).toBeGreaterThan(0);
+
+  const outer = container.getBoundingClientRect();
+  const column = rhythm.getBoundingClientRect();
+  const cap = stepPx(CAP_REM);
+  const applies = scaled && scaleGatesOpen() && outer.width >= scaleStepPx();
+
+  // THE COLUMN — the Container's, or the cap's centred in it.
+  await near(
+    column.width,
+    applies ? Math.min(outer.width, cap) : outer.width,
+    'the band’s column',
+    0.5,
+  );
+  await near(
+    column.left - outer.left,
+    outer.right - column.right,
+    'the band’s centring',
+    1,
+  );
+
+  if (applies) {
+    const s = Math.min(outer.width, cap) / REFERENCE;
+    const title = sizeOf(heading);
+    await near(parseFloat(pixelOf(rhythm)), s, 'the band’s pixel', 0.0001);
+    await near(
+      parseFloat(pixelOf(list)),
+      (s * 9) / 8,
+      'the tiles’ pixel',
+      0.0001,
+    );
+    await near(title, 36 * s, 'the <h2>');
+    await near(sizeOf(kicker), 14 * s, 'the eyebrow');
+    for (const part of parts) {
+      await near(part.sentence, 18 * s, 'a tile’s sentence');
+      await near(part.sentence, title / 2, 'a tile’s sentence, half the <h2>');
+      await near(part.label, 22.5 * s, 'a tile’s label');
+      await near(part.number, 40.5 * s, 'a tile’s number');
+      await near(part.disc, 126 * s, 'a tile’s disc');
+      await near(part.glyph, 54 * s, 'a tile’s glyph');
+    }
+    return true;
+  }
+
+  const rem = stepPx(1);
+  await expect(pixelOf(rhythm)).toBe('1px');
+  await expect(pixelOf(list)).toBe('1px');
+  await near(
+    sizeOf(heading),
+    (outer.width >= stepPx(28) ? 2.25 : 1.875) * rem,
+    'the <h2>, unscaled',
+  );
+  await near(sizeOf(kicker), 0.875 * rem, 'the eyebrow, unscaled');
+  for (const part of parts) {
+    await near(part.sentence, rem, 'a tile’s sentence, unscaled');
+    await near(part.label, 1.25 * rem, 'a tile’s label, unscaled');
+    await near(part.number, 2.25 * rem, 'a tile’s number, unscaled');
+    await near(part.disc, 7 * rem, 'a tile’s disc, unscaled');
+    await near(part.glyph, 3 * rem, 'a tile’s glyph, unscaled');
+  }
+  return false;
+};
+
+/**
+ * THE SCALE IS NOT VACUOUS where the story is pinned to see it (the
+ * `expectBranch` guard's reasoning, for THE BAND SCALE): under open gates, a
+ * window whose column MUST be past the step — 80 % of it less 17px of classic
+ * scrollbar at most, the gutter's 10vw governing every window up to its
+ * 2000px cap and the column only wider beyond — must have drawn the scale.
+ * Conditioned on the live window and browser, so a Playwright project
+ * photographing the story at a phone's width runs it without a false failure.
+ */
+const expectScaled = async (applied: boolean): Promise<void> => {
+  if (scaleGatesOpen() && window.innerWidth >= (scaleStepPx() + 17) / 0.8) {
+    await expect(applied).toBe(true);
+  }
+};
+
 const meta = {
   title: 'Sections/DoctorStats',
   component: DoctorStats,
@@ -817,6 +1021,11 @@ const meta = {
       options: ['center', 'start'],
       description:
         'How the opener lines up — sections/SectionHeading’s two answers: `center` (default, the doctor page) or `start` (Home and the Team page, "left alligned as other headings nad eyebrows on main page"). The tiles stay centred either way',
+    },
+    scaled: {
+      control: 'boolean',
+      description:
+        'Draws the band in THE BAND SCALE (ui/Container’s paragraph of that name; §15.32): on a laptop or desktop column of max(56rem, 896px) the doctors band’s own design pixel, the column ÷ 1106, capped at a 96rem column and centred past it — so the eyebrow and the title are the doctors band’s size and stand on its left edge — and the tiles at 9/8 of it, so a tile’s sentence reads a doctor card’s quote size. Home and the Team page pass it; the doctor page does not (default false). Below the step, on a touch device and in an engine that cannot register custom properties it changes nothing',
     },
     tiles: {
       control: false,
@@ -865,8 +1074,10 @@ const LABELS = TILES.map((tile) => tile.label);
  * when the machine asks for reduced motion, every number final within the
  * budget, the painted order (the number above its <h3>, which follows it in
  * the DOM), the glyphs' lilac against the decorative role's own token and the
- * arrangement derived from the measured column. The count itself is watched
- * in `Counting` (the header says why).
+ * arrangement derived from the measured column — and, at the laptop width
+ * where `PageGround` draws in THE BAND SCALE, that the doctor page's band does
+ * NOT: never `scaled`, its sizes the theme's rem (`expectBandScale`). The
+ * count itself is watched in `Counting` (the header says why).
  */
 export const Default: Story = {
   tags: ['stress-320'],
@@ -876,6 +1087,7 @@ export const Default: Story = {
 
     await expect(canvas.getByText(EYEBROW)).toBeVisible();
     await expectOutline(band, TITLE, LABELS, RO_SPOKEN);
+    await expectBandScale(band, EYEBROW, false);
     await expectLilacGlyphs(band);
     await expectTwinsOnTheDigits(band);
     // The title never splits a word (the a11y review of 2026-10-01): the
@@ -1061,7 +1273,8 @@ const THREE_LABELS = THREE_TILES.map((tile) => tile.label);
 
 /**
  * THE SECOND PAGE'S CALL, prop for prop — what Home and the Team page pass
- * besides the words: the page ground, the opener at the start, NO lead. The
+ * besides the words: the page ground, the opener at the start, NO lead, and,
+ * since 2026-10-02, `scaled` (the header's BAND SCALE paragraph). The
  * `lead: undefined` takes the meta's Romanian lead back OUT, so the band
  * receives what those pages hand it: nothing (the header's own paragraph).
  */
@@ -1069,6 +1282,7 @@ const HOME_ARGS = {
   ground: 'page',
   align: 'start',
   lead: undefined,
+  scaled: true,
   tiles: THREE_TILES,
 } as const;
 
@@ -1081,15 +1295,23 @@ const HOME_ARGS = {
  * whose `line` ring is now its only edge (the white disc stands off the page
  * ground at 1.05:1, DoctorStats.tsx's DISC bullet). What to look at: the
  * opener on the column's left edge, the three tiles level and evenly spread,
- * nothing tinted anywhere.
+ * nothing tinted anywhere. And since 2026-10-02 the band is `scaled`, like
+ * every band on those two pages (the header's BAND SCALE paragraph): at this
+ * laptop width it draws in the doctors band's design pixel — its eyebrow and
+ * title the doctors band's size, a tile's sentence a doctor card's quote — so
+ * the same frame at another laptop or desktop width is this one, larger or
+ * smaller, in the same proportions.
  *
  * **1536 · 390 · 320 (`stress-320`):** below the container's `@xl` the three
- * stand one above the other (`PageGroundStacked` pins the phone). The play
- * reads back what a picture cannot: the outline, the absent lead, the page
- * ground resolved from its own token, the start alignment off the engine, the
- * lilac glyphs, every number final within the budget, the painted order, and
- * the arrangement derived from the measured column — one row of three
- * wherever the window is 48rem or wider (`expectBranch`).
+ * stand one above the other (`PageGroundStacked` pins the phone), and below
+ * the scale's step every size is the theme's. The play reads back what a
+ * picture cannot: the outline, the absent lead, the page ground resolved from
+ * its own token, the start alignment off the engine (on the band's centred
+ * column, the scaled bands' one left edge), THE BAND SCALE — every size the
+ * design pixel's multiple, and the scale not skipped at the laptop
+ * (`expectScaled`) — the lilac glyphs, every number final within the budget,
+ * the painted order, and the arrangement derived from the measured column —
+ * one row of three wherever the window is 48rem or wider (`expectBranch`).
  */
 export const PageGround: Story = {
   tags: ['stress-320'],
@@ -1103,6 +1325,7 @@ export const PageGround: Story = {
     await expectNoLead(band, LEAD);
     await expectPageGround(band);
     await expectStartAligned(band, EYEBROW);
+    await expectScaled(await expectBandScale(band, EYEBROW, true));
     await expectLilacGlyphs(band);
     await expectTwinsOnTheDigits(band);
     await expectFinalWithinBudget(band, RO_THREE_FINALS, RO_THREE_SPOKEN);
@@ -1118,7 +1341,10 @@ export const PageGround: Story = {
  * three tiles stand one above the other — every top strictly under the one
  * before, every tile as wide as the column, never two and one. The opener
  * stays at the start (a wrapping title fills the column; its lines still read
- * from the start), and nothing scrolls sideways.
+ * from the start), and nothing scrolls sideways. The band is `scaled`, as on
+ * Home, and on the phone that changes nothing — the owner's "on phone and
+ * tablet it looks perfect atm, so do not touch those": the play reads every
+ * size back as the theme's (`expectBandScale`, its unscaled side).
  */
 export const PageGroundStacked: Story = {
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },
@@ -1129,6 +1355,7 @@ export const PageGroundStacked: Story = {
     await expectOutline(band, TITLE, THREE_LABELS, RO_THREE_SPOKEN);
     await expectNoLead(band, LEAD);
     await expectStartAligned(band, EYEBROW);
+    await expectBandScale(band, EYEBROW, true);
     await expectFinalWithinBudget(band, RO_THREE_FINALS, RO_THREE_SPOKEN);
     await expectPaintOrder(band, THREE_TILES);
     const branch = await expectArrangement(band);
@@ -1148,10 +1375,13 @@ export const PageGroundStacked: Story = {
  * wider than its tile, the three in one row, the German opener at the start
  * with no lead, and nothing sideways. `lang="de"` rides the native prop spread
  * onto the section, as in `GermanLongest`, so the prose hyphenates with the
- * German dictionary while the labels opt out.
+ * German dictionary while the labels opt out. `scaled` as on Home, and the
+ * tablet's 614px column is under the scale's step: every size the theme's.
  *
  * **390 · 1536:** the Sections tier's two widths; at 390 the three stack and
- * the labels' check still holds — a whole word is whole in any column.
+ * the labels' check still holds — a whole word is whole in any column; at
+ * 1536 the band draws in THE BAND SCALE, German labels at 22.5 design pixels
+ * in tiles that grew with them.
  */
 export const PageGroundGerman: Story = {
   globals: { locale: 'de', viewport: { value: 'tablet' } },
@@ -1178,6 +1408,7 @@ export const PageGroundGerman: Story = {
     await expectNoLead(band, GERMAN_LEAD);
     await expectPageGround(band);
     await expectStartAligned(band, GERMAN_EYEBROW);
+    await expectBandScale(band, GERMAN_EYEBROW, true);
     await expectFinalWithinBudget(band, DE_THREE_FINALS, DE_THREE_SPOKEN);
     await expectLabelsWhole(band);
     await expectBranch(await expectArrangement(band), 'three');

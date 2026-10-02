@@ -185,6 +185,72 @@ function paintedPixels(canvas: HTMLCanvasElement): number {
 }
 
 const tiles = (h: Harness) => [...h.layer.querySelectorAll('canvas')];
+/** How many of the canvas-width writes a spy saw landed on canvases ON THE PAGE — the tiles; THE SCRATCH (DRAWN IN SOFTWARE) never is. */
+const tileWrites = (widths: { mock: { contexts: readonly unknown[] } }) =>
+  widths.mock.contexts.filter(
+    (canvas) => canvas instanceof HTMLCanvasElement && canvas.isConnected,
+  ).length;
+/** The same writes on canvases OFF the page — THE SCRATCH's (DRAWN IN SOFTWARE); the colour probe's size is never written. */
+const scratchWrites = (widths: { mock: { contexts: readonly unknown[] } }) =>
+  widths.mock.contexts.filter(
+    (canvas) => canvas instanceof HTMLCanvasElement && !canvas.isConnected,
+  ).length;
+/** THE SCRATCH by identity (DRAWN IN SOFTWARE): every canvas whose context is asked for `willReadFrequently`, gathered by a spy that changes nothing. */
+function scratchSpy(): HTMLCanvasElement[] {
+  const real = HTMLCanvasElement.prototype.getContext;
+  const made: HTMLCanvasElement[] = [];
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+    function (this: HTMLCanvasElement, ...args: unknown[]) {
+      const settings = args[1] as CanvasRenderingContext2DSettings | undefined;
+      if (settings?.willReadFrequently === true && !made.includes(this)) {
+        made.push(this);
+      }
+      return Reflect.apply(real, this, args);
+    },
+  );
+  return made;
+}
+/** Run `body` with the window's devicePixelRatio at `ratio`, and give it back. */
+function withRatio<T>(ratio: number, body: () => T): T {
+  const own = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+  if (own === undefined) throw new Error('no devicePixelRatio on the window');
+  Object.defineProperty(window, 'devicePixelRatio', {
+    configurable: true,
+    value: ratio,
+  });
+  try {
+    return body();
+  } finally {
+    Object.defineProperty(window, 'devicePixelRatio', own);
+  }
+}
+/** Every tile's pixels, one array per tile. */
+const pixelsOf = (h: Harness) =>
+  tiles(h).map((tile) => {
+    const ctx = tile.getContext('2d');
+    if (ctx === null) throw new Error('a tile without a context');
+    return ctx.getImageData(0, 0, tile.width, tile.height).data;
+  });
+/** The pixels of a canvas the ribbon's BODY covers — alpha 200 or more; its shadow, at 0.38, never gets there. */
+function body(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d');
+  if (ctx === null || canvas.width === 0) return { count: 0, x: 0, y: 0 };
+  const { width, height } = canvas;
+  const data = ctx.getImageData(0, 0, width, height).data;
+  // Canvas pixels → the root's px, so two tiles of different sizes compare.
+  const scale = parseFloat(canvas.style.width) / width;
+  const [left, top] = [canvas.style.left, canvas.style.top].map(parseFloat);
+  let [count, sx, sy] = [0, 0, 0];
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 200) continue;
+    const pixel = (i - 3) / 4;
+    count++;
+    sx += left + ((pixel % width) + 0.5) * scale;
+    sy += top + (Math.floor(pixel / width) + 0.5) * scale;
+  }
+  // Its count, and its centre of mass in the root's px.
+  return { count, x: sx / count, y: sy / count };
+}
 const scrollTo = (h: Harness, rootTop: number) => {
   h.view.rootTop = rootTop;
   window.dispatchEvent(new Event('scroll'));
@@ -242,6 +308,304 @@ describe('startRibbonDraw — one call starts it', () => {
     const scroll = added.mock.calls.filter(([type]) => type === 'scroll');
     expect(scroll).toHaveLength(1);
     expect(scroll[0][2]).toEqual({ passive: true });
+  });
+});
+
+describe('DRAWN IN SOFTWARE — the pieces on THE SCRATCH, the shadow on the tile', () => {
+  it('paints the ribbon’s ADDED pieces on a canvas drawn in software alone — `willReadFrequently` — and leaves the tiles, which draw the shadow, to the browser’s default', async () => {
+    /** For every additive fill, whether its canvas was made to be drawn in software. */
+    const additive: (boolean | undefined)[] = [];
+    const fill = CanvasRenderingContext2D.prototype.fill;
+    vi.spyOn(CanvasRenderingContext2D.prototype, 'fill').mockImplementation(
+      function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+        if (this.globalCompositeOperation === 'lighter') {
+          additive.push(this.getContextAttributes().willReadFrequently);
+        }
+        Reflect.apply(fill, this, args);
+      },
+    );
+    /** The settings each tile's context was made with — a second getContext returns that very context. */
+    const settings = (h: Harness) =>
+      tiles(h).map(
+        (tile) =>
+          tile.getContext('2d')?.getContextAttributes().willReadFrequently,
+      );
+    const h = harness({ reduced: true });
+    h.start();
+    expect(additive.length).toBeGreaterThan(100);
+    expect(new Set(additive)).toEqual(new Set([true]));
+    expect(settings(h)).toEqual([false, false]);
+
+    // A later build — the column grows by a card — paints the same way.
+    additive.length = 0;
+    h.root
+      .querySelector('[data-ribbon-station]')
+      ?.parentElement?.insertAdjacentHTML('beforeend', card(CARD_H));
+    await settle();
+    h.frames.run(500);
+    expect(additive.length).toBeGreaterThan(100);
+    expect(new Set(additive)).toEqual(new Set([true]));
+    expect(settings(h)).toEqual([false, false, false]);
+  });
+
+  it('paints the scratch in each tile’s own transform — at a pixel ratio of 2 the same ribbon, in twice the pixels each way', () => {
+    const own = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+    if (own === undefined) throw new Error('no devicePixelRatio on the window');
+    /** Each tile at a pixel ratio: its canvas width and its body. */
+    const at = (ratio: number) => {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        configurable: true,
+        value: ratio,
+      });
+      const h = harness({ reduced: true });
+      h.start();
+      return tiles(h).map((tile) => ({ width: tile.width, ...body(tile) }));
+    };
+    try {
+      const one = at(1);
+      const two = at(2);
+      expect(two).toHaveLength(one.length);
+      two.forEach((tile, t) => {
+        expect(tile.width).toBe(2 * one[t].width);
+        expect(tile.count).toBeGreaterThan(3.5 * one[t].count);
+        expect(Math.abs(tile.x - one[t].x)).toBeLessThan(0.5);
+        expect(Math.abs(tile.y - one[t].y)).toBeLessThan(0.5);
+      });
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', own);
+    }
+  });
+
+  it('copies every tile’s box 1:1 from a scratch that holds it — a LATER tile larger than the first included', () => {
+    const copies: (readonly [
+      HTMLCanvasElement,
+      HTMLCanvasElement,
+      unknown[],
+    ])[] = [];
+    const drawImage = CanvasRenderingContext2D.prototype.drawImage;
+    vi.spyOn(
+      CanvasRenderingContext2D.prototype,
+      'drawImage',
+    ).mockImplementation(function (
+      this: CanvasRenderingContext2D,
+      ...args: unknown[]
+    ) {
+      const [source, ...box] = args;
+      if (source instanceof HTMLCanvasElement) {
+        copies.push([source, this.canvas, box]);
+      }
+      Reflect.apply(drawImage, this, args);
+    });
+    const h = harness({
+      cards: [card(CARD_H), card(2 * CARD_H)],
+      reduced: true,
+    });
+    h.start();
+    const [first, second] = tiles(h);
+    expect(second.height).toBeGreaterThan(first.height);
+    expect(copies.length).toBeGreaterThan(0);
+    for (const [source, tile, box] of copies) {
+      expect(box).toEqual([
+        0,
+        0,
+        tile.width,
+        tile.height,
+        0,
+        0,
+        tile.width,
+        tile.height,
+      ]);
+      expect(source.width).toBeGreaterThanOrEqual(tile.width);
+      expect(source.height).toBeGreaterThanOrEqual(tile.height);
+    }
+    expect(new Set(copies.map(([, tile]) => tile))).toEqual(
+      new Set([first, second]),
+    );
+  });
+
+  it('refuses the column, before a tile is touched, when the browser gives no context to paint in software', () => {
+    const real = HTMLCanvasElement.prototype.getContext;
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
+      function (this: HTMLCanvasElement, ...args: unknown[]) {
+        const settings = args[1] as
+          CanvasRenderingContext2DSettings | undefined;
+        return settings?.willReadFrequently === true
+          ? null
+          : Reflect.apply(real, this, args);
+      },
+    );
+    const widths = vi.spyOn(HTMLCanvasElement.prototype, 'width', 'set');
+    const h = harness({ reduced: true });
+    expect(h.start().getSnapshot().painted).toBe(false);
+    expect(warnings()[0]).toMatch(/to paint the ribbon in software/);
+    expect(tileWrites(widths)).toBe(0);
+  });
+
+  it('gives the scratch’s memory back — while THE GUARD withholds the ribbon, and on dispose()', async () => {
+    const made = scratchSpy();
+    const widths = vi.spyOn(HTMLCanvasElement.prototype, 'width', 'set');
+    /** The sizes written to the scratch, in order. */
+    const sizes = () =>
+      widths.mock.calls
+        .filter((_, i) =>
+          made.includes(widths.mock.contexts[i] as HTMLCanvasElement),
+        )
+        .map(([value]) => value);
+    const h = harness({ reduced: true });
+    const draw = h.start();
+    expect(sizes()).toHaveLength(1);
+    expect(sizes()[0]).toBeGreaterThan(0);
+
+    h.root.style.removeProperty('--ribbon');
+    resize();
+    h.frames.run(500);
+    expect(draw.getSnapshot().painted).toBe(false);
+    expect(sizes().at(-1)).toBe(0);
+
+    h.root.style.setProperty('--ribbon', TOKENS['--ribbon']);
+    resize();
+    h.frames.run(600);
+    expect(draw.getSnapshot().painted).toBe(true);
+    expect(sizes().at(-1)).toBeGreaterThan(0);
+
+    draw.dispose();
+    expect(sizes().at(-1)).toBe(0);
+  });
+
+  it('ends a pen’s drawing on the picture of repainting each WHOLE tile — pixel for pixel, though the scratch is added to frame by frame', async () => {
+    // The reference: the whole ribbon, then every tile repainted whole by a
+    // rebuild — the same colour, spelled in capitals, is a new key (NO
+    // REBUILD WITHOUT A NEW GEOMETRY) but not a new picture.
+    const whole = harness({ reduced: true });
+    whole.start();
+    await settle();
+    whole.root.style.setProperty('--ribbon', TOKENS['--ribbon'].toUpperCase());
+    resize();
+    whole.frames.run(500);
+    const reference = pixelsOf(whole);
+
+    const pen = harness();
+    const draw = pen.start();
+    await settle();
+    pen.frames.run(500);
+    scrollTo(pen, lineOf(CARD_H) - SECOND_TOP);
+    for (let time = 1_000; time <= 1_000 + 2 * DRAW_MS + 100; time += 16) {
+      pen.frames.run(time);
+    }
+    expect(draw.getSnapshot()).toMatchObject({ drawn: 2, drawing: -1 });
+    const drawn = pixelsOf(pen);
+    drawn.forEach((tile, t) => {
+      expect(tile.length).toBe(reference[t].length);
+      let differing = 0;
+      for (let i = 0; i < tile.length; i++) {
+        if (tile[i] !== reference[t][i]) differing++;
+      }
+      expect(differing).toBe(0);
+    });
+  });
+
+  it('adds to the scratch frame by frame — ONE clearing of it for a whole stretch on one tile, while the tile is cleared every frame', async () => {
+    const made = scratchSpy();
+    const h = harness();
+    const draw = h.start();
+    await settle();
+    h.frames.run(500);
+    const clears = vi.spyOn(CanvasRenderingContext2D.prototype, 'clearRect');
+    scrollTo(h, lineOf(CARD_H) - FIRST_TOP); // the first card alone
+    for (let time = 1_000; time <= 1_000 + DRAW_MS + 16; time += 16) {
+      h.frames.run(time);
+    }
+    expect(draw.getSnapshot()).toMatchObject({ drawn: 1, drawing: -1 });
+    const onScratch = clears.mock.contexts.filter((context) =>
+      made.includes((context as CanvasRenderingContext2D).canvas),
+    ).length;
+    expect(onScratch).toBe(1);
+    expect(clears.mock.calls.length - onScratch).toBeGreaterThan(20);
+  });
+
+  it('keeps the ribbon its own colour — no pure-white pixel, the body’s median the token — painted at once and drawn by the pen', async () => {
+    const [r, g, b] = [0xd4, 0xcf, 0xdc];
+    /** The opaque pixels of every tile: none pure white, their median the token within 3 levels. */
+    const expectOwnColour = (h: Harness) => {
+      for (const data of pixelsOf(h)) {
+        const channels: [number[], number[], number[]] = [[], [], []];
+        let white = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] !== 255) continue;
+          if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255) {
+            white++;
+          }
+          channels[0].push(data[i]);
+          channels[1].push(data[i + 1]);
+          channels[2].push(data[i + 2]);
+        }
+        expect(white).toBe(0);
+        expect(channels[0].length).toBeGreaterThan(1_000);
+        const median = channels.map(
+          (values) => values.sort((x, y) => x - y)[values.length >> 1],
+        );
+        median.forEach((value, k) => {
+          expect(Math.abs(value - [r, g, b][k])).toBeLessThanOrEqual(3);
+        });
+      }
+    };
+    const once = harness({ reduced: true });
+    once.start();
+    expectOwnColour(once);
+
+    const pen = harness();
+    const draw = pen.start();
+    await settle();
+    pen.frames.run(500);
+    scrollTo(pen, lineOf(CARD_H) - SECOND_TOP);
+    for (let time = 1_000; time <= 1_000 + 2 * DRAW_MS + 100; time += 16) {
+      pen.frames.run(time);
+    }
+    expect(draw.getSnapshot()).toMatchObject({ drawn: 2 });
+    expectOwnColour(pen);
+  });
+
+  it('resizes the scratch to a tile it cannot hold — where the widest tile by the tallest would pass one canvas — and still copies 1:1', () => {
+    withRatio(2, () => {
+      /** At each copy: the scratch's size then, the tile's, and the box. */
+      const copies: (readonly [number, number, number, number, unknown[]])[] =
+        [];
+      const drawImage = CanvasRenderingContext2D.prototype.drawImage;
+      vi.spyOn(
+        CanvasRenderingContext2D.prototype,
+        'drawImage',
+      ).mockImplementation(function (
+        this: CanvasRenderingContext2D,
+        ...args: unknown[]
+      ) {
+        const [source, ...box] = args;
+        if (source instanceof HTMLCanvasElement) {
+          copies.push([
+            source.width,
+            source.height,
+            this.canvas.width,
+            this.canvas.height,
+            box,
+          ]);
+        }
+        Reflect.apply(drawImage, this, args);
+      });
+      const h = harness({
+        cards: [card(CARD_H), card(7_000), card(CARD_H)],
+        reduced: true,
+      });
+      expect(h.start().getSnapshot().painted).toBe(true);
+      const sides = tiles(h).map(({ width, height }) => [width, height]);
+      const widest = Math.max(...sides.map(([width]) => width));
+      const tallest = Math.max(...sides.map(([, height]) => height));
+      expect(widest * tallest).toBeGreaterThan(16_000_000);
+      expect(copies.length).toBeGreaterThanOrEqual(sides.length);
+      for (const [sourceWidth, sourceHeight, width, height, box] of copies) {
+        expect(box).toEqual([0, 0, width, height, 0, 0, width, height]);
+        expect(sourceWidth).toBeGreaterThanOrEqual(width);
+        expect(sourceHeight).toBeGreaterThanOrEqual(height);
+      }
+    });
   });
 });
 
@@ -487,12 +851,16 @@ describe('reduced motion (lib/reduced-motion)', () => {
     });
     expect(h.frames.pending).toBe(0);
     // In the column's order: canvas i holds card i's body and card i+1's
-    // head, so the canvases painted on never step back.
-    const order = fills.mock.contexts.map((context) =>
-      context instanceof CanvasRenderingContext2D
-        ? tiles(h).indexOf(context.canvas)
-        : -1,
-    );
+    // head, so the canvases painted on never step back. The pieces are
+    // painted on THE SCRATCH (DRAWN IN SOFTWARE); a tile's own fill is its
+    // shadow, one per repaint — the tiles' order is in those.
+    const order = fills.mock.contexts
+      .map((context) =>
+        context instanceof CanvasRenderingContext2D
+          ? tiles(h).indexOf(context.canvas)
+          : -1,
+      )
+      .filter((index) => index >= 0);
     expect(order.length).toBeGreaterThan(0);
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
@@ -543,7 +911,8 @@ describe('a new geometry — the prototype’s second bug', () => {
     );
     await settle();
     h.frames.run(500);
-    expect(widths).toHaveBeenCalledTimes(2);
+    expect(tileWrites(widths)).toBe(2);
+    expect(scratchWrites(widths)).toBe(1);
   });
 
   it('touches no canvas on a resize that moves nothing — and a taller window still queues a card', async () => {
@@ -554,7 +923,8 @@ describe('a new geometry — the prototype’s second bug', () => {
     h.frames.run(500);
     resize();
     h.frames.run(600);
-    expect(widths).toHaveBeenCalledTimes(2);
+    expect(tileWrites(widths)).toBe(2);
+    expect(scratchWrites(widths)).toBe(1);
     expect(h.frames.pending).toBe(0);
 
     // An address bar folding away: only the window's height moves — and
@@ -562,7 +932,8 @@ describe('a new geometry — the prototype’s second bug', () => {
     h.view.height = 1_400;
     resize();
     h.frames.run(700);
-    expect(widths).toHaveBeenCalledTimes(2);
+    expect(tileWrites(widths)).toBe(2);
+    expect(scratchWrites(widths)).toBe(1);
     expect(h.frames.pending).toBe(1);
     h.frames.run(800);
     expect(draw.getSnapshot().drawing).toBe(0);
@@ -578,7 +949,8 @@ describe('a new geometry — the prototype’s second bug', () => {
     first.style.height = '450px';
     await settle();
     h.frames.run(600);
-    expect(widths).toHaveBeenCalledTimes(4);
+    expect(tileWrites(widths)).toBe(4);
+    expect(scratchWrites(widths)).toBe(2);
   });
 
   it('observes each station and keep-out ONCE, and lets go of those that leave', async () => {
@@ -775,13 +1147,13 @@ describe('THE UNIT — the root’s --ribbon-unit, the CSS px of one card unit',
     const draw = h.start();
     await settle();
     h.frames.run(500);
-    expect(widths).toHaveBeenCalledTimes(2);
+    expect(tileWrites(widths)).toBe(2);
     const before = edges(h);
 
     h.root.style.setProperty('--ribbon-unit', '120px');
     resize();
     h.frames.run(600);
-    expect(widths).toHaveBeenCalledTimes(4);
+    expect(tileWrites(widths)).toBe(4);
     expect(edges(h)).not.toEqual(before);
     expect(draw.getSnapshot()).toMatchObject({ painted: true, drawn: 2 });
   });
@@ -805,27 +1177,6 @@ describe('THE UNIT — the root’s --ribbon-unit, the CSS px of one card unit',
 });
 
 describe('THE WIDTH SHARE — the root’s --ribbon-width-share, the share of its width the ribbon is drawn at', () => {
-  /** The pixels of a canvas the ribbon's BODY covers — alpha 200 or more; its shadow, at 0.38, never gets there. */
-  function body(canvas: HTMLCanvasElement) {
-    const ctx = canvas.getContext('2d');
-    if (ctx === null || canvas.width === 0) return { count: 0, x: 0, y: 0 };
-    const { width, height } = canvas;
-    const data = ctx.getImageData(0, 0, width, height).data;
-    // Canvas pixels → the root's px, so two tiles of different sizes compare.
-    const scale = parseFloat(canvas.style.width) / width;
-    const [left, top] = [canvas.style.left, canvas.style.top].map(parseFloat);
-    let [count, sx, sy] = [0, 0, 0];
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] < 200) continue;
-      const pixel = (i - 3) / 4;
-      count++;
-      sx += left + ((pixel % width) + 0.5) * scale;
-      sy += top + (Math.floor(pixel / width) + 0.5) * scale;
-    }
-    // Its count, and its centre of mass in the root's px.
-    return { count, x: sx / count, y: sy / count };
-  }
-
   it('draws the ribbon at 0.7 of its width — along the very same route — when an ancestor declares it, as the doctors band does', () => {
     const whole = harness({ reduced: true });
     whole.start();
@@ -866,13 +1217,13 @@ describe('THE WIDTH SHARE — the root’s --ribbon-width-share, the share of it
     const draw = h.start();
     await settle();
     h.frames.run(500);
-    expect(widths).toHaveBeenCalledTimes(2);
+    expect(tileWrites(widths)).toBe(2);
     const before = tiles(h).map((tile) => body(tile).count);
 
     h.root.parentElement?.style.setProperty('--ribbon-width-share', '0.7');
     resize();
     h.frames.run(600);
-    expect(widths).toHaveBeenCalledTimes(4);
+    expect(tileWrites(widths)).toBe(4);
     tiles(h).forEach((tile, i) =>
       expect(body(tile).count, `canvas ${i}`).toBeLessThan(0.72 * before[i]),
     );

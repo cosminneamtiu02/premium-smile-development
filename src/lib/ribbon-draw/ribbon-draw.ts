@@ -290,8 +290,8 @@ import {
 // card as card 0's begins there, and nothing here treats it apart.
 // REPAINT: a tile's picture is
 // rebuilt from `drawn` whenever a card on it moves — cleared, each half's
-// drawn range painted, and ONE shadow of
-// all of it laid under — so the shadow is never a filter's afterthought and
+// drawn range painted (on THE SCRATCH, and copied: DRAWN IN SOFTWARE), and ONE
+// shadow of all of it laid under — so the shadow is never a filter's afterthought and
 // never seamed between pieces; the finished tiles are not touched. A tile is
 // the bounding box of the samples it holds, grown by TILE_MARGIN px and the
 // shadow's reach and snapped outward to whole CSS px, at the device's pixel
@@ -304,6 +304,69 @@ import {
 // the column's order. WAIT trigger (§15.26): two canvases per card — a top
 // band and a side band, a third of the memory — when a column of more than
 // six doctors or a measured memory complaint arrives.
+//
+// ── DRAWN IN SOFTWARE (CLAUDE.md §15.26 round 7 — the owner, 2026-10-02, in
+// Chrome on Windows: "the ribbon … is having on and off some white dots.
+// like some of the popular «purici pe televizor»"). A tile's PIECES are
+// painted on THE SCRATCH — one canvas, never on the page, the widest tile's
+// width by the tallest's height (capped like a tile: past what one canvas may
+// hold it is the largest tile, grown for a tile that does not fit), its 2D
+// context made `willReadFrequently` (SOFTWARE), which in
+// Chrome keeps it off the graphics card: the browser's software rasteriser
+// draws it, on the processor. The tile then copies the scratch's box pixel
+// for pixel and lays THE SHADOW under it itself. The reason is
+// lib/ribbon-paint's NO HAIRLINES: two pieces of the strip meet without a
+// seam because both are painted ADDITIVELY, and half plus half is one only
+// where the rasteriser computes each piece's coverage TRUE. The software
+// rasteriser does. The graphics card's — a canvas's default wherever Chrome
+// trusts the GPU, on Windows over Direct3D — estimates it, and the estimate
+// runs high where a piece is thinner than a pixel; where the ribbon bends
+// over a card's edge many such pieces share a pixel, their sum passes the
+// ribbon's colour, and an addition has no ceiling: a white speck. Measured
+// in Chrome 154 on the owner's workstation (Intel graphics, Direct3D 11),
+// the Team page's six canvases at a 1401 window: 1 200 to 1 700 pure-white
+// pixels at a pixel ratio of 1, 1.25 and 1.5, and none in software. A speck
+// stays where the pen painted it — "on and off" is the pen arriving — and the
+// specks are older than the band's pale tint (§15.26 round 6): with the old
+// #8377a3 the same ~2 700 pixels stood out as pale violet, and a colour 83 to
+// 86 % of white only pushed them to white.
+// WHY THE SHADOW STAYS ON THE TILE: it is ONE path's blur — no addition, so
+// a graphics card draws it without a speck — and in software it was the
+// cost. Measured in that Chrome, a resize repainting the six tiles kept the
+// main thread busy ~1 000 ms at a pixel ratio of 2 with the shadow in
+// software, ~490 ms with it on the tile (develop's ~320); at a ratio of 1,
+// ~450, ~300 and ~270. Scrolling the band while its stretches draw, with A
+// REPAINT ADDS TO THE SCRATCH (below), against develop's own module on the
+// same quiet machine: the main thread busy 1.5 s against 1.9 at a ratio of 1
+// and 2.1 against 2.0 at 2, and 14.1 s against 13.6 on a phone screen with
+// the processor slowed four times; frames slower than 50 ms 0 against 1, 1
+// against 16 and 85 against 159.
+// WHAT THE VISITOR GETS: in software — every test and every baseline — the
+// copied box is the very pixels painting on the tile gave (the Team page's
+// six canvases byte-identical to develop's at a ratio of 1 and 1.5, painted at
+// once and drawn by the pen); in that Chrome, the same pieces under the
+// graphics card's shadow, as before. A redraw of only the box a frame's
+// stroke can change was tried and dropped: a clip changes how the software
+// rasteriser anti-aliases a shape it cuts (measured: up to 35 levels on an
+// edge pixel), so the picture would no longer be the one painted whole.
+// A REPAINT ADDS TO THE SCRATCH: the scratch keeps what it holds — the tile
+// last painted on it, `held` — and a repaint of that same tile with nothing
+// drawn back paints only the pieces it does not hold yet, on top. Additive
+// sums do not care about order, and a pen frame ends on a WHOLE sample, so
+// the scratch then holds exactly what painting the tile's range at once
+// gives (lib/ribbon-paint pins piece by piece against at once); a range
+// that ends inside a piece — a rebuild's `drawn` — is never added to, and
+// that piece is painted whole the next time. The tile itself is still
+// cleared, copied and shadowed whole every repaint. Every repaint of the
+// reduced-motion paint is one per tile (finishAll), not one per card.
+// The specks hid from every test twice over: the tests' browser, Playwright's
+// own Chromium, draws in software anyway, and a page that READS a canvas's
+// pixels shows none either — Chrome moves a canvas to the processor by itself
+// after a few readbacks — which is why a probe of the GPU's picture reads
+// each canvas once. A hint, not an order: an engine that ignores it keeps its own
+// default (Safari and Firefox were not measured on real devices); the road
+// that needs no hint — pieces that overlap, painted one over the other — is
+// recorded in §15.26 round 7, not built.
 //
 // ── LISTENERS: `scroll` on the window, passive (nothing here ever cancels a
 // scroll); `resize` on the window; the observer; the reduced-motion watch.
@@ -377,6 +440,10 @@ export const shadowOf = (k: number, unit: number) => {
 /** What one canvas may hold: under iOS's 16.7 million pixels, and every engine's side. */
 const MAX_TILE_PIXELS = 16_000_000;
 const MAX_TILE_SIDE = 16_384;
+/** DRAWN IN SOFTWARE: the settings THE SCRATCH's 2D context is made with. */
+const SOFTWARE: Readonly<CanvasRenderingContext2DSettings> = {
+  willReadFrequently: true,
+};
 
 /** The pen: a half-cosine over the middle 76 % of its turn, normalised to 0 → 1. */
 const ease = (t: number) => 0.5 - 0.5 * Math.cos(Math.PI * (0.12 + 0.76 * t));
@@ -401,6 +468,19 @@ export function tileScale(
     MAX_TILE_SIDE / width,
     MAX_TILE_SIDE / height,
   );
+}
+
+/** Whether `effort` is a sample of `strip` — where a piece ends, so painting on from it repeats no piece (A REPAINT ADDS TO THE SCRATCH). The efforts never go down along a strip. */
+function onSample(strip: readonly StripSample[], effort: number): boolean {
+  let [lo, hi] = [0, strip.length - 1];
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const at = strip[mid].effort;
+    if (at === effort) return true;
+    if (at < effort) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return false;
 }
 
 /** A card's HAND-OVER point (TILES, in the header): the index of the strip sample nearest `u` along the ribbon. */
@@ -549,6 +629,18 @@ export function startRibbonDraw(
   let buildFrame: number | undefined;
   /** A context of its own that turns any CSS colour into `#rrggbb` (THE COLOURS). */
   let probe: CanvasRenderingContext2D | null = null;
+  /** THE SCRATCH (DRAWN IN SOFTWARE): the context of one canvas, never on the page, where every tile's pieces are painted in software before the tile copies them. */
+  let scratch: CanvasRenderingContext2D | null = null;
+  /** What THE SCRATCH holds (A REPAINT ADDS TO THE SCRATCH): the tile last painted on it and each card's effort painted there — null when there is nothing to add to. */
+  let held: Readonly<{ tile: number; drawn: readonly number[] }> | null = null;
+
+  /** THE SCRATCH holds no page and no listener, only memory: give it back. */
+  function releaseScratch(): void {
+    held = null;
+    if (scratch === null) return;
+    scratch.canvas.width = 0;
+    scratch.canvas.height = 0;
+  }
 
   function getSnapshot(): RibbonDrawSnapshot {
     return {
@@ -579,6 +671,7 @@ export function startRibbonDraw(
     if (penFrame !== undefined) cancelFrame(penFrame);
     if (buildFrame !== undefined) cancelFrame(buildFrame);
     for (const canvas of canvases.splice(0)) canvas.remove();
+    releaseScratch();
   }
 
   function warn(reason: string): void {
@@ -593,6 +686,7 @@ export function startRibbonDraw(
       canvas.width = 0;
       canvas.height = 0;
     }
+    releaseScratch();
     painted = false;
     built = '';
     if (penFrame !== undefined) cancelFrame(penFrame);
@@ -693,6 +787,12 @@ export function startRibbonDraw(
         { tile: i, cx, cy, frontY, samples: body },
       ];
     });
+    // THE SCRATCH's context first (DRAWN IN SOFTWARE): a browser that refuses
+    // it refuses the column before a tile is touched.
+    scratch ??= document.createElement('canvas').getContext('2d', SOFTWARE);
+    if (scratch === null) {
+      return 'the browser gave no 2D context to paint the ribbon in software';
+    }
     const laid: Tile[] = [];
     const places: Readonly<{ left: number; top: number }>[] = [];
     for (let t = 0; t < planned.length; t++) {
@@ -748,6 +848,27 @@ export function startRibbonDraw(
     }
     for (const canvas of canvases.splice(planned.length)) canvas.remove();
     tiles = laid;
+    // THE SCRATCH holds every tile's box: the widest tile's width by the
+    // tallest's height — and, should that pass what one canvas may hold, the
+    // largest tile, which repaint grows for a tile that does not fit.
+    const widest = Math.max(0, ...laid.map((tile) => tile.canvas.width));
+    const tallest = Math.max(0, ...laid.map((tile) => tile.canvas.height));
+    const largest = laid.reduce<HTMLCanvasElement | undefined>(
+      (most, { canvas }) =>
+        most === undefined ||
+        canvas.width * canvas.height > most.width * most.height
+          ? canvas
+          : most,
+      undefined,
+    );
+    const [scratchWidth, scratchHeight] =
+      widest * tallest <= MAX_TILE_PIXELS || largest === undefined
+        ? [widest, tallest]
+        : [largest.width, largest.height];
+    scratch.canvas.width = scratchWidth;
+    scratch.canvas.height = scratchHeight;
+    // A resized canvas is a clear one, and a new build a new column.
+    held = null;
 
     const parts = halves.map(({ tile, cx, cy, frontY, samples }): Part => {
       const { left, top } = places[tile];
@@ -823,17 +944,40 @@ export function startRibbonDraw(
     warned = false;
   }
 
-  /** REPAINT (the header): tile `t`'s picture from what is drawn — cleared, each half's drawn range painted, ONE shadow under all of it. */
+  /** REPAINT (the header): tile `t`'s picture from what is drawn — each half's drawn range painted on THE SCRATCH (DRAWN IN SOFTWARE) and copied onto the cleared tile, ONE shadow under all of it. */
   function repaint(t: number): void {
     const tile = tiles[t];
-    if (tile === undefined) return;
+    if (tile === undefined || scratch === null) return;
+    const paper = scratch;
     const { ctx, canvas } = tile;
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
+    const { width, height } = canvas;
+    // A tile the scratch cannot hold — only where the widest by the tallest
+    // would pass what one canvas may hold (lay) — has it resized to the tile.
+    if (paper.canvas.width < width || paper.canvas.height < height) {
+      paper.canvas.width = width;
+      paper.canvas.height = height;
+      held = null;
+    }
+    // A REPAINT ADDS TO THE SCRATCH when it holds this very tile, painted no
+    // further than now on any card; otherwise it starts from a clear box.
+    const before = held;
+    const adding =
+      before !== null &&
+      before.tile === t &&
+      before.drawn.length === cards.length &&
+      cards.every((_, i) => drawn[i] >= before.drawn[i]);
+    // The scratch in the tile's own transform, so a piece lands on the very
+    // pixels it would have painted on the tile.
+    const transform = ctx.getTransform();
+    paper.save();
+    if (!adding) {
+      paper.setTransform(1, 0, 0, 1, 0, 0);
+      paper.clearRect(0, 0, width, height);
+    }
+    paper.setTransform(transform);
     const outline = new Path2D();
     let any = false;
+    let whole = true;
     cards.forEach((card, i) => {
       // The head's range is [0, split], the body's [split, total]; each
       // clipped to what is drawn.
@@ -843,11 +987,30 @@ export function startRibbonDraw(
       ];
       for (const [part, from, to] of halves) {
         if (part.tile !== t || !(to > from)) continue;
-        paintStretch(ctx, part.stretch, from, to);
+        // On the scratch, only what it does not hold yet.
+        const start =
+          adding && before !== null
+            ? Math.max(from, Math.min(before.drawn[i], to))
+            : from;
+        if (to > start) paintStretch(paper, part.stretch, start, to);
         outlineStretch(outline, part.stretch, from, to);
         any = true;
+        whole &&= onSample(part.stretch.strip, to);
       }
     });
+    paper.restore();
+    // Only a range that ends on a whole sample can be added to — a rebuild
+    // leaves `drawn` inside a piece, and that piece is painted whole next.
+    held = whole ? { tile: t, drawn: [...drawn] } : null;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    // Pixel for pixel: the same box, at the same size, nothing resampled.
+    ctx.imageSmoothingEnabled = false;
+    if (any) {
+      ctx.drawImage(paper.canvas, 0, 0, width, height, 0, 0, width, height);
+    }
+    ctx.restore();
     if (any) paintShadow(ctx, outline, tile.shadow, tile.dy, tile.blur);
   }
 
@@ -876,7 +1039,19 @@ export function startRibbonDraw(
     penFrame = undefined;
     running = null;
     queue = [];
-    cards.forEach((_, index) => finish(index));
+    // Every card drawn first, then each tile it touched repainted ONCE, in
+    // the column's order: canvas i holds card i's body and card i+1's head,
+    // and one card at a time would paint it twice.
+    const touched = new Set<number>();
+    cards.forEach((card, index) => {
+      if (drawn[index] < card.total) {
+        if (drawn[index] < card.split) touched.add(card.head.tile);
+        if (card.total > card.split) touched.add(card.body.tile);
+        drawn[index] = card.total;
+      }
+      status[index] = 'drawn';
+    });
+    for (const t of [...touched].sort((a, b) => a - b)) repaint(t);
   }
 
   /** THE OWNER'S RULE, walked in order (the header). */

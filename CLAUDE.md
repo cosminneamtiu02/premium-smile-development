@@ -106,7 +106,7 @@ src/
     ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; its side wave SMOOTH beside a keep-out — no corner, no ruler line (§15.26 round 2) — and its top run A LOW RIPPLE — three normal-distribution bumps, a valley, a crest, a valley, their depth and height shares of the run and capped by the lane's room and the top edge's headroom (round 3, 2026-10-01: the top wave, "too much" to the owner, is history); and the LAST card's tail TUCKED under its bottom edge — `G: null`, the side wave straight down, the hook's circle, over the bottom edge at the top's 35° and onto the back (round 5, 2026-10-01: the hanging tail, fb-504, is history); six frozen reference cards beside it, re-written from the module in both rounds (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
     ribbon-layout/ribbon-layout.ts  # the page → the model's numbers: stations and their keep-out blocks found by `data-ribbon-keepout` MARKERS, never by their place in the markup; a keep-out is WHAT IS PAINTED (the element's box and its contents'), a marker that paints nothing is skipped; the portrait's inset; every second card mirrored (§15.26)
     ribbon-paint/ribbon-paint.ts  # numbers → pixels on the ordinary 2D canvas: the strip, the light, additive blending, the plane cut at the card's front face — what is deeper is not painted — and, since round 3 (2026-10-01), THE SHADOW, painted under the ribbon as one path's drop shadow, never a CSS filter on the canvas; since round 6 (2026-10-02) THE ANCHORED LIGHT — a face turned to the viewer shows the colour token itself, the light's accents kept in their ratios round it — and THE WIDTH SHARE, `buildStrip(…, widthShare)`: the strip drawn at a share of its width along the very same centre line (§15.26)
-    ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's line — a card's centre a QUARTER of the screen above its bottom since round 4 (the screen's centre until then), a card taller than the screen its top the same quarter under the top — and the end-of-page rule, the FIRST card drawn without its head (round 4), the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser, and — since round 6 (2026-10-02) — the width share read off the root's `--ribbon-width-share` (0.7 in the doctors band's laptop and desktop regime, 1 everywhere else) — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
+    ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's line — a card's centre a QUARTER of the screen above its bottom since round 4 (the screen's centre until then), a card taller than the screen its top the same quarter under the top — and the end-of-page rule, the FIRST card drawn without its head (round 4), the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser, and — since round 6 (2026-10-02) — the width share read off the root's `--ribbon-width-share` (0.7 in the doctors band's laptop and desktop regime, 1 everywhere else), and — since round 7 (2026-10-02) — the pieces painted IN SOFTWARE on one off-page scratch canvas (`willReadFrequently`) and copied onto each tile, which lays its shadow itself: a graphics card's rasteriser sowed white specks in the additive seams — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
     rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
@@ -3240,6 +3240,67 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the band's source test allow exactly that one re-spelled class): the 48 cells re-recorded in the darwin set
     under classic scrollbars (the 15px gutter measured first) and verified 48/48. **Evidence at READY:** see
     the lane's PR.
+    **Round 7 (owner, 2026-10-02 — THE WHITE SPECKS, a bug report; verbatim: "the ribbon here on windows
+    chrome is having on and off some white dots. like some of the popular "purici pe televizor" why is that",
+    then "can you implement the fix asap?"; lane `fix/ribbon-gpu-specks`, `/debug-deep`):** THE CAUSE, measured
+    on the owner's workstation (Chrome 154, Intel graphics, Direct3D 11): lib/ribbon-paint joins its pieces by
+    ADDITIVE blending (its NO HAIRLINES), which is seamless only where the rasteriser computes each piece's
+    anti-aliased coverage TRUE — half plus half is one. Chrome's software rasteriser does; its graphics-card
+    one, a canvas's default wherever Chrome trusts the GPU, estimates it, high for a piece thinner than a pixel,
+    and where the ribbon bends over a card's edge many such pieces share a pixel: the sum passes the ribbon's
+    colour and clips. The Team page's six canvases at a 1401 window held 1 200 to 1 700 pure-white pixels at
+    pixel ratios 1, 1.25 and 1.5, against none in Playwright's bundled Chromium, which draws in software — the
+    browser every test and baseline uses, so nothing caught it; a page that READS a canvas's pixels hides it
+    too (Chrome moves a canvas to the processor after a few readbacks). The specks are OLDER than round 6:
+    with the old `#8377a3` the same ~2 700 pixels stood out as pale violet; the pale tint only pushed them to
+    white. A speck stays where the pen painted it ("on and off" is the pen arriving — measured, nothing
+    twinkles once drawn). Two experiments closed it: additive blending off → 0 specks and the hairline seams
+    back; the canvases in software → 0 specks and the very picture of the tests. THE FIX (lib/ribbon-draw's
+    DRAWN IN SOFTWARE): a tile's PIECES are painted on THE SCRATCH — one off-page canvas, the widest tile's
+    width by the tallest's height (capped like a tile), its context `willReadFrequently`, which keeps it off
+    the graphics card in Chrome — and the
+    tile copies the box 1:1 and lays its shadow under it ITSELF, on its default context: the shadow is one
+    path's blur (no addition, no speck) and in software it was the cost — a resize repainting the six tiles
+    kept the main thread busy ~1 000 ms at a pixel ratio of 2 with it, ~490 ms without it (develop's ~320).
+    Measured after the fix: 0 specks and 0 isolated bright pixels in that Chrome; in software every canvas
+    byte-identical to develop's at ratios 1 and 1.5, painted at once and drawn by the pen, so NO visual
+    baseline moves. AND A REPAINT ADDS TO THE SCRATCH (the React review's lever): the scratch keeps the tile
+    it holds, and a pen frame paints only the pieces it does not hold yet — exact, because additive sums
+    ignore order and a frame ends on a whole sample (a range ending inside a piece, a rebuild's, is never
+    added to); the reduced-motion paint repaints each tile once, not once per card. Against develop's own
+    module on the same quiet machine, scrolling the band while it draws: the main thread busy 1.5 s against
+    1.9 at a ratio of 1, 2.1 against 2.0 at 2, 14.1 s against 13.6 on a phone screen with the processor
+    slowed four times; frames slower than 50 ms 0 against 1, 1 against 16, 85 against 159 — as smooth as
+    develop's or smoother everywhere, for about its main-thread time. Tried and DROPPED on the way: all canvases in software (the speck fix alone — the
+    drawing stuttered, the slowest 5 % of frames at 50 and 100 ms, single frames up to 300 ms) and a redraw of
+    only the box a frame's stroke changes (cheap, but a clip changes how the software rasteriser anti-aliases
+    a shape it cuts — measured, up to 35 levels on an edge pixel — so the picture was no longer the one
+    painted whole). Pinned: ribbon-draw.test.ts's DRAWN IN SOFTWARE block — every additive fill lands on a
+    `willReadFrequently` context and the tiles keep the default, at start and after a rebuild (red against
+    develop's module, green with the fix); the scratch in each tile's transform (a pixel ratio of 2 gives the
+    same ribbon in twice the pixels each way); every copy 1:1 from a scratch that holds the tile, a later and
+    larger tile included; a browser that refuses the software context refuses the column before a tile is
+    touched; the scratch's memory given back under THE GUARD and on dispose; a pen's drawing ending on the
+    picture of repainting each tile whole, pixel for pixel; ONE clearing of the scratch for a whole stretch on
+    one tile; the ribbon its own colour (no pure-white pixel, the body's median the token within 3 levels) at
+    once and under the pen; the scratch resized to a tile it cannot hold where the widest by the tallest
+    passes one canvas — each test shown red on the mutation it guards; the width-write counts split into the
+    canvases on the page and the scratch. **G2** (react-reviewer and typescript-reviewer on Opus): APPROVE
+    WITH CHANGES twice, 0 critical, 0 high; every finding folded in one round — the colour pin, the phone
+    cost (A REPAINT ADDS TO THE SCRATCH, the reduced-motion paint once per tile), the tests above, the scratch
+    obtained before any tile, given back under THE GUARD, capped like a tile and named exactly, two comments
+    narrowed to what was measured. The React reviewer measured the same Intel GPU independently: develop
+    2 302 – 2 488 pure-white pixels across the six tiles, this lane 0, its GPU picture within 0.06 px of its
+    software one. **Recorded, the owner's calls:**
+    `willReadFrequently` is a hint — Safari and Firefox were NOT measured on real devices (an engine that
+    ignores it keeps its default and, if its graphics-card rasteriser estimates like Chrome's, its specks);
+    the road that needs no hint is to stop relying on the addition — pieces that overlap by a pixel, painted
+    one over the other, which can never pass the ribbon's colour — a change to the picture (the edges at every
+    joint), so the owner's eye first; the scratch is CPU memory held while the band is mounted and painted —
+    at a 1401 window 3.8 MB at a pixel ratio of 1 and 8.6 MB at 1.5 (measured), about 15 MB at 2; speed was
+    measured on the workstation only, a phone as an emulated screen with the processor slowed four times — a
+    real mid-range Android phone, where the same path uploads a whole tile every pen frame, is worth one trace
+    before launch. **Evidence at READY:** see the lane's PR.
 
 27. **The clinic's real data — ON THE OWNER'S WORD (2026-09-30, verbatim: "find everywhere in the page where
     the page has data about the clininc ,that is not photos and add those ones … tell me if i skipped any" ·

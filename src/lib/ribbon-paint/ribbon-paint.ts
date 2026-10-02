@@ -86,7 +86,10 @@ import {
 // over the other drops its seams to ~190. No overlap is needed, so the
 // ribbon's outer edges are painted once, and drawing piece by piece ends on
 // the picture of drawing at once, pixel for pixel (ribbon-paint.test.ts pins
-// both).
+// both). It holds for a rasteriser that computes coverage TRUE — Chrome's
+// software one (measured). Its graphics-card one estimates it, high for a
+// piece thinner than a pixel, and the sum turns white specks: lib/ribbon-draw
+// paints the pieces in software (its DRAWN IN SOFTWARE).
 //
 // ── THE SHADOW IS PAINTED, NOT FILTERED (the owner, 2026-10-01: "when ribbon
 // is generated … it's shadow is squareish and after a while it rerenders and

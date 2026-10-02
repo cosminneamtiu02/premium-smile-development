@@ -20,13 +20,44 @@ import {
 // 0.03 % apart, colour within one level in 255 for 95 % of pixels.
 //
 // ── THE LIGHT is the approved picture's fragment shader, line for line, as a
-// function of the surface's normal (`shade`). A ribbon is flat across its
+// function of the surface's normal (`light`). A ribbon is flat across its
 // width, so its colour changes ALONG it only: one colour per sample, and a
 // gradient between two samples is what the graphics chip computed per pixel.
 // The ribbon is ONE colour (globals.css's `--ribbon`; the owner, 2026-09-30:
 // "drop the dark mauve,/ black one and use the mov"). Until that day its two
 // sides wore two, and lib/ribbon-model's hidden half twist showed them in
 // turn; now the light simply falls on whichever side is turned to the viewer.
+//
+// ── THE ANCHORED LIGHT (the owner, 2026-10-02, with a screenshot of the lilac
+// band's ground: "i want it on every screen to be the shade that the
+// background of "IN NUMBERS …" is while also maintaining the accents of light
+// upon it"). The shader multiplies a colour by the light that reaches it, and
+// a face turned squarely to the viewer gets about half of it: until that day
+// the token #8377a3 showed on screen as rgb(97 87 114) and was never seen as
+// itself, and the band's #d4cfdc would have shown as a grey rgb(155 147 152).
+// So `shade` sets an EXPOSURE, one per channel, that makes a face turned
+// squarely to the viewer show the colour it is given EXACTLY — and every
+// other direction keeps its own ratio to that face: brighter where the ribbon
+// turns to the key light, dimmer where it turns away, a glint whiter still.
+// One factor per channel scales the whole light at once, as a camera's
+// exposure does, so the accents are the approved light's own. Measured on
+// the six recorded cards with the band's colour: the median of the visible
+// ribbon's area is the token itself on every card, half of that area or more
+// lies within three levels of it (the ripple, flat on the face, all of it),
+// and the light's accents run from about rgb(204 198 211) to rgb(219 214 228)
+// between its 5th and 95th centiles — further at a fold or a glint.
+//
+// ── THE WIDTH SHARE (the owner, the same day: "on desktop, laptops whatever
+// screen larger than tablet make it 30% thinner. on tablet phone etc, the
+// width is fine"). `buildStrip` draws the strip at a SHARE of the model's
+// width — lib/ribbon-draw reads it off the page (its THE WIDTH SHARE) —
+// along the very same centre line: the route, its waves, the ripple and
+// every fold stay lib/ribbon-model's, laid for the design's width, so a
+// thinner ribbon keeps MORE air beside every keep-out and under every edge,
+// never less. Laying the route for the thinner width instead would have moved
+// shapes the owner had called perfect: the ribbon coming back over a card's
+// top edge about 9px nearer the drop-in on a laptop, and the ripple's crest,
+// which the top edge's headroom caps there, up to half again as high.
 //
 // ── A STRIP IS IN THE CARD'S OWN COORDINATES — card units, origin at the
 // card's centre, mirrored when the column mirrors the card. Where it lands in
@@ -135,23 +166,45 @@ const GROUND = [0.6, 0.525, 0.435].map((c) => Math.pow(c, GAMMA));
 const SHININESS = 30;
 
 /**
- * A colour under the light, 0 … 255 per channel and not rounded, for the
- * direction the surface looks in (`normal`, a unit vector pointing out of
- * the side that is looked at).
+ * The approved light on a surface that looks in the direction `normal`, in
+ * linear light: what each channel's colour is multiplied by — the ground's
+ * warm bounce, the sky, the key and the fill — and the glint of the two
+ * lights, added on top.
  */
-export function shade(base: Rgb, normal: Vec3): Shade {
+function light(
+  normal: Vec3,
+): Readonly<{ diffuse: readonly [number, number, number]; glint: number }> {
   const kd = Math.max(dot(normal, KEY), 0);
   const fd = Math.max(dot(normal, FILL), 0);
   const sky = 0.5 + 0.5 * normal[1];
   const shine =
     Math.pow(Math.max(dot(normal, HALF_KEY), 0), SHININESS) * 1.4 * kd +
     Math.pow(Math.max(dot(normal, HALF_FILL), 0), SHININESS) * 0.5 * fd;
+  const diffuse = (i: number) =>
+    ((GROUND[i] + (1 - GROUND[i]) * sky) * 1.1 + 1.4 * kd + 0.5 * fd) / Math.PI;
+  return {
+    diffuse: [diffuse(0), diffuse(1), diffuse(2)],
+    glint: 0.076 * shine,
+  };
+}
+
+/** The light on a face turned squarely to the viewer — what THE ANCHORED LIGHT measures every other face against. */
+const SQUARELY = light(EYE);
+
+/**
+ * A colour under the light, 0 … 255 per channel and not rounded, for the
+ * direction the surface looks in (`normal`, a unit vector pointing out of
+ * the side that is looked at) — anchored so that a face turned squarely to
+ * the viewer, (0, −1, 0), shows `base` itself (THE ANCHORED LIGHT).
+ */
+export function shade(base: Rgb, normal: Vec3): Shade {
+  const { diffuse, glint } = light(normal);
   const channel = (value: number, i: number) => {
-    const linear =
-      (Math.pow(value, GAMMA) *
-        ((GROUND[i] + (1 - GROUND[i]) * sky) * 1.1 + 1.4 * kd + 0.5 * fd)) /
-        Math.PI +
-      0.076 * shine;
+    const albedo = Math.pow(value, GAMMA);
+    // The exposure that lights a face turned squarely to the viewer to
+    // `value` exactly; every other face keeps its ratio to that one.
+    const exposure = albedo / (albedo * SQUARELY.diffuse[i] + SQUARELY.glint);
+    const linear = (albedo * diffuse[i] + glint) * exposure;
     return 255 * Math.pow(Math.min(1, Math.max(0, linear)), 1 / GAMMA);
   };
   return [channel(base[0], 0), channel(base[1], 1), channel(base[2], 2)];
@@ -176,14 +229,19 @@ export function samplesOf(segment: Segment): number {
 
 /**
  * One card's ribbon as a strip ready to paint, in the card's OWN coordinates,
- * mirrored when the column mirrors the card.
+ * mirrored when the column mirrors the card, and `widthShare` of the model's
+ * width across (THE WIDTH SHARE) — 1, the design's 0.25 k, unless the page
+ * asks for less; above 0 and at most 1, as lib/ribbon-draw reads it. A share
+ * moves the two edges only: the centre line, the colours and the efforts are
+ * the same at any share.
  */
 export function buildStrip(
   model: CardModel,
   mirror: boolean,
   base: Rgb,
+  widthShare = 1,
 ): readonly StripSample[] {
-  const half = model.width / 2;
+  const half = (model.width * widthShare) / 2;
   const sx = mirror ? -1 : 1;
   const frontY = -model.T / 2;
   const us = [0];

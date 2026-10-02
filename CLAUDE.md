@@ -105,8 +105,8 @@ src/
     sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a link the KEYBOARD focused reveals its edge — a pointer's focus is never answered, 2026-09-29 (React-free; price-menu-pin lane, 2026-09-18)
     ribbon-model/ribbon-model.ts  # THE floss ribbon's mathematics: one card's path as a chain of segments by arc length (each a plain `kind`, never a class), the gauge rule `k = max(0.0793 W, 0.192 + 0.0602 W)` and the lanes that follow from it, the clearance measure; its side wave SMOOTH beside a keep-out — no corner, no ruler line (§15.26 round 2) — and its top run A LOW RIPPLE — three normal-distribution bumps, a valley, a crest, a valley, their depth and height shares of the run and capped by the lane's room and the top edge's headroom (round 3, 2026-10-01: the top wave, "too much" to the owner, is history); and the LAST card's tail TUCKED under its bottom edge — `G: null`, the side wave straight down, the hook's circle, over the bottom edge at the top's 35° and onto the back (round 5, 2026-10-01: the hanging tail, fb-504, is history); six frozen reference cards beside it, re-written from the module in both rounds (React-free, no DOM; ribbon lane 2026-09-30, §15.26)
     ribbon-layout/ribbon-layout.ts  # the page → the model's numbers: stations and their keep-out blocks found by `data-ribbon-keepout` MARKERS, never by their place in the markup; a keep-out is WHAT IS PAINTED (the element's box and its contents'), a marker that paints nothing is skipped; the portrait's inset; every second card mirrored (§15.26)
-    ribbon-paint/ribbon-paint.ts  # numbers → pixels on the ordinary 2D canvas: the strip, the light, additive blending, the plane cut at the card's front face — what is deeper is not painted — and, since round 3 (2026-10-01), THE SHADOW, painted under the ribbon as one path's drop shadow, never a CSS filter on the canvas (§15.26)
-    ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's line — a card's centre a QUARTER of the screen above its bottom since round 4 (the screen's centre until then), a card taller than the screen its top the same quarter under the top — and the end-of-page rule, the FIRST card drawn without its head (round 4), the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
+    ribbon-paint/ribbon-paint.ts  # numbers → pixels on the ordinary 2D canvas: the strip, the light, additive blending, the plane cut at the card's front face — what is deeper is not painted — and, since round 3 (2026-10-01), THE SHADOW, painted under the ribbon as one path's drop shadow, never a CSS filter on the canvas; since round 6 (2026-10-02) THE ANCHORED LIGHT — a face turned to the viewer shows the colour token itself, the light's accents kept in their ratios round it — and THE WIDTH SHARE, `buildStrip(…, widthShare)`: the strip drawn at a share of its width along the very same centre line (§15.26)
+    ribbon-draw/ribbon-draw.ts  # WHEN a card's stretch is drawn: the owner's line — a card's centre a QUARTER of the screen above its bottom since round 4 (the screen's centre until then), a card taller than the screen its top the same quarter under the top — and the end-of-page rule, the FIRST card drawn without its head (round 4), the queue, the pen, reduced motion, a new geometry, the guard, ONE canvas per card joined behind the cards, one barrier round every entry from the browser, and — since round 6 (2026-10-02) — the width share read off the root's `--ribbon-width-share` (0.7 in the doctors band's laptop and desktop regime, 1 everywhere else) — `startRibbonDraw(layer)` → `{ dispose, getSnapshot }`, and NOT the ring's construct / start / dispose protocol: nothing renders from it (§15.26)
     reduced-motion/reduced-motion.ts  # THE prefers-reduced-motion seam: read + watch (React-free; rotation lane 2026-09-09)
     clock/clock.ts       # THE auto-advance beat: timeout chain + the APG time manners (sticky pause/play, transient cause-keyed suspend/resume, first dwell, reduced-motion + tab-hidden reactions, external driver)
     rotation/rotation.ts # the ring on a clock: active index, step, wrapIndex, liveRegion, rotationControl, classifyFocusEntry/leavesRegion — consumed through useSyncExternalStore (its header IS the consumption law)
@@ -582,7 +582,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    lettering; if that ever arrives it replaces the words as a second file. The purple
    confirmation is now a NUMBER, not a change: the logo's lilac is #8576B1 against
    `accent-decorative`'s #7A6D9C and the ribbon's #8377A3 — adopting it is the owner's call
-   (§15.28). THE FAVICON LANDED THE SAME DAY (§15.31): the mark itself is the tab's icon —
+   (§15.28). *(Since 2026-10-02 the ribbon follows `accent-decorative`: `--ribbon` is the
+   lilac band's ground, #D4CFDC, held to that mix by a test — §15.26 round 6.)* THE FAVICON LANDED THE SAME DAY (§15.31): the mark itself is the tab's icon —
    `src/app/icon.svg`, a byte copy, beside `src/app/favicon.ico` rasterised from it. STILL OPEN: the
    OG share image, for which the mark is the natural source.
 7. **Visual-testing environment — DECIDED 2026-07-31 (owner, via plan-canvas review):**
@@ -2776,6 +2777,11 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     drawn inside the box, and nothing else beyond the known flicker. AT THE SEAL, rebased onto develop 04599e1:
     tsc · eslint · prettier clean; vitest 143 files / 3691 tests; build-storybook and `next build` green; e2e 134
     passed / 52 skipped / 0 failed.
+    *(Amended 2026-10-02, §15.26 round 6: the band gained one class of its OWN under the regime's chain —
+    DoctorShowcase D11, `--ribbon-width-share: 0.7`, the chain re-spelled in the band's own rhythm string, the
+    shape §15.32's census allows — so on a laptop or a desktop the band's ribbon is drawn 30 % thinner, the
+    owner's "on desktop, laptops whatever screen larger than tablet make it 30% thinner"; every touch device and
+    every column under the step keeps its whole width.)*
 
 26. **Floss-ribbon run — DECIDED (owner, consult board `.claude/plans/ribbon-3d.plan.md`, five rounds on
     2026-09-29, fb-489 … fb-513; contract board `.claude/plans/ribbon-floss.plan.md`, approved in the chat
@@ -2797,7 +2803,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     alternatives or rebuilds", fb-505) · NO DOT on the ribbon (fb-475, the connector's board) · colours
     `--ribbon-light` `#8377a3` and `--ribbon-dark` `#2d263c`, both from the old site's palette, raw tokens
     with NO utility name (nothing paints with a class; the painter reads them) — ONE colour since round 2,
-    below: `--ribbon` `#8377a3`, and `--ribbon-shadow` `#2d263c` for the shadow alone.
+    below: `--ribbon` `#8377a3`, and `--ribbon-shadow` `#2d263c` for the shadow alone — and since round 6
+    (2026-10-02) `--ribbon` `#d4cfdc`, the lilac band's ground, under a light ANCHORED to show it.
     **The motion (fb-502, fb-503, fb-507):** "drawn while scrolling but remains drawn" — a card's stretch is
     drawn when "the fixxed center line of the screen" reaches "the center line of the card", in order, and it
     stays drawn: no undoing on the way up, no pinning, the page's scroll never touched (source-fenced by
@@ -3165,6 +3172,73 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     computed value, and lib/ribbon-model never sees it — so the doctors band's design scale (which sets the unit
     to 100 of its design pixels) draws the REFERENCE ribbon scaled instead of a new one for a wider column. At
     the default unit the column is byte-identical (243 widths, Chromium and WebKit) and every ribbon test stands.
+    **Round 6 (owner, 2026-10-02 — THE BAND'S SHADE, AND A SLIMMER RIBBON ON A LAPTOP; verbatim: "important
+    refactor on the color and width of the ribbon. i want it on every screen to be the shade that the background
+    of "IN NUMBERS / Experience confirmed over time / The numbers below say, in short, how we work: …" is while
+    also mentaining the accents of light upon it AND very important on desktop, laptops whatever screen larger
+    than tablet make it 30% thinner. on tablet phone etc, the width is fine" · "i hav eeven attatched a ss with
+    desired color"; lane `rework/ribbon-tint-slim`):** (1) **THE COLOUR.** The screenshot is one colour,
+    rgb(212 207 220) in every one of its 30 400 pixels — sections/TintedBand's ground, `--accent-decorative` at
+    30 % over `--page`, the doctor page's „În cifre" band. `--ribbon` = **`#d4cfdc`**, a LITERAL (lib/ribbon-draw
+    reads it through a canvas round-trip that answers `#rrggbb`), held to the band's own mix by NEW
+    `tests/unit/ribbon-tint-sync.test.ts`: the day §15.1's hue confirm moves `--accent-decorative`, that test
+    names the ribbon's new value. `--ribbon-shadow` #2d263c is unchanged. (2) **THE ANCHORED LIGHT.** The token
+    alone would not have done it: the approved light multiplies a colour by the light that reaches it, and a face
+    turned squarely to the viewer gets about half — `#8377a3` showed on screen as rgb(97 87 114), never as
+    itself, and `#d4cfdc` would have shown as a grey rgb(155 147 152). lib/ribbon-paint's `shade` now sets an
+    EXPOSURE, one per channel, that makes a face turned squarely to the viewer show the colour it is given
+    EXACTLY, every other direction keeping its own ratio to that face: the approved light's accents, whole —
+    brighter towards the key light, a glint whiter still, dimmer turned away. MEASURED on the six recorded cards:
+    the median of the visible ribbon's area is the token itself on every card, 50 to 82 % of that area within
+    three levels of it (the ripple, flat on the face, all of it), and the accents from about rgb(204 198 211) to
+    rgb(219 214 228) between the 5th and 95th centiles — the record's own samples from (185, 182, 196) to (238,
+    235, 252); on the built pages the ripple's centre reads 212 / 207 / 220 at every width. (3) **THE WIDTH
+    SHARE.** `buildStrip(model, mirror, base, widthShare = 1)` draws the strip at a SHARE of the model's width
+    along the very SAME centre line: the route, its waves, the ripple and every fold stay the model's, laid for
+    the design's 0.25 k, so a thinner ribbon keeps MORE air beside every keep-out and under every edge, never
+    less. Thinning the model's own width instead would have moved shapes the owner had called perfect — the
+    ribbon coming back over a card's top edge ≈ 9px nearer the drop-in on a laptop, and the ripple's crest, which
+    the top edge's headroom caps there, up to half again as high. lib/ribbon-draw reads the root's
+    `--ribbon-width-share` (a plain number, NOT registered: it needs no computing where it is declared; anything
+    outside (0, 1] reads as 1; part of the rebuild key), and THE GUARD measures the strip as drawn.
+    sections/DoctorShowcase declares it, its D11 — `scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]` —
+    under its scale's VERY variant chain (§15.25 round 2), in the band's OWN rhythm string: since §15.32 the
+    regime's classes live in ui/Container's strings, every band wears them, and a ribbon setting has no place
+    among them, so the band re-spells the chain for its one class — the shape tests/unit/design-scale.test.ts
+    allows a class that must follow the regime (TeamRoster's tiles are the precedent), held to that chain
+    exactly, so the share can never switch at another width than the scale. "Larger than tablet" read as the band's
+    laptop-and-desktop regime, a mouse or trackpad from a column of max(56rem, 896px), ≈ 1140px of window — the
+    boundary the owner drew on 2026-10-01 ("Touch devices unchanged") — so every phone, every touch tablet held
+    either way and a narrow window keep the whole width. MEASURED on the built pages (the body's run through the
+    ripple): 22 → 15px at the owner's 1401 window, 20 → 14 at 1280, 30 → 21 at 1920; 14px on a 768 touch tablet
+    and 9 on a 390 phone, unchanged; the drawn body 0.693 to 0.695 of the same page's at its whole width at every
+    laptop and desktop window from 1140 to 2560, Romanian and German (70 % less the anti-aliased fringe).
+    **Pinned:** ribbon-paint.test — a face turned squarely to the viewer shows any colour as itself (six colours,
+    to 1e-9), the accents' order round it, and the share's edges with the centre line, colours and efforts
+    unmoved (1e-12); ribbon-draw.test — 0.689 of the body on a 13.8px ribbon, its centre of mass within half a
+    pixel, invalid shares read as 1, a new share rebuilds; DoctorShowcase.test — the byte pin, ONE declaration,
+    the share 0.7 from THE STEP and 1 a pixel before it, its compiled rule under both gates and both container
+    steps; design-scale.test — the band among the files that may re-spell the gate chain, its one token the
+    share at 0.7 on the regime's own chain; the e2e
+    (doctor-showcase.spec) — 0.66 to 0.70 at the owner's window and every laptop and desktop width, exactly 1
+    below the step and on the four sideways touch tablets. The paint record was re-written FROM THE PORT,
+    colours only (no edge, count or effort moved — checked against the port before every number was written).
+    **Recorded, the owner's calls:** the share is one class's number, 0.7 — the lever; the shadow keeps the
+    gauge's offset and blur (a thinner strip casts a thinner shadow, no lighter or nearer); the pale ribbon reads
+    1.53:1 against the white card and 1.45:1 against the page ground — a decoration, its dark shadow its edge; a
+    window under the step on a laptop keeps the whole width (a tablet's), and the step is a jump like the band's
+    own (≈ 18 → 12px across it). **Visual,** MEASURED by the lane's differential at zero tolerance against a
+    pristine build of develop bdb9611 on a private port: exactly the declared 47 cells move — every cell with a
+    painted ribbon: `ui/ribbon/*` 8, Sections/DoctorShowcase 15, Pages/Home 12, Pages/Team 12 (the colour in all
+    of them, the width too wherever the band's regime applies) — plus ONE new cell, `ui/ribbon/width-share` at
+    1280 (the atom's NEW WidthShare story: the Desktop column with the share declared on an ancestor, as the band
+    declares it); 5 more of 1–9 px in the harness's known flicker families (the open language dial, SpeedDial's
+    discs, the language switcher, the price list) — pristine develop re-shot against its OWN reference minutes
+    later differed in 8 cells of those same families, 1–6 px. AT THE SEAL, rebased onto develop 32595a1 (#139,
+    THE BAND SCALE promoted to ui/Container — D11 moved into the band's own rhythm string, and the census and
+    the band's source test allow exactly that one re-spelled class): the 48 cells re-recorded in the darwin set
+    under classic scrollbars (the 15px gutter measured first) and verified 48/48. **Evidence at READY:** see
+    the lane's PR.
 
 27. **The clinic's real data — ON THE OWNER'S WORD (2026-09-30, verbatim: "find everywhere in the page where
     the page has data about the clininc ,that is not photos and add those ones … tell me if i skipped any" ·
@@ -3279,7 +3353,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     Tailwind's NAMED `@4xl` and moves the flip from ≈1221 to ≈1141 px of window. NOT taken: a behaviour change
     the owner did not ask for with the logo — his lever. **Recorded, not built — the owner's:** `accent-decorative`
     #7A6D9C and `--ribbon` #8377A3 to the logo's own #8576B1 (repaints tints, auras, keywords, the ribbon;
-    #8576B1 reads 3.82:1 on the page, inside the display charter's 3:1); the favicon (`src/app/icon.svg`) *(BUILT
+    #8576B1 reads 3.82:1 on the page, inside the display charter's 3:1) *(the ribbon's half is moot since
+    2026-10-02: `--ribbon` is the lilac band's ground and follows `accent-decorative` — §15.26 round 6)*; the favicon (`src/app/icon.svg`) *(BUILT
     2026-10-01, §15.31)* and the OG share image from the mark; the mark's size in the pill (90 % / 40 % of the row,
     kept from the cat — one number in Wordmark.tsx) *(TAKEN 2026-10-01, §15.31: 68.85 % / 30.6 %, the name to the
     30px `section` step, in both instances)*; the Publio lettering, if it ever arrives, as a second file; the placeholder `<a>` →
@@ -3702,7 +3777,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     484 / 489px from 1140 to 2560, their names `<h3>` at 30 × s. Unchanged: every 390 and 768 window and the 1180
     and 1366 touch tablets on Home; no sideways scroll at any width. **GUARDS:** tests/unit/design-scale.test.ts (the regime spelled ONCE in Container.tsx, the five
     wearers importing it, the zoom's one setter at 9/8, the one re-spelled gate chain — the staff tile's width —
-    equal to the regime's, the two picture hints derived), Container.test.tsx (the two strings' bytes, and the
+    equal to the regime's *(two since the same day: the doctors band's ribbon width share, DoctorShowcase D11,
+    §15.26 round 6, held to the same chain)*, the two picture hints derived), Container.test.tsx (the two strings' bytes, and the
     engine measured: 36px at a 1106 column, the cap at 1536 centred, rem under the step, the zoom), page-twins.test.ts
     (`scaled` on Home and Team, never on the doctor page, TeamRoster's two props), each band's own suite and stories,
     and NEW tests/e2e/band-scale.spec.ts on the built export (every opener = 36 / 14 × s on one left edge at seven

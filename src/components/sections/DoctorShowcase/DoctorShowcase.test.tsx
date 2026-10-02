@@ -193,9 +193,11 @@ const SIDES: readonly PersonnelSide[] = ['start', 'end', 'start'];
  *  standard band top, and NO bottom padding and NO gap — the ribbon's own
  *  head and tail room are the band's air above the first card and under the
  *  last. */
-const BAND_RHYTHM = 'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20';
+const BAND_RHYTHM =
+  'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20 scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]';
 
-/** The band's rhythm box, byte for byte (D4, D10): its own rhythm, then
+/** The band's rhythm box, byte for byte (D4, D10, D11): its own rhythm — and,
+ *  under the regime's chain re-spelled, its ribbon's width share (D11) — then
  *  ui/Container's two band-scale strings, in that order — THE SCALE behind
  *  its GATES: on a mouse or trackpad, in an engine that registers custom
  *  properties (`scalable:`), the cap, centred; and from the Container's `@4xl`
@@ -500,15 +502,34 @@ describe('DoctorShowcase — the band’s shape (D4)', () => {
       expect(token.startsWith('scalable:@4xl:@min-[896px]:'), token).toBe(true);
     }
     const gated = tokens.filter((token) => token.startsWith('scalable:'));
-    expect(gated).toHaveLength(3);
-    const cap = gated.filter((token) => !regime.includes(token));
+    // The scale's three, and ONE of the band's own: its ribbon's width share
+    // under the regime's very chain (D11) — the only class the band itself
+    // spells behind a gate.
+    expect(gated).toHaveLength(4);
+    const own = gated.filter(
+      (token) => !column.includes(token) && !scale.includes(token),
+    );
+    expect(own).toEqual([
+      'scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]',
+    ]);
+    const cap = gated.filter(
+      (token) => !regime.includes(token) && !own.includes(token),
+    );
     expect(cap).toHaveLength(1);
     expect(cap[0]?.startsWith('scalable:max-w-'), cap[0]).toBe(true);
-    expect(
-      gated.filter(
-        (token) => !column.includes(token) && !scale.includes(token),
-      ),
-    ).toEqual([]);
+    // ONE declaration of the width share, on this box: the ribbon INHERITS it
+    // and reads it off its own root (lib/ribbon-draw, THE WIDTH SHARE).
+    for (const element of [
+      bandOf(container),
+      columnOf(container),
+      ...rhythmOf(container).querySelectorAll('*'),
+    ]) {
+      expect(
+        tokensOf(element).filter((token) =>
+          token.includes('--ribbon-width-share'),
+        ),
+      ).toEqual([]);
+    }
     // ONE box: nothing else in the band declares a design pixel or wears the
     // remap — the opener, the ribbon and every card INHERIT the band's.
     for (const element of [
@@ -909,13 +930,18 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
     expect(CODE).not.toMatch(/^export\s[^=]*\sfrom\s/m);
   });
 
-  it('takes THE SCALE from ui/Container by IMPORT and spells none of the regime itself (D10’s THE PROMOTION, §15.32)', () => {
+  it('takes THE SCALE from ui/Container by IMPORT and spells none of the regime itself — its ONE gated class, the ribbon’s width share, on the scale’s own chain (D10’s THE PROMOTION, §15.32; D11)', () => {
     // ui/Container's recipe rule 5: a band that scales wears the two
     // band-scale strings on its rhythm box, and the rule "is never spelled in
     // a band". So the code — prose removed — imports both beside the column
-    // and names no input gate, no design pixel, no remap, no zoom and no
-    // REFERENCE of its own: a lever pulled in Container.tsx reaches this band
-    // with every other, and none can be pulled here alone.
+    // and names no design pixel, no remap, no zoom and no REFERENCE of its
+    // own: a lever pulled in Container.tsx reaches this band with every
+    // other, and none can be pulled here alone. ONE class of the band's own
+    // must switch with the regime — its ribbon's width share, D11 — and
+    // Tailwind reads a class only whole from source text, so that one class
+    // re-spells the chain (TeamRoster's tiles are the precedent): it must be
+    // bandScaleClasses' chain, byte for byte, or the ribbon would thin at
+    // another column than the band scales.
     const named =
       /^import \{([^}]*)\} from '@\/components\/ui\/Container\/Container';$/m
         .exec(CODE)?.[1]
@@ -926,8 +952,20 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
     expect(named).toEqual(
       ['Container', 'bandColumnClasses', 'bandScaleClasses'].toSorted(),
     );
-    expect(CODE).not.toMatch(/scalable:|design-scale|--scale-px|--band-zoom/);
+    expect(CODE).not.toMatch(/design-scale|--scale-px|--band-zoom/);
     expect(CODE).not.toMatch(/\b1106\b/);
+    // The scale's chain, read off its remap class; the bracket assembled
+    // from parts so no stray class is spelled here (THE D-LIT RULE's spirit).
+    const remap =
+      bandScaleClasses
+        .split(' ')
+        .find((token) => token.endsWith(':design-scale')) ?? '';
+    const chain = remap.slice(0, -'design-scale'.length);
+    expect(chain).toBe('scalable:@4xl:@min-[896px]:');
+    const open = '[';
+    expect(CODE.match(/scalable:[^\s'"`]+/g)).toEqual([
+      `${chain}${open}--ribbon-width-share:0.7]`,
+    ]);
   });
 });
 
@@ -1705,6 +1743,25 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
     }
   });
 
+  it('draws its ribbon at 0.7 of its width from THE STEP — the very gates of the scale — and at its whole width a pixel before it (D11)', () => {
+    // Read where lib/ribbon-draw reads it: the ribbon's own root, which
+    // inherits it from the rhythm box. 895px is a tablet's column — and every
+    // phone's and every touch tablet's is plain too, by the `scalable:` gate
+    // the same class wears (the e2e's touch tablets measure the paint).
+    const step = Math.max(STEP_REM * rootRem(), STEP_FLOOR);
+    for (const [width, share] of [
+      [step - 1, 1],
+      [step, 0.7],
+    ] as const) {
+      const scene = renderColumn(width);
+      const read = getComputedStyle(scene.ribbon)
+        .getPropertyValue('--ribbon-width-share')
+        .trim();
+      expect(read === '' ? 1 : Number(read), `${width}px`).toBe(share);
+      scene.unmount();
+    }
+  });
+
   it('floors THE STEP in px — under a 12px root a 700px column, past its 56rem (672px), stays plain, and 896px is drawn at 0.81, two-column (G2 react, R6)', () => {
     // With the step in rem alone, a smaller root started the regime on a
     // tablet-wide column, smaller than the design — 0.61 at this root from a
@@ -1941,12 +1998,13 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
     // fine pointer again on CI's Linux within seconds (2026-10-01), and the tab
     // it leaves coarse is every later file's. Here: the compiled rules, read
     // from the CSSOM — each `scalable:` class of RHYTHM is found, and every
-    // rule that styles it sits under both gates, the regime's two also under
+    // rule that styles it sits under both gates, the regime's three — the
+    // design pixel, the remap and the ribbon's width share (D11) — also under
     // the Container's 56rem step and the 896px floor.
     const gated = RHYTHM_BOX.split(' ').filter((token) =>
       token.startsWith('scalable:'),
     );
-    expect(gated).toHaveLength(3);
+    expect(gated).toHaveLength(4);
     type Found = { conditions: string[] };
     const found = new Map<string, Found[]>(gated.map((token) => [token, []]));
     const walk = (rules: CSSRuleList, conditions: string[]): void => {

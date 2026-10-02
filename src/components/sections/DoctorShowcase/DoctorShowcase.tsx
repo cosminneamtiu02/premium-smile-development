@@ -29,10 +29,11 @@ import { cx } from '@/lib/cx/cx';
 // with heading and eyebrow smth in the direction of specialistii cu care ne
 // mandrim familia premium smile." The decision numbers below are that
 // contract's D1–D8 — and D9, the first screen's eager picture, added the same
-// day, and D10, THE SCALE, on 2026-10-01 — and are the anchors other files
-// cite (§17.7 — never a line number; D10's GATES among them, and since
-// 2026-10-02 ui/Container's THE BAND SCALE, which holds the regime D10
-// invented and cites D10 for its numbers and for what it trades).
+// day, D10, THE SCALE, on 2026-10-01, and D11, THE SLIMMER RIBBON, on
+// 2026-10-02 — and are the anchors other files cite (§17.7 — never a line
+// number; D10's GATES among them, and since 2026-10-02 ui/Container's THE BAND
+// SCALE, which holds the regime D10 invented and cites D10 for its numbers
+// and for what it trades).
 //
 // ── D1 · DUMB, PROPS-IN, ZERO KEYS — the PriceList / Hero / DoctorIntro shape.
 // Every string that arrives here is FINISHED: the eyebrow, the title, each
@@ -424,6 +425,33 @@ import { cx } from '@/lib/cx/cx';
 // pulled, the gate's two conditions in globals.css — and each one, pulled,
 // the same for every band that wears the scale (THE PROMOTION).
 //
+// ── D11 · THE SLIMMER RIBBON (2026-10-02). The owner, verbatim: "AND very
+// important on desktop, laptops whatever screen larger than tablet make it
+// 30% thinner. on tablet phone etc, the width is fine." RHYTHM's OWN string
+// declares `--ribbon-width-share: 0.7` under the regime's very variant chain —
+// a mouse or trackpad, an engine that registers custom properties, a column of
+// at least max(56rem, 896px) — and ui/Ribbon's drawing reads it off its root
+// (lib/ribbon-draw, THE WIDTH SHARE): the ribbon is drawn at 70 % of its
+// width along the very same route, its waves, ripple and folds untouched, so
+// it keeps MORE air beside every word, never less. "Larger than tablet" is
+// read as the regime ON PURPOSE: it is where the band is the laptop and
+// desktop design the owner shaped on 2026-10-01, and that day's answer,
+// "Touch devices unchanged", puts every tablet, held either way, outside it;
+// a narrow window on a laptop is a tablet's width and keeps a tablet's
+// ribbon. The class is the BAND's, not ui/Container's: the ribbon is this
+// band's alone, so a share in the strings every band wears would be a ribbon
+// setting on bands that have none. It therefore RE-SPELLS the regime's chain
+// in this file — the one shape tests/unit/design-scale.test.ts allows a class
+// that must follow the regime but is none of its strings (TeamRoster's tile
+// classes are the precedent), holding every such token to the regime's chain
+// exactly, so the share can never switch at another width than the scale.
+// The ribbon inside the regime is the 1401 design's, scaled (D10), so its
+// width is a share of the band's like every other length: ≈ 21.9px at the
+// owner's 1401 window before, ≈ 15.3px now — 0.25 k of the design's
+// k = 0.877, × 0.7 — ≈ 12.4px at the step's s = 0.810 and ≈ 21.1px at a 1920
+// window's 1.375 (tests/e2e/doctor-showcase.spec.ts measures the painted
+// width). One class, one number: the lever.
+//
 // ── FIDELITY (§6.8). The remaining native props and `ref` land on the
 // <section>; a caller's className merges LAST (placement only). The band owns
 // no outer margin (§6.4) — the page owns the rhythm BETWEEN bands. Its own
@@ -478,7 +506,9 @@ type DoctorShowcaseOwnProps = Readonly<{
  * its recipe rule 5, §15.32), composed once, here, at module scope. Tailwind
  * reads class names from source text, so every class stands whole inside a
  * string literal: the band's own in this file, the scale's in Container.tsx.
- *   · THE BAND'S OWN: a flex column, the band top and nothing below it (D4).
+ *   · THE BAND'S OWN: a flex column, the band top and nothing below it (D4),
+ *     and the ribbon drawn at 0.7 of its width under the regime's chain
+ *     (D11) — the one class of the band's own that the regime decides.
  *   · `bandColumnClasses`: `mx-auto` and `w-full`, and THE CAP behind
  *     `scalable:` — the first two of D10's GATES, a mouse or trackpad in an
  *     engine that registers custom properties — on the box's maximum width,
@@ -490,15 +520,15 @@ type DoctorShowcaseOwnProps = Readonly<{
  *     design pixel, min(column, CAP) / REFERENCE times `--band-zoom` (1:
  *     nothing in this band sets it), declared on this box, and every theme
  *     length on this box and inside it measured in it (`design-scale`).
- * The band spells none of the regime: tests/unit/design-scale.test.ts holds
- * the two strings to their one spelling in Container.tsx (the cap twice
- * there, KEEP IN SYNC) and DoctorShowcase.test.tsx this composition byte for
- * byte. The classes this box wore until 2026-10-02, in a new order (an
+ * The band spells none of the regime's strings: tests/unit/design-scale.test.ts
+ * holds the two to their one spelling in Container.tsx (the cap twice there,
+ * KEEP IN SYNC), and D11's class — the chain re-spelled once, here — to that
+ * same chain; DoctorShowcase.test.tsx holds this composition byte for byte. The classes this box wore until 2026-10-02, in a new order (an
  * attribute's order never decides a style), plus `w-full` and the zoom
  * factor — and neither moves a pixel.
  */
 const RHYTHM = cx(
-  'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20',
+  'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20 scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]',
   bandColumnClasses,
   bandScaleClasses,
 );

@@ -169,8 +169,8 @@ import {
 // rebuild.
 //
 // ── NO REBUILD WITHOUT A NEW GEOMETRY. When the placed column, the unit (THE
-// UNIT), the device's pixel ratio and the two colour tokens are what the last
-// good build had, no canvas is touched: the observer's first report repeats
+// UNIT), the width share (THE WIDTH SHARE), the device's pixel ratio and the
+// two colour tokens are what the last good build had, no canvas is touched: the observer's first report repeats
 // the build the start has just made, and a phone fires `resize` when its
 // address bar folds away mid-scroll, where only the window's height moved.
 // That frame still walks the rule, because the window's height moves the
@@ -205,6 +205,22 @@ import {
 // the design's px — a pace is a share of the stretch, so a scaled ribbon
 // draws in the same time.
 //
+// ── THE WIDTH SHARE (CLAUDE.md §15.26 round 6 — the owner, 2026-10-02: "on
+// desktop, laptops whatever screen larger than tablet make it 30% thinner. on
+// tablet phone etc, the width is fine"). The ribbon is drawn at a SHARE of
+// its width — the root's computed `--ribbon-width-share`, a plain number,
+// read with the unit — along the very same route (lib/ribbon-paint's THE
+// WIDTH SHARE). It is 1, the design's width, unless the page declares less:
+// the doctors band does, on a laptop or a desktop, 0.7 — sections/
+// DoctorShowcase, D11, under the very gates of its scale, so a phone, a
+// tablet held either way and a narrow window keep the whole width. A value
+// that is not a number above 0 and at most 1 reads as 1: a share above 1
+// would ask for a ribbon wider than the lanes its cards keep for it. Not
+// registered (globals.css): a number needs no computing where it is
+// declared, so the root inherits it as written and reads the number. THE
+// GUARD measures the strip as drawn, so a thinner ribbon only ever has more
+// air; THE SHADOW keeps the gauge's numbers, its shape is the thinner strip.
+//
 // ── THE GUARD: NO LANES, NO RIBBON. After every build, if any card's strip —
 // the painter's own samples, edges and centre — enters its own keep-outs by
 // more than GUARD_DEPTH (lib/ribbon-model's `penetration`), or the model or
@@ -217,7 +233,9 @@ import {
 //
 // ── THE COLOURS — the ribbon's ONE colour and its shadow's — are read from
 // the root's computed `--ribbon` and `--ribbon-shadow` (globals.css; one
-// colour since 2026-09-30, on the owner's word) and normalised by a canvas of
+// colour since 2026-09-30, on the owner's word, and since 2026-10-02 the lilac
+// band's tint, which lib/ribbon-paint's THE ANCHORED LIGHT shows as itself
+// wherever the ribbon faces the viewer) and normalised by a canvas of
 // their own: a CSS colour assigned to a 2D context's `fillStyle` reads back
 // as `#rrggbb`. A missing or unreadable token, or a translucent one: nothing
 // is painted. The ribbon's shadow is the prototype's — 0 max(1px, 3k px)
@@ -413,6 +431,14 @@ function unitOf(style: CSSStyleDeclaration): number {
   return Number.isFinite(unit) && unit > 0 ? unit : UNIT_PX;
 }
 
+/** THE WIDTH SHARE: the share of its width the ribbon is drawn at — the
+ *  root's computed `--ribbon-width-share` — or 1 where that is not a number
+ *  above 0 and at most 1. */
+function widthShareOf(style: CSSStyleDeclaration): number {
+  const share = parseFloat(style.getPropertyValue('--ribbon-width-share'));
+  return Number.isFinite(share) && share > 0 && share <= 1 ? share : 1;
+}
+
 /** A RangeError is a column the model or the layout refuses — its text is the
  *  reason; anything else is a bug, thrown on (A DECORATION NEVER TAKES THE PAGE DOWN). */
 function reasonOf(error: unknown): string {
@@ -586,11 +612,12 @@ export function startRibbonDraw(
     observed = now;
   }
 
-  /** Every card of the column built and checked by THE GUARD — or what refuses the column. */
+  /** Every card of the column built at the width share and checked by THE GUARD — or what refuses the column. */
   function plan(
     column: readonly PlacedCard[],
     tokens: readonly [string, string],
     unit: number,
+    share: number,
   ): Readonly<{ shadow: Rgb; planned: readonly Planned[] }> | string {
     probe ??= document.createElement('canvas').getContext('2d');
     if (probe === null) {
@@ -610,9 +637,9 @@ export function startRibbonDraw(
         return `card ${placed.index}: ${reasonOf(error)}`;
       }
       const frontY = -model.T / 2;
-      // The painter's own samples — both edges and the centre — against the
-      // card's keep-outs, mirrored into the strip's frame.
-      const strip = buildStrip(model, placed.mirror, colour);
+      // The painter's own samples — both edges and the centre, at the width
+      // drawn — against the card's keep-outs, mirrored into the strip's frame.
+      const strip = buildStrip(model, placed.mirror, colour, share);
       const points = strip.flatMap(({ l, r }): Vec3[] => [
         l,
         r,
@@ -750,6 +777,7 @@ export function startRibbonDraw(
     // the column, before the first canvas write: one layout.
     const style = getComputedStyle(root);
     const unit = unitOf(style);
+    const share = widthShareOf(style);
     let column: readonly PlacedCard[];
     try {
       column = placeColumn(measureColumn(root), unit);
@@ -764,7 +792,7 @@ export function startRibbonDraw(
       style.getPropertyValue('--ribbon-shadow'),
     ] as const;
     const ratio = window.devicePixelRatio;
-    const key = JSON.stringify([column, unit, ratio, tokens]);
+    const key = JSON.stringify([column, unit, share, ratio, tokens]);
     if (key !== built) {
       // Progress crosses the rebuild by index, as a share of the stretch.
       const shares = column.map((_, i) =>
@@ -772,7 +800,7 @@ export function startRibbonDraw(
       );
       if (running !== null && running.index >= column.length) running = null;
       queue = queue.filter((index) => index < column.length);
-      const outcome = plan(column, tokens, unit);
+      const outcome = plan(column, tokens, unit, share);
       const laid =
         typeof outcome === 'string'
           ? outcome

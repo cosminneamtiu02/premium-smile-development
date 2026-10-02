@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { CSSProperties } from 'react';
 import { expect, spyOn, waitFor } from 'storybook/test';
 import { prefersReducedMotion } from '@/lib/reduced-motion/reduced-motion';
 import { Ribbon } from './Ribbon';
@@ -10,9 +11,9 @@ import {
   StandInFrame,
 } from './Ribbon.fixtures';
 
-// NINE stories, EIGHT pictures (§15.26's manifest): seven photographed at the
-// `UI/*` tier's one window width, 1280, and the Narrowest also at a real 320
-// window ('stress-320'). Two are never photographed ('no-visual'): Drawing
+// TEN stories, NINE pictures (§15.26's manifest): eight photographed at the
+// `UI/*` tier's one window width, 1280 — WidthShare the eighth, since round 6
+// (2026-10-02) — and the Narrowest also at a real 320 window ('stress-320'). Two are never photographed ('no-visual'): Drawing
 // MOVES by design, and ReducedMotion's picture IS Desktop's — the net asks
 // for reduced motion itself, so a second baseline would hold the same
 // pixels. The export NAMES are load-bearing: each names a baseline file
@@ -115,6 +116,32 @@ export const Desktop: Story = {
   ),
   play: async ({ canvasElement }) => {
     await expectDecorative(canvasElement, 2);
+  },
+};
+
+/**
+ * THE WIDTH SHARE (§15.26 round 6 — the owner, 2026-10-02: "on desktop,
+ * laptops whatever screen larger than tablet make it 30% thinner"): the
+ * Desktop column with `--ribbon-width-share: 0.7` declared on an ANCESTOR,
+ * as the doctors band declares it on a laptop or a desktop
+ * (sections/DoctorShowcase, D11). The very same route, the strip 70 % as wide
+ * — 14px where Desktop's is 20.
+ */
+export const WidthShare: Story = {
+  render: () => (
+    <StandInFrame width="desktop">
+      <div style={{ '--ribbon-width-share': '0.7' } as CSSProperties}>
+        <StandInColumn doctors={DOCTORS_RO.slice(0, 2)} />
+      </div>
+    </StandInFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectDecorative(canvasElement, 2);
+    // Read where lib/ribbon-draw reads it: the ribbon's own root.
+    const { root } = parts(canvasElement);
+    await expect(
+      Number(getComputedStyle(root).getPropertyValue('--ribbon-width-share')),
+    ).toBe(0.7);
   },
 };
 

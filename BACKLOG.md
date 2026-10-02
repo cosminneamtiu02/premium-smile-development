@@ -166,3 +166,32 @@ Decisions still go to CLAUDE.md §15.
   own 18px body size is the smallest step, and it ends the rows being smaller than everything
   else; a bigger step is a look to try on the built page at 390 and 1280. The 14px eyebrows are
   site-wide (§15.24), so enlarging them widens this entry — on the owner's word.
+
+## 6 · Re-optimise the site for all its static content
+
+- **Why it waits:** the owner, 2026-10-02, while the ribbon's white specks were being fixed: "add also
+  with this pr in the backlog to reoptimize site for all static content". The ribbon fix (CLAUDE.md
+  §15.26 round 7) is the trigger: it was a performance question too, and it showed how much the
+  browser can still be spared.
+- **What it is:** one pass over everything the static export serves — the HTML of every locale ×
+  route, the stylesheet, the client islands' JavaScript, the fonts, the optimised pictures — for
+  weight and for the work the visitor's browser does with it, against CLAUDE.md §10.6, which already
+  makes Core Web Vitals an acceptance criterion: Lighthouse / PageSpeed on the built export for each
+  page type, the hero picture as the LCP element. The exact scope is the owner's to set when the
+  work starts.
+- **Starting points already recorded (read them first; none is a decision):**
+  - the doctors band's ribbon sizes one canvas per card at mount, also on Home where the band starts
+    below the first screen; lazy canvas creation is the recorded lever (CLAUDE.md §15.25) — and since
+    round 7 each tile's pieces are painted in software and copied, at about develop's main-thread time
+    on the workstation and a phone emulated with a slowed processor, never on a real phone (§15.26
+    round 7 has the numbers);
+  - the services page ships about 162 KB of JavaScript gzipped (§15.20 round 5's measurement), most of
+    it the framework every page carries;
+  - `ui/Image` threads no base path, so on the interim GitHub Pages host the optimised pictures
+    answer 404 (§15.25; Wordmark.tsx and Footer.tsx record the same debt) — a launch-host question
+    as much as a weight one;
+  - the hero's three photographs ship at 1920 × 1280, 74–202 KB each before the optimiser's variants
+    (§15.21 round 11).
+- **How to measure it:** on the built export, served the way the host will serve it, never the dev
+  server — `next dev` ships unminified bundles and a different image pipeline. Record each page
+  type's numbers before and after, in five languages where the words change the weight.

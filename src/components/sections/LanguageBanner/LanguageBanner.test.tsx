@@ -13,16 +13,20 @@ import {
   vi,
 } from 'vitest';
 // The REAL stylesheet (the Modal / SpeedDial / LanguageSwitcher precedent),
-// because two of this file's claims are questions about COMPUTED style rather
-// than about class names:
+// because three of this file's claims are questions about COMPUTED style
+// rather than about class names:
 //  · the z-30 seat and the lifted anchor (board §2/§3) live nowhere else — no
 //    other suite and no unit test can say whether this card sits below the
 //    corner discs or on top of them;
 //  · the §9 target floor is a MEASUREMENT. `min-h-11` proves nothing without a
-//    sheet to compile it.
+//    sheet to compile it;
+//  · the accept link's lavender is a claim about PAINT: the owner named the
+//    colour by the button that wears it (2026-10-02), so the last block
+//    compares the link's computed colour with a real lavender ui/Button face.
 // It also brings the entrance transition, which is why the stillness style in
 // beforeAll is not optional here (the PR #45 rule — see that block).
 import '@/styles/globals.css';
+import { Button } from '@/components/ui/Button/Button';
 import { type Locale } from '@/i18n/locales';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
@@ -515,4 +519,61 @@ describe('LanguageBanner — every locale is offered in its own words (§8, D6)'
       expect(dismissButton(locale)).toBeVisible();
     },
   );
+});
+
+describe('LanguageBanner — the accept link wears the „Mai multe despre mine” lavender (owner, 2026-10-02)', () => {
+  /** A semantic token's hex, read off the live sheet, as `rgb(r, g, b)`. */
+  const tokenRgb = (name: string) => {
+    const hex = getComputedStyle(document.documentElement)
+      .getPropertyValue(`--${name}`)
+      .trim();
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  it('paints the lavender button’s face at rest and its deeper violet under the pointer — no green left', async () => {
+    // The owner: "drop that green and replace with the casual lilla from the
+    // app, the one that the "mai multe despre mine" button has". That button
+    // is the doctor card's one link, ui/Button's `accent` family (the
+    // PersonnelCard suite pins the tone), so the claim is measured against a
+    // REAL lavender ui/Button face rendered beside the card — a KEEP-IN-SYNC
+    // relation held by paint, not by class name: retune the family and this
+    // goes red.
+    const parking = document.createElement('div');
+    parking.style.cssText = 'width: 2rem; height: 2rem';
+    document.body.prepend(parking);
+    try {
+      // The pointer first, AWAY from the card: the dismiss tests above leave
+      // the real pointer on the card's row, and a resting pointer is :hover
+      // (the park-the-pointer rule — ReviewsDeck.test.tsx's precedent).
+      await userEvent.hover(parking);
+      render(<Button tone="accent">Mai multe despre mine</Button>);
+      mount('ro');
+      const link = acceptLink();
+      const face = getComputedStyle(
+        screen.getByRole('button', { name: 'Mai multe despre mine' }),
+      ).backgroundColor;
+
+      // The class list says it: the lavender pair, and no green token in any
+      // state.
+      const tokens = link.className.split(/\s+/);
+      expect(tokens).toEqual(
+        expect.arrayContaining(['text-accent', 'hover:text-accent-strong']),
+      );
+      expect(tokens.filter((t) => t.includes('cta'))).toEqual([]);
+
+      // …and the paint says it. At rest the label IS the button's face, and
+      // the underline is currentColor, so it turns with the label.
+      expect(face).toBe(tokenRgb('accent'));
+      expect(getComputedStyle(link).color).toBe(face);
+      expect(getComputedStyle(link).textDecorationColor).toBe(face);
+
+      // Under the pointer: one step darker, the family's own deep violet (the
+      // stillness rule in beforeAll means no fade to wait out).
+      await userEvent.hover(link);
+      expect(getComputedStyle(link).color).toBe(tokenRgb('accent-strong'));
+    } finally {
+      parking.remove();
+    }
+  });
 });

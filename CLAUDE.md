@@ -510,7 +510,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    4.52:1 there, 4.76:1 on #f8f8f8, 4.81:1 on `--page`, 5.06:1 on white, 3.32:1 on the 30 %
    lilac tint (barred there, like `--ink-faint`). The green it
    replaces, `cta-hover` #006b42, is untouched as a token — ui/Button, GlyphButton, SpeedDial
-   and the language banner's accept link keep it. `tests/unit/accent-census.test.ts` names
+   and the language banner's accept link keep it *(the banner's link left it on 2026-10-02 —
+   §15.30 round 6)*. `tests/unit/accent-census.test.ts` names
    every wearer and renderer with its ground and MEASURES the value from globals.css, so the
    old site's exact `#8377a3` fails there with its number. **The owner's lever:** the exact
    old value is one line in globals.css plus an exception in that test — an AA failure on the
@@ -3588,7 +3589,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     site; a census `it` that would (every shipped non-ghost button atom passing `tone="accent"`) is
     the owner's call. The green LEFT on the site, outside the dialog and not asked: the language
     bulb's fill under its flag (ui/SpeedDial has no lavender tone) and the language-suggestion
-    banner's accept link (`text-cta`, a text link).
+    banner's accept link (`text-cta`, a text link) *(lilac since the next day, on the owner's word
+    — round 6)*.
     Visual, MEASURED (the lane differential against pristine develop 04599e1, 457 cells, private port
     6141): exactly seven cells move — Sections/ContactModal Default at 320 / 390 / 1536 and German
     Stress at 390 / 1536, 24k–41k px each (the two faces; the stand-in opener behind the scrim moves
@@ -3615,6 +3617,73 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     owner's: the lilac is as light as the green but about half as colourful (OKLCH chroma 0.069
     against 0.129) — more contrast, less pop, and "call the clinic" now shares its colour with the
     secondary controls; the hover's hairline is 1px.
+    **Round 6 (owner, 2026-10-02, three messages, verbatim: "i need a fix. i had that "continue in
+    englis" or "continue in spanish" modal, the one with an x button alos. i has "continue in englis"
+    or "continue in spanish" in that green. drop that green and replace with the casual lilla from the
+    app, the one that the "mai multe despre mine" button has" · "also, is that green used anywhere else
+    in the webapp right now? like in the composed broser?" · "i hope you understood you do not have to
+    like literally color the toast lilla but rather just that button."; lane
+    `rework/language-banner-lilac`):** the "modal" is sections/LanguageBanner, the §8.6 suggestion
+    toast — „Continue in English" beside a ✕ — and its accept link was the green text round 5 left.
+    Its two colour classes moved and NOTHING ELSE in the toast did (the card stays white with ink
+    words, the ✕ ink — the third sentence): `text-cta` → `text-accent` (#746894, the face of
+    ui/Button's `accent` family at rest — the doctor card's „Mai multe despre mine" wears it) and
+    `hover:text-cta-hover` → `hover:text-accent-strong` (#4b3a86, the family's own hover step); the 2px
+    underline is currentColor and follows. MEASURED (WCAG 2.2): 5.06:1 at rest and 9.34:1 on hover on
+    the card's opaque white (the green read 4.52 / 6.60), against the 4.5:1 a 16px label owes; on the
+    built pages (/ro/ at 1280 × 800 and /de/team/ at 390 × 844, each for a visitor of another
+    language): rest rgb(116, 104, 148) — the button face's own value — hover rgb(75, 58, 134), 0 green
+    pixels left in the card (~4 500 before), no console error. The compiled stylesheet is
+    BYTE-IDENTICAL to develop's: both lavender utilities already shipped and both green ones still do
+    (the two button atoms' default family), so only the link's class list changed. PINS:
+    `tests/unit/accent-census.test.ts` names the banner a wearer — the one that is neither an atom nor
+    dressed through one, so it carries its own ground, the opaque card — and measures its hover pair on
+    `--surface`; LanguageBanner.test.tsx pins the PAINT: with the real pointer parked away, the link's
+    computed colour and underline EQUAL a real `<Button tone="accent">`'s face, and under a real hover
+    the family's deep violet — a KEEP-IN-SYNC relation with the button, held by paint; three mutants
+    turn it red (the green back · `text-ink` beside the lavender · the same ink, on hover only,
+    beside the hover — named in words here because Tailwind scans this file, and a spelled class
+    nothing wears would ship as a dead rule).
+    THE AUDIT (the second sentence), measured on all 55 real pages of develop's build (five languages ×
+    home, services, team, six doctors and the 404) at 1280 × 800 and 390 × 844 — every element's
+    computed colours, its `::before` and `::after`, and every class in every state: the site's green
+    showed in TWO of our controls — this link and the language bulb's fill (ui/SpeedDial's `cta` tone,
+    LanguageSwitcher's `tone="cta"`) — and the bulb's is HIDDEN under the current language's flag: 0
+    green pixels on the desktop bulb, and on the phone's a one-device-pixel anti-aliased rim where a
+    dark flag stripe meets the edge (36 device pixels on the German flag, invisible at 4× zoom); its
+    hover and press steps sit under the flag too. The one other green is the Italian flag's own stripe
+    in the dial (rgb(0, 146, 70)) — a national flag, not the site's colour. The root redirect and the
+    404 dispatcher carry none; the green rules still in the stylesheet belong to the two button atoms'
+    default family, which no page wears; the map frame is Google's own content. After this lane the
+    bulb's hidden fill is the site's ONLY green: turning it lilac needs a lavender tone on ui/SpeedDial
+    — the owner's lever, not built. Visual, MEASURED (the lane differential against pristine develop
+    bdb9611, 459 cells, private port 6152): exactly the five Sections/LanguageBanner cells move —
+    Default at 390 / 1536 and Longest Fit 320 at 320 / 390 / 1536, 696–737 px each (the link's letters
+    and underline) — and 454 are identical: 0 undeclared; at ZERO tolerance two more differ by 1 and 5
+    px, UI/SpeedDial's Host Scaled and Sections/PriceList's Smartphone 390 at 1536 — the harness's
+    known flicker families. Gates at READY: prettier · eslint (0 errors; the one warning is develop's,
+    `UNIT_PX` in lib/ribbon-layout) · tsc clean; vitest 143 files / 3694 tests with the optimizer
+    variants hidden (the CI rehearsal); build-storybook and `next build` green; e2e not run (no spec
+    covers the banner, and the stylesheet is byte-identical). No reviewer round was run — the recolour
+    precedent (#120, #124, #127, #137); Opus reviewers if the owner asks. SEALED on the owner's
+    "perfect, pr" the same day, REBASED onto develop 32595a1 (#139, the bands scale, merged while
+    the lane waited; one conflict, MIGRATION_INVENTORY's last row — both rows kept) and re-measured
+    on the combined tree against a pristine build of 32595a1 (461 cells, the same private port): the
+    same five cells by the same pixel counts at the net's tolerance, 456 identical; at zero
+    tolerance seven more of 1–4 px (Pages/Services ×2, Sections/PriceList ×3, UI/SpeedDial's Open
+    Right, Sections/LanguageSwitcher's Open — the glow and dial flicker families, a different set
+    from the first shoot's). That comparison also caught a dead CSS rule of the lane's own making:
+    Tailwind scans this file, and the first wording of the mutants above spelled a hover ink class
+    nothing wears; reworded, the compiled stylesheet is byte-identical to 32595a1's again. The
+    audit re-run on the combined build finds the same two greens and nothing else. The five darwin
+    cells are recorded under classic scrollbars (the 15px gutter measured off the body's width) and
+    verified, with Sections/ContactModal's seven passing against the committed set as the mode's
+    control. Gates on the rebased tree: prettier · eslint (0 errors) · tsc clean; vitest 143 files /
+    3747 tests with the optimizer variants hidden; build-storybook and `next build` green. Rebased
+    once more the same day onto develop 548d691 (#140, the ribbon in the band's shade, merged after
+    the PR opened — the same one-row inventory conflict, all three rows kept): the stylesheet
+    byte-identical to 548d691's, and the five banner cells and Sections/ContactModal's seven passing
+    against the committed set on the combined tree.
 
 31. **The logo's sizes and the tab icon — ON THE OWNER'S WORD (2026-10-01, four messages, verbatim: "use the logo
     from top bar also in the tab. and make logo in top bar 15% smaller" · "make the logo 10% smaller again and make

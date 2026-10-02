@@ -2,8 +2,12 @@ import { createRef, StrictMode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { containerClasses } from '@/components/ui/Container/Container';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from '@/components/ui/Container/Container';
 import { TextButton } from '@/components/ui/TextButton/TextButton';
 import arrivalSource from './arrival.ts?raw';
 import cardSource from './CategoryCard.tsx?raw';
@@ -11,6 +15,7 @@ import {
   PriceList,
   PRICE_MENU_ID,
   type PriceCategoryProps,
+  type PriceListProps,
   type PriceRowProps,
 } from './PriceList';
 import source from './PriceList.tsx?raw';
@@ -27,10 +32,17 @@ import menuSource from './PriceMenu.tsx?raw';
 // Styles are NOT loaded in this project (tests/setup/components.ts imports no
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
-// this repo follows (Footer, GlyphButton, ClinicLocation). The one fact that
-// only real CSS can prove — that the menu is `position: sticky` at 8.5rem once
-// the split fires — is asserted in PriceList.stories.tsx's play functions,
-// where globals.css is loaded and the box can be measured.
+// this repo follows (Footer, GlyphButton, ClinicLocation). The facts that only
+// real CSS can prove — that the menu is `position: sticky` at 8.5rem once the
+// split fires, and, since 2026-10-02, what THE BAND SCALE draws (every length
+// in the band's design pixel, never under the theme's own — THE FLOOR — and
+// the pill's pair at 136px and 40px at every width) — are asserted where
+// globals.css is loaded and the box can be
+// measured: PriceList.stories.tsx's play functions and the file beside this
+// one, PriceList.scale.test.tsx. That file loads the sheet, so it lives apart:
+// this one must keep its stylesheet-free premise for the scrolling below (its
+// header says why). The scale's CLASS contract stays here (THE BAND SCALE
+// block, after the jump menu's).
 //
 // ── WHAT IS DIFFERENT SINCE THE PACK ROUND (owner 2026-09-14): the band now
 // has ONE island, ./PriceMenu, so this file also drives a REAL SCROLL. The
@@ -193,6 +205,35 @@ const bandOf = (container: HTMLElement): HTMLElement =>
 const tokensOf = (element: Element): string[] =>
   (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
 
+/** A class's VARIANT CHAIN — split at every colon OUTSIDE brackets, so an
+ *  arbitrary value's own colon (`supports-[color:…]`) stays inside its
+ *  variant; the utility, after the last colon, is dropped
+ *  (tests/unit/design-scale.test.ts's `parse`, for this band's guards). */
+const variantsOf = (token: string): string[] => {
+  const variants: string[] = [];
+  let depth = 0;
+  let part = '';
+  for (const char of token) {
+    if (char === '[') depth += 1;
+    else if (char === ']') depth -= 1;
+    if (char === ':' && depth === 0) {
+      variants.push(part);
+      part = '';
+    } else {
+      part += char;
+    }
+  }
+  return variants;
+};
+
+/** A class's UTILITY — what is left after its last top-level colon. */
+const utilityOf = (token: string): string => {
+  const variants = variantsOf(token);
+  return variants.length === 0
+    ? token
+    : token.slice(variants.join(':').length + 1);
+};
+
 const menuLinks = (): HTMLElement[] =>
   within(screen.getByRole('navigation', { name: MENU_TITLE })).getAllByRole(
     'link',
@@ -249,14 +290,26 @@ const tabTo = async (link: HTMLElement): Promise<void> => {
 };
 
 /**
- * The two components' source with their PROSE removed, which is what the
- * island and data guards at the bottom run against (mechanism from
+ * The band's sources with their PROSE removed, which is what the island and
+ * data guards at the bottom run against (mechanism from
  * ClinicLocation.test.tsx, reasoning written out in full in
  * Wordmark.test.tsx). Without it the guards police the files' own
  * documentation: every header discusses `'use client'` and `t()` by name.
+ * ONE LEFT-TO-RIGHT PASS (the G2 typescript review, 2026-10-02, M2 — the same
+ * shape as tests/unit/design-scale.test.ts's `tsCode`): string literals are
+ * stepped over whole, and a `//` comment — which opens only at a line's start
+ * or after whitespace, so a URL or a regex in code survives — is consumed
+ * before a `/*` inside it can open a block that runs on to the next `*\/` and
+ * hides the code between. The two-pass version it replaces stripped blocks
+ * FIRST, so a `src/messages/*.json` in a line comment would have hidden code
+ * from every guard and turned each `not.toMatch` vacuous; the stripper's own
+ * test, in the island block, holds that case.
  */
 const stripComments = (code: string): string =>
-  code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+  code.replace(
+    /('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/gm,
+    (match: string, literal: string | undefined) => literal ?? ' ',
+  );
 
 const CODE = stripComments(source);
 const CARD_CODE = stripComments(cardSource);
@@ -366,7 +419,10 @@ describe('PriceList — the band', () => {
         'py-12',
         '@lg:py-16',
         '@3xl:py-20',
-        '@3xl:grid-cols-[minmax(15rem,1fr)_4fr]',
+        // The menu's floor in the SPACING STEP — sixty of them, 15rem outside
+        // the band scale and 240 design pixels inside it (PriceList.tsx's THE
+        // TWO TRACKS): a literal rem floor would not follow the scale.
+        '@3xl:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr]',
         // Without it a grid item is stretched to the row's height and the
         // sticky menu has nothing left to stick against (board §3.3).
         '@3xl:items-start',
@@ -374,23 +430,35 @@ describe('PriceList — the band', () => {
     );
   });
 
-  it('measures the CONTAINER, never the viewport (§6.5), in NAMED steps only', () => {
+  it('measures the CONTAINER, never the viewport (§6.5), in NAMED steps only — bar the band scale’s own chain, which arrives whole from ui/Container', () => {
     // A media query here would react to the window instead of the boxes the
-    // band actually occupies. Token-wise, not a substring match — `@3xl:`
-    // legitimately contains "xl:".
+    // band actually occupies. Read VARIANT BY VARIANT along every class's
+    // chain, never as a substring — `@3xl:` legitimately contains "xl:", and a
+    // breakpoint could hide behind another variant. The band scale's two
+    // strings (ui/Container's THE BAND SCALE) are the one exception, taken
+    // whole and never re-spelled here: their gate, `scalable:`, asks the
+    // POINTER, a property of the device and no width, and their floor,
+    // `@min-[896px]`, is the regime's documented step — held to its one
+    // spelling by tests/unit/design-scale.test.ts, not by this band.
     const { container } = mount();
     const band = bandOf(container);
-    const viewportVariant = /^(sm|md|lg|xl|2xl):/;
-    const named = /^@(3xs|2xs|xs|sm|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl):/;
+    const viewportVariant = /^(max-|min-)?(sm|md|lg|xl|2xl)$|^(min|max)-\[/;
+    const named = /^@(3xs|2xs|xs|sm|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl)$/;
+    const fromTheScale = new Set([
+      ...bandColumnClasses.split(' '),
+      ...bandScaleClasses.split(' '),
+    ]);
 
     const everything = [band, ...band.querySelectorAll('*')];
-    for (const el of everything) {
-      expect(tokensOf(el).filter((c) => viewportVariant.test(c))).toEqual([]);
+    const chains = everything
+      .flatMap((el) => tokensOf(el))
+      .filter((c) => !fromTheScale.has(c))
+      .map(variantsOf);
+    for (const chain of chains) {
+      expect(chain.filter((v) => viewportVariant.test(v))).toEqual([]);
     }
 
-    const steps = everything
-      .flatMap((el) => tokensOf(el))
-      .filter((c) => c.startsWith('@') && c !== '@container');
+    const steps = chains.flat().filter((v) => v.startsWith('@'));
     expect(steps.length).toBeGreaterThan(0);
     // No custom container step may enter the untouched default scale (§3).
     for (const step of steps) expect(step).toMatch(named);
@@ -501,14 +569,15 @@ describe('PriceList — the jump menu', () => {
     // shown only while the island marks it (owner 2026-09-29).
     expect(tokensOf(menu).filter((t) => t.startsWith('before:'))).toEqual([]);
     // …and the placement className is merged after them (ui/slot.ts). 8.5rem
-    // of offset = the pill's 6rem reach + 2.5rem that clears its glow, and
-    // the ONE rule lib/sticky-rail's 'travel' mode asks for, under the same
-    // container gate.
+    // of offset = the pill's 6rem reach + 2.5rem that clears its glow, both
+    // rem LITERALS the band scale cannot remap (THE BAND SCALE block below),
+    // and the ONE rule lib/sticky-rail's 'travel' mode asks for, under the
+    // same container gate.
     expect(tokensOf(menu)).toEqual(
       expect.arrayContaining([
-        'scroll-mt-10',
+        'scroll-mt-[2.5rem]',
         '@3xl:sticky',
-        '@3xl:top-34',
+        '@3xl:top-[8.5rem]',
         '@3xl:data-[rail=travel]:relative',
       ]),
     );
@@ -621,6 +690,171 @@ describe('PriceList — the jump menu', () => {
   });
 });
 
+// ── THE BAND SCALE (2026-10-02, §15.32 — PriceList.tsx's paragraph of that
+// name). The owner: "i do not want the cards jsut to wide, i want the menu and
+// cards to adapt too with the width of the screen". The CLASS contract lives
+// here: the rhythm box wears ui/Container's two band-scale strings — read from
+// the atom's exports and never written out (their one spelling is
+// Container.tsx's; tests/unit/design-scale.test.ts fences every other) — and
+// the band's own floor beside them, THE FLOOR (the band never draws smaller
+// than the theme); and the pair coupled to the header pill is spelled so the
+// scale cannot reach it. What the engine draws with all of it is
+// PriceList.scale.test.tsx's.
+
+/** THE FLOOR's property and its value (PriceList.tsx's BAND_FLOOR), each
+ *  named apart: the band spells its whole class ONCE, in PriceList.tsx —
+ *  tests/unit/design-scale.test.ts counts one setter — and Tailwind scans this
+ *  file too, so the expected token is assembled here from its parts, never
+ *  written whole. */
+const FLOOR_PROPERTY = '--band-floor';
+const FLOOR_VALUE = '0.0625rem';
+const FLOOR_CLASS = ['[', FLOOR_PROPERTY, ':', FLOOR_VALUE, ']'].join('');
+
+/** Every class-like token in a source's string literals — single, double and
+ *  backtick, a template's `${…}` read as a gap: what Tailwind's scanner sees
+ *  in a quoted class string (tests/unit/design-scale.test.ts's `tokensOf`). */
+const classTokensOf = (code: string): string[] =>
+  [...code.matchAll(/'([^'\n]*)'|"([^"\n]*)"|`([^`]*)`/g)]
+    .flatMap((match) =>
+      (
+        match[1] ??
+        match[2] ??
+        (match[3] ?? '').replace(/\$\{[^}]*\}/g, ' ')
+      ).split(/\s+/),
+    )
+    .filter(Boolean);
+
+describe('PriceList — THE BAND SCALE, the class contract (§15.32)', () => {
+  it('wears BOTH band-scale strings on the rhythm box and THE FLOOR beside them — after its own classes, in the order cx() writes them — and on no other element', () => {
+    // ui/Container's recipe rule 5: the RHYTHM box, the first inside the
+    // Container — never the Container itself (an element cannot query its own
+    // size, and the regime's `@4xl` step reads the Container), never the
+    // <section> (outside the container context the step would never match).
+    // Here the rhythm box is also the grid. THE FLOOR must sit on that very
+    // box: the design pixel is declared there, and reads it there.
+    const { container } = mount();
+    const band = bandOf(container);
+    const grid = (band.firstElementChild as HTMLElement)
+      .firstElementChild as HTMLElement;
+
+    expect(tokensOf(grid)).toEqual([
+      'grid',
+      'gap-8',
+      'py-12',
+      '@lg:py-16',
+      '@3xl:py-20',
+      '@3xl:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr]',
+      '@3xl:items-start',
+      ...bandColumnClasses.split(' '),
+      ...bandScaleClasses.split(' '),
+      FLOOR_CLASS,
+    ]);
+    for (const element of [band, ...band.querySelectorAll('*')]) {
+      if (element === grid) continue;
+      expect(
+        tokensOf(element).filter((t) => variantsOf(t).includes('scalable')),
+      ).toEqual([]);
+      // …and no other box sets the floor: unregistered and inherited, one
+      // more setter below would only repeat it, one above would reach past
+      // the band.
+      expect(
+        tokensOf(element).filter((t) => t.includes(FLOOR_PROPERTY)),
+      ).toEqual([]);
+    }
+  });
+
+  it('pins THE FLOOR at one sixteenth of a rem — the theme’s own pixel at any root — ungated, set once, in PriceList.tsx alone', () => {
+    // 1rem / 16 is the pixel the theme's rem lengths are drawn in at ANY root
+    // (PriceList.tsx's BAND_FLOOR), so the band never draws smaller than the
+    // theme and, under the reference, IS its rem self. Ungated on purpose: it
+    // is inert wherever ui/Container's pixel declaration is held back, its one
+    // reader. The census (tests/unit/design-scale.test.ts) holds the same
+    // number from src/; this holds what the band renders and its folder.
+    const { container } = mount();
+    const grid = (bandOf(container).firstElementChild as HTMLElement)
+      .firstElementChild as HTMLElement;
+    const floors = tokensOf(grid).filter((t) =>
+      t.startsWith(`[${FLOOR_PROPERTY}:`),
+    );
+
+    expect(floors).toHaveLength(1);
+    expect(variantsOf(floors[0])).toEqual([]);
+    expect(utilityOf(floors[0])).toBe(FLOOR_CLASS);
+    expect(floors[0].slice(FLOOR_PROPERTY.length + 2, -1)).toBe(FLOOR_VALUE);
+    // Spelled ONCE in the folder's code, prose stripped: in PriceList.tsx, and
+    // in no other module of the band.
+    expect(CODE.split(FLOOR_PROPERTY)).toHaveLength(2);
+    for (const code of [CARD_CODE, MENU_CODE, ARRIVAL_CODE]) {
+      expect(code).not.toContain(FLOOR_PROPERTY);
+    }
+  });
+
+  it('is UNCONDITIONAL and spells none of the regime itself — no `scaled` prop, both strings imported', () => {
+    // The band's one page is the Services page, where it is the only band —
+    // unlike ClinicLocation, which also stands on a page that does not scale
+    // and so asks for a prop. Every class of the regime is ui/Container's.
+    expectTypeOf<PriceListProps>().not.toHaveProperty('scaled');
+    expect(CODE).toMatch(
+      /import \{[^}]*\bbandColumnClasses\b[^}]*\bbandScaleClasses\b[^}]*\} from '@\/components\/ui\/Container\/Container'/,
+    );
+    for (const code of [CODE, CARD_CODE, MENU_CODE, ARRIVAL_CODE]) {
+      expect(code).not.toMatch(/scalable:|design-scale|--scale-px/);
+    }
+  });
+
+  it('keeps the pill’s pair out of its reach — the menu’s 8.5rem line and every card’s 2.5rem of air are rem LITERALS, and no class string in the folder spells either as a spacing step', () => {
+    // The header pill these two clear is not a band and does not scale
+    // (PriceList.tsx's `@3xl:top-[8.5rem]` paragraph): as spacing steps they
+    // would follow the band's design pixel past the reference — the menu
+    // floating further and further under the bar, the card's line off the
+    // menu's — so they are arbitrary rem values no theme variable carries.
+    mount();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    expect(tokensOf(menu)).toContain('@3xl:top-[8.5rem]');
+    expect(tokensOf(menu)).toContain('scroll-mt-[2.5rem]');
+    for (const card of screen.getAllByRole('region')) {
+      expect(tokensOf(card)).toContain('scroll-mt-[2.5rem]');
+    }
+
+    // The folder's own class strings, prose stripped: every `top` and
+    // `scroll-mt` utility in them is a bracketed literal — none is a step.
+    const stepForm = /^-?(top|scroll-mt)-\d+(\.\d+)?$/;
+    for (const [name, code] of [
+      ['PriceList.tsx', CODE],
+      ['CategoryCard.tsx', CARD_CODE],
+      ['PriceMenu.tsx', MENU_CODE],
+      ['arrival.ts', ARRIVAL_CODE],
+    ] as const) {
+      expect(
+        classTokensOf(code).filter((t) => stepForm.test(utilityOf(t))),
+        name,
+      ).toEqual([]);
+    }
+    // …and each literal is spelled exactly once, where it is worn.
+    const count = (code: string, token: string): number =>
+      classTokensOf(code).filter((t) => t === token).length;
+    expect(count(MENU_CODE, '@3xl:top-[8.5rem]')).toBe(1);
+    expect(count(MENU_CODE, 'scroll-mt-[2.5rem]')).toBe(1);
+    expect(count(CARD_CODE, 'scroll-mt-[2.5rem]')).toBe(1);
+  });
+
+  it('has a step reader with teeth — a spacing step behind any variant is seen, a literal is not', () => {
+    // Assembled from parts, never one literal: Tailwind scans this file too,
+    // and a spelled step class would ship a rule nobody wears.
+    const step = ['top', String(8.5 * 4)].join('-');
+    const air = ['scroll', 'mt', String(2.5 * 4)].join('-');
+    const probe = [
+      `const A = '@3xl:${step} block';`,
+      `const B = \`${air}\`;`,
+      `const C = "scroll-mt-[2.5rem] @3xl:top-[8.5rem]";`,
+    ].join('\n');
+    const stepForm = /^-?(top|scroll-mt)-\d+(\.\d+)?$/;
+    expect(
+      classTokensOf(probe).filter((t) => stepForm.test(utilityOf(t))),
+    ).toEqual([`@3xl:${step}`, air]);
+  });
+});
+
 describe('PriceList — one card per category', () => {
   it('renders each category as a named region, in order', () => {
     mount();
@@ -646,8 +880,8 @@ describe('PriceList — one card per category', () => {
       expect(card).toHaveAttribute('tabindex', '-1');
       // 2.5rem of air on top of the global scroll-padding-top: 6rem
       // (globals.css) — the same 2.5rem the stuck menu wears, so the two come
-      // to rest on one line.
-      expect(tokensOf(card)).toContain('scroll-mt-10');
+      // to rest on one line; a rem literal, so the band scale leaves it 40px.
+      expect(tokensOf(card)).toContain('scroll-mt-[2.5rem]');
     }
   });
 
@@ -1482,6 +1716,43 @@ describe('PriceList — where a click lands, and whose ring it is (owner 2026-09
 });
 
 describe('PriceList — dumb by construction', () => {
+  it('strips prose in ONE pass — a `/*` inside a line comment hides no code after it, a comment opener inside a string is kept, and the band’s real prose is gone', () => {
+    // The stripper's own teeth (the G2 typescript review, M2): every guard in
+    // this block reads code through it, so a stripper that hid code would turn
+    // each `not.toMatch` vacuous. The openers are assembled from parts, so the
+    // sample is data and never a comment of this file's own.
+    const open = ['/', '*'].join('');
+    const close = ['*', '/'].join('');
+    const sample = [
+      `// a path like src/messages/${open}.json, in a line comment`,
+      'const kept = 1;',
+      `${open} a block comment ${close}`,
+      `const url = 'https://example.ro/${open}still-a-string';`,
+      'const alsoKept = 2; // trailing prose',
+      `${open} a second block ${close}`,
+      'const lastKept = 3;',
+    ].join('\n');
+    const code = stripComments(sample);
+
+    for (const line of [
+      'const kept = 1;',
+      `const url = 'https://example.ro/${open}still-a-string';`,
+      'const alsoKept = 2;',
+      'const lastKept = 3;',
+    ]) {
+      expect(code).toContain(line);
+    }
+    expect(code).not.toMatch(
+      /a path like|a block comment|trailing prose|a second block/,
+    );
+    // …and on the band's real sources: the prose that names the guards'
+    // targets is gone, and the code is all there.
+    expect(source).toMatch(/'use client'/);
+    expect(CODE).not.toMatch(/use client/);
+    expect(CODE).toMatch(/export function PriceList\b/);
+    expect(CODE).toMatch(/const RHYTHM = cx\(/);
+  });
+
   it('hands the island id/name pairs only — no price row crosses the boundary', () => {
     // Props that cross a server→client boundary are serialized into the page's
     // own HTML (the RSC flight payload). The island needs eleven `{ id, name }`

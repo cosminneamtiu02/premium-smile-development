@@ -59,6 +59,12 @@ const QUIET_RING = 'not-data-[arrival=keyboard]:focus-visible:outline-hidden';
 /** The island's stamp on a card the keyboard jumped to — its attribute. */
 const ARRIVAL = 'data-arrival';
 
+/** The card's own scroll rider: 2.5rem of air over the shell's 6rem scroll
+ *  padding — a rem LITERAL since 2026-10-02, so the band scale cannot remap
+ *  it (CategoryCard.tsx's paragraph of the same name). Spelled here, never
+ *  imported, AURA's reason. */
+const AIR = 'scroll-mt-[2.5rem]';
+
 /** ui/Card's own surface, ARMED with the glow (`aura="current"`) and on the
  *  HOUSE corner (the atom's default — the soft corner of §15.29 was tried on
  *  this page and reverted on the owner's taste, 2026-10-01), DERIVED from a
@@ -88,7 +94,7 @@ describe('CategoryCard — the card IS the section (ui/Card asChild)', () => {
     // a deterministic convention the tests pin, NOT a cascade mechanism. The
     // element's own are the scroll rider and, since 2026-09-29, the quiet
     // ring (THE RING IS THE KEYBOARD'S).
-    expect(card.className).toBe(`${cardSurface()} scroll-mt-10 ${QUIET_RING}`);
+    expect(card.className).toBe(`${cardSurface()} ${AIR} ${QUIET_RING}`);
   });
 
   it('keeps the HOUSE corner — the owner’s taste (2026-10-01, §15.29)', () => {
@@ -136,7 +142,7 @@ describe('CategoryCard — the card IS the section (ui/Card asChild)', () => {
     );
 
     expect(cardOf(container).className).toBe(
-      `${cardSurface()} scroll-mt-10 ${QUIET_RING} col-span-2`,
+      `${cardSurface()} ${AIR} ${QUIET_RING} col-span-2`,
     );
   });
 
@@ -183,7 +189,22 @@ describe('CategoryCard — the fragment target (board §4.2)', () => {
     // 2.5rem over the shell's global `scroll-padding-top: 6rem` — the same
     // 2.5rem the sticky menu adds to that reach, so a jumped-to card and the
     // stuck menu come to rest on ONE line (owner 2026-09-14).
-    expect(tokensOf(card)).toContain('scroll-mt-10');
+    expect(tokensOf(card)).toContain(AIR);
+  });
+
+  it('spells that air as a rem LITERAL, never a spacing step — the band scale must not reach it (2026-10-02)', () => {
+    // Inside the band scale every spacing step is a DESIGN length, and the
+    // header pill this air sits under does not scale (PriceList.tsx's
+    // `@3xl:top-[8.5rem]` paragraph): the rider is an arbitrary rem value,
+    // 40px inside the scale and out — and no `scroll-mt` step is left on the
+    // card. What the engine computes is PriceList.scale.test.tsx's.
+    const { container } = render(<CategoryCard {...CATEGORY} />);
+    const scrollMargins = tokensOf(cardOf(container)).filter((t) =>
+      /(^|:)scroll-mt-/.test(t),
+    );
+
+    expect(scrollMargins).toEqual([AIR]);
+    expect(cardSource).toContain(`'${AIR}'`);
   });
 
   it('derives the heading id from the category id — no generated pair', () => {

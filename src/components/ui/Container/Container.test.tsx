@@ -109,10 +109,10 @@ describe('Container — THE gutter definition', () => {
 // THE BAND SCALE (2026-10-02, CLAUDE.md §15.32) — the two strings every band
 // of Home and Team wears on its rhythm box, written out for the GUTTER's
 // reason above. tests/unit/design-scale.test.ts holds their parts (one
-// spelling, the gate, the cap, the step, the zoom's one setter); this suite
-// holds the bytes and what the engine draws with them.
+// spelling, the gate, the cap, the step, the zoom's one setter, the floor's
+// one setter); this suite holds the bytes and what the engine draws with them.
 const BAND_SCALE =
-  'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106*var(--band-zoom,1))] scalable:@4xl:@min-[896px]:design-scale';
+  'scalable:@4xl:@min-[896px]:[--scale-px:max(var(--band-floor,0px),calc(min(100cqw,96rem)/1106*var(--band-zoom,1)))] scalable:@4xl:@min-[896px]:design-scale';
 const BAND_COLUMN = 'mx-auto w-full scalable:max-w-[96rem]';
 
 describe('Container — THE BAND SCALE (§15.32)', () => {
@@ -195,6 +195,63 @@ describe('Container — THE BAND SCALE (§15.32)', () => {
     expect(size('band-text')).toBeCloseTo(16 * s, 2);
     // 16 × 9/8 = 18 design pixels — the doctor card's quote size.
     expect(size('zoomed-text')).toBeCloseTo(18 * s, 2);
+  });
+
+  it('never draws a floored band under the theme — THE FLOOR, worn by the price list at 1rem / 16', () => {
+    // The floor sits on the box that wears the scale (it is read where the
+    // design pixel is declared). Under the reference the pixel would shrink;
+    // floored, it holds the theme's own pixel — at ANY root, because the floor
+    // is spelled in rem.
+    const floor = '[--band-floor:0.0625rem]';
+    // Whether the regime REDREW the band (its `--spacing` differs from the
+    // root's): under the floor a redrawn band and an untouched one draw alike,
+    // so the size alone could not tell the floor from a gate that never
+    // opened (the G2 typescript review).
+    const remapped = (element: Element): boolean =>
+      getComputedStyle(element).getPropertyValue('--spacing').trim() !==
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--spacing')
+        .trim();
+    const titleAt = (column: number): number => {
+      const { unmount } = render(
+        <Container style={{ marginInline: 0, width: `${column}px` }}>
+          <div
+            data-testid="floored-band"
+            className={`${bandColumnClasses} ${bandScaleClasses} ${floor}`}
+          >
+            <p data-testid="floored" className="text-4xl">
+              {RO_COPY}
+            </p>
+          </div>
+        </Container>,
+      );
+      const size = parseFloat(
+        getComputedStyle(screen.getByTestId('floored')).fontSize,
+      );
+      expect(
+        remapped(screen.getByTestId('floored-band')),
+        `the regime ran at a ${column}px column`,
+      ).toBe(true);
+      unmount();
+      return size;
+    };
+    // Inside the regime (900 ≥ max(56rem, 896px)), where the unfloored pixel
+    // is 900 / 1106 = 0.814: the floor holds the title at its 36px.
+    expect(titleAt(900)).toBeCloseTo(36, 2);
+    // Past the reference the floor is out of the way: the band grows as ever.
+    expect(titleAt(1300)).toBeCloseTo((36 * 1300) / 1106, 2);
+    // At a 20px root the floor is 1.25px. A 1200px column is inside the
+    // regime there (the step is 56rem = 1120px), and the unfloored pixel —
+    // 1200 / 1106 = 1.085 — is under it: the title reads the theme's rem
+    // look, 36 × 1.25 = 45px, where an unfloored band would read 39.06.
+    const root = document.documentElement;
+    const before = root.style.fontSize;
+    root.style.fontSize = '20px';
+    try {
+      expect(titleAt(1200)).toBeCloseTo(45, 2);
+    } finally {
+      root.style.fontSize = before;
+    }
   });
 });
 

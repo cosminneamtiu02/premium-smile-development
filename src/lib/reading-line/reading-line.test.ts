@@ -30,7 +30,7 @@ import {
 
 /** The shell's scroll-padding-top: 6rem, the header pill's reach. */
 const PADDING = 96;
-/** A category card's scroll-margin-top: `scroll-mt-10`, 2.5rem. */
+/** A category card's scroll-margin-top: `scroll-mt-[2.5rem]`. */
 const FLOOR = 40;
 
 type Measured = Readonly<{

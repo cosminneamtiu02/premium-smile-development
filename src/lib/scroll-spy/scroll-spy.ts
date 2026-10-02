@@ -177,8 +177,8 @@ import {
 //     first (a breakpoint may change it: EVENTS' own argument for never
 //     hoisting the read), and never on a scroll event. So a reading-line
 //     target keeps its floor in a STYLESHEET — the price card's
-//     `scroll-mt-10` — because an inline one is the very property this line
-//     writes over.
+//     `scroll-mt-[2.5rem]` — because an inline one is the very property
+//     this line writes over.
 //   · THE TWO ENDS AND THE TWO PROPERTIES. Near an end the landings are kept
 //     inside the page and apart, a share of each card's size between them
 //     (the owner's "based on size of card"), so that (1) every target is the

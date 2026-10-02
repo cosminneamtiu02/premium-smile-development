@@ -320,17 +320,21 @@ export function Header(): ReactElement {
                              expires the moment the burger widths get the
                              taller bar too.
           Five spellings, one number: change this height and all five move.
-            PriceList        `@3xl:top-34` on the sticky price menu (reach 6rem +
-                             2.5rem of air) — the FIFTH spelling, added by the
-                             price-list lane (its board §3.3, 2026-09-13; the air
-                             widened from 1rem in that lane's pack round 2,
-                             2026-09-14, and MEASURED: the pill's aura tints the
-                             page ground down to y = 126px, so the old 7rem menu
-                             sat 14px inside the glow). Its cards mirror the same
-                             2.5rem as `scroll-mt-10` over globals' 6rem
+            PriceList        `@3xl:top-[8.5rem]` on the sticky price menu
+                             (reach 6rem + 2.5rem of air) — the FIFTH spelling,
+                             added by the price-list lane (its board §3.3,
+                             2026-09-13; the air widened from 1rem in that
+                             lane's pack round 2, 2026-09-14, and MEASURED: the
+                             pill's aura tints the page ground down to
+                             y = 126px, so the old 7rem menu sat 14px inside
+                             the glow). Its cards mirror the same 2.5rem as
+                             `scroll-mt-[2.5rem]` over globals' 6rem
                              scroll-padding, so a jumped-to card and the stuck
                              menu rest on one line: change this height and all
-                             five move.
+                             five move. Both are rem LITERALS since 2026-10-02:
+                             the price band draws in the band scale's own
+                             design pixel (CLAUDE.md §15.32 round 2), and these
+                             two follow THIS pill, which does not scale.
             Hero             `-mt-[calc(6rem+2px)]` on the Home opener's root —
                              this pill's FLOW BOX (mt-4 + h-20 + the two 1px
                              borders), by which the band pulls itself UNDER the

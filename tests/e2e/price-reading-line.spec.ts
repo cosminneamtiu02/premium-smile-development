@@ -54,8 +54,8 @@ const MENU = '#price-categories';
 const CURRENT = 'data-current';
 
 /** The 8.5rem line: the header pill's 6rem reach plus a card's 2.5rem floor
- *  (CategoryCard's `scroll-mt-10`) — where a card too tall to be centred
- *  rests, as every card rested before round 5. */
+ *  (CategoryCard's `scroll-mt-[2.5rem]`) — where a card too tall to be
+ *  centred rests, as every card rested before round 5. */
 const CEILING = 136;
 
 /** A card FITS the clear area when its height is at most `innerHeight −
@@ -66,7 +66,9 @@ const CLEAR = 176;
 
 /** The largest scroll step of the walks below. The shortest turn any card has
  *  on the measured page is 64px (the first card, at 1920×945 — the planner's
- *  simulation), so a 40px step can never step over one. */
+ *  simulation, before THE BAND SCALE; since 2026-10-02 every length there is
+ *  1.375 × its design, so every turn there is longer still and the conclusion
+ *  only safer), so a 40px step can never step over one. */
 const STEP = 40;
 
 /** lib/reading-line's READING_END_PACE, the planner's decided value — spelled
@@ -317,9 +319,10 @@ const walkDown = (page: Page): Promise<Sample[]> =>
  *     distance between its top and the top of the card AT that end. That is
  *     lib/reading-line's THE STEP — near an end the landings are kept apart so
  *     that every card between keeps a turn — and it is what holds the second
- *     card at 1920×945: its centred landing (28px) lies inside the page, but
- *     the first card's turn needs (422 − 178) / 2 = 122px of scrolling before
- *     it, so it rests 94px above centre. Away from both ends this can never
+ *     card on a window tall enough to show it at scroll 0 (the owner's 1392 ×
+ *     1179): its centred landing lies inside the page, but the first card's
+ *     turn needs half the distance between the two cards' tops of scrolling
+ *     before it, so it rests above centre. Away from both ends this can never
  *     hold a card (the middle cards' ideal landings are further apart than
  *     the step), so the centring is still asserted exactly where the owner
  *     sees it.
@@ -345,26 +348,43 @@ for (const locale of ['ro', 'de']) {
   test.describe(`${locale}/services — the reading line`, () => {
     test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
-    test('at load the FIRST card is current — even where the second card’s top already sits above the middle of the window', async ({
-      page,
-    }, testInfo) => {
+    test('at load the FIRST card is current', async ({ page }) => {
       await open(page, `/${locale}/services/`);
       const reading = await read(page);
 
       expect(reading.y).toBe(0);
       expect(reading.marked).toEqual([reading.fragments[0]]);
       expect(reading.linked).toEqual([reading.fragments[0]]);
+    });
 
-      // The owner's case ("so smaller cars at top also get selection"): on
-      // the desktop the second card is already above the window's middle —
-      // and so above the reading line — at scroll 0, the highest the page
-      // goes. An unbent line would name it and the first card would never
-      // have a turn; the line bends near the top, and the first card is lit.
-      if (testInfo.project.name === 'desktop-1920x945') {
-        const second = await boxOf(page, reading.fragments[1]);
-        expect(second.top).toBeLessThan(reading.innerHeight / 2);
-        expect(second.top).toBeLessThan(reading.line);
-      }
+    // The owner's case ("so smaller cars at top also get selection"): where
+    // the window is tall enough, the second card is already above the
+    // window's middle — and so above the reading line — at scroll 0, the
+    // highest the page goes. An unbent line would name it and the first card
+    // would never have a turn; the line bends near the top, and the first
+    // card is lit. THE WINDOW IS THE OWNER'S 1392 × 1179 since 2026-10-02: the
+    // band draws in THE BAND SCALE's design pixel (CLAUDE.md §15.32 round 2),
+    // so at a 1920 × 945 window its cards are 37.5 % taller and the second
+    // one starts below the middle (542px against 472 — measured on the build),
+    // while at 1392 × 1179 — where THE FLOOR keeps the band develop's own — it
+    // starts at 422px against 590.
+    test('at the owner’s 1392 × 1179 window the FIRST card is current — although the second card’s top already sits above the middle of the window', async ({
+      page,
+    }, testInfo) => {
+      test.skip(
+        testInfo.project.name !== 'desktop-1920x945',
+        'this test sets its own window; one project is enough',
+      );
+      await page.setViewportSize({ width: 1392, height: 1179 });
+      await open(page, `/${locale}/services/`);
+      const reading = await read(page);
+
+      expect(reading.y).toBe(0);
+      const second = await boxOf(page, reading.fragments[1]);
+      expect(second.top).toBeLessThan(reading.innerHeight / 2);
+      expect(second.top).toBeLessThan(reading.line);
+      expect(reading.marked).toEqual([reading.fragments[0]]);
+      expect(reading.linked).toEqual([reading.fragments[0]]);
     });
 
     test('every card has its turn, in order — from the top to the end in steps of at most 40px', async ({

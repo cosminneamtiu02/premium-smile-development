@@ -49,6 +49,12 @@ import type { PriceCategoryProps } from './CategoryCard';
 //     1440×900 MacBook                    789      637      no
 //     1080p desktop at 100%               945      793     yes
 //
+// (Since 2026-10-02 the menu is a design length on a laptop or desktop past
+// the owner's reference — PriceList.tsx's THE BAND SCALE, which never lets it
+// fall under these 655px (its THE FLOOR) — so the laptop rows stand as they
+// are and only the last turns "no" as well; PriceList.tsx's NO HEIGHT BELT has
+// the heights. The rail needs no word of it: it measures the card it holds,
+// against a line that does not scale.)
 // The first answer was a HEIGHT BELT on the card — `max-h` + `overflow-y-auto`
 // — which made the card its own scroll container on every laptop: the wheel
 // scrolled the menu instead of the page, with a nested scrollbar inside it.
@@ -73,7 +79,8 @@ import type { PriceCategoryProps } from './CategoryCard';
 // attribute and ONE inline property, and the static classes stay untouched:
 //   · `data-rail` carries the mode — absent for 'fits', so a desktop that
 //     fits shows the server HTML byte for byte; 'top' is attribute-only and
-//     paints nothing (the base `@3xl:sticky @3xl:top-34` IS the top pin);
+//     paints nothing (the base `@3xl:sticky @3xl:top-[8.5rem]` IS the top
+//     pin);
 //   · `@3xl:data-[rail=travel]:relative` is the one rule the stylesheet gains,
 //     and it wears the SAME container-query gate as the base sticky — so
 //     below the step, where the menu is a stacked table of contents, the mode
@@ -86,8 +93,13 @@ import type { PriceCategoryProps } from './CategoryCard';
 //     element `top` is inert, which is the same gate again.
 // The rail reads the 8.5rem line back from the computed `top` rather than
 // being told it — the FIFTH coupled spelling of the pill's reach stays the
-// fifth (Header.tsx's "THE MOUNT CONTRACT", PriceList.tsx's `@3xl:top-34`
-// paragraph) and this file spells no number of its own.
+// fifth (Header.tsx's "THE MOUNT CONTRACT", PriceList.tsx's
+// `@3xl:top-[8.5rem]` paragraph) and this file spells no number of its own
+// but that class. A rem LITERAL since 2026-10-02, never a spacing step: past
+// the owner's reference the band draws in its design pixel on a laptop or
+// desktop (PriceList.tsx's THE BAND SCALE), and the pill the line clears does
+// not, so the line must not either — 136px inside the scale and out, which is
+// also what the rail reads back.
 //
 // ── STILL DUMB (owner fb-459, board §2c.1). Props in, HTML out: `title` and
 // `items` are FINISHED strings — translated, in one language — plus the
@@ -114,10 +126,13 @@ import type { PriceCategoryProps } from './CategoryCard';
 // floor.
 // The step answers to the NEAREST container, and this title's container is
 // the menu card itself (ui/Card's `@container`, landed on the <nav>) — not
-// the band's column. Beside the cards that card is the 15rem track
-// (PriceList.tsx's `minmax(15rem,1fr) 4fr` paragraph): 190px of content
-// inside ui/Card's 25px sides, so „Categorii" reads 30px while every category
-// card — its own container, four shares of the row — reads 36px. By the
+// the band's column — and a container query reads the ROOT's rem, never the
+// band's design pixel. Beside the cards that card is the menu's track at its
+// floor (PriceList.tsx's THE TWO TRACKS — sixty spacing steps, 15rem outside
+// the band scale): 190px of content inside ui/Card's 25px sides, so
+// „Categorii" reads 30px while every category card — its own container, four
+// shares of the row — reads 36px. WITHOUT the band scale — a touch screen at
+// these widths, an engine that cannot register custom properties — by the
 // band's own arithmetic at the named widths (ui/Container's 10vw gutters, the
 // grid's gap-8; the stories' expectHeadingOutline reads each title back from
 // real CSS against its own container):
@@ -130,21 +145,35 @@ import type { PriceCategoryProps } from './CategoryCard';
 //         1920   beside               251px         1153px     30 / 36
 //
 // (Read back in the Storybook test browser, whose classic scrollbar takes
-// 15px off the column, 2026-09-26: 247/247px → 30/30 at 390, 190/892px →
-// 30/36 at 1536, 190/623px → 30/36 on its 1200px default canvas — the 15rem
-// floor holds the menu at 190px beside the cards up to a ~1540px viewport,
-// where its 1fr share takes over.)
+// 15px off the column, 2026-09-26 — before the band scale: 247/247px → 30/30
+// at 390, 190/892px → 30/36 at 1536, 190/623px → 30/36 on its 1200px default
+// canvas — the 15rem floor held the menu at 190px beside the cards up to a
+// ~1540px viewport, where its 1fr share took over. Since 2026-10-02 that
+// runner's 1200 canvas draws the band inside the scale but at its floor —
+// the theme's own pixels, so those readings stand — and its 1536 canvas past
+// the reference: the next lines.)
+// INSIDE the band scale (PriceList.tsx's THE BAND SCALE — a mouse or
+// trackpad, from a column of max(56rem, 896px)) the band is its rem self up
+// to the reference (its THE FLOOR), and the readings above hold as they are.
+// Past the reference the menu sits at its floor, 240 design pixels: 192 of
+// content less 2px of hairline, which the root's 28rem reaches only past
+// s = 2.34, far beyond the cap's 1.389 — and a card's content is 786 design
+// pixels less 2px, past 28rem from s = 0.573, far under the floor's 1. So the
+// title reads 30 beside the cards' 36 at every scaled width — px up to the
+// reference, design pixels past it: the same one step under, magnified with
+// the band (PriceList.stories.tsx's plays read both back).
 //
-// So "one step under" holds wherever the menu sits BESIDE the cards — from
-// the split to a ~2922px viewport, where the 1fr share would finally carry
-// the card past 28rem — bar a 2.5px sliver at the split itself (a 960px
-// viewport), where the cards' track is still under 498px and both read 30px.
-// STACKED, the menu spans the same column as the cards and wears the SAME
-// step: 30/30 on a phone, 36/36 from a ~622px viewport. That is the honest
-// reading of a 15rem track, not a size of this file's own (§6.6): the title
-// is still a sibling of the card titles — the owner's 2026-09-14 decision, a
-// TITLE and not the first item — and the rule over the <ul> is what separates
-// it from its links at either step.
+// So, without the scale, "one step under" holds wherever the menu sits
+// BESIDE the cards — from the split to a ~2922px viewport, where the 1fr
+// share would finally carry the card past 28rem — bar a 2.5px sliver at the
+// split itself (a 960px viewport), where the cards' track is still under
+// 498px and both read 30px; inside it, at every width. STACKED, the menu
+// spans the same column as the cards and wears the SAME step: 30/30 on a
+// phone, 36/36 from a ~622px viewport. That is the honest reading of the
+// menu's track, not a size of this file's own (§6.6): the title is still a
+// sibling of the card titles — the owner's 2026-09-14 decision, a TITLE and
+// not the first item — and the rule over the <ul> is what separates it from
+// its links at either step.
 //
 // ── THE CONSUMPTION IDIOM IS lib/rotation's RECIPE, COPIED — twice now, once
 // per store (ReviewsDeck was its first witness; the two stores here are
@@ -200,7 +229,9 @@ import type { PriceCategoryProps } from './CategoryCard';
 // PLAIN LEFT CLICK PINS, below). The argument, the arithmetic and the
 // measurements are lib/scroll-spy's THE READING LINE and lib/reading-line's
 // header; the class every plan starts from is CategoryCard.tsx's
-// `scroll-mt-10`, the FLOOR.
+// `scroll-mt-[2.5rem]`, the FLOOR — a rem literal that the band scale cannot
+// remap, so every plan starts from 40px at every width (that file's
+// paragraph of the same name).
 //
 // ── THE CARD THE VISITOR IS AT WEARS THE MARK TOO (owner 2026-09-29: "add
 // aura shadow just to currently selected/viewed price box … what category
@@ -510,17 +541,22 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
           here through className, which ui/slot.ts merges LAST — placement
           only (§6.8), never a restyle of the atom's paint — and so does the
           one rule the rail's 'travel' mode needs (WHAT THE RAIL WRITES, in
-          the header). `tabIndex={-1}` + `scroll-mt-10`: the id is a public
-          address — the URL bar, a link from another page — so arriving at it
-          gets the treatment a card's arrival gets (CategoryCard.tsx, THE CARD
-          IS THE TARGET): real focus, hence an announcement by name, and the
-          2.5rem of air that puts its top edge on the stuck menu's own line
-          (G2 a11y M1) — the stylesheet's value, because the menu is not one
-          of the spy's targets and nothing writes over it. A focus the
-          KEYBOARD made there is answered by the rail, which pins 'top' so the
-          visitor arrives at the title; a pointer's is not (lib/sticky-rail's
-          ONLY THE KEYBOARD'S FOCUS IS ANSWERED) — the jump's own scrolling
-          carries the menu to its line. */}
+          the header). The offset and the air are rem LITERALS, never spacing
+          steps: past the owner's reference the band draws in its design
+          pixel on a laptop or desktop, and the header pill both of them clear
+          does not (PriceList.tsx's `@3xl:top-[8.5rem]` paragraph).
+          `tabIndex={-1}` +
+          `scroll-mt-[2.5rem]`: the id is a public address — the URL bar, a
+          link from another page — so arriving at it gets the treatment a
+          card's arrival gets (CategoryCard.tsx, THE CARD IS THE TARGET): real
+          focus, hence an announcement by name, and the 2.5rem of air that
+          puts its top edge on the stuck menu's own line (G2 a11y M1) — the
+          stylesheet's value, because the menu is not one of the spy's
+          targets and nothing writes over it. A focus the KEYBOARD made there
+          is answered by the rail, which pins 'top' so the visitor arrives at
+          the title; a pointer's is not (lib/sticky-rail's ONLY THE KEYBOARD'S
+          FOCUS IS ANSWERED) — the jump's own scrolling carries the menu to
+          its line. */}
       <nav
         id={id}
         aria-labelledby={titleId}
@@ -531,7 +567,7 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
             ? { top: `${topPx}px` }
             : undefined
         }
-        className="scroll-mt-10 @3xl:sticky @3xl:top-34 @3xl:data-[rail=travel]:relative"
+        className="scroll-mt-[2.5rem] @3xl:sticky @3xl:top-[8.5rem] @3xl:data-[rail=travel]:relative"
       >
         {/* ui/Heading's `band` step on a REAL <h2> — the step every page <h2>
             wears (D48, over D46's hour-long `page`), the category card titles
@@ -539,12 +575,14 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
             2026-09-14 decision in one word: „Categorii" is the TITLE of this
             navigation, an honest sibling of the card titles beside it, not
             the first of its own items. Beside them it reads one step under,
-            30px to their 36px, because the step answers to this card's own
-            15rem container (THE TITLE'S STEP IS `band`, in the header, has
-            the measurements). A visible title and an outline entry are two
-            independent decisions, which is what `asChild` exists for; the id
-            closes the landmark's aria-labelledby pair, and the rule that
-            separates the title from the list rides the <ul> below. */}
+            30px to their 36px — 30 to 36 design pixels inside the band
+            scale — because the step answers to this card's own container,
+            the menu's track at its floor (THE TITLE'S STEP IS `band`, in the
+            header, has the measurements). A visible title and an outline
+            entry are two independent decisions, which is what `asChild`
+            exists for; the id closes the landmark's aria-labelledby pair,
+            and the rule that separates the title from the list rides the
+            <ul> below. */}
         <Heading asChild size="band">
           <h2 id={titleId}>{title}</h2>
         </Heading>

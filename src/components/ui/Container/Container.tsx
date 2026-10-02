@@ -120,6 +120,24 @@ import { cx } from '@/lib/cx/cx';
 //     both read the nearest one, so inside a ui/Card, a doctor card's inset or
 //     a ribbon station (each a container of its own) the gate would test that
 //     box, never open, and the zoom would silently do nothing.
+//   · THE FLOOR, `--band-floor` (default 0px): a band that must never draw
+//     SMALLER than the theme sets a `--band-floor` of its own on its rhythm
+//     box, beside the two strings (an arbitrary property class again — never
+//     spelled here), and its pixel is max(floor, column / 1106 × zoom): under
+//     the reference the band draws exactly as the theme does, past it it grows
+//     like every scaled band. ONE wearer: sections/PriceList, at 0.0625rem —
+//     1rem / 16, the theme's own pixel at ANY root, so under the reference a
+//     larger default font size and a browser zoom enlarge the price rows as
+//     rem does (the owner's delegated decision, 2026-10-02: "decide for me on
+//     decisions and create pr" — his own BACKLOG entry asks for LARGER price
+//     text for older patients, never smaller; CLAUDE.md §15.32 round 2).
+//     Unregistered and INHERITED like the zoom, so tests/unit/design-scale.test.ts
+//     fences who may name it; it is read where `--scale-px` is declared, so
+//     it belongs on the box that wears `bandScaleClasses`. It is NOT
+//     multiplied by the zoom: a zoomed box inside a floored band would floor
+//     at the band's own pixel, not at its multiple — so the two must not nest,
+//     and today they cannot (the census holds the floor's one setter and the
+//     zoom's to two other files).
 // THE NUMBERS — REFERENCE 1106, CAP 96rem, STEP max(@4xl, 896px) — and what
 // the regime trades (a browser zoom, the user's default font size, the jump at
 // the step, the typeface's optical size) are argued and measured where they
@@ -206,13 +224,13 @@ export const containerClasses = '@container mx-[clamp(1rem,10vw,12.5rem)]';
  * THE BAND SCALE's pixel (the header's THE BAND SCALE): on a laptop or desktop
  * column of max(56rem, 896px) the box wearing it declares the design pixel —
  * min(column, 96rem) / 1106, times `--band-zoom` (1 unless a box says
- * otherwise) — and redraws every theme length on it and inside it in that
- * pixel. The CAP is spelled here and in `bandColumnClasses` (KEEP IN SYNC;
+ * otherwise), never under `--band-floor` (0px unless a band says otherwise)
+ * — and redraws every theme length on it and inside it in that pixel. The CAP is spelled here and in `bandColumnClasses` (KEEP IN SYNC;
  * tests/unit/design-scale.test.ts holds the two equal). ONE static string per
  * class: Tailwind reads class names from source text.
  */
 export const bandScaleClasses =
-  'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106*var(--band-zoom,1))] ' +
+  'scalable:@4xl:@min-[896px]:[--scale-px:max(var(--band-floor,0px),calc(min(100cqw,96rem)/1106*var(--band-zoom,1)))] ' +
   'scalable:@4xl:@min-[896px]:design-scale';
 
 /**

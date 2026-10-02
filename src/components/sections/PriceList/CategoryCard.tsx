@@ -116,7 +116,7 @@ import type { ARRIVAL_BY_KEYBOARD, ARRIVAL_KEY } from './arrival';
 // file still renders no mark of any kind, and a card with no island around it
 // is never stamped.
 //
-// ── `scroll-mt-10` IS THE CARD'S OWN RIDER on the shell's global
+// ── `scroll-mt-[2.5rem]` IS THE CARD'S OWN RIDER on the shell's global
 // `scroll-padding-top: 6rem` (src/styles/globals.css, the "the deepest thing a
 // focusable must be scrolled clear of" block — §17.7 anchors, never line
 // numbers). The global number equals the header pill's reach exactly, so a
@@ -125,11 +125,20 @@ import type { ARRIVAL_BY_KEYBOARD, ARRIVAL_KEY } from './arrival';
 // than "glued to it". 2.5rem rather than the 1rem it shipped with on
 // 2026-09-13, because the number now has a SECOND job (owner 2026-09-14): it
 // is the same 2.5rem the sticky menu adds to that same 6rem reach
-// (`@3xl:top-34`), so a jumped-to card's top edge and the stuck menu's top
-// edge come to rest on ONE line instead of a hand's width apart. The two
-// numbers are a pair — PriceList.tsx's `@3xl:top-34` paragraph carries the
-// measurement they share. It is `scroll-mt-*` — margin on the TARGET — not
+// (`@3xl:top-[8.5rem]`), so a jumped-to card's top edge and the stuck menu's
+// top edge come to rest on ONE line instead of a hand's width apart. The two
+// numbers are a pair — PriceList.tsx's `@3xl:top-[8.5rem]` paragraph carries
+// the measurement they share. It is `scroll-mt-*` — margin on the TARGET — not
 // more padding on the scroller, because only these elements want the extra gap.
+// A REM LITERAL, NOT A SPACING STEP (2026-10-02, PriceList.tsx's THE BAND
+// SCALE). Until then the rider was ten spacing steps — the same 40px — and on a
+// laptop or desktop the band now draws every spacing step in its design pixel
+// past the owner's reference, while the pill this air sits under, and the 6rem
+// scroll padding it adds to, do not scale. As a step it would have been 40px
+// up to the reference (the band's floor keeps the theme's own pixels there)
+// and 56px at the cap, the card's line there 16px below the menu's; spelled as
+// an arbitrary rem value, which no theme variable carries, it is 40px inside
+// the scale and out — the menu's offset the same way, its pair.
 // SINCE 2026-09-29 IT IS A FLOOR, with a third job and a fourth (owner: "the go
 // to card when you click on the meniu on an option should be more to the
 // center of the screen"). A click no longer lands every card on this line: the
@@ -188,7 +197,12 @@ import type { ARRIVAL_BY_KEYBOARD, ARRIVAL_KEY } from './arrival';
 // NORMAL case here, not the exception (board §5.3), and a name sharing a line
 // with its price in 262px would be a two-word column beside a number. From the
 // tablet up the inside clears 384px and the pair shares a baseline-aligned
-// line.
+// line. Inside the band scale (PriceList.tsx's THE BAND SCALE) the card's
+// inside is at least 574px — at the scale's step, where the band's floor keeps
+// the theme's own pixels — 784 at the reference and ≈ 1090 at the cap, while
+// the query still asks the ROOT's 24rem (a container query never reads the
+// band's design pixel), so every row sits beside its price at every scaled
+// width, exactly as at the reference.
 // Deliberately NO leaders (the dotted restaurant-menu rule): two shorter lines
 // beat one long dotted one, and the row rule already pairs name with price.
 // THE RULE RIDES EACH ROW (`border-b` on the pair), not the list (`divide-y`):
@@ -297,7 +311,7 @@ export function CategoryCard({
         id={id}
         aria-labelledby={headingId}
         tabIndex={-1}
-        className={cx('scroll-mt-10', QUIET_RING, className)}
+        className={cx('scroll-mt-[2.5rem]', QUIET_RING, className)}
       >
         <SectionHeading
           level={2}

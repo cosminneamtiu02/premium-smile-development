@@ -85,14 +85,26 @@ Decisions still go to CLAUDE.md §15.
     the stat tiles, plus NVDA with Firefox in browse mode on a tile (§15.23 round 5);
   - the map — the corner buttons over Google's zoom controls at 320 and 390px, and the Tab order
     through Google's frame (COOKIES.md §7);
-  - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5);
-  - SC 1.4.4 Resize Text on Home and Team — the band scale (CLAUDE.md §15.25 round 2, §15.32): on a
-    laptop or desktop every band there draws in a design pixel that follows its column, so a browser
+  - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5); and, since
+    the band scale reached it (CLAUDE.md §15.32 round 2), two zoom paths never measured: open
+    `/de/services/` in a 1920 window in FIREFOX with View → Zoom → "Zoom Text Only" at 150 and 200 % —
+    the price rows must read ≈ 1.5× and 2× their 100 % size (not 2.25× and 4×, the double zoom the
+    rem floor may cause), and no menu label may cross into the cards column; and compare SAFARI's page
+    zoom at 125 / 150 / 200 % against the Chromium numbers below;
+  - SC 1.4.4 Resize Text on Home, Team and Services — the band scale (CLAUDE.md §15.25 round 2, §15.32
+    and its round 2): on a laptop or desktop every band there — the Services page's price list since
+    the same evening, which a floor holds at the theme's own size under the reference, so there it
+    follows a zoom as rem does — draws in a design pixel that follows its column, so a browser
     zoom leaves its text the same size on screen until the column drops under the scale's step (the
     map band's address at 200 %: ×1.45 on a 1920 screen, ×1.31 on 2560, against develop's ×2), and a
     larger default font size is not followed (a 20px setting on a 1440 laptop reads the address at
     16.45px) — so the 200 % zoom check above must test that text GROWS, not only that nothing
-    scrolls sideways. The owner's levers are in §15.25 round 2 (a cap at the reference).
+    scrolls sideways. The owner's levers are in §15.25 round 2 (a cap at the reference). The
+    price list's OWN numbers (§15.32 round 2, the a11y review's arithmetic, Chromium page zoom):
+    under the reference a floor keeps it never smaller than develop and growing with a zoom as rem
+    does; past it a 200 % zoom grows the price rows ×1.45 on a 1920 screen and ×1.44 on 2560
+    (develop ×2), the 110 and 125 % steps leave them unchanged on 1920 and the 175 % step on 2560,
+    and twice the 100 % size arrives at ≈ 275 %.
 
 ## 3 · The privacy and cookie policy page
 
@@ -146,6 +158,12 @@ Decisions still go to CLAUDE.md §15.
   eyebrow at 14px (ui/Eyebrow, the same on every page), the category titles at 30px on a phone
   and 36px on a card at least 498px wide (Heading's `band` step, §15.24) and the menu's eleven
   links at 18px (ui/TextButton).
+- **Since 2026-10-02, on a laptop or desktop — the band scale (CLAUDE.md §15.32 round 2):** the price
+  list draws in the band's own design pixel there, FLOORED at the theme's own (1rem / 16), so it never
+  draws smaller than today: the rows are 16px from the step up to the 1401 reference, then grow with
+  the window — 17.6 at 1536, 21.6 at 1882, 22.2 past the cap (measured on the built page) — while every
+  phone and touch tablet keeps 16px. Whatever size this entry picks becomes a DESIGN size the scale
+  carries, and the floor holds it as the smallest a laptop shows.
 - **The work:**
   - the rows' size belongs to ui/Text, not to the band: §6.8 lets a parent's `className` place an
     atom, never restyle it. Two routes, the owner's call between them — a size axis on ui/Text

@@ -7,15 +7,20 @@ import { expect, type Page, test } from '@playwright/test';
 // two): at 1366×633 the eleven-category menu is TALLER than the window and
 // lib/sticky-rail must hold it — bottom-pinned on the way down, top-pinned on
 // the way up, every link reachable by scrolling the PAGE and every focused
-// link on screen; at 1920×945 it FITS, and nothing the rail could do may
-// show — plain CSS sticky at the 8.5rem line throughout, the DOM byte for
-// byte what the server sent.
+// link on screen; where it FITS, nothing the rail could do may show — plain
+// CSS sticky at the 8.5rem line throughout, the DOM byte for byte what the
+// server sent. THE FITTING WINDOW IS THE OWNER'S 1392 × 1179 since 2026-10-02:
+// the price band draws in THE BAND SCALE's design pixel on a laptop or desktop
+// (CLAUDE.md §15.32 round 2), so the menu grows with the page's column — 655px
+// tall at the 1106px reference, ≈ 900px at a 1920 window, taller than a 945px
+// one, where the rail now holds it like the laptop's. The parity story sets its
+// own window and still runs once, on the desktop project.
 //
-// Both locales the owner measured (Romanian and German — the menu is 653px
-// tall in each) run the tall story. The numbers below are the site's own:
+// Both locales the owner measured (Romanian and German — the menu is the same
+// height in each) run the tall story. The numbers below are the site's own:
 // 136px = the 8.5rem line (the header pill's 6rem reach + 2.5rem of air,
-// sections/PriceList's `@3xl:top-34` paragraph), 16px = the 1rem of air under
-// the bottom pin (lib/sticky-rail's default, one root em).
+// sections/PriceList's `@3xl:top-[8.5rem]` paragraph), 16px = the 1rem of air
+// under the bottom pin (lib/sticky-rail's default, one root em).
 //
 // ── A PRESS MUST LAND WHERE IT WAS AIMED (owner 2026-09-29, of the defect the
 // planner found in the lane's previous round: "fix them for me"). A mouse
@@ -35,6 +40,9 @@ const LINE = 136;
 const GAP = 16;
 
 type Box = Readonly<{ top: number; bottom: number; height: number }>;
+
+/** The window's height — the tall story runs at both geometries. */
+const windowHeight = (page: Page): number => page.viewportSize()?.height ?? 0;
 
 const menuBox = (page: Page): Promise<Box> =>
   page.evaluate((selector) => {
@@ -214,12 +222,13 @@ async function expectThePressNavigated(
 }
 
 for (const locale of ['ro', 'de']) {
+  // BOTH GEOMETRIES SINCE 2026-10-02 (CLAUDE.md §15.32 round 2, the G2 a11y
+  // review): at 1366 × 633 the band is develop's own (THE FLOOR), and at
+  // 1920 × 945 THE BAND SCALE grows the menu to ≈ 900px with 60.5px links,
+  // taller than that window — a tall-menu geometry develop never had. Every
+  // height below is the window's own, read off the page.
   test.describe(`${locale}/services — the menu taller than the window`, () => {
-    test.beforeEach(async ({ page }, testInfo) => {
-      test.skip(
-        testInfo.project.name !== 'laptop-1366x633',
-        'the tall story belongs to the laptop geometry',
-      );
+    test.beforeEach(async ({ page }) => {
       await page.goto(`/${locale}/services/`);
       await page.waitForSelector(MENU);
       await page.evaluate(() => document.fonts.ready);
@@ -247,7 +256,7 @@ for (const locale of ['ro', 'de']) {
       page,
     }) => {
       const box = await menuBox(page);
-      expect(box.height).toBeGreaterThan(633 - LINE - GAP);
+      expect(box.height).toBeGreaterThan(windowHeight(page) - LINE - GAP);
       await expectNoNestedScroll(page);
       await stepScroll(page, await lastCardLanding(page));
       await expectNoNestedScroll(page);
@@ -262,7 +271,7 @@ for (const locale of ['ro', 'de']) {
 
       await expect(page.locator(MENU)).toHaveAttribute('data-rail', 'bottom');
       const box = await menuBox(page);
-      expect(box.bottom).toBeLessThanOrEqual(633 - GAP + 1);
+      expect(box.bottom).toBeLessThanOrEqual(windowHeight(page) - GAP + 1);
       const last = await page
         .locator(`${MENU} a`)
         .last()
@@ -271,7 +280,7 @@ for (const locale of ['ro', 'de']) {
           return { top: rect.top, bottom: rect.bottom };
         });
       expect(last.top).toBeGreaterThanOrEqual(0);
-      expect(last.bottom).toBeLessThanOrEqual(633);
+      expect(last.bottom).toBeLessThanOrEqual(windowHeight(page));
     });
 
     test('scrolling back up pins the menu by its top at the 8.5rem line, title on screen', async ({
@@ -290,7 +299,7 @@ for (const locale of ['ro', 'de']) {
         .locator(`${MENU} h2`)
         .evaluate((h2) => h2.getBoundingClientRect().top);
       expect(title).toBeGreaterThanOrEqual(LINE - 1);
-      expect(title).toBeLessThanOrEqual(633);
+      expect(title).toBeLessThanOrEqual(windowHeight(page));
     });
 
     test('Tab through all eleven links, and back — every focused link on screen', async ({
@@ -314,7 +323,7 @@ for (const locale of ['ro', 'de']) {
         }, MENU);
         expect(state.index).toBe(index);
         expect(state.top).toBeGreaterThanOrEqual(0);
-        expect(state.bottom).toBeLessThanOrEqual(633);
+        expect(state.bottom).toBeLessThanOrEqual(windowHeight(page));
       };
 
       await links.first().focus();
@@ -415,7 +424,13 @@ for (const locale of ['ro', 'de']) {
   });
 }
 
+/** Where the scaled menu fits with room to spare — the owner's best window
+ *  (650px of menu under a 136px line in a 1179px window). */
+const FITS = { width: 1392, height: 1179 } as const;
+
 test.describe('ro/services — the menu fits: plain-sticky parity', () => {
+  test.use({ viewport: FITS });
+
   test.beforeEach(async ({ page }, testInfo) => {
     test.skip(
       testInfo.project.name !== 'desktop-1920x945',
@@ -430,7 +445,7 @@ test.describe('ro/services — the menu fits: plain-sticky parity', () => {
     page,
   }) => {
     const box = await menuBox(page);
-    expect(LINE + box.height + GAP).toBeLessThanOrEqual(945);
+    expect(LINE + box.height + GAP).toBeLessThanOrEqual(FITS.height);
     await expectNoNestedScroll(page);
 
     const samples = await page.evaluate(

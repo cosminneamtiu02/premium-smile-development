@@ -77,11 +77,17 @@ const read = (path: string): string =>
 /** CSS without its comments. */
 const cssCode = (css: string): string => css.replace(/\/\*[\s\S]*?\*\//g, ' ');
 
-/** TS without its comments (the soft-corner census's stripper: `//` opens a
- *  comment only at a line's start or after whitespace, so a `…/1106)` inside
- *  a class string survives). */
+/** TS without its comments, in ONE left-to-right pass (the G2 typescript
+ *  review, 2026-10-02): string literals are stepped over whole, and a `//`
+ *  comment — which opens only at a line's start or after whitespace, so a
+ *  regex literal or a URL in code survives — is consumed before a `/*` inside
+ *  it could open a block that runs on to the next `*\/` (a `src/messages/*.json`
+ *  in a line comment once hid whole page components from this census). */
 const tsCode = (source: string): string =>
-  source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|\s)\/\/[^\n]*/g, '$1');
+  source.replace(
+    /('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/gm,
+    (match: string, literal: string | undefined) => literal ?? ' ',
+  );
 
 /** The text between the brace at `open` and the one that closes it — braces
  *  counted, so a nested @keyframes inside a @theme never ends it early. */
@@ -398,9 +404,12 @@ const regime = scaleClasses.filter(
 );
 
 /** The design pixel's value,
- *  `calc(min(100cqw,CAP)/REFERENCE*var(ZOOM,DEFAULT))`, read as its parts:
- *  THE CAP as written, REFERENCE, the zoom's name and its default. */
+ *  `max(var(FLOOR,FLOOR_DEFAULT),calc(min(100cqw,CAP)/REFERENCE*var(ZOOM,DEFAULT)))`,
+ *  read as its parts: the floor's name and its default, THE CAP as written,
+ *  REFERENCE, the zoom's name and its default. */
 const pixel = ((): {
+  floor: string;
+  floorDefault: string;
   cap: string;
   reference: number;
   zoom: string;
@@ -409,19 +418,21 @@ const pixel = ((): {
   const value =
     regime.map(({ utility }) => arbitrary(utility)).find(Boolean)?.value ?? '';
   const match =
-    /^calc\(min\(100cqw,(\d+(?:\.\d+)?rem)\)\/(\d+)\*var\((--[\w-]+),(\d+(?:\.\d+)?)\)\)$/.exec(
+    /^max\(var\((--[\w-]+),([\d.]+px)\),calc\(min\(100cqw,(\d+(?:\.\d+)?rem)\)\/(\d+)\*var\((--[\w-]+),(\d+(?:\.\d+)?)\)\)\)$/.exec(
       value,
     );
   if (match === null) {
     throw new Error(
-      `the design pixel reads “${value}”, not min()/N times a zoom`,
+      `the design pixel reads “${value}”, not a floored min()/N times a zoom`,
     );
   }
   return {
-    cap: match[1],
-    reference: Number(match[2]),
-    zoom: match[3],
-    zoomDefault: Number(match[4]),
+    floor: match[1],
+    floorDefault: match[2],
+    cap: match[3],
+    reference: Number(match[4]),
+    zoom: match[5],
+    zoomDefault: Number(match[6]),
   };
 })();
 
@@ -437,11 +448,13 @@ const productFiles = readdirSync(new URL('src/', REPO), {
 
 /** The bands that wear THE BAND SCALE (§15.32): every band under the Home
  *  hero and every band of the Team page — the doctors, the numbers, the map,
- *  the reviews' opener and the staff. */
+ *  the reviews' opener and the staff — and, since round 2 the same evening,
+ *  the Services page's one band, the price list (its menu and its cards). */
 const WEARERS = [
   'components/sections/ClinicLocation/ClinicLocation.tsx',
   'components/sections/DoctorShowcase/DoctorShowcase.tsx',
   'components/sections/DoctorStats/DoctorStats.tsx',
+  'components/sections/PriceList/PriceList.tsx',
   'components/sections/ReviewsCarousel/ReviewsCarousel.tsx',
   'components/sections/TeamRoster/TeamRoster.tsx',
 ];
@@ -538,6 +551,25 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(Number(stats.slice(at, stats.indexOf(']', at)))).toBe(9 / 8);
   });
 
+  it('never lets a pixel fall under THE FLOOR — 0px unless a band says otherwise, and ONE band says otherwise: the price list, at 1rem / 16', () => {
+    expect(pixel.floor).toBe('--band-floor');
+    expect(pixel.floorDefault).toBe('0px');
+    // Assembled from parts, never one literal (THE D-LIT RULE's spirit).
+    const opener = `[${pixel.floor}:`;
+    const setters = productFiles
+      .filter((name) => tsCode(read(`src/${name}`)).includes(opener))
+      .toSorted();
+    expect(setters).toEqual(['components/sections/PriceList/PriceList.tsx']);
+    const list = tsCode(
+      read('src/components/sections/PriceList/PriceList.tsx'),
+    );
+    const at = list.indexOf(opener) + opener.length;
+    // 1rem / 16: the theme's own pixel at ANY root — the price rows never
+    // draw smaller than the theme (the owner's delegated decision, §15.32
+    // round 2), and a larger root lifts the floor with it.
+    expect(list.slice(at, list.indexOf(']', at))).toBe('0.0625rem');
+  });
+
   it('is ONE custom variant in globals.css, with exactly its two conditions — a mouse or trackpad, in an engine that registers custom properties', () => {
     expect(globals.split('@custom-variant scalable').length - 1).toBe(1);
     expect(
@@ -555,7 +587,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     // Assembled from parts, never one literal (THE D-LIT RULE).
     const open = '[';
     const samples = [
-      `scalable:@4xl:@min-[896px]:${open}${PIXEL}:calc(min(100cqw,96rem)/1106*var(--band-zoom,1))]`,
+      `scalable:@4xl:@min-[896px]:${open}${PIXEL}:max(var(--band-floor,0px),calc(min(100cqw,96rem)/1106*var(--band-zoom,1)))]`,
       `@5xl:${open}${PIXEL}:2px]`,
       `${open}${PIXEL}:1px]`,
       `${open}--ribbon-unit:100px]`,
@@ -568,7 +600,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(arbitrary(samples[3]?.utility ?? '')?.name).toBe('--ribbon-unit');
   });
 
-  it('is the ONLY product file in src/ that declares a design pixel or spells the remap — and every band of Home and Team wears it by IMPORTING both strings', () => {
+  it('is the ONLY product file in src/ that declares a design pixel or spells the remap — and every band of Home and Team and the price list wears it by IMPORTING both strings', () => {
     const spellers = productFiles
       .filter((name) =>
         /design-scale|--scale-px/.test(tsCode(read(`src/${name}`))),
@@ -677,6 +709,27 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       return uses !== 0;
     });
     expect(offenders).toEqual([]);
+    // …nor the stylesheet: a `:root` declaration would scale every band.
+    expect(cssCode(globals).split(name).length - 1, 'globals.css').toBe(0);
+  });
+
+  it('lets ONE band set the floor — no other product code names `--band-floor` but ui/Container’s own read', () => {
+    // Unregistered and INHERITED like the zoom: a setter on any wrapping box
+    // would lift every band inside it. So outside ui/Container's
+    // `var(--band-floor,0px)` read and the price list's one class (the floor
+    // test above), no product code may name it — class, inline style or CSS.
+    const name = pixel.floor;
+    const offenders = productFiles.filter((file) => {
+      const code = tsCode(read(`src/${file}`));
+      const uses = code.split(name).length - 1;
+      if (file === 'components/ui/Container/Container.tsx') return uses !== 1;
+      if (file === 'components/sections/PriceList/PriceList.tsx')
+        return uses !== 1;
+      return uses !== 0;
+    });
+    expect(offenders).toEqual([]);
+    // …nor the stylesheet: a `:root` declaration would floor every band.
+    expect(cssCode(globals).split(name).length - 1, 'globals.css').toBe(0);
   });
 
   it('strips its comments — ui/Container’s own prose names the regime many times', () => {
@@ -721,6 +774,60 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(found.filter((entry) => !entry.endsWith(`: ${own ?? ''}`))).toEqual(
       [],
     );
+  });
+
+  it('lets no scanned file spell a floor or a zoom setter but as its one wearer’s class, whole (THE D-LIT RULE, the setters)', () => {
+    // The same reason, for the two variables a band may set (the G2
+    // typescript review): a stale literal in a test or a story — say the old
+    // value after the wearer's changed — would ship a rule nobody wears.
+    const setterOf = (file: string, name: string): string => {
+      const code = tsCode(read(`src/${file}`));
+      const at = code.indexOf(`[${name}:`);
+      return at === -1 ? '' : code.slice(at, code.indexOf(']', at) + 1);
+    };
+    const cases = [
+      {
+        name: pixel.floor,
+        own: setterOf(
+          'components/sections/PriceList/PriceList.tsx',
+          pixel.floor,
+        ),
+      },
+      {
+        name: pixel.zoom,
+        own: setterOf(
+          'components/sections/DoctorStats/DoctorStats.tsx',
+          pixel.zoom,
+        ),
+      },
+    ];
+    for (const { name, own } of cases) {
+      // The wearer may assemble its class from parts (the price list does);
+      // then its code holds no whole literal and the value is the census's.
+      const opener = `[${name}:`;
+      const found: string[] = [];
+      for (const root of ['src/', 'tests/', '.storybook/']) {
+        for (const file of readdirSync(new URL(root, REPO), {
+          recursive: true,
+          encoding: 'utf8',
+        })) {
+          if (!/\.(ts|tsx|mts|mjs|js|css|mdx)$/.test(file)) continue;
+          const raw = read(`${root}${file.replaceAll('\\', '/')}`);
+          for (let at = raw.indexOf(opener); at !== -1;) {
+            const end = raw.indexOf(']', at) + 1;
+            found.push(raw.slice(at, end));
+            at = raw.indexOf(opener, end);
+          }
+        }
+      }
+      const expected =
+        own ||
+        (name === pixel.floor ? `[${name}:0.0625rem]` : `[${name}:1.125]`);
+      expect(
+        found.filter((token) => token !== expected),
+        `every ${opener}…] in a scanned file`,
+      ).toEqual([]);
+    }
   });
 });
 

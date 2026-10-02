@@ -40,6 +40,28 @@ import {
 // measured column instead of assuming the pinned width (the PersonnelCard
 // `sitsBeside` precedent).
 //
+// ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — PriceList.tsx's paragraph
+// of that name). On a laptop or a desktop — a mouse or trackpad, in an engine
+// that registers custom properties, from a column of max(56rem, 896px) — the
+// whole band is one design drawn at a 1106px column and scaled to its own,
+// never under the theme's own pixel (its THE FLOOR), so the plays never
+// assume a size: `regimeOf` reads which side of the scale the play stands on
+// off the browser and the band's own column (TeamRoster's recipe), never off
+// the pinned window, and every expected length is its design length × the
+// design pixel that side gives — s = max(rem / 16, min(column, 96rem) / 1106)
+// inside the scale, the root's rem / 16 outside it. In the Vitest storybook
+// project the pointer is Chromium's fine one, so the laptop pins are drawn
+// past the reference (s ≈ 1.10 at 1536) and the unpinned stories' 1200px
+// canvas inside the scale at its floor, s = 1 — the regime on, every pixel
+// the theme's — and the phone pins are not in it at all. Under the floor the
+// sizes alone cannot tell a regime that ran from one the sheet skipped (both
+// draw the theme's pixels, and the design pixel reads `1px` either way), so
+// `expectBandScale` reads what the SHEET did — the theme remapped on the
+// rhythm box — and holds it equal to the play's own prediction, and
+// `expectScaled` asserts that, wherever the window must be past the step, the
+// sheet did run it. In the pixel net every 1536 frame is drawn past the
+// reference and every 390 frame as before.
+//
 // ── WHAT THE PLAYS DELIBERATELY DO NOT DO: click. The band's island marks the
 // category the visitor is at, and both of its inputs — a click and a scroll —
 // MOVE THE PAGE, which would photograph a different frame than the one the
@@ -306,6 +328,103 @@ const splitHasFired = (band: HTMLElement): boolean =>
   (band.firstElementChild as HTMLElement).getBoundingClientRect().width >=
   48 * rem();
 
+/** THE BAND SCALE's numbers (PriceList.tsx's THE BAND SCALE; ui/Container's),
+ *  written out as the other scaled bands' plays write them: the REFERENCE
+ *  column, where a design pixel is a CSS pixel; the CAP in rem of the root
+ *  (1536px at the default 16px, a 1920 window's column); THE STEP's two
+ *  halves, `@4xl`'s 56rem and the 896px floor. */
+const REFERENCE = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/** The scale's two GATES — globals.css's `scalable:` — read off the browser
+ *  the play runs in: a fine primary pointer (a mouse or a trackpad), in an
+ *  engine that registers custom properties (the relative colour syntax
+ *  shipped with `@property`). */
+const scaleGatesOpen = (): boolean =>
+  window.matchMedia('(pointer: fine)').matches &&
+  CSS.supports('color', 'rgb(from red r g b)');
+
+/** The column from which the scale applies — max(56rem, 896px). */
+const scaleStepPx = (): number => Math.max(STEP_REM * rem(), STEP_FLOOR);
+
+/** Which side of the band scale this play stands on, read off the browser and
+ *  the band's own column (ui/Container, the band's first box), never off the
+ *  pinned window — and the DESIGN PIXEL every theme length is drawn in: `s`
+ *  inside the scale, never under the root's rem / 16 (the band's floor,
+ *  PriceList.tsx's THE FLOOR — the theme's own pixel at any root), and that
+ *  same rem / 16 outside it (TeamRoster's `regimeOf`, floored). */
+type Regime = Readonly<{
+  scalable: boolean;
+  s: number;
+  unit: number;
+  column: DOMRect;
+  rhythm: HTMLElement;
+}>;
+
+const regimeOf = (band: HTMLElement): Regime => {
+  const column = band.firstElementChild;
+  const rhythm = column?.firstElementChild;
+  if (!(column instanceof HTMLElement) || !(rhythm instanceof HTMLElement)) {
+    throw new Error('PriceList story: the band lost its column');
+  }
+  const box = column.getBoundingClientRect();
+  const scalable = scaleGatesOpen() && box.width >= scaleStepPx();
+  const s = scalable
+    ? Math.max(rem() / 16, Math.min(box.width, CAP_REM * rem()) / REFERENCE)
+    : 1;
+  return {
+    scalable,
+    s,
+    unit: scalable ? s : rem() / 16,
+    column: box,
+    rhythm,
+  };
+};
+
+/** `actual` within `tolerance` of `expected`, the message naming both. */
+const near = async (
+  actual: number,
+  expected: number,
+  tolerance: number,
+  label: string,
+): Promise<void> => {
+  await expect(
+    Math.abs(actual - expected),
+    `${label}: ${actual} against ${expected}`,
+  ).toBeLessThanOrEqual(tolerance);
+};
+
+const fontSizeOf = (element: Element): number =>
+  parseFloat(getComputedStyle(element).fontSize);
+
+/** The node a query found, as an HTMLElement — or a failure that NAMES what
+ *  went missing (`regimeOf`'s own check, for one node at a time), so a lost
+ *  node fails with its name instead of a TypeError further on. */
+const htmlElement = (
+  node: Element | null | undefined,
+  name: string,
+): HTMLElement => {
+  if (!(node instanceof HTMLElement)) {
+    throw new Error(`PriceList story: no ${name}`);
+  }
+  return node;
+};
+
+/** DID THE SHEET RUN THE REGIME on this box — read off what the CSS did,
+ *  never off the play's own prediction: globals.css's `design-scale` remaps
+ *  `--spacing` on the box that wears it, and only there does the box hold a
+ *  value other than the root's (PriceList.scale.test.tsx's `remapped`). The
+ *  design pixel cannot answer it under the band's floor: at s = 1 a declared
+ *  `--scale-px` reads `1px` — exactly the registered initial value an
+ *  undeclared one reads. */
+const remapped = (element: Element): boolean =>
+  getComputedStyle(element).getPropertyValue('--spacing').trim() !==
+  getComputedStyle(document.documentElement)
+    .getPropertyValue('--spacing')
+    .trim();
+
 /**
  * The arrangement contract, in the branch the measured column actually puts us
  * in (board §3.3, §5.2):
@@ -314,14 +433,20 @@ const splitHasFired = (band: HTMLElement): boolean =>
  *     coupled spelling of that reach, measured in PriceList.tsx's header);
  *   · stacked — the menu is a plain static table of contents at the top of the
  *     band, which is the whole phone design.
- * This is the assertion that needs REAL CSS, which is why it lives in a play
- * function: the components project loads no stylesheet (PriceList.test.tsx's
- * header says so) and can only see class tokens.
+ * In EITHER, the menu's own 2.5rem of air over a jump to its id. Both numbers
+ * are rem of the root on purpose — inside the band scale too, where every
+ * other length is a design length: the pill they clear does not scale
+ * (PriceList.tsx's `@3xl:top-[8.5rem]` paragraph). This is the assertion that
+ * needs REAL CSS, which is why it lives in a play function: the components
+ * project loads no stylesheet (PriceList.test.tsx's header says so) and can
+ * only see class tokens — the one file there that loads it,
+ * PriceList.scale.test.tsx, holds the same pair at five columns.
  */
 const expectArrangement = async (
   band: HTMLElement,
   menu: HTMLElement,
 ): Promise<void> => {
+  await expect(getComputedStyle(menu).scrollMarginTop).toBe(`${2.5 * rem()}px`);
   if (splitHasFired(band)) {
     await expect(getComputedStyle(menu).position).toBe('sticky');
     await expect(getComputedStyle(menu).top).toBe(`${8.5 * rem()}px`);
@@ -530,18 +655,21 @@ const contentWidth = (element: HTMLElement): number => {
  *
  * THE SIZES, read back from real CSS and derived per element rather than
  * assumed per story. Every title wears ui/Heading's `band` step (D48, §15.24's
- * one size per outline level): 30px on a container narrower than 28rem, 36px
- * from it — and each title's container is its own card. So the expectation is
+ * one size per outline level): 30 on a container narrower than 28rem, 36 from
+ * it — and each title's container is its own card. So the expectation is
  * computed from THAT card's measured content box, which keeps the play true at
  * whatever width the canvas or the visual runner gives it (the splitHasFired
- * precedent). What that implies, measured in PriceMenu.tsx's "THE TITLE'S STEP
- * IS `band`" table: beside the cards, „Categorii" sits in a 15rem track —
- * 190px of content at 1280 and 1536 — and reads 30px next to 36px card titles;
- * stacked, the menu spans the cards' column and reads their size exactly (30px
- * on the phone). Two relations are pinned on top of the per-element sizes,
- * because they are the design claims and not the engine's arithmetic: beside,
- * the menu's title never outranks a card title; stacked, every title in the
- * band is one size.
+ * precedent) — and drawn in the band's DESIGN PIXEL (`regimeOf`): 30 or 36
+ * design pixels inside the band scale, 30 or 36px outside it, while the 28rem
+ * the query asks is ALWAYS the root's (a container query never reads the
+ * band's pixel). What that implies, in PriceMenu.tsx's "THE TITLE'S STEP IS
+ * `band`" paragraph: beside the cards, „Categorii" sits in the menu's track at
+ * its floor and reads 30 next to 36 card titles — px without the scale, design
+ * pixels inside it; stacked, the menu spans the cards' column and reads their
+ * size exactly (30px on the phone). Two relations are pinned on top of the
+ * per-element sizes, because they are the design claims and not the engine's
+ * arithmetic: beside, the menu's title never outranks a card title; stacked,
+ * every title in the band is one size.
  */
 const expectHeadingOutline = async (
   band: HTMLElement,
@@ -575,10 +703,16 @@ const expectHeadingOutline = async (
 
   const sizeOf = (title: HTMLElement): number =>
     parseFloat(getComputedStyle(title).fontSize);
+  const { unit } = regimeOf(band);
   for (const [title, card] of pairs) {
     await expect(queryContainerOf(title)).toBe(card);
-    const step = contentWidth(card) >= 28 * rem() ? 2.25 : 1.875;
-    await expect(getComputedStyle(title).fontSize).toBe(`${step * rem()}px`);
+    const step = contentWidth(card) >= 28 * rem() ? 36 : 30;
+    await near(
+      sizeOf(title),
+      step * unit,
+      0.05,
+      `the title „${title.textContent}"`,
+    );
   }
 
   const [menuTitle, ...cardTitles] = headings;
@@ -588,6 +722,133 @@ const expectHeadingOutline = async (
     } else {
       await expect(sizeOf(cardTitle)).toBe(sizeOf(menuTitle));
     }
+  }
+};
+
+/**
+ * THE BAND SCALE (2026-10-02, §15.32 — PriceList.tsx's paragraph), asserted
+ * on whichever side of it the play finds itself (`regimeOf`): the menu AND the
+ * cards in one design pixel. Inside the scale the rhythm box declares
+ * s = max(rem / 16, min(column, 96rem) / 1106) — the band's floor first, so
+ * under the reference s is the theme's own pixel — and is the column capped
+ * at 96rem and centred in it; outside it nothing is declared — the registered
+ * 1px — and the box is the column. Either way, beside the cards the menu's
+ * track is its floor, sixty spacing steps (240 design pixels, or 15rem),
+ * unless its 1fr share is wider — which inside the scale it never is — and
+ * the cards' column the rest; every card's eyebrow reads 14 and every row 16; every menu link's
+ * label 18 on a box of at least 44 (`min-h-11`, the §9 floor, drawn in the
+ * design pixel: a label that wraps onto a second line — „Prothetische
+ * Versorgung" — makes its box taller, never shorter). No face to load: a font
+ * SIZE, a grid track and a minimum box do not depend on which face has
+ * arrived.
+ * FIRST, WHAT THE SHEET DID (the G2 review, 2026-10-02): the remap on the
+ * rhythm box (`remapped`), held EQUAL to the play's own prediction — so a
+ * regime the sheet skipped, or ran where the play says it must not, fails
+ * here by name, even under the floor, where every number of the theme and of
+ * the scale agree. Returns what the sheet did, for `expectScaled`.
+ */
+const expectBandScale = async (
+  band: HTMLElement,
+  categories: readonly PriceCategoryProps[],
+): Promise<boolean> => {
+  const { scalable, s, unit, column, rhythm } = regimeOf(band);
+  const document_ = band.ownerDocument;
+  const menu = htmlElement(band.querySelector('nav'), 'menu <nav>');
+
+  const applied = remapped(rhythm);
+  await expect(
+    applied,
+    'the sheet ran the regime exactly where the play predicts it',
+  ).toBe(scalable);
+
+  const pixel = getComputedStyle(rhythm).getPropertyValue('--scale-px');
+  if (scalable) {
+    await near(parseFloat(pixel), s, 0.0001, 'the design pixel');
+  } else {
+    await expect(pixel).toBe('1px');
+  }
+
+  // THE COLUMN — the Container's, or the cap's centred in it.
+  const box = rhythm.getBoundingClientRect();
+  await near(
+    box.width,
+    scalable ? Math.min(column.width, CAP_REM * rem()) : column.width,
+    0.5,
+    'the band’s column',
+  );
+  await near(
+    box.left - column.left,
+    column.right - box.right,
+    1,
+    'the band’s centring',
+  );
+
+  // THE TWO TRACKS, beside the cards (PriceList.tsx's THE TWO TRACKS).
+  if (splitHasFired(band)) {
+    const gap = 32 * unit;
+    const menuTrack = Math.max(240 * unit, (box.width - gap) / 5);
+    const firstCard = htmlElement(
+      document_.getElementById(categories[0].id),
+      `card #${categories[0].id}`,
+    );
+    const cards = htmlElement(firstCard.parentElement, 'cards’ column');
+    await near(
+      menu.getBoundingClientRect().width,
+      menuTrack,
+      0.5,
+      'the menu’s track',
+    );
+    await near(
+      cards.getBoundingClientRect().width,
+      box.width - gap - menuTrack,
+      0.5,
+      'the cards’ column',
+    );
+  }
+
+  // A card's words, and the menu's links — the titles are
+  // expectHeadingOutline's.
+  for (const category of categories) {
+    const card = htmlElement(
+      document_.getElementById(category.id),
+      `card #${category.id}`,
+    );
+    await near(
+      fontSizeOf(
+        htmlElement(card.querySelector('p'), `eyebrow of #${category.id}`),
+      ),
+      14 * unit,
+      0.05,
+      `${category.name}: the eyebrow`,
+    );
+    for (const cell of card.querySelectorAll('dt, dd')) {
+      await near(fontSizeOf(cell), 16 * unit, 0.05, `${category.name}: a row`);
+    }
+  }
+  for (const link of menu.querySelectorAll('a')) {
+    await near(fontSizeOf(link), 18 * unit, 0.05, `${link.textContent}: label`);
+    await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+      44 * unit - 0.5,
+    );
+  }
+  return applied;
+};
+
+/**
+ * THE SCALE IS NOT VACUOUS where the story is drawn to see it (DoctorStats'
+ * `expectScaled`): under open gates, a window whose column MUST be past the
+ * step — 80 % of it less 17px of classic scrollbar at most, the gutter's 10vw
+ * governing every window up to its 2000px cap and the column only wider
+ * beyond — must have drawn the scale. `applied` is what the SHEET did
+ * (`expectBandScale`'s remap), never the play's prediction, so a regime the
+ * sheet skipped fails here even where the band's floor makes every size of
+ * the theme and of the scale agree — the unpinned stories' 1200px canvas.
+ * Conditioned on the live window and browser, so a runner photographing the
+ * story at a phone's width runs it without a false failure.
+ */
+const expectScaled = async (applied: boolean): Promise<void> => {
+  if (scaleGatesOpen() && window.innerWidth >= (scaleStepPx() + 17) / 0.8) {
+    await expect(applied).toBe(true);
   }
 };
 
@@ -606,6 +867,9 @@ const playDeck =
 
     await expectMenuMatchesCards(band, deck.categories);
     await expectCardContents(band, deck.categories);
+    // The scale BEFORE any size that depends on it: if the sheet skipped the
+    // regime, the first failure says so, not a heading size it threw off.
+    await expectScaled(await expectBandScale(band, deck.categories));
     await expectHeadingOutline(band, deck.categories);
     await expectCurrentIsFirst(band, deck.categories);
     await expectGlowOnCurrentOnly(band, deck.categories);
@@ -626,13 +890,16 @@ const longestRowName = (categories: readonly PriceCategoryProps[]): number =>
  * The everyday picture, Romanian, at whatever width the canvas gives it.
  *
  * What to look at: the menu card on the left, its „Categorii" title one step
- * under the card titles beside it — 30px to their 36px, the `band` step read
- * against a 15rem card (PriceMenu.tsx's header) — with a rule under it, then
- * four links, each a 44px row — the first one lavender and underlined, because
- * that is where the page currently is; the cards on the right, each opening
- * with its own eyebrow and <h2> — the first one wearing the header pill's
- * lavender glow, because the page is at it, and the others none (owner
- * 2026-09-29: the glow follows the menu's mark, fading in and out);
+ * under the card titles beside it — 30 to their 36, the `band` step read
+ * against the menu's own card at its floor (PriceMenu.tsx's header) — with a
+ * rule under it, then four links, each a 44 row — the first one lavender and
+ * underlined, because that is where the page currently is; on a laptop or a
+ * desktop all of them in the band's design pixel, so the menu and the cards
+ * grow together with the window (PriceList.tsx's THE BAND SCALE); the cards
+ * on the right, each opening with its own eyebrow and <h2> — the first one
+ * wearing the header pill's lavender glow, because the page is at it, and the
+ * others none (owner 2026-09-29: the glow follows the menu's mark, fading in
+ * and out);
  * the price column right-aligned with tabular digits so „2.300 RON" and
  * „150 RON" line up, one column however wide the card gets. Click a menu entry
  * and the browser jumps — the jump itself is still the browser's, and the only
@@ -648,12 +915,25 @@ export const Romanian: Story = {
  *
  * The three things to look at, all of them reasons the numbers in
  * PriceList.tsx are what they are: „Kinderzahnheilkunde" must fit the menu
- * track's 15rem floor on ONE line, because §15.14 forbids syllable-breaking an
+ * track's floor on ONE line, because §15.14 forbids syllable-breaking an
  * interactive label; „Prothetische Versorgung" must not push the card's
  * heading into its rows; and the ~90-character compound row name must wrap
  * inside the card without ever colliding with its price. If a label ever stops
  * fitting, the FLOOR moves — never the architecture, and never in this file
  * alone.
+ * MEASURED 2026-10-02 (Source Serif 4 at the link's weight 500): the stress
+ * word is 181.4px wide at 18px, and its LINK — the word plus the atom's right
+ * padding, less the `-ml-2` pull — has 182px of the menu's content box at the
+ * reference: one line with 0.6px to spare. The band's floor (PriceList.tsx's
+ * THE FLOOR) never lets the design pixel fall under 1, so under the reference
+ * the word keeps exactly those numbers, and past it the typeface's optical
+ * size draws the word NARROWER per em as it grows, so its room only widens:
+ * ≈ 5px at 1536, ≈ 10px at the cap. It never overruns. (The plain scale,
+ * before the floor, drew it under s ≈ 0.986 and let the link's right padding
+ * run a few pixels past the content edge — 5.5px at the scale's step.) It is a
+ * STRESS word, on no real page: the real tariff's longest single word,
+ * „Kieferorthopädie" (142.2px), keeps ≈ 40px of room up to the reference and
+ * more past it.
  */
 export const German: Story = {
   globals: { locale: 'de' },
@@ -684,7 +964,10 @@ export const Smartphone390: Story = {
  * The laptop, Romanian — the other sampled width, and the one that shows the
  * design the owner asked for: the menu beside the cards, stuck 8.5rem down so
  * it clears the header pill AND the glow around it, while the price cards
- * scroll past it and the marked link follows them.
+ * scroll past it and the marked link follows them — and, since 2026-10-02,
+ * the band past the reference in its design pixel (s ≈ 1.10 at 1536): menu
+ * and cards one design, grown together, the 8.5rem line alone left at the
+ * pill's. At 1280 the same band holds the theme's own pixels (its floor).
  */
 export const Laptop1536: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -702,7 +985,8 @@ export const GermanSmartphone390: Story = {
 
 /** German on the laptop: the split layout at its most expansive, and the
  *  measurement that decides the menu track's floor — „Kinderzahnheilkunde" on
- *  one unbroken line inside a 15rem card. */
+ *  one unbroken line inside the menu's card at its floor (240 design pixels
+ *  here, past the reference, where the word's room has grown to ≈ 5px). */
 export const GermanLaptop1536: Story = {
   globals: { locale: 'de', viewport: { value: 'laptop' } },
   args: GERMAN,

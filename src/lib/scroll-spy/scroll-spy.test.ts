@@ -39,8 +39,8 @@ import {
 //
 // ── THE FIXTURE IS THE PRICE PAGE, IN NUMBERS: <html> keeps 96px of
 // scroll-padding-top (globals.css's 6rem, the header pill's reach) and every
-// target carries 40px of scroll-margin-top (a CategoryCard's `scroll-mt-10`,
-// 2.5rem). Pixels rather than rem because a test that re-derived the root font
+// target carries 40px of scroll-margin-top (a CategoryCard's
+// `scroll-mt-[2.5rem]`). Pixels rather than rem because a test that re-derived the root font
 // size would be testing arithmetic; what matters here is that BOTH properties
 // are read and that the landing line is their sum.
 
@@ -760,7 +760,7 @@ describe("createScrollSpy — line: 'reading' (owner 2026-09-29)", () => {
   // reading line writes the inline `scroll-margin-top` itself and lifts it
   // again to read the floor, so an inline floor would be the very value it
   // writes over — which is also why a reading-line target on the site keeps
-  // its floor in a class (the price card's `scroll-mt-10`).
+  // its floor in a class (the price card's `scroll-mt-[2.5rem]`).
 
   /** THE READING PAGE: two short cards at the very top — the second's top
    *  already ABOVE the line at scroll 0 — then one that fits, one far too tall

@@ -58,13 +58,13 @@
 //     ceiling = padding + floor
 //     restTop = max(ceiling, line − height / 2)
 // `floor` is the target's own STYLESHEET `scroll-margin-top` (40px on a price
-// card, its `scroll-mt-10`), so the ceiling is the 136px line the sticky price
-// menu rests on — the line every jump landed on before this module existed. A
-// card that fits between the ceiling and the ceiling's mirror image at the
-// bottom of the window — a height up to `viewport − padding − 2·floor`, 457px
-// on a 633px laptop — is centred between them; a taller one rests exactly
-// where it rested before, and at that boundary height the two descriptions
-// name the same place.
+// card, its `scroll-mt-[2.5rem]`), so the ceiling is the 136px line the sticky
+// price menu rests on — the line every jump landed on before this module
+// existed. A card that fits between the ceiling and the ceiling's mirror image
+// at the bottom of the window — a height up to `viewport − padding −
+// 2·floor`, 457px on a 633px laptop — is centred between them; a taller one
+// rests exactly where it rested before, and at that boundary height the two
+// descriptions name the same place.
 //
 // ── ITS IDEAL LANDING is the scroll position that puts it there, `ideal = top
 // − restTop` (`top` in DOCUMENT coordinates, `rect.top + scrollY`), and its

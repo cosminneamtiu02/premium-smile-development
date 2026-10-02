@@ -111,6 +111,16 @@ import { slotClone } from '../slot';
 // but no longer more at a larger user font. It holds a tile's 2px margin and
 // the shadow, and the shadow follows the unit.
 //
+// ── THE WIDTH SHARE (CLAUDE.md §15.26 round 6). A consumer may declare
+// `--ribbon-width-share` — a plain number above 0 and at most 1 — on the
+// ribbon or above it, and the ribbon is then drawn at that share of its width
+// along the very same route: lib/ribbon-draw reads it off the root as it
+// reads the unit, lib/ribbon-paint draws the strip that much narrower. The
+// lanes, the gap and the room keep the design's width, so a thinner ribbon
+// only ever has more air. Its one declaration is the doctors band's, on a
+// laptop or a desktop (sections/DoctorShowcase, D11): 0.7, the owner's "30%
+// thinner" (2026-10-02).
+//
 // ── THE SEAM TO A CARD — all the two share. The card marks four blocks with
 // the LITERAL attribute `data-ribbon-keepout` (the quote, the name block,
 // the buttons row) and `data-ribbon-keepout="portrait"` (the portrait's

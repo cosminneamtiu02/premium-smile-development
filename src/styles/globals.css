@@ -37,11 +37,12 @@
    lane, is the 20th); worn by sections/Wordmark's two words and by nothing else
    (WCAG 2.2 SC 1.4.3's logo clause; tests/unit/logotype-census.test.ts). The
    "purple hue confirm" is now a NUMBER: the logo's lilac is #8576b1 against
-   accent-decorative's #7a6d9c and the ribbon's #8377a3 — moving those two to
-   it repaints tints, auras and keywords and is the owner's call (§15.28).
+   accent-decorative's #7a6d9c — moving it there repaints tints, auras,
+   keywords and, since 2026-10-02, the floss ribbon, whose colour is the lilac
+   band's tint (--ribbon, below), and is the owner's call (§15.28).
    Everything else is PROVISIONAL warm-grayscale until the token-audit values
-   land (open: whether accent-decorative and --ribbon adopt the logo's own
-   lilac now that it is known, §15.1 + §15.28).
+   land (open: whether accent-decorative adopts the logo's own lilac now that
+   it is known, §15.1 + §15.28).
    ──────────────────────────────────────────────────────────────────────────── */
 
 @theme {
@@ -403,11 +404,19 @@
      ground named here. */
   --accent: #746894;
   /* additional role outside the 22 (§15.1 amendment) */
-  --accent-decorative: #7a6d9c; /* the real logo's lilac is --brand-lilac #8576b1 (2026-10-01) — moving this role (and --ribbon) to it is the owner's call, §15.28 */
-  /* the ribbon's colour and its shadow's (§15.26) — the old site's OWN palette, never invented. ONE colour
-     since 2026-09-30 (owner: "drop the dark mauve,/ black one and use the mov"); the dark mauve that was its
-     second face stays as the colour of the shadow it casts: */
-  --ribbon: #8377a3; /* old `--accent` rgb(131 119 163) — its primary lavender */
+  --accent-decorative: #7a6d9c; /* the real logo's lilac is --brand-lilac #8576b1 (2026-10-01) — moving this role to it is the owner's call, §15.28; --ribbon follows it (tests/unit/ribbon-tint-sync.test.ts) */
+  /* the ribbon's colour and its shadow's (§15.26). ONE colour since 2026-09-30 (owner: "drop the dark mauve,/
+     black one and use the mov"), and since 2026-10-02 the shade of sections/TintedBand's ground — the owner,
+     with a screenshot of that ground: "i want it on every screen to be the shade that the background of
+     "IN NUMBERS …" is while also maintaining the accents of light upon it". --accent-decorative at 30% over
+     --page, rgb(212 207 220): a LITERAL, not a mix, because lib/ribbon-draw reads it through a canvas
+     round-trip that answers #rrggbb; tests/unit/ribbon-tint-sync.test.ts holds it to the band's own mix, so
+     the day §15.1's hue confirm moves --accent-decorative, that test names the new value. It is the colour a
+     face of the ribbon turned to the viewer SHOWS — lib/ribbon-paint's THE ANCHORED LIGHT brightens it where
+     the ribbon turns to the light and dims it where it turns away. Until that day the ribbon wore the old
+     site's lavender #8377a3, which its light showed at about rgb(97 87 114). Its shadow keeps the old
+     palette's dark mauve, the colour of the ribbon's second face until 2026-09-30: */
+  --ribbon: #d4cfdc;
   --ribbon-shadow: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness */
   /* THE BRAND'S TWO COLOURS (owner, 2026-10-01, with the clinic's real mark:
      "Lilac/purple: #8576B1 (RGB 133, 118, 177) · Grey: #939598 (RGB 147, 149,

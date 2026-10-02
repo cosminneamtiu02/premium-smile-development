@@ -808,6 +808,52 @@ async function openAt(
   expect(sideways, `${width}px: sideways scroll`).toBeLessThanOrEqual(0);
 }
 
+/** The pixels of the first card's canvas that the ribbon's BODY covers —
+ *  alpha 200 or more, where its shadow, at 0.38, never reaches. */
+const bodyOf = (page: Page): Promise<number> =>
+  page.evaluate((layer) => {
+    const canvas = document.querySelector<HTMLCanvasElement>(`${layer} canvas`);
+    const pixels = canvas
+      ?.getContext('2d')
+      ?.getImageData(0, 0, canvas.width, canvas.height).data;
+    let body = 0;
+    if (pixels) {
+      for (let i = 3; i < pixels.length; i += 4) {
+        if (pixels[i] >= 200) body += 1;
+      }
+    }
+    return body;
+  }, LAYER);
+
+/**
+ * THE WIDTH SHARE as the page draws it (sections/DoctorShowcase, D11): the
+ * ribbon's body at the page's own share, over its body once the SAME page is
+ * told `--ribbon-width-share: 1` on the ribbon's root and rebuilt by a
+ * resize — 1 where the page declares no share, and 0.7 less the anti-aliased
+ * fringe each edge keeps where it draws the ribbon 30 % thinner. Relative on
+ * purpose: the gauge rule is lib/ribbon-model's, and this file spells none of
+ * it. Reduced motion is on (openAt), so a rebuild paints the whole ribbon in
+ * its own frame.
+ */
+async function widthShareDrawn(page: Page): Promise<number> {
+  const own = await bodyOf(page);
+  await page.evaluate((layer) => {
+    const root = document.querySelector(layer)?.parentElement;
+    if (!root) throw new Error('no ribbon root');
+    root.style.setProperty('--ribbon-width-share', '1');
+    window.dispatchEvent(new Event('resize'));
+  }, LAYER);
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  const whole = await bodyOf(page);
+  expect(whole, 'the ribbon painted at its whole width').toBeGreaterThan(0);
+  return own / whole;
+}
+
 /** THE STRUCTURE the owner's sentence is about, for one card: every length
  *  that is no line of text, each over the card's width. */
 const structureOf = (card: CardShape): Record<string, number> => ({
@@ -984,7 +1030,22 @@ for (const [locale, path] of [
       ).toBeGreaterThan(0);
     });
 
-    test('below the step — the phone, the tablet upright, a 1024 window — the band is today’s: nothing declared, the theme’s own sizes', async ({
+    test('draws the ribbon 30 % thinner at the owner’s window and at every laptop and desktop width — 0.7 of the width the same page draws without the share (D11)', async ({
+      page,
+    }) => {
+      // The owner, 2026-10-02: "on desktop, laptops whatever screen larger
+      // than tablet make it 30% thinner". Measured on this build: 0.69 at
+      // every window — 70 % less the fringe each edge keeps at any width.
+      test.setTimeout(180_000);
+      for (const width of [OWNER_WINDOW.width, ...SCALED_WINDOWS, 2560]) {
+        await openAt(page, path, width, OWNER_WINDOW.height);
+        const ratio = await widthShareDrawn(page);
+        expect(ratio, `${path} at ${width}px`).toBeGreaterThan(0.66);
+        expect(ratio, `${path} at ${width}px`).toBeLessThan(0.7);
+      }
+    });
+
+    test('below the step — the phone, the tablet upright, a 1024 window — the band is today’s: nothing declared, the theme’s own sizes, the ribbon its whole width', async ({
       page,
     }) => {
       test.setTimeout(120_000);
@@ -995,6 +1056,8 @@ for (const [locale, path] of [
           STEP_FLOOR,
         );
         expectUnscaled(shape, `${path} at ${width}px`);
+        // "on tablet phone etc, the width is fine" (D11).
+        expect(await widthShareDrawn(page), `${path} at ${width}px`).toBe(1);
       }
     });
 
@@ -1046,7 +1109,7 @@ for (const [locale, path] of [
         // the first assertion checks that it did.
         test.use({ viewport: tablet, hasTouch: true, isMobile: true });
 
-        test('declares nothing: no design pixel, no remap, no cap — today’s card, the ribbon painted, nothing sideways', async ({
+        test('declares nothing: no design pixel, no remap, no cap — today’s card, the ribbon painted at its whole width, nothing sideways', async ({
           page,
         }) => {
           // FIRST, the device: asked on the context's blank first page, before
@@ -1064,8 +1127,10 @@ for (const [locale, path] of [
           const at = `${path} on a ${tablet.width}px touch tablet`;
           // The window a MOUSE would scale — the column past the step…
           expect(shape.column, at).toBeGreaterThanOrEqual(STEP_FLOOR);
-          // …and today's band all the same.
+          // …and today's band all the same, its ribbon at its whole width
+          // (D11: "on tablet phone etc, the width is fine").
           expectUnscaled(shape, at);
+          expect(await widthShareDrawn(page), at).toBe(1);
         });
       });
     }

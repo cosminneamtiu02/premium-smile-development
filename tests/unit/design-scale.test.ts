@@ -591,8 +591,9 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
 
   it('lets the GATE CHAIN be re-spelled only where Tailwind needs a literal of its own — and only as the regime’s chain', () => {
     // A class that must follow the regime but is none of its strings — the
-    // staff tile's width and its row's gap — spells the chain itself, because
-    // Tailwind reads class names from source text. Every such token must carry
+    // staff tile's width and its row's gap, and the doctors band's ribbon
+    // drawn 30 % thinner (DoctorShowcase D11, §15.26 round 6) — spells the
+    // chain itself, because Tailwind reads class names from source text. Every such token must carry
     // the SAME chain, gate first, so a tile can never switch at another width
     // than the band. The gate is looked for ANYWHERE in a chain (a reordered
     // `@4xl:scalable:` is caught as itself) and in backtick literals too (the
@@ -611,6 +612,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(
       [...new Set(gatedTokens.map(({ name }) => name))].toSorted(),
     ).toEqual([
+      'components/sections/DoctorShowcase/DoctorShowcase.tsx',
       'components/sections/TeamRoster/TeamRoster.tsx',
       'components/ui/Container/Container.tsx',
     ]);
@@ -631,6 +633,19 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       'scalable:@4xl:@min-[896px]:gap-x-6',
       'scalable:@4xl:@min-[896px]:w-88',
     ]);
+    // The doctors band's one: its ribbon's width share, 0.7 — the owner's
+    // "30% thinner" on a laptop or a desktop, and nowhere a phone or a touch
+    // tablet stands (D11).
+    const share = gatedTokens.filter(({ name }) =>
+      name.endsWith('DoctorShowcase.tsx'),
+    );
+    expect(
+      share.map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual(['scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]']);
+    expect(arbitrary(share[0]?.utility ?? '')).toEqual({
+      name: '--ribbon-width-share',
+      value: '0.7',
+    });
   });
 
   it('has a gate-chain reader with teeth — a backtick class and a reordered chain are both seen', () => {

@@ -44,7 +44,7 @@ const FIRST_TOP = 100;
 const CARD_H = 400;
 const GAP = 150;
 const SECOND_TOP = FIRST_TOP + CARD_H + GAP;
-const TOKENS = { '--ribbon': '#8377a3', '--ribbon-shadow': '#2d263c' };
+const TOKENS = { '--ribbon': '#d4cfdc', '--ribbon-shadow': '#2d263c' };
 /** The window's y at which a card of height h is due: its centre on the line — or, taller than the screen, its top LINE under the window's top. */
 const lineOf = (h: number) =>
   Math.max((1 - LINE) * HEIGHT - h / 2, LINE * HEIGHT);
@@ -81,6 +81,8 @@ function harness(
     scale?: number;
     /** The root's `--ribbon-unit`, as a page would declare it (THE UNIT). */
     unit?: string;
+    /** `--ribbon-width-share`, declared on the root's PARENT — an ancestor, as the doctors band declares it (THE WIDTH SHARE). */
+    share?: string;
   } = {},
 ): Harness {
   const cards = options.cards ?? [card(CARD_H), card(CARD_H)];
@@ -104,6 +106,9 @@ function harness(
   }
   if (options.unit !== undefined) {
     root.style.setProperty('--ribbon-unit', options.unit);
+  }
+  if (options.share !== undefined) {
+    host.style.setProperty('--ribbon-width-share', options.share);
   }
 
   const pending = new Map<number, (time: number) => void>();
@@ -796,6 +801,82 @@ describe('THE UNIT — the root’s --ribbon-unit, the CSS px of one card unit',
     );
     if (depth === null) throw new Error('no depth in the warning');
     expect(Number(depth[2])).toBeCloseTo(Number(depth[1]) * 150, 0);
+  });
+});
+
+describe('THE WIDTH SHARE — the root’s --ribbon-width-share, the share of its width the ribbon is drawn at', () => {
+  /** The pixels of a canvas the ribbon's BODY covers — alpha 200 or more; its shadow, at 0.38, never gets there. */
+  function body(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d');
+    if (ctx === null || canvas.width === 0) return { count: 0, x: 0, y: 0 };
+    const { width, height } = canvas;
+    const data = ctx.getImageData(0, 0, width, height).data;
+    // Canvas pixels → the root's px, so two tiles of different sizes compare.
+    const scale = parseFloat(canvas.style.width) / width;
+    const [left, top] = [canvas.style.left, canvas.style.top].map(parseFloat);
+    let [count, sx, sy] = [0, 0, 0];
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 200) continue;
+      const pixel = (i - 3) / 4;
+      count++;
+      sx += left + ((pixel % width) + 0.5) * scale;
+      sy += top + (Math.floor(pixel / width) + 0.5) * scale;
+    }
+    // Its count, and its centre of mass in the root's px.
+    return { count, x: sx / count, y: sy / count };
+  }
+
+  it('draws the ribbon at 0.7 of its width — along the very same route — when an ancestor declares it, as the doctors band does', () => {
+    const whole = harness({ reduced: true });
+    whole.start();
+    const slim = harness({ reduced: true, share: '0.7' });
+    expect(slim.start().getSnapshot()).toMatchObject({
+      painted: true,
+      drawn: 2,
+    });
+    tiles(slim).forEach((tile, i) => {
+      const [a, b] = [body(tiles(whole)[i]), body(tile)];
+      // 70 % of the body, less the anti-aliased fringe each edge keeps at any
+      // width — on this 13.8px ribbon, measured: 0.689 on both canvases.
+      expect(b.count / a.count, `canvas ${i}`).toBeGreaterThan(0.66);
+      expect(b.count / a.count, `canvas ${i}`).toBeLessThan(0.7);
+      // The same route: the body's centre of mass within half a pixel
+      // (measured: 0.08 and 0.12px).
+      expect(Math.hypot(b.x - a.x, b.y - a.y), `canvas ${i}`).toBeLessThan(0.5);
+    });
+  });
+
+  it('reads 1 where the share is not a number above 0 and at most 1 — text, a zero, a negative, more than the whole', () => {
+    const reference = harness({ reduced: true });
+    reference.start();
+    for (const share of ['thin', '0', '-0.7', '1.5']) {
+      const h = harness({ reduced: true, share });
+      expect(h.start().getSnapshot().painted, share).toBe(true);
+      tiles(h).forEach((tile, i) =>
+        expect(body(tile).count, `${share}, canvas ${i}`).toBe(
+          body(tiles(reference)[i]).count,
+        ),
+      );
+    }
+  });
+
+  it('rebuilds for a new share alone — the same cards, drawn thinner', async () => {
+    const widths = vi.spyOn(HTMLCanvasElement.prototype, 'width', 'set');
+    const h = harness({ reduced: true });
+    const draw = h.start();
+    await settle();
+    h.frames.run(500);
+    expect(widths).toHaveBeenCalledTimes(2);
+    const before = tiles(h).map((tile) => body(tile).count);
+
+    h.root.parentElement?.style.setProperty('--ribbon-width-share', '0.7');
+    resize();
+    h.frames.run(600);
+    expect(widths).toHaveBeenCalledTimes(4);
+    tiles(h).forEach((tile, i) =>
+      expect(body(tile).count, `canvas ${i}`).toBeLessThan(0.72 * before[i]),
+    );
+    expect(draw.getSnapshot()).toMatchObject({ painted: true, drawn: 2 });
   });
 });
 

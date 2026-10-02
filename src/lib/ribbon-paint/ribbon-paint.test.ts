@@ -32,9 +32,9 @@ const hex = (value: number): Rgb => [
   ((value >> 8) & 255) / 255,
   (value & 255) / 255,
 ];
-/** The colour the record was written with — the ribbon's one colour, the old
- *  site's palette, globals.css's --ribbon. */
-const COLOUR: Rgb = hex(0x8377a3);
+/** The colour the record was written with — the ribbon's one colour since
+ *  2026-10-02, the lilac band's tint: globals.css's --ribbon. */
+const COLOUR: Rgb = hex(0xd4cfdc);
 const NINE = 1e-9;
 const FOUR = 1e-4;
 
@@ -138,19 +138,104 @@ describe('lib/ribbon-paint — the strip, as recorded (GOLDEN_STRIPS)', () => {
         ).toBeLessThan(NINE),
       );
     }
-    // The record's `light` row for that normal.
-    [97.527363, 86.953778, 113.604757].forEach((value, i) =>
+    // The record's `light` row for that normal: the colour itself (THE
+    // ANCHORED LIGHT) — until 2026-10-02 the light showed #8377a3 there as
+    // 97.527363 / 86.953778 / 113.604757.
+    [212, 207, 220].forEach((value, i) =>
       expect(Math.abs(squarely[i] - value)).toBeLessThan(FOUR),
     );
+  });
+});
+
+describe('lib/ribbon-paint — THE ANCHORED LIGHT (the owner, 2026-10-02: the band’s shade, the accents of light kept)', () => {
+  /** Relative luminance's weights on 0 … 255 sRGB — enough to order shades. */
+  const luma = ([r, g, b]: Shade) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const unitOf = (v: Vec3): Vec3 => {
+    const l = Math.hypot(v[0], v[1], v[2]);
+    return [v[0] / l, v[1] / l, v[2] / l];
+  };
+  const SQUARELY: Vec3 = [0, -1, 0];
+
+  it('shows a face turned squarely to the viewer in the very colour it is given — for any colour', () => {
+    // The ribbon's tint, the lavender it wore until that day, its shadow's
+    // dark mauve, white, a saturated red and a near-black: the exposure is
+    // per channel, so every one comes back as itself.
+    for (const value of [
+      0xd4cfdc, 0x8377a3, 0x2d263c, 0xffffff, 0xcc3355, 0x101010,
+    ]) {
+      const base = hex(value);
+      shade(base, SQUARELY).forEach((channel, i) =>
+        expect(
+          Math.abs(channel - 255 * base[i]),
+          `#${value.toString(16)}, channel ${i}`,
+        ).toBeLessThan(NINE),
+      );
+    }
+  });
+
+  it('keeps the light’s accents round that face: brighter turned to the key light, brightest at its glint, dimmer turned away', () => {
+    // The key light comes from the upper left and the eye looks along +y; its
+    // glint is brightest where the surface faces halfway between the two.
+    const key = unitOf([-3, -6, 5]);
+    const glint = unitOf([key[0], key[1] - 1, key[2]]);
+    const away = unitOf([0.5, -0.85, -0.2]);
+    const face = luma(shade(COLOUR, SQUARELY));
+    expect(luma(shade(COLOUR, key))).toBeGreaterThan(face);
+    expect(luma(shade(COLOUR, glint))).toBeGreaterThan(
+      luma(shade(COLOUR, key)),
+    );
+    expect(luma(shade(COLOUR, away))).toBeLessThan(face);
+    // …and the record's own strip shows them: lighter and darker samples
+    // than the colour itself, on the desktop card's nine.
+    const golden = GOLDEN_STRIPS.find((strip) => strip.name === 'desktop');
+    const lumas = (golden?.samples ?? []).map(([, , , , , , , r, g, b]) =>
+      luma([r, g, b]),
+    );
+    expect(Math.max(...lumas)).toBeGreaterThan(face + 10);
+    expect(Math.min(...lumas)).toBeLessThan(face - 10);
+  });
+});
+
+describe('lib/ribbon-paint — THE WIDTH SHARE (the owner, 2026-10-02: "30% thinner" on a laptop or a desktop)', () => {
+  it('draws the strip at that share of its width along the very same centre line — the colours and the efforts unmoved', () => {
+    const model = modelOf('desktop');
+    const whole = buildStrip(model, false, COLOUR);
+    const slim = buildStrip(model, false, COLOUR, 0.7);
+    expect(slim).toHaveLength(whole.length);
+    const across = (sample: StripSample) =>
+      Math.hypot(
+        sample.r[0] - sample.l[0],
+        sample.r[1] - sample.l[1],
+        sample.r[2] - sample.l[2],
+      );
+    whole.forEach((sample, i) => {
+      const thin = slim[i];
+      // The same centre: each edge moved towards it, never along the ribbon.
+      for (let axis = 0; axis < 3; axis++) {
+        expect(
+          Math.abs(
+            (thin.l[axis] + thin.r[axis]) / 2 -
+              (sample.l[axis] + sample.r[axis]) / 2,
+          ),
+        ).toBeLessThan(1e-12);
+      }
+      expect(Math.abs(across(thin) - 0.7 * across(sample))).toBeLessThan(1e-12);
+      expect(thin.colour).toEqual(sample.colour);
+      expect(thin.effort).toBe(sample.effort);
+      expect(thin.u).toBe(sample.u);
+    });
+    // The whole width is the model's: 0.25 k across.
+    expect(Math.abs(across(whole[0]) - model.width)).toBeLessThan(1e-12);
   });
 });
 
 describe('lib/ribbon-paint — the light, as recorded (GOLDEN_LIGHT)', () => {
   it('shades each face by the direction its surface looks in', () => {
     // The record's `face` column names the two base colours the light was
-    // recorded on: the ribbon's own, and the dark mauve it wore on its other
-    // side until 2026-09-30. `shade` takes any colour, so both stay pinned.
-    const bases = { dark: hex(0x2d263c), light: hex(0x8377a3) };
+    // recorded on: the ribbon's own — the lilac band's tint since
+    // 2026-10-02 — and the dark mauve it wore on its other side until
+    // 2026-09-30. `shade` takes any colour, so both stay pinned.
+    const bases = { dark: hex(0x2d263c), light: COLOUR };
     expect(GOLDEN_LIGHT.length).toBeGreaterThan(0);
     for (const [face, nx, ny, nz, red, green, blue] of GOLDEN_LIGHT) {
       const colour = shade(face === 'dark' ? bases.dark : bases.light, [

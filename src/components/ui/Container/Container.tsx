@@ -67,6 +67,65 @@ import { cx } from '@/lib/cx/cx';
 //      the ≥128px gutters keep band content clear of the fixed corner discs
 //      for free; at narrow widths a page lane still owes the "no standalone
 //      focusable flush against the margins" keyboard walkthrough.
+//   5. A BAND THAT SCALES on a laptop or desktop wears BOTH band-scale strings
+//      below — `bandColumnClasses` and `bandScaleClasses` — on its RHYTHM box,
+//      the first box inside this one (the box that already carries its `py`).
+//      A band that scales its OPENER alone wears them one box further in, on
+//      a box holding the opener with the band's top step — the reviews band,
+//      whose deck stays outside them (sections/ReviewsCarousel's THE OPENER'S
+//      SCALE). THE BAND SCALE paragraph has the rule; it is never spelled in
+//      a band.
+//
+// ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — promoted from
+// sections/DoctorShowcase's D10 at its second, third, fourth and fifth
+// consumers, §4's sharing table, first row). The owner, verbatim: "i want both
+// section to in parallel on widening of screen to be responsive and adapt in
+// parallel, so headings and eyebrows grow together, always have same size and
+// extremley important for headings and eyebrows, same offset always". On a
+// laptop or desktop the doctors band was drawn in a DESIGN PIXEL — its column ÷
+// 1106, the column of the owner's 1401 × 1063 window — while the bands around it
+// stayed in rem, so above that window its heading grew and theirs did not (36 →
+// 49.5px at 1920 beside 36), and past the cap it centred while theirs stayed on
+// the column's edge (x 504.5 against 200 at 2560, measured on develop's build).
+// One rule, worn by every band below the Home hero and every band of the Team
+// page, makes the two facts — one SIZE, one OFFSET — true by construction:
+// every band draws in the SAME pixel, and caps and centres at the SAME width.
+//   · `bandScaleClasses` — the design pixel and the remap, behind ONE variant
+//     chain: globals.css's `scalable:` (a mouse or trackpad, in an engine that
+//     registers custom properties) and THIS box's `@4xl` step floored at
+//     896px. There the box declares `--scale-px` = min(column, 96rem) / 1106 —
+//     `100cqw` read against THIS atom, the nearest container — and wears
+//     `design-scale` (globals.css, THE DESIGN SCALE), which redraws every theme
+//     length on it and inside it in that pixel. Below the step, on every touch
+//     device and in an engine that cannot register, nothing is declared and
+//     nothing remapped: the band is its rem self (§7), every pixel as before.
+//   · `bandColumnClasses` — the cap and the centring: `mx-auto w-full` with
+//     `scalable:max-w-[96rem]`, so past a 1536px column (the 1920 window's) the
+//     band stops growing and centres in its column, as every scaled band does,
+//     on one left edge. `w-full` keeps a rhythm box that sits in a FLEX column
+//     from shrinking to its content (auto margins on a flex item size it to its
+//     content); in the block flow of this box it changes nothing.
+//   · THE ZOOM, `--band-zoom` (default 1): a box INSIDE a scaled band that must
+//     draw at a fixed multiple of the band's pixel wears `bandScaleClasses`
+//     again and sets a `--band-zoom` of its own beside it (an arbitrary
+//     property class — never spelled here, where Tailwind would ship it as a
+//     rule nobody wears) — its `--scale-px` is computed
+//     afresh from the same column (a box cannot multiply its own inherited
+//     value: `--scale-px: calc(var(--scale-px) * …)` is a cycle), so the
+//     multiple holds at every width. ONE wearer: sections/DoctorStats' tiles,
+//     at 9/8, so a tile's sentence reads the doctor card's quote size (16 × 9/8
+//     = 18 design pixels) while the tile keeps its own proportions. ITS
+//     PRECONDITION (the Opus review, 2026-10-02): the zoomed box must have
+//     THIS atom as its nearest size container — `100cqw` and the `@4xl` gate
+//     both read the nearest one, so inside a ui/Card, a doctor card's inset or
+//     a ribbon station (each a container of its own) the gate would test that
+//     box, never open, and the zoom would silently do nothing.
+// THE NUMBERS — REFERENCE 1106, CAP 96rem, STEP max(@4xl, 896px) — and what
+// the regime trades (a browser zoom, the user's default font size, the jump at
+// the step, the typeface's optical size) are argued and measured where they
+// were born: sections/DoctorShowcase's D10. tests/unit/design-scale.test.ts
+// holds both strings to ONE spelling, here, and every wearer to an import of
+// them.
 //
 // ── THE CONTAINER MARK IS BUNDLED WITH THE GUTTER — the load-bearing choice
 // (board Q2). Both original copies paired them, and SPLITTING them has a
@@ -142,6 +201,26 @@ import { cx } from '@/lib/cx/cx';
  * below. Quoted nowhere else in src/, by construction and by test.
  */
 export const containerClasses = '@container mx-[clamp(1rem,10vw,12.5rem)]';
+
+/**
+ * THE BAND SCALE's pixel (the header's THE BAND SCALE): on a laptop or desktop
+ * column of max(56rem, 896px) the box wearing it declares the design pixel —
+ * min(column, 96rem) / 1106, times `--band-zoom` (1 unless a box says
+ * otherwise) — and redraws every theme length on it and inside it in that
+ * pixel. The CAP is spelled here and in `bandColumnClasses` (KEEP IN SYNC;
+ * tests/unit/design-scale.test.ts holds the two equal). ONE static string per
+ * class: Tailwind reads class names from source text.
+ */
+export const bandScaleClasses =
+  'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106*var(--band-zoom,1))] ' +
+  'scalable:@4xl:@min-[896px]:design-scale';
+
+/**
+ * THE BAND SCALE's column (the header's THE BAND SCALE): a full-width box,
+ * capped at 96rem wherever a scaled design may apply, centred past it — one
+ * left edge for every scaled band on the page.
+ */
+export const bandColumnClasses = 'mx-auto w-full scalable:max-w-[96rem]';
 
 /**
  * Props are the native `<div>` surface, unmodified: React 19 puts `ref` in

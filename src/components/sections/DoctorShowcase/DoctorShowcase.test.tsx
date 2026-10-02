@@ -26,7 +26,11 @@ import {
   type PersonnelPhoto,
   type PersonnelSide,
 } from '@/components/sections/PersonnelCard/PersonnelCard';
-import { containerClasses } from '@/components/ui/Container/Container';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from '@/components/ui/Container/Container';
 import { Keyword } from '@/components/ui/Keyword/Keyword';
 import { Ribbon, RibbonStation } from '@/components/ui/Ribbon/Ribbon';
 import { gaugeRule, lanes, UNIT_PX } from '@/lib/ribbon-model/ribbon-model';
@@ -185,15 +189,25 @@ const TEXTS = [ELENA.text, ANDREI.text, CRISTINA.text];
 /** The side every card should face, by index (D5): start, end, start. */
 const SIDES: readonly PersonnelSide[] = ['start', 'end', 'start'];
 
-/** The band's rhythm box, byte for byte (D4, D10): the standard band top, and
- *  NO bottom padding and NO gap — the ribbon's own head and tail room are the
- *  band's air above the first card and under the last — and THE SCALE behind
+/** The band's OWN rhythm, written out byte for byte (D4): a flex column, the
+ *  standard band top, and NO bottom padding and NO gap — the ribbon's own
+ *  head and tail room are the band's air above the first card and under the
+ *  last. */
+const BAND_RHYTHM = 'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20';
+
+/** The band's rhythm box, byte for byte (D4, D10): its own rhythm, then
+ *  ui/Container's two band-scale strings, in that order — THE SCALE behind
  *  its GATES: on a mouse or trackpad, in an engine that registers custom
  *  properties (`scalable:`), the cap, centred; and from the Container's `@4xl`
  *  step floored at 896px, the band's design pixel and every theme length
- *  measured in it. */
-const RHYTHM_BOX =
-  'mx-auto flex flex-col pt-12 @lg:pt-16 @3xl:pt-20 scalable:max-w-[96rem] scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106)] scalable:@4xl:@min-[896px]:design-scale';
+ *  measured in it. The two strings are IMPORTED, never re-typed: since
+ *  2026-10-02 the regime is spelled once, in Container.tsx, and every band of
+ *  Home and Team wears it (D10's THE PROMOTION, §15.32) — the gutter's rule
+ *  for the column above (`containerClasses`) — and its spelling is
+ *  tests/unit/design-scale.test.ts's to hold. A second spelling here would be
+ *  a second regime the next lever misses, and a bracketed declaration spelled
+ *  any other way ships a CSS rule nobody wears (Tailwind reads tests too). */
+const RHYTHM_BOX = `${BAND_RHYTHM} ${bandColumnClasses} ${bandScaleClasses}`;
 
 const tokensOf = (element: Element): string[] =>
   (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
@@ -449,36 +463,52 @@ describe('DoctorShowcase — the band’s shape (D4)', () => {
     expect(rhythm.children[1]).toBe(screen.getByRole('list'));
   });
 
-  it('wears THE SCALE on that same box, behind its GATES — the cap on a mouse or trackpad, the regime from the Container’s `@4xl` step floored at 896px (D10)', () => {
+  it('wears THE SCALE on that same box — ui/Container’s two band-scale strings, whole — behind its GATES: the cap on a mouse or trackpad, the regime from the Container’s `@4xl` step floored at 896px (D10, §15.32)', () => {
     // Named one by one beside the byte pin above, so a scale that moved to
     // another box — or lost a gate: without `scalable:` it would scale every
     // touch tablet held sideways, without its container step every narrow
     // window a mouse opens, down to the phone's width the owner keeps — reads
-    // as itself. The numbers' own census is tests/unit/design-scale.test.ts.
+    // as itself. The classes are read off ui/Container's two strings, never
+    // re-typed (RHYTHM_BOX says why), and the gates off the classes the box
+    // wears. The spelling's own census is tests/unit/design-scale.test.ts.
     const { container } = renderBand();
     const tokens = tokensOf(rhythmOf(container));
+    const column = bandColumnClasses.split(' ');
+    const scale = bandScaleClasses.split(' ');
 
-    expect(tokens).toEqual(
-      expect.arrayContaining([
-        'mx-auto',
-        'scalable:max-w-[96rem]',
-        'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106)]',
-        'scalable:@4xl:@min-[896px]:design-scale',
-      ]),
+    // Both strings WHOLE: every class of each, on this box.
+    expect(tokens).toEqual(expect.arrayContaining([...column, ...scale]));
+    // THE REGIME — the design pixel's declaration and the remap, one each —
+    // is the scale string's, and no other class of the box joins it.
+    const regime = tokens.filter((token) =>
+      /design-scale|--scale-px/.test(token),
+    );
+    expect(regime).toEqual(scale);
+    expect(regime.filter((token) => token.includes('--scale-px'))).toHaveLength(
+      1,
     );
     expect(
-      tokens.filter((token) => /design-scale|--scale-px/.test(token)),
-    ).toEqual([
-      'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106)]',
-      'scalable:@4xl:@min-[896px]:design-scale',
-    ]);
-    // THE GATE on all three and on nothing else: the band's top, its flex
-    // column and its centring are every device's.
-    expect(tokens.filter((token) => token.startsWith('scalable:'))).toEqual([
-      'scalable:max-w-[96rem]',
-      'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106)]',
-      'scalable:@4xl:@min-[896px]:design-scale',
-    ]);
+      regime.filter((token) => token.endsWith(':design-scale')),
+    ).toHaveLength(1);
+    // THE GATES: the regime's two classes behind the WHOLE chain — the input
+    // gate first, then the Container's `@4xl` step and its 896px floor (a
+    // chain alone is no class: Tailwind ships nothing for it) — and THE CAP,
+    // the box's maximum width, behind the input gate alone. Worn through the
+    // two strings and nothing else: the band's top, its flex column and its
+    // centring are every device's.
+    for (const token of regime) {
+      expect(token.startsWith('scalable:@4xl:@min-[896px]:'), token).toBe(true);
+    }
+    const gated = tokens.filter((token) => token.startsWith('scalable:'));
+    expect(gated).toHaveLength(3);
+    const cap = gated.filter((token) => !regime.includes(token));
+    expect(cap).toHaveLength(1);
+    expect(cap[0]?.startsWith('scalable:max-w-'), cap[0]).toBe(true);
+    expect(
+      gated.filter(
+        (token) => !column.includes(token) && !scale.includes(token),
+      ),
+    ).toEqual([]);
     // ONE box: nothing else in the band declares a design pixel or wears the
     // remap — the opener, the ribbon and every card INHERIT the band's.
     for (const element of [
@@ -488,10 +518,17 @@ describe('DoctorShowcase — the band’s shape (D4)', () => {
     ]) {
       expect(
         tokensOf(element).filter((token) =>
-          /design-scale|--scale-px/.test(token),
+          /design-scale|--scale-px|--band-zoom/.test(token),
         ),
       ).toEqual([]);
     }
+    // …and nothing in the band sets THE ZOOM (ui/Container's THE ZOOM): the
+    // only class of the box that names `--band-zoom` is the scale string's
+    // own, so the factor is its fallback, 1, and the band draws in the plain
+    // pixel D10 measured.
+    expect(tokens.filter((token) => token.includes('--band-zoom'))).toEqual(
+      scale.filter((token) => token.includes('--band-zoom')),
+    );
   });
 
   it('puts no outer margin on the opener or the ribbon (§6.4)', () => {
@@ -871,6 +908,27 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
     expect(CODE).not.toMatch(/^import\s*['"]/m);
     expect(CODE).not.toMatch(/^export\s[^=]*\sfrom\s/m);
   });
+
+  it('takes THE SCALE from ui/Container by IMPORT and spells none of the regime itself (D10’s THE PROMOTION, §15.32)', () => {
+    // ui/Container's recipe rule 5: a band that scales wears the two
+    // band-scale strings on its rhythm box, and the rule "is never spelled in
+    // a band". So the code — prose removed — imports both beside the column
+    // and names no input gate, no design pixel, no remap, no zoom and no
+    // REFERENCE of its own: a lever pulled in Container.tsx reaches this band
+    // with every other, and none can be pulled here alone.
+    const named =
+      /^import \{([^}]*)\} from '@\/components\/ui\/Container\/Container';$/m
+        .exec(CODE)?.[1]
+        ?.split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .toSorted();
+    expect(named).toEqual(
+      ['Container', 'bandColumnClasses', 'bandScaleClasses'].toSorted(),
+    );
+    expect(CODE).not.toMatch(/scalable:|design-scale|--scale-px|--band-zoom/);
+    expect(CODE).not.toMatch(/\b1106\b/);
+  });
 });
 
 describe('DoctorShowcase — type-level pins', () => {
@@ -1011,8 +1069,10 @@ const STILL_CSS =
 /** D10's numbers, written out — the REFERENCE column, where a design pixel is
  *  a CSS pixel; the CAP, 96rem, in px at this runner's 16px root (THE PREMISE
  *  asserts the root); and THE STEP's two halves, `@4xl`'s 56rem and the
- *  floor's 896px. Spelled again on purpose: the byte pin holds the source,
- *  these hold what the engine does with it. */
+ *  floor's 896px. Spelled again on purpose: the byte pin holds the band's
+ *  composition, tests/unit/design-scale.test.ts the strings' one spelling in
+ *  ui/Container (D10's THE PROMOTION), and these what the engine does with
+ *  them. */
 const REFERENCE = 1106;
 const CAP_REM = 96;
 const CAP = CAP_REM * 16;

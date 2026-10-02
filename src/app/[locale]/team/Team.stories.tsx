@@ -78,8 +78,13 @@ function TeamPageBands(): ReactElement {
         title={t('showcase.title')}
         doctors={cards}
       />
-      <TeamRoster members={populateTeamRoster(locale)} />
+      <TeamRoster
+        eyebrow={t('roster.eyebrow')}
+        title={t('roster.title')}
+        members={populateTeamRoster(locale)}
+      />
       <DoctorStats
+        scaled
         ground="page"
         align="start"
         eyebrow={t('doctor.stats.eyebrow')}
@@ -88,7 +93,7 @@ function TeamPageBands(): ReactElement {
         tiles={toStatTiles(populateStats(locale, clinicStats))}
         format={new Intl.NumberFormat(locale).format}
       />
-      <ClinicLocation />
+      <ClinicLocation scaled />
     </>
   );
 }
@@ -233,6 +238,8 @@ const playPage =
       /** The numbers band's opener — the doctor page's `team.doctor.stats.*`
        *  keys — and the lead it must NOT print. */
       numbers: { eyebrow: string; title: string; lead: string };
+      /** The staff band's opener since 2026-10-02 — `team.roster.*` (§15.32). */
+      roster: { eyebrow: string; title: string };
     },
     locale: Locale,
   ): NonNullable<Story['play']> =>
@@ -317,10 +324,16 @@ const playPage =
         timeout: 3_000,
       });
 
-    // THE STAFF TILES: the next band, one list, every auxiliary member.
+    // THE STAFF TILES: the next band — since 2026-10-02 a region named by its
+    // own <h2> (`team.roster.title`), its eyebrow above it (§15.32) — one
+    // list, every auxiliary member.
     const staff = band.nextElementSibling;
     if (!(staff instanceof HTMLElement) || staff.tagName !== 'SECTION')
       throw new Error('team story: no staff band after the doctors band');
+    await expect(staff).toBe(
+      canvas.getByRole('region', { name: words.roster.title }),
+    );
+    await expect(within(staff).getByText(words.roster.eyebrow)).toBeVisible();
     const tiles = within(within(staff).getByRole('list')).getAllByRole(
       'article',
     );
@@ -377,7 +390,8 @@ const playPage =
       1, // the page's own, sr-only
       2, // the doctors band
       ...doctors.map(() => 3), // one per doctor card
-      ...auxiliaries.map(() => 2), // one per staff tile
+      2, // the staff band, since 2026-10-02 (§15.32)
+      ...auxiliaries.map(() => 3), // one per staff tile
       2, // the numbers band
       ...clinicStats.map(() => 3), // one per clinic tile — three
       2, // the map
@@ -397,6 +411,7 @@ export const Romanian: Story = {
       profile: ro.team.showcase.profile,
       location: ro.home.location.title,
       numbers: ro.team.doctor.stats,
+      roster: ro.team.roster,
     },
     'ro',
   ),
@@ -418,6 +433,7 @@ export const German: Story = {
         profile: de.team.showcase.profile,
         location: de.home.location.title,
         numbers: de.team.doctor.stats,
+        roster: de.team.roster,
       },
       'de',
     )(context);

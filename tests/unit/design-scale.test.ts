@@ -9,10 +9,15 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 // globals.css's `@utility design-scale` redraws every theme LENGTH of the box
 // that wears it in one design pixel, `--scale-px`, by REMAPPING Tailwind's
 // own variables — one line per step, `calc(var(--scale-px) * N)` — and
-// sections/DoctorShowcase wears it behind its three GATES (its D10): the
-// `scalable` variant — a mouse or trackpad, in an engine that registers
-// custom properties — and a column of max(56rem, 896px). Four things can rot
-// silently there, and this file is the machine for all four:
+// since 2026-10-02 (CLAUDE.md §15.32) ui/Container spells the regime ONCE as
+// THE BAND SCALE — `bandScaleClasses` (the design pixel and the remap behind
+// three GATES: the `scalable` variant — a mouse or trackpad, in an engine
+// that registers custom properties — and a column of max(56rem, 896px)) and
+// `bandColumnClasses` (the cap and the centring) — which every band under the
+// Home hero and every band of the Team page wears, so all of their headings
+// are one size and one offset (sections/DoctorShowcase's D10 invented it,
+// alone, on 2026-10-01). Four things can rot silently there, and this file is
+// the machine for all four:
 //   · A STEP LEFT BEHIND. A theme length with no remap line stays in rem
 //     inside the band: the one utility that reads it keeps its size while
 //     everything round it scales — exactly the "disproportioned" the owner
@@ -31,20 +36,23 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 //     SCALE stays untouched, only the unit moves). The body size (§15.1's
 //     1.125rem) and the ribbon's unit (lib/ribbon-model's UNIT_PX, imported)
 //     are held the same way.
-//   · A SECOND WEARER, OR A SECOND SPELLING. The regime is ONE box's: the band
-//     declares the design pixel and wears the remap behind ONE variant chain,
-//     the gate first, once each; its cap is one number spelled twice in that
-//     one class string and its chain one spelling worn twice (KEEP IN SYNC);
-//     and the gate is ONE custom variant in globals.css with exactly its two
-//     conditions. No other product file in src/ declares either.
+//   · A SECOND SPELLING. The regime is spelled ONCE, in ui/Container: the
+//     design pixel and the remap behind ONE variant chain, the gate first,
+//     once each; the cap one number spelled twice across the two strings and
+//     the chain one spelling worn twice (KEEP IN SYNC); the zoom one variable
+//     with ONE setter (DoctorStats' tiles, at 9/8); and the gate ONE custom
+//     variant in globals.css with exactly its two conditions. No other
+//     product file in src/ declares the pixel or spells the remap — the five
+//     wearers IMPORT both strings — and the one class that must re-spell the
+//     chain as a literal (the staff tile's width) spells the same chain.
 //   · A PICTURE ASKED FOR AT THE WRONG SIZE (G2, T5/R7). PersonnelCard's
 //     CUTOUT_SIZES tells the browser how wide the doctor's cutout is drawn,
 //     and each number in it is derived from the band's: the vw share from
 //     REFERENCE, the cell and ui/Container's gutters, the min-width from the
 //     STEP and the gutters, the pointer condition from the gate. They are read
-//     here where they live — the band's class string, the card's and the
-//     Container's source, the stylesheet — so pulling one of D10's levers
-//     fails a test instead of quietly blurring a picture.
+//     here where they live — ui/Container's band-scale string, the card's
+//     and the Container's source, the stylesheet — so pulling one of D10's
+//     levers fails a test instead of quietly blurring a picture.
 // The two registrations (`@property`) are held too: an UNREGISTERED design
 // pixel is pasted as text and its `cqw` measured again against whichever
 // card reads it (globals.css, THE DESIGN SCALE — 86.48px where 100 was due).
@@ -54,8 +62,8 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 // explain the regime in prose that names the very tokens counted below.
 // THE D-LIT RULE, for this file and every other: Tailwind reads class names
 // out of every file it scans, tests and comments included, so a complete
-// arbitrary class spelled anywhere but in the band ships as a rule only that
-// file needs (globals.css, THE DESIGN SCALE — THE BARE RULE SHIPS). The
+// arbitrary class spelled anywhere but in ui/Container ships as a rule only
+// that file needs (globals.css, THE DESIGN SCALE — THE BARE RULE SHIPS). The
 // design pixel's bracketed declaration is therefore never written here whole:
 // its name is matched as a part, every sample is assembled from parts, and
 // the last test below holds the rest of the repository to the same rule.
@@ -360,42 +368,102 @@ const arbitrary = (utility: string): { name: string; value: string } | null => {
 /** The design pixel's name — the one custom property the regime declares. */
 const PIXEL = '--scale-px';
 
-/** The band's source, raw and without its comments. */
-const bandSource = read(
-  'src/components/sections/DoctorShowcase/DoctorShowcase.tsx',
-);
-const band = tsCode(bandSource);
+/** ui/Container's source, raw and without its comments — THE BAND SCALE's
+ *  one spelling since 2026-10-02 (§15.32). */
+const containerSource = read('src/components/ui/Container/Container.tsx');
+const container = tsCode(containerSource);
 
-/** RHYTHM as the browser gets it — its string literals, joined. */
-const rhythm = ((): string => {
-  const match = /\bconst RHYTHM =([^;]*);/.exec(band);
-  if (match === null) throw new Error('no RHYTHM in the band’s source');
+/** An exported string constant as the browser gets it — its string
+ *  literals, joined (a constant may be written over several `+`ed
+ *  literals). Throws by name when the constant is gone. */
+const exported = (code: string, name: string): string => {
+  const match = new RegExp(`\\bexport const ${name} =([^;]*);`).exec(code);
+  if (match === null) throw new Error(`no exported ${name} in the source`);
   return [...match[1].matchAll(/'([^']*)'/g)].map((m) => m[1]).join('');
-})();
-/** RHYTHM's classes, each read as its chain and its utility. */
-const classes = rhythm.split(/\s+/).filter(Boolean).map(parse);
+};
+
+/** THE BAND SCALE's two strings: the design pixel with the remap, and the
+ *  column (the cap and the centring). */
+const scaleString = exported(container, 'bandScaleClasses');
+const columnString = exported(container, 'bandColumnClasses');
+/** Each string's classes, each read as its chain and its utility. */
+const scaleClasses = scaleString.split(/\s+/).filter(Boolean).map(parse);
+const columnClasses = columnString.split(/\s+/).filter(Boolean).map(parse);
 
 /** The two regime classes — the design pixel's declaration and the remap —
- *  in the order RHYTHM writes them. */
-const regime = classes.filter(
+ *  in the order bandScaleClasses writes them. */
+const regime = scaleClasses.filter(
   ({ utility }) =>
     utility === 'design-scale' || arbitrary(utility)?.name === PIXEL,
 );
 
-/** The design pixel's value, `calc(min(100cqw,CAP)/REFERENCE)`, read as its
- *  two numbers: THE CAP as written, and REFERENCE. */
-const pixel = ((): { cap: string; reference: number } => {
+/** The design pixel's value,
+ *  `calc(min(100cqw,CAP)/REFERENCE*var(ZOOM,DEFAULT))`, read as its parts:
+ *  THE CAP as written, REFERENCE, the zoom's name and its default. */
+const pixel = ((): {
+  cap: string;
+  reference: number;
+  zoom: string;
+  zoomDefault: number;
+} => {
   const value =
     regime.map(({ utility }) => arbitrary(utility)).find(Boolean)?.value ?? '';
-  const match = /^calc\(min\(100cqw,(\d+(?:\.\d+)?rem)\)\/(\d+)\)$/.exec(value);
+  const match =
+    /^calc\(min\(100cqw,(\d+(?:\.\d+)?rem)\)\/(\d+)\*var\((--[\w-]+),(\d+(?:\.\d+)?)\)\)$/.exec(
+      value,
+    );
   if (match === null) {
-    throw new Error(`the design pixel reads “${value}”, not min()/N`);
+    throw new Error(
+      `the design pixel reads “${value}”, not min()/N times a zoom`,
+    );
   }
-  return { cap: match[1], reference: Number(match[2]) };
+  return {
+    cap: match[1],
+    reference: Number(match[2]),
+    zoom: match[3],
+    zoomDefault: Number(match[4]),
+  };
 })();
 
-describe('the design scale — ONE wearer, the doctors band, behind its gates (D10)', () => {
-  const count = (token: string): number => band.split(token).length - 1;
+/** The product files under src/ — tests and stories render the utility on
+ *  purpose, to measure it, and are left out. */
+const productFiles = readdirSync(new URL('src/', REPO), {
+  recursive: true,
+  encoding: 'utf8',
+})
+  .map((name) => name.replaceAll('\\', '/'))
+  .filter((name) => /\.(ts|tsx)$/.test(name))
+  .filter((name) => !/\.(test|stories)\.tsx?$/.test(name));
+
+/** The bands that wear THE BAND SCALE (§15.32): every band under the Home
+ *  hero and every band of the Team page — the doctors, the numbers, the map,
+ *  the reviews' opener and the staff. */
+const WEARERS = [
+  'components/sections/ClinicLocation/ClinicLocation.tsx',
+  'components/sections/DoctorShowcase/DoctorShowcase.tsx',
+  'components/sections/DoctorStats/DoctorStats.tsx',
+  'components/sections/ReviewsCarousel/ReviewsCarousel.tsx',
+  'components/sections/TeamRoster/TeamRoster.tsx',
+];
+
+/** Every class-like token in a source's string literals — single, double AND
+ *  backtick (a template literal's `${…}` read as a gap) — each read as its
+ *  chain and its utility: what Tailwind's scanner can see in a quoted class
+ *  string (the Opus review's census probe: backticks were missed). */
+const tokensOf = (code: string): { variants: string[]; utility: string }[] =>
+  [...code.matchAll(/'([^'\n]*)'|"([^"\n]*)"|`([^`]*)`/g)]
+    .flatMap((match) =>
+      (
+        match[1] ??
+        match[2] ??
+        (match[3] ?? '').replace(/\$\{[^}]*\}/g, ' ')
+      ).split(/\s+/),
+    )
+    .filter(Boolean)
+    .map(parse);
+
+describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band of Home and Team (§15.32)', () => {
+  const count = (token: string): number => container.split(token).length - 1;
 
   it('declares the design pixel once and wears the remap once, behind ONE variant chain — the gate first, then the Container’s `@4xl` step floored at 896px', () => {
     expect(
@@ -404,32 +472,33 @@ describe('the design scale — ONE wearer, the doctors band, behind its gates (D
     for (const { variants } of regime) {
       expect(variants).toEqual(['scalable', '@4xl', '@min-[896px]']);
     }
-    // …and names neither anywhere else in its code — no inline style, no
-    // second reading, no second wearing.
+    // …nothing else rides in that string,
+    expect(scaleClasses).toEqual(regime);
+    // …and the file names neither anywhere else in its code — no inline
+    // style, no second reading, no second wearing.
     expect(count('design-scale')).toBe(1);
     expect(count(PIXEL)).toBe(1);
   });
 
+  it('caps and centres in a string of its own — `mx-auto w-full`, and the cap behind the gate alone', () => {
+    expect(
+      columnClasses.map(({ variants, utility }) =>
+        [...variants, utility].join(':'),
+      ),
+    ).toEqual(['mx-auto', 'w-full', `scalable:max-w-[${pixel.cap}]`]);
+  });
+
   it('wears the gate on exactly THREE classes — the cap and the two regime classes — and always as the outermost variant', () => {
-    const gated = classes.filter(({ variants }) =>
+    const gated = [...columnClasses, ...scaleClasses].filter(({ variants }) =>
       variants.includes('scalable'),
     );
     expect(gated).toHaveLength(3);
     for (const { variants } of gated) expect(variants[0]).toBe('scalable');
-    // The cap: the gate alone, nothing between it and the box's width.
-    const [cap, ...rest] = gated;
-    expect(cap?.variants).toEqual(['scalable']);
-    expect(cap?.utility.startsWith('max-w-')).toBe(true);
-    expect(rest).toEqual(regime);
-    // The token is spelled as many times as it is worn, and no more.
     expect(count('scalable:')).toBe(3);
-    // …and the box centres in a wider column.
-    expect(classes.map(({ utility }) => utility)).toContain('mx-auto');
   });
 
-  it('spells the CAP in rem, once in the design pixel and once in the box’s width — the same number (KEEP IN SYNC, G2 typescript T2)', () => {
-    const inBox = classes
-      .filter(({ variants }) => variants.includes('scalable'))
+  it('spells the CAP in rem, once in the design pixel and once in the column’s width — the same number (KEEP IN SYNC, G2 typescript T2)', () => {
+    const inBox = columnClasses
       .map(({ utility }) => /^max-w-\[(\d+(?:\.\d+)?rem)\]$/.exec(utility))
       .find(Boolean)?.[1];
     expect(pixel.cap).toBe('96rem');
@@ -449,6 +518,26 @@ describe('the design scale — ONE wearer, the doctors band, behind its gates (D
     );
   });
 
+  it('multiplies the pixel by THE ZOOM — 1 unless a box says otherwise, and ONE box says otherwise: DoctorStats’ tiles, at 9/8', () => {
+    expect(pixel.zoom).toBe('--band-zoom');
+    expect(pixel.zoomDefault).toBe(1);
+    // Assembled from parts, never one literal (THE D-LIT RULE's spirit).
+    const opener = `[${pixel.zoom}:`;
+    const setters = productFiles
+      .filter((name) => tsCode(read(`src/${name}`)).includes(opener))
+      .toSorted();
+    expect(setters).toEqual([
+      'components/sections/DoctorStats/DoctorStats.tsx',
+    ]);
+    const stats = tsCode(
+      read('src/components/sections/DoctorStats/DoctorStats.tsx'),
+    );
+    const at = stats.indexOf(opener) + opener.length;
+    // 9/8: a tile's sentence (text-base, 16) reads the doctor card's quote
+    // (text-lg, 18) — the owner's "1 to 1" — and the tile keeps its ratios.
+    expect(Number(stats.slice(at, stats.indexOf(']', at)))).toBe(9 / 8);
+  });
+
   it('is ONE custom variant in globals.css, with exactly its two conditions — a mouse or trackpad, in an engine that registers custom properties', () => {
     expect(globals.split('@custom-variant scalable').length - 1).toBe(1);
     expect(
@@ -466,7 +555,7 @@ describe('the design scale — ONE wearer, the doctors band, behind its gates (D
     // Assembled from parts, never one literal (THE D-LIT RULE).
     const open = '[';
     const samples = [
-      `scalable:@4xl:@min-[896px]:${open}${PIXEL}:calc(min(100cqw,96rem)/1106)]`,
+      `scalable:@4xl:@min-[896px]:${open}${PIXEL}:calc(min(100cqw,96rem)/1106*var(--band-zoom,1))]`,
       `@5xl:${open}${PIXEL}:2px]`,
       `${open}${PIXEL}:1px]`,
       `${open}--ribbon-unit:100px]`,
@@ -479,36 +568,114 @@ describe('the design scale — ONE wearer, the doctors band, behind its gates (D
     expect(arbitrary(samples[3]?.utility ?? '')?.name).toBe('--ribbon-unit');
   });
 
-  it('is the ONLY product file in src/ that declares a design pixel or wears the remap', () => {
-    const wearers = readdirSync(new URL('src/', REPO), {
-      recursive: true,
-      encoding: 'utf8',
-    })
-      .map((name) => name.replaceAll('\\', '/'))
-      .filter((name) => /\.(ts|tsx)$/.test(name))
-      // Tests and stories render the utility on purpose, to measure it.
-      .filter((name) => !/\.(test|stories)\.tsx?$/.test(name))
+  it('is the ONLY product file in src/ that declares a design pixel or spells the remap — and every band of Home and Team wears it by IMPORTING both strings', () => {
+    const spellers = productFiles
       .filter((name) =>
         /design-scale|--scale-px/.test(tsCode(read(`src/${name}`))),
       )
       .toSorted();
-    expect(wearers).toEqual([
-      'components/sections/DoctorShowcase/DoctorShowcase.tsx',
+    expect(spellers).toEqual(['components/ui/Container/Container.tsx']);
+    const wearers = productFiles
+      .filter((name) => name !== 'components/ui/Container/Container.tsx')
+      .filter((name) =>
+        /\bbandScaleClasses\b/.test(tsCode(read(`src/${name}`))),
+      )
+      .toSorted();
+    expect(wearers).toEqual(WEARERS);
+    for (const name of WEARERS) {
+      expect(tsCode(read(`src/${name}`)), name).toMatch(
+        /\bbandColumnClasses\b/,
+      );
+    }
+  });
+
+  it('lets the GATE CHAIN be re-spelled only where Tailwind needs a literal of its own — and only as the regime’s chain', () => {
+    // A class that must follow the regime but is none of its strings — the
+    // staff tile's width and its row's gap — spells the chain itself, because
+    // Tailwind reads class names from source text. Every such token must carry
+    // the SAME chain, gate first, so a tile can never switch at another width
+    // than the band. The gate is looked for ANYWHERE in a chain (a reordered
+    // `@4xl:scalable:` is caught as itself) and in backtick literals too (the
+    // Opus review's census probe).
+    const chain = regime[0]?.variants ?? [];
+    const gatedTokens = productFiles.flatMap((name) =>
+      tokensOf(tsCode(read(`src/${name}`)))
+        .filter(({ variants }) => variants.includes('scalable'))
+        .map((token) => ({ name, ...token })),
+    );
+    for (const { name, variants, utility } of gatedTokens) {
+      expect(variants[0], `${name}: ${utility} — the gate first`).toBe(
+        'scalable',
+      );
+    }
+    expect(
+      [...new Set(gatedTokens.map(({ name }) => name))].toSorted(),
+    ).toEqual([
+      'components/sections/TeamRoster/TeamRoster.tsx',
+      'components/ui/Container/Container.tsx',
+    ]);
+    for (const { name, variants, utility } of gatedTokens) {
+      // The cap alone wears the gate bare (bandColumnClasses).
+      if (variants.length === 1) {
+        expect(name).toBe('components/ui/Container/Container.tsx');
+        continue;
+      }
+      expect(variants, `${name}: ${utility}`).toEqual(chain);
+    }
+    expect(
+      gatedTokens
+        .filter(({ name }) => name.endsWith('TeamRoster.tsx'))
+        .map(({ variants, utility }) => [...variants, utility].join(':'))
+        .toSorted(),
+    ).toEqual([
+      'scalable:@4xl:@min-[896px]:gap-x-6',
+      'scalable:@4xl:@min-[896px]:w-88',
     ]);
   });
 
-  it('strips its comments — the band’s own prose names the regime many times', () => {
-    expect(bandSource.split('design-scale').length - 1).toBeGreaterThan(1);
+  it('has a gate-chain reader with teeth — a backtick class and a reordered chain are both seen', () => {
+    // Assembled from parts, never one literal (THE D-LIT RULE's spirit).
+    const gate = 'scalable';
+    const tick = '`';
+    const probe = [
+      `const A = ${tick}w-72 ${gate}:@3xl:w-88${tick};`,
+      `const B = '@3xl:${gate}:w-88';`,
+    ].join('\n');
+    const seen = tokensOf(probe)
+      .filter(({ variants }) => variants.includes(gate))
+      .map(({ variants, utility }) => [...variants, utility].join(':'));
+    expect(seen).toEqual([`${gate}:@3xl:w-88`, `@3xl:${gate}:w-88`]);
+  });
+
+  it('lets ONE box set the zoom — no other product code names `--band-zoom` but ui/Container’s own read', () => {
+    // An unregistered custom property INHERITS: a setter on any wrapping box
+    // would rescale every band inside it. So outside ui/Container's
+    // `var(--band-zoom,1)` read and DoctorStats' one class (the zoom test
+    // above), no product code may name it — class, inline style or CSS.
+    const name = pixel.zoom;
+    const offenders = productFiles.filter((file) => {
+      const code = tsCode(read(`src/${file}`));
+      const uses = code.split(name).length - 1;
+      if (file === 'components/ui/Container/Container.tsx') return uses !== 1;
+      if (file === 'components/sections/DoctorStats/DoctorStats.tsx')
+        return uses !== 1;
+      return uses !== 0;
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it('strips its comments — ui/Container’s own prose names the regime many times', () => {
+    expect(containerSource.split('design-scale').length - 1).toBeGreaterThan(1);
     expect(count('design-scale')).toBe(1);
   });
 
-  it('lets no scanned file spell the design pixel’s declaration but as the band’s own class (THE D-LIT RULE)', () => {
+  it('lets no scanned file spell the design pixel’s declaration but as ui/Container’s own class (THE D-LIT RULE)', () => {
     // Tailwind scans comments and tests too, so a bracketed declaration in
     // any other spelling would ship a rule nobody wears. Every occurrence in
     // src/, tests/ and .storybook/ — raw text, comments included — must be
-    // the band's own regime class, whole. Never vacuous: the band's own
+    // ui/Container's own regime class, whole. Never vacuous: Container's own
     // source is among the occurrences.
-    const own = rhythm
+    const own = scaleString
       .split(/\s+/)
       .find((token) => arbitrary(parse(token).utility)?.name === PIXEL);
     const opener = `[${PIXEL}:`;
@@ -546,7 +713,9 @@ describe('the cutout’s `sizes` — every number derived from the band’s, rea
   const card = tsCode(
     read('src/components/sections/PersonnelCard/PersonnelCard.tsx'),
   );
-  const container = tsCode(read('src/components/ui/Container/Container.tsx'));
+  // ui/Container's code (`container`, read once above) holds both the gutter
+  // these numbers divide by and, since 2026-10-02, THE BAND SCALE they derive
+  // from (§15.32) — REFERENCE and the STEP are read off its regime.
 
   /** A `const NAME = '…';` of a source, its one string literal. */
   const constant = (code: string, name: string): string => {
@@ -605,5 +774,24 @@ describe('the cutout’s `sizes` — every number derived from the band’s, rea
       )?.[1],
     ).toBe(parts?.[2]);
     expect(Number(parts?.[4]) * 16).toBe(cell);
+  });
+
+  it('derives the STAFF portrait’s `sizes` the same way — its 192px cell scaled in the staff band since 2026-10-02 (§15.32, PersonnelCard D19)', () => {
+    const portrait =
+      /^\(min-width: (\d+)rem\) and (\(pointer: fine\)) (\d+)vw, (\d+)rem$/.exec(
+        constant(card, 'PORTRAIT_SIZES'),
+      );
+    // The tile's portrait cell, its `w-N` beside the 3:4 ratio, in px.
+    const tile =
+      Number(/aspect-3\/4 w-(\d+)\b/.exec(card)?.[1]) *
+      (steps.get('--spacing') ?? NaN);
+    expect(tile).toBe(192);
+    expect(portrait).not.toBeNull();
+    expect(Math.ceil((100 * tile * column) / reference)).toBe(
+      Number(portrait?.[3]),
+    );
+    expect(stepRem / column).toBe(Number(portrait?.[1]));
+    expect(portrait?.[2]).toBe(parts?.[2]);
+    expect(Number(portrait?.[4]) * 16).toBe(tile);
   });
 });

@@ -1,8 +1,13 @@
 import type { ReactElement } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
-import { Container } from '@/components/ui/Container/Container';
+import {
+  Container,
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
 import { defaultLocale, locales, type Locale } from '@/i18n/locales';
+import { cx } from '@/lib/cx/cx';
 import { reviews as siteReviews, type Review } from '@/lib/reviews/reviews';
 import { formatTimeAgo } from '@/lib/time-ago/time-ago';
 import {
@@ -69,14 +74,23 @@ import {
 // plain `YYYY-MM-DD` string, which the card prints as `<time dateTime>`. The
 // card never sees the number and this file never formats by hand.
 //
-// ── THE BAND SHELL is ui/Container's PAGE-BAND RECIPE, unchanged: a
-// full-bleed semantic <section> owning the paint, a Container owning the width
-// and the container-query context, and a rhythm box one level in owning the
-// vertical steps (an element cannot query its OWN size, so the stepped `py`
-// cannot ride on Container itself — sections/ClinicLocation's D7). NO outer
-// margin: the page owns the rhythm between bands (§6.4). The old Home wrapped
-// this block in its own `pl-[clamp(48px,10vw,200px)]` gutter; that spelling is
-// gone, because ui/Container is the site's ONE gutter definition (§15.15 a).
+// ── THE BAND SHELL is ui/Container's PAGE-BAND RECIPE: a full-bleed semantic
+// <section> owning the paint, a Container owning the width and the
+// container-query context, and the vertical steps one level in (an element
+// cannot query its OWN size, so a stepped padding cannot ride on Container
+// itself — sections/ClinicLocation's D7). Since 2026-10-02 the steps sit on
+// TWO boxes where they sat on one (THE OPENER'S SCALE, below): the RHYTHM box
+// — the flex column the opener and the deck stack in — owns the band's BOTTOM
+// step, under the deck; the OPENER box inside it owns the TOP step and the
+// one space between the heading and the deck, as its own `pb-8` — the 32px
+// the rhythm box's `gap-8` used to be (§6.4: the band owns its children's
+// spacing, and neither child brings a margin). Below the regime the two boxes
+// lay out as the one `flex flex-col gap-8 py-12 @lg:py-16 @3xl:py-20` box
+// did, to the pixel: the same step above the eyebrow, the same 32px under the
+// h2, the same step under the deck. NO outer margin: the page owns the rhythm
+// between bands (§6.4). The old Home wrapped this block in its own
+// `pl-[clamp(48px,10vw,200px)]` gutter; that spelling is gone, because
+// ui/Container is the site's ONE gutter definition (§15.15 a).
 //
 // ── ONE DELIBERATE BREACH OF THAT RECIPE, AND ITS BELT (owner 2026-09-12,
 // pack round 2). The deck's STAGE — the slides' clipping box, nothing else —
@@ -92,6 +106,50 @@ import {
 // that on the document itself. Behind a `@supports not (overflow: clip)`
 // gate the same belt is spelled `overflow-x-hidden` for Safari ≤ 15, which
 // does not know `clip` (G3 react M1; the band test pins both tokens).
+//
+// ── THE OPENER'S SCALE, AND ONLY THE OPENER'S (2026-10-02, CLAUDE.md §15.32;
+// ui/Container's THE BAND SCALE). On a laptop or a desktop every band under
+// the Home hero now draws in ONE design pixel — its column ÷ 1106, the column
+// of the owner's 1401-wide window — so that every eyebrow and every h2 on the
+// page read one size and stand on one left edge. For this band the owner drew
+// the line himself, verbatim: "And then there is the reviews carrousell which
+// you will not touch under any circumstance, it is already responsive BUT
+// it's heading and eyebrow isnt. so that heading + eyebrow must be taken care
+// of and always be in corcondance of offset and height with other headings
+// and eyebrows on the page." So ui/Container's two band-scale strings ride the
+// OPENER box (`OPENER_BOX` below) and nothing else:
+//   · IN THE REGIME — a mouse or trackpad, an engine that registers custom
+//     properties, a column of max(56rem, 896px) — the opener box declares the
+//     design pixel s and redraws every theme length on it and inside it in
+//     that pixel: the eyebrow 14 × s, the h2 36 × s, the 8px between them
+//     8 × s, the top step 80 × s and the 32px under the h2 32 × s — the
+//     numbers every other band's opener reads at the same width. Past a
+//     1536px column (a 1920 window's) the box caps at 96rem and centres, on
+//     the one left edge every scaled band shares.
+//   · THE DECK — stage, cards, buttons, every word on a card — is the opener
+//     box's SIBLING in the rhythm box, never its child, so it inherits no
+//     design pixel: its cards keep their rem sizes and its stage its shares of
+//     the screen (ReviewsDeck.tsx's STAGE paragraph) at every width. It moves
+//     down the page by however much the opener grows, and changes by no pixel
+//     itself. The stage's full-bleed margins still resolve against the
+//     Container's box and its `@md` step still queries the Container: the
+//     opener box is no container.
+//   · BELOW THE STEP, ON EVERY TOUCH DEVICE AND IN AN ENGINE THAT CANNOT
+//     REGISTER, nothing is declared and nothing remapped: the band is the one
+//     box of before, to the pixel (THE BAND SHELL above) — phones and tablets
+//     unchanged.
+// WHERE THE STRINGS RIDE, AND WHY NOT ON THE RHYTHM BOX. ui/Container's recipe
+// rule 5 puts them on a scaling band's RHYTHM box, the box that carries its
+// `py` — written for a band that scales whole. This one scales its opener
+// alone, and its rhythm box holds the deck, so the strings ride one box
+// further in. What that costs is named here: the band's TOP step scales with
+// the opener (the space between the band above and this eyebrow is the one
+// every band shares), its BOTTOM step stays rem (it is the deck's floor).
+// `w-full` (inside `bandColumnClasses`) is load-bearing on this box: the
+// opener box is a FLEX item of the rhythm box's column, where `mx-auto` alone
+// would shrink it to its text and centre the heading (ui/Container's THE BAND
+// SCALE, its second bullet). The band takes no switch: its one page is Home,
+// and Home scales.
 
 /**
  * The `aria-labelledby` target. Hard-coded like ClinicLocation's HEADING_ID and
@@ -99,6 +157,30 @@ import {
  * generated id would only make the pair harder to keep in step.
  */
 const HEADING_ID = 'reviews-heading';
+
+/**
+ * THE RHYTHM BOX (the header's THE BAND SHELL): the flex column the opener box
+ * and the deck stack in, and the band's BOTTOM step on container steps. It
+ * never wears the band scale — the deck is inside it (THE OPENER'S SCALE) — so
+ * the step under the deck is rem at every width. ONE static string: Tailwind
+ * reads class names from source text.
+ */
+const RHYTHM_BOX = 'flex flex-col pb-12 @lg:pb-16 @3xl:pb-20';
+
+/**
+ * THE OPENER BOX (the header's THE OPENER'S SCALE): the band's TOP step, the
+ * 32px between the heading and the deck as its own bottom padding (the old
+ * rhythm box's `gap-8`), and ui/Container's two band-scale strings — the
+ * column (cap and centring) and the scale (design pixel and remap) — imported
+ * whole, never spelled here (tests/unit/design-scale.test.ts holds every
+ * wearer to an import of them). Below the regime the strings declare nothing
+ * and the box adds nothing to the old single box's layout.
+ */
+const OPENER_BOX = cx(
+  'pt-12 pb-8 @lg:pt-16 @3xl:pt-20',
+  bandColumnClasses,
+  bandScaleClasses,
+);
 
 /**
  * THE RHYTHM (owner D11 — "pick whatever, we'll see"; recomputed against the
@@ -247,20 +329,31 @@ export function ReviewsCarousel({
       className="overflow-x-clip supports-[not_(overflow:clip)]:overflow-x-hidden bg-page"
     >
       <Container>
-        {/* The rhythm box — band-owned `py` on container steps, plus the ONE
-            gap between the opener and the deck (§6.4: the section owns its
-            children's spacing, and neither child brings a margin). */}
-        <div className="flex flex-col gap-8 py-12 @lg:py-16 @3xl:py-20">
-          {/* The id lands on the <h2> — the half of the aria-labelledby pair
-              the <section> above points at, and what turns this band into a
-              named region rather than a generic box. The page owns its one
-              <h1> (§9); a band opens at 2. */}
-          <SectionHeading
-            eyebrow={t('reviews.eyebrow')}
-            title={t('reviews.title')}
-            id={HEADING_ID}
-            align="start"
-          />
+        {/* The rhythm box — the column the opener and the deck stack in, and
+            the band's bottom step under the deck; never scaled, because the
+            deck is inside it (the header's THE BAND SHELL). */}
+        <div className={RHYTHM_BOX}>
+          {/* The opener box — the band's top step and the ONE space between
+              the opener and the deck, as its own bottom padding (§6.4: the
+              section owns its children's spacing, and neither child brings a
+              margin) — and the only box here that wears ui/Container's band
+              scale, so the eyebrow and the h2 match every band under the
+              Hero in size and left edge (the header's THE OPENER'S SCALE). */}
+          <div className={OPENER_BOX}>
+            {/* The id lands on the <h2> — the half of the aria-labelledby
+                pair the <section> above points at, and what turns this band
+                into a named region rather than a generic box. The page owns
+                its one <h1> (§9); a band opens at 2. */}
+            <SectionHeading
+              eyebrow={t('reviews.eyebrow')}
+              title={t('reviews.title')}
+              id={HEADING_ID}
+              align="start"
+            />
+          </div>
+          {/* The deck — the opener box's SIBLING, never its child: it
+              inherits no design pixel and keeps its rem sizes at every width
+              (the owner: "you will not touch under any circumstance"). */}
           <ReviewsDeck
             slides={slides}
             labels={labels}

@@ -91,6 +91,10 @@
       "title": "Les spécialistes dont nous sommes fiers",
       "profile": "En savoir plus sur moi"
     },
+    "roster": {
+      "eyebrow": "Notre équipe de soutien",
+      "title": "Les personnes sans qui nous n'y arriverions pas"
+    },
     "doctor": {
       "philosophy": {
         "eyebrow": "Avec mes mots",

@@ -1,8 +1,18 @@
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { Container, containerClasses } from './Container';
+import {
+  Container,
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from './Container';
 import source from './Container.tsx?raw';
+// The project loads no stylesheet (tests/setup/components.ts); THE BAND SCALE
+// block below measures COMPUTED lengths, so this file loads the site's sheet
+// — the DoctorShowcase.test.tsx precedent. Every other assertion here reads
+// class names and holds with the sheet or without it.
+import '@/styles/globals.css';
 
 // A <div> has no role, and that is the contract (this atom measures a column,
 // it does not add semantics — landmarks stay the band's own markup), so the
@@ -93,6 +103,98 @@ describe('Container — THE gutter definition', () => {
     render(<Container>{RO_COPY}</Container>);
     const tokens = tokensOf(screen.getByText(RO_COPY));
     expect(tokens.filter((t) => /^(sm|md|lg|xl|2xl):/.test(t))).toEqual([]);
+  });
+});
+
+// THE BAND SCALE (2026-10-02, CLAUDE.md §15.32) — the two strings every band
+// of Home and Team wears on its rhythm box, written out for the GUTTER's
+// reason above. tests/unit/design-scale.test.ts holds their parts (one
+// spelling, the gate, the cap, the step, the zoom's one setter); this suite
+// holds the bytes and what the engine draws with them.
+const BAND_SCALE =
+  'scalable:@4xl:@min-[896px]:[--scale-px:calc(min(100cqw,96rem)/1106*var(--band-zoom,1))] scalable:@4xl:@min-[896px]:design-scale';
+const BAND_COLUMN = 'mx-auto w-full scalable:max-w-[96rem]';
+
+describe('Container — THE BAND SCALE (§15.32)', () => {
+  it('exports both band-scale strings byte-for-byte', () => {
+    expect(bandScaleClasses).toBe(BAND_SCALE);
+    expect(bandColumnClasses).toBe(BAND_COLUMN);
+  });
+
+  it('never wears them itself — the box stays the gutter alone; a band’s rhythm box wears them (recipe rule 5)', () => {
+    render(<Container>{RO_COPY}</Container>);
+    expect(screen.getByText(RO_COPY).className).toBe(GUTTER);
+  });
+
+  it('draws a band in its design pixel on a laptop column, stops at the 96rem cap, and leaves a column under the step in rem', () => {
+    // The gate's pointer half: the test browser is a desktop Chromium.
+    expect(matchMedia('(pointer: fine)').matches).toBe(true);
+    // Each case forces the COLUMN through the box's own width (inline style
+    // beats the gutter's margin), so the numbers do not depend on the window:
+    // the design pixel reads `100cqw` against THIS box.
+    const cases = [
+      // The reference column — the owner's 1401 window: a design pixel IS a
+      // CSS pixel, the band its own unscaled self.
+      { column: 1106, title: 36, band: 1106 },
+      { column: 1300, title: (36 * 1300) / 1106, band: 1300 },
+      // Past the cap (96rem = 1536px at the default root): the band stops
+      // growing at 1536 and centres in its column.
+      { column: 1800, title: (36 * 1536) / 1106, band: 1536 },
+      // Under the step (max(56rem, 896px)): no design pixel, rem as ever.
+      { column: 880, title: 36, band: 880 },
+    ];
+    for (const { column, title, band } of cases) {
+      const { unmount } = render(
+        <Container style={{ marginInline: 0, width: `${column}px` }}>
+          <div
+            data-testid="band"
+            className={`${bandColumnClasses} ${bandScaleClasses}`}
+          >
+            <p data-testid="title" className="text-4xl">
+              {RO_COPY}
+            </p>
+          </div>
+        </Container>,
+      );
+      const box = screen.getByTestId('band').getBoundingClientRect();
+      const host = screen
+        .getByTestId('band')
+        .parentElement?.getBoundingClientRect();
+      expect(
+        parseFloat(getComputedStyle(screen.getByTestId('title')).fontSize),
+        `the title at a ${column}px column`,
+      ).toBeCloseTo(title, 2);
+      expect(box.width, `the band at a ${column}px column`).toBeCloseTo(
+        band,
+        2,
+      );
+      // Centred in whatever the cap leaves over.
+      expect(box.left - (host?.left ?? 0)).toBeCloseTo((column - band) / 2, 2);
+      unmount();
+    }
+  });
+
+  it('lets a box inside draw at a fixed multiple of the band’s pixel — THE ZOOM, worn by DoctorStats’ tiles at 9/8', () => {
+    render(
+      <Container style={{ marginInline: 0, width: '1300px' }}>
+        <div className={`${bandColumnClasses} ${bandScaleClasses}`}>
+          <p data-testid="band-text" className="text-base">
+            {RO_COPY}
+          </p>
+          <div className={`${bandScaleClasses} [--band-zoom:1.125]`}>
+            <p data-testid="zoomed-text" className="text-base">
+              {RO_COPY}
+            </p>
+          </div>
+        </div>
+      </Container>,
+    );
+    const size = (id: string): number =>
+      parseFloat(getComputedStyle(screen.getByTestId(id)).fontSize);
+    const s = 1300 / 1106;
+    expect(size('band-text')).toBeCloseTo(16 * s, 2);
+    // 16 × 9/8 = 18 design pixels — the doctor card's quote size.
+    expect(size('zoomed-text')).toBeCloseTo(18 * s, 2);
   });
 });
 

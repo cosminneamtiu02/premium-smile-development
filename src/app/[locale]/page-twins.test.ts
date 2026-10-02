@@ -31,7 +31,17 @@ import teamPage from './team/page.tsx?raw';
 //     are the band's defaults — and each twin says what its page says. Here
 //     a drift DOES move pixels, just not where the net looks: a page that
 //     lost `ground="page"` would ship the band lilac again, while the pixel
-//     net photographs the TWIN, which would still say it.
+//     net photographs the TWIN, which would still say it;
+//   · THE BAND SCALE (2026-10-02, CLAUDE.md §15.32) — `scaled` on the numbers
+//     band and on the map, by NAME: Home and the Team page say it (every band
+//     on both pages draws in ui/Container's THE BAND SCALE, one heading size
+//     and one offset), the doctor page says it on NEITHER (its other bands do
+//     not scale yet, and its headings must stay one size with them), and each
+//     twin says what its page says. A page that lost the word would ship one
+//     band out of step with its neighbours on every laptop — in pixels the net
+//     does see, but only on the TWIN, which would still say it;
+//   · THE STAFF BAND'S PROPS (since 2026-10-02): the Team page hands
+//     sections/TeamRoster its eyebrow and its title, and its twin the same.
 // Only names are compared, never values: a page reads `getTranslations`, its
 // twin `useTranslations`. And only the doctors band's and the numbers band's
 // props are held equal — a twin may pin a band for the workbench (a clock, a
@@ -137,6 +147,25 @@ const literalsOf = (jsx: string, element: string): string[] => {
   ).toSorted();
 };
 
+/**
+ * The BARE boolean attributes one element is given — written with no `=` at
+ * all, `scaled` — sorted (the Opus review, 2026-10-02). `propsOf` strips every
+ * value, so `scaled={false}` reads as `scaled` there and would pass while the
+ * page ships an unscaled band; this reader sees only the bare spelling.
+ */
+const flagsOf = (jsx: string, element: string): string[] => {
+  const start = jsx.indexOf(`<${element}`);
+  const end = jsx.indexOf('/>', start);
+  if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
+  return jsx
+    .slice(start + element.length + 1, end)
+    .replace(/=\{[^{}]*\}/g, '=VALUE')
+    .replace(/="[^"]*"/g, '=VALUE')
+    .split(/\s+/)
+    .filter((name) => /^[A-Za-z][\w-]*$/.test(name))
+    .toSorted();
+};
+
 /** The numbers band's two settings as Home and the Team page write them. */
 const PAGE_GROUND_AT_THE_START = ['align="start"', 'ground="page"'];
 
@@ -156,7 +185,8 @@ const DOCTOR = {
 /**
  * The numbers band's props as Home and the Team page pass them (owner,
  * 2026-10-01): the page ground and the start — and no `lead`, which is the
- * absence the owner asked for ("so dorp that part").
+ * absence the owner asked for ("so dorp that part") — and, since 2026-10-02,
+ * `scaled`: one scale with every band on those two pages (§15.32).
  */
 const CLINIC_NUMBERS = [
   'align',
@@ -164,6 +194,7 @@ const CLINIC_NUMBERS = [
   'eyebrow',
   'format',
   'ground',
+  'scaled',
   'tiles',
   'title',
 ];
@@ -208,6 +239,32 @@ describe('the Team page and its story twin — read off their source', () => {
     expect(propsOf(TEAM.twin, 'DoctorShowcase')).toEqual(
       propsOf(TEAM.page, 'DoctorShowcase'),
     );
+  });
+
+  it('titles the staff band — its eyebrow, its title and its members — page and twin alike (owner, 2026-10-02)', () => {
+    expect(propsOf(TEAM.page, 'TeamRoster')).toEqual([
+      'eyebrow',
+      'members',
+      'title',
+    ]);
+    expect(propsOf(TEAM.twin, 'TeamRoster')).toEqual(
+      propsOf(TEAM.page, 'TeamRoster'),
+    );
+  });
+
+  it('draws the map in the band scale — `scaled` and nothing else, page and twin alike (§15.32)', () => {
+    expect(propsOf(TEAM.page, 'ClinicLocation')).toEqual(['scaled']);
+    expect(propsOf(TEAM.twin, 'ClinicLocation')).toEqual(
+      propsOf(TEAM.page, 'ClinicLocation'),
+    );
+  });
+
+  it('writes `scaled` BARE on the numbers band and the map — never `scaled={…}` — page and twin alike (§15.32)', () => {
+    for (const jsx of [TEAM.page, TEAM.twin]) {
+      expect(flagsOf(jsx, 'ClinicLocation')).toEqual(['scaled']);
+      expect(flagsOf(jsx, 'DoctorStats')).toContain('scaled');
+      expect(jsx).not.toMatch(/\bscaled=/);
+    }
   });
 });
 
@@ -257,6 +314,21 @@ describe('the Home page and its story twin — read off their source', () => {
       propsOf(HOME.page, 'DoctorShowcase'),
     );
   });
+
+  it('draws the map in the band scale — `scaled` and nothing else, page and twin alike (§15.32)', () => {
+    expect(propsOf(HOME.page, 'ClinicLocation')).toEqual(['scaled']);
+    expect(propsOf(HOME.twin, 'ClinicLocation')).toEqual(
+      propsOf(HOME.page, 'ClinicLocation'),
+    );
+  });
+
+  it('writes `scaled` BARE on the numbers band and the map — never `scaled={…}` — page and twin alike (§15.32)', () => {
+    for (const jsx of [HOME.page, HOME.twin]) {
+      expect(flagsOf(jsx, 'ClinicLocation')).toEqual(['scaled']);
+      expect(flagsOf(jsx, 'DoctorStats')).toContain('scaled');
+      expect(jsx).not.toMatch(/\bscaled=/);
+    }
+  });
 });
 
 describe('a doctor’s page and its story twin — read off their source', () => {
@@ -294,6 +366,13 @@ describe('a doctor’s page and its story twin — read off their source', () =>
       expect(propsOf(jsx, 'DoctorStats')).toContain('lead');
       expect(propsOf(jsx, 'DoctorStats')).not.toContain('ground');
       expect(propsOf(jsx, 'DoctorStats')).not.toContain('align');
+    }
+  });
+
+  it('leaves BOTH shared bands UNSCALED — the numbers and the map, page and twin alike (§15.32: its own bands do not scale yet)', () => {
+    for (const jsx of [DOCTOR.page, DOCTOR.twin]) {
+      expect(propsOf(jsx, 'DoctorStats')).not.toContain('scaled');
+      expect(propsOf(jsx, 'ClinicLocation')).toEqual([]);
     }
   });
 });
@@ -335,6 +414,18 @@ describe('the reader itself — a guard that cannot fail is not a guard', () => 
     expect(
       literalsOf('<DoctorStats ground="page" align="center" />', 'DoctorStats'),
     ).not.toEqual(PAGE_GROUND_AT_THE_START);
+  });
+
+  it('reads a BARE flag as a flag, and a valued one as nothing', () => {
+    expect(flagsOf('<ClinicLocation scaled />', 'ClinicLocation')).toEqual([
+      'scaled',
+    ]);
+    expect(
+      flagsOf('<ClinicLocation scaled={false} />', 'ClinicLocation'),
+    ).toEqual([]);
+    expect(
+      flagsOf('<DoctorStats scaled ground="page" tiles={x} />', 'DoctorStats'),
+    ).toEqual(['scaled']);
   });
 
   it('names the function it could not find', () => {

@@ -2,6 +2,10 @@ import type { ReactElement } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it } from 'vitest';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
 import { locales, type Locale } from '@/i18n/locales';
 import {
   reviews as siteReviews,
@@ -27,8 +31,10 @@ import deckSource from './ReviewsDeck.tsx?raw';
 // island needs arrives FINISHED and correct for the page's language (the
 // "how long ago" phrase included, measured from the band's `now`), that the
 // list decides whether the band exists at all, that the story clock stays in
-// the workbench, and that no client directive ever creeps into this file. The
-// island's own manners live in ReviewsDeck.test.tsx.
+// the workbench, that no client directive ever creeps into this file — and,
+// since 2026-10-02 (CLAUDE.md §15.32), that ui/Container's band scale rides
+// the opener box alone and never reaches the deck. The island's own manners
+// live in ReviewsDeck.test.tsx.
 //
 // Role-based queries (§9, §13), the clinic's own Romanian reviews with their
 // diacritics (§15.7), and every user-facing string read from the REAL message
@@ -129,6 +135,29 @@ const mount = (locale: Locale = 'ro', reviews: readonly Review[] = real()) => {
 
 const classesOf = (el: Element): string[] =>
   (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/** A class string's tokens, the way an element's class attribute holds them. */
+const tokensOf = (classes: string): string[] =>
+  classes.split(/\s+/).filter(Boolean);
+
+/**
+ * The band scale's OWN classes — every token of ui/Container's two strings
+ * that rides the `scalable:` variant: the cap, the design pixel, the remap.
+ * Read off the strings themselves, so a re-spelled string moves the tests with
+ * it; `mx-auto` and `w-full` are ordinary layout any box may wear.
+ */
+const SCALE_TOKENS: readonly string[] = [
+  ...tokensOf(bandColumnClasses),
+  ...tokensOf(bandScaleClasses),
+].filter((token) => token.startsWith('scalable:'));
+
+/** The rhythm box: the band's first box inside ui/Container (THE BAND SHELL). */
+const rhythmOf = (band: HTMLElement): HTMLElement => {
+  const rhythm = band.firstElementChild?.firstElementChild;
+  if (!(rhythm instanceof HTMLElement))
+    throw new Error('ReviewsCarousel test: the band lost its rhythm box.');
+  return rhythm;
+};
 
 /** ICU interpolation, done the way the message file declares it. */
 const fill = (message: string, values: Record<string, string>): string =>
@@ -306,21 +335,26 @@ describe('ReviewsCarousel — the band shell', () => {
     expect(margins).toEqual([]);
   });
 
-  it('gives the band its own vertical rhythm one level in (the rhythm box)', () => {
+  it('gives the band its own vertical rhythm one level in — the BOTTOM step on the rhythm box', () => {
     // An element cannot query its OWN size: ui/Container IS the container, so
-    // the stepped `py` sits on a child of it (the ClinicLocation D7 precedent).
+    // the stepped padding sits on a child of it (the ClinicLocation D7
+    // precedent). RE-SPELLED 2026-10-02 (CLAUDE.md §15.32 — the band's THE
+    // BAND SHELL): this box was `flex flex-col gap-8 py-12 @lg:py-16
+    // @3xl:py-20`. The opener's scale took the TOP step and the 32px gap into
+    // the opener box (pinned in the next describe, as its `pt-*` and `pb-8`);
+    // the BOTTOM step stays here, under the deck, which never scales. Below
+    // the regime the two boxes lay out exactly as the one did.
     const { band } = mount();
     const container = band().firstElementChild as HTMLElement;
-    const rhythm = container.firstElementChild as HTMLElement;
+    const rhythm = rhythmOf(band());
 
     expect(classesOf(container)).toContain('@container');
     expect(classesOf(rhythm)).toEqual([
       'flex',
       'flex-col',
-      'gap-8',
-      'py-12',
-      '@lg:py-16',
-      '@3xl:py-20',
+      'pb-12',
+      '@lg:pb-16',
+      '@3xl:pb-20',
     ]);
   });
 
@@ -334,6 +368,88 @@ describe('ReviewsCarousel — the band shell', () => {
       'aria-roledescription',
       ro.common.carousel.role,
     );
+  });
+});
+
+describe('ReviewsCarousel — the opener scales, the deck does not (§15.32)', () => {
+  // ui/Container's THE BAND SCALE on the OPENER box alone (the band's header,
+  // THE OPENER'S SCALE). No stylesheet is loaded in this project, so these
+  // tests pin WHERE the two strings ride; the stories measure what they do in
+  // a real browser — the eyebrow 14 × s and the h2 36 × s on a laptop, the
+  // deck's body text still the theme's 16px.
+
+  it('wraps the opener — and only the opener — in a box wearing both of ui/Container’s band-scale strings', () => {
+    const { band, messages } = mount();
+    const opener = rhythmOf(band()).firstElementChild as HTMLElement;
+
+    // The band's top step, the old 32px gap as the box's own bottom padding,
+    // then the two strings WHOLE and in their order — read off ui/Container,
+    // never re-spelled here, so the pin follows the one definition.
+    expect(classesOf(opener)).toEqual([
+      'pt-12',
+      'pb-8',
+      '@lg:pt-16',
+      '@3xl:pt-20',
+      ...tokensOf(bandColumnClasses),
+      ...tokensOf(bandScaleClasses),
+    ]);
+    // …holding the eyebrow over the h2 through sections/SectionHeading, and
+    // nothing else: one child, and no region inside it.
+    expect(opener.children).toHaveLength(1);
+    expect(
+      within(opener).getByRole('heading', { level: 2, name: messages.title }),
+    ).toHaveAttribute('id', 'reviews-heading');
+    expect(within(opener).getByText(messages.eyebrow).tagName).toBe('P');
+    expect(within(opener).queryByRole('region')).toBeNull();
+  });
+
+  it('keeps the deck OUTSIDE the scale — no box from the deck up to the band, and none inside it, wears a band-scale class', () => {
+    // The owner, verbatim: "the reviews carrousell which you will not touch
+    // under any circumstance". The deck is the rhythm box's SECOND child — the
+    // opener box's sibling, never its child — so it inherits no design pixel
+    // at any width. The opener's own wear is asserted first, so the empty
+    // lists below cannot pass on an empty SCALE_TOKENS.
+    const { band, deck } = mount();
+    const rhythm = rhythmOf(band());
+    const opener = rhythm.firstElementChild as HTMLElement;
+    const wearsScale = (element: Element): boolean =>
+      classesOf(element).some((token) => SCALE_TOKENS.includes(token));
+
+    expect(wearsScale(opener)).toBe(true);
+    expect([...rhythm.children]).toEqual([opener, deck()]);
+    expect(opener.contains(deck())).toBe(false);
+
+    // Every box from the deck's own <section> up to the band's, inclusive.
+    const ancestry: Element[] = [];
+    for (
+      let element: Element | null = deck();
+      element !== null;
+      element = element.parentElement
+    ) {
+      ancestry.push(element);
+      if (element === band()) break;
+    }
+    expect(ancestry.at(-1)).toBe(band());
+    expect(ancestry.filter(wearsScale)).toEqual([]);
+    // …and nothing the deck renders, down to the last word on a card.
+    expect([...deck().querySelectorAll('*')].filter(wearsScale)).toEqual([]);
+  });
+
+  it('hands the deck the same four props as before — no class and no style that could carry the scale into it', () => {
+    // Pinned by NAME and in order from the source, with the prose stripped: a
+    // `className` or a `style` on <ReviewsDeck> would be a road for the design
+    // pixel into the deck the owner put out of reach.
+    const start = CODE.indexOf('<ReviewsDeck');
+    const element = CODE.slice(start, CODE.indexOf('/>', start));
+
+    expect(start).toBeGreaterThan(-1);
+    // EVERY attribute form — `name={…}`, `name="…"`, `name='…'` (the Opus
+    // review: a `className="…"` string slipped past a `={`-only reader) —
+    // and no spread, which could carry anything.
+    expect(
+      [...element.matchAll(/([\w-]+)=["'{]/g)].map(([, name]) => name),
+    ).toEqual(['slides', 'labels', 'intervalMs', 'startDelayMs']);
+    expect(element).not.toMatch(/\{\s*\.\.\./);
   });
 });
 

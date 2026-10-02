@@ -490,7 +490,12 @@
    THE CONSUMER declares `--scale-px` from its container's width — `calc(min(
    100cqw, cap) / reference)` — and wears this utility under the SAME
    container variant, so below its regime nothing changes and rem stays the
-   unit (§7). `--scale-px` is REGISTERED for the ribbon lanes' reason (above):
+   unit (§7). Since 2026-10-02 that declaration is spelled ONCE, in
+   ui/Container's THE BAND SCALE (`bandScaleClasses`, with its cap in
+   `bandColumnClasses` and a `--band-zoom` multiple a box inside may set),
+   and every band under the Home hero and of the Team page wears it — one
+   heading size and one offset for all of them (§15.32). `--scale-px` is
+   REGISTERED for the ribbon lanes' reason (above):
    an unregistered one is pasted as text and its `cqw` measured again against
    the nearest container of whichever box reads it — and every card in a band
    is a container — so the band's design pixel would come out a card's

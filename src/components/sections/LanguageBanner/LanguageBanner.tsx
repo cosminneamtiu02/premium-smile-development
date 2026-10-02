@@ -205,20 +205,27 @@ const textClasses = 'text-base';
 // THE ACCEPT LINK. `min-h-11` (2.75rem = 44px) is the §9 target floor, rem-based
 // so it grows with zoom, and `py-2` keeps that height honest when the label
 // wraps to two lines in German.
-// COLOR: `text-cta` at rest, `cta-hover` on hover — the direction every control
-// on this site moves. cta #008854 measures 4.52:1 on `--surface` and 4.29:1 on
-// `--page` (measured, recorded in ui/TextButton's colour invariant): this card's
-// ground is `bg-surface`, which is exactly why the rest state is legal here and
-// would not be on the page ground. The underline is STATIC, so the affordance
-// never depends on hover or on colour alone (SC 1.4.1).
+// COLOR — THE LAVENDER (owner, 2026-10-02: "drop that green and replace with
+// the casual lilla from the app, the one that the "mai multe despre mine"
+// button has"): `text-accent` at rest — #746894, the face of ui/Button's
+// `accent` family, which that button wears — and `accent-strong` on hover, one
+// step darker, the same step the family takes in place of the green's
+// `cta-hover` (the green pair, #008854 → #006b42, until then). Measured on this
+// card's ground, `bg-surface` white: 5.06:1 at rest and 9.34:1 on hover,
+// against the 4.5:1 a 16px label owes (SC 1.4.3); the card is OPAQUE, so the
+// page it floats over never becomes the ground. tests/unit/accent-census.test.ts
+// names this file a wearer and measures both values from globals.css, and the
+// suite pins the paint against a real lavender ui/Button face. The underline is
+// currentColor and STATIC, so it turns with the label and the affordance never
+// depends on hover or on colour alone (SC 1.4.1).
 // `hyphens-none`: the site ships `hyphens: auto` at the body tier (§15.14), and
 // an interactive label that breaks mid-word — "Deut-sch" — reads as a rendering
 // fault (owner, 2026-09-04, ui/Button and ui/TextButton carry the same class for
 // the same rule). Wrapping BETWEEN words is untouched.
 const acceptClasses =
   'inline-flex min-h-11 items-center rounded-md px-2 py-2 font-medium ' +
-  'text-cta underline decoration-2 underline-offset-4 hyphens-none ' +
-  'transition-[color] duration-200 ease-out hover:text-cta-hover ' +
+  'text-accent underline decoration-2 underline-offset-4 hyphens-none ' +
+  'transition-[color] duration-200 ease-out hover:text-accent-strong ' +
   'motion-reduce:transition-none';
 
 // THE DISMISS ✕. A 44px square (§9's target floor again, `shrink-0` so a long

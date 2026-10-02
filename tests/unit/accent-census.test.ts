@@ -51,6 +51,17 @@ import { describe, expect, it } from 'vitest';
 // philosophy only: the doctor card's quote and the credo card, both white.
 // KEYWORD_RENDERERS and KEYWORD_WALK below hold both halves.
 //
+// THE LANGUAGE BANNER (owner, 2026-10-02: "drop that green and replace with
+// the casual lilla from the app, the one that the "mai multe despre mine"
+// button has"): sections/LanguageBanner's accept link is the one wearer that
+// is neither an atom nor dressed through one — a plain <a> the section styles
+// itself — so the section is the wearer and carries its own ground: the
+// banner's OPAQUE white card (`bg-surface`), over whatever page it floats. A
+// 16px label, so 4.5:1 binds — 5.06:1 at rest and, under the pointer, 9.34:1
+// for the family's `accent-strong`, both measured below. It was the site's
+// last green TEXT: what green the built pages still paint is the language
+// bulb's fill (ui/SpeedDial's `cta` tone), hidden under the current flag.
+//
 // THE VALUE IS MEASURED HERE TOO. The ratios are computed from the tokens' own
 // lines in globals.css, so a later edit to the value — the old site's exact
 // #8377a3 among them, 4.09:1 on white — fails with the number in the message
@@ -71,7 +82,7 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 const WEARS_ACCENT =
   /\b(?:text|bg|border(?:-[trblxyse])?|outline|decoration|fill|stroke|ring|shadow|from|via|to|caret|divide|placeholder)-accent(?:\/\d+)?(?![\w-])|var\(--(?:color-)?accent\)/g;
 
-/** The wearers — five atoms and one section — and how many spellings each carries. */
+/** The wearers — five atoms and two sections — and how many spellings each carries. */
 const WEARERS: Readonly<Record<string, number>> = {
   // The hover label, the underline and the active label — TextButton.tsx's
   // COLOR INVARIANT: one colour for all three.
@@ -98,6 +109,13 @@ const WEARERS: Readonly<Record<string, number>> = {
   // until then). BODY TEXT at 18px and 20px, so its bar is 4.5:1 — on the
   // white cards, measured below; the renderers are named in KEYWORD_RENDERERS.
   'components/ui/Keyword/Keyword.tsx': 1,
+  // The language banner's accept link — a plain <a> the section dresses
+  // itself, a 16px LABEL on the banner's own opaque white card, whatever page
+  // it floats over (owner 2026-10-02: "drop that green and replace with the
+  // casual lilla from the app, the one that the "mai multe despre mine" button
+  // has"; `text-cta` until then). Its hover label is `accent-strong`, which the
+  // lookahead refuses — so one spelling. Both pairs are measured below.
+  'components/sections/LanguageBanner/LanguageBanner.tsx': 1,
 };
 
 /**
@@ -284,7 +302,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2026-10-01)', () => {
-  it('is worn by the five atoms and the map band, each exactly as many times as named', () => {
+  it('is worn by the five atoms, the map band and the language banner, each exactly as many times as named', () => {
     for (const [file, count] of Object.entries(WEARERS)) {
       expect(wearings(stripComments(read(file))), file).toBe(count);
     }
@@ -392,7 +410,8 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     const tint = over(token(css, 'accent-decorative'), 0.3, page);
 
     // (--surface is also the key words' ground: both doctor quotes sit on a
-    // white card — KEYWORD_RENDERERS.)
+    // white card — KEYWORD_RENDERERS — and the language banner's: its accept
+    // link sits on the banner's own opaque white card.)
     for (const [ground, hex] of [
       ['the glass floor', glassFloor],
       ['--page', page],
@@ -423,6 +442,12 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
       ['white on the solid face (and the initials disc)', white, accent],
       ['white on the press face', white, strong],
       ["the outline's hover label on its grey, --line", strong, grey],
+      // The language banner's hover label on its white card (2026-10-02).
+      [
+        "the language banner's hover label on its card, --surface",
+        strong,
+        surface,
+      ],
     ] as const) {
       const ratio = contrast(fg, bg);
       expect(ratio, `${name}: ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(

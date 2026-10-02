@@ -46,7 +46,9 @@ import { cx } from '@/lib/cx/cx';
 // site's links — ui/Button dresses its <a> as a green face and ui/TextButton
 // draws a 2px green bar, neither a text-decoration, and the one underlined
 // link in a band, LanguageBanner's accept link, is green, 2px thick and 4px
-// down — but an underline is the web's oldest link cue, and one look
+// down (all three wear the lavender now — the face and the bar since
+// 2026-10-01, the banner's link since 2026-10-02; D59's record is kept as
+// written) — but an underline is the web's oldest link cue, and one look
 // outweighed the record.
 //   font-[650]         weight 650, PINNED — D59's "just a little more bold",
 //                      kept by D60: half a step above D56's 600 ("just a

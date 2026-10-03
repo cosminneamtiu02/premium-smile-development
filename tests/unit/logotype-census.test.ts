@@ -152,8 +152,8 @@ describe("the browser tab's icon (src/app — Next's icon + favicon conventions)
   // redirect and the 404 dispatcher, tools/) — a request to the DOMAIN root,
   // so it finds the file on a root-served host and misses it on the interim
   // Pages host's base path. Measured on the build: both links carry that base
-  // path, unlike the Wordmark's own <img> (Wordmark.tsx's KNOWN DEBT ·
-  // basePath).
+  // path — and so, since 2026-10-03, does the Wordmark's own <img>
+  // (Wordmark.tsx's THE BASE PATH, through lib/base-path).
 
   it('is the mark itself, byte for byte (src/app/icon.svg)', () => {
     // A COPY, because Next's convention reads a file inside src/app while the

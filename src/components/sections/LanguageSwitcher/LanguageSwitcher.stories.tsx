@@ -6,6 +6,7 @@ import { expect, waitFor } from 'storybook/test';
 import { localeHref } from '@/i18n/href';
 import { type Locale, locales, nativeNames } from '@/i18n/locales';
 import { usePathname } from '@/i18n/navigation';
+import { basePath } from '@/lib/base-path/base-path';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
@@ -66,19 +67,20 @@ const bulbName = (locale: Locale): string =>
  * locale segment and nothing else.
  *
  * Both values this demo feeds the context come from the other side of that
- * line — localeHref() and an anchor's resolved .href both INCLUDE the interim
- * Pages base path (§15.2) when Storybook is built with PAGES_BASE_PATH
- * exported. Feeding one back in unstripped would stack the prefix on every
- * re-render: '/premium-smile-development/de/premium-smile-development/ro/…'.
- * Only a story would ever see it — the browser never round-trips a pathname
- * like this — but a wrong story is a wrong review.
+ * line — localeHref() and an anchor's resolved .href both INCLUDE the
+ * deployment's base path (§15.2) whenever one is set. Feeding one back in
+ * unstripped would stack the prefix on every re-render:
+ * '/premium-smile-development/de/premium-smile-development/ro/…'. Only a story
+ * would ever see it — the browser never round-trips a pathname like this — but
+ * a wrong story is a wrong review. Since 2026-10-03 Storybook is never built
+ * with a base path (.storybook/main.ts removes PAGES_BASE_PATH before
+ * next.config.ts loads), so today this strips nothing: it stays as the belt.
  *
- * Read at CALL time, not at module load: the same convention as
- * src/i18n/href.ts' basePath(), and the Storybook build inlines the variable
- * exactly as next.config.ts' `env` does for the browser bundle.
+ * Read at CALL time through lib/base-path's basePath() — the one reader the
+ * links and the pictures share.
  */
 const withoutBasePath = (pathname: string): string => {
-  const base = process.env.PAGES_BASE_PATH ?? '';
+  const base = basePath();
   return base && pathname.startsWith(base)
     ? pathname.slice(base.length)
     : pathname;

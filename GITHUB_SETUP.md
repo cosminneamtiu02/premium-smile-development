@@ -140,7 +140,7 @@ blocked by hookify + re-checked by CI.
 | Translation-parity test (all 5 locale JSONs share one key set) | | ✅ (part of Vitest) | ✅ | ✅ | |
 | Storybook builds | | | ✅ | ✅ | |
 | Site export builds | | | ✅ | ✅ | |
-| Internal link + hreflang check (linkinator 8.x over `out/`) | | | ✅ | ✅ | |
+| Internal link + hreflang check (linkinator 8.x over `out/`) | | | ✅ | ✅ the PRODUCTION shape, served under its base path (`tools/check-export-links.mjs`, 2026-10-03) — also run on the artifact before every Pages deploy | |
 | **Visual pixel suite (Playwright)** | | | | **✅ linux set (pinned container)** | **✅ darwin set — the pre-commit regression net, run in the commit ritual** |
 | Lighthouse / Core Web Vitals | | | | Phase 4+ manual, optional job later | |
 

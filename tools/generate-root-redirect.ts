@@ -7,6 +7,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { localeHref } from '../src/i18n/href.ts';
+import { basePath } from '../src/lib/base-path/base-path.ts';
 import {
   defaultLocale,
   locales,
@@ -33,8 +34,9 @@ const messages = JSON.parse(
 // PAGES_BASE_PATH prefixes every path; NOINDEX=1 (or STAGING=1) keeps the
 // github.io copy out of Google until the real domain is attached. `base` is
 // read here for the log line only — every URL in the page comes from localeHref
-// (§15.13), including the script's.
-const base = process.env.PAGES_BASE_PATH ?? '';
+// (§15.13), including the script's — and it is read through lib/base-path, the
+// one reader the links and the pictures share (2026-10-03).
+const base = basePath();
 const noindex = process.env.NOINDEX === '1' || process.env.STAGING === '1';
 
 // BOTH shapes come from the same builder (org review D12). The inline script

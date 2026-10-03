@@ -362,7 +362,7 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
     expect(CODE).not.toMatch(/\bon[A-Z]\w*=/);
   });
 
-  it('imports EXACTLY four things — a swap to ui/Image cannot be silent', () => {
+  it('imports EXACTLY five things — a swap to ui/Image cannot be silent', () => {
     // F14: every guard above is one level deep. `<img>` → `ui/Image` would
     // hydrate both shells on every page without tripping a single regex —
     // ExportedImage holds useState for its error fallback, but that `use` sits
@@ -370,7 +370,11 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
     // sees it: adding an import here has to be a deliberate edit to this test,
     // with the hydration question asked out loud. The fourth entry is the
     // TYPE of the artwork's path (lib/image-path) — erased at build, a
-    // dependency on paper only.
+    // dependency on paper only. The fifth, lib/base-path (pages-base-path
+    // lane, 2026-10-03), puts the deployment's prefix on the mark's address;
+    // asked out loud: it is a React-free function of one environment variable
+    // (tests/unit/lib-react-free.test.ts fences the folder), so it hydrates
+    // nothing — the shells stay inert HTML.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -379,6 +383,7 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
 
     expect(specifiers).toEqual([
       '@/components/ui/Heading/Heading',
+      '@/lib/base-path/base-path',
       '@/lib/clinic/clinic',
       '@/lib/image-path/image-path',
       'react',

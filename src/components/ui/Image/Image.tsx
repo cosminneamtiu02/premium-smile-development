@@ -1,5 +1,6 @@
 import ExportedImage from 'next-image-export-optimizer';
 import type { ComponentPropsWithRef, ReactElement } from 'react';
+import { basePath, withBasePath } from '@/lib/base-path/base-path';
 import { cx } from '@/lib/cx/cx';
 
 // THE single image wrapper (§11) — every image on the site goes through here.
@@ -58,8 +59,14 @@ type ImageOwnProps = {
 // IF an upstream ever ships its own `variant`, this atom's prop SHADOWS it
 // visibly here instead of silently intersecting at every call site
 // (G2 ts M1 + react NIT, 2026-08-20).
+// `basePath` is the optimizer's own prop, and it is NOT the caller's to pass:
+// the atom puts the deployment's prefix on `src` itself (THE BASE PATH, above
+// the component), and the library would add a caller's value a second time.
 export type ImageProps = ImageOwnProps &
-  Omit<ComponentPropsWithRef<typeof ExportedImage>, keyof ImageOwnProps>;
+  Omit<
+    ComponentPropsWithRef<typeof ExportedImage>,
+    keyof ImageOwnProps | 'basePath'
+  >;
 
 // D2 — framed geometry is `h-full w-full object-cover`, and the CSS fact doing
 // the work is that a percentage height against an auto-height parent resolves
@@ -107,15 +114,70 @@ const placeholderDefaults: Record<ImageVariant, ImageProps['placeholder']> = {
   artwork: 'empty',
 };
 
+// THE BASE PATH (pages-base-path lane, 2026-10-03; CLAUDE.md §15.2). The
+// interim GitHub Pages build serves the site under /premium-smile-development/
+// and the domain root holds nothing else. The optimizer builds every URL from
+// the DIRECTORY of `src` — /images/hero/lobby.jpg → its srcset
+// /images/hero/nextImageExportOptimizer/lobby-opt-<w>.WEBP, its blur
+// placeholder (the -opt-10 file) and the <img> src — and Next adds its
+// `basePath` to none of them (it leaves a custom loader's URLs alone), so
+// before this lane every picture on the Pages build 404'd. For a path on this
+// site the prefix goes on `src` itself rather than through the optimizer's
+// `basePath` prop, because the library's ERROR FALLBACK (fallbackLoader)
+// re-reads the raw `src` and drops that prop: a variant that fails to load
+// would fall back to a second 404. Prefixed here, every URL the library
+// derives carries it, the fallback too — and so do a caller's `overrideSrc`
+// and `blurDataURL`, the two other addresses this atom forwards.
+// A STATIC IMPORT is the other way round: Next already prefixes its `src.src`
+// (its assetPrefix defaults to the basePath), while the optimizer keeps an
+// import's variants at the site root and prefixes their URLs only through its
+// own `basePath` prop — so for an imported picture, and only for it, the atom
+// passes that prop (the library's static branch never touches the src, so
+// nothing is prefixed twice). The repo imports no picture today.
+// Left as they are: a full URL — 'data:', '//host/…', and a remote 'https:'
+// picture, whose downloaded variants the optimizer's remote mode keeps at the
+// site root behind that same prop (the site has none; the Pages crawl in
+// release.yml would flag the first) — and an empty string, which stays empty
+// so next/image can still report a missing src. A path without its leading
+// slash ('images/…') is read the way the optimizer reads it, from the root.
+const FULL_URL = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i;
+
+const isRooted = (path: string): path is `/${string}` => path.startsWith('/');
+
+/** An address this atom writes — under the deployment's prefix when it is a path on this site. */
+function deployedUrl(url: string): string {
+  if (url === '' || FULL_URL.test(url)) return url;
+  return withBasePath(isRooted(url) ? url : `/${url}`);
+}
+
 export function Image({
   variant = 'plain',
   className,
   placeholder,
+  src,
+  overrideSrc,
+  blurDataURL,
   ...rest
 }: ImageProps): ReactElement {
+  // Only the props there are: an explicit `undefined` still rides the
+  // server-component payload, and — measured on the team page — reordered the
+  // ids React numbers its server components with (two staff tiles swapped
+  // theirs). Harmless, but where nothing changed the export stays
+  // byte-identical.
+  const addresses =
+    typeof src === 'string'
+      ? { src: deployedUrl(src) }
+      : { src, basePath: basePath() };
   return (
     <ExportedImage
       {...rest}
+      {...addresses}
+      {...(overrideSrc === undefined
+        ? {}
+        : { overrideSrc: deployedUrl(overrideSrc) })}
+      {...(blurDataURL === undefined
+        ? {}
+        : { blurDataURL: deployedUrl(blurDataURL) })}
       // §6.8 merge order: the atom's own classes first, the caller's
       // className appended last — a deterministic merge CONVENTION, not a
       // cascade promise: attribute order never decides CSS conflicts (the

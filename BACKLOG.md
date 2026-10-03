@@ -214,9 +214,6 @@ Decisions still go to CLAUDE.md §15.
     round 7 has the numbers);
   - the services page ships about 162 KB of JavaScript gzipped (§15.20 round 5's measurement), most of
     it the framework every page carries;
-  - `ui/Image` threads no base path, so on the interim GitHub Pages host the optimised pictures
-    answer 404 (§15.25; Wordmark.tsx and Footer.tsx record the same debt) — a launch-host question
-    as much as a weight one;
   - the hero's three photographs ship at 1920 × 1280, 74–202 KB each before the optimiser's variants
     (§15.21 round 11).
 - **How to measure it:** on the built export, served the way the host will serve it, never the dev

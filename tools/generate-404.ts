@@ -46,6 +46,7 @@ import {
   type NotFoundBlock,
 } from '../src/lib/not-found-html/not-found-html.ts';
 import { localeHref } from '../src/i18n/href.ts';
+import { basePath } from '../src/lib/base-path/base-path.ts';
 import {
   defaultLocale,
   locales,
@@ -126,8 +127,9 @@ const blocks: NotFoundBlock[] = locales.map((locale) => ({
 // Interim GitHub Pages serves under /<repo>/ (§15.2 amended 2026-08-02). Here
 // it is not just a log value as it is in the root stub: the inline script
 // STRIPS this prefix before reading the first path segment, so a miss under
-// /premium-smile-development/de/… still resolves to German.
-const base = process.env.PAGES_BASE_PATH ?? '';
+// /premium-smile-development/de/… still resolves to German. Read through
+// lib/base-path, the one reader the links and the pictures share (2026-10-03).
+const base = basePath();
 
 // THE FIVE DESTINATIONS, computed HERE and shipped as results (org review D12).
 // `localeHref` cannot be CALLED by the emitted script — it runs in a browser

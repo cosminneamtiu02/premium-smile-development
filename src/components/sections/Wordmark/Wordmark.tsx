@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { Heading } from '@/components/ui/Heading/Heading';
+import { withBasePath } from '@/lib/base-path/base-path';
 import { clinic } from '@/lib/clinic/clinic';
 import type { ImagePath } from '@/lib/image-path/image-path';
 
@@ -161,18 +162,19 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // layout has run: all of the cost, none of the saving. The Footer instance loads the same
 // file eagerly for nothing, which is a cache hit rather than a second download.
 //
-// KNOWN DEBT · basePath, the same one the SAL badge books (the KNOWN DEBT
-// paragraph inside Footer's SAL-badge block) and the LARGER instance of it
-// (F13). This `src` is ROOT-ABSOLUTE and nothing threads next.config's
-// `basePath` through it, so under the interim GitHub-Pages deploy
-// (`PAGES_BASE_PATH=/premium-smile-development`, §15.2) it resolves at the
-// domain root and 404s. Where the badge is one image at the bottom of the page,
-// this is the BRAND CORNER of the header and the footer on every route — and
-// because it is correctly `alt=""` (decorative), a 404
-// degrades to an invisible box rather than to broken-image alt text, i.e. it
-// fails silently. Reported, not patched: threading the prefix is a repo-wide
-// deploy-hardening item (R2 — three bookings now: the SAL badge, this, and
-// ui/Image), and a section is the wrong place to read process env.
+// THE BASE PATH (pages-base-path lane, 2026-10-03 — the KNOWN DEBT this
+// paragraph booked as R2, PAID). The artwork's `src` is root-absolute data
+// ('/images/brand/mark.svg'), and under the interim GitHub-Pages deploy
+// (`PAGES_BASE_PATH=/premium-smile-development`, §15.2) a root-absolute URL
+// resolves at the github.io domain root and 404s — MEASURED on a Pages-shaped
+// build before the fix: the mark was missing from the header and the footer
+// of every route, and because it is correctly `alt=""` (decorative) it failed
+// SILENTLY, as an invisible box. So the <img> takes `withBasePath(artwork.src)`:
+// the one reader lib/base-path/base-path.ts, which the links (i18n/href.ts),
+// ui/Image and the Footer's ANPC badge share — the section reads no process
+// env. The data stays prefix-free; only the address the page writes moves.
+// The guard that would have caught it: tools/check-export-links.mjs crawls the
+// Pages-shaped export the way github.io serves it (release.yml).
 //
 // ── D12 · NO BAR (owner, terminal, 2026-08-20: "remove vertical line"). v2's
 // middle element — the vertical `line-subtle` hairline between artwork and
@@ -371,7 +373,7 @@ export function Wordmark({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={artwork.src}
+        src={withBasePath(artwork.src)}
         alt=""
         width={artwork.width}
         height={artwork.height}

@@ -11,6 +11,7 @@ import { Phone } from '@/assets/glyphs/Phone';
 import { Tiktok } from '@/assets/glyphs/Tiktok';
 import { Whatsapp } from '@/assets/glyphs/Whatsapp';
 import { localeHref } from '@/i18n/href';
+import { withBasePath } from '@/lib/base-path/base-path';
 import type { ClinicInfo } from '@/lib/clinic/clinic';
 import { clinic } from '@/lib/clinic/clinic';
 import { formatHoursRows } from '@/lib/hours/hours';
@@ -339,11 +340,13 @@ export function Footer(): ReactElement {
               focus ring comes from the globals.css :focus-visible safety net
               (§9). target=_blank + rel="noopener noreferrer": an official
               external portal, opened without handing it a window handle.
-              KNOWN DEBT, repo-wide rather than new here: neither this src nor
-              ui/Image threads next.config's basePath, so under the interim
-              PAGES_BASE_PATH deploy (§15.2) the file resolves at the domain
-              root. Reported to the planning loop rather than patched from a
-              section. */}
+              THE BASE PATH (pages-base-path lane, 2026-10-03 — the KNOWN DEBT
+              this note booked, paid): under the interim PAGES_BASE_PATH deploy
+              (§15.2) a root-absolute src resolves at the github.io domain root
+              and 404s (measured on a Pages-shaped build), so the src goes
+              through withBasePath — the one reader in lib/base-path, shared
+              with the links (i18n/href.ts), ui/Image and the Wordmark's mark.
+              The section reads no process env itself. */}
           {/* CENTERED UNTIL THE GRID IS FULLY COLUMNAR (owner, 2026-09-04:
               "on phone and tablet dimensions i'd want the anpc button centered,
               not sticky to the left", then — same day, seeing the tablet — "the
@@ -367,7 +370,7 @@ export function Footer(): ReactElement {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/anpc-sal-pictograma.png"
+                src={withBasePath('/anpc-sal-pictograma.png')}
                 alt=""
                 width={250}
                 height={62}

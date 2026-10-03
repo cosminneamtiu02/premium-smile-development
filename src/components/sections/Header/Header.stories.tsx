@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
+import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import ro from '@/messages/ro.json';
@@ -147,16 +148,18 @@ const expectContactAtItsFloor = async (contact: HTMLElement) => {
  * THE BAR'S LOCKUP AT THE OWNER'S SIZES (2026-10-01: "make logo in top bar
  * 15% smaller", "make the logo 10% smaller again", "make the text 50% bigger
  * than it is now", then "update also in footer") — sections/Wordmark carries
- * them (its THE OWNER'S SIZES block) and Header.tsx hands it the whole row, so
- * in the bar the mark is 68.85% of the row (90% × 85% × 90%) and the name
- * Heading's `section` step, 1.875rem — and below the Wordmark's `@max-sm` step
- * (a pill under 24rem: a phone up to ~482px wide, the 390 smartphone pin
- * included) the mark is 30.6% of the row and the name the old 20px, 1.25rem
- * (the phone fitting, 2026-10-01). Measured off the layout as RATIOS of the
- * row and the root, so the pin holds at any root font size and at every width
- * the visual runner samples — which step applies is read off the pill itself,
- * the box the container query measures. And the smaller mark must not have
- * moved anything: the mark and the name both sit on the row's centre line.
+ * them (its THE OWNER'S SIZES block) and Header.tsx hands it a cell the whole
+ * row tall, centring the lockup's hugging link in it (2026-10-02, Wordmark's
+ * D9), so in the bar the mark is 68.85% of the row (90% × 85% × 90%) and the
+ * name Heading's `section` step, 1.875rem — and below the Wordmark's
+ * `@max-sm` step (a pill under 24rem: a phone up to ~482px wide, the 390
+ * smartphone pin included) the mark is 30.6% of the row and the name the old
+ * 20px, 1.25rem (the phone fitting, 2026-10-01). Measured off the layout as
+ * RATIOS of the row and the root, so the pin holds at any root font size and
+ * at every width the visual runner samples — which step applies is read off
+ * the pill itself, the box the container query measures. And the smaller mark
+ * must not have moved anything: the mark and the name both sit on the row's
+ * centre line.
  */
 const expectMarkAtTopBarSize = async (bar: HTMLElement): Promise<void> => {
   const row = bar.querySelector(':scope > div');
@@ -218,6 +221,14 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('link', { name: ro.common.nav.home }),
     ).not.toHaveAttribute('aria-current');
+    // The brand corner is the home link too (owner, 2026-10-02 —
+    // Wordmark.tsx's D9): named by `common.brand.ariaLabel` with the clinic's
+    // name, the visible text first, and pointing at the Romanian home.
+    await expect(
+      canvas.getByRole('link', {
+        name: ro.common.brand.ariaLabel.replace('{name}', clinic.name),
+      }),
+    ).toHaveAttribute('href', '/ro/');
     await expectContactAtItsFloor(
       canvas.getByRole('button', { name: ro.common.actions.contact }),
     );
@@ -426,15 +437,20 @@ export const AtTheStep: Story = {
     // The brand corner is sections/Wordmark's lockup: an <a> around the
     // artwork <img> and the name. Found through the <img> — which Wordmark's
     // D10 renders at every width — and `closest('a')` (Wordmark.test.tsx's own
-    // idiom), NOT through its missing href: that D9 placeholder is scheduled
-    // to become a real home link, and a selector keyed on the absence would
-    // then find nothing. A missing lockup is thrown by NAME rather than left
-    // to a TypeError further down. The gap is measured from what the lockup
-    // PAINTS, the right edge of its last child (the name), never from the
-    // anchor's own box: WebKit sizes that box from the artwork's natural
-    // width — 301.5px around the 258.5px of lockup it paints (measured
-    // 2026-09-26), and in Firefox the brand's CELL spans the whole track — so
-    // a box edge would misreport the air between "Smile" and the first link.
+    // idiom), NOT through its href: the lockup was an hrefless placeholder
+    // until 2026-10-02 and is a home link now (Wordmark's D9), and a selector
+    // keyed on the href's presence or absence breaks at each such turn. A
+    // missing lockup is thrown by NAME rather than left to a TypeError
+    // further down. The gap is measured from what the lockup PAINTS, the
+    // right edge of its last child (the name), never from the anchor's own
+    // box: WebKit once sized that box from the artwork's natural width
+    // (301.5px around the 258.5px the demo cat's lockup painted, measured
+    // 2026-09-26) and Firefox lets the brand's CELL span its whole track, so
+    // a box edge could misreport the air between "Smile" and the first link.
+    // Since the mark became a fixed rem with `max-w-none` (2026-10-01) the
+    // link box hugs the lockup in Chromium and WebKit alike (270.1px,
+    // measured 2026-10-02), and the painted edge stays the honest measure all
+    // the same.
     const brand = bar.querySelector('img')?.closest('a');
     if (!brand) {
       throw new Error(

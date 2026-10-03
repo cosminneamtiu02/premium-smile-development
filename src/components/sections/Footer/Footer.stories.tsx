@@ -87,17 +87,18 @@ const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
 };
 
 /**
- * ROW 1's `h-full` CHAIN, asserted here because this is the only place with a
- * real stylesheet AND a real Footer (G2 react-reviewer, F15).
+ * ROW 1's CHAIN, asserted here because this is the only place with a real
+ * stylesheet AND a real Footer (G2 react-reviewer, F15).
  *
- * sections/Wordmark sizes its artwork as a percentage of the anchor's height,
- * and the anchor is `h-full` — so the whole lockup rests on a chain of three
- * boxes this file owns: the centring row, the `h-20` box inside it, and the
- * `self-stretch`-equivalent flex item. Break any link (drop the `h-20`,
- * centre instead of stretch) and the percentage resolves against `auto`: the
- * artwork keeps only its intrinsic size (D12: no bar). Nothing throws, and
- * the Wordmark's own stories cannot catch it — they reproduce the HEADER's
- * pill.
+ * The lockup rests on two boxes this file owns: the centring row and the
+ * `h-20` box inside it, whose `items-center` centres the lockup's link — which
+ * HUGS what it draws since it became the home link (owner, 2026-10-02,
+ * Wordmark.tsx's D9; `h-full` stretched it to the box until then). Drop the
+ * `h-20` and the brand row quietly shrinks to the lockup's own height, off the
+ * 5rem both instances share (fb-205); drop the `items-center` and the box's
+ * default `stretch` pulls the link back to the whole row, its focus ring with
+ * it. Nothing throws, and the Wordmark's own stories cannot catch either —
+ * they reproduce the HEADER's pill.
  *
  * `wide` selects the expected artwork step: the tighten step is a container
  * query on the gutter box, so it is live at the phone width and off at the
@@ -107,24 +108,39 @@ const expectLockupChain = async (
   band: HTMLElement,
   wide: boolean,
 ): Promise<void> => {
-  const anchor = band.querySelector('a:not([href])') as HTMLElement;
-  const img = anchor.querySelector('img') as HTMLElement;
+  // The mark is the band's FIRST image (row 1 precedes the SAL badge), and the
+  // lockup its link — found through the artwork, never through the href.
+  const img = band.querySelector('img');
+  const anchor = img?.closest('a');
+  const ruler = anchor?.parentElement;
+  if (!img || !anchor || !ruler) {
+    throw new Error(
+      'expectLockupChain: the band has no brand lockup (an <img> inside an ' +
+        '<a> inside the h-20 box) — Footer.tsx or sections/Wordmark changed ' +
+        'shape.',
+    );
+  }
 
   // 5rem, the height both consumers agree on (fb-205) — measured, not read
   // back off a class. It was 64px until 2026-09-04, when the owner's "same
   // size on every screen" took Header's row to `h-20` and fb-205 carried the
   // Footer's ruler with it; this is the assertion that would have caught the
   // two drifting apart, so it moves in the same edit or not at all.
-  await expect(anchor.getBoundingClientRect().height).toBe(80);
+  const box = ruler.getBoundingClientRect();
+  await expect(box.height).toBe(80);
   // The mark's share of that ruler: 68.85% / 30.6% (Wordmark.tsx's THE
   // OWNER'S SIZES, 2026-10-01 — 90% / 40% until then), read rounded.
   await expect(
-    Math.round(
-      (img.getBoundingClientRect().height /
-        anchor.getBoundingClientRect().height) *
-        100,
-    ),
+    Math.round((img.getBoundingClientRect().height / box.height) * 100),
   ).toBe(wide ? 69 : 31);
+  // The link hugs, centred in the ruler, and never under the 44px target
+  // (`min-h-11`, §9 — the floor that binds at the phone step).
+  const link = anchor.getBoundingClientRect();
+  await expect(link.height).toBeGreaterThanOrEqual(44);
+  await expect(link.height).toBeLessThan(box.height);
+  await expect(
+    Math.abs(link.top + link.height / 2 - (box.top + box.height / 2)),
+  ).toBeLessThanOrEqual(0.5);
 };
 
 /**
@@ -172,6 +188,14 @@ export const Default: Story = {
         name: ro.common.footer.contactPhone.replaceAll('{name}', clinic.name),
       }),
     ).toHaveAttribute('href', `tel:${clinic.phone}`);
+    // Row 1's lockup is a SECOND link home (owner, 2026-10-02 — fb-179
+    // reversed, Footer.tsx's ROW 1): named like the Header's, by
+    // `common.brand.ariaLabel` with the clinic's name.
+    await expect(
+      canvas.getByRole('link', {
+        name: ro.common.brand.ariaLabel.replaceAll('{name}', clinic.name),
+      }),
+    ).toHaveAttribute('href', '/ro/');
     await expectNoSidewaysScroll(band);
     // Row 1's lockup, at the width where the tighten step is OFF (the gutter
     // box here is ~1214px, far past the 20rem container step).

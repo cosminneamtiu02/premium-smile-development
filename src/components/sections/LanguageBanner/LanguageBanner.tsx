@@ -422,6 +422,18 @@ export interface LanguageBannerCardProps {
  * card (§14's CTABanner, by design) is the named re-open trigger; the
  * walkthrough owns the entirely-hidden check, and globals' C43 block records
  * the same bond from the shell's side.
+ * THE TRIGGER FIRED on 2026-10-03 (CLAUDE.md §15.33): the Footer's logo became
+ * a link — centred, 278px with its ring, narrower than this card (291–309px).
+ * MEASURED on the built export (Chromium, Firefox, WebKit, 390–1920px): the
+ * logo itself is never hidden — the Footer's first stop, it rests 405–451px
+ * above the viewport's bottom because the page cannot scroll past its end —
+ * but in CHROMIUM, in windows 1024–1280px wide, the Tab that reaches it scrolls
+ * the page to its end, where this card covers the site map, and the next Tabs
+ * land on „Acasă" or „Servicii" ENTIRELY hidden (Firefox and WebKit keep 76–95%
+ * of them visible; before that day no Footer stop was ever hidden). No scroll
+ * can reveal what the page's end holds under the card, so the cure is this
+ * component's: keep the card's reach free at the page's end while it shows.
+ * ACCEPTED by the owner the same day, not built — BACKLOG.md entry 2.
  */
 export function LanguageBannerCard({
   suggested,

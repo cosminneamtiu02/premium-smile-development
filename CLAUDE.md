@@ -423,7 +423,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step; on a laptop and a desktop, since 2026-10-01 (§15.23 round 6), the owner's TWO CONTAINERS across the whole column — the picture's track a third of the column after an inset of 15 % of the gutter, a gap of a sixth of the column clamped to 3–10.5rem, the words in the rest: the specialty over the name a ninth of the column down and the credo card under them on ONE left edge 1.5rem into the words, the card up to 36rem wide and centred in the height the name leaves (as much space above it as below), and the cutout drawn out of flow as tall as the row, growing (centred, up to 1.4 × its third) until it stands on the words' floor, so the two containers share ONE floor — the `align` seat axis (rounds 2e–2l's `lowered`) and round 2k's centred content-sized columns retired with it; the band's own rhythm halved in round 2j ("it starts height wise too low … also the image, so the whole thing"), the credo's quote on `text-xl`; and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred (round 2k: "name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the doctor card button's lavender `accent` since 2026-10-02 (§15.1's keyword rider — "i want that highlighted text to actually be the color of the current mai multe despre mine button"; the deep violet `accent-strong` until then) (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Experiență confirmată în timp” (the reference's „Excelență" until round 2s) centred over a lead sentence and four tiles: a light disc with a line glyph — LILAC (`accent-decorative`) since 2026-10-01, the owner: "paint it's svgs lilla"; green until then —, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the twin (`sr-only` until 2026-10-01, since then an invisible copy laid exactly over the digits on one line, so a screen reader's cursor outlines the number and VoiceOver touch finds it — §15.23 round 5) SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"; a space grouping the spoken number's digits dropped since round 5 — « plus de 3000 »); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
-| Global | Header (nav + Contact button + LanguageSwitcher) · Footer (**full NAP** + hours + policy link) | `common` |
+| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher) · Footer (the logo, the same link + **full NAP** + hours + policy link) | `common` |
 
 ## 15. Parked decisions — ASK before deciding, do not improvise
 
@@ -3425,7 +3425,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     kept from the cat — one number in Wordmark.tsx) *(TAKEN 2026-10-01, §15.31: 68.85 % / 30.6 %, the name to the
     30px `section` step, in both instances)*; the Publio lettering, if it ever arrives, as a second file; the placeholder `<a>` →
     `<span>` now that the home link is dropped for good (three suites and the e2e find the lockup through it);
-    striking the uncalled `common.brand.ariaLabel` key ×5. **Evidence at READY:** see the lane's PR. **Visual:**
+    striking the uncalled `common.brand.ariaLabel` key ×5 *(both VOID since 2026-10-02: the owner restored the home
+    link — the placeholder became the real `<a href>` and the key is called, §15.33)*. **Evidence at READY:** see the lane's PR. **Visual:**
     every cell with the shell moves (the brand corner is on every page) — Sections/Wordmark (5), Sections/Header
     (8), Sections/Footer (8), Sections/Hero (the Header above the band), Pages/* in both languages; the darwin
     re-record is the owner's, on the owner's machine (§15.7).
@@ -4048,6 +4049,74 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     crossing into the cards) — and Safari's page zoom applies inside style computation, unlike Chromium's; both are
     explicit checks in BACKLOG.md entry 2, and the remedy if the first reproduces is to take the floor out of the
     registered pixel and spell it in the size steps themselves (`max(1rem…, …)`), whose font-relative units zoom once.
+
+33. **The logo is a link home — ON THE OWNER'S WORD (2026-10-02, verbatim: "i want to create  a new button
+    class. so i just want the "premium smile" logo from top bar and from footer bto be a component that takes
+    you to home"; lane `rework/wordmark-home-link`):** the owner's own reversal of the 2026-09-06 drop ("i am
+    dropping wordmark home link") and of fb-179 ("no second link to home in the footer"). sections/Wordmark's
+    root — fb-200's hrefless placeholder `<a>` (D9) since 2026-08-20 — is a real link to the page's locale home
+    in BOTH consumers, `/ro/`, `/de/` … (§15.13: a plain `<a href>`, a full document load, zero JavaScript),
+    named „Premium Smile, acasă": the reserved `common.brand.ariaLabel` ×5 ("{name}, acasă" · "{name}, home" ·
+    "{name}, Startseite" · "{name}, accueil" · "{name}, home"), called at last — the visible name leads the
+    accessible name (SC 2.5.3) and the destination is spoken (SC 2.4.4); Header.test.tsx holds every language to
+    open with `{name}`. "Button" is the owner's word for any control; a control that NAVIGATES is a link (§9).
+    **The decisions — the planner's, each a lever:** (1) PROPS-IN — `href` and `aria-label` are REQUIRED props
+    (§6.6: both consumers moved in the same change) and the consumers pass `localeHref(locale, '/')` and the
+    translated label, so Wordmark keeps zero message keys, no hook and its four imports (§4's page-phase default,
+    the owner's dumb-component preference) and §4's sub-kind list stands as written; (2) THE BOX HUGS the lockup —
+    `h-full` left the root, `min-h-11` keeps a phone's target at 44px, and both consumers centre it
+    (`items-center` on the Header's brand cell and on the Footer's `h-20` box — load-bearing: a flex parent's
+    default stretch would pull the link back to the full row); MEASURED on the built export, Chromium and
+    WebKit: 270.1 × 55.1px on a laptop, 171 × 44px on a phone, the link's width equal to the lockup's to the
+    hundredth of a pixel; (3) THE RING is ui/TextButton's recipe — 2px of `--focus` at a 2px offset — on §15.1's
+    6px `rounded-md`, inside the bar's 80px row at every width (measured); NOT the soft corner, whose census
+    (§15.29) keeps four wearers; (4) NO HOVER LOOK — the old site's logo link had none, and it is the web's
+    convention (the browser gives every `<a href>` the pointer); CONFIRMED by the owner on 2026-10-03, offered
+    the jump or a slight dim: "no effect"; (5) THE BURGER'S FOCUS RETURN keeps landing on the row's first link: NavMenu's fallback —
+    "the first `a[href]` in the bar", which would now be the logo — is scoped to the row's `<nav>`
+    (Header.test.tsx pins that focus lands there and NOT on the logo). **Consequences, measured** on the built
+    export in Chromium and WebKit: the Tab order is skip link → the logo → the row's first link (the burger on
+    a phone); with the phone menu open the logo stays live (the bar is never frozen, the page below is), so the
+    menu's cycle is logo → ✕ → Contact → the links; a click on either logo lands on its language's home
+    (`/ro/team/` → `/ro/`, `/de/services/` → `/de/` from the footer); each page now carries two links home in
+    the Header (beside „Acasă") and two in the Footer (beside the site map's „Acasă"), every pair under two
+    names. No new message key, no new client island, and the compiled stylesheet lost one dead rule (the
+    pointer-cursor class only the old D9 test named). **Visual, MEASURED** at ZERO tolerance against a pristine
+    build of develop bed8003 (462 cells, private port 6181, classic scrollbars): NO existing cell moves — every
+    Pages/*, Sections/Header, Sections/Footer, Sections/Hero and Sections/Wordmark cell byte-identical (the link
+    paints nothing at rest; a 1/64px change in the name's layout position at desktop widths, measured in both
+    engines, never reaches a pixel) — plus the 2 NEW cells of Sections/Wordmark's `FocusVisible` story (390 +
+    1536: one Tab press, the ring) and 3 cells of 9–37px at 1–2/255 in the known flicker families (SpeedDial,
+    the price list's glow, the Services page — located inside the price list, nowhere near the logo). **Reviews
+    (G2, three Opus reviewers on the owner's word — "opus reviewers, no effect"):** react APPROVE, typescript and
+    a11y APPROVE WITH CHANGES, 0 critical / 0 high; every LOW folded in one round — the hover guard reads every
+    variant segment (`group-hover:` would have slipped past; proven red), the fallback scoped `:scope nav a[href]`,
+    the props' docs say what the types guarantee (required; only `href`, `aria-label` and `artwork` reach the
+    DOM), Esc from the logo with the menu open lands on the burger (the disclosure pattern — documented and
+    tested), the logo live and ordered before the burger with the menu open (tested), the ring's colour pinned,
+    stale comments. **THE BANNER — a measured regression, ACCEPTED by the owner (2026-10-03, offered a fix or
+    the record: "2"):** the a11y review's MEDIUM predicted the footer logo fully hidden under the language
+    banner at ≥1536px; MEASURED on the built export (Chromium, Firefox, WebKit; 390–1920px; the banner shown by
+    a browser language unlike the page's) the logo never is — it rests 405–451px above the viewport's bottom,
+    because the page cannot scroll past its end — but the measurement found what IS hidden: in Chromium, in
+    windows 1024 to 1280px wide, Tab reaching the logo scrolls the page to its end, where the card covers the
+    site map, and „Acasă" or „Servicii" is then ENTIRELY hidden when Tab reaches it (SC 2.4.11, AA; Firefox and
+    WebKit keep 76–95 % visible; develop hid no footer stop at any width). The banner's own record named this
+    case its re-open trigger and now says it fired (LanguageBanner.tsx); the cure, recommended and not built,
+    is the banner's — keep its reach free at the page's end while it is open — and the gap is listed in
+    BACKLOG.md entry 2. **Gates at the seal** (on develop e3837e2, the lane rebased onto #143 by a 3-way patch,
+    MIGRATION_INVENTORY the one hand merge): prettier · eslint (0 errors; develop's one warning) · tsc clean;
+    vitest 145 files / 3796 tests with the optimizer variants hidden (CI's condition); build-storybook and `next
+    build` green; e2e 236 passed / 126 skipped / 0 failed; the visual differential at zero tolerance against a
+    pristine build of e3837e2: no existing cell moved, the 2 new FocusVisible cells, 6 cells of 1–14px in the
+    flicker families (SpeedDial, the language dial, the price list — none renders the logo). The 2 new darwin
+    cells are recorded under classic scrollbars (a 15px gutter, read off the body's width). The compiled
+    stylesheet lost two dead rules (a pointer-cursor class and a `@max-xs` gap rule, each spelled only in a
+    test or a comment) and gained none. **Recorded, the owner's calls:** `aria-current` on the logo while you are on the home page
+    (it needs the page's path in the browser — a client island for one attribute; the row's „Acasă" already
+    carries it); in the test runner's 320 stress cell (a 15px scrollbar gutter, a 163px cell) the ring reaches
+    4px into the burger's transparent box — on a real 320 phone, with no gutter, it clears it by 3px; §15.28's
+    two levers (the placeholder `<a>` → `<span>`, striking the key) are void.
 
 ## 16. Build-time vs runtime contract
 

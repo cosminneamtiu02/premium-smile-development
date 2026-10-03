@@ -325,6 +325,33 @@ describe('Header — the freeze is `inert`, and nothing else (board §5·A1)', (
     expect(first).toHaveTextContent(ro.common.actions.contact);
   });
 
+  it('keeps the LOGO live too while open — before the ✕ in the cycle, the panel after it (D9, 2026-10-02)', async () => {
+    // The freeze takes <body>'s OTHER children; the bar is the section's own
+    // body-level box, so the brand link — a real home link since 2026-10-02
+    // (sections/Wordmark's D9) — stays live beside the ✕, and the cycle reads
+    // logo → ✕ → the panel. Sequential focus follows DOM order here (no
+    // positive tabindex anywhere). Styles are not loaded in this project, so
+    // the row and the bar's Contact — display:none while the panel is open —
+    // still sit between the logo and the ✕ in the DOM: the claim is RELATIVE
+    // order, not a full list.
+    const user = userEvent.setup();
+    const { container, burger, panel } = mount();
+    const brand = container.querySelector('header img')?.closest('a');
+    if (!brand) {
+      throw new Error('the bar has no brand lockup (an <img> inside an <a>)');
+    }
+    await user.click(burger());
+    expect(page).toHaveAttribute('inert');
+
+    expect(brand.closest('[inert]')).toBeNull();
+    const follows = (a: Node, b: Node): boolean =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(brand, burger())).toBe(true);
+    const firstInPanel = focusablesIn(panel() as HTMLElement)[0];
+    expect(firstInPanel, "the panel's first focusable").toBeDefined();
+    expect(follows(burger(), firstInPanel as HTMLElement)).toBe(true);
+  });
+
   it("never freezes a live region — Next's announcer and any aria-live box stay live", async () => {
     // The freeze must never silence a live region. Next appends its
     // <next-route-announcer> to the <body> of every page and `inert` reaches
@@ -496,7 +523,7 @@ describe('Header — every close path returns focus to the burger', () => {
     expect(document.activeElement).toBe(burger());
   });
 
-  it('falls back to the first bar LINK when closing HIDES the ✕ (board §4c, row 4 → 3)', async () => {
+  it("falls back to the nav row's first link when closing HIDES the ✕ (board §4c, row 4 → 3)", async () => {
     // The transition nobody can trigger deliberately: the menu was opened
     // below the breakpoint, the container then grew past it (a rotated tablet,
     // a resized window), and closing re-applies the bar step's `hidden` to the
@@ -508,14 +535,21 @@ describe('Header — every close path returns focus to the burger', () => {
     // applied directly here — the branch under test is "the burger is
     // display:none by the time the focus return runs", whatever CSS put it
     // there.
-    // WHICH link, since the fb-200 swap: NavMenu's fallback is
-    // `header a[href]`, the first LINKED thing in the bar. That used to be the
-    // brand anchor; sections/Wordmark took its place and is a placeholder
-    // <a> with no href (D9), so the first focusable in the bar is now the nav
-    // row's Home link — which is where the fallback lands, and the next Tab
-    // still continues into the row that just became visible.
+    // WHICH link: the nav ROW's first, its Home link — NOT the bar's first
+    // link, which is the logo since the brand corner became a real home link
+    // again (owner, 2026-10-02 — sections/Wordmark's D9). NavMenu's fallback
+    // is scoped to `:scope nav a[href]`, so it parks focus in the row that
+    // just became visible — where the next Tab still continues — and not on
+    // the logo at the far left. The closed panel is unmounted by the time the
+    // effect runs, so the row's <nav> is the only one left in the bar (and it
+    // precedes the panel in DOM order anyway). This test is also the guard
+    // NavMenu's comment names: a future <nav> placed before the row inside
+    // the header (a LanguageSwitcher in the bar, §8.5) would take the
+    // fallback and turn it red.
     const user = userEvent.setup();
-    const { burger, panel, barNav, messages } = mount();
+    const { container, burger, panel, barNav, messages } = mount();
+    const brand = container.querySelector('header img')?.closest('a');
+    expect(brand, 'the bar has no brand link to steer clear of').toBeTruthy();
     await user.click(burger());
     burger().style.display = 'none';
 
@@ -526,7 +560,40 @@ describe('Header — every close path returns focus to the burger', () => {
       name: messages.nav.home,
     });
     expect(document.activeElement).toBe(firstBarLink);
+    expect(document.activeElement).not.toBe(brand);
     expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('lands on the BURGER on Esc from the logo too — the disclosure’s toggle, the ARIA pattern (D9, 2026-10-02)', async () => {
+    // With the menu open the logo is a live stop beside the ✕ (the bar is
+    // never frozen), and Shift+Tab from the ✕ reaches it once the
+    // single-menu rule has taken the row and the bar's Contact to
+    // display:none — applied by hand here, because this runner loads no
+    // stylesheet (the fallback test above does the same for the ✕). Esc on
+    // the logo closes the menu and puts focus on the BURGER, not back on the
+    // logo: the ARIA disclosure pattern returns focus to the toggle, and
+    // NavMenu's close() keeps it that way on purpose.
+    const user = userEvent.setup();
+    const { container, burger, panel, barNav, barCtaBox } = mount();
+    const brand = container.querySelector('header img')?.closest('a');
+    if (!brand) {
+      throw new Error('the bar has no brand lockup (an <img> inside an <a>)');
+    }
+    const row = barNav();
+    const ctaBox = barCtaBox();
+    await user.click(burger());
+    expect(document.activeElement).toBe(burger());
+    row.style.display = 'none';
+    ctaBox.style.display = 'none';
+
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(brand);
+
+    await user.keyboard('{Escape}');
+
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    expect(document.activeElement).toBe(burger());
   });
 
   it('hands the panel over to the ContactModal in ONE commit, and Esc lands focus back on the burger', async () => {
@@ -884,23 +951,25 @@ describe('Header — the nav row, the panel list, and the current page', () => {
 });
 
 describe('Header — the brand and the two Contact links', () => {
-  it('hands its brand corner to sections/Wordmark, in a self-stretch box', () => {
-    // The fb-200 swap: the corner used to be a locale-prefixed <Link> named
-    // from `brand.ariaLabel`; it is now the shared lockup — the mark and the
-    // name — and this file owns only the BOX around it (§6.4/§6.8).
-    // `self-stretch` is load-bearing: the row is `items-center`, and the
-    // lockup's artwork is sized as a percentage of the row height, which a
-    // centred child does not have. The SIZES are the lockup's own since the
-    // owner's "update also in footer" (2026-10-01, Wordmark.tsx's THE OWNER'S
-    // SIZES) — the bar shows them, so the name here is the `section` step.
-    // Class-level here (this project loads no stylesheet); the Default and
-    // MenuOpen stories MEASURE.
+  it('hands its brand corner to sections/Wordmark, centred in a self-stretch cell', () => {
+    // The fb-200 swap made the corner the shared lockup — the mark and the
+    // name — and this file owns the CELL around it (§6.4/§6.8): `self-stretch`
+    // keeps the cell the whole 5rem row, the same box the Footer's ruler gives
+    // its instance (fb-205), and `items-center` centres the lockup in it —
+    // since 2026-10-02 the lockup's link HUGS what it draws (Wordmark.tsx, D9),
+    // so the cell, not the link, carries the row's height. The SIZES are the
+    // lockup's own since the owner's "update also in footer" (2026-10-01,
+    // Wordmark.tsx's THE OWNER'S SIZES) — the bar shows them, so the name here
+    // is the `section` step. Class-level here (this project loads no
+    // stylesheet); the Default and MenuOpen stories MEASURE.
     const { container } = mount();
     const row = container.querySelector('header > div') as HTMLElement;
     const box = row.firstElementChild as HTMLElement;
     const lockup = box.firstElementChild as HTMLElement;
 
-    expect(classesOf(box)).toEqual(expect.arrayContaining(['self-stretch']));
+    expect(classesOf(box)).toEqual(
+      expect.arrayContaining(['flex', 'self-stretch', 'items-center']),
+    );
     const name = lockup.querySelector('span');
     expect(name, "the lockup's name host").not.toBeNull();
     expect(classesOf(name as HTMLElement)).toEqual(
@@ -912,26 +981,54 @@ describe('Header — the brand and the two Contact links', () => {
     expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
   });
 
-  it('no longer NAVIGATES from the brand — D9 placeholder, key held in reserve', () => {
-    // fb-200 taken literally: "make it clickable, but don't implement
-    // go-to-a-page yet". The corner is an <a> WITHOUT href, so it has no link
-    // role, no tab stop and no accessible name (a label on an unfocusable
-    // generic is prohibited ARIA). `common.brand.ariaLabel` stays in all five
-    // message files, uncalled, for the wiring diff Wordmark.tsx declares — an
-    // unused key is legal, the parity gate compares key SETS.
-    const { container, messages } = mount();
-    const lockup = container.querySelector('header a') as HTMLElement;
-    const named = messages.brand.ariaLabel.replace('{name}', clinic.name);
+  it('takes you HOME from the brand — the first stop in the bar, named clinic first (D9, owner 2026-10-02)', () => {
+    // "i just want the "premium smile" logo from top bar and from footer to
+    // be a component that takes you to home": a plain <a href> to the PAGE'S
+    // locale home (§15.13 — the same URL rule as every other link, a full
+    // document load), named by `common.brand.ariaLabel` with the clinic's
+    // name — so a links list says „Premium Smile, acasă", not a bare brand.
+    // Both locales in one test, because the locale is half of each string
+    // (the nav-entry test's discipline: unmount first, RTL keeps renders).
+    for (const locale of ['ro', 'de'] as const) {
+      const { container, barNav, messages, unmount } = mount(locale);
+      const header = container.querySelector('header') as HTMLElement;
+      // Found the way the stories and the e2e find it — the artwork <img>
+      // and its <a> — with a named throw rather than a bare TypeError.
+      const brand = header.querySelector('img')?.closest('a');
+      if (!brand) {
+        throw new Error('the bar has no brand lockup (an <img> inside an <a>)');
+      }
+      const named = messages.brand.ariaLabel.replace('{name}', clinic.name);
 
-    expect(lockup).not.toHaveAttribute('href');
-    expect(lockup).not.toHaveAttribute('aria-label');
-    expect(screen.queryByRole('link', { name: named })).toBeNull();
-    // …and no OTHER link in the bar points at home either: the single home
-    // destination is gone until the wiring lands, rather than moved.
-    for (const link of screen.getAllByRole('link')) {
-      expect(link).not.toHaveAccessibleName(named);
+      // THE one link with that name, and it is the lockup's own root.
+      expect(screen.getByRole('link', { name: named })).toBe(brand);
+      // The final string a visitor gets (base path '' in this runner), and
+      // the SAME destination as the row's Home link: two links, one home.
+      expect(brand).toHaveAttribute('href', `/${locale}/`);
+      expect(brand.getAttribute('href')).toBe(
+        within(barNav())
+          .getByRole('link', { name: messages.nav.home })
+          .getAttribute('href'),
+      );
+      // The FIRST stop in the bar — before the row's links and the CTA, as
+      // the bar reads left to right. (No stylesheet here, so every control is
+      // in the list; DOM order is what is under test.)
+      expect(focusablesIn(header)[0]).toBe(brand);
+      unmount();
     }
-    expect(messages.brand.ariaLabel).not.toMatch(/brand\.ariaLabel/);
+  });
+
+  it('puts the clinic name FIRST in the brand label in every language (SC 2.5.3)', () => {
+    // Label in Name: the visible text of the link is the clinic's name, so
+    // the accessible name must OPEN with it in all five languages — a
+    // translation that moved `{name}` after the destination would break
+    // "click Premium Smile" for speech input. And it must say more than the
+    // name: the destination is the point of the label (SC 2.4.4).
+    for (const [locale, messages] of Object.entries(MESSAGES)) {
+      const label = messages.common.brand.ariaLabel;
+      expect(label.startsWith('{name}'), locale).toBe(true);
+      expect(label.length, locale).toBeGreaterThan('{name}'.length);
+    }
   });
 
   it('opens the ONE dialog from the bar AND from the panel, and the number lives inside it (B7)', async () => {

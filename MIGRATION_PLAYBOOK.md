@@ -209,7 +209,10 @@ boxes stay open BY DESIGN, annotated below — they are not lane debt:
 - [x] Wordmark's declared two-line home-link wiring diff — DROPPED, not parked (owner,
       2026-09-06: "i am dropping wordmark home link"); fb-179 is closed by removal. The three
       files that still described it as parked were cleaned on 2026-10-01 (Wordmark.tsx D9,
-      Footer.test.tsx, the header-step e2e).
+      Footer.test.tsx, the header-step e2e). *(LANDED 2026-10-02 on the owner's word — "i just
+      want the "premium smile" logo from top bar and from footer … to be a component that takes
+      you to home": the logo is a link to the locale home in the Header AND the Footer, fb-179
+      reversed with it; CLAUDE.md §15.33)*
 - [x] **Skip-link** — named in the Order above and carried by NO section header: it is a NEW
       build item of this shell lane, not a mount of something that exists.
 - [x] Delete the placeholder header/footer markup in `layout.tsx` (and its duplicate

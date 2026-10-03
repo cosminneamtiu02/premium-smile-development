@@ -85,6 +85,15 @@ Decisions still go to CLAUDE.md §15.
     the stat tiles, plus NVDA with Firefox in browse mode on a tile (§15.23 round 5);
   - the map — the corner buttons over Google's zoom controls at 320 and 390px, and the Tab order
     through Google's frame (COOKIES.md §7);
+  - SC 2.4.11 Focus Not Obscured under the language banner — an ACCEPTED gap (the owner, 2026-10-03,
+    CLAUDE.md §15.33): with the suggestion card open (a visitor whose browser language differs from
+    the page), a keyboard visitor in Chrome or Edge in a window 1024 to 1280px wide who Tabs into the
+    footer finds „Acasă" or „Servicii" ENTIRELY hidden behind the card. The footer's logo, a link
+    since that day and the footer's first stop, makes Chromium scroll to the page's end, where the
+    card covers the site map; Firefox and Safari keep 76 to 95 % of those links visible, and develop
+    before that day hid none (measured on the built export). The page cannot scroll past its end, so
+    the cure belongs to the banner: keep room for the card at the page's end while it is open — the
+    planner's recommendation, declined for now (LanguageBanner.tsx, its SC 2.4.11 record);
   - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5); and, since
     the band scale reached it (CLAUDE.md §15.32 round 2), two zoom paths never measured: open
     `/de/services/` in a 1920 window in FIREFOX with View → Zoom → "Zoom Text Only" at 150 and 200 % —

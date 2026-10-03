@@ -1,8 +1,10 @@
 import type { ReactElement } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
 import { containerClasses } from '@/components/ui/Container/Container';
+import { localeHref } from '@/i18n/href';
+import { clinic } from '@/lib/clinic/clinic';
 import { cx } from '@/lib/cx/cx';
 import { HeaderNav } from './HeaderNav';
 import { NavMenu } from './NavMenu';
@@ -19,7 +21,9 @@ import { NavMenu } from './NavMenu';
 // · LanguageBanner). Not here: the LanguageSwitcher (deferred, fb-129). The
 // brand corner is sections/Wordmark since the fb-200 swap — the clinic's own
 // mark and its two lettering colours since 2026-10-01 (§15.6 landed there,
-// one edit to that file's default; this file only hands it the cell).
+// one edit to that file's default) and a link HOME since 2026-10-02 (the
+// owner's word, Wordmark.tsx's D9): this file hands it the cell, the locale
+// home's href and the link's translated name.
 //
 // ── THE CONTACT MODAL IS WIRED (org-review F1, 2026-09-02). This IS the "next
 // run" D4 parked, so the interim `tel:` links are gone from both CTAs: the
@@ -35,13 +39,14 @@ import { NavMenu } from './NavMenu';
 // and Header.stories.tsx each supply one.
 //
 // ── NO 'use client' here, and it still calls t() — the FloatingActions
-// precedent (§16 + board §1.1). next-intl's useTranslations is ISOMORPHIC: it
-// resolves against the request-scoped config while this Server Component is
-// pre-rendered into complete static HTML, and reads NextIntlClientProvider in
-// Storybook/Vitest. The server-only `getTranslations` would work in the build
-// and NOWHERE else, leaving the section un-storyable — and §13 requires a
-// story per state. §8.1 holds either way: the ui/ atoms below never see a key,
-// only finished text.
+// precedent (§16 + board §1.1). next-intl's useTranslations is ISOMORPHIC —
+// and so is useLocale, the brand link's locale since 2026-10-02 (the Footer's
+// own pair) — it resolves against the request-scoped config while this Server
+// Component is pre-rendered into complete static HTML, and reads
+// NextIntlClientProvider in Storybook/Vitest. The server-only
+// `getTranslations` would work in the build and NOWHERE else, leaving the
+// section un-storyable — and §13 requires a story per state. §8.1 holds
+// either way: the ui/ atoms below never see a key, only finished text.
 //
 // ── THREE islands, and everything else is inert HTML (board §1.1 — the count
 // was TWO until the ContactModal wiring gave the bar's Contact a reason to
@@ -209,6 +214,7 @@ import { NavMenu } from './NavMenu';
 
 export function Header(): ReactElement {
   const t = useTranslations('common');
+  const locale = useLocale();
 
   return (
     // ── THE FLOATING PILL (owner, 2026-08-16 — restore the old top-bar's
@@ -422,28 +428,39 @@ export function Header(): ReactElement {
             Both consumers used to spell the mark out themselves, so the §15.6
             logo swap was two edits that could disagree; it is one now.
             THE WRAPPER IS THIS SECTION OWNING THE BOX (§6.4/§6.8), not
-            decoration: the row is `items-center`, which centres its children
-            rather than stretching them, while the lockup's artwork is sized as
-            a PERCENTAGE of the box it is handed — `self-stretch` is what hands
-            it the full 5rem to be a percentage of. Everything else in this
-            file was untouched by THAT swap (fb-207): the pill chrome, the
-            `group/bar` name, the single-menu rule, the row (h-16 then, h-20
-            since the owner's 2026-09-04 uniform-height ask — the lockup
-            follows it for free, which is the point of `self-stretch`).
-            WHAT THE SWAP REMOVES, deliberately rather than by accident: the
-            home LINK and its `brand.ariaLabel`. D9 (fb-200 — "make it
-            clickable, but don't implement go-to-a-page yet") makes the
-            wordmark a placeholder <a> with NO href, so nothing navigates and
-            there is nothing to name — a label on an unfocusable generic is
-            prohibited ARIA, i.e. an axe failure. The key stays in all five
-            message files, reserved and uncalled, for the two-line wiring diff
-            Wordmark.tsx declares in full. C2 is unaffected either way: the
-            brand is not a heading, because the one <h1> belongs to the page. */}
+            decoration: `self-stretch` makes the cell the whole 5rem row — the
+            same box the Footer's ruler gives its instance (fb-205) — and
+            `items-center` centres the lockup in it, which is also what lets
+            the lockup's link HUG what it draws since 2026-10-02 (a flex
+            cell's default `stretch` would pull it to the row's height), so
+            its focus ring circles the lockup inside the row (Wordmark.tsx,
+            D9). Everything else in this file was untouched by the fb-200 swap
+            (fb-207): the pill chrome, the `group/bar` name, the single-menu
+            rule, the row (h-16 then, h-20 since the owner's 2026-09-04
+            uniform-height ask — the cell follows it for free, which is the
+            point of `self-stretch`).
+            THE HOME LINK, BACK (owner, 2026-10-02: "i just want the "premium
+            smile" logo from top bar and from footer to be a component that
+            takes you to home"). The swap had removed the bar's home link — D9
+            made the wordmark a placeholder <a> with no href, and on 2026-09-06
+            the owner dropped the wiring — and this restores it through the
+            two props sections/Wordmark now requires: `href`, the page's locale
+            home through the one URL rule (`localeHref(locale, '/')`, §15.13 —
+            a plain anchor, a full document load), and `aria-label`,
+            `common.brand.ariaLabel` — the key the swap left uncalled in all
+            five message files — filled with clinic.name (§10.1's single
+            spelling): „Premium Smile, acasă" — the visible name first
+            (SC 2.5.3), then where it goes (SC 2.4.4). The lockup is the bar's
+            FIRST tab stop now, which is why NavMenu's focus-return fallback is
+            scoped to the nav row: it keeps landing there, not on the logo. C2
+            is unaffected: the brand is not a heading, because the one <h1>
+            belongs to the page. */}
         {/* CELL 1 — `justify-self-start` states the intent the old flex order
             gave implicitly. `self-stretch` still overrides the grid's
-            `items-center` for this one cell, which is what hands the lockup the
-            full row height its percentage-sized artwork needs — and it follows
-            the h-20 step for free.
+            `items-center` for this one cell, so the cell is the full row
+            height, and the cell's own `items-center` centres the hugging
+            lockup in it (2026-10-02, the home link above) — both follow the
+            h-20 step for free.
             THE MARK'S SIZE IS NOT THIS CELL'S (owner, 2026-10-01). Two words
             that evening made the bar's mark smaller and its name bigger — "make
             logo in top bar 15% smaller", "make the logo 10% smaller again",
@@ -451,7 +468,8 @@ export function Header(): ReactElement {
             cell carried them as a shorter box (85%, then 76.5% of the row) plus
             a name-size prop. Then "update also in footer": the look became the
             lockup's own, so sections/Wordmark carries it (its THE OWNER'S
-            SIZES block) and this cell is back to the whole row. In the bar the
+            SIZES block) and this cell is back to the whole row (the lockup
+            centred in it since 2026-10-02). In the bar the
             mark is 55.1px (24.5 below the Wordmark's phone step) and the name
             30px, the lockup 270.1px wide at the row; the file header's step
             arithmetic follows it.
@@ -487,8 +505,11 @@ export function Header(): ReactElement {
             (measured on develop's preview; flagged by the real-clinic-data
             lane on 2026-09-30, fixed here). The grid's reason for nowrap
             starts where the grid starts, so the class now wears the step. */}
-        <div className="flex self-stretch @min-[62rem]:col-start-1 @min-[62rem]:justify-self-start @min-[62rem]:whitespace-nowrap">
-          <Wordmark />
+        <div className="flex self-stretch items-center @min-[62rem]:col-start-1 @min-[62rem]:justify-self-start @min-[62rem]:whitespace-nowrap">
+          <Wordmark
+            href={localeHref(locale, '/')}
+            aria-label={t('brand.ariaLabel', { name: clinic.name })}
+          />
         </div>
 
         {/* CELL 2 — the nav row, centred. `justify-self-center` lives on

@@ -51,20 +51,22 @@ const readBar = (page: Page): Promise<Bar> =>
       el !== null && getComputedStyle(el).display !== 'none';
     // The brand corner is sections/Wordmark's lockup: the one <a> in the bar
     // wrapping an <img> (the artwork; D10 renders every part at every width).
-    // NOT "the <a> without an href" — D9's placeholder state is FINAL since
-    // the owner dropped the home-link wiring (2026-09-06), and a selector
-    // keyed on an absence would be the wrong idiom anyway (G2, 2026-09-26).
+    // Found through the artwork, never through its href: the lockup has been
+    // an hrefless placeholder (D9, until 2026-10-02) and is a home link now,
+    // and a selector keyed on the href's presence or absence would have broken
+    // at each turn (G2, 2026-09-26).
     // The gap is measured from what the lockup PAINTS — the right edge of its
-    // last child, the name — never from the anchor's own box: WebKit sizes
-    // that box from the artwork's natural width (301.5px around the 258.5px
-    // the demo cat's lockup painted, measured 2026-09-26; at the owner's sizes
-    // of 2026-10-01 — the clinic's mark at 68.85% of the row, the name at
-    // 30px, sections/Wordmark — the lockup is ~270px and the German gap at the
-    // step ~56px, under the floor until the owner rules on the fitting —
-    // Header.tsx, THE BRAND GREW) and Firefox lets the brand's cell span
-    // its whole track, so a box edge would misreport the air between "Smile"
-    // and the first link. Chromium is the only engine this suite runs today;
-    // the measurement is engine-proof anyway.
+    // last child, the name — never from the anchor's own box: WebKit once
+    // sized that box from the artwork's natural width (301.5px around the
+    // 258.5px the demo cat's lockup painted, measured 2026-09-26) and Firefox
+    // lets the brand's cell span its whole track, so a box edge could
+    // misreport the air between "Smile" and the first link. Since the mark
+    // became a fixed rem with `max-w-none` (2026-10-01) the link box hugs the
+    // lockup in Chromium and WebKit alike (270.1px, measured 2026-10-02), and
+    // the painted edge stays the honest measure all the same. At the owner's
+    // sizes the lockup is ~270px and the German gap at the 62rem step 70.6px
+    // (Header.tsx, THE BRAND GREW). Chromium is the only engine this suite
+    // runs today; the measurement is engine-proof anyway.
     const brand = header.querySelector('img')?.closest('a');
     if (!brand) {
       throw new Error(

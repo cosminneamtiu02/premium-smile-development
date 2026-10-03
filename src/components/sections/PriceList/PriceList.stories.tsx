@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import {
   PriceList,
   PRICE_MENU_ID,
@@ -538,21 +538,34 @@ const CURRENT = 'data-current';
  * settle (its ToneMorph and AuraOnCurrent plays), with `subtree`, which is
  * what includes a pseudo-element's transition. One frame first, so the style
  * change that starts a fade has been seen; then every animation in the band is
- * awaited to its last frame. No timeout and no polling, because these plays
- * run in TWO runners: Vitest's storybook project, where motion is allowed and
- * the glow really fades, and the visual net, which sets
- * `prefers-reduced-motion: reduce` — nothing animates there, the list is empty
- * and this resolves at once.
+ * awaited to its last frame. No timeout, because these plays run in TWO
+ * runners: Vitest's storybook project, where motion is allowed and the glow
+ * really fades, and the visual net, which sets `prefers-reduced-motion:
+ * reduce` — nothing animates there, the list is empty and this resolves at
+ * once.
+ * IN ROUNDS, not one look (release gate, 2026-10-03): a fade can START after
+ * the first look — the island stamps its mark in a passive effect, a task of
+ * its own after the commit that wrote the link's aria-current — and one look
+ * then awaits only the fades already running. CI read the first card's layer
+ * at 0 twice that way (2026-09-30, and the release container 2026-10-03);
+ * with the stamp held back 150ms every story caught the glow mid-fade
+ * (measured). So: a frame, every animation then running, and again, until a
+ * frame passes with nothing running. A fade interrupted by a mark that moves
+ * on is not a failure here (its `finished` rejects; the next round looks
+ * again), and the rounds are bounded, so a looping animation fails the
+ * assertion that follows instead of hanging the run.
  */
 const settle = async (band: HTMLElement): Promise<void> => {
-  await new Promise<void>((resolve) => {
-    requestAnimationFrame(() => resolve());
-  });
-  await Promise.all(
-    band
-      .getAnimations({ subtree: true })
-      .map((animation) => animation.finished),
-  );
+  for (let round = 0; round < 10; round += 1) {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+    const running = band.getAnimations({ subtree: true });
+    if (running.length === 0) return;
+    await Promise.all(
+      running.map((animation) => animation.finished.catch(() => undefined)),
+    );
+  }
 };
 
 /**
@@ -574,11 +587,15 @@ const expectGlowOnCurrentOnly = async (
   band: HTMLElement,
   categories: readonly PriceCategoryProps[],
 ): Promise<void> => {
-  await settle(band);
-
   const cards = categories.map(
     (category) => band.ownerDocument.getElementById(category.id) as HTMLElement,
   );
+  // The mark is a STATE to wait for, not one to assume: expectCurrentIsFirst
+  // saw the link's aria-current, which React writes in its commit, and the
+  // island stamps the card in a passive effect after it (settle's IN ROUNDS).
+  await waitFor(() => expect(cards[0]).toHaveAttribute(CURRENT));
+  await settle(band);
+
   const marked = cards.filter((card) => card.hasAttribute(CURRENT));
 
   await expect(marked).toHaveLength(1);

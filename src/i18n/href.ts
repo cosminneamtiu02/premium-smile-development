@@ -1,10 +1,11 @@
-// THE one place a locale URL is spelled — pure data-shaping, zero imports, so
-// every consumer can reach it: the Header's row and panel, the Footer's site
-// map, the Wordmark home link, the LanguageSwitcher and in-content CTAs,
-// and tools/generate-root-redirect.ts (plain Node at build time, for BOTH the
-// visible locale list and the table its inline script redirects through). No
-// React, no next-intl, no browser API — the locales.ts rule, for the same
-// reason. There is no second spelling of the rule left anywhere.
+// THE one place a locale URL is spelled — pure data-shaping, one import (the
+// base-path reader, itself import-free), so every consumer can reach it: the
+// Header's row and panel, the Footer's site map, the Wordmark home link, the
+// LanguageSwitcher and in-content CTAs, and tools/generate-root-redirect.ts
+// (plain Node at build time, for BOTH the visible locale list and the table its
+// inline script redirects through). No React, no next-intl, no browser API —
+// the locales.ts rule, for the same reason. There is no second spelling of the
+// rule left anywhere.
 //
 // ── WHY IT EXISTS AT ALL (§15.13). Every internal link is a plain <a href>:
 // there is no <Link> left to add the /{locale} prefix, the trailing slash or
@@ -32,6 +33,11 @@
 // where a rename must not go unnoticed. The PATH is typed the other way round:
 // `/${string}` costs nothing at runtime and refuses 'services' at compile time,
 // which the old `string` signature silently shipped as '/roservices/'.
+//
+// The one import is RELATIVE and `.ts`-suffixed on purpose: the root-redirect
+// tool loads this file under plain Node's type stripping, which resolves no
+// `@/` alias and no extension-less specifier.
+import { basePath } from '../lib/base-path/base-path.ts';
 
 /**
  * '/services' → '/ro/services/' · '/' → '/ro/' · plus the base path when set.
@@ -82,17 +88,10 @@ export function stripLocale(
   return rest === '' ? '/' : `/${rest}`;
 }
 
-/**
- * '/premium-smile-development' in the interim Pages build (§15.2), '' on every
- * other host and — unless a test stubs it — in every runner. The SAME variable
- * next.config.ts reads for Next's own `basePath`, so the link prefix and the
- * asset prefix cannot disagree.
- *
- * Read at CALL time, not at module load: the browser bundle and the Chromium
- * test project get this text replaced by a literal at build time (next.config
- * `env` · vitest.config `define`), while the node runners keep a real
- * environment a test can flip between cases.
- */
-function basePath(): string {
-  return process.env.PAGES_BASE_PATH ?? '';
-}
+// The base path itself — '/premium-smile-development' in the interim Pages
+// build (§15.2), '' everywhere else — is read by lib/base-path/base-path.ts,
+// the ONE reader the links here and the pictures (ui/Image, the Wordmark's
+// mark, the Footer's badge) share, so the two prefixes cannot disagree
+// (pages-base-path lane, 2026-10-03). It moved there from a private copy at
+// the foot of this file when the pictures became its second consumer (§4's
+// sharing table, row 1).

@@ -119,6 +119,7 @@ src/
     time-ago/time-ago.ts # "how long ago" the way Google's review list says it: a `YYYY-MM-DD` day + a `now` → one unit rounded down (year · month · week · day) → Intl.RelativeTimeFormat's words in five languages („acum 2 ani", "vor 2 Jahren"); computed at BUILD by the reviews band (React-free, real-reviews lane 2026-09-30)
     prices/prices.ts     # THE price list — 11 categories · 102 fixed whole-RON rows, facts + five-language words per row (RO transcribed from the owner's printed tariff 2026-09-13; EN/DE/FR/IT DRAFTED, flagged; an eyebrow on EVERY category — eleven, eight drafted 2026-09-14); the Services page populates the DUMB band from it (§15.20)
     image-path/image-path.ts  # THE picture-path type (`/images/${string}`, type-only) — promoted by the hero lane on §15.19's recorded trigger; lib/reviews, lib/hero-slides, ui/Avatar, ReviewCard and ReviewsDeck all import it (2026-09-19)
+    base-path/base-path.ts  # THE deployment's base path, read once — `basePath()` · `withBasePath(path)`: i18n/href's links and every picture (ui/Image, the Wordmark's mark, the Footer's ANPC badge) take their prefix from it, so on the interim Pages host nothing the page addresses misses it (pages-base-path lane, 2026-10-03, §15.2)
     hero-slides/hero-slides.ts  # THE Home opener's slides — picture + five-language words per row: the clinic's OWN three photographs since 2026-10-01 (lobby · treatment room · handpieces, `public/images/hero/`, 1920 × 1280, EXIF stripped) under slogans and alts DRAFTED by Claude in all five languages on the owner's word, flagged (§15.21 round 11); the Home page populates the DUMB Hero band from it (hero lane, 2026-09-19)
     team/team.ts         # THE clinic's people — doctors (ONE picture, the transparent waist-up cutout — the framed portrait and the optional lib/prices category left with the card's services link, 2026-09-30, §15.25 — own week in lib/clinic's OpeningHours shape, course rows `{ year, words }` grouped by `coursesByYear`, `stats` rows `{ icon id, value, suffix?, words }` for the „în cifre” tiles) and auxiliaries (a 3:4 portrait), five-language words per row (`philosophy` = the `<k>…</k>` quote split by `splitKeywords`, `about` = third-person paragraphs); the clinic's six REAL doctors since 2026-09-30 (names + specialties the owner's; every other field a RANDOM placeholder on his word, EN/DE/FR/IT drafted, all flagged; nobody gendered) beside the clinic's three REAL auxiliary staff since 2026-10-01 (names and roles the owner's, the titles FEMININE on the owner's word and translated by Claude; portraits still the demo silhouettes) — and, since 2026-10-01, the clinic's OWN numbers, `clinicStats` (three rows of the doctors' `stats` shape, now named `Stat`: years · patients · procedures, the Home and Team pages' „în cifre" band; placeholder values, flagged) (doctor-pages run, 2026-09-21; round 2 2026-09-25; round 3 2026-09-30; rounds 4 and 5 2026-10-01, §15.23)
     not-found-html/not-found-html.ts  # THE 404 dispatcher document builder (out/404.html via tools/generate-404.ts; S6)
@@ -566,6 +567,31 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    never compete with launch SEO, same hard rule as staging). The 07-31 exclusion now
    applies to LAUNCH only: Cloudflare Pages remains the recommended final host; the
    staging deploy step remains a placeholder. Also enabled: `delete_branch_on_merge`.
+   **AMENDED 2026-10-03 — the base path reaches the PICTURES (the second promotion's
+   prerequisite; owner: "take latest development. i want it hosted with a link on the
+   production … don't stop until the current development is on production"; lane
+   `fix/pages-base-path`):** MEASURED on a Pages-shaped build before the lane, every picture
+   404'd — ui/Image's optimizer URLs (Next adds its `basePath` to no custom loader's URL), the
+   Wordmark's mark and the Footer's ANPC badge (raw root-absolute `<img src>`), the "KNOWN DEBT ·
+   basePath" those files had booked: 1,120 broken links on 47 pages, while CI's root-served crawl
+   stayed green. NEW `lib/base-path` is the one reader (`basePath()`, moved out of i18n/href.ts,
+   and `withBasePath(path)`; the two build tools read it too — next.config.ts stays the source).
+   ui/Image puts the prefix on a site path's `src` itself — not through the optimizer's own
+   `basePath` prop, which the library's error fallback drops, and which `ImageProps` now refuses —
+   and on a caller's `overrideSrc` / `blurDataURL`; for a STATIC IMPORT (none in the repo) it
+   passes that prop instead, since Next prefixes the import's own URL and the optimizer its
+   variants only through the prop. The two raw images call `withBasePath`. THE GUARD:
+   `tools/check-export-links.mjs` serves `out/` the way github.io does (mounted under the
+   prefix, nothing at the root — `tools/serve-static.mjs` gained a `base`) and crawls it with
+   linkinator, inline-style and stylesheet `url()`s included (`checkCss`: the blur placeholders
+   live only there); release.yml's gate now builds and crawls the PRODUCTION shape (step-level
+   env: Storybook and the visual suite stay unprefixed), the production job crawls the exact
+   artifact before its upload, and ci.yml's root-shape crawl runs the same tool. Storybook is
+   pinned root-shaped (`.storybook/main.ts` deletes the variable before next.config.ts loads), so
+   a shell left exporting it cannot record broken frames. Before the fix 1,120 broken; after,
+   0 broken of 553 links in both shapes (all 118 optimized variants checked). Nothing moves on a
+   root-served build: its 59 HTML files are byte-identical to develop's. G2 on Opus (react,
+   typescript): APPROVE WITH CHANGES twice, 0 critical / 0 high, every finding folded.
 3. Localized URL slugs (decide before launch).
 4. EUR price display on non-`ro` locales.
 5. ~~Image optimizer final pick~~ — **DECIDED 2026-08-01 (owner, Phase 0 kickoff):**
@@ -2587,7 +2613,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     starts below the first screen (nominally 8–29 MB of backing store for two cards at 2–3× density) —
     lazy canvas creation belongs in `lib/ribbon-draw`, beside the SC 2.2.2 cap · `ui/Image` threads no
     base path, so on the interim Pages host the new preload targets a 404 like every optimized image
-    there (the debt Wordmark.tsx and Footer.tsx record) · the e2e suite runs in no workflow and no hook ·
+    there (the debt Wordmark.tsx and Footer.tsx record) *(PAID 2026-10-03, §15.2's base-path
+    amendment: every picture, the preload included, carries the prefix through lib/base-path)* · the
+    e2e suite runs in no workflow and no hook ·
     `lib/team`'s `findAuxiliary` has no caller but its own test (older than the lane; left to the
     real-doctors lane, which is rewriting that file) · ui/Ribbon's stand-in column still imitates the
     parked two-button card (re-dressing it re-records the atom's eight cells).
@@ -3809,7 +3837,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     type="image/x-icon">` then `<link rel="icon" href="/icon.svg?…" sizes="any" type="image/svg+xml">`, both files at
     the export root — Next collects `favicon` for the top-level segment although the root layout is
     `[locale]/layout.tsx` — and with `PAGES_BASE_PATH` set both hrefs carry the prefix (the Wordmark's own `<img>`
-    does not: its KNOWN DEBT, so on the interim host the tab shows the logo while the header's is the recorded 404).
+    does not: its KNOWN DEBT, so on the interim host the tab shows the logo while the header's is the recorded 404)
+    *(since 2026-10-03 it does — §15.2's base-path amendment, lib/base-path)*.
     WHY TWO FILES: SVG tab icons are drawn by Chrome 80+, Firefox 41+ and Safari 26+ only — every Safari up to 18.7,
     on the Mac and on the iPhone, draws none (caniuse link-icon-svg), and an older patient's iPhone may never run iOS
     26; the ICO is their icon, and it is also the file a browser asks for by default on the two documents Next does

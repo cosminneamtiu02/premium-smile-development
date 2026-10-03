@@ -13,7 +13,7 @@
 // as octet-stream, anything missing is a plain 404.
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { extname, join, normalize } from 'node:path';
+import { extname, join, normalize, sep } from 'node:path';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -40,18 +40,44 @@ const TYPES = {
  * caller's own message — when `sentinel` (a file relative to `root`) is
  * missing, so a suite never waits 30 s on an unbuilt tree.
  *
- * @param {{ root: string; port: number; sentinel: string; missing: string }} options
+ * `base` (pages-base-path lane, 2026-10-03) serves the tree the way a github.io
+ * PROJECT site does: `root` mounted under that prefix, and the domain root
+ * holding nothing else — a request outside the prefix is a 404, exactly the
+ * address a root-absolute URL that forgot the prefix would reach in production
+ * (tools/check-export-links.mjs is the caller). Omitted, the tree is served at
+ * the root as before. Returns the server, so a script can close it.
+ *
+ * @param {{ root: string; port: number; sentinel: string; missing: string; base?: string }} options
+ * @returns {import('node:http').Server}
  */
-export function serveStatic({ root, port, sentinel, missing }) {
+export function serveStatic({ root, port, sentinel, missing, base = '' }) {
   if (!existsSync(join(root, sentinel))) {
     console.error(missing);
     process.exit(1);
   }
 
-  createServer((req, res) => {
+  return createServer((req, res) => {
     const url = new URL(req.url ?? '/', `http://127.0.0.1:${port}`);
-    let filePath = normalize(join(root, decodeURIComponent(url.pathname)));
-    if (!filePath.startsWith(root)) {
+    let pathname;
+    try {
+      pathname = decodeURIComponent(url.pathname);
+    } catch {
+      // A malformed %-escape is a broken URL, answered as one — not a throw
+      // that takes the server (and the link check it gates) down with it.
+      res.writeHead(400).end('bad request');
+      return;
+    }
+    if (base) {
+      if (pathname !== base && !pathname.startsWith(`${base}/`)) {
+        res.writeHead(404).end('not found');
+        return;
+      }
+      pathname = pathname.slice(base.length) || '/';
+    }
+    let filePath = normalize(join(root, pathname));
+    // Inside `root` means `root` itself or below it — a bare prefix test
+    // would also admit a sibling such as `out-old/`.
+    if (filePath !== root && !filePath.startsWith(root + sep)) {
       res.writeHead(403).end();
       return;
     }
@@ -67,6 +93,6 @@ export function serveStatic({ root, port, sentinel, missing }) {
     });
     createReadStream(filePath).pipe(res);
   }).listen(port, '127.0.0.1', () => {
-    console.log(`${root} on http://127.0.0.1:${port}`);
+    console.log(`${root} on http://127.0.0.1:${port}${base || ''}/`);
   });
 }

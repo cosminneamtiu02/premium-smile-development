@@ -418,9 +418,12 @@ describe('Shell — the body-level sibling contract (E10/E11, P1)', () => {
     expect(shellChildren()[0]).toBe(skipLink());
     // The claim that actually matters to a visitor (SC 2.4.1 Bypass Blocks):
     // FIRST IN THE TAB ORDER. `sr-only` clips the link but never hides it, so it
-    // stays a real tab stop; everything above it in the bar is either
-    // unfocusable (Wordmark's hrefless D9 placeholder) or display:none below the
-    // bar's container step (Header.tsx; header-nav-gap lane, 2026-09-26).
+    // stays a real tab stop — and it stays FIRST because it precedes the
+    // <header> in the DOM, not because the bar has nothing to offer: the
+    // brand corner is a real home link again since 2026-10-02 (Wordmark's D9),
+    // so it is the SECOND stop, ahead of whatever the bar shows at its width
+    // (the row and the bar's Contact are display:none below its container
+    // step — Header.tsx; header-nav-gap lane, 2026-09-26).
     expect(focusablesInDocument()[0]).toBe(skipLink());
   });
 

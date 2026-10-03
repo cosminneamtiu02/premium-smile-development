@@ -29,15 +29,16 @@ import '@/styles/globals.css';
 // siblings and asserts the order, the freeze, the P7 single-open invariant, the
 // skip-link and the globals scroll-padding pair.
 //
-// THREE BOXES STAY OPEN ON PURPOSE, each annotated in the playbook:
+// TWO BOXES STAY OPEN ON PURPOSE, each annotated in the playbook:
 //   · the page-composition rule for the bottom corner bands (FloatingActions b)
 //     — a STANDING rule every page lane carries, never "done";
 //   · `viewport-fit: cover` (FloatingActions' own caveat) — DORMANT until the
 //     first full-bleed hero asks for it; the `env()` terms are already written
-//     so that day changes one export, not four expressions;
-//   · Wordmark's two-line home-link wiring diff (Wordmark.tsx header) — PARKED
-//     on the owner's word, because landing it re-poses fb-179 (a second home
-//     link per page, once the Footer has one too).
+//     so that day changes one export, not four expressions.
+// (A third — Wordmark's home-link wiring — CLOSED: dropped on the owner's word
+// on 2026-09-06, LANDED on his word on 2026-10-02; the logo in the Header and
+// in the Footer is a link to the locale home, fb-179 reversed with it —
+// Wordmark.tsx D9, CLAUDE.md §15.33.)
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

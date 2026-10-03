@@ -4,23 +4,27 @@ import { expect } from 'storybook/test';
 import { containerClasses } from '@/components/ui/Container/Container';
 import { clinic } from '@/lib/clinic/clinic';
 import { cx } from '@/lib/cx/cx';
+import ro from '@/messages/ro.json';
 import { Wordmark } from './Wordmark';
 
-// The Wordmark's two stories — the component has ONE axis that can change its
-// shape, the WIDTH OF THE BOX IT IS GIVEN, so there are exactly two pictures:
-// full size, and the tightened step (contract §7). What is deliberately absent
-// is as informative as what is here:
+// The Wordmark's three stories — the component has ONE axis that can change
+// its shape, the WIDTH OF THE BOX IT IS GIVEN, so there are two pictures of
+// it: full size, and the tightened step (contract §7) — and, since the lockup
+// became the home link (owner, 2026-10-02, Wordmark.tsx's D9), one state: the
+// keyboard's focus ring (FocusVisible). What is deliberately absent is as
+// informative as what is here:
 //
-// ── NO GermanStress. This section renders no translated string at all: the
-// only text is `clinic.name`, which is DATA (§10.1) and identical in five
-// languages. Flip the locale toolbar to Pseudo and nothing here may change —
+// ── NO GermanStress. This section translates nothing: its only visible text
+// is `clinic.name`, which is DATA (§10.1) and identical in five languages, and
+// the link's name arrives FINISHED as the `aria-label` prop — here the real
+// Romanian message as a meta arg, in the shells whatever their locale's t()
+// returns. Flip the locale toolbar to Pseudo and nothing here may change —
 // that is the §8.9 sweep passing, not failing.
-// ── NO FocusVisible. D9's placeholder <a> has no href, so it is not focusable
-// and there is no focus state to photograph (Wordmark.tsx says why at length).
 // ── NO `parameters.nextjs`. Only the Header's stories still pin a pretend
 // route, and for the one thing that needs one: usePathname decides which entry
 // gets aria-current. Nobody pins for LINKS any more — they are plain anchors
-// since §15.13 — and this section has none (the home link is dropped, D9).
+// since §15.13 — and this section's one link takes its href as a prop, which
+// the consumer builds (D9), so there is no route here to pin.
 //
 // THE THREE MECHANICS THAT WOULD OTHERWISE FAIL SILENTLY, same as the Header's
 // and the Footer's files:
@@ -99,30 +103,45 @@ const Cell = ({
           )
     }
   >
-    {/* h-20 = 5rem — the ruler the percentage-sized mark resolves against,
-        the row height BOTH consumers give it (fb-205; see the file header for
-        the day this harness caught up with them). `self-stretch` on the
-        wrapper is what the Header does for the same reason: `items-center`
-        centres children instead of stretching them, and a centred child has no
-        full height to be a percentage of. px-4 is the pill's own number, and
-        it is load-bearing in the pinned case: 241 − 2 border − 32 padding =
-        207 of row, minus the 44px control = the 163px cell the Header really
-        offers at 320 (no gap — the file header says why). */}
+    {/* h-20 = 5rem — the row height BOTH consumers give the lockup (fb-205;
+        see the file header for the day this harness caught up with them), and
+        the ruler the plays read the mark's share against. The wrapper each
+        story puts inside it is the Header's own cell, `flex self-stretch
+        items-center`: the cell the whole row, the lockup's link centred in it
+        and hugging what it draws (Wordmark.tsx, D9 — the focus ring round the
+        lockup, inside the row). px-4 is the pill's own number, and it is
+        load-bearing in the pinned case: 241 − 2 border − 32 padding = 207 of
+        row, minus the 44px control = the 163px cell the Header really offers
+        at 320 (no gap — the file header says why). */}
     <div className="flex h-20 items-center px-4">{children}</div>
   </header>
 );
+
+/**
+ * The link's name as both consumers build it — the real Romanian
+ * `common.brand.ariaLabel` with `{name}` filled from the single NAP source,
+ * what `t('brand.ariaLabel', { name: clinic.name })` returns in the shells.
+ */
+const LABEL = ro.common.brand.ariaLabel.replace('{name}', clinic.name);
+
+/** The Romanian home, as `localeHref('ro', '/')` writes it (§15.13). */
+const HOME = '/ro/';
 
 const meta = {
   title: 'Sections/Wordmark',
   component: Wordmark,
   parameters: { layout: 'fullscreen' },
-  // args flow through (G2 TS r2, M2): the D11 artwork control in the
-  // workbench is LIVE — empty args render the component's own default, so the
-  // baselines are untouched, and dropping a different artwork into the panel
-  // actually draws it.
+  // The link's two REQUIRED props (D9) as meta args — the Romanian home and
+  // the Romanian label, exactly what the Header hands its instance on a
+  // Romanian page — so every story renders a real link. And args flow
+  // through (G2 TS r2, M2): the D11 artwork control in the workbench is LIVE —
+  // no artwork arg renders the component's own default, so the baselines are
+  // untouched, and dropping a different artwork into the panel actually draws
+  // it.
+  args: { href: HOME, 'aria-label': LABEL },
   render: (args) => (
     <Cell>
-      <div className="flex self-stretch">
+      <div className="flex self-stretch items-center">
         <Wordmark {...args} />
       </div>
     </Cell>
@@ -133,16 +152,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The mark's height as a PERCENTAGE of the row, read off the layout and
- * rounded to a whole percent: the classes say 68.85% and 30.6% (THE OWNER'S
- * SIZES, Wordmark.tsx), so the readings are 69 and 31 — and
+ * The mark's height as a PERCENTAGE of the 5rem row, read off the layout and
+ * rounded to a whole percent: the classes say 3.4425rem and 1.53rem — 68.85%
+ * and 30.6% of the 5rem row (THE OWNER'S SIZES, Wordmark.tsx) — so the
+ * readings are 69 and 31 — and
  * getBoundingClientRect, not offsetHeight, because 55.08px and 24.48px would
- * round in the box before they rounded here.
+ * round in the box before they rounded here. Against the ROW, not the link:
+ * the link hugs what it draws since 2026-10-02 (D9), so its own height is the
+ * mark's or the name's, never the row's.
  */
-const artworkPercent = (img: HTMLElement, anchor: HTMLElement): number =>
+const artworkPercent = (img: HTMLElement, row: HTMLElement): number =>
   Math.round(
-    (img.getBoundingClientRect().height /
-      anchor.getBoundingClientRect().height) *
+    (img.getBoundingClientRect().height / row.getBoundingClientRect().height) *
       100,
   );
 
@@ -162,16 +183,33 @@ const parts = (root: HTMLElement) => {
 };
 
 /**
- * D9, provable in EVERY picture: the lockup looks like a link and is not one.
- * No href, therefore no link role, therefore no tab stop and no accessible
- * name to give it — the owner's final word on the home link (2026-09-06).
+ * D9, provable in EVERY picture (the owner, 2026-10-02): the lockup IS the
+ * home link — its own root <a>, the one link the label names, pointing at the
+ * href it was handed — and the link HUGS what it draws, centred in the row:
+ * never the whole 80px row (`h-full` left with the link), its middle on the
+ * row's, and at least 44px tall. THAT LAST CHECK DOES NOT TEST THE FLOOR in
+ * these stories: in Default the 55.08px mark sets the height and in Stress320
+ * the name's two 28px lines do, so deleting `min-h-11` leaves every Wordmark
+ * play green (measured, 2026-10-03). The story that MEASURES the 44px floor
+ * is Footer › Smartphone, where the one-line phone lockup is 28px of content
+ * (it fails "expected 28 to be greater than or equal to 44" without the
+ * class); the class itself stays pinned in Wordmark.test.tsx.
  */
-const expectPlaceholderAnchor = async (
-  canvas: { queryByRole: (role: string) => HTMLElement | null },
-  anchor: HTMLElement,
+const expectHomeLink = async (
+  canvas: {
+    getByRole: (role: string, options: { name: string }) => HTMLElement;
+  },
+  p: ReturnType<typeof parts>,
 ): Promise<void> => {
-  await expect(canvas.queryByRole('link')).toBeNull();
-  await expect(anchor).not.toHaveAttribute('href');
+  await expect(canvas.getByRole('link', { name: LABEL })).toBe(p.anchor);
+  await expect(p.anchor).toHaveAttribute('href', HOME);
+  const link = p.anchor.getBoundingClientRect();
+  const row = p.row.getBoundingClientRect();
+  await expect(link.height).toBeGreaterThanOrEqual(44);
+  await expect(link.height).toBeLessThan(row.height);
+  await expect(
+    Math.abs(link.top + link.height / 2 - (row.top + row.height / 2)),
+  ).toBeLessThanOrEqual(0.5);
 };
 
 /** D10: both parts render at every width — nothing may hide (D12 removed the
@@ -236,7 +274,8 @@ const expectBrandColours = async (
  *
  * The play function measures the ratios the file header derives, because a
  * picture cannot: the mark's share and near-square box, the gap's 0.75rem,
- * the two colours. If any drifts, this fails before a baseline does.
+ * the two colours — and the home link hugging the lockup in the middle of its
+ * row (D9). If any drifts, this fails before a baseline does.
  */
 export const Default: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -244,7 +283,7 @@ export const Default: Story = {
     const p = parts(canvasElement);
     await loadFace(p.text);
 
-    await expectPlaceholderAnchor(canvas, p.anchor);
+    await expectHomeLink(canvas, p);
     await expectAllPartsVisible(p);
     await expectNoOverflow(p);
 
@@ -253,7 +292,7 @@ export const Default: Story = {
     await expect(p.text).toHaveTextContent(clinic.name);
     await expectBrandColours(p);
     // Full size: 68.85% of the row (rounded, 69), and the untightened gap-3.
-    await expect(artworkPercent(p.img, p.anchor)).toBe(69);
+    await expect(artworkPercent(p.img, p.row)).toBe(69);
     await expect(getComputedStyle(p.anchor).columnGap).toBe('12px');
     // The mark is near-square: 55.08px tall draws ~54.44px wide (258/261),
     // the number sections/Header's step arithmetic reads (the demo cat drew
@@ -280,10 +319,10 @@ export const Default: Story = {
  * 2026-09-04 (#69) — right when written, stale for four weeks.
  *
  * What the step does, and why the numbers are what they are (the full
- * derivation is in Wordmark.tsx): below a 20rem container the gap drops to
- * 0.5rem, the mark to 30.6% of the row — 24.47px tall, 24.19 wide — and the
- * name to the old 20px (the owner's 30px name stands from the tablet up: the
- * phone fitting, 2026-10-01). One line needs 24.19 + 8 + 138.75 = 170.94px,
+ * derivation is in Wordmark.tsx): below the `@max-sm` step (a 24rem container)
+ * the gap drops to 0.5rem, the mark to 1.53rem — 24.47px tall, 24.19 wide,
+ * 30.6% of the row — and the name to the old 20px (the owner's 30px name
+ * stands from the tablet up: the phone fitting, 2026-10-01). One line needs 24.19 + 8 + 138.75 = 170.94px,
  * more than this 163px cell (a real 320 phone's is 178px and keeps one line),
  * so the name reflows onto two 28px lines inside the 5rem row, „Premium" over
  * „Smile", and what has to fit is the min-content sum: 24.19 + 8 + 83.70 =
@@ -301,7 +340,7 @@ export const Stress320: Story = {
   globals: { locale: 'ro', viewport: { value: 'stress320' } },
   render: (args) => (
     <Cell pinned>
-      <div className="flex self-stretch">
+      <div className="flex self-stretch items-center">
         <Wordmark {...args} />
       </div>
       {/* The Header's burger, as a box: same 2.75rem square (§9's touch
@@ -324,7 +363,7 @@ export const Stress320: Story = {
     const p = parts(canvasElement);
     await loadFace(p.text);
 
-    await expectPlaceholderAnchor(canvas, p.anchor);
+    await expectHomeLink(canvas, p);
     await expectAllPartsVisible(p);
     await expectNoOverflow(p);
     await expectBrandColours(p);
@@ -351,7 +390,7 @@ export const Stress320: Story = {
     await expect(cell).toBe(163);
     // …and the lockup fills that cell with genuine slack rather than by
     // crushing anything. WHERE THE SLACK LIVES is worth being precise about:
-    // the anchor stretches to the whole 163px, so the headroom shows up as
+    // the anchor spans the whole 163px, so the headroom shows up as
     // the TEXT BOX being wider than the longest word it has to hold —
     // 163 − 24.19 mark − 8 gap = 130.81px of text box against an 83.70px
     // "Premium" at the phone step's 20px, i.e. the slack the file header
@@ -368,16 +407,16 @@ export const Stress320: Story = {
     );
 
     // The step is LIVE here: the 30.6% mark (rounded, 31), gap-2.
-    await expect(artworkPercent(p.img, p.anchor)).toBe(31);
+    await expect(artworkPercent(p.img, p.row)).toBe(31);
     await expect(getComputedStyle(p.anchor).columnGap).toBe('8px');
     // …and the name reflows onto a second line rather than being clipped or
     // dropped — still the whole name, still inside the 5rem row: the two
-    // words stack, „Premium" above „Smile".
+    // words stack, „Premium" above „Smile". Measured against the ROW: the link
+    // hugs the name since 2026-10-02 (D9), so the link's own height would
+    // prove nothing.
     await expect(p.text).toHaveTextContent(clinic.name);
     await expect(p.text.offsetHeight).toBeGreaterThan(40);
-    await expect(p.text.offsetHeight).toBeLessThanOrEqual(
-      p.anchor.offsetHeight,
-    );
+    await expect(p.text.offsetHeight).toBeLessThanOrEqual(p.row.offsetHeight);
     // „Smile" one LINE BOX below „Premium", measured top to top: at the
     // section step the face's own box (~1.3em) is taller than its 36px line,
     // so the two words' boxes overlap by a few pixels while sitting on
@@ -386,5 +425,45 @@ export const Stress320: Story = {
       p.second.getBoundingClientRect().top -
         p.first.getBoundingClientRect().top,
     ).toBeCloseTo(parseFloat(getComputedStyle(p.text).lineHeight), 0);
+  },
+};
+
+/**
+ * THE KEYBOARD'S STATE, pinned as real pixels — ui/TextButton's FocusVisible
+ * precedent. The lockup is a home link since 2026-10-02 (Wordmark.tsx, D9),
+ * so it has a focus ring to photograph, and the per-story axe pass and the
+ * visual net then see the ring the unit suite can only read as classes — 2px
+ * of `--focus` at a 2px offset, on the 6px house corner, round the HUGGING
+ * lockup and INSIDE the 5rem row (the reason the link stopped stretching to
+ * the row: a ring round the whole row would straddle the pill's edge). The
+ * lockup is the cell's only focusable, so the first Tab lands on it.
+ * WHAT THE TAB IS, stated honestly: user-event's `tab()` dispatches UNTRUSTED
+ * key events and then calls `focus()` — a script focus. `:focus-visible`
+ * matches because Chromium keeps the ring on a script focus when no pointer
+ * focus came first, a heuristic and not a guarantee; the play's own
+ * `matches(':focus-visible')` check is what makes a change in that heuristic
+ * fail loudly here instead of photographing a ringless link.
+ */
+export const FocusVisible: Story = {
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  play: async ({ canvasElement, userEvent }) => {
+    const p = parts(canvasElement);
+    await userEvent.tab();
+
+    await expect(document.activeElement).toBe(p.anchor);
+    await expect(p.anchor.matches(':focus-visible')).toBe(true);
+    const ring = getComputedStyle(p.anchor);
+    await expect(ring.outlineStyle).toBe('solid');
+    await expect(ring.outlineWidth).toBe('2px');
+    await expect(ring.outlineOffset).toBe('2px');
+    // The `--focus` token, #1a1714 — the ring's colour, not the UA's.
+    await expect(ring.outlineColor).toBe('rgb(26, 23, 20)');
+    await expect(ring.borderTopLeftRadius).toBe('6px');
+    // The ring's outer edge — the box plus offset plus width — stays inside
+    // the row, top and bottom.
+    const link = p.anchor.getBoundingClientRect();
+    const row = p.row.getBoundingClientRect();
+    await expect(link.top - 4).toBeGreaterThanOrEqual(row.top);
+    await expect(link.bottom + 4).toBeLessThanOrEqual(row.bottom);
   },
 };

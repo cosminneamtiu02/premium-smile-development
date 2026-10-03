@@ -155,12 +155,14 @@ describe('Footer — row 1, the brand', () => {
     // data from lib/clinic/clinic.ts (§10.1), and the brand is still identified
     // positionally: the first child of the gutter box. The two wrappers are
     // this section owning placement and SIZE (§6.4/§6.8) — `pb-8` is the old
-    // row's rhythm, `h-20` the 5rem ruler the lockup's percentages resolve
-    // against, matching the header instance exactly (fb-205). The ruler tracks
-    // Header's row rather than standing on its own: it went 4rem → 5rem on
-    // 2026-09-04 when the owner asked for one bar height on every screen, and
-    // fb-205 is what makes that a required knock-on rather than a nicety — and
-    // why the owner's sizes of 2026-10-01 live in sections/Wordmark itself.
+    // row's rhythm, `h-20` the same 5rem row the Header gives its instance
+    // (fb-205), and `items-center` centres the lockup in it: since 2026-10-02
+    // the lockup is a link that HUGS what it draws (Wordmark.tsx, D9), so the
+    // box, not the link, carries the row's height. The box tracks Header's
+    // row rather than standing on its own: it went 4rem → 5rem on 2026-09-04
+    // when the owner asked for one bar height on every screen, and fb-205 is
+    // what makes that a required knock-on rather than a nicety — and why the
+    // owner's sizes of 2026-10-01 live in sections/Wordmark itself.
     const { footer } = mount();
     const gutter = footer().firstElementChild as HTMLElement;
     const brandRow = gutter.firstElementChild as HTMLElement;
@@ -170,7 +172,9 @@ describe('Footer — row 1, the brand', () => {
     expect(classesOf(brandRow)).toEqual(
       expect.arrayContaining(['flex', 'justify-center', 'pb-8']),
     );
-    expect(classesOf(box)).toEqual(expect.arrayContaining(['flex', 'h-20']));
+    expect(classesOf(box)).toEqual(
+      expect.arrayContaining(['flex', 'h-20', 'items-center']),
+    );
     expect(lockup.tagName).toBe('A');
     expect(lockup).toHaveTextContent(clinic.name);
     // The name is ONE string split over two coloured words (Wordmark.tsx, THE
@@ -184,28 +188,45 @@ describe('Footer — row 1, the brand', () => {
     expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
   });
 
-  it('adds NO second destination to the tab order — fb-179 stays honoured', () => {
-    // The rule this row was built on ("the Header owns the home link; a second
-    // link with the same name is a duplicate destination") is not broken by
-    // the swap, it is MOOT: D9's lockup is a placeholder <a> with no href, so
-    // it takes no link role, no tab stop and no accessible name — and since
-    // the owner dropped the wiring (2026-09-06, Wordmark.tsx D9) the question
-    // is closed by removal, not merely deferred.
-    const { footer } = mount();
+  it('is a SECOND link home, beside the site map’s — fb-179 reversed on the owner’s word (2026-10-02)', () => {
+    // fb-179 built this row on "no second link to home in the footer"; the
+    // owner reversed it himself: "i just want the "premium smile" logo from
+    // top bar and from footer to be a component that takes you to home"
+    // (Wordmark.tsx, D9). So the band now carries TWO links to one home with
+    // two different names — the lockup's „Premium Smile, acasă" and the site
+    // map's „Acasă" — which WCAG allows: each name says where it goes
+    // (SC 2.4.4), and the same destination is named the same way wherever the
+    // lockup appears, the Header's included (SC 3.2.4) — both shells fill
+    // the one `common.brand.ariaLabel` with the one clinic name.
+    const { footer, messages } = mount();
     const gutter = footer().firstElementChild as HTMLElement;
-    const lockup = gutter.querySelector('a') as HTMLElement;
+    const lockup = gutter.querySelector('img')?.closest('a');
+    if (!lockup) {
+      throw new Error('the band has no brand lockup (an <img> inside an <a>)');
+    }
+    const named = messages.brand.ariaLabel.replace('{name}', clinic.name);
 
-    expect(lockup).not.toHaveAttribute('href');
-    expect(lockup).not.toHaveAttribute('aria-label');
-    // The site-map column's title carries the same name and is likewise no
-    // link — the two occurrences of the clinic name are both inert.
+    // THE one link with the lockup's name, to the locale home.
+    expect(screen.getByRole('link', { name: named })).toBe(lockup);
+    expect(lockup).toHaveAttribute('href', '/ro/');
+    // The site map's own Home link is still there: a second link to the same
+    // home, under a different name.
+    const siteMap = within(footer()).getByRole('navigation', {
+      name: clinic.name,
+    });
+    const home = within(siteMap).getByRole('link', { name: messages.nav.home });
+    expect(home).not.toBe(lockup);
+    expect(home).toHaveAttribute('href', lockup.getAttribute('href'));
+    expect(named).not.toBe(messages.nav.home);
+    // The site-map column's TITLE carries the clinic name too, and is still
+    // no link: a title labels the landmark, it does not navigate.
     for (const occurrence of within(footer()).getAllByText(clinic.name, {
       selector: 'p',
     })) {
       expect(occurrence.closest('a')).toBeNull();
     }
-    // …and every element the accessibility tree DOES call a link is one of the
-    // band's real destinations, none of them named for the brand alone.
+    // …and no link is named for the brand ALONE: the lockup's name says
+    // where it goes.
     for (const link of screen.getAllByRole('link')) {
       expect(link).not.toHaveAccessibleName(clinic.name);
     }

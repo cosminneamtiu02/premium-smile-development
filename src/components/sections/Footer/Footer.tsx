@@ -167,19 +167,25 @@ export function Footer(): ReactElement {
             message key — and the real mark landed there as ONE edit to the
             component's default (§15.6), which is what having ONE file instead
             of two that can disagree was for.
-            THE fb-179 RULE THIS ROW WAS BUILT ON IS NOT BROKEN, it is MOOT:
-            "no second link to home in the footer" assumed a link, and D9's
-            wordmark is a placeholder <a> with no href — it navigates nowhere,
-            takes no tab stop and carries no accessible name, so there is no
-            duplicate destination to add. The question re-poses itself the day
-            the wiring diff in Wordmark.tsx lands, and that is where it is
-            written down. Still not a heading either (see the file header).
+            fb-179 REVERSED, DELIBERATELY (owner, 2026-10-02: "i just want the
+            "premium smile" logo from top bar and from footer to be a component
+            that takes you to home"). This row was built on "no second link to
+            home in the footer", and while D9's wordmark was a placeholder <a>
+            with no href the rule held by default. Now the lockup is a SECOND
+            link home in this band, beside the site map's „Acasă": one
+            destination under two names — „Premium Smile, acasă" here, the
+            `common.brand.ariaLabel` the Header fills the same way, and the site
+            map's own label — which WCAG allows: each name says where it goes
+            (SC 2.4.4), and the lockup is named alike in both shells (SC 3.2.4).
+            Still not a heading either (see the file header).
             THE TWO WRAPPERS ARE THIS SECTION OWNING PLACEMENT AND SIZE
             (§6.4/§6.8): the outer one keeps the old row's centring and its
-            `pb-8` rhythm, the inner `h-20` box is the 5rem ruler the lockup's
-            `h-full` bar and its percentage-sized artwork resolve against —
+            `pb-8` rhythm, the inner `h-20` box is the lockup's 5rem row —
             EXACTLY the header instance's height, on the owner's ask that both
-            read at the same size (fb-205).
+            read at the same size (fb-205) — and its `items-center` centres the
+            lockup's link and lets it HUG what it draws since 2026-10-02 (a
+            flex box's default `stretch` would pull it to the full 5rem; the
+            focus ring round the lockup — Wordmark.tsx, D9).
             BUMPED 4rem → 5rem ON 2026-09-04, and fb-205 is the whole reason:
             the owner asked for the top bar at one size on every screen ("make
             top bar same size on every screen as it is on a standard pc screen
@@ -193,8 +199,11 @@ export function Footer(): ReactElement {
             also in footer" — live in sections/Wordmark (its THE OWNER'S SIZES
             block), so this box and the Header's row took them in one edit. */}
         <div className="flex justify-center pb-8">
-          <div className="flex h-20">
-            <Wordmark />
+          <div className="flex h-20 items-center">
+            <Wordmark
+              href={localeHref(locale, '/')}
+              aria-label={t('brand.ariaLabel', { name: clinic.name })}
+            />
           </div>
         </div>
 

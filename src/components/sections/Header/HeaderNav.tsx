@@ -58,12 +58,12 @@ export function HeaderNav(): ReactElement {
     // boundary. It outranks the step's `flex` by specificity (an id inside
     // `:has()` → (1,1,0) vs (0,1,0)), not by source order.
     // A11y consequence, deliberate: display:none is unfocusable, so while the
-    // panel is open the Tab cycle tightens to ✕ → panel — the brand corner is
-    // sections/Wordmark's hrefless placeholder anchor since D9, visible but
-    // never focusable, so it is not a stop in that cycle (NavMenu.tsx carries
-    // the same correction) — the same shape the phone always had, and the
-    // panel carries the same links. The
-    // elements stay in the DOM, though, which is why the tests still scope
+    // panel is open the Tab cycle tightens to the brand link → ✕ → panel — the
+    // brand corner is sections/Wordmark's home link again since 2026-10-02
+    // (its D9), and it sits in the bar, which is never frozen, so it is a
+    // live stop in that cycle (NavMenu.tsx carries the same correction) — the
+    // same shape the phone always had, and the panel carries the same links.
+    // The elements stay in the DOM, though, which is why the tests still scope
     // their queries with within() (board §5·B7).
     // `col-start-2 justify-self-center` at the step is this element's placement
     // in Header's three-cell grid (owner, 2026-09-04 — the nav row sits on the

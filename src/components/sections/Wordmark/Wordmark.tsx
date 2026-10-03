@@ -11,37 +11,60 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // logo swap would have been two edits that can disagree — and when the swap
 // came (2026-10-01, THE MARK and THE TWO COLOURS below) it was one file.
 //
-// ── TIER: SECTION — and not because it is big. It has ONE optional prop (the
-// artwork, D11), no state, no message key. Rule 3 of /classify-component decides on the IMPORT GRAPH:
+// ── TIER: SECTION — and not because it is big. It has two required props
+// (the home link's href and name, D9), one optional one (the artwork, D11), no
+// state, no message key. Rule 3 of /classify-component decides on the IMPORT GRAPH:
 // this composes ui/Heading, so it is a composition, and §4's dependency
 // direction (app → sections → ui) then forbids ui/ from importing it back.
 // Two consumers is rule 4, the SectionHeading paradox: heavy reuse schedules a
 // composite EARLY in the build order, it never promotes it to ui/.
 //
-// ── D9 · CLICKABLE-SHAPED, NAVIGATING NOWHERE (fb-200, "make it clickable but
-// don't implement go-to-a-page yet"). The root is an <a> WITHOUT href — HTML's
-// own placeholder link. Four consequences, each deliberate rather than
-// overlooked:
-//   · it is NOT focusable and joins no tab order — an <a> without href has no
-//     link role at all, it is a generic element that happens to be an <a>;
-//   · it therefore carries NO aria-label. On a non-interactive generic a label
-//     is PROHIBITED ARIA (axe aria-prohibited-attr, a hard §13 gate failure),
-//     and it would be pointless anyway: the visible clinic name IS the name;
-//   · no cursor-pointer. Painting the affordance of a link that goes nowhere
-//     is worse than not having the link;
-//   · the Header's home link is GONE. The brand corner of the time navigated
-//     to '/', the swapped-in Wordmark does not.
-// THE WIRING IS DROPPED, NOT PARKED (owner, 2026-09-06: "i am dropping
-// wordmark home link"): the logo stays a non-link, and the fb-179 question —
-// a second home link per page once the Footer has one — is closed by removal
-// rather than answered. The two-line diff this header used to declare
-// (`href={localeHref(locale, '/')}` + `aria-label={t('brand.ariaLabel', …)}`)
-// is history; the reserved `common.brand.ariaLabel` key still sits in all
-// five messages/*.json, uncalled (an unused key is legal: the parity gate
-// compares key SETS, not usage) — striking it ×5 is the owner's word. The
-// placeholder <a> stays as the ELEMENT for now: three suites and the e2e find
-// the lockup through it (`img.closest('a')`), so trading it for a <span> is
-// its own small cleanup, not a rider on the logo.
+// ── D9 · THE HOME LINK (owner, 2026-10-02: "i just want the "premium smile"
+// logo from top bar and from footer to be a component that takes you to
+// home"). The root is a plain <a href> to the page's locale home — "button"
+// is the owner's word for any control, and a control that NAVIGATES is a link
+// (§9: buttons act, links navigate). One tab stop, a full document load on
+// click, zero JavaScript (§15.13: no router, no prefetch). Both halves arrive
+// as REQUIRED props, so a consumer cannot leave either out: `href`, which the
+// consumer builds with `localeHref(locale, '/')` — the one URL rule (locale
+// prefix, trailing slash, the interim base path) — and `aria-label`, the
+// consumer's `common.brand.ariaLabel` with `{name}` = clinic.name, „Premium
+// Smile, acasă": the visible name FIRST (SC 2.5.3 Label in Name — speech
+// input's "click Premium Smile" finds it), then the destination (SC 2.4.4).
+// The types hold only that both are there; what they SAY is held by the
+// tests — Header.test.tsx's five-language `{name}`-first check and both
+// consumers' suites.
+// THE HISTORY, three steps: fb-200 ("make it clickable but don't implement
+// go-to-a-page yet", 2026-08-20) made the root an <a> WITHOUT href — HTML's
+// own placeholder link: no link role, no tab stop, no name; the owner dropped
+// the wiring on 2026-09-06 ("i am dropping wordmark home link"); and on
+// 2026-10-02 he restored it, which also reverses fb-179 ("no second link to
+// home in the footer") — the Footer's lockup is now a second link home beside
+// its site map's „Acasă", under a different name (Footer.tsx, ROW 1).
+// WHY PROPS-IN, and no t() here: the locale and the words belong to the band
+// that composes the lockup — §4's page-phase default, a repeated unit shared
+// by 2+ consumers starts props-in and message keys stay with the composing
+// band — so this file stays the dumb lockup both shells populate: still
+// zero message keys, still no hook, still the four imports
+// Wordmark.test.tsx's allowlist names.
+// WHY THE BOX HUGS: the root no longer stretches to the consumer's 5rem row —
+// `h-full` left with this change, and nothing resolved against the box any
+// more anyway (the mark has been a fixed rem since 2026-10-01) — so the focus
+// ring draws round the lockup itself, INSIDE the bar's row, instead of
+// straddling the pill's edge; `min-h-11` keeps the target at least 44px tall
+// where the phone lockup is shorter (§9's aim: a 24.5px mark beside a 28px
+// line), and both consumers centre the box with `items-center` — load-bearing:
+// a flex parent's default `stretch` would pull the link back to the row's full
+// height (Header.test.tsx and Footer.test.tsx pin the class). The ring is
+// ui/TextButton's own recipe — 2px of `--focus` at a 2px offset, the
+// globals.css safety net's numbers stated on the element — on `rounded-md`,
+// §15.1's 6px house corner (an outline follows border-radius). NOT the soft
+// corner: §15.29 gives it to four named parts by the owner's taste, and
+// tests/unit/soft-corner-census.test.ts holds that list.
+// NO HOVER LOOK — no hover or press state, no jump, no transition, no cursor
+// class: the old site's logo link had none, that is the web's convention for
+// a logo, and the browser already gives every <a href> the pointer. A hover
+// look is the owner's future call, not this change's.
 //
 // ── ZERO ISLANDS, which is why the artwork is a plain <img>. No 'use client',
 // no hooks, no t(): this renders identically for every visitor, so it compiles
@@ -80,7 +103,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // THE ARTWORK STAYS A PARAMETER (D11, owner terminal 2026-08-20: "src image is
 // just parameter"): `WordmarkArtwork` carries src AND intrinsic width/height
 // together, because §11's zero-CLS attributes are only honest when the numbers
-// travel with the file they describe. Both consumers render `<Wordmark />` and
+// travel with the file they describe. Both consumers pass no artwork and
 // inherit the default — the mark — so a future re-cut of the logo is one edit
 // to BRAND_MARK, or a per-consumer override, which is the parameter's point.
 // `src` is typed `ImagePath` (lib/image-path): the picture folder is the one
@@ -289,7 +312,33 @@ export function brandWords(name: string): readonly [string, string] {
 
 const [FIRST_WORD, SECOND_WORD] = brandWords(clinic.name);
 
+/**
+ * The lockup's three props — and the only three that reach the DOM: the root
+ * spreads nothing, so any other attribute a consumer writes is dropped
+ * silently (TypeScript does not check a hyphenated JSX attribute such as
+ * `aria-current` against this interface); a new attribute arrives as its own
+ * typed prop (the `aria-current` follow-up recorded in CLAUDE.md §15.33).
+ */
 export interface WordmarkProps {
+  /**
+   * Where the lockup takes you: the page's locale home, built BY THE CONSUMER
+   * with `localeHref(locale, '/')` — §15.13's one URL rule (locale prefix,
+   * trailing slash, the interim base path), so a click is a plain full
+   * document load. REQUIRED (D9), so a consumer cannot leave it out; which
+   * href it passes is the consumer's to get right, and both consumers' tests
+   * pin theirs.
+   */
+  href: string;
+  /**
+   * The link's accessible name, passed through verbatim. Both consumers pass
+   * `common.brand.ariaLabel` with `{name}` = clinic.name („{name}, acasă" in
+   * Romanian): the clinic name FIRST, so the visible text leads the name
+   * (WCAG 2.2 SC 2.5.3 Label in Name), then the destination (SC 2.4.4).
+   * REQUIRED (D9), so a consumer cannot leave it out — but the name-first
+   * rule is not this type's to hold: Header.test.tsx's five-language
+   * `{name}`-first check and both consumers' tests hold it.
+   */
+  'aria-label': string;
   /**
    * The left half of the lockup — §8.1's "props with defaults" shape (D11):
    * both consumers render the mark by default, and a re-cut of the mark is
@@ -299,26 +348,27 @@ export interface WordmarkProps {
 }
 
 export function Wordmark({
+  href,
+  'aria-label': ariaLabel,
   artwork = BRAND_MARK,
 }: WordmarkProps): ReactElement {
   return (
     // NO outer margin, and no width of its own: the CONSUMER owns the box
     // (§6.4/§6.8) — the Header hands it a `self-stretch` cell in the pill row,
-    // the Footer a centred `h-20` box. `h-full` makes both of those the box the
-    // mark and the name are centred in (the mark itself is a fixed rem since
-    // 2026-10-01 — it no longer resolves against the box). Both boxes are
-    // 5rem since 2026-09-04 (the owner's uniform bar height); fb-205 is the
-    // standing rule that they must agree, so they move together or not at all
-    // — which is why the owner's sizes of 2026-10-01 live HERE (THE OWNER'S
-    // SIZES, above), not in either consumer's box.
-    // THE ONE SUPPRESSED RULE, and the one place it is honest to suppress it:
-    // jsx-a11y/anchor-is-valid says an anchor must be keyboard accessible, and
-    // it is exactly right — which is why this element is inert (D9 above).
-    // Suppressed here rather than worked around: a `href="#"` would ship a
-    // real link to nowhere, and a <button> would promise an action there is
-    // none of.
-    // eslint-disable-next-line jsx-a11y/anchor-is-valid
-    <a className="flex h-full items-center gap-3 @max-sm:gap-2">
+    // the Footer an `h-20` box, both `items-center`, so this link sits centred
+    // in the consumer's 5rem row while hugging what it draws (D9: the focus
+    // ring round the lockup, inside the row). `h-full` stretched this root to
+    // the row until 2026-10-02 and left when the link arrived: nothing
+    // resolves against the box any more — the mark has been a fixed rem since
+    // 2026-10-01. Both boxes are 5rem since 2026-09-04 (the owner's uniform bar
+    // height); fb-205 is the standing rule that they must agree, so they move
+    // together or not at all — which is why the owner's sizes of 2026-10-01
+    // live HERE (THE OWNER'S SIZES, above), not in either consumer's box.
+    <a
+      href={href}
+      aria-label={ariaLabel}
+      className="flex min-h-11 items-center gap-3 rounded-md outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus @max-sm:gap-2"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={artwork.src}

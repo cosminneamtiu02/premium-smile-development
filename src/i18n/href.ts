@@ -1,6 +1,6 @@
 // THE one place a locale URL is spelled — pure data-shaping, zero imports, so
 // every consumer can reach it: the Header's row and panel, the Footer's site
-// map, later the Wordmark home link, the LanguageSwitcher and in-content CTAs,
+// map, the Wordmark home link, the LanguageSwitcher and in-content CTAs,
 // and tools/generate-root-redirect.ts (plain Node at build time, for BOTH the
 // visible locale list and the table its inline script redirects through). No
 // React, no next-intl, no browser API — the locales.ts rule, for the same

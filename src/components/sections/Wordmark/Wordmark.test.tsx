@@ -1,30 +1,37 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { clinic } from '@/lib/clinic/clinic';
+import de from '@/messages/de.json';
+import ro from '@/messages/ro.json';
 import { brandWords, Wordmark } from './Wordmark';
 import source from './Wordmark.tsx?raw';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. The one visible string is Romanian with diacritics by
 // nature — it is `clinic.name` from lib/clinic/clinic.ts (§10.1), the single NAP
-// source, never a literal typed in here (§17.4).
+// source, never a literal typed in here (§17.4) — and so is the link's name:
+// the REAL Romanian `common.brand.ariaLabel`, filled the way the consumers
+// fill it (LABEL below).
 //
 // Styles are NOT loaded in this project (tests/setup/components.ts imports no
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
 // this repo follows (GlyphButton, FloatingActions, Header, Footer). The facts
-// that need real CSS — the tighten step's measurements, the no-overflow rule
-// and the two words' painted colours — are asserted one tier up, in
-// Wordmark.stories.tsx, where the section renders inside its consumers' box.
+// that need real CSS — the tighten step's measurements, the no-overflow rule,
+// the two words' painted colours and the focus ring's pixels — are asserted
+// one tier up, in Wordmark.stories.tsx, where the section renders inside its
+// consumers' box.
 //
 // ── HARNESS NOTE — there is NO NextIntlClientProvider here, and that absence
 // is itself an assertion. next-intl's hooks throw without one, so a green
 // render proves what §5 of the contract states: this section calls no t() and
-// uses ZERO message keys (D9 removed the label along with the navigation).
+// uses ZERO message keys — the link's name arrives FINISHED, as the
+// `aria-label` prop the consumers translate (D9, 2026-10-02).
 // The Header's suite mocks '@/i18n/navigation' for its ONE remaining export,
 // usePathname (§15.13: the links themselves are plain anchors and need no
-// stub); this file mocks nothing at all, because the placeholder anchor imports
-// no router.
+// stub); this file mocks nothing at all, because the home link is a plain
+// anchor whose href arrives finished too — it imports no router and no URL
+// rule.
 
 const classesOf = (el: Element): string[] =>
   (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
@@ -50,8 +57,23 @@ const stripComments = (code: string): string =>
 
 const CODE = stripComments(source);
 
-const mount = () => {
-  const utils = render(<Wordmark />);
+/**
+ * The link's name exactly as both consumers build it: the real Romanian
+ * `common.brand.ariaLabel` („{name}, acasă") with `{name}` filled from the
+ * single NAP source — what `t('brand.ariaLabel', { name: clinic.name })`
+ * returns in the Header and the Footer, never a string typed in here.
+ */
+const LABEL = ro.common.brand.ariaLabel.replace('{name}', clinic.name);
+
+/** The Romanian home, as `localeHref('ro', '/')` writes it (§15.13). */
+const HOME = '/ro/';
+
+/** The German pair — the pass-through test's second language. */
+const DE_LABEL = de.common.brand.ariaLabel.replace('{name}', clinic.name);
+const DE_HOME = '/de/';
+
+const mount = ({ href = HOME, label = LABEL } = {}) => {
+  const utils = render(<Wordmark href={href} aria-label={label} />);
   const text = utils.container.querySelector(
     'span.font-display',
   ) as HTMLElement;
@@ -65,36 +87,104 @@ const mount = () => {
   };
 };
 
-describe('Wordmark — D9, the placeholder anchor', () => {
-  it('is an <a> with NO href, so it takes no link role and no tab stop', () => {
-    // fb-200: clickable-shaped, navigating nowhere. An <a> without href is not
-    // a link — it is a generic element — and since 2026-09-06 that is the
-    // FINAL state, not a parking spot: the owner dropped the home-link wiring
-    // (Wordmark.tsx, D9).
+describe('Wordmark — D9, the home link (owner, 2026-10-02)', () => {
+  it('IS the link: the root <a> carries the href it was handed, and nothing else in the lockup links', () => {
+    // "i just want the "premium smile" logo from top bar and from footer to
+    // be a component that takes you to home" — a control that NAVIGATES, so a
+    // plain <a href> (§9, §15.13), and the root itself: the lockup adds no
+    // wrapper, so the consumer's box holds exactly one link.
     const { anchor } = mount();
 
     expect(anchor.tagName).toBe('A');
-    expect(anchor).not.toHaveAttribute('href');
-    expect(screen.queryByRole('link')).toBeNull();
-    // Nor may it be forced into the tab order by hand: a focusable element
-    // with no destination is a dead stop for a keyboard user.
+    expect(screen.getByRole('link', { name: LABEL })).toBe(anchor);
+    expect(anchor).toHaveAttribute('href', HOME);
+    // ONE link: the mark stays decorative (alt=""), so no image link and no
+    // second anchor can nest inside the first.
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(anchor.querySelectorAll('a')).toHaveLength(0);
+  });
+
+  it('is named by EXACTLY the label it is handed — a pass-through, in any language', () => {
+    // The accessible name IS the `aria-label` prop, verbatim: this component
+    // neither builds the label nor checks it, and the visible text stays the
+    // clinic's name whatever the label says. So the label-in-name rule —
+    // SC 2.5.3, the visible „Premium Smile" FIRST, then the destination
+    // (SC 2.4.4) — is not this file's to hold: Header.test.tsx's five-language
+    // `{name}`-first check holds it, and both consumers' suites pin the label
+    // they pass. Two languages here, so a hard-wired Romanian label could not
+    // pass for a pass-through.
+    for (const [href, label] of [
+      [HOME, LABEL],
+      [DE_HOME, DE_LABEL],
+    ] as const) {
+      const { anchor, text, unmount } = mount({ href, label });
+
+      expect(text.textContent).toBe(clinic.name);
+      expect(anchor).toHaveAccessibleName(label);
+      expect(anchor).toHaveAttribute('href', href);
+      unmount();
+    }
+  });
+
+  it('is a tab stop by being a real link — no tabindex, no role bolted on', () => {
+    // An <a href> is focusable and announced as a link by the platform
+    // itself; a tabindex or a role here would only be a second, driftable
+    // spelling of what the element already is.
+    const { anchor } = mount();
+
     expect(anchor).not.toHaveAttribute('tabindex');
-  });
-
-  it('carries NO aria-label — on an unfocusable generic that is prohibited ARIA', () => {
-    // axe's aria-prohibited-attr, a hard §13 gate failure. The visible clinic
-    // name IS the name; the reserved `common.brand.ariaLabel` key stays
-    // uncalled.
-    const { anchor } = mount();
-
-    expect(anchor).not.toHaveAttribute('aria-label');
-    expect(anchor).not.toHaveAttribute('aria-labelledby');
     expect(anchor).not.toHaveAttribute('role');
+    anchor.focus();
+    expect(document.activeElement).toBe(anchor);
   });
 
-  it('fakes no affordance: no cursor-pointer on an inert element', () => {
+  it('hugs the lockup and wears the house focus ring — never the soft corner', () => {
+    // The box HUGS (no `h-full`), so the ring draws round the lockup inside
+    // the bar's row; `min-h-11` keeps a 44px target where the phone lockup is
+    // shorter (§9). The ring is ui/TextButton's recipe on §15.1's 6px corner;
+    // the soft corner belongs to the four parts §15.29 names
+    // (tests/unit/soft-corner-census.test.ts).
     const { anchor } = mount();
-    expect(classesOf(anchor)).not.toContain('cursor-pointer');
+    const classes = classesOf(anchor);
+
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        'min-h-11',
+        'rounded-md',
+        'outline-offset-2',
+        'focus-visible:outline-2',
+        'focus-visible:outline-focus',
+      ]),
+    );
+    expect(classes).not.toContain('h-full');
+    expect(classes).not.toContain('rounded-soft');
+  });
+
+  it('fakes no hover look: no hover or press state, no motion, no cursor class', () => {
+    // A logo link at rest IS its look — the old site's had no hover effect,
+    // the owner confirmed "no effect" (2026-10-03), and the browser already
+    // gives every <a href> the pointer. Every element of the lockup, not just
+    // the root: nothing in it may restyle or move on hover.
+    // EVERY VARIANT SEGMENT of every token is read — everything before a
+    // token's last colon — so the hover and press states hide under no
+    // prefix: plain `hover:`, `group-hover:` (the repo's own idiom —
+    // ClinicLocation's rows and SpeedDial's scrim wear it), `peer-hover:`, a
+    // named `group-hover/x:`, an arbitrary `[&:hover]:` (its inner colon
+    // splits off a segment that still says "hover"), `group-active:`. A
+    // leading-colon pattern saw only the first of those.
+    const { anchor } = mount();
+    const tokens = [anchor, ...anchor.querySelectorAll('*')].flatMap(classesOf);
+    const variantsOf = (token: string): string[] =>
+      token.split(':').slice(0, -1);
+
+    expect(
+      tokens.filter((t) => variantsOf(t).some((v) => /hover|active/.test(v))),
+    ).toEqual([]);
+    expect(
+      tokens.filter((t) =>
+        /(^|:)-?(transition|duration-|ease-|scale-|animate-|cursor-)/.test(t),
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -120,7 +210,9 @@ describe('Wordmark — the mark', () => {
   it('reserves its box with width/height ATTRIBUTES (§11, zero CLS)', () => {
     // The intrinsic box is the file's viewBox, 258 × 261 — near-square; the
     // attributes give the browser that aspect ratio before the bytes arrive,
-    // and the CSS then draws it at a percentage of the row it was given.
+    // and the CSS then draws it at a FIXED rem height — 3.4425rem, 1.53rem
+    // below the phone step, since 2026-10-01 (Wordmark.tsx's THE OWNER'S
+    // SIZES) — its width following that ratio.
     // tests/unit/logotype-census.test.ts holds the two numbers to the file.
     const { img } = mount();
 
@@ -148,6 +240,8 @@ describe('Wordmark — the mark', () => {
     // ImagePath: a path outside /images/ is a compile error, not a 404.
     const { container } = render(
       <Wordmark
+        href={HOME}
+        aria-label={LABEL}
         artwork={{ src: '/images/brand/other.svg', width: 96, height: 96 }}
       />,
     );
@@ -321,8 +415,10 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
     // prefix, the `max-md:` and compound `dark:max-lg:` forms, and the
     // arbitrary `min-[600px]:` / `max-[600px]:` variants. The first pattern
     // therefore anchors on start-OR-colon, which is what keeps a legitimate
-    // CONTAINER token out of it: in `@max-xs:gap-2` the character before
-    // `max-` is `@`, not a colon — and `xs` is not a viewport name anyway.
+    // CONTAINER token out of it: in `@max-sm:gap-2` the character before
+    // `max-` is `@`, not a colon, and that leading `@` is the whole
+    // protection — `sm` IS a viewport name, so without it the token would
+    // read as the media query it is not.
     // The second never matches `max-h-[…]` / `max-w-[…]`, which are sizing
     // utilities rather than variants.
     const { anchor, container } = mount();

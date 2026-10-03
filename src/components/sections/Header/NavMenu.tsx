@@ -56,15 +56,16 @@ import { useNavItems } from './useNavItems';
 // includes the bar and therefore the ✕ — and the ✕ must stay reachable. It is
 // honestly a DISCLOSURE: a button that opens and closes a thing, wearing
 // aria-expanded + aria-controls. With everything below the bar inert, the
-// browser's OWN Tab order is ✕ → Contact → the links — the brand corner is
-// sections/Wordmark's hrefless placeholder anchor since D9 (visible, never
-// focusable) — page content is unreachable, and there is NO JavaScript focus
-// trap anywhere in this file.
+// browser's OWN Tab order is the brand link → ✕ → Contact → the links — the
+// brand corner is sections/Wordmark's home link again since 2026-10-02 (its
+// D9), and it sits in the bar, which is never frozen, so it is a live stop in
+// the cycle too — page content is unreachable, and there is NO JavaScript
+// focus trap anywhere in this file.
 // Since fb-164/165/166 that order is exact at EVERY width: the single-menu
 // rule takes the bar's row and its Contact to display:none while the panel is
 // open, and display:none is unfocusable — so the wide screen now walks the
-// same three-step cycle the phone always did, and the Contact in it is the
-// panel's own (the classes live in Header.tsx and HeaderNav.tsx).
+// same cycle the phone always did, and the Contact in it is the panel's own
+// (the classes live in Header.tsx and HeaderNav.tsx).
 
 /**
  * The panel's id, hard-coded rather than useId: FIVE places must agree on the
@@ -265,9 +266,14 @@ export function NavMenu(): ReactElement {
 
   /**
    * Every close the USER performs — the ✕, Esc, a tap on the sheet — puts
-   * focus back where they left it. Without this, closing from Esc or the
-   * sheet would drop focus on <body> and a keyboard user would restart at the
-   * top of the document.
+   * focus on the BURGER, the disclosure's toggle: back where they left it
+   * when they closed from the ✕, from anywhere in the panel or from the
+   * sheet. From the brand link — a live stop beside the ✕ since 2026-10-02
+   * (sections/Wordmark's D9) — Esc lands on the burger too, not back on the
+   * logo: that is the ARIA disclosure pattern (Esc returns focus to the
+   * toggle), kept on purpose and pinned in Header.test.tsx. Without this,
+   * closing from Esc or the sheet would drop focus on <body> and a keyboard
+   * user would restart at the top of the document.
    */
   const close = useCallback(() => {
     returningFocus.current = true;
@@ -284,11 +290,22 @@ export function NavMenu(): ReactElement {
   // is silently teleported to the top of the document (G2 review, 2026-08-13).
   // Reading offsetParent after the commit is what tells the two cases apart:
   // it is null exactly when the element (or an ancestor) is display:none.
-  // The fallback is the FIRST `a[href]` in the bar. That used to be the brand
-  // link; since the brand became Wordmark's hrefless placeholder anchor (D9)
-  // it is the nav row's first link — safe by construction, because this path
-  // only runs when the burger vanished, i.e. above the bar's step, exactly
-  // where the row is visible. Header.test.tsx asserts the target.
+  // The fallback is the nav ROW's first link — `:scope nav a[href]`, scoped
+  // on purpose, and `:scope` so the <nav> must sit INSIDE the header (a bare
+  // `nav a[href]` would also match through a <nav> AROUND it). The brand
+  // corner is a real home link again since 2026-10-02 (sections/Wordmark's
+  // D9) and the FIRST link in the bar, so the bare `a[href]` this used to
+  // query would now park focus on the logo at the far left, away from the
+  // row that just became visible. The <nav> scope is exact at this moment:
+  // the panel's own <nav> renders only while `open`, so it was unmounted in
+  // the very commit this effect follows — the row's is the only one left in
+  // the bar (and it precedes the panel in DOM order in any case). ONE THING
+  // WOULD BREAK IT: a future <nav> placed BEFORE the row inside the header —
+  // a LanguageSwitcher in the bar, say (§8.5) — would take the fallback. The
+  // Header.test.tsx test "…falls back to the nav row's first link…" guards
+  // exactly that, and that the target is not the logo. Safe by construction
+  // otherwise, because this path only runs when the burger vanished, i.e.
+  // above the bar's step, exactly where the row is visible.
   useEffect(() => {
     if (open || !returningFocus.current) return;
     returningFocus.current = false;
@@ -311,16 +328,18 @@ export function NavMenu(): ReactElement {
       burger.focus({ preventScroll: true });
       return;
     }
-    // Scoped to this section's own root — never a document-wide query.
+    // Scoped to this section's own root — never a document-wide query — and
+    // inside it to the nav row (the paragraph above says why not the logo).
     burger
       .closest('header')
-      ?.querySelector<HTMLElement>('a[href]')
+      ?.querySelector<HTMLElement>(':scope nav a[href]')
       ?.focus({ preventScroll: true });
   }, [open]);
 
   // Esc closes (§9). Bound to the document, not the panel, because focus may
-  // legitimately sit on the ✕ — outside the panel and live (the brand corner
-  // stopped being focusable with Wordmark's D9 placeholder anchor).
+  // legitimately sit on the ✕ or on the brand link — outside the panel and
+  // live, since the bar is never frozen (the brand corner is a home link again
+  // since 2026-10-02, Wordmark's D9).
   //
   // KEEP-IN-SYNC with ui/SpeedDial's own "Esc closes (§9)" effect
   // (src/components/ui/SpeedDial/SpeedDial.tsx): same key check, same document

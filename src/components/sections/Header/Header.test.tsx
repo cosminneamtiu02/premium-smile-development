@@ -1,0 +1,1316 @@
+import type { ReactElement } from 'react';
+import { act, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { userEvent as browserUser } from 'vitest/browser';
+import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
+import type { Locale } from '@/i18n/locales';
+import { clinic } from '@/lib/clinic/clinic';
+import de from '@/messages/de.json';
+import en from '@/messages/en.json';
+import fr from '@/messages/fr.json';
+import it_ from '@/messages/it.json';
+import ro from '@/messages/ro.json';
+import { Header } from './Header';
+import headerSource from './Header.tsx?raw';
+import navSource from './HeaderNav.tsx?raw';
+import menuSource from './NavMenu.tsx?raw';
+import burgerSource from './BurgerToggle.tsx?raw';
+import itemSource from './NavItem.tsx?raw';
+
+// Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
+// accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
+// user-facing string comes from the REAL message files or lib/clinic/clinic.ts —
+// never a literal typed in here (§17.4). A renamed or dropped key then fails
+// HERE as well as in the translation-parity gate, instead of silently
+// rendering the dotted key path (which is what next-intl does for a miss).
+//
+// Styles are NOT loaded in this project (tests/setup/components.ts imports no
+// stylesheet), so computed values would read back as browser defaults: the
+// utility TOKENS are the contract here, same convention as GlyphButton.test.tsx
+// and FloatingActions.test.tsx. A direct consequence, and the reason so many
+// queries below are scoped with within(): `hidden @min-[62rem]:flex` hides
+// nothing in this runner, so the bar row AND the open panel are both fully
+// queryable and a bare getByRole('link', { name: 'Blog' }) would find two
+// (board §5·B7).
+// The one thing the missing stylesheet still hides for us is the CLOSED
+// <dialog> the provider renders: the UA sheet's own `dialog:not([open])`
+// display:none keeps its phone link out of every role query until a trigger is
+// pressed, so nothing below had to start excluding it.
+//
+// ── TWO EVENT SOURCES, the split ContactModal.test.tsx documents.
+// `userEvent` from @testing-library/user-event drives everything in this file
+// EXCEPT one keystroke: its events are SYNTHETIC, and <dialog>'s native
+// Escape handling runs on TRUSTED events only. The overlay-handover test at
+// the bottom therefore reaches for `browserUser` from vitest/browser — the
+// real browser's own input — for its Esc, exactly as the ContactModal suite
+// does. Everything else stays on the synthetic driver the rest of the file
+// already uses; there is nothing to gain from converting tests that never
+// touch the platform dialog.
+//
+// ── HARNESS NOTE — why '@/i18n/navigation' is the mock boundary, not
+// 'next/navigation' (the layer the build dispatch named).
+// Vitest pre-bundles bare deps: next-intl's optimized chunk imports
+// next/navigation's optimized chunk by esbuild-internal alias, so replacing
+// next/navigation with vi.mock breaks ESM linking before any factory runs
+// ("does not provide an export named 'c'"). The sanctioned cure is
+// optimizeDeps.exclude in vitest.config.ts — outside this lane's write
+// surface. Mocking OUR first-party module instead controls exactly what the
+// section consumes, one call frame closer to the components — and since §15.13
+// that is ONE export: usePathname, which hands back the LOCALE-STRIPPED
+// pathname ('/ro/services/' → '/services/'; since D9 our own stripLocale does
+// that unprefixing, over next/navigation, with no next-intl navigation and
+// therefore no next/link anywhere in the graph). The hrefs are NOT mocked any
+// more: they come from the pure src/i18n/href.ts, which runs for real here, so
+// the strings asserted below are the ones a visitor gets.
+// The REAL chain (next/navigation → stripLocale) is exercised one tier up, in
+// Header.stories.tsx, where the Storybook Next framework feeds the true
+// pathname via parameters.nextjs.navigation — so both halves are covered.
+const nav = vi.hoisted(() => ({ pathname: '/services' }));
+
+vi.mock('@/i18n/navigation', () => ({ usePathname: () => nav.pathname }));
+
+const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
+
+// The TWO providers the section gets in production and in Storybook, mounted
+// here in the same order.
+//
+// ① NextIntlClientProvider — app/[locale]/layout.tsx wraps the whole tree, and
+// .storybook/preview.tsx has a decorator for it. Header itself is NOT a client
+// component; useTranslations/useLocale are isomorphic and read this context.
+//
+// ② ContactModalProvider — the wrapper Phase 4 will add to the same shell. It
+// owns the ONE `open` boolean and renders the ONE <ContactModal /> after its
+// children, so both of the Header's Contact triggers summon the same dialog.
+// It is not optional here: a ContactModalTrigger rendered outside a provider
+// THROWS by design (useContactModal names the missing wrapper rather than
+// no-oping), so this is the shell's half of the contract standing in. Its
+// dialog reads the `contact` namespace, which is why the whole message file —
+// not just `common` — is handed to next-intl above.
+const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
+  <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
+    <ContactModalProvider>
+      <Header />
+    </ContactModalProvider>
+  </NextIntlClientProvider>
+);
+
+// The page the Header freezes. RTL renders into its own <div> under <body>, so
+// these two are exactly the body-level SIBLINGS the real shell puts around the
+// bar (§4: layout.tsx = Header · {children} · Footer) — which is what the
+// inert freeze walks over (board §5·A1).
+let page: HTMLElement;
+let pageFooter: HTMLElement;
+
+beforeEach(() => {
+  nav.pathname = '/services';
+  page = document.createElement('main');
+  page.innerHTML = '<a href="/ro/team">Echipa noastră</a>';
+  pageFooter = document.createElement('footer');
+  pageFooter.innerHTML = '<a href="/ro/blog">Articole</a>';
+  document.body.append(page, pageFooter);
+});
+
+afterEach(() => {
+  page.remove();
+  pageFooter.remove();
+});
+
+const mount = (locale: Locale = 'ro') => {
+  const utils = render(<Mounted locale={locale} />);
+  const messages = MESSAGES[locale].common;
+
+  // The BAR's Contact control. Since the ContactModal wiring both CTAs are
+  // <button>s carrying the same accessible name, so this picks the one that is
+  // NOT in the panel — the board §5·B7 discipline the old link tests used
+  // within() for, expressed against a control the panel and the bar share by
+  // design (one key, two places, §8.1). No stylesheet here, so an open panel is
+  // fully queryable and a bare getByRole would be ambiguous.
+  // The throw earns its keep: getAllByRole already fails descriptively when
+  // NOTHING matches, but the find() miss is a different fact — every match sits
+  // inside the panel — and without a message of its own it would surface as an
+  // undefined slipping into whichever assertion asked for it.
+  const findBarCta = (): HTMLElement => {
+    const cta = screen
+      .getAllByRole('button', { name: messages.actions.contact })
+      .find((button) => button.closest('#header-menu') === null);
+    if (!cta) {
+      throw new Error(
+        'every Contact button sits inside #header-menu — the bar CTA is gone',
+      );
+    }
+    return cta;
+  };
+
+  return {
+    ...utils,
+    messages,
+    burger: () => screen.getByRole('button', { name: messages.menu.label }),
+    // The panel is queried by the id aria-controls promises — if the two ever
+    // drift, every open-state test fails here rather than passing on a lucky
+    // second <nav>.
+    panel: () => document.getElementById('header-menu'),
+    // The bar row and the panel are two distinct navigation landmarks, named
+    // by two distinct keys — that is what makes within() scoping possible.
+    barNav: () =>
+      screen.getByRole('navigation', { name: messages.nav.ariaLabel }),
+    barCta: findBarCta,
+    // The bar CTA's BOX, not the control: its visibility lives on a wrapper
+    // the section owns, because ui/Button's base already sets `inline-flex`
+    // and a second display utility in the atom's class list is decided by
+    // sheet order, not by the caller (see Header.tsx).
+    barCtaBox: () => findBarCta().parentElement as HTMLElement,
+    sheet: () => document.querySelector('[data-header-sheet]'),
+    // The ONE dialog the provider renders. Closed, it is display:none by the
+    // UA sheet, so this is null until a trigger is pressed.
+    dialog: () => screen.queryByRole('dialog'),
+  };
+};
+
+/**
+ * Chromium dispatches <dialog>'s `close` event on the next RENDERING frame
+ * rather than the next macrotask (the finding ui/Modal's own suite records),
+ * so one frame plus one task is what reaches React's commit after it.
+ * Borrowed verbatim from ContactModal.test.tsx, where it is the same wait.
+ */
+const flush = () =>
+  new Promise<void>((resolve) =>
+    requestAnimationFrame(() => setTimeout(resolve, 0)),
+  );
+
+/** Tab order as the browser computes it, scoped to one subtree. */
+const focusablesIn = (root: ParentNode): HTMLElement[] =>
+  Array.from(
+    root.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    ),
+  );
+
+/** SVG elements expose className as SVGAnimatedString — read the attribute. */
+const classesOf = (el: Element): string[] =>
+  (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/**
+ * THE BAR'S STEP, spelled once for this suite: Tailwind v4's arbitrary
+ * container variant, `@container (width >= 62rem)` — a MEASURED number since
+ * the header-nav-gap lane (the owner's ask, 2026-09-26: 60rem; 62rem since the
+ * owner's logo sizes of 2026-10-01; Tailwind's named `@3xl`, 48rem, before). Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP"
+ * block carries the arithmetic; the single-spelling fence at the bottom of
+ * this file pins that the three source files agree with this constant.
+ */
+const STEP = '@min-[62rem]:';
+
+/**
+ * The three files' source with their PROSE removed, which is what the
+ * single-spelling fence runs against (mechanism from ClinicLocation.test.tsx,
+ * reasoning — and the known limit — written out in Wordmark.test.tsx). The
+ * files' comments legitimately NAME the old step as history; only the class
+ * strings are the breakpoint.
+ */
+const stripComments = (code: string): string =>
+  code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+
+/** The three components that spell the bar's step — and only these three. */
+const STEP_FILES = {
+  'Header.tsx': stripComments(headerSource),
+  'HeaderNav.tsx': stripComments(navSource),
+  'NavMenu.tsx': stripComments(menuSource),
+} as const;
+
+/** The folder's other two components, which spell no container step at all. */
+const STEPLESS_FILES = {
+  'NavItem.tsx': stripComments(itemSource),
+  'BurgerToggle.tsx': stripComments(burgerSource),
+} as const;
+
+describe('Header — the burger toggles the panel (disclosure, not a dialog)', () => {
+  it('flips aria-expanded false → true → false and mounts/unmounts the panel', async () => {
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    expect(panel()).toBeNull();
+
+    await user.click(burger());
+    expect(burger()).toHaveAttribute('aria-expanded', 'true');
+    expect(panel()).not.toBeNull();
+
+    await user.click(burger());
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    // While closed neither panel nor sheet exists in the document at all, so
+    // the pre-built HTML contains no menu and nothing can flicker during
+    // hydration (§16 — visitor-dependent UI decides only after mount).
+    expect(panel()).toBeNull();
+  });
+
+  it('claims NO dialog semantics — the panel is a disclosure (board §5·A1, fb-157)', async () => {
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    await user.click(burger());
+
+    const open = panel();
+    expect(open).not.toBeNull();
+    expect(open).not.toHaveAttribute('aria-modal');
+    expect(open?.getAttribute('role')).not.toBe('dialog');
+    // aria-controls names the element the toggle governs; the id must match.
+    expect(burger()).toHaveAttribute('aria-controls', 'header-menu');
+  });
+
+  it('keeps ONE state-invariant accessible name on the burger (menu.label)', async () => {
+    // Wave-1 a11y verdict, three keys → two: the state comes from
+    // aria-expanded, and swapping the label to "Închide" would
+    // double-announce it. This test is that rule's regression guard.
+    const user = userEvent.setup();
+    const { burger, messages } = mount();
+    const closedName = burger().getAttribute('aria-label');
+
+    await user.click(burger());
+    const openName = screen
+      .getByRole('button', { name: messages.menu.label })
+      .getAttribute('aria-label');
+
+    expect(closedName).toBe(messages.menu.label);
+    expect(openName).toBe(closedName);
+    expect(closedName).not.toMatch(/menu\.label|^common\./);
+  });
+});
+
+describe('Header — the freeze is `inert`, and nothing else (board §5·A1)', () => {
+  it('makes page content unreachable while open and restores it on close', async () => {
+    const user = userEvent.setup();
+    const { burger } = mount();
+
+    expect(page).not.toHaveAttribute('inert');
+    expect(pageFooter).not.toHaveAttribute('inert');
+
+    await user.click(burger());
+    // inert removes a subtree from focus order, hit-testing AND the
+    // accessibility tree — one attribute doing the whole job of a focus trap.
+    expect(page).toHaveAttribute('inert');
+    expect(pageFooter).toHaveAttribute('inert');
+
+    await user.click(burger());
+    // B5: reverted exactly. A leaked `inert` would freeze the live page
+    // forever, and it is a DOM effect on the SHELL — the knowingly documented
+    // §6 boundary crossing, so its cleanup is a first-class assertion.
+    expect(page).not.toHaveAttribute('inert');
+    expect(pageFooter).not.toHaveAttribute('inert');
+  });
+
+  it('leaves the bar LIVE: the ✕ is focusable and the panel opens with Contact', async () => {
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    await user.click(burger());
+
+    // The ✕ must NOT be inert — that is the whole reason the panel refuses to
+    // claim aria-modal (fb-157). Tab can reach it because nothing above it in
+    // the tree was frozen.
+    expect(burger().closest('[inert]')).toBeNull();
+    burger().focus();
+    expect(document.activeElement).toBe(burger());
+
+    // B3: focus does NOT teleport on open; DOM order makes the next Tab stop
+    // the panel's first focusable — the full-width Contact CTA (fb-151).
+    // Since the ContactModal wiring that CTA is a real <button> that summons
+    // the dialog rather than an <a href="tel:"> that dials: an opener acts in
+    // place, so §9 makes it a button, and ContactModalTrigger declares what the
+    // press produces with aria-haspopup="dialog". Its POSITION is unchanged,
+    // which is the half of fb-151/B3 this test exists for.
+    const open = panel();
+    expect(open).not.toBeNull();
+    const first = focusablesIn(open as HTMLElement)[0];
+    expect(first?.tagName).toBe('BUTTON');
+    expect(first).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(first).toHaveTextContent(ro.common.actions.contact);
+  });
+
+  it('keeps the LOGO live too while open — before the ✕ in the cycle, the panel after it (D9, 2026-10-02)', async () => {
+    // The freeze takes <body>'s OTHER children; the bar is the section's own
+    // body-level box, so the brand link — a real home link since 2026-10-02
+    // (sections/Wordmark's D9) — stays live beside the ✕, and the cycle reads
+    // logo → ✕ → the panel. Sequential focus follows DOM order here (no
+    // positive tabindex anywhere). Styles are not loaded in this project, so
+    // the row and the bar's Contact — display:none while the panel is open —
+    // still sit between the logo and the ✕ in the DOM: the claim is RELATIVE
+    // order, not a full list.
+    const user = userEvent.setup();
+    const { container, burger, panel } = mount();
+    const brand = container.querySelector('header img')?.closest('a');
+    if (!brand) {
+      throw new Error('the bar has no brand lockup (an <img> inside an <a>)');
+    }
+    await user.click(burger());
+    expect(page).toHaveAttribute('inert');
+
+    expect(brand.closest('[inert]')).toBeNull();
+    const follows = (a: Node, b: Node): boolean =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(brand, burger())).toBe(true);
+    const firstInPanel = focusablesIn(panel() as HTMLElement)[0];
+    expect(firstInPanel, "the panel's first focusable").toBeDefined();
+    expect(follows(burger(), firstInPanel as HTMLElement)).toBe(true);
+  });
+
+  it("never freezes a live region — Next's announcer and any aria-live box stay live", async () => {
+    // The freeze must never silence a live region. Next appends its
+    // <next-route-announcer> to the <body> of every page and `inert` reaches
+    // into shadow DOM, so a walk over body's children freezes it unless told
+    // otherwise. Since §15.13 that element no longer narrates OUR navigations
+    // — a click loads a new document, which announces its own title — so this
+    // guards the general rule rather than the panel-link flow it was written
+    // for (G2 review, 2026-08-13): the first region that does matter here (the
+    // language-suggestion banner, a future form status) would otherwise
+    // inherit the bug with no symptom. A live region is announced, never
+    // focused, so leaving it live costs the freeze nothing.
+    const user = userEvent.setup();
+    const announcer = document.createElement('next-route-announcer');
+    const politeRegion = document.createElement('div');
+    politeRegion.setAttribute('aria-live', 'polite');
+    document.body.append(announcer, politeRegion);
+
+    try {
+      const { burger } = mount();
+      await user.click(burger());
+
+      expect(announcer).not.toHaveAttribute('inert');
+      expect(politeRegion).not.toHaveAttribute('inert');
+      // …while the page around them is frozen as usual.
+      expect(page).toHaveAttribute('inert');
+    } finally {
+      announcer.remove();
+      politeRegion.remove();
+    }
+  });
+
+  it('scroll-locks the document while open and releases it on close', async () => {
+    const user = userEvent.setup();
+    const { burger } = mount();
+    const before = document.documentElement.style.overflow;
+
+    await user.click(burger());
+    expect(document.documentElement.style.overflow).toBe('hidden');
+
+    await user.click(burger());
+    expect(document.documentElement.style.overflow).toBe(before);
+  });
+
+  it('releases the freeze when the section unmounts mid-open', async () => {
+    // Navigating away (or a story remount) while open must not leave the page
+    // inert and unscrollable forever — the effect cleanup owns both.
+    const user = userEvent.setup();
+    const { burger, unmount } = mount();
+    await user.click(burger());
+    expect(page).toHaveAttribute('inert');
+
+    unmount();
+    expect(page).not.toHaveAttribute('inert');
+    expect(document.documentElement.style.overflow).toBe('');
+  });
+
+  it('closes on a bfcache restore — Back must not hand the menu back open', async () => {
+    // The back/forward cache: browsers keep the document you LEAVE frozen in
+    // memory — DOM, React state, scroll position — and restore it whole when
+    // you press Back, without re-running a single line. Since §15.13 a nav tap
+    // loads a NEW document, so the frozen one is exactly the one whose panel
+    // was open: without this, Back hands the visitor an open menu over a page
+    // that is still `inert` and still scroll-locked, with focus nowhere. It is
+    // the one case the deleted B1 (close-on-route-change) used to cover by
+    // accident, and the case §7's "shell state cannot persist" row got wrong.
+    // `persisted: true` is the browser's own flag for "this is a restore":
+    // pageshow also fires on every ordinary load, with it false.
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    const overflowBefore = document.documentElement.style.overflow;
+    await user.click(burger());
+    expect(panel()).not.toBeNull();
+    expect(page).toHaveAttribute('inert');
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      );
+    });
+
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    // Everything the open state had taken from the page is handed back…
+    expect(page).not.toHaveAttribute('inert');
+    expect(document.documentElement.style.overflow).toBe(overflowBefore);
+    // …and focus lands on the burger, which is why NavMenu calls close() and
+    // not setOpen(false): only close() arms the focus return.
+    expect(document.activeElement).toBe(burger());
+  });
+
+  it('closes on pagehide — the frozen snapshot must never contain an open menu', async () => {
+    // The other half of D1, and the one that removes the flicker: `pageshow`
+    // above REPAIRS a restored document (the browser paints the frozen page
+    // first, so one frame can still show the panel), while `pagehide` prevents
+    // it — it is the one event that fires on EVERY departure and ONLY on
+    // departures, so a close committed inside its handler is what the frozen
+    // snapshot contains.
+    // EVERY assertion therefore sits INSIDE act(), reading the DOM immediately
+    // after dispatch and before act flushes anything of its own — because a
+    // "clean snapshot" is not merely the panel and the sheet gone: it is also
+    // the page un-frozen (no `inert`), the scroll unlocked, and focus already
+    // placed on the burger. Those last three are undone by passive-effect
+    // CLEANUPS, and asserting them HERE is exactly what pins the guarantee the
+    // pre-close depends on — that React runs those cleanups synchronously for a
+    // flushSync commit, and not on a later turn a frozen page may never get.
+    // Asserting them after act() would pass whether or not that holds, so it
+    // would distinguish nothing.
+    // The control that makes these real detectors: a plain scheduled setState
+    // would still be PENDING at this point and the panel would still be in the
+    // document; finding all of it already reverted is the proof that NavMenu
+    // wrapped the close in flushSync — i.e. that the commit is synchronous with
+    // the event, which is the entire point on a page about to be frozen.
+    // `persisted: true` is passed only because a real pagehide carries the flag;
+    // the handler deliberately ignores it (leaving is enough), so this test
+    // would pass with either value.
+    const user = userEvent.setup();
+    const { burger, panel, sheet } = mount();
+    const overflowBefore = document.documentElement.style.overflow;
+    await user.click(burger());
+    expect(panel()).not.toBeNull();
+    expect(page).toHaveAttribute('inert');
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent('pagehide', { persisted: true }),
+      );
+      // The menu itself is gone from the markup the snapshot would capture…
+      expect(panel()).toBeNull();
+      expect(sheet()).toBeNull();
+      expect(burger()).toHaveAttribute('aria-expanded', 'false');
+      // …everything the open state had taken from the page is handed back…
+      expect(page).not.toHaveAttribute('inert');
+      expect(document.documentElement.style.overflow).toBe(overflowBefore);
+      // …and focus lands on the burger: the pre-close goes through close(), so
+      // a browser that declines to cache the page (or a Back that re-runs it)
+      // finds focus exactly where every other close path leaves it.
+      expect(document.activeElement).toBe(burger());
+    });
+  });
+});
+
+describe('Header — every close path returns focus to the burger', () => {
+  it('closes on Escape', async () => {
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    await user.click(burger());
+
+    await user.keyboard('{Escape}');
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    expect(document.activeElement).toBe(burger());
+  });
+
+  it('closes on a tap anywhere on the dimming sheet (fb-154)', async () => {
+    const user = userEvent.setup();
+    const { burger, panel, sheet } = mount();
+    await user.click(burger());
+
+    const scrim = sheet();
+    expect(scrim).not.toBeNull();
+    // Portaled to <body> (board §4b): inside the bar, `fixed` would resolve
+    // against the header — its glass makes it a containing block in every
+    // engine — and paint a stripe the height of the bar.
+    expect(scrim?.parentElement).toBe(document.body);
+    expect(scrim).toHaveAttribute('aria-hidden', 'true');
+
+    await user.click(scrim as Element);
+    expect(panel()).toBeNull();
+    expect(document.activeElement).toBe(burger());
+  });
+
+  it("falls back to the nav row's first link when closing HIDES the ✕ (board §4c, row 4 → 3)", async () => {
+    // The transition nobody can trigger deliberately: the menu was opened
+    // below the breakpoint, the container then grew past it (a rotated tablet,
+    // a resized window), and closing re-applies the bar step's `hidden` to the
+    // burger.
+    // Focusing a button that the same commit turns into display:none drops
+    // focus on <body>, i.e. silently teleports a keyboard user to the top of
+    // the document.
+    // Stylesheets are not loaded in this project, so the hidden state is
+    // applied directly here — the branch under test is "the burger is
+    // display:none by the time the focus return runs", whatever CSS put it
+    // there.
+    // WHICH link: the nav ROW's first, its Home link — NOT the bar's first
+    // link, which is the logo since the brand corner became a real home link
+    // again (owner, 2026-10-02 — sections/Wordmark's D9). NavMenu's fallback
+    // is scoped to `:scope nav a[href]`, so it parks focus in the row that
+    // just became visible — where the next Tab still continues — and not on
+    // the logo at the far left. The closed panel is unmounted by the time the
+    // effect runs, so the row's <nav> is the only one left in the bar (and it
+    // precedes the panel in DOM order anyway). This test is also the guard
+    // NavMenu's comment names: a future <nav> placed before the row inside
+    // the header (a LanguageSwitcher in the bar, §8.5) would take the
+    // fallback and turn it red.
+    const user = userEvent.setup();
+    const { container, burger, panel, barNav, messages } = mount();
+    const brand = container.querySelector('header img')?.closest('a');
+    expect(brand, 'the bar has no brand link to steer clear of').toBeTruthy();
+    await user.click(burger());
+    burger().style.display = 'none';
+
+    await user.keyboard('{Escape}');
+
+    expect(panel()).toBeNull();
+    const firstBarLink = within(barNav()).getByRole('link', {
+      name: messages.nav.home,
+    });
+    expect(document.activeElement).toBe(firstBarLink);
+    expect(document.activeElement).not.toBe(brand);
+    expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('lands on the BURGER on Esc from the logo too — the disclosure’s toggle, the ARIA pattern (D9, 2026-10-02)', async () => {
+    // With the menu open the logo is a live stop beside the ✕ (the bar is
+    // never frozen), and Shift+Tab from the ✕ reaches it once the
+    // single-menu rule has taken the row and the bar's Contact to
+    // display:none — applied by hand here, because this runner loads no
+    // stylesheet (the fallback test above does the same for the ✕). Esc on
+    // the logo closes the menu and puts focus on the BURGER, not back on the
+    // logo: the ARIA disclosure pattern returns focus to the toggle, and
+    // NavMenu's close() keeps it that way on purpose.
+    const user = userEvent.setup();
+    const { container, burger, panel, barNav, barCtaBox } = mount();
+    const brand = container.querySelector('header img')?.closest('a');
+    if (!brand) {
+      throw new Error('the bar has no brand lockup (an <img> inside an <a>)');
+    }
+    const row = barNav();
+    const ctaBox = barCtaBox();
+    await user.click(burger());
+    expect(document.activeElement).toBe(burger());
+    row.style.display = 'none';
+    ctaBox.style.display = 'none';
+
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(brand);
+
+    await user.keyboard('{Escape}');
+
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    expect(document.activeElement).toBe(burger());
+  });
+
+  it('hands the panel over to the ContactModal in ONE commit, and Esc lands focus back on the burger', async () => {
+    // THE OVERLAY HANDOVER (org-review F1) — the acceptance criterion of the
+    // wiring lane, and the reason `onClick={close}` sits on the panel's trigger
+    // at all. Both setStates fire inside ONE event handler — the trigger calls
+    // the consumer's onClick and then open() — so React's automatic batching
+    // lands NavMenu's close and the provider's open in ONE commit. Their order
+    // INSIDE that handler is NOT what this rests on and is not observable
+    // anyway: ContactModalTrigger.tsx says so itself, because the batch hides
+    // it. What matters is only that both happen in the same handler.
+    // Within that commit React runs ALL PASSIVE-effect destroys and then ALL
+    // passive creates, child-first in tree order — passive specifically, since
+    // layout effects run earlier, during commit, and nothing here should be
+    // read as a claim about those. NavMenu lives inside the provider's
+    // {children} while the single <ContactModal /> renders after them, so the
+    // sequence this test pins is:
+    //   destroy  NavMenu's freeze cleanup — scroll lock released, `inert` off
+    //   create   NavMenu's focus-return effect (armed by close()) — the burger
+    //            takes focus
+    //   create   ui/Modal's engine — reads document.activeElement, finds the
+    //            burger, calls showModal() (the platform records that same
+    //            element as its restore target) and takes its OWN lockScroll()
+    // Which is why the focus return costs useContactModal no API at all:
+    // nothing passes a target, because the platform already holds the right
+    // one. Break either real link — drop the close(), or render the dialog
+    // before the provider's children — and one of the assertions below goes
+    // red.
+    const user = userEvent.setup();
+    const { burger, panel, dialog } = mount();
+    const overflowBefore = document.documentElement.style.overflow;
+    expect(overflowBefore).toBe('');
+
+    await user.click(burger());
+    expect(page).toHaveAttribute('inert');
+
+    // The panel's first focusable IS the Contact trigger (fb-151/B3) — pressed
+    // here the way a thumb reaches it, rather than queried by name, so this
+    // test also fails if the CTA ever stops being first.
+    const panelCta = focusablesIn(panel() as HTMLElement)[0];
+    await user.click(panelCta);
+    await flush();
+
+    // The dialog is up…
+    expect(dialog()).not.toBeNull();
+    // …the panel is gone and the burger says so…
+    expect(panel()).toBeNull();
+    expect(burger()).toHaveAttribute('aria-expanded', 'false');
+    // …the MENU's freeze is fully released. A modal's modality is the
+    // platform's own — showModal() blocks the rest of the document from the top
+    // layer — never this attribute, so nothing about an open dialog wants a
+    // leftover `inert` anywhere. These two assertions are how a dropped
+    // `onClick={close}` surfaces: the menu would still be open, the freeze
+    // still up, and in the SHELL that freeze covers the <dialog> too, because
+    // the provider renders it as a body-level sibling of header/main/footer and
+    // the walk skips only the section's own ancestor. (Here it cannot: RTL puts
+    // the bar and the dialog inside one container, which is exactly the box the
+    // walk skips — so the leak shows one step earlier, on the page and footer
+    // below, rather than on the dialog itself.)
+    expect(page).not.toHaveAttribute('inert');
+    expect(pageFooter).not.toHaveAttribute('inert');
+    // …and the page is STILL locked, because the modal took its own lock in the
+    // same commit that released the menu's. A frame of scrollable page between
+    // the two would be a visible lurch; save/restore in lib/scroll-lock is what
+    // makes the handover race-free — the menu put '' back before the modal
+    // saved it, so the modal's eventual unlock restores '' and not 'hidden'.
+    expect(document.documentElement.style.overflow).toBe('hidden');
+
+    // Esc through the REAL browser: <dialog>'s native cancel/close runs on
+    // TRUSTED events only, and @testing-library/user-event dispatches synthetic
+    // ones (ContactModal.test.tsx documents the same split, and is why this one
+    // keystroke changes drivers mid-file).
+    await browserUser.keyboard('{Escape}');
+    await flush();
+
+    expect(dialog()).toBeNull();
+    // THE ACCEPTANCE CRITERION. Focus is visible and sensible: it sits on the
+    // control the visitor's finger left the bar with — not on <body>, and not
+    // on the panel trigger, which unmounted along with the panel that held it.
+    expect(document.activeElement).toBe(burger());
+    expect(document.documentElement.style.overflow).toBe(overflowBefore);
+  });
+});
+
+describe('Header — the panel hangs off the bar and survives a short screen', () => {
+  it('is ANCHORED (absolute, top-full) rather than pinned to the viewport', async () => {
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    await user.click(burger());
+
+    const classes = classesOf(panel() as Element);
+    expect(classes).toEqual(
+      expect.arrayContaining([
+        'absolute',
+        'inset-x-0',
+        'top-full',
+        'rounded-soft',
+      ]),
+    );
+    // `fixed` would need viewport arithmetic and a magic bar height; the
+    // anchored panel follows the bar wherever it goes.
+    expect(classes).not.toContain('fixed');
+  });
+
+  it('shares the SOFT CORNER with the bar — one token on the pill and its panel (§15.29)', async () => {
+    // owner 2026-10-01: "that rounded corner effect that the doctor card from
+    // old webpage has … the top bar". Both wear `rounded-soft` — the old
+    // site's 1rem card corner, ONE token in globals.css — so the two glass
+    // cards can never round differently; the bar's CONTROLS keep §15.1's 6px
+    // (the burger's `rounded-md` square; the Contact ui/Button likewise).
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    const pill = document.querySelector('header');
+    if (!pill) throw new Error('no <header> rendered — the pill is gone');
+    expect(classesOf(pill)).toContain('rounded-soft');
+    expect(classesOf(pill)).not.toContain('rounded-lg');
+    expect(classesOf(burger())).toContain('rounded-md');
+
+    await user.click(burger());
+    expect(classesOf(panel() as Element)).toContain('rounded-soft');
+    expect(classesOf(panel() as Element)).not.toContain('rounded-lg');
+  });
+
+  it('caps its height at the dynamic viewport and scrolls internally (B2)', async () => {
+    // ~356px of content vs a 320px-tall landscape phone: the PANEL scrolls,
+    // the page behind it stays frozen. dvh, not vh — mobile URL bars change
+    // the viewport height as you scroll. Asserted here because the visual
+    // harness samples widths only.
+    // 6.5rem = the pill's reach (top-4 + h-20) + the panel's own `mt-2` gap.
+    // It was 5.5rem until the owner's 2026-09-04 uniform bar height took the
+    // burger widths from h-16 to h-20 — NavMenu's cap comment records why that
+    // ask moved this number when the previous, desktop-only one did not.
+    const user = userEvent.setup();
+    const { burger, panel } = mount();
+    await user.click(burger());
+
+    expect(classesOf(panel() as Element)).toEqual(
+      expect.arrayContaining([
+        'max-h-[calc(100dvh-6.5rem)]',
+        'overflow-y-auto',
+      ]),
+    );
+  });
+});
+
+describe('Header — the ☰ → ✕ morph belongs to this section (D12)', () => {
+  it('drives its transforms off the button aria-expanded, with a motion guard', async () => {
+    const { burger } = mount();
+    const svg = burger().querySelector('svg');
+
+    expect(svg).toBeInstanceOf(SVGSVGElement);
+    // The glyph never announces itself: the button's aria-label already names
+    // the control, and a labelled child would double-announce.
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+
+    const bars = Array.from(svg?.children ?? []);
+    expect(bars).toHaveLength(3);
+
+    // The morph is whole in ./BurgerToggle (§3c, owner 2026-08-16): artwork
+    // and behavior in one section-owned control, so there is no data module
+    // to import — these literals ARE the drawn spec (bars at y = 6 / 12 / 18
+    // on the shared 24-unit grid). If the geometry ever changes, this test
+    // changes with it, deliberately.
+    expect(svg?.getAttribute('viewBox')).toBe('0 0 24 24');
+    expect(bars.map((bar) => bar.getAttribute('d'))).toEqual([
+      'M4 6h16',
+      'M4 12h16',
+      'M4 18h16',
+    ]);
+
+    // GlyphButton contributes ONLY the `group` marker class on its root; the
+    // state lives on that root as aria-expanded, and these utilities read it.
+    // No `group` may appear on any wrapper in between — an unnamed outer group
+    // would capture the utilities and freeze the morph (Wave-1 constraint 3).
+    expect(classesOf(burger())).toContain('group');
+    const wrappers = burger().querySelectorAll('.group');
+    expect(wrappers).toHaveLength(0);
+
+    // The same trap from ABOVE: the bar root carries a group for the
+    // single-menu rule, and it must be the NAMED `group/bar`. A bare `group`
+    // on any ancestor would satisfy `:is(:where(.group)[aria-expanded] *)`
+    // against an element that has no aria-expanded, freezing the morph.
+    for (
+      let ancestor = burger().parentElement;
+      ancestor;
+      ancestor = ancestor.parentElement
+    ) {
+      expect(classesOf(ancestor)).not.toContain('group');
+    }
+
+    const [top, middle, bottom] = bars.map(classesOf);
+    expect(top).toEqual(
+      expect.arrayContaining([
+        'group-aria-expanded:translate-y-[6px]',
+        'group-aria-expanded:rotate-45',
+      ]),
+    );
+    expect(middle).toContain('group-aria-expanded:opacity-0');
+    expect(bottom).toEqual(
+      expect.arrayContaining([
+        'group-aria-expanded:-translate-y-[6px]',
+        'group-aria-expanded:-rotate-45',
+      ]),
+    );
+
+    // §9: the morph is decoration over a state that aria-expanded already
+    // states — under prefers-reduced-motion it becomes an instant swap.
+    for (const bar of bars) {
+      expect(classesOf(bar)).toContain('motion-reduce:transition-none');
+      expect(classesOf(bar).join(' ')).toMatch(/duration-300/);
+      // Each bar rotates about ITS OWN centre. Without this, an SVG child's
+      // transform-box defaults to `view-box` and origin-center resolves to the
+      // centre of the 24×24 viewBox for all three alike — the ✕ comes out
+      // lopsided and right-shifted (G2 review, 2026-08-13).
+      expect(classesOf(bar)).toContain('[transform-box:fill-box]');
+      expect(classesOf(bar)).toContain('origin-center');
+    }
+  });
+});
+
+describe('Header — the nav row, the panel list, and the current page', () => {
+  it('marks the mocked-active route with aria-current="page", and only it', async () => {
+    const { container, barNav, messages } = mount();
+    const current = container.querySelectorAll('[aria-current="page"]');
+
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveTextContent(messages.nav.services);
+    expect(
+      within(barNav()).getByRole('link', { name: messages.nav.services }),
+    ).toHaveAttribute('aria-current', 'page');
+    // Sibling routes stay unmarked — the home link especially, since '/' is a
+    // prefix of every path and a naive startsWith would light it up always.
+    expect(
+      within(barNav()).getByRole('link', { name: messages.nav.home }),
+    ).not.toHaveAttribute('aria-current');
+  });
+
+  it('marks NOTHING on a blog page while the Blog item is hidden (owner, 2026-09-20)', () => {
+    // The section rule (a nested route reports as its section) still holds
+    // in lib/routes; it simply has no Blog item to mark while that row wears
+    // `hidden`. Delete the flag and this test's twin — one current item,
+    // reading Blog — is what returns.
+    nav.pathname = '/blog/coroane-ceramice';
+    const { container } = mount();
+
+    expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(0);
+  });
+
+  it('does NOT mark a route whose path merely starts with another one', () => {
+    // The boundary the section rule turns on: a sibling route may share a
+    // prefix with a nav item ('/servicii-urgente' next to '/services'), and
+    // only a SEGMENT boundary makes it that item's page. A bare
+    // pathname.startsWith(href) would light Servicii up here — and pass every
+    // other test in this file, which is why this fixture exists.
+    nav.pathname = '/services-urgente';
+    const { container } = mount();
+
+    expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(0);
+  });
+
+  it('marks Home only on the exact root', () => {
+    nav.pathname = '/';
+    const { container, messages } = mount();
+
+    const current = container.querySelectorAll('[aria-current="page"]');
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveTextContent(messages.nav.home);
+  });
+
+  it('renders every nav entry as a plain anchor carrying the FINAL href', async () => {
+    // §15.13: nothing finishes these strings on the way out any more — what
+    // useNavItems hands NavItem is exactly what lands in the DOM, so the locale
+    // prefix and the trailing slash (`trailingSlash: true`, next.config.ts) are
+    // asserted here or nowhere. The base path is empty in this runner
+    // (vitest.config.ts inlines the unset PAGES_BASE_PATH as ''), which is the
+    // root-serving host's shape; the prefixed one is tests/unit/href.test.ts.
+    // Both locales in ONE test because the locale is half of the string under
+    // test — and each pass unmounts first, since RTL leaves every render in the
+    // document and a second bar would double every query below.
+    const user = userEvent.setup();
+
+    for (const locale of ['ro', 'de'] as const) {
+      const { burger, panel, barNav, messages, unmount } = mount(locale);
+      const expected: Array<[string, string]> = [
+        [messages.nav.home, `/${locale}/`],
+        [messages.nav.services, `/${locale}/services/`],
+        [messages.nav.team, `/${locale}/team/`],
+      ];
+      // Romanian alone carried the blog (§5) — and since 2026-09-20 the row
+      // is hidden on `ro` too (owner: "drop it for now"), so NO locale offers
+      // it; the absence is asserted below for both.
+
+      await user.click(burger());
+      for (const [label, href] of expected) {
+        // Both call sites: the bar row and the panel render the same hook's
+        // rows, and both are what a visitor actually taps (board §5·B7 — no
+        // stylesheet here, so both are queryable and must be scoped).
+        for (const scope of [barNav(), panel() as HTMLElement]) {
+          const link = within(scope).getByRole('link', { name: label });
+          // A plain <a>, not something that renders one: no click handler, no
+          // prefetch observer — the browser does the navigating (§15.13).
+          expect(link.tagName).toBe('A');
+          expect(link).toHaveAttribute('href', href);
+        }
+      }
+
+      for (const scope of [barNav(), panel() as HTMLElement]) {
+        expect(
+          within(scope).queryByRole('link', { name: messages.nav.blog }),
+        ).toBeNull();
+      }
+      unmount();
+    }
+  });
+
+  it('offers NO Blog on `ro` either — in the bar row or the panel — while the row is hidden (owner, 2026-09-20)', async () => {
+    const user = userEvent.setup();
+    const { burger, panel, barNav, messages } = mount('ro');
+
+    expect(
+      within(barNav()).queryByRole('link', { name: messages.nav.blog }),
+    ).toBeNull();
+    // The other three still ship.
+    expect(
+      within(barNav()).getByRole('link', { name: messages.nav.team }),
+    ).toBeInTheDocument();
+
+    await user.click(burger());
+    expect(
+      within(panel() as HTMLElement).queryByRole('link', {
+        name: messages.nav.blog,
+      }),
+    ).toBeNull();
+  });
+
+  it('drops Blog off Romanian — the blog is `ro`-only (§5)', async () => {
+    const user = userEvent.setup();
+    const { burger, panel, barNav, messages } = mount('en');
+
+    expect(
+      within(barNav()).queryByRole('link', { name: messages.nav.blog }),
+    ).toBeNull();
+    // The other three still ship, in English.
+    expect(
+      within(barNav()).getByRole('link', { name: messages.nav.services }),
+    ).toBeInTheDocument();
+
+    await user.click(burger());
+    expect(
+      within(panel() as HTMLElement).queryByRole('link', {
+        name: messages.nav.blog,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('Header — the brand and the two Contact links', () => {
+  it('hands its brand corner to sections/Wordmark, centred in a self-stretch cell', () => {
+    // The fb-200 swap made the corner the shared lockup — the mark and the
+    // name — and this file owns the CELL around it (§6.4/§6.8): `self-stretch`
+    // keeps the cell the whole 5rem row, the same box the Footer's ruler gives
+    // its instance (fb-205), and `items-center` centres the lockup in it —
+    // since 2026-10-02 the lockup's link HUGS what it draws (Wordmark.tsx, D9),
+    // so the cell, not the link, carries the row's height. The SIZES are the
+    // lockup's own since the owner's "update also in footer" (2026-10-01,
+    // Wordmark.tsx's THE OWNER'S SIZES) — the bar shows them, so the name here
+    // is the `section` step. Class-level here (this project loads no
+    // stylesheet); the Default and MenuOpen stories MEASURE.
+    const { container } = mount();
+    const row = container.querySelector('header > div') as HTMLElement;
+    const box = row.firstElementChild as HTMLElement;
+    const lockup = box.firstElementChild as HTMLElement;
+
+    expect(classesOf(box)).toEqual(
+      expect.arrayContaining(['flex', 'self-stretch', 'items-center']),
+    );
+    const name = lockup.querySelector('span');
+    expect(name, "the lockup's name host").not.toBeNull();
+    expect(classesOf(name as HTMLElement)).toEqual(
+      expect.arrayContaining(['font-display', 'text-3xl']),
+    );
+    expect(lockup.tagName).toBe('A');
+    expect(lockup).toHaveTextContent(clinic.name);
+    // The brand is NOT a heading (C2): one <h1> per page belongs to the page.
+    expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
+  });
+
+  it('takes you HOME from the brand — the first stop in the bar, named clinic first (D9, owner 2026-10-02)', () => {
+    // "i just want the "premium smile" logo from top bar and from footer to
+    // be a component that takes you to home": a plain <a href> to the PAGE'S
+    // locale home (§15.13 — the same URL rule as every other link, a full
+    // document load), named by `common.brand.ariaLabel` with the clinic's
+    // name — so a links list says „Premium Smile, acasă", not a bare brand.
+    // Both locales in one test, because the locale is half of each string
+    // (the nav-entry test's discipline: unmount first, RTL keeps renders).
+    for (const locale of ['ro', 'de'] as const) {
+      const { container, barNav, messages, unmount } = mount(locale);
+      const header = container.querySelector('header') as HTMLElement;
+      // Found the way the stories and the e2e find it — the artwork <img>
+      // and its <a> — with a named throw rather than a bare TypeError.
+      const brand = header.querySelector('img')?.closest('a');
+      if (!brand) {
+        throw new Error('the bar has no brand lockup (an <img> inside an <a>)');
+      }
+      const named = messages.brand.ariaLabel.replace('{name}', clinic.name);
+
+      // THE one link with that name, and it is the lockup's own root.
+      expect(screen.getByRole('link', { name: named })).toBe(brand);
+      // The final string a visitor gets (base path '' in this runner), and
+      // the SAME destination as the row's Home link: two links, one home.
+      expect(brand).toHaveAttribute('href', `/${locale}/`);
+      expect(brand.getAttribute('href')).toBe(
+        within(barNav())
+          .getByRole('link', { name: messages.nav.home })
+          .getAttribute('href'),
+      );
+      // The FIRST stop in the bar — before the row's links and the CTA, as
+      // the bar reads left to right. (No stylesheet here, so every control is
+      // in the list; DOM order is what is under test.)
+      expect(focusablesIn(header)[0]).toBe(brand);
+      unmount();
+    }
+  });
+
+  it('puts the clinic name FIRST in the brand label in every language (SC 2.5.3)', () => {
+    // Label in Name: the visible text of the link is the clinic's name, so
+    // the accessible name must OPEN with it in all five languages — a
+    // translation that moved `{name}` after the destination would break
+    // "click Premium Smile" for speech input. And it must say more than the
+    // name: the destination is the point of the label (SC 2.4.4).
+    for (const [locale, messages] of Object.entries(MESSAGES)) {
+      const label = messages.common.brand.ariaLabel;
+      expect(label.startsWith('{name}'), locale).toBe(true);
+      expect(label.length, locale).toBeGreaterThan('{name}'.length);
+    }
+  });
+
+  it('opens the ONE dialog from the bar AND from the panel, and the number lives inside it (B7)', async () => {
+    // The B7 pair survives the ContactModal wiring, with the assertion moved
+    // one step down the chain: both CTAs used to BE the tel: link, and now both
+    // SUMMON the panel that holds it. So this proves (a) two distinct openers,
+    // neither of them a link any more, and (b) that what they open still dials
+    // the single-source number — §10.1's whole point, just read from
+    // lib/clinic/clinic.ts inside the dialog instead of from the bar.
+    const user = userEvent.setup();
+    const { burger, panel, barCta, dialog, messages } = mount();
+
+    const bar = barCta();
+    expect(bar.tagName).toBe('BUTTON');
+    expect(bar).toHaveAttribute('aria-haspopup', 'dialog');
+    // Not a link anywhere: neither CTA navigates any more, so a query for one
+    // must come back empty — that is what fails if an interim tel: anchor is
+    // ever restored beside a trigger.
+    expect(
+      screen.queryByRole('link', { name: messages.actions.contact }),
+    ).toBeNull();
+
+    await user.click(burger());
+    // Two Contact BUTTONS now exist in the DOM; the scoped query is what keeps
+    // this test from passing on the wrong one.
+    const panelCta = within(panel() as HTMLElement).getByRole('button', {
+      name: messages.actions.contact,
+    });
+    expect(panelCta).not.toBe(bar);
+    expect(panelCta).toHaveAttribute('aria-haspopup', 'dialog');
+    // fb-151 + D8: full width, first in the panel, first thing a thumb reaches.
+    expect(classesOf(panelCta)).toContain('w-full');
+
+    // …and the number itself, one press away. Queried by ROLE and by its
+    // accessible name (§9): the visible human-formatted number IS the link's
+    // name, so SC 2.5.3 holds, and the href is the E.164 field of the same
+    // single source (§10.1). The menu is closed first so the press under test
+    // is the ordinary one — a bar CTA pressed with no panel over it; the
+    // panel's own trigger has a close() of its own and is exercised whole in
+    // the handover test below.
+    expect(dialog()).toBeNull();
+    await user.click(burger());
+    expect(panel()).toBeNull();
+
+    await user.click(barCta());
+    await flush();
+    // Asserted before it is scoped into, the handover test's own discipline: a
+    // null dialog must fail as "the press opened nothing", not as a confusing
+    // within(null) further down.
+    expect(dialog()).not.toBeNull();
+    const phone = within(dialog() as HTMLElement).getByRole('link', {
+      name: clinic.phoneDisplay,
+    });
+    expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
+  });
+
+  it('wears the lavender solid face on BOTH Contact buttons — the owner’s own reversal of his morning rule (2026-10-01)', async () => {
+    // The morning the menu links turned lavender the owner pinned the CTA
+    // green — "contact button MUST STAY GREEN AS IT MUST JUMP INTO YOUR EYES"
+    // — and this test pinned both Contact buttons to ui/Button's green face.
+    // The same evening he reversed it himself: "also paint the contact button
+    // from top bar a lilla and make it wider, more seszable and adjust to
+    // widest language form". So the pin flips, in the bar and in the panel
+    // (the same control, one look): the lavender family, no green token left.
+    const user = userEvent.setup();
+    const { burger, panel, barCta, messages } = mount();
+    const bar = barCta();
+
+    await user.click(burger());
+    const panelCta = within(panel() as HTMLElement).getByRole('button', {
+      name: messages.actions.contact,
+    });
+
+    for (const cta of [bar, panelCta]) {
+      expect(classesOf(cta)).toEqual(
+        expect.arrayContaining([
+          'bg-accent',
+          'text-ink-inverse',
+          'hover:bg-surface',
+          'hover:text-accent',
+        ]),
+      );
+      expect(classesOf(cta).filter((c) => /cta/.test(c))).toEqual([]);
+      expect(cta).not.toHaveAttribute('tone');
+    }
+  });
+
+  it('the bar’s Contact is the md box under a 10rem floor with the old site’s jump; the panel’s stays full-width and still', async () => {
+    // "make it wider, more seszable and adjust to widest language form" —
+    // and, on the look, "i wanted the contact button wider just, not also
+    // taller": the md face (44px, the row's own height; the lg face was
+    // tried and taken off) under a `min-w-40` floor the section owns (§6.8,
+    // §8.4) — 10rem, measured against the widest of the five labels
+    // („Contatti", 66.4px at 18px medium, + 2 × 20px of padding = 106.4px
+    // natural), so every language renders the SAME box; Header.tsx
+    // carries the arithmetic and the stories' plays measure the floor. The
+    // jump ("contact button in top bar, to have that jump at you animation
+    // on hover") is ui/Button's `motion="jump"`; the panel's full-width
+    // Contact wears neither the floor nor the jump — a row that grows past
+    // its panel's padding reads as a glitch on a touch surface.
+    const user = userEvent.setup();
+    const { burger, panel, barCta, messages } = mount();
+    const bar = classesOf(barCta());
+    expect(bar).not.toContain('min-h-14');
+    expect(bar).toEqual(
+      expect.arrayContaining([
+        'min-h-11',
+        'min-w-40',
+        'hover:scale-105',
+        'active:scale-100',
+        'motion-reduce:hover:scale-100',
+      ]),
+    );
+    expect(bar).not.toContain('w-full');
+    expect(barCta()).not.toHaveAttribute('motion');
+
+    await user.click(burger());
+    const panelCta = classesOf(
+      within(panel() as HTMLElement).getByRole('button', {
+        name: messages.actions.contact,
+      }),
+    );
+    expect(panelCta).toContain('w-full');
+    expect(panelCta.filter((c) => /scale-|--jump|min-w-/.test(c))).toEqual([]);
+  });
+
+  it('never puts a display utility in the CTA atom own class list', () => {
+    // The regression this file exists for, measured on 2026-08-13: ui/Button's
+    // base sets `inline-flex`, so a caller's `hidden` lands in the same class
+    // list at the same specificity (0,1,0) and loses to whichever the sheet
+    // emits last — which is `.inline-flex`. The bar's Contact was therefore
+    // VISIBLE at 390, beside the burger, against the board's phone sketch.
+    // The cure is structural: the section owns a wrapper box, the atom keeps
+    // its own display. This test fails the moment someone moves the
+    // breakpoint classes back onto the Button.
+    // Unchanged by the ContactModal wiring except for the role: the trigger is
+    // still a ui/Button underneath, so `inline-flex` is still the base class
+    // the wrapper exists to stay out of.
+    const { barCta, barCtaBox } = mount();
+
+    for (const token of ['hidden', `${STEP}flex`, `${STEP}inline-flex`]) {
+      expect(classesOf(barCta())).not.toContain(token);
+    }
+    expect(classesOf(barCta())).toContain('inline-flex'); // the atom's own
+    expect(classesOf(barCtaBox())).toContain('hidden');
+  });
+
+  it('renders the bar CTA and the row only above the container step', () => {
+    // The ENTIRE breakpoint: both variants exist in the HTML at every width
+    // and CSS decides which is drawn — the bar's step, 62rem, measured
+    // against the BAR, never the viewport (§6.5).
+    const { barNav, barCtaBox, burger } = mount();
+
+    // The CTA's box, not the atom — see the wrapper rationale in Header.tsx.
+    expect(classesOf(barCtaBox())).toEqual(
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
+    );
+    expect(classesOf(barNav())).toEqual(
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
+    );
+    expect(classesOf(burger())).toContain(`${STEP}hidden`);
+    // Container steps only: a viewport media query here would measure the
+    // window instead of the bar (§6.5). Token-wise, not a substring match —
+    // `@min-[62rem]:` legitimately contains "min-[". The arbitrary spelling
+    // put the MEDIA twin one character away: `min-[62rem]:` without the `@`
+    // is a viewport query. So every media shape Tailwind v4 compiles from a
+    // breakpoint is rejected: the bare names, their `min-*` / `max-*` /
+    // `not-*` forms (`min-md:` → `@media (width >= 48rem)`, `not-sm:` →
+    // `@media not (width >= 40rem)` — compiled with this repo's Tailwind by
+    // the G2 typescript reviewer) and the arbitrary `min-[…]` / `max-[…]`.
+    const viewportVariant =
+      /^(sm|md|lg|xl|2xl|(min|max|not)-(sm|md|lg|xl|2xl)|min-\[[^\]]*\]|max-\[[^\]]*\]):/;
+    for (const el of [barCtaBox(), barNav(), burger()]) {
+      expect(classesOf(el).filter((c) => viewportVariant.test(c))).toEqual([]);
+    }
+  });
+
+  it('shows ONE menu at a time: the open panel hides the bar row and bar Contact', async () => {
+    // Owner amendment fb-164/165/166. Below the step nothing else was ever
+    // visible; above it the row and the bar's Contact used to sit behind the
+    // open panel, which reads as two menus at once. Pure CSS: the panel exists
+    // in the bar's subtree exactly while it is open, so `:has()` on the bar's
+    // NAMED group is the whole mechanism — no state crosses a component
+    // boundary and Header.tsx stays a Server Component.
+    // Class tokens are the contract here (no stylesheet in this project), and
+    // asserting all three in ONE test is deliberate: renaming the group breaks
+    // the pair silently in production, and loudly right here.
+    const { container, barNav, barCtaBox, messages } = mount();
+    const header = container.querySelector('header');
+    const HIDE_WHILE_OPEN = 'group-has-[#header-menu]/bar:hidden';
+    expect(messages.actions.contact).toBeTruthy();
+
+    expect(classesOf(header as Element)).toContain('group/bar');
+    expect(classesOf(barNav())).toContain(HIDE_WHILE_OPEN);
+    expect(classesOf(barCtaBox())).toContain(HIDE_WHILE_OPEN);
+
+    // The group MUST stay named: a bare `group` on the bar root would be
+    // matched by the morph's `group-aria-expanded:*` utilities and freeze the
+    // ☰ → ✕ animation (Wave-1 constraint 3).
+    expect(classesOf(header as Element)).not.toContain('group');
+  });
+
+  it('leaves the CLOSED bar composition untouched by the single-menu rule', async () => {
+    // The amendment changes the open state only. Closed, at any width, the
+    // breakpoint classes are exactly what shipped: the row and the CTA appear
+    // above the step, the burger below it.
+    const user = userEvent.setup();
+    const { barNav, barCtaBox, burger } = mount();
+
+    expect(classesOf(barNav())).toEqual(
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
+    );
+    expect(classesOf(barCtaBox())).toEqual(
+      expect.arrayContaining(['hidden', `${STEP}flex`]),
+    );
+    expect(classesOf(burger())).toContain(`${STEP}hidden`);
+
+    // NO AUTO MARGINS ANYWHERE ANY MORE (Header's three-cell grid,
+    // 2026-09-04). `ml-auto` and a step-scoped `ml-0` used to push the ✕ and
+    // the CTA to the bar's right edge and hand that job between them across
+    // the step; the right-hand grid cell is `justify-self-end`, so the free
+    // space now sits outside both boxes and an auto margin inside a
+    // content-sized cell would move nothing. Asserted as ABSENT rather than
+    // simply dropped, so nobody reintroduces a class that reads like a rule
+    // and is not.
+    for (const el of [barCtaBox(), burger()]) {
+      expect(classesOf(el)).not.toContain('ml-auto');
+      expect(classesOf(el)).not.toContain(`${STEP}ml-0`);
+    }
+
+    // …and OPEN, the burger keeps only the dropped hide-rule (fb-145/149).
+    await user.click(burger());
+    expect(classesOf(burger())).not.toContain(`${STEP}hidden`);
+    expect(classesOf(burger())).not.toContain('ml-auto');
+  });
+
+  it('keeps the ✕ visible at ANY width while the menu is open (fb-145/149)', async () => {
+    // Row 4 of the board's state table: a menu opened before rotating must
+    // stay closable. The hide-rule is dropped while open — the alternative
+    // (JS watching the window) re-introduces the width-measuring script D1
+    // deleted, and would undo the patient's own action on rotation.
+    const user = userEvent.setup();
+    const { burger } = mount();
+    await user.click(burger());
+
+    expect(classesOf(burger())).not.toContain(`${STEP}hidden`);
+  });
+});
+
+describe("Header — the bar's step is ONE number in three files", () => {
+  it('spells the step `@min-[62rem]:` in Header, HeaderNav and NavMenu, and nothing else', () => {
+    // THE SINGLE-SPELLING FENCE (header-nav-gap lane, the owner's ask,
+    // 2026-09-26). The breakpoint has no home of its own: it is the same
+    // container variant written into three files — the grid and the CTA box
+    // (Header.tsx), the row (HeaderNav.tsx), the burger (NavMenu.tsx). A
+    // stale step left in ONE of them splits the breakpoint silently: the row
+    // arriving at one width while the burger leaves at another, so a band of
+    // widths shows both menus or neither. The class-token tests above read
+    // the rendered DOM; this one reads the source, so a spelling in a branch
+    // the DOM tests never render cannot slip past either. The source is read
+    // through Vite's ?raw (typed by the repo's own src/types/raw-import.d.ts),
+    // prose stripped — the comments NAME the old step as history.
+    // Three files spell it, the folder's other two spell none: every
+    // container variant in the three must be THE step, and NavItem.tsx and
+    // BurgerToggle.tsx must carry no container variant at all — so the step
+    // cannot leak into a fourth file behind Header.tsx's "spelled in THREE
+    // files" claim. The old named step is asserted absent by name for a
+    // readable failure; any other `@<step>:` (a `@4xl:` added to one file, a
+    // `@min-[56rem]:` typo) fails the set check. The pattern also takes the
+    // NAMED-container form (`@3xl/bar:`, `@min-[62rem]/x:` — the optional
+    // `/name` before the colon), which would otherwise evade both checks.
+    const containerVariant =
+      /(?<![\w-])@[a-z0-9-]+(?:\[[^\]]*\])?(?:\/[\w-]+)?:/g;
+    for (const [file, code] of Object.entries(STEP_FILES)) {
+      expect(code, file).toContain(STEP);
+      expect(code, file).not.toMatch(/@3xl[:/]/);
+      expect(new Set(code.match(containerVariant)), file).toEqual(
+        new Set([STEP]),
+      );
+    }
+    for (const [file, code] of Object.entries(STEPLESS_FILES)) {
+      expect(code.match(containerVariant) ?? [], file).toEqual([]);
+    }
+  });
+});

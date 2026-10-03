@@ -1,0 +1,424 @@
+import { describe, expect, it } from 'vitest';
+import { GOLDEN_CARDS } from '../ribbon-model/ribbon-model.golden.ts';
+import {
+  buildCard,
+  UNIT_PX,
+  type CardModel,
+  type Vec3,
+} from '../ribbon-model/ribbon-model.ts';
+import { GOLDEN_LIGHT, GOLDEN_STRIPS } from './ribbon-paint.golden.ts';
+import {
+  buildStrip,
+  HIDDEN_PACE,
+  paintStretch,
+  samplesOf,
+  shade,
+  type Rgb,
+  type Shade,
+  type Stretch,
+  type StripSample,
+} from './ribbon-paint.ts';
+
+// lib/ribbon-paint — the strip and its light equal the record beside this
+// file, the painter paints only what is in front of the card's face, and it
+// joins its pieces without a seam: inside one canvas (the additive blend) and
+// across a frame (whole samples). Where two CANVASES meet is lib/ribbon-draw's
+// (behind the card, where nothing is painted) and is pinned on the stand-in
+// column in ui/Ribbon/Ribbon.test.tsx. Real Chromium, real 2D canvases, no
+// stylesheet: every assertion reads pixels back with getImageData.
+
+const hex = (value: number): Rgb => [
+  ((value >> 16) & 255) / 255,
+  ((value >> 8) & 255) / 255,
+  (value & 255) / 255,
+];
+/** The colour the record was written with — the ribbon's one colour since
+ *  2026-10-02, the lilac band's tint: globals.css's --ribbon. */
+const COLOUR: Rgb = hex(0xd4cfdc);
+const NINE = 1e-9;
+const FOUR = 1e-4;
+
+const modelOf = (name: string): CardModel => {
+  const card = GOLDEN_CARDS.find((golden) => golden.name === name);
+  if (card === undefined) throw new Error(`no golden card ${name}`);
+  return buildCard(card.input);
+};
+
+describe('lib/ribbon-paint — the strip, as recorded (GOLDEN_STRIPS)', () => {
+  it('covers the six recorded cards', () => {
+    expect(GOLDEN_STRIPS.map((strip) => strip.name)).toEqual(
+      GOLDEN_CARDS.map((card) => card.name),
+    );
+  });
+
+  describe.each(GOLDEN_STRIPS)('$name', (golden) => {
+    const model = modelOf(golden.name);
+    const strip = buildStrip(model, golden.mirror, COLOUR);
+
+    it('cuts every segment by what it IS — a bend finely, a straight coarsely', () => {
+      expect(
+        model.segments.map((segment) => [segment.name, samplesOf(segment)]),
+      ).toEqual(golden.samplesPerSegment);
+      expect(strip).toHaveLength(golden.count);
+    });
+
+    it('spends the same effort over the whole stretch', () => {
+      expect(
+        Math.abs(strip[strip.length - 1].effort - golden.total),
+      ).toBeLessThan(FOUR);
+    });
+
+    it('matches the nine recorded samples: edges to 1e-9, colour and effort to 1e-4', () => {
+      for (const [
+        index,
+        lx,
+        ly,
+        lz,
+        rx,
+        ry,
+        rz,
+        red,
+        green,
+        blue,
+        effort,
+      ] of golden.samples) {
+        const sample = strip[index];
+        const edges = [...sample.l, ...sample.r];
+        [lx, ly, lz, rx, ry, rz].forEach((value, i) =>
+          expect(Math.abs(edges[i] - value)).toBeLessThan(NINE),
+        );
+        [red, green, blue].forEach((value, i) =>
+          expect(Math.abs(sample.colour[i] - value)).toBeLessThan(FOUR),
+        );
+        expect(Math.abs(sample.effort - effort)).toBeLessThan(FOUR);
+      }
+    });
+  });
+
+  it('counts a hidden stretch at HIDDEN_PACE of its length', () => {
+    // The desktop card's efforts, rebuilt by hand from the strip's own
+    // points: a step with both ends behind the front face costs 0.35 of its
+    // length in px, every other step its whole length.
+    const model = modelOf('desktop');
+    const strip = buildStrip(model, false, COLOUR);
+    const frontY = -model.T / 2;
+    const middle = (sample: StripSample): Vec3 => [
+      (sample.l[0] + sample.r[0]) / 2,
+      (sample.l[1] + sample.r[1]) / 2,
+      (sample.l[2] + sample.r[2]) / 2,
+    ];
+    let effort = 0;
+    let hidden = 0;
+    for (let i = 1; i < strip.length; i++) {
+      const [a, b] = [middle(strip[i - 1]), middle(strip[i])];
+      const behind = a[1] > frontY && b[1] > frontY;
+      if (behind) hidden++;
+      effort +=
+        Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) *
+        UNIT_PX *
+        (behind ? HIDDEN_PACE : 1);
+      expect(Math.abs(strip[i].effort - effort)).toBeLessThan(1e-6);
+    }
+    expect(hidden).toBeGreaterThan(0);
+  });
+
+  it('is one colour on both sides', () => {
+    // The desktop card's first sample looks at the viewer squarely, normal
+    // (0, −1, 0): built unmirrored it shows the ribbon's front side, built
+    // mirrored its back. Until 2026-09-30 the two sides wore two colours —
+    // the unmirrored one the dark mauve's 41.624769 / 37.525312 / 48.2412.
+    const model = modelOf('desktop');
+    const squarely = shade(COLOUR, [0, -1, 0]);
+    for (const mirror of [false, true]) {
+      const { colour } = buildStrip(model, mirror, COLOUR)[0];
+      colour.forEach((value, i) =>
+        expect(
+          Math.abs(value - squarely[i]),
+          `mirrored: ${mirror}`,
+        ).toBeLessThan(NINE),
+      );
+    }
+    // The record's `light` row for that normal: the colour itself (THE
+    // ANCHORED LIGHT) — until 2026-10-02 the light showed #8377a3 there as
+    // 97.527363 / 86.953778 / 113.604757.
+    [212, 207, 220].forEach((value, i) =>
+      expect(Math.abs(squarely[i] - value)).toBeLessThan(FOUR),
+    );
+  });
+});
+
+describe('lib/ribbon-paint — THE ANCHORED LIGHT (the owner, 2026-10-02: the band’s shade, the accents of light kept)', () => {
+  /** Relative luminance's weights on 0 … 255 sRGB — enough to order shades. */
+  const luma = ([r, g, b]: Shade) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const unitOf = (v: Vec3): Vec3 => {
+    const l = Math.hypot(v[0], v[1], v[2]);
+    return [v[0] / l, v[1] / l, v[2] / l];
+  };
+  const SQUARELY: Vec3 = [0, -1, 0];
+
+  it('shows a face turned squarely to the viewer in the very colour it is given — for any colour', () => {
+    // The ribbon's tint, the lavender it wore until that day, its shadow's
+    // dark mauve, white, a saturated red and a near-black: the exposure is
+    // per channel, so every one comes back as itself.
+    for (const value of [
+      0xd4cfdc, 0x8377a3, 0x2d263c, 0xffffff, 0xcc3355, 0x101010,
+    ]) {
+      const base = hex(value);
+      shade(base, SQUARELY).forEach((channel, i) =>
+        expect(
+          Math.abs(channel - 255 * base[i]),
+          `#${value.toString(16)}, channel ${i}`,
+        ).toBeLessThan(NINE),
+      );
+    }
+  });
+
+  it('keeps the light’s accents round that face: brighter turned to the key light, brightest at its glint, dimmer turned away', () => {
+    // The key light comes from the upper left and the eye looks along +y; its
+    // glint is brightest where the surface faces halfway between the two.
+    const key = unitOf([-3, -6, 5]);
+    const glint = unitOf([key[0], key[1] - 1, key[2]]);
+    const away = unitOf([0.5, -0.85, -0.2]);
+    const face = luma(shade(COLOUR, SQUARELY));
+    expect(luma(shade(COLOUR, key))).toBeGreaterThan(face);
+    expect(luma(shade(COLOUR, glint))).toBeGreaterThan(
+      luma(shade(COLOUR, key)),
+    );
+    expect(luma(shade(COLOUR, away))).toBeLessThan(face);
+    // …and the record's own strip shows them: lighter and darker samples
+    // than the colour itself, on the desktop card's nine.
+    const golden = GOLDEN_STRIPS.find((strip) => strip.name === 'desktop');
+    const lumas = (golden?.samples ?? []).map(([, , , , , , , r, g, b]) =>
+      luma([r, g, b]),
+    );
+    expect(Math.max(...lumas)).toBeGreaterThan(face + 10);
+    expect(Math.min(...lumas)).toBeLessThan(face - 10);
+  });
+});
+
+describe('lib/ribbon-paint — THE WIDTH SHARE (the owner, 2026-10-02: "30% thinner" on a laptop or a desktop)', () => {
+  it('draws the strip at that share of its width along the very same centre line — the colours and the efforts unmoved', () => {
+    const model = modelOf('desktop');
+    const whole = buildStrip(model, false, COLOUR);
+    const slim = buildStrip(model, false, COLOUR, 0.7);
+    expect(slim).toHaveLength(whole.length);
+    const across = (sample: StripSample) =>
+      Math.hypot(
+        sample.r[0] - sample.l[0],
+        sample.r[1] - sample.l[1],
+        sample.r[2] - sample.l[2],
+      );
+    whole.forEach((sample, i) => {
+      const thin = slim[i];
+      // The same centre: each edge moved towards it, never along the ribbon.
+      for (let axis = 0; axis < 3; axis++) {
+        expect(
+          Math.abs(
+            (thin.l[axis] + thin.r[axis]) / 2 -
+              (sample.l[axis] + sample.r[axis]) / 2,
+          ),
+        ).toBeLessThan(1e-12);
+      }
+      expect(Math.abs(across(thin) - 0.7 * across(sample))).toBeLessThan(1e-12);
+      expect(thin.colour).toEqual(sample.colour);
+      expect(thin.effort).toBe(sample.effort);
+      expect(thin.u).toBe(sample.u);
+    });
+    // The whole width is the model's: 0.25 k across.
+    expect(Math.abs(across(whole[0]) - model.width)).toBeLessThan(1e-12);
+  });
+});
+
+describe('lib/ribbon-paint — the light, as recorded (GOLDEN_LIGHT)', () => {
+  it('shades each face by the direction its surface looks in', () => {
+    // The record's `face` column names the two base colours the light was
+    // recorded on: the ribbon's own — the lilac band's tint since
+    // 2026-10-02 — and the dark mauve it wore on its other side until
+    // 2026-09-30. `shade` takes any colour, so both stay pinned.
+    const bases = { dark: hex(0x2d263c), light: COLOUR };
+    expect(GOLDEN_LIGHT.length).toBeGreaterThan(0);
+    for (const [face, nx, ny, nz, red, green, blue] of GOLDEN_LIGHT) {
+      const colour = shade(face === 'dark' ? bases.dark : bases.light, [
+        nx,
+        ny,
+        nz,
+      ]);
+      [red, green, blue].forEach((value, i) =>
+        expect(Math.abs(colour[i] - value)).toBeLessThan(FOUR),
+      );
+    }
+  });
+});
+
+// ── THE PAINTER, on real canvases ───────────────────────────────────────────
+
+/** A canvas in the test page, 1 device pixel per CSS px. */
+function canvasOf(width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (ctx === null) throw new Error('no 2D context in the test browser');
+  return { canvas, ctx };
+}
+
+/** Card units → px of a canvas whose card centre sits at (cx, cy). */
+const placeAt =
+  (cx: number, cy: number) =>
+  (point: Vec3): readonly [number, number] => [
+    cx + point[0] * UNIT_PX,
+    cy - point[2] * UNIT_PX,
+  ];
+
+/** A card's stretch on a canvas, the card's centre at (cx, cy). */
+function stretchOf(
+  model: CardModel,
+  mirror: boolean,
+  cx: number,
+  cy: number,
+): Stretch {
+  return {
+    strip: buildStrip(model, mirror, COLOUR),
+    place: placeAt(cx, cy),
+    frontY: -model.T / 2,
+  };
+}
+
+const alphaAt = (ctx: CanvasRenderingContext2D, x: number, y: number) =>
+  ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data[3];
+
+describe('lib/ribbon-paint — paintStretch, on a real canvas', () => {
+  it('paints only what is in front of the card’s face: a piece behind it, nothing; a piece that crosses it, its front part', () => {
+    // A synthetic straight ribbon, 0.2 units wide, from x = −1 to x = +1.
+    // The card's face is y = 0; `depth` says where each end sits.
+    const colour: Shade = [120, 100, 140];
+    const end = (u: number, x: number, depth: number): StripSample => ({
+      u,
+      l: [x, depth, -0.1],
+      r: [x, depth, 0.1],
+      colour,
+      effort: 100 * (x + 1),
+    });
+    const paint = (from: number, to: number) => {
+      const { ctx } = canvasOf(400, 300);
+      paintStretch(
+        ctx,
+        {
+          strip: [end(0, -1, from), end(1, 1, to)],
+          place: placeAt(200, 150),
+          frontY: 0,
+        },
+        0,
+        200,
+      );
+      return ctx;
+    };
+
+    // Wholly behind: the card is opaque — not one pixel.
+    const behind = paint(0.3, 0.3);
+    expect(
+      behind
+        .getImageData(0, 0, 400, 300)
+        .data.every((channel) => channel === 0),
+    ).toBe(true);
+    // Crossing the face half-way along (behind at x = −1, in front at x = +1):
+    // cut at x = 0, the front half painted and the other half not.
+    const crossing = paint(0.3, -0.3);
+    expect(alphaAt(crossing, 200 - 50, 150)).toBe(0);
+    expect(alphaAt(crossing, 200 + 50, 150)).toBe(255);
+    // Wholly in front: all of it.
+    const front = paint(-0.3, -0.3);
+    expect(alphaAt(front, 200 - 50, 150)).toBe(255);
+  });
+
+  it('leaves no hairline between neighbouring pieces: the ribbon’s inside stays opaque', () => {
+    // The additive blend: two anti-aliased neighbours cover their shared edge
+    // "half and half", and half PLUS half is one — up to the rasteriser's
+    // own rounding of each half, measured in this Chromium at 245 … 255 of
+    // 255 on all six recorded cards. The same pieces painted one OVER the
+    // other (a context that refuses 'lighter', below) leave a seam at every
+    // joint, down to 188: three quarters, the hairline the blend exists to
+    // remove. So "no hairline" is pinned as: never under OPAQUE_ENOUGH, where
+    // painting over drops far below it.
+    const OPAQUE_ENOUGH = 240;
+    const model = modelOf('desktop');
+    const frontY = -model.T / 2;
+    const interior = (ctx: CanvasRenderingContext2D) => {
+      const stretch = stretchOf(model, false, 600, 400);
+      paintStretch(
+        ctx,
+        stretch,
+        0,
+        stretch.strip[stretch.strip.length - 1].effort,
+      );
+      let least = 255;
+      for (const segment of model.segments) {
+        // A bend round an edge is seen nearly edge-on: its inside is a pixel
+        // or two wide, all of it anti-aliased edge.
+        if (segment.kind === 'fold') continue;
+        const steps = Math.max(40, Math.ceil(segment.length * 400));
+        for (let i = 2; i < steps - 1; i++) {
+          const u = (segment.start + (segment.length * i) / steps) / model.S;
+          // The stretch's own two ends are real edges, not seams.
+          if (u < 0.002 || u > 0.998) continue;
+          if (model.evaluate(u).y > frontY) continue;
+          for (const v of [0.3, 0.5, 0.7]) {
+            const [x, y] = stretch.place(model.surface(u, v));
+            least = Math.min(least, alphaAt(ctx, x, y));
+          }
+        }
+      }
+      return least;
+    };
+
+    expect(interior(canvasOf(1200, 900).ctx)).toBeGreaterThanOrEqual(
+      OPAQUE_ENOUGH,
+    );
+    // The guard has teeth: the same painting, but every assignment of the
+    // blend ignored, so the pieces go on one over the other.
+    const { ctx: real } = canvasOf(1200, 900);
+    const over = new Proxy(real, {
+      get: (target, key) => {
+        const value: unknown = Reflect.get(target, key, target);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+      set: (target, key, value) =>
+        key === 'globalCompositeOperation' ||
+        Reflect.set(target, key, value, target),
+    });
+    expect(interior(over)).toBeLessThan(200);
+  });
+
+  it('paints piece by piece exactly what it paints at once, pixel for pixel', () => {
+    const model = modelOf('desktop');
+    const whole = canvasOf(1200, 900);
+    const pieces = canvasOf(1200, 900);
+    const stretch = stretchOf(model, false, 600, 400);
+    const efforts = stretch.strip.map((sample) => sample.effort);
+    const total = efforts[efforts.length - 1];
+
+    paintStretch(whole.ctx, stretch, 0, total);
+    // Frames that end on WHOLE samples, of uneven sizes, as a pen draws.
+    let from = 0;
+    for (let j = 7; j < efforts.length - 1; j += 5 + (j % 11)) {
+      paintStretch(pieces.ctx, stretch, from, efforts[j]);
+      from = efforts[j];
+    }
+    paintStretch(pieces.ctx, stretch, from, total);
+
+    const a = whole.ctx.getImageData(0, 0, 1200, 900).data;
+    const b = pieces.ctx.getImageData(0, 0, 1200, 900).data;
+    let differing = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      if (
+        a[i] !== b[i] ||
+        a[i + 1] !== b[i + 1] ||
+        a[i + 2] !== b[i + 2] ||
+        a[i + 3] !== b[i + 3]
+      ) {
+        differing++;
+      }
+    }
+    expect(differing).toBe(0);
+  });
+});

@@ -1,37 +1,136 @@
 {
   "common": {
     "siteName": "Premium Smile",
+    "skipToContent": "Skip to content",
     "nav": {
       "home": "Home",
       "services": "Services",
       "team": "Team",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Main navigation"
     },
     "actions": {
       "call": "Call now",
-      "contact": "Contact"
+      "contact": "Contact",
+      "whatsapp": "Message us on WhatsApp"
+    },
+    "menu": {
+      "label": "Menu"
+    },
+    "language": {
+      "switch": "{name}, change language",
+      "region": "Language",
+      "banner": {
+        "text": "This page is also available in English.",
+        "accept": "Continue in English",
+        "dismiss": "Close"
+      }
+    },
+    "notFound": {
+      "title": "This page doesn't exist",
+      "message": "The address may be old or mistyped, or the page may have moved in the meantime."
+    },
+    "brand": {
+      "ariaLabel": "{name}, home"
     },
     "footer": {
-      "rights": "All rights reserved"
+      "tagline": "Everything for your smile",
+      "contactLabel": "Contact us here",
+      "hoursTitle": "Working hours",
+      "closed": "Closed",
+      "salLabel": "Alternative dispute resolution",
+      "backToTop": "Back to top",
+      "copyright": "© {year} {name}. All rights reserved.",
+      "socialInstagram": "{name} on Instagram",
+      "socialTiktok": "{name} on TikTok",
+      "contactWhatsapp": "{name} on WhatsApp",
+      "contactPhone": "Call {name}"
+    },
+    "carousel": {
+      "role": "carousel",
+      "slideRole": "slide"
     }
   },
   "home": {
     "hero": {
       "title": "Your smile, our priority",
-      "subtitle": "Modern dental care, gentle and professional"
+      "region": "Clinic showcase",
+      "slide": "Image {index} of {total}",
+      "contact": "Book a consultation",
+      "services": "See our services",
+      "picker": "Choose an image (stops the slideshow)"
+    },
+    "location": {
+      "eyebrow": "Find us",
+      "title": "Visit our clinic",
+      "mapAlt": "Map showing the {name} clinic location",
+      "directionsLabel": "Get directions to {address}",
+      "callLabel": "Call {phone}"
+    },
+    "reviews": {
+      "eyebrow": "Your voice matters",
+      "title": "More from our patients",
+      "region": "Patient reviews",
+      "previous": "Previous review",
+      "next": "Next review",
+      "slide": "Review {index} of {total}",
+      "rating": "{rating, number} out of 5 stars"
     }
   },
   "services": {
-    "title": "Our services"
+    "title": "Our services",
+    "prices": {
+      "menu": "Categories",
+      "amount": "{amount, number} RON"
+    }
   },
   "team": {
-    "title": "Our team"
+    "title": "Our team",
+    "showcase": {
+      "eyebrow": "The Premium Smile family",
+      "title": "The specialists we are proud of",
+      "profile": "More about me"
+    },
+    "roster": {
+      "eyebrow": "Our support team",
+      "title": "The people we couldn't do without"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "In my own words",
+        "title": "My philosophy"
+      },
+      "about": {
+        "eyebrow": "Biography",
+        "title": "About {name}"
+      },
+      "courses": {
+        "eyebrow": "Continuing education",
+        "title": "Courses and specialisations"
+      },
+      "stats": {
+        "eyebrow": "In numbers",
+        "title": "Experience confirmed over time",
+        "lead": "The numbers below say, in short, how we work: with care, with modern technology and with genuine attention to every patient.",
+        "atLeast": "over"
+      },
+      "schedule": {
+        "title": "When to find me at the clinic",
+        "closed": "Closed"
+      }
+    }
   },
   "blog": {
     "title": "Articles & news"
   },
   "contact": {
-    "title": "Get in touch",
+    "heading": "Reach us by phone or on WhatsApp.",
+    "callHeading": "Call us at",
+    "callHours": "Mon–Fri {weekOpens}–{weekCloses}",
+    "or": "or",
+    "whatsappHeading": "Write to us",
+    "whatsapp": "Contact us on WhatsApp",
+    "whatsappNote": "Write anytime, we'll reply soon.",
     "close": "Close"
   }
 }

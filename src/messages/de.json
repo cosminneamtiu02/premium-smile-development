@@ -1,37 +1,136 @@
 {
   "common": {
     "siteName": "Premium Smile",
+    "skipToContent": "Zum Inhalt springen",
     "nav": {
       "home": "Startseite",
       "services": "Leistungen",
       "team": "Team",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Hauptnavigation"
     },
     "actions": {
       "call": "Jetzt anrufen",
-      "contact": "Kontakt"
+      "contact": "Kontakt",
+      "whatsapp": "Schreiben Sie uns auf WhatsApp"
+    },
+    "menu": {
+      "label": "Menü"
+    },
+    "language": {
+      "switch": "{name}, Sprache ändern",
+      "region": "Sprache",
+      "banner": {
+        "text": "Diese Seite gibt es auch auf Deutsch.",
+        "accept": "Weiter auf Deutsch",
+        "dismiss": "Schließen"
+      }
+    },
+    "notFound": {
+      "title": "Diese Seite existiert nicht",
+      "message": "Die Adresse ist möglicherweise veraltet oder falsch geschrieben, oder die Seite wurde inzwischen verschoben."
+    },
+    "brand": {
+      "ariaLabel": "{name}, Startseite"
     },
     "footer": {
-      "rights": "Alle Rechte vorbehalten"
+      "tagline": "Alles für Ihr Lächeln",
+      "contactLabel": "Kontaktieren Sie uns hier",
+      "hoursTitle": "Öffnungszeiten",
+      "closed": "Geschlossen",
+      "salLabel": "Alternative Streitbeilegung",
+      "backToTop": "Nach oben",
+      "copyright": "© {year} {name}. Alle Rechte vorbehalten.",
+      "socialInstagram": "{name} auf Instagram",
+      "socialTiktok": "{name} auf TikTok",
+      "contactWhatsapp": "{name} auf WhatsApp",
+      "contactPhone": "{name} anrufen"
+    },
+    "carousel": {
+      "role": "Karussell",
+      "slideRole": "Slide"
     }
   },
   "home": {
     "hero": {
       "title": "Ihr Lächeln, unsere Priorität",
-      "subtitle": "Moderne Zahnmedizin – einfühlsam und professionell"
+      "region": "Klinikvorstellung",
+      "slide": "Bild {index} von {total}",
+      "contact": "Beratungstermin vereinbaren",
+      "services": "Unsere Leistungen ansehen",
+      "picker": "Bild wählen (stoppt den Wechsel)"
+    },
+    "location": {
+      "eyebrow": "So finden Sie uns",
+      "title": "Besuchen Sie unsere Klinik",
+      "mapAlt": "Karte mit dem Standort der Klinik {name}",
+      "directionsLabel": "Route zu {address} anzeigen",
+      "callLabel": "Rufen Sie {phone} an"
+    },
+    "reviews": {
+      "eyebrow": "Ihre Meinung zählt",
+      "title": "Weitere Stimmen unserer Patienten",
+      "region": "Patientenbewertungen",
+      "previous": "Vorherige Bewertung",
+      "next": "Nächste Bewertung",
+      "slide": "Bewertung {index} von {total}",
+      "rating": "{rating, number} von 5 Sternen"
     }
   },
   "services": {
-    "title": "Unsere Leistungen"
+    "title": "Unsere Leistungen",
+    "prices": {
+      "menu": "Kategorien",
+      "amount": "{amount, number} RON"
+    }
   },
   "team": {
-    "title": "Unser Team"
+    "title": "Unser Team",
+    "showcase": {
+      "eyebrow": "Die Premium-Smile-Familie",
+      "title": "Spezialisten, auf die wir stolz sind",
+      "profile": "Mehr über mich"
+    },
+    "roster": {
+      "eyebrow": "Unser Praxisteam",
+      "title": "Die Menschen, ohne die es nicht ginge"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "In meinen Worten",
+        "title": "Meine Philosophie"
+      },
+      "about": {
+        "eyebrow": "Biografie",
+        "title": "Über {name}"
+      },
+      "courses": {
+        "eyebrow": "Fortbildung",
+        "title": "Kurse und Spezialisierungen"
+      },
+      "stats": {
+        "eyebrow": "In Zahlen",
+        "title": "Über die Jahre bestätigte Erfahrung",
+        "lead": "Die Zahlen unten sagen in Kürze, wie wir arbeiten: sorgfältig, mit moderner Technik und mit echter Aufmerksamkeit für jeden Patienten.",
+        "atLeast": "über"
+      },
+      "schedule": {
+        "title": "Wann Sie mich in der Praxis finden",
+        "closed": "Geschlossen"
+      }
+    }
   },
   "blog": {
     "title": "Artikel & Neuigkeiten"
   },
   "contact": {
-    "title": "Kontaktieren Sie uns",
+    "heading": "Erreichbar per Anruf oder WhatsApp.",
+    "callHeading": "Rufen Sie uns an unter",
+    "callHours": "Mo.–Fr. {weekOpens}–{weekCloses}",
+    "or": "oder",
+    "whatsappHeading": "Schreiben Sie uns",
+    "whatsapp": "Kontaktieren Sie uns über WhatsApp",
+    "whatsappNote": "Jederzeit, wir melden uns rasch.",
     "close": "Schließen"
   }
 }

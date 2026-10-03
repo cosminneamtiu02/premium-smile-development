@@ -1,37 +1,136 @@
 {
   "common": {
     "siteName": "Premium Smile",
+    "skipToContent": "Aller au contenu",
     "nav": {
       "home": "Accueil",
       "services": "Soins",
       "team": "Équipe",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Navigation principale"
     },
     "actions": {
       "call": "Appeler maintenant",
-      "contact": "Contact"
+      "contact": "Contact",
+      "whatsapp": "Écrivez-nous sur WhatsApp"
+    },
+    "menu": {
+      "label": "Menu"
+    },
+    "language": {
+      "switch": "{name}, changer de langue",
+      "region": "Langue",
+      "banner": {
+        "text": "Cette page existe aussi en français.",
+        "accept": "Continuer en français",
+        "dismiss": "Fermer"
+      }
+    },
+    "notFound": {
+      "title": "Cette page n'existe pas",
+      "message": "L'adresse est peut-être ancienne ou mal saisie, ou la page a été déplacée entre-temps."
+    },
+    "brand": {
+      "ariaLabel": "{name}, accueil"
     },
     "footer": {
-      "rights": "Tous droits réservés"
+      "tagline": "Tout pour votre sourire",
+      "contactLabel": "Contactez-nous ici",
+      "hoursTitle": "Horaires d'ouverture",
+      "closed": "Fermé",
+      "salLabel": "Règlement alternatif des litiges",
+      "backToTop": "Retour en haut",
+      "copyright": "© {year} {name}. Tous droits réservés.",
+      "socialInstagram": "{name} sur Instagram",
+      "socialTiktok": "{name} sur TikTok",
+      "contactWhatsapp": "{name} sur WhatsApp",
+      "contactPhone": "Appeler {name}"
+    },
+    "carousel": {
+      "role": "carrousel",
+      "slideRole": "diapositive"
     }
   },
   "home": {
     "hero": {
       "title": "Votre sourire, notre priorité",
-      "subtitle": "Des soins dentaires modernes, en douceur et avec professionnalisme"
+      "region": "Présentation de la clinique",
+      "slide": "Image {index} sur {total}",
+      "contact": "Prendre rendez-vous",
+      "services": "Voir nos services",
+      "picker": "Choisir une image (arrête le défilement)"
+    },
+    "location": {
+      "eyebrow": "Nous trouver",
+      "title": "Visitez notre clinique",
+      "mapAlt": "Carte indiquant l'emplacement de la clinique {name}",
+      "directionsLabel": "Voir l'itinéraire vers {address}",
+      "callLabel": "Appeler le {phone}"
+    },
+    "reviews": {
+      "eyebrow": "Votre avis compte",
+      "title": "D'autres avis de nos patients",
+      "region": "Avis des patients",
+      "previous": "Avis précédent",
+      "next": "Avis suivant",
+      "slide": "Avis {index} sur {total}",
+      "rating": "{rating, number} étoiles sur 5"
     }
   },
   "services": {
-    "title": "Nos soins"
+    "title": "Nos soins",
+    "prices": {
+      "menu": "Catégories",
+      "amount": "{amount, number} RON"
+    }
   },
   "team": {
-    "title": "Notre équipe"
+    "title": "Notre équipe",
+    "showcase": {
+      "eyebrow": "La famille Premium Smile",
+      "title": "Les spécialistes dont nous sommes fiers",
+      "profile": "En savoir plus sur moi"
+    },
+    "roster": {
+      "eyebrow": "Notre équipe de soutien",
+      "title": "Les personnes sans qui nous n'y arriverions pas"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "Avec mes mots",
+        "title": "Ma philosophie"
+      },
+      "about": {
+        "eyebrow": "Biographie",
+        "title": "{name} en quelques mots"
+      },
+      "courses": {
+        "eyebrow": "Formation continue",
+        "title": "Cours et spécialisations"
+      },
+      "stats": {
+        "eyebrow": "En chiffres",
+        "title": "Une expérience confirmée dans le temps",
+        "lead": "Les chiffres ci-dessous résument notre façon de travailler : avec soin, avec des technologies modernes et une attention sincère pour chaque patient.",
+        "atLeast": "plus de"
+      },
+      "schedule": {
+        "title": "Quand me trouver à la clinique",
+        "closed": "Fermé"
+      }
+    }
   },
   "blog": {
     "title": "Articles et actualités"
   },
   "contact": {
-    "title": "Contactez-nous",
+    "heading": "Joignables par téléphone ou WhatsApp.",
+    "callHeading": "Appelez-nous au",
+    "callHours": "Lun.–ven. {weekOpens}–{weekCloses}",
+    "or": "ou",
+    "whatsappHeading": "Écrivez-nous",
+    "whatsapp": "Contactez-nous sur WhatsApp",
+    "whatsappNote": "À tout moment, nous revenons vite.",
     "close": "Fermer"
   }
 }

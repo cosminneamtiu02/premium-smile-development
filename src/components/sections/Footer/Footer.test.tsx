@@ -1,0 +1,689 @@
+import type { ReactElement } from 'react';
+import { render, screen, within } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
+import { describe, expect, it } from 'vitest';
+import type { Locale } from '@/i18n/locales';
+import { clinic } from '@/lib/clinic/clinic';
+import { formatHoursRows } from '@/lib/hours/hours';
+import de from '@/messages/de.json';
+import en from '@/messages/en.json';
+import fr from '@/messages/fr.json';
+import it_ from '@/messages/it.json';
+import ro from '@/messages/ro.json';
+import { Footer, socialEntries } from './Footer';
+
+// Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
+// accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
+// user-facing string comes from the REAL message files or lib/clinic/clinic.ts —
+// never a literal typed in here (§17.4). A renamed or dropped key then fails
+// HERE as well as in the translation-parity gate, instead of silently
+// rendering the dotted key path (which is what next-intl does for a miss).
+//
+// Styles are NOT loaded in this project (tests/setup/components.ts imports no
+// stylesheet), so computed values would read back as browser defaults: the
+// utility TOKENS are the contract here, the convention every component test in
+// this repo already follows (GlyphButton, FloatingActions, Header).
+//
+// NOTHING IS MOCKED HERE, and since §15.13 nothing needs to be: the site-map
+// hrefs come from the pure src/i18n/href.ts, which runs for real in this
+// runner, and the Footer touches no router at all (it marks no active route —
+// a footer link list is a site map, not a "you are here" indicator). The stub
+// this file used to carry was a hand-written <Link>, and a less faithful one
+// than the real thing: it dropped the trailing slash every export URL has.
+
+const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
+
+// The provider the section gets in production (app/[locale]/layout.tsx wraps
+// the whole tree) and in Storybook (.storybook/preview.tsx decorator), so the
+// tests mount it the same way. Footer itself is NOT a client component;
+// useTranslations/useLocale are isomorphic and read this context.
+const Mounted = ({ locale }: { locale: Locale }): ReactElement => (
+  <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
+    <Footer />
+  </NextIntlClientProvider>
+);
+
+const mount = (locale: Locale = 'ro') => {
+  const utils = render(<Mounted locale={locale} />);
+  const messages = MESSAGES[locale].common;
+  return {
+    ...utils,
+    messages,
+    locale,
+    footer: () => screen.getByRole('contentinfo'),
+  };
+};
+
+const classesOf = (el: Element): string[] =>
+  (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/** ICU interpolation, done the way the message file declares it. */
+const fill = (message: string, values: Record<string, string>): string =>
+  Object.entries(values).reduce(
+    (text, [key, value]) => text.replaceAll(`{${key}}`, value),
+    message,
+  );
+
+describe('Footer — the contentinfo landmark', () => {
+  it('is a real <footer>, with no role attribute bolted on', () => {
+    // <footer> at body level IS contentinfo; spelling role="contentinfo" on it
+    // would be redundant ARIA (§9 semantic-HTML-first).
+    const { footer } = mount();
+    expect(footer().tagName).toBe('FOOTER');
+    expect(footer()).not.toHaveAttribute('role');
+  });
+
+  it('carries NO outer margin — pages own the rhythm above it (§6.4)', () => {
+    const { footer } = mount();
+    const margins = classesOf(footer()).filter((c) =>
+      /^-?m[trblxye]?-/.test(c),
+    );
+    expect(margins).toEqual([]);
+  });
+
+  it('measures ITSELF with container queries, never the viewport (§6.5)', () => {
+    // A media query here would react to the window instead of the box the
+    // section actually occupies. Token-wise, not a substring match — `@3xl:`
+    // legitimately contains "xl:".
+    const { footer } = mount();
+    const viewportVariant = /^(sm|md|lg|xl|2xl):/;
+    for (const el of footer().querySelectorAll('*')) {
+      expect(classesOf(el).filter((c) => viewportVariant.test(c))).toEqual([]);
+    }
+    expect(classesOf(footer())).not.toContain('@container');
+    // …and the measured box is the gutter box, one level in.
+    const gutter = footer().firstElementChild as HTMLElement;
+    expect(classesOf(gutter)).toContain('@container');
+    // The SAME clamp the Header pill wears — one number, two sections.
+    expect(classesOf(gutter)).toContain('mx-[clamp(1rem,10vw,12.5rem)]');
+  });
+
+  it('flips its grids on NAMED container steps only', () => {
+    const { footer } = mount();
+    const grids = Array.from(footer().querySelectorAll('[class*="grid-cols"]'));
+    const tokens = grids.flatMap(classesOf);
+
+    expect(tokens).toEqual(
+      expect.arrayContaining([
+        'grid-cols-1',
+        '@3xl:grid-cols-2',
+        '@5xl:grid-cols-[1fr_0.6fr_1fr_1fr]',
+        '@3xl:grid-cols-3',
+      ]),
+    );
+    // No custom container step may enter the untouched default scale (§3):
+    // every @-variant here is one of Tailwind's own names.
+    const named = /^@(3xs|2xs|xs|sm|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl):/;
+    for (const token of tokens.filter((t) => t.startsWith('@'))) {
+      expect(token).toMatch(named);
+    }
+  });
+});
+
+describe('Footer — every control is a LINK (zero-island contract)', () => {
+  it('renders no <button> anywhere: nothing here needs JavaScript', () => {
+    // The section is a Server Component with no client island (§16): a button
+    // would imply a handler, i.e. hydration on every page of the site.
+    mount();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  it('gives EVERY link an accessible name', () => {
+    mount();
+    const links = screen.getAllByRole('link');
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link).toHaveAccessibleName();
+    }
+  });
+
+  it('never leaks a message key path into a visible string', () => {
+    // next-intl does not throw on a miss — it renders "common.footer.tagline"
+    // and logs. This is the assertion that turns that into a failure.
+    const { footer } = mount();
+    expect(footer().textContent).not.toMatch(/\bfooter\.[a-zA-Z]+\b/);
+    expect(footer().textContent).not.toMatch(/\{(year|name)\}/);
+  });
+});
+
+describe('Footer — row 1, the brand', () => {
+  it('opens the band with sections/Wordmark, centred in an h-20 box', () => {
+    // Since the fb-200 swap this row is the SAME lockup the Header's corner
+    // renders — the mark, the name at Heading's section step in the brand's two
+    // colours (2026-10-01; the hairline bar left with D12) — which is how the
+    // §15.6 logo arrived in one file instead of two. The name is still
+    // data from lib/clinic/clinic.ts (§10.1), and the brand is still identified
+    // positionally: the first child of the gutter box. The two wrappers are
+    // this section owning placement and SIZE (§6.4/§6.8) — `pb-8` is the old
+    // row's rhythm, `h-20` the same 5rem row the Header gives its instance
+    // (fb-205), and `items-center` centres the lockup in it: since 2026-10-02
+    // the lockup is a link that HUGS what it draws (Wordmark.tsx, D9), so the
+    // box, not the link, carries the row's height. The box tracks Header's
+    // row rather than standing on its own: it went 4rem → 5rem on 2026-09-04
+    // when the owner asked for one bar height on every screen, and fb-205 is
+    // what makes that a required knock-on rather than a nicety — and why the
+    // owner's sizes of 2026-10-01 live in sections/Wordmark itself.
+    const { footer } = mount();
+    const gutter = footer().firstElementChild as HTMLElement;
+    const brandRow = gutter.firstElementChild as HTMLElement;
+    const box = brandRow.firstElementChild as HTMLElement;
+    const lockup = box.firstElementChild as HTMLElement;
+
+    expect(classesOf(brandRow)).toEqual(
+      expect.arrayContaining(['flex', 'justify-center', 'pb-8']),
+    );
+    expect(classesOf(box)).toEqual(
+      expect.arrayContaining(['flex', 'h-20', 'items-center']),
+    );
+    expect(lockup.tagName).toBe('A');
+    expect(lockup).toHaveTextContent(clinic.name);
+    // The name is ONE string split over two coloured words (Wordmark.tsx, THE
+    // TWO COLOURS), so it is found by its Heading host, not by a text match
+    // that a single text node would satisfy and two spans cannot.
+    const host = lockup.querySelector('span.font-display') as HTMLElement;
+    expect(host.textContent).toBe(clinic.name);
+    expect(host.querySelectorAll('[data-logotype]')).toHaveLength(2);
+    // NOT a heading either: the one <h1> belongs to the page, and a repeated
+    // shell element must not claim an outline slot (the Header's C2 rule).
+    expect(lockup.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
+  });
+
+  it('is a SECOND link home, beside the site map’s — fb-179 reversed on the owner’s word (2026-10-02)', () => {
+    // fb-179 built this row on "no second link to home in the footer"; the
+    // owner reversed it himself: "i just want the "premium smile" logo from
+    // top bar and from footer to be a component that takes you to home"
+    // (Wordmark.tsx, D9). So the band now carries TWO links to one home with
+    // two different names — the lockup's „Premium Smile, acasă" and the site
+    // map's „Acasă" — which WCAG allows: each name says where it goes
+    // (SC 2.4.4), and the same destination is named the same way wherever the
+    // lockup appears, the Header's included (SC 3.2.4) — both shells fill
+    // the one `common.brand.ariaLabel` with the one clinic name.
+    const { footer, messages } = mount();
+    const gutter = footer().firstElementChild as HTMLElement;
+    const lockup = gutter.querySelector('img')?.closest('a');
+    if (!lockup) {
+      throw new Error('the band has no brand lockup (an <img> inside an <a>)');
+    }
+    const named = messages.brand.ariaLabel.replace('{name}', clinic.name);
+
+    // THE one link with the lockup's name, to the locale home.
+    expect(screen.getByRole('link', { name: named })).toBe(lockup);
+    expect(lockup).toHaveAttribute('href', '/ro/');
+    // The site map's own Home link is still there: a second link to the same
+    // home, under a different name.
+    const siteMap = within(footer()).getByRole('navigation', {
+      name: clinic.name,
+    });
+    const home = within(siteMap).getByRole('link', { name: messages.nav.home });
+    expect(home).not.toBe(lockup);
+    expect(home).toHaveAttribute('href', lockup.getAttribute('href'));
+    expect(named).not.toBe(messages.nav.home);
+    // The site-map column's TITLE carries the clinic name too, and is still
+    // no link: a title labels the landmark, it does not navigate.
+    for (const occurrence of within(footer()).getAllByText(clinic.name, {
+      selector: 'p',
+    })) {
+      expect(occurrence.closest('a')).toBeNull();
+    }
+    // …and no link is named for the brand ALONE: the lockup's name says
+    // where it goes.
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).not.toHaveAccessibleName(clinic.name);
+    }
+  });
+});
+
+describe('Footer — row 2, the contact column', () => {
+  it('dials the E.164 number while SHOWING the human format', () => {
+    mount();
+    // The visible text is the accessible name — SC 2.5.3 Label in Name holds
+    // by construction, because the glyph beside it is aria-hidden.
+    const phone = screen.getByRole('link', { name: clinic.phoneDisplay });
+
+    expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
+    expect(phone).toHaveAttribute('href', 'tel:+40770162765');
+    expect(phone).toHaveTextContent(clinic.phoneDisplay);
+    // Two different strings on purpose: a tel: href needs E.164, a reader
+    // needs spacing. Collapsing them would break one of the two.
+    expect(clinic.phoneDisplay).not.toBe(clinic.phone);
+    expect(clinic.phone.startsWith('+')).toBe(true);
+  });
+
+  it('keeps the phone glyph unlabelled so the link announces once', () => {
+    mount();
+    const svg = screen
+      .getByRole('link', { name: clinic.phoneDisplay })
+      .querySelector('svg');
+
+    expect(svg).toBeInstanceOf(SVGSVGElement);
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).not.toHaveAttribute('role');
+  });
+
+  it('prints the tagline, the contact label and the postal address', () => {
+    const { footer, messages } = mount();
+    const text = footer().textContent ?? '';
+
+    expect(text).toContain(messages.footer.tagline);
+    expect(text).toContain(messages.footer.contactLabel);
+    // §10.5: the NAP must be crawlable in the footer of every page.
+    expect(text).toContain(clinic.address.street);
+    expect(text).toContain(clinic.address.postalCode);
+    expect(text).toContain(clinic.address.city);
+  });
+
+  it('prints the county line only when it differs from the city', () => {
+    // The clinic's data has Sibiu twice (city = county); printing it twice
+    // reads as a mistake, and §10.1 says one source decides.
+    const { footer } = mount();
+    const county = clinic.address.county;
+    const occurrences = (footer().textContent ?? '').split(county).length - 1;
+
+    expect(occurrences).toBe(county === clinic.address.city ? 1 : 2);
+  });
+});
+
+describe('Footer — row 2, the nav column', () => {
+  it('links the three OFFERED primary routes in Romanian, locale-prefixed — the blog row is hidden for now (owner, 2026-09-20)', () => {
+    const { messages } = mount('ro');
+
+    // The exact strings the export serves: /{locale} because localePrefix is
+    // 'always' (§5), and the trailing slash because `trailingSlash: true`
+    // writes out/ro/services/index.html — so a visitor pays no redirect hop.
+    // Both come from src/i18n/href.ts, the only place that spells them
+    // (§15.13); the base path is '' in this runner (vitest.config.ts).
+    for (const [label, href] of [
+      [messages.nav.home, '/ro/'],
+      [messages.nav.services, '/ro/services/'],
+      [messages.nav.team, '/ro/team/'],
+    ] as const) {
+      expect(screen.getByRole('link', { name: label })).toHaveAttribute(
+        'href',
+        href,
+      );
+    }
+    expect(screen.queryByRole('link', { name: messages.nav.blog })).toBeNull();
+  });
+
+  it('drops Blog on non-Romanian locales — the blog is `ro`-only (§5)', () => {
+    const { messages } = mount('de');
+
+    expect(screen.queryByRole('link', { name: messages.nav.blog })).toBeNull();
+    // The other three still ship, in German.
+    expect(
+      screen.getByRole('link', { name: messages.nav.services }),
+    ).toHaveAttribute('href', '/de/services/');
+  });
+
+  it('marks NO footer link as the current page', () => {
+    // A footer link list is a site map, not a "you are here" indicator — and
+    // the Header already answers that question (its aria-current is the one).
+    const { footer } = mount();
+    expect(footer().querySelectorAll('[aria-current]')).toHaveLength(0);
+  });
+
+  it('names its navigation landmark, so it is not a second bare "navigation"', () => {
+    const { footer } = mount();
+    const nav = within(footer()).getByRole('navigation', {
+      name: clinic.name,
+    });
+    expect(nav.tagName).toBe('NAV');
+    // The visible column title IS the name — no invented message key.
+    expect(nav).toHaveAccessibleName(clinic.name);
+  });
+});
+
+describe('Footer — row 2, the ANPC/SAL badge', () => {
+  it('opens the official SAL portal in a new tab, safely', () => {
+    const { messages } = mount();
+    const sal = screen.getByRole('link', { name: messages.footer.salLabel });
+
+    expect(sal).toHaveAttribute('href', 'https://reclamatiisal.anpc.ro');
+    expect(sal).toHaveAttribute('target', '_blank');
+    // noopener kills the reverse-tabnabbing handle; noreferrer is belt-and-
+    // braces for older engines.
+    expect(sal.getAttribute('rel')).toContain('noopener');
+    expect(sal.getAttribute('rel')).toContain('noreferrer');
+    expect(messages.footer.salLabel).not.toMatch(/footer\.salLabel/);
+  });
+
+  it('carries the artwork as a DECORATIVE image — the link holds the name', () => {
+    const { messages } = mount();
+    const sal = screen.getByRole('link', { name: messages.footer.salLabel });
+    const img = sal.querySelector('img');
+
+    expect(img).toBeInstanceOf(HTMLImageElement);
+    // alt="" + the link's aria-label = announced once, not twice.
+    expect(img).toHaveAttribute('alt', '');
+    expect(img?.getAttribute('src')).toContain('anpc-sal-pictograma');
+  });
+
+  it('reserves the badge box so nothing shifts when it loads (§11)', () => {
+    const { messages } = mount();
+    const img = screen
+      .getByRole('link', { name: messages.footer.salLabel })
+      .querySelector('img') as HTMLImageElement;
+
+    // Intrinsic 500×124, displayed at half that — the width/height ATTRIBUTES
+    // are what give the browser the aspect ratio before the bytes arrive.
+    expect(img.getAttribute('width')).toBe('250');
+    expect(img.getAttribute('height')).toBe('62');
+    expect(img).toHaveAttribute('loading', 'lazy');
+    // …and it must still be able to shrink inside a narrow column (320px, §7).
+    expect(classesOf(img)).toEqual(
+      expect.arrayContaining(['h-auto', 'max-w-full']),
+    );
+  });
+});
+
+describe('Footer — the column titles', () => {
+  it('sizes both titles a full step ABOVE the nav labels they head', () => {
+    // Owner amendment 2026-08-18: at text-lg the titles sat at exactly the
+    // nav TextButtons' own text-lg and read as list items, not headings.
+    // text-xl is one step up the untouched scale (§3) — the step IS the
+    // hierarchy, so this test fails if either title falls back to text-lg.
+    const { footer, messages } = mount();
+    const nav = within(footer()).getByRole('navigation', { name: clinic.name });
+    const navTitle = within(nav).getByText(clinic.name);
+    const hoursTitle = within(footer()).getByText(messages.footer.hoursTitle);
+
+    for (const title of [navTitle, hoursTitle]) {
+      expect(title.tagName).toBe('P');
+      expect(classesOf(title)).toContain('text-xl');
+      expect(classesOf(title)).not.toContain('text-lg');
+      expect(classesOf(title)).toContain('font-display');
+    }
+  });
+});
+
+describe('Footer — row 2, the opening hours', () => {
+  it('renders one <dt>/<dd> pair per row from lib/hours', () => {
+    const { footer, messages } = mount();
+    const expected = formatHoursRows(
+      clinic.hours,
+      'ro',
+      messages.footer.closed,
+    );
+    const list = footer().querySelector('dl') as HTMLElement;
+
+    expect(within(list).getAllByRole('term')).toHaveLength(expected.length);
+    const terms = Array.from(list.querySelectorAll('dt')).map(
+      (dt) => dt.textContent,
+    );
+    const values = Array.from(list.querySelectorAll('dd')).map(
+      (dd) => dd.textContent,
+    );
+
+    expect(terms).toEqual(expected.map((row) => row.label));
+    expect(values).toEqual(expected.map((row) => row.value));
+    // The shipped fixture, ONE ROW PER DAY (owner 2026-08-18): five identical
+    // weekday rows, then Saturday and Sunday closed (owner 2026-09-30) —
+    // calendar order, no grouped ranges.
+    expect(terms).toEqual([
+      'Luni',
+      'Marți',
+      'Miercuri',
+      'Joi',
+      'Vineri',
+      'Sâmbătă',
+      'Duminică',
+    ]);
+  });
+
+  it('titles the column from the message file', () => {
+    const { footer, messages } = mount();
+    expect(footer().textContent).toContain(messages.footer.hoursTitle);
+  });
+
+  it('dims every closed row with a COLOR token, never opacity', () => {
+    // opacity-60 dims the row below the contrast the token guarantees;
+    // text-ink-muted is a measured 7.35:1 on the surface ground (§9). Since
+    // the fb-186 rewire the token rides ON each dt/dd — ui/Text emits its ink
+    // explicitly (no inherit tone, its D4) — while the row wrapper carries
+    // layout only, so the elements are checked for the token and the whole
+    // row for the absence of the opacity trick.
+    // EVERY closed row, counted from the data: since 2026-09-30 the week has
+    // two (Sâmbătă and Duminică), and a single-row query would pick one and
+    // leave the other unchecked.
+    const { footer, messages } = mount();
+    const closedValues = within(footer()).getAllByText(messages.footer.closed);
+    const closedDays = formatHoursRows(
+      clinic.hours,
+      'ro',
+      messages.footer.closed,
+    ).filter((row) => row.closed);
+
+    expect(closedValues).toHaveLength(closedDays.length);
+    for (const closedValue of closedValues) {
+      const closedRow = closedValue.closest('div') as HTMLElement;
+      const closedTerm = closedRow.querySelector('dt') as HTMLElement;
+
+      expect(classesOf(closedTerm)).toContain('text-ink-muted');
+      expect(classesOf(closedValue)).toContain('text-ink-muted');
+      for (const el of [closedRow, closedTerm, closedValue]) {
+        expect(el.className).not.toMatch(/opacity-/);
+      }
+    }
+    // …and an OPEN row keeps the solid ink — the ternary's other side.
+    expect(classesOf(within(footer()).getByText('Luni'))).toContain('text-ink');
+  });
+
+  it('translates the closed label per locale, never a hardcoded word', () => {
+    const { footer, messages } = mount('de');
+    expect(footer().textContent).toContain(messages.footer.closed);
+    expect(footer().textContent).not.toContain(ro.common.footer.closed);
+  });
+});
+
+describe('Footer — row 3, the legal strip', () => {
+  it('states the copyright with the build year and the single-source name', () => {
+    const { footer, messages } = mount();
+    const year = String(new Date().getFullYear());
+    const expected = fill(messages.footer.copyright, {
+      year,
+      name: clinic.name,
+    });
+
+    expect(footer().textContent).toContain(expected);
+    expect(expected).toContain(year);
+    // A grouped "2.026" would be next-intl number-formatting the year — the
+    // reason the value crosses as a string.
+    expect(footer().textContent).not.toContain('2.0');
+  });
+
+  it('takes you back to the top with a plain fragment link, no JS', () => {
+    const { messages } = mount();
+    const top = screen.getByRole('link', { name: messages.footer.backToTop });
+
+    expect(top.tagName).toBe('A');
+    // '#top' is the HTML spec's own name for the top of the document, so this
+    // works with zero script and zero id to point at.
+    expect(top).toHaveAttribute('href', '#top');
+    expect(
+      screen.queryByRole('button', { name: messages.footer.backToTop }),
+    ).toBeNull();
+  });
+
+  it('renders one named social control per URL the clinic actually has', () => {
+    const { messages } = mount();
+    const instagram = screen.getByRole('link', {
+      name: fill(messages.footer.socialInstagram, { name: clinic.name }),
+    });
+    const tiktok = screen.getByRole('link', {
+      name: fill(messages.footer.socialTiktok, { name: clinic.name }),
+    });
+
+    expect(instagram).toHaveAttribute('href', clinic.social.instagram);
+    expect(tiktok).toHaveAttribute('href', clinic.social.tiktok);
+    for (const link of [instagram, tiktok]) {
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+      // Icon-only controls: the glyph stays unlabelled, the anchor is named.
+      const svg = link.querySelector('svg');
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(link.textContent).toBe('');
+    }
+  });
+
+  it('drops the button entirely when a profile URL is absent', () => {
+    // The conditional itself, through the section OWN logic — no module
+    // mocking, and no pretend clinic: socialEntries is what the component
+    // calls, handed the data shapes the owner may actually leave behind.
+    expect(socialEntries({}).map((entry) => entry.name)).toEqual([]);
+    expect(socialEntries({ instagram: 'https://example.com' })).toEqual([
+      {
+        name: 'instagram',
+        url: 'https://example.com',
+        labelKey: 'footer.socialInstagram',
+      },
+    ]);
+    expect(socialEntries({ tiktok: 'https://example.com' })).toEqual([
+      {
+        name: 'tiktok',
+        url: 'https://example.com',
+        labelKey: 'footer.socialTiktok',
+      },
+    ]);
+    // …and the shipped data has both, which is what the render test above sees.
+    expect(socialEntries(clinic.social).map((entry) => entry.name)).toEqual([
+      'instagram',
+      'tiktok',
+    ]);
+  });
+
+  it('dials straight from the strip — the phone disc is a bare tel: link', () => {
+    // The contact discs are NOT socialEntries: `phone` and `whatsapp` are
+    // REQUIRED ClinicInfo fields, so there is no absent case to filter (board
+    // contact-touchpoints §4/§7). This one acts DIRECTLY — tap = call, never a
+    // modal (board D1; §15.15's third-overlay trap).
+    const { messages } = mount();
+    const disc = screen.getByRole('link', {
+      name: fill(messages.footer.contactPhone, { name: clinic.name }),
+    });
+
+    expect(disc).toHaveAttribute('href', `tel:${clinic.phone}`);
+    expect(disc).toHaveAttribute('href', 'tel:+40770162765');
+    // NO target/rel: tel: hands the number to a protocol handler (the dialler),
+    // it does not navigate a browsing context — _blank would open and orphan a
+    // blank tab on desktop.
+    expect(disc).not.toHaveAttribute('target');
+    // Icon-only control: the glyph stays out of the a11y tree, the anchor
+    // carries the whole name (§9, GlyphButton's children doc).
+    const svg = disc.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).not.toHaveAttribute('role');
+    expect(disc.textContent).toBe('');
+  });
+
+  it('opens the clinic chat directly — the WhatsApp disc is a wa.me link', () => {
+    // Board D2: the disc opens the WhatsApp conversation itself. A "WhatsApp
+    // modal" is banned — it would be the third stateful overlay §15.15 keeps
+    // WAITing on, bought for nothing.
+    const { messages } = mount();
+    const disc = screen.getByRole('link', {
+      name: fill(messages.footer.contactWhatsapp, { name: clinic.name }),
+    });
+
+    expect(disc).toHaveAttribute('href', `https://wa.me/${clinic.whatsapp}`);
+    expect(disc).toHaveAttribute('href', 'https://wa.me/40770162765');
+    // The field's own format contract, mechanized like clinic.phone's '+'
+    // guard in row 2: wa.me wants digits only, no plus (lib/clinic/clinic.ts
+    // whatsapp doc) — a pasted E.164 value must fail HERE, not ship.
+    expect(clinic.whatsapp).toMatch(/^\d+$/);
+    // Real external navigation, unlike tel: — so it travels like its row-mates.
+    expect(disc).toHaveAttribute('target', '_blank');
+    expect(disc.getAttribute('rel')).toContain('noopener');
+    expect(disc.getAttribute('rel')).toContain('noreferrer');
+    const svg = disc.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg).not.toHaveAttribute('role');
+    expect(disc.textContent).toBe('');
+  });
+
+  it('orders the strip profiles-first, contact-right, phone outermost', () => {
+    // The owner's order (fb-334): Instagram · TikTok · WhatsApp · phone. The
+    // two contact discs are appended AFTER the mapped socials, so the conversion
+    // control sits at the far end of the row.
+    const { footer } = mount();
+    const strip = footer().querySelector('[data-footer-socials]');
+    expect(strip).not.toBeNull();
+    const hrefs = Array.from((strip as HTMLElement).querySelectorAll('a')).map(
+      (a) => a.getAttribute('href'),
+    );
+
+    expect(hrefs).toEqual([
+      clinic.social.instagram,
+      clinic.social.tiktok,
+      `https://wa.me/${clinic.whatsapp}`,
+      `tel:${clinic.phone}`,
+    ]);
+  });
+
+  it('dresses all four discs in GlyphButton’s outline face in the lavender family (owner, 2026-10-01)', () => {
+    // "all round glyph buttons from the footer" turn lilac like the menu
+    // buttons — the fixed corner's discs do not (FloatingActions.test.tsx).
+    // Token contract: the atom's outline bundle in its `accent` family, read
+    // off every anchor of the strip; never a green token.
+    const { footer } = mount();
+    const strip = footer().querySelector(
+      '[data-footer-socials]',
+    ) as HTMLElement;
+    const discs = Array.from(strip.querySelectorAll('a'));
+    expect(discs).toHaveLength(4);
+    for (const disc of discs) {
+      expect(classesOf(disc)).toEqual(
+        expect.arrayContaining([
+          'border-accent',
+          'text-accent',
+          'bg-surface',
+          'hover:bg-accent',
+          'hover:text-ink-inverse',
+        ]),
+      );
+      expect(classesOf(disc).filter((c) => /cta/.test(c))).toEqual([]);
+    }
+  });
+
+  it('names both contact discs per locale, never a hardcoded word', () => {
+    const { messages } = mount('de');
+
+    for (const message of [
+      messages.footer.contactWhatsapp,
+      messages.footer.contactPhone,
+    ]) {
+      expect(
+        screen.getByRole('link', {
+          name: fill(message, { name: clinic.name }),
+        }),
+      ).toBeInTheDocument();
+    }
+    // …and the Romanian names are gone with them — both of them, so this
+    // comment stays true of what is actually asserted.
+    for (const roMessage of [
+      ro.common.footer.contactWhatsapp,
+      ro.common.footer.contactPhone,
+    ]) {
+      expect(
+        screen.queryByRole('link', {
+          name: fill(roMessage, { name: clinic.name }),
+        }),
+      ).toBeNull();
+    }
+  });
+
+  it('keeps the socials off the fixed corner discs (FloatingActions §b)', () => {
+    // SC 2.4.11: the call CTA is `fixed` bottom-right at every scroll
+    // position, so a 44px social flush against the right margin would sit
+    // behind it. Centred below the step, and inset ≥ 88px above it (10vw of a
+    // ≥960px canvas), is exactly the composition rule FloatingActions.tsx asks
+    // pages for.
+    const { footer } = mount();
+    const socials = footer().querySelector('[data-footer-socials]');
+    expect(socials).not.toBeNull();
+    expect(classesOf(socials as Element)).toEqual(
+      expect.arrayContaining(['@3xl:justify-self-end']),
+    );
+    const strip = (socials as Element).parentElement as HTMLElement;
+    expect(classesOf(strip)).toContain('justify-items-center');
+  });
+});

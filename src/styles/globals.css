@@ -14,13 +14,35 @@
    `ui/` components consume ONLY semantic utilities (bg-page, text-ink, …),
    never primitives.
 
-   LOCKED (§15.1): cta #008854 · anchor #00A968 · star #B29126 ·
+   LOCKED (§15.1): cta #008854 · anchor #00A968 · star #D4AF37 (amended 2026-09-12, was #B29126) ·
    accent-decorative #7A6D9C (large display text ≥3:1 + graphics ONLY — the
    a11y addon polices misuse) · scrim floor 0.55 · body base 1.125rem ·
-   component default radius 6px (= rounded-md; scale untouched) · font tokens
+   component default radius 6px (= rounded-md; scale untouched — plus ONE ADDED
+   step, --radius-soft 1rem, the old site's card corner, §15.29) · font tokens
    named display/body/mono, never --font-sans.
+   ADDED (D56, the doctor-pages run, owner 2026-09-26): accent-strong — accent
+   ink for body-size text (≥4.5:1), the 18th semantic role; its charter and its
+   numbers sit on the declaration below. VALUE #4b3a86 since D57 (the same day,
+   the owner after seeing D56's #655885: "a darker accent of lilla. a more
+   seeable one … make it just jump at you more"). The candidates weighed, on
+   the page ground: #5b4e7a 7.09 · #55467c 7.82 · #4f3f78 8.62 · #4b3a86 8.88
+   (the saturated one — taken) · #4a3878 9.38 · #453372 10.13.
+   ADDED (D58, the doctor-pages run, owner 2026-09-26, after D57's violet
+   keywords: "what if you make the faint text lighter"): ink-faint — washed
+   prose that still passes body text's 4.5:1, the 19th semantic role; its
+   charter and its numbers sit on the declaration below.
+   ADDED (2026-10-01, the clinic's real mark — the wordmark-brand lane):
+   brand-grey #939598 + brand-lilac #8576b1, the logotype's two colours, roles
+   21 and 22 (the menu buttons' `--accent`, minted the same day by its own
+   lane, is the 20th); worn by sections/Wordmark's two words and by nothing else
+   (WCAG 2.2 SC 1.4.3's logo clause; tests/unit/logotype-census.test.ts). The
+   "purple hue confirm" is now a NUMBER: the logo's lilac is #8576b1 against
+   accent-decorative's #7a6d9c — moving it there repaints tints, auras,
+   keywords and, since 2026-10-02, the floss ribbon, whose colour is the lilac
+   band's tint (--ribbon, below), and is the owner's call (§15.28).
    Everything else is PROVISIONAL warm-grayscale until the token-audit values
-   land (open: purple hue confirm against the real logo, §15.1 + §15.6).
+   land (open: whether accent-decorative adopts the logo's own lilac now that
+   it is known, §15.1 + §15.28).
    ──────────────────────────────────────────────────────────────────────────── */
 
 @theme {
@@ -30,12 +52,209 @@
     var(--font-source-serif), ui-serif, Georgia, 'Times New Roman', serif;
   --font-mono:
     var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* THE AURA — the old top bar's lavender glow, imported as ONE static value
+     (board .claude/plans/header-aura.plan.md, fb-359, owner 2026-09-04: "the
+     old top bar has like a shadow around it. like an aura"). §15.1 locked the
+     token set, so this is an owner-approved ADDITION recorded by that board —
+     approving the board approved the token.
+
+     PROVENANCE. The old bar carried TWO shadows swapped by a scroll listener
+     (`window.scrollY > 8`): a tight rest state, and this one — named
+     `shadow-cta` there, 0 8px 22px at a 40% tint — which its dropdown panel
+     also wore at every scroll position. Only the SCROLLED value is imported,
+     and it is worn permanently, because the new pill is permanently in the
+     posture that value belonged to (floating over content at every scroll
+     position) while the old bar only reached it once you scrolled. The
+     rest/scrolled pair and the listener that drove them stay behind: Header.tsx
+     records D1 — "no scroll listener, no height animation, no chrome that
+     watches the window" — and it stands untouched. One state, nothing to
+     transition.
+
+     THE TINT IS MIXED, NOT PASTED. The old accent was the lavender
+     rgb(131, 119, 163); its successor in this vocabulary is
+     --accent-decorative (#7A6D9C), whose charter fits exactly — "graphics
+     ONLY", and a shadow is pure decoration: no information, no contrast duty.
+     Mixing through the token means §15.1's one still-open sub-item — confirm
+     the purple hue against the real logo — re-tints the aura for free the day
+     that value moves. A pasted rgb would have frozen it.
+
+     WHY PLAIN `@theme`, NOT `@theme inline` — a LAYER CONVENTION, not a
+     behavioral choice, and this paragraph first claimed otherwise (G2 fold,
+     this lane): compiled with this repo's own tailwindcss, the two flavors
+     emit a byte-identical `.shadow-aura` utility. The `--shadow-*` namespace
+     is transformed into the utility under EITHER flavor — Tailwind wraps the
+     color in var(--tw-shadow-color, …) so shadow-color utilities can override
+     it, and builds the @supports fallback below. The custom property itself
+     was TREE-SHAKEN from the output while nothing referenced it (the Header
+     lane's build); since the corner's `[--bulb-shadow:var(--shadow-aura)]`
+     feed READS it (2026-09-05), Tailwind emits it at :root — base +
+     @supports twin — and the language dial's aura rides exactly that
+     emission: remove the last var(--shadow-aura) reader and the property is
+     shaken out again, taking the bulb's glow with it silently (the census in
+     tests/unit/aura-token.test.ts is the guard).
+     The re-tint guarantee above therefore hangs on one thing only:
+     the value mixes FROM var(--accent-decorative) instead of pasting its
+     rgb, and that inner var survives the inlining and resolves at paint time
+     in both modes. Plain `@theme` is simply this layer's spelling (the font
+     tokens sit in it), and the pin test asserts it for uniformity.
+
+     THE NAME IS `shadow-aura`, never the old `shadow-cta`. In this vocabulary
+     `cta` means the GREEN family, so a lavender glow called cta would lie;
+     "aura" is the owner's own word for it. The old family's other steps
+     (soft-sm, soft-md, cta-lg) are NOT imported — zero consumers today; a
+     second depth step arrives by the rule-of-two, through the lane that needs
+     it.
+
+     Tailwind v4 mints the `shadow-aura` utility from the `--shadow-*`
+     namespace automatically (the same mechanism that makes bg-surface out of
+     --color-surface). Consumers: the Header pill and NavMenu's dropdown panel
+     (the old site's own pairing), and — owner 2026-09-05 — the fixed corner's
+     three permanent residents via FloatingActions: the call and WhatsApp
+     discs wear the utility, the language dial's bulb takes the same value
+     through ui/SpeedDial's `--bulb-shadow` public variable.
+
+     COLOR-MIX ON OLD ENGINES is handled by that same generator, and NOT the
+     way a hand-written declaration would be. Compiled and read rather than
+     assumed (this lane, with the real pipeline), `shadow-aura` comes out
+     twice: a base `--tw-shadow: 0 8px 22px
+     var(--tw-shadow-color, var(--accent-decorative))`, then the
+     mixed value inside `@supports (color: color-mix(in lab, red, red))`. So an
+     engine too old for color-mix (pre-2023) paints the glow in SOLID
+     --accent-decorative — stronger than intended, still pure decoration, never
+     a broken bar — while every current engine gets the 40% mix. The frozen
+     phones §1 cares about lose the softness and nothing else. Do not "fix"
+     this with a hand-rolled fallback declaration: the progressive enhancement
+     is Tailwind's, and a second spelling of the value would be the very
+     divergence this token exists to prevent.
+
+     tests/unit/aura-token.test.ts pins this value and the consumer census. */
+  --shadow-aura: 0 8px 22px
+    color-mix(in srgb, var(--accent-decorative) 40%, transparent);
+
+  /* THE SOFT CORNER — the old site's CARD radius: `rounded-2xl` on its doctor
+     card, its staff card and its review card, which is Tailwind's 2xl step,
+     1rem = 16px, on a radius scale that site never overrode (read in its
+     index.css, not assumed). Imported on the owner's word (2026-10-01: "i
+     want that rounded corner effect that the doctor card from old webpage
+     has … implemented in all mentioned parts") for FOUR wearers and nothing
+     else: ui/Card's `corners="soft"` row (sections/PersonnelCard, both
+     kinds), the Header pill with NavMenu's panel, ui/TextButton's box and
+     ui/Modal's box — the contact dialog. §15.1's 6px default (rounded-md)
+     still holds for every other corner on the site: ui/Button, GlyphButton's
+     square, the price, review, credo and schedule cards, the language
+     banner's toast, the map frame — the price cards by the owner's taste: the
+     soft corner was put on the services page on his "apply to all cards on
+     services page too" and taken off the same evening ("i liked card from
+     before better for services. it looked perfect."). ONE token rather than
+     four spellings of `rounded-2xl`, so
+     `rounded-2xl`, so the wearers cannot drift and the number is dialled in
+     one place; the default radius scale stays untouched (§3) — this is an
+     ADDITION to the `--radius-*` namespace, from which Tailwind mints
+     `rounded-soft`, `rounded-b-soft` and every other side and corner form.
+     rem, not px (§7): the corner scales with the root, as the old site's
+     did. tests/unit/soft-corner-census.test.ts pins this value and counts
+     the wearers. Declared BEFORE the keyframes below for the aura's own
+     reason: aura-token.test.ts reads this block up to its first `}`. */
+  --radius-soft: 1rem;
+
+  /* THE POP — the "jump at you" the owner asked of the current year on a
+     doctor's course timeline (2026-09-26, the doctor-pages run's round 2g,
+     D36): 0.7 → 1.25 → 1 over 450ms on an overshoot curve, fill `both` so the
+     first frame is already small. Tailwind v4 mints `animate-pop` from the
+     `--animate-*` namespace and emits the keyframes only where it is worn.
+     It animates `transform`, so it COMPOSES with a `scale-*` utility (v4's
+     separate `scale` property): the lit dot, which also wears `scale-125`,
+     lands at 1.25; the year, at 1. Every wearer pairs it with
+     `motion-reduce:animate-none` (§9). Consumer: sections/DoctorCourses/
+     CourseTimeline (the lit dot and the lit year). Declared AFTER the aura
+     on purpose: tests/unit/aura-token.test.ts reads this block up to its
+     first closing brace, and the keyframes below bring the first ones. */
+  --animate-pop: pop 450ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+
+  @keyframes pop {
+    from {
+      transform: scale(0.7);
+    }
+    60% {
+      transform: scale(1.25);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  /* THE FORWARD — the "come for you on a theoretical z axis" the owner asked
+     of the current subsection of a doctor's course timeline (2026-09-26, the
+     doctor-pages run's round 2j, D44c): the WHOLE group — its stretch of
+     line, its dot, its year, its courses — grows toward the viewer, drawn
+     1 → 1.06 → 1.04 over 450ms on the pop's overshoot curve, and STAYS at
+     1.04 for as long as it is current. THE KEYFRAMES ARE RELATIVE TO THE
+     WEARER'S OWN SETTLED SIZE (G2-R2 tier 2, react F1, 2026-09-26): the
+     current group wears a static `scale-104`, and this animation carries
+     ONLY the overshoot on top of it — 0.9615 → 1.0192 → 1 on `transform`,
+     which multiplies with the `scale` property, so the product is the drawn
+     1 → ~1.06 → 1.04 above (MEASURED peak ~1.065 at ~160ms: the overshoot
+     curve runs over each keyframe interval separately, so the 60 % stop is
+     overshot too — true of the first cut as well). Why not 1 → 1.06 → 1.04 held by `fill: both`, as
+     the first cut had it: a value an ANIMATION holds is not a value a
+     TRANSITION can ease from — when the group stopped being current, the
+     computed transform dropped from 1.04 to `none` in ONE frame while its
+     opacity faded over 300ms (measured in Chromium, a 4 % pop-back). With
+     the settled size in a transitioned property, the wearer eases the
+     recede 1.04 → 1 over its own 300ms; the ENTRY still starts at a drawn
+     1.0 because the wearer's current state transitions opacity alone (the
+     `scale` jumps to 1.04 at once, the animation begins at 0.9615 × 1.04 =
+     1.0). Same namespace, same composition rule as the pop above: it
+     animates `transform`, so a `scale-*` utility worn inside the group (the
+     lit dot's `scale-125`) multiplies with it.
+     `forward` is a legal keyframes name — NOT the `forwards` fill keyword,
+     which the shorthand's parser matches only with its final "s". Every
+     wearer pairs it with `motion-reduce:animate-none` (§9); under reduced
+     motion only the static `scale-104` remains — a size, not a motion — and
+     the wearer's `motion-reduce:transition-none` makes both directions an
+     instant switch. Consumer: sections/DoctorCourses/CourseTimeline
+     (the current group). Declared AFTER the aura for the same reason as the
+     pop: tests/unit/aura-token.test.ts reads this block up to its first
+     closing brace. */
+  --animate-forward: forward 450ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+
+  @keyframes forward {
+    from {
+      transform: scale(0.9615);
+    }
+    60% {
+      transform: scale(1.0192);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
 }
 
-/* Semantic color roles — exactly 17 (`success` dropped, §15.1) + the one
-   additional accent-decorative role. */
+/* Semantic color roles — exactly 22: §15.1's 17 (`success` dropped) +
+   accent-strong (D56, 2026-09-26) + ink-faint (D58, the same day) + accent
+   (the menu buttons' lavender, owner 2026-10-01) + the brand's two, brand-grey
+   and brand-lilac (the same day, the logotype's own — the charter sits on
+   their declaration) — plus
+   the one additional accent-decorative role, and the floss ribbon's colour
+   and its shadow's, --ribbon and --ribbon-shadow (§15.26): raw values read
+   by lib/ribbon-draw for its canvases, so they get NO utility name in the
+   `@theme inline` block below — nothing paints with a class.
+
+   `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
+   modal's scrim IS the backdrop pseudo-element, `backdrop:bg-scrim` compiles to
+   `background-color: var(--scrim)`, and engines older than 2024 (Chrome 122 /
+   Safari 17.4 / Firefox 120) do not inherit custom properties into `::backdrop`
+   — the variable would resolve to nothing and the dim would silently vanish on
+   exactly the older phones §1 cares about. Declaring the tokens ON the
+   pseudo-element works in every browser that has <dialog> at all (Tailwind's own
+   reset targets ::backdrop the same way), and keeps ONE value in ONE place: a
+   future dark theme adds `, [data-theme='dark'] ::backdrop` to its own block.
+   tests/unit/backdrop-token-layer.test.ts fails if this entry is ever trimmed. */
 :root,
-[data-theme='light'] {
+[data-theme='light'],
+::backdrop {
   /* surfaces */
   --page: #faf9f7;
   --surface: #ffffff;
@@ -45,6 +264,32 @@
   --ink: #2b2724;
   --ink-strong: #1a1714;
   --ink-muted: #5b554f;
+  /* faint ink — the 19th semantic role (D58, owner 2026-09-26, after D57's
+     deep violet keywords: "what if you make the faint text lighter").
+     THE CHARTER: washed prose that still passes body text's 4.5:1 — the
+     owner's "relatively washed or ghost" for a doctor's own words
+     (sections/PersonnelCard D8) given an ink of its own, lighter than
+     --ink-muted, so the --accent-strong keywords inside it stood further
+     off — until 2026-10-02, when the key words took --accent, the doctor
+     card button's lavender, at this ink's own lightness (1.02:1; the owner:
+     "i want that highlighted text to actually be the color of the current
+     mai multe despre mine button"). Consumers: the two doctor quotes ONLY
+     — PersonnelCard's <blockquote> and sections/DoctorIntro's CredoCard <p>
+     — and the
+     STAND-IN of the first in ui/Ribbon's stories (Ribbon.fixtures.tsx,
+     §15.26): a stand-in judged beside the ribbon must wear the card's own
+     ink, on the same white ground. Every other quiet text keeps --ink-muted.
+     Measured (WCAG 2.2 relative luminance, sRGB): 4.94:1 on --surface white ·
+     4.70:1 on --page — the ground that binds: #79726c, three units lighter
+     per channel, already reads 4.499:1 there · 1.02:1 against --accent, the
+     key words' ink since 2026-10-02: the same lightness, the key words set
+     apart by hue and weight (1.89:1 against the --accent-strong they wore
+     before, where --ink-muted read 1.27:1) · 1.49:1 against --ink-muted.
+     NOT FOR THE TINT: 3.24:1 on sections/TintedBand's 30% lilac ground
+     (#d4cfdc), under 4.5:1 — prose on the lilac band keeps --ink or
+     --ink-muted. Dark grounds are outside the charter: 3.24:1 on
+     --inverse-surface. */
+  --ink-faint: #766f69;
   --ink-inverse: #ffffff;
   /* lines */
   --line: #d8d4cf;
@@ -56,11 +301,300 @@
   /* focus */
   --focus: #1a1714;
   /* specials */
-  --star: #b29126; /* LOCKED */
+  --star: #d4af37; /* LOCKED (§15.1) — value amended 2026-09-12 by the owner (reviews pack round 2): the old site's own gold, was #b29126 */
+  /* The modal's dim. The Hero's own veil is the old site's 0.40, spelled in
+     sections/Hero (§15.1's rider, owner 2026-09-20) — this token is untouched. */
   --scrim: rgb(0 0 0 / 0.55); /* LOCKED floor — never below 0.55 */
   --error: #b3261e;
-  /* additional role outside the 17 (§15.1 amendment) */
-  --accent-decorative: #7a6d9c; /* pending hue confirm vs the real logo */
+  /* accent ink — the 18th semantic role (D56, owner 2026-09-26: "a darker
+     lilla"). THE CHARTER: accent ink for body-size text — the lilac that
+     passes 4.5:1; keywords were its first consumer (ui/Keyword, from D56
+     until 2026-10-02, when the owner moved them to --accent below: "i want
+     that highlighted text to actually be the color of the current mai multe
+     despre mine button"), and the `accent` button family's press face and
+     darkened hover label are its consumers today (--accent's charter);
+     `accent-decorative` stays the display/graphics role.
+     THE VALUE is D57's (the same day: "a more seeable one … make it just jump
+     at you more, as keyword, important information"): #4b3a86, darker AND
+     more saturated than D56's #655885 — R75 G58 B134, a clear violet.
+     Measured (WCAG 2.2 relative luminance, sRGB): 9.34:1 on --surface white ·
+     8.88:1 on --page · 6.12:1 on sections/TintedBand's 30% lilac ground
+     (#d4cfdc) — over 4.5:1 on all three light grounds (D56's value read 4.18:1
+     there, under the bar) · 1.27:1 against --ink-muted, the accent now the
+     DARKER of the two (D56's was the lighter, 1.15:1): beside muted copy it
+     stands apart by lightness as well as by hue and its consumer's weight ·
+     1.91:1 against --ink-strong. Dark grounds are outside the charter: 1.71:1
+     on --inverse-surface.
+     A literal, not a mix: the day §15.1's hue confirm moves
+     --accent-decorative, this value is re-derived by hand. */
+  --accent-strong: #4b3a86;
+  /* accent — the 20th semantic role (owner 2026-10-01: "i need them not to be
+     that green. i want them to be same color as in old website on the same top
+     bar buttons"). THE CHARTER: the lavender a QUIET control turns — the one
+     colour of ui/TextButton's hover label, current-page label and underline
+     (the Header's menu row and panel, the Footer's links, the price menu's
+     categories) — and, since later the same day, the `accent` FAMILY of
+     ui/Button and ui/GlyphButton (their THE TWO FAMILIES: the same faces with
+     cta → accent, cta-hover → accent-strong, the hairline → inset-ring-accent),
+     worn per call site on the owner's word by the doctor card's one link, the
+     Hero's two calls to action, the Footer's four discs, the reviews deck's
+     prev/next and the map band's two row discs — and, the same day, the GROUND
+     of ui/Avatar's initials disc on the review cards, white letters on it
+     (the old site's lavender letters ground, back on an AA-passing shade;
+     CLAUDE.md §15.30) — and, since that evening, the Header's Contact button
+     in the bar and in the phone's panel: pinned GREEN that morning on the
+     owner's "contact button MUST STAY GREEN AS IT MUST JUMP INTO YOUR EYES",
+     and turned on his own reversal — "also paint the contact button from top
+     bar a lilla and make it wider, more seszable and adjust to widest
+     language form" (Header.test.tsx pins the lilac on both) — and, later that
+     evening, the fixed corner's call and WhatsApp discs, held back that
+     morning ("do not modify at least yet the hovering buttons from bottom
+     right") and turned on the owner's "i thaught i told you to refactor the
+     whatsapp and call buttons to be lilla too" (FloatingActions.test.tsx
+     pins the lilac) — and the contact dialog's own two buttons, on the
+     owner's "so all is green there rurn to liliac" (ContactModal.test.tsx
+     pins the lilac) — and, since 2026-10-02, as TEXT INK: ui/Keyword's key
+     words inside the two doctor quotes, on the owner's "i want that
+     highlighted text to actually be the color of the current mai multe
+     despre mine button" — body text, so 4.5:1 binds, met on their white
+     cards at 5.06:1 (the census names the pages that render them, and the
+     tint stays barred for them like for every label) — and, the same day,
+     the language banner's accept link, a 16px label on the banner's own
+     opaque white card, on the owner's "drop that green and replace with the
+     casual lilla from the app, the one that the "mai multe despre mine"
+     button has": 5.06:1 at rest, --accent-strong 9.34:1 under the pointer
+     (LanguageBanner.test.tsx pins the paint). As an outline's hover
+     GROUND the lavender family greys
+     to --line, not --line-subtle (the owner, the same evening: "on hover of
+     vezi serviciile i want little darker shade of gray"): --accent-strong
+     reads 6.33:1 on it and the --accent border 3.43:1; the green cell keeps
+     --line-subtle because --cta-hover would read 4.47:1 on --line, under
+     4.5:1 (tests/unit/accent-census.test.ts measures all three). The old top
+     bar painted all three with its own `--accent`,
+     rgb(131 119 163) = #8377a3 (top-bar.tsx: `text-accent`, `after:bg-accent`)
+     — which reads 4.09:1 on white and 3.89:1 on --page, under the 4.5:1 an
+     18px medium label owes SC 1.4.3: the current page's label is a RESTING
+     state, so the bar binds, and axe fails it in every story that shows one.
+     THE VALUE is that accent with its hue and chroma kept (OKLCH H 296.6°,
+     C 0.069) and its lightness lowered to the lightest step that passes on
+     THE GLASS FLOOR: the Header pill and the phone's menu panel are
+     bg-surface/95 — 95% white, see-through — so the darkest ground they can
+     make is 95% white over black, #f2f2f2. It is not hypothetical: the open
+     menu dims the page behind the panel with the scrim, axe measured the
+     panel at #f8f8f8 there, and a dark photograph under the scrim goes lower.
+     L 0.597 → 0.546. The first pick, #786c98 (the page ground's pass line),
+     read 4.49:1 on that #f8f8f8 and failed the Menu Open story's axe run.
+     Measured (WCAG 2.2 relative luminance, sRGB): 4.52:1 on the glass floor
+     #f2f2f2 · 4.76:1 on the open panel's #f8f8f8 · 4.81:1 on --page · 5.06:1
+     on --surface white · the same as the 2px underline, whose SC 1.4.11 bar
+     is 3:1 · 2.93:1 against --ink, the resting label it takes over from on
+     hover (the green it replaces read 2.24:1 there) · AS A BUTTON FACE
+     (2026-10-01): white ink on it 5.06:1, its inset hairline 5.06:1 on
+     --surface, its border 4.81:1 over --page; as an outline's hover label it
+     would read 3.43:1 on --line (4.07:1 on --line-subtle), under 4.5:1, so
+     that label darkens to --accent-strong (6.33:1 on --line, 7.51:1 on
+     --line-subtle) while the border stays (3:1 cleared at 3.43:1) — the
+     green's own cta → cta-hover step; the press face is white on
+     --accent-strong, 9.34:1 (tests/unit/accent-census.test.ts measures all of
+     it from these lines).
+     NOT FOR THE TINT: 3.32:1 on sections/TintedBand's 30% lilac ground.
+     Dark grounds are outside the charter.
+     Beside its siblings: --accent-decorative (#7a6d9c) is the display and
+     graphics lavender and reads 4.44:1 on --page, under the bar — this role is
+     the TEXT grade of the same lavender; --accent-strong (#4b3a86) is the deep
+     violet of the family's press and hover faces — and of the keywords until
+     2026-10-02. A literal, not a mix: the day §15.1's hue confirm
+     moves --accent-decorative, this value is re-derived by hand, like
+     --accent-strong — tests/unit/accent-census.test.ts measures it on every
+     ground named here. */
+  --accent: #746894;
+  /* additional role outside the 22 (§15.1 amendment) */
+  --accent-decorative: #7a6d9c; /* the real logo's lilac is --brand-lilac #8576b1 (2026-10-01) — moving this role to it is the owner's call, §15.28; --ribbon follows it (tests/unit/ribbon-tint-sync.test.ts) */
+  /* the ribbon's colour and its shadow's (§15.26). ONE colour since 2026-09-30 (owner: "drop the dark mauve,/
+     black one and use the mov"), and since 2026-10-02 the shade of sections/TintedBand's ground — the owner,
+     with a screenshot of that ground: "i want it on every screen to be the shade that the background of
+     "IN NUMBERS …" is while also maintaining the accents of light upon it". --accent-decorative at 30% over
+     --page, rgb(212 207 220): a LITERAL, not a mix, because lib/ribbon-draw reads it through a canvas
+     round-trip that answers #rrggbb; tests/unit/ribbon-tint-sync.test.ts holds it to the band's own mix, so
+     the day §15.1's hue confirm moves --accent-decorative, that test names the new value. It is the colour a
+     face of the ribbon turned to the viewer SHOWS — lib/ribbon-paint's THE ANCHORED LIGHT brightens it where
+     the ribbon turns to the light and dims it where it turns away. Until that day the ribbon wore the old
+     site's lavender #8377a3, which its light showed at about rgb(97 87 114). Its shadow keeps the old
+     palette's dark mauve, the colour of the ribbon's second face until 2026-09-30: */
+  --ribbon: #d4cfdc;
+  --ribbon-shadow: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness */
+  /* THE BRAND'S TWO COLOURS (owner, 2026-10-01, with the clinic's real mark:
+     "Lilac/purple: #8576B1 (RGB 133, 118, 177) · Grey: #939598 (RGB 147, 149,
+     152)" — "on Premium the gray and on smile the liliac"). THE CHARTER: the
+     LOGOTYPE and nothing else — sections/Wordmark's two words are the only
+     wearers, and tests/unit/logotype-census.test.ts keeps it so. Both FAIL
+     body text's 4.5:1 on both light grounds (measured, WCAG 2.2 relative
+     luminance): grey 3.00:1 on --surface · 2.85:1 on --page; lilac 4.02:1 ·
+     3.82:1 — legal on the brand name alone, by WCAG 2.2 SC 1.4.3's own
+     logotype clause (Wordmark.tsx, THE TWO COLOURS). Never an ink for prose,
+     never a control's face. The .svg mark paints with the same two values as
+     literals (a file loaded through <img> cannot read a token) — the census
+     holds the pair in sync. */
+  --brand-grey: #939598;
+  --brand-lilac: #8576b1;
+}
+
+/* THE RIBBON'S LANES, REGISTERED (§15.26). ui/Ribbon DECLARES these on the box
+   that lays its cards out — the gauge from the column's width in container
+   units, the lanes from the gauge — and a card READS the two lanes as its
+   padding (24px outside a ribbon: the initial values). Registered, because an
+   UNREGISTERED custom property is pasted as text where it is used, so `cqw`
+   inside it is measured against the NEAREST container of the box that reads
+   it — and a card is a container of its own (ui/Card's `@container`): the
+   lanes came out up to 13.4px too narrow on the card and inside it. A
+   `<length>` registration computes the value where it is declared and
+   inherits a plain length: the rule to 0.001px, on the card and inside it
+   (measured in Chromium and WebKit at nine widths, the ribbon consult's
+   lanes probe). The GAUGE (`--ribbon-k`) and the GAP (`--ribbon-gap`) are
+   NOT registered — tried both ways, measured (fold round 2): each is read on
+   the column that declares it, where its `cqw` meets the ribbon's root
+   whether registered or not — the lanes above are computed there from it,
+   and the column's own gap and head room read it there. A reader BELOW the
+   column resolves them at itself: a consumer's list spaced by
+   `--ribbon-gap` (ui/Ribbon's route A) sits directly in the column for that
+   reason. KEEP IN SYNC: the numbers are lib/ribbon-model's gaugeRule() and
+   lanes(), spelled in CSS in ui/Ribbon's `COLUMN`. */
+@property --ribbon-lane-top {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 24px;
+}
+@property --ribbon-lane-side {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 24px;
+}
+/* THE RIBBON'S UNIT (§15.26, §15.25 round 2): one of lib/ribbon-model's card
+   units, in CSS px — 100px, the prototype's, unless a scaled design says
+   otherwise (`design-scale` below makes it 100 of the design's pixels).
+   ui/Ribbon spells its gauge, lanes, gap and room from it and
+   lib/ribbon-draw reads it off the ribbon's root to turn the model's units
+   into canvas pixels, so a ribbon inside a scaled design is the reference
+   ribbon, scaled — not a new ribbon for a wider column. Registered for the
+   lanes' reason: it is read as a plain length where it is used, and
+   lib/ribbon-draw needs a computed length, not text. */
+@property --ribbon-unit {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 100px;
+}
+
+/* THE DESIGN SCALE (§15.25 round 2 — owner, 2026-10-01: "i want card and
+   component and all contents to adjust in size harmonically all at once and
+   mentain raports as on following sizes: 1401x1063. i might even make it
+   myself smaller for it to fit in a different container or smth but i think
+   i'd want same rations to still remian"). A box that wears `design-scale`
+   measures every theme LENGTH in `--scale-px` — one pixel of a design drawn
+   at a fixed reference width — instead of in rem: the spacing step, every
+   text step, every container step, every radius, its own font size (the
+   §15.1 body base, 18) and the floss ribbon's unit. Tailwind v4 compiles each
+   utility to its theme variable — `p-6` is `calc(var(--spacing) * 6)`,
+   `text-lg` is `var(--text-lg)`, `max-w-md` is `var(--container-md)` (read
+   off the built sheet) — so remapping the variables on ONE box rescales every
+   utility inside it and no atom is edited: §3's theme mechanism ("future
+   themes remap the same variable names") applied to lengths. The SCALE stays
+   untouched (§3): every step keeps Tailwind's own ratio, each multiplier
+   below is its default rem × 16; only the unit moves. Letter spacing (em)
+   and line heights (unitless) follow the font by themselves.
+   THE CONSUMER declares `--scale-px` from its container's width — `calc(min(
+   100cqw, cap) / reference)` — and wears this utility under the SAME
+   container variant, so below its regime nothing changes and rem stays the
+   unit (§7). Since 2026-10-02 that declaration is spelled ONCE, in
+   ui/Container's THE BAND SCALE (`bandScaleClasses`, with its cap in
+   `bandColumnClasses` and a `--band-zoom` multiple a box inside may set),
+   and every band under the Home hero and of the Team page wears it — one
+   heading size and one offset for all of them (§15.32). `--scale-px` is
+   REGISTERED for the ribbon lanes' reason (above):
+   an unregistered one is pasted as text and its `cqw` measured again against
+   the nearest container of whichever box reads it — and every card in a band
+   is a container — so the band's design pixel would come out a card's
+   (measured: 86.48px where 100 was due, Chromium and WebKit agreeing to
+   0.001px). Registered, it is computed once, where it is declared, and
+   inherited as a plain length.
+   NOT remapped, on purpose: borders and outlines spelled in px — a hairline
+   stays a hairline, a focus ring stays the ring §9 measured, and ui/Card's
+   3px frame stays 3px (an engine FLOORS a border to whole device pixels, so
+   a frame in the step lost a pixel at the reference itself; the card's
+   PADDING carries the step instead — ui/Card's THE SUM RULE). The census
+   (tests/unit/design-scale.test.ts) holds every multiplier to Tailwind's
+   default and every default length step to a line here.
+   THE BARE RULE SHIPS: Tailwind generates a utility for every mention of its
+   name in a scanned file — comments and these docs included — so the bare
+   `.design-scale` sits in the site's stylesheet beside the variant form the
+   band wears (≈0.4 KB gzipped); accepted, rather than banning the word from
+   the comments that explain it. A test sets its design pixel with an INLINE
+   style, never with an arbitrary class, which would ship a rule only the
+   test reads. */
+@property --scale-px {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 1px;
+}
+/* THE SCALABLE VARIANT — where a scaled design may apply AT ALL (G2, the
+   owner's answer of 2026-10-01: "Touch devices unchanged"). Two conditions,
+   spelled once, worn as `scalable:` in front of a consumer's own container
+   step: (1) `(pointer: fine)` — a mouse or trackpad is the primary input, so
+   a laptop or a desktop; every touch device, a tablet held either way
+   included, keeps its rem design at any width; (2) `@supports (color: rgb(from
+   red r g b))` — the engine REGISTERS custom properties: relative colour
+   syntax shipped in the same releases as `@property` in Safari (16.4) and
+   Firefox (128) and after it in Chrome (119; `@property` 85), read off
+   caniuse-lite. Without registration `--scale-px` would be pasted as text and
+   its `cqw` measured against each card (the 86.48 above): the cards' contents
+   would draw at ≈0.865 of the design (the reviewers measured it), so an
+   engine that cannot register keeps today's rem band instead. A Chrome 85–118
+   loses the scale too — harmless, it sees the rem band. */
+@custom-variant scalable {
+  @supports (color: rgb(from red r g b)) {
+    @media (pointer: fine) {
+      @slot;
+    }
+  }
+}
+@utility design-scale {
+  --spacing: calc(var(--scale-px) * 4);
+  --text-xs: calc(var(--scale-px) * 12);
+  --text-sm: calc(var(--scale-px) * 14);
+  --text-base: calc(var(--scale-px) * 16);
+  --text-lg: calc(var(--scale-px) * 18);
+  --text-xl: calc(var(--scale-px) * 20);
+  --text-2xl: calc(var(--scale-px) * 24);
+  --text-3xl: calc(var(--scale-px) * 30);
+  --text-4xl: calc(var(--scale-px) * 36);
+  --text-5xl: calc(var(--scale-px) * 48);
+  --text-6xl: calc(var(--scale-px) * 60);
+  --text-7xl: calc(var(--scale-px) * 72);
+  --text-8xl: calc(var(--scale-px) * 96);
+  --text-9xl: calc(var(--scale-px) * 128);
+  --container-3xs: calc(var(--scale-px) * 256);
+  --container-2xs: calc(var(--scale-px) * 288);
+  --container-xs: calc(var(--scale-px) * 320);
+  --container-sm: calc(var(--scale-px) * 384);
+  --container-md: calc(var(--scale-px) * 448);
+  --container-lg: calc(var(--scale-px) * 512);
+  --container-xl: calc(var(--scale-px) * 576);
+  --container-2xl: calc(var(--scale-px) * 672);
+  --container-3xl: calc(var(--scale-px) * 768);
+  --container-4xl: calc(var(--scale-px) * 896);
+  --container-5xl: calc(var(--scale-px) * 1024);
+  --container-6xl: calc(var(--scale-px) * 1152);
+  --container-7xl: calc(var(--scale-px) * 1280);
+  --radius-xs: calc(var(--scale-px) * 2);
+  --radius-sm: calc(var(--scale-px) * 4);
+  --radius-md: calc(var(--scale-px) * 6);
+  --radius-lg: calc(var(--scale-px) * 8);
+  --radius-xl: calc(var(--scale-px) * 12);
+  --radius-2xl: calc(var(--scale-px) * 16);
+  --radius-3xl: calc(var(--scale-px) * 24);
+  --radius-4xl: calc(var(--scale-px) * 32);
+  --radius-soft: calc(var(--scale-px) * 16);
+  --ribbon-unit: calc(var(--scale-px) * 100);
+  font-size: calc(var(--scale-px) * 18);
 }
 
 @theme inline {
@@ -71,6 +605,7 @@
   --color-ink: var(--ink);
   --color-ink-strong: var(--ink-strong);
   --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
   --color-ink-inverse: var(--ink-inverse);
   --color-line: var(--line);
   --color-line-subtle: var(--line-subtle);
@@ -81,10 +616,124 @@
   --color-star: var(--star);
   --color-scrim: var(--scrim);
   --color-error: var(--error);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-decorative: var(--accent-decorative);
+  --color-brand-grey: var(--brand-grey);
+  --color-brand-lilac: var(--brand-lilac);
 }
 
 @layer base {
+  /* The classic-scrollbar gutter is RESERVED even while a scroll lock
+     (overflow: hidden) hides the bar — board §5·A2's site-wide line, shipped
+     early for the Header (owner, 2026-08-16). Without it, NavMenu's page
+     freeze removes the scrollbar, the viewport widens by its width, and every
+     viewport-relative box — the Header pill's 10vw margins first of all —
+     visibly resizes the moment the menu opens. Overlay scrollbars (macOS
+     default) reserve no gutter and are unaffected. ContactModal's lock will
+     lean on this same line (NavMenu.tsx tells the story). */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  /* THE TWO-SIDED FOCUS CLEARANCE — SC 2.4.11 Focus Not Obscured (Minimum), AA
+     and new in WCAG 2.2, by the WCAG-documented technique C43. Three surfaces
+     float over the page at every scroll position: the Header's blurred glass
+     pill above, and the two fixed corner discs below. A focusable that Tab or
+     an #anchor jump brings to rest behind any of them is obscured together with
+     its focus ring — and "visible through blurred glass" is not visible.
+     Tab going DOWN is safe on its own (the browser scrolls the target to the
+     BOTTOM of the viewport); Shift+Tab going UP scrolls it to the TOP, i.e.
+     behind the pill, and the skip-link's own #main jump does the same.
+     These are SHELL-tier lines: §6 forbids a section from styling the shell, so
+     the numbers are DERIVED in the sections that own the boxes and SPELLED here
+     — the same division the `scrollbar-gutter` rule above already practices.
+     Their authoritative homes, by stable anchor (§17.7):
+       · 6rem  — Header.tsx "THE MOUNT CONTRACT" (a): `sticky top-4` + `h-20`,
+                 the pill's reach, and a SINGLE value at every width since the
+                 owner's 2026-09-04 "make top bar same size on every screen as
+                 it is on a standard pc screen now". (An earlier spelling the
+                 same day stepped it 5rem → 6rem at xl, mirroring a row that
+                 grew only on desktop; the owner asked for the desktop size
+                 everywhere, so both the step and the container-step arithmetic
+                 it needed are gone.) The same reach is derived independently by
+                 NavMenu's panel cap (6.5rem = reach + the `mt-2` gap) and by
+                 FloatingActions' `--stem-inset` (7rem = reach + the corner's
+                 own 1rem offset). Four spellings that move together (design
+                 board P9a) — change one and the debt reopens.
+       · 9.5 / 10.5 / 11.5rem — FloatingActions.tsx's mount-contract obligation
+                 (a). These three steps used to be the INVISIBLE half of a pair:
+                 that file also rendered a visible clearance spacer of the same
+                 heights, as the last box in normal flow. THE SPACER WAS REMOVED
+                 BY THE OWNER ON 2026-09-04 ("i do not need that empty space
+                 below the footer as the buttons for language and phone do not
+                 cover info/anything clickable in the footer"), so these rules
+                 now carry the scroll-clearance duty ALONE — do not read them as
+                 a duplicate of something else and delete them.
+                 THE NUMBERS GREW THE SAME DAY (fb-353): the right corner became
+                 a STACKED PAIR — a WhatsApp disc above the phone — so the
+                 deepest thing a focusable must be scrolled clear of is two
+                 discs, not one. Each step is 1rem corner offset + disc +
+                 0.5rem stack gap + disc + 1rem headroom, which is why they step
+                 with the discs (--disc-size 3.5 → 4 → 4.5rem at Tailwind's
+                 untouched xl/2xl, §3):
+                   base 1 + 3.5 + 0.5 + 3.5 + 1 = 9.5rem
+                   xl   1 + 4   + 0.5 + 4   + 1 = 10.5rem
+                   2xl  1 + 4.5 + 0.5 + 4.5 + 1 = 11.5rem
+                 The `env(safe-area-inset-bottom)` term belongs to EVERY
+                 step, for the same reason the controls' own offsets carry it:
+                 drop it from the upper two and a viewport-fit=cover phone
+                 under-clears by the inset it lifted the controls with. Until
+                 the shell opts into
+                 `viewport-fit: cover` (dormant, decided with the first
+                 full-bleed hero) the term resolves to 0 and costs nothing.
+     Media queries are legal at THIS tier and only here (§6.5 reserves them for
+     page-level layout; a section would use container queries).
+     src/app/[locale]/shell.test.tsx pins all four numbers against the real
+     compiled sheet, one assertion per step.
+     ONE MORE READER OF THE BOTTOM STEPS (banner-lane G2 a11y, 2026-09-04;
+     re-derived 2026-09-05 for fb-353's stacked corner):
+     sections/LanguageBanner lifts its fixed card by the TALLEST step
+     (calc(11.5rem + env(safe-area-inset-bottom))), so a Tab-scrolled target
+     keeps a visible sliver under the card wherever the local step is smaller
+     (9.5/10.5rem) and rests FLUSH at 2xl, where step and lift are equal. The
+     bond is an inequality — the card's lift must EXCEED every step it
+     overlaps, never the reverse — argued in that component's SC 2.4.11
+     comment; the §9 page-tier walkthrough owns the entirely-hidden check,
+     with §14's CTABanner the named trigger. */
+  html {
+    scroll-padding-top: 6rem;
+    scroll-padding-bottom: calc(9.5rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 1280px) {
+    html {
+      scroll-padding-bottom: calc(10.5rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (min-width: 1536px) {
+    html {
+      scroll-padding-bottom: calc(11.5rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  /* In-page jumps GLIDE instead of teleporting — the Footer's "back to top"
+     link (href="#top") is the first consumer, and any future skip-link or
+     anchor gets it for free. A §6.7-legal line: scroll behaviour is document
+     state, so it belongs to the reset tier and NOT to a section (§6.1 — a
+     section may never style the shell), exactly like the scrollbar-gutter rule
+     above.
+     Wrapped in prefers-reduced-motion: no-preference because smooth scrolling
+     is vestibular motion (§9): with the query, a user who asked for less
+     motion gets the instant jump, and the link still works identically —
+     nothing is conveyed by the animation. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
   body {
     /* §15.1: body base 1.125rem. html stays 16px so rem/user zoom behave (§7). */
     font-size: 1.125rem;
@@ -92,9 +741,41 @@
     background-color: var(--page);
     color: var(--ink);
     font-family: var(--font-body);
+    /* §15.14 (owner, 2026-09-01): long words may break at syllable points —
+       German compounds first of all, §8.4's expansion headroom at its extreme.
+       Inherited everywhere from here; engages only under a declared language
+       (`<html lang>` per locale on the site, §8.10 — the Storybook decorator
+       stamps the same attribute so stories and baselines exercise it too). */
+    -webkit-hyphens: auto;
+    hyphens: auto;
   }
 
-  /* Long prose aligns logically (§15.1) — `start`, never `left`. */
+  /* A closed <dialog> is invisible even where the element is not implemented
+     (Modal board D1b): browsers without <dialog> support — the ~3% frozen on
+     2019–2021 software — treat it as a plain box and would render the CLOSED
+     modal inline, in the page flow. The modal still cannot OPEN there (no
+     showModal()), which is the honest outcome; this line just keeps the page
+     clean. A §6.7-legal reset-tier rule, same tier as the scrollbar-gutter line
+     above, and inert for supporting engines (their UA sheet already says it).
+     `open:flex` on the atom is the other half: a bare `flex` utility would win
+     over this rule and un-hide the closed dialog everywhere. */
+  dialog:not([open]) {
+    display: none;
+  }
+
+  /* Long prose aligns logically (§15.1) — `start`, never `left`.
+     A FENCE, not a default (text-align's initial value is already `start`):
+     this rule's one observable job is refusing INHERITED centring, so a
+     wrapper's text-center can never blanket-centre prose by accident. Centring
+     prose is a PER-ELEMENT act — the utility goes on the p/li/blockquote
+     itself (atoms merge the caller's className onto their host element, §6.8)
+     and wins by layer order (utilities beats base); breakpoint re-assertions
+     are per-element too and use text-start, never text-left; wrapper-level
+     [&_p]:text-center is barred in every spelling — it would win the cascade,
+     which is exactly why. Real headings are OUTSIDE this selector on purpose:
+     display text may inherit centring, prose may not. Precedents: the
+     ContactModal lead's per-paragraph comment · the Footer copyright's.
+     DECIDED on the text-align board (§15.15 b, owner 2026-09-04). */
   p,
   li,
   blockquote {

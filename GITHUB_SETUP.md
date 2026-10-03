@@ -26,6 +26,10 @@ Also add at repo root: `.nvmrc` containing `24` (the workflows read it).
   `fix/…`, `migrate/…`) branch off it and merge back via PR.
 - **Flow:** feature → PR → `develop` (fast CI lane) → promotion PR
   `develop → main` (release gate incl. the full visual suite) → merge → deploy.
+  *(Amended 2026-08-02:)* the release gate **fails instantly for any PR into
+  `main` whose source branch is not `develop`** (guard step in release.yml) —
+  promotions have exactly one origin. Merge methods are ruleset-enforced:
+  squash-only into `develop`, merge-commit-only into `main`.
 
 **One-time settings (GitHub → Settings):**
 1. Create `develop` from `main`; set `develop` as the default branch.
@@ -136,7 +140,7 @@ blocked by hookify + re-checked by CI.
 | Translation-parity test (all 5 locale JSONs share one key set) | | ✅ (part of Vitest) | ✅ | ✅ | |
 | Storybook builds | | | ✅ | ✅ | |
 | Site export builds | | | ✅ | ✅ | |
-| Internal link + hreflang check (linkinator 8.x over `out/`) | | | ✅ | ✅ | |
+| Internal link + hreflang check (linkinator 8.x over `out/`) | | | ✅ | ✅ the PRODUCTION shape, served under its base path (`tools/check-export-links.mjs`, 2026-10-03) — also run on the artifact before every Pages deploy | |
 | **Visual pixel suite (Playwright)** | | | | **✅ linux set (pinned container)** | **✅ darwin set — the pre-commit regression net, run in the commit ritual** |
 | Lighthouse / Core Web Vitals | | | | Phase 4+ manual, optional job later | |
 
@@ -171,6 +175,17 @@ npm run visual:update -- --workers=2
   intentional visual changes accumulate — at latest before each
   `develop → main` promotion, or the release gate will fail on stale
   baselines.
+
+  **Expected asymmetry (recorded 2026-09-02, org-review board):** the darwin
+  set is the day-to-day net and grows with every lane (~165 PNGs at the time
+  of writing); the linux set refreshes in batches and may lag far behind
+  (4 PNGs at the same moment). A sparse linux set is the WORKFLOW, not
+  corruption — the refresh trigger is the promotion above, never parity for
+  its own sake. Also budget the calendar in the promotion ritual: the Footer's
+  copyright year is read at BUILD time, so the first baseline run of a new
+  year changes every Footer shot in BOTH sets with zero code change
+  (Footer.tsx's YEAR docstring carries the full note) — re-record, don't
+  investigate.
 
 Review changed PNGs in the git diff, commit them with the code change, and tick
 the PR-template box. The failure report (`playwright-report/`) shows

@@ -1,37 +1,136 @@
 {
   "common": {
     "siteName": "Premium Smile",
+    "skipToContent": "Sari la conținut",
     "nav": {
       "home": "Acasă",
       "services": "Servicii",
       "team": "Echipa",
-      "blog": "Blog"
+      "blog": "Blog",
+      "ariaLabel": "Navigare principală"
     },
     "actions": {
       "call": "Sună acum",
-      "contact": "Contact"
+      "contact": "Contact",
+      "whatsapp": "Scrieți-ne pe WhatsApp"
+    },
+    "menu": {
+      "label": "Meniu"
+    },
+    "language": {
+      "switch": "{name}, schimbă limba",
+      "region": "Limbă",
+      "banner": {
+        "text": "Această pagină este disponibilă și în română.",
+        "accept": "Continuă în română",
+        "dismiss": "Închide"
+      }
+    },
+    "notFound": {
+      "title": "Această pagină nu există",
+      "message": "Adresa poate fi veche sau scrisă greșit, ori pagina a fost mutată între timp."
+    },
+    "brand": {
+      "ariaLabel": "{name}, acasă"
     },
     "footer": {
-      "rights": "Toate drepturile rezervate"
+      "tagline": "Totul pentru zâmbetul tău",
+      "contactLabel": "Contactează-ne aici",
+      "hoursTitle": "Program de lucru",
+      "closed": "Închis",
+      "salLabel": "Soluționarea alternativă a litigiilor",
+      "backToTop": "Înapoi sus",
+      "copyright": "© {year} {name}. Toate drepturile rezervate.",
+      "socialInstagram": "{name} pe Instagram",
+      "socialTiktok": "{name} pe TikTok",
+      "contactWhatsapp": "{name} pe WhatsApp",
+      "contactPhone": "Sună {name}"
+    },
+    "carousel": {
+      "role": "carusel",
+      "slideRole": "diapozitiv"
     }
   },
   "home": {
     "hero": {
       "title": "Zâmbetul tău, prioritatea noastră",
-      "subtitle": "Îngrijire stomatologică modernă, cu blândețe și profesionalism"
+      "region": "Prezentarea clinicii",
+      "slide": "Imaginea {index} din {total}",
+      "contact": "Programează o consultație",
+      "services": "Vezi serviciile",
+      "picker": "Alege imaginea (oprește derularea)"
+    },
+    "location": {
+      "eyebrow": "Ne găsești",
+      "title": "Vizitează clinica noastră",
+      "mapAlt": "Hartă cu locația clinicii {name}",
+      "directionsLabel": "Vezi direcțiile către {address}",
+      "callLabel": "Sună la {phone}"
+    },
+    "reviews": {
+      "eyebrow": "Părerea ta contează",
+      "title": "Alte păreri ale pacienților noștri",
+      "region": "Recenziile pacienților",
+      "previous": "Recenzia anterioară",
+      "next": "Recenzia următoare",
+      "slide": "Recenzia {index} din {total}",
+      "rating": "{rating, number} din 5 stele"
     }
   },
   "services": {
-    "title": "Serviciile noastre"
+    "title": "Serviciile noastre",
+    "prices": {
+      "menu": "Categorii",
+      "amount": "{amount, number} RON"
+    }
   },
   "team": {
-    "title": "Echipa noastră"
+    "title": "Echipa noastră",
+    "showcase": {
+      "eyebrow": "Familia Premium Smile",
+      "title": "Specialiștii cu care ne mândrim",
+      "profile": "Mai multe despre mine"
+    },
+    "roster": {
+      "eyebrow": "Echipa de sprijin",
+      "title": "Oamenii fără de care nu ne-am descurca"
+    },
+    "doctor": {
+      "philosophy": {
+        "eyebrow": "În cuvintele mele",
+        "title": "Filozofia mea"
+      },
+      "about": {
+        "eyebrow": "Biografie",
+        "title": "Despre {name}"
+      },
+      "courses": {
+        "eyebrow": "Formare continuă",
+        "title": "Cursuri și specializări"
+      },
+      "stats": {
+        "eyebrow": "În cifre",
+        "title": "Experiență confirmată în timp",
+        "lead": "Cifrele de mai jos spun, pe scurt, cum lucrăm: cu atenție, cu tehnologie modernă și cu grijă reală pentru fiecare pacient.",
+        "atLeast": "peste"
+      },
+      "schedule": {
+        "title": "Când mă găsiți la clinică",
+        "closed": "Închis"
+      }
+    }
   },
   "blog": {
     "title": "Articole și noutăți"
   },
   "contact": {
-    "title": "Contactează-ne",
+    "heading": "Ne găsiți la telefon sau pe WhatsApp.",
+    "callHeading": "Sunați-ne la",
+    "callHours": "Lun–Vin {weekOpens}–{weekCloses}",
+    "or": "sau",
+    "whatsappHeading": "Scrieți-ne",
+    "whatsapp": "Contactați-ne pe WhatsApp",
+    "whatsappNote": "Scrieți-ne oricând, revenim cât de curând.",
     "close": "Închide"
   }
 }

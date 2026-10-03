@@ -1,0 +1,616 @@
+import type { ComponentProps, ReactElement } from 'react';
+import { cx } from '@/lib/cx/cx';
+import { slotClone } from '../slot';
+
+// ui/Card — THE card surface, and the only place its geometry is spelled.
+// Promoted 2026-09-09 on the owner-approved board .claude/plans/card-atom.plan.md
+// (verdict fb-415), the moment the surface stopped being one section's
+// business: the two approved dossiers — TeamMemberCard and ServiceCard — plus
+// the archived ServicesTeaser <li> had each arrived at the SAME root, byte for
+// byte, from three independent readings of the old site. That is §4's
+// "identical mechanics, second consumer arrives → extract to the nearest tier
+// both may import" row, with the third and fourth consumers already named
+// (PostCard on the blog index, ReviewCard when the reviews band ships) and the
+// ClinicLocation breakdown's D2 trigger fired exactly as it was written.
+// The old repo's composite/card is NOT the ancestor: it took a `title` string
+// and rendered its own heading — the shape §6.2's "slots over modes" replaces —
+// and had zero app consumers, so the same inventory pass that opened this row
+// dropped it. What the old repo actually had was five divergent inline
+// spellings of one idea; this file is the reply.
+//
+// ── WHAT THIS ATOM OWNS: the paint (a background and a border — 1px on the
+// flat rows, 3px for `framed`), the corner radius (§15.1's 6px default, or
+// the old site's 1rem card corner through `corners="soft"` — THE CORNER AXIS
+// below, owner 2026-10-01), the inner padding, the inner COLUMN —
+// children stack vertically with one rhythm between them — and the
+// `@container` context that stack is measured against.
+//
+// ── WHAT IT DELIBERATELY DOES NOT OWN, each rejection with a named re-open
+// trigger, so a section lane can tell "not decided yet" from "decided no":
+//   · WIDTH (D3) — the parent's, always: a card fills the grid track, the
+//     flex slot or the block flow it is placed in. TRIGGER: a consumer that
+//     needs a card NARROWER than its slot re-opens width as an additive prop
+//     with a board note — until then `max-w-*` rides className as placement.
+//   · HEIGHT / MIN-HEIGHT (D4) — equal-looking cards in a row are the GRID's
+//     doing (`align-items: stretch` is the default) plus `flex-1` on the child
+//     that should absorb the slack, which is also what pins a price or a CTA
+//     line to the bottom of every card in the row. That pair is §8.4's
+//     expansion mechanism — German runs 30–35% longer and the tallest card
+//     sets the row — and a `minHeight` prop would freeze a number the longest
+//     language then overflows. A LONE card's floor is placement: `min-h-*`
+//     through className.
+//   · PER-SIDE PADDING (D5) — rejected twice over: `paddingTop`-style knobs
+//     are CSS with a prop's clothes on (the named-situations doctrine below),
+//     and a left/right pair would be the physical spelling §3's logical
+//     properties exist to avoid. TRIGGER: a `density` AXIS OF ITS OWN
+//     (`regular | compact`, its own lookup — padding AND gap move together as
+//     ONE situation, D8) joins when a SECOND proven card kind measures a
+//     different inset; never as a row of `tone`, which would couple paint to
+//     inset and make every future combination a new row. One lane's wish is
+//     not a second measurement.
+//   · A RADIUS KNOB — ui/Image's D3 reasoning, inherited: a per-call number
+//     turns a design decision into call-site variance. What the atom HAS
+//     since 2026-10-01 is not a knob but a second SITUATION, `corners`
+//     (`house` | `soft`, THE CORNER AXIS below): the premise "one value for
+//     the whole site" fell on the owner's word — "i want that rounded corner
+//     effect that the doctor card from old webpage has" — and the personnel
+//     card wears the old site's 1rem corner while every other card keeps the
+//     6px default (§15.29). A row joins that lookup by decision, never a
+//     `radius={…}` prop.
+//   · TEXT COLOUR — ink is inherited from the body, so a card reads the same
+//     wherever it lands and a section can still tone individual lines through
+//     ui/Text (§6.1: closed system, no styling of other people's insides).
+//
+// ── WHY className CANNOT BE THE PADDING OR COLOUR API — measured on the board
+// against this repo's own Tailwind (4.3.3) rather than assumed: the sheet emits
+// `p-4` before `p-6` before `p-8`, `rounded-lg` before `rounded-md`,
+// black before white backgrounds. One flat layer, single-class selectors, equal
+// specificity — and `cx` is a plain join (lib/cx/cx.ts), so the attribute order
+// it produces is a convention, never a cascade. CSS picks the LATER rule in
+// the STYLESHEET, which means a caller's `p-4` can never beat this atom's
+// padding while `p-8` happens to win: an "override" that works in one
+// direction only is worse than none, because it reads as an API. On a `framed`
+// card not even that half survives: ARBITRARY values are emitted AFTER the
+// whole named scale, so the row's `p-[calc(var(--spacing)*6_-_2px)]` (the old
+// 1.5rem − 2px arbitrary padding until §15.25 round 2, the same 22px)
+// outranks `p-4`, `p-6` and `p-8` alike and no caller `p-*` wins in either
+// direction — read back from the engine in Card.test.tsx ("keeps a framed
+// card's 22px against a caller's …"). The conclusion is the same one, only
+// stronger: className is PLACEMENT only (§6.8 — `h-full`, `max-w-*`,
+// `col-span-*`, a grid area), and anything that must be able to win in BOTH
+// directions is a prop here or it is nothing.
+//
+// ── THE CONTAINER MARK IS BUNDLED WITH THE SURFACE (D10), for ui/Container's
+// reason rather than a new one: splitting them has a silent failure mode. A
+// card that took the padding but forgot the mark would leave its consumers'
+// `@sm:`/`@md:` variants with no queryable ancestor — the nearest context
+// would be the BAND's column, so a card-level step would silently measure the
+// whole band — and container-gated styles then match at the wrong width or
+// never. No error, no console line: exactly the regression class the §13 nets
+// exist for. COSTS, stated here rather than discovered later — and CORRECTED
+// on 2026-09-29, because what this sentence first recorded is true of only
+// some of the engines that read it. `container-type` used to imply LAYOUT
+// containment, which makes a box a stacking context and a positioning scope;
+// the CSS Working Group took that out in July 2024 — a query container now
+// forces style and size containment and an independent formatting context,
+// nothing more — and engines followed, Chrome from 129 and Safari from 18.4.
+// MEASURED on 2026-09-29 in Chromium 151 and WebKit 26.5: an absolutely
+// positioned child of a bare card resolves against the nearest POSITIONED
+// ancestor (702px wide around a 620px card), and a `z-index: -1` child sinks
+// under the card's own background. An iPhone on iOS 16 to 18.3 still does
+// the opposite. So a card's scope DEPENDS ON THE ENGINE, and nothing may rely
+// on it either way: whatever must be positioned against a card makes the
+// card say `relative` itself (THE GLOW CAN FOLLOW A MARK, below, does), and
+// nothing inside a card may count on a negative z-index. What the mark
+// applies in EVERY engine is INLINE-SIZE CONTAINMENT, so a Card must always
+// sit in a width-giving parent: a grid track, a `flex-1` item, ordinary
+// block flow. GRID TRACKS ARE SAFE even when they are implicit
+// and `auto`-sized — a grid's default `justify-content: normal` behaves as
+// stretch, so the track fills its container; the InAGrid story's 320 frame is
+// the proof (three full-width cards in one implicit auto column). The REAL
+// collapse cases are the ones where nothing hands the box a width and the
+// contents may no longer be consulted for one: a direct child of a `flex` ROW
+// with no `flex-1`, `basis-*` or `w-full` (flex-basis stays `auto`, the
+// contained content contributes 0, and the card shrinks to roughly 50px of
+// padding and border); a grid whose `justify-items`/`justify-content` is
+// anything other than stretch; a fit-content or max-content width; a float;
+// an absolutely positioned box with no inset pair. In every one of those,
+// hand the card a width — the rule does not change, only the list of places
+// that break it.
+//
+// ── `tone` NAMES SITUATIONS, NEVER CSS KNOBS (ui/Image's D1 doctrine): a
+// section asks for `emphasized`, not for a background and a border colour, so
+// the day the palette moves this file moves once. Two rules hold the axis
+// together.
+// (1) THE SUM RULE — every row spends the same 25px per side on BORDER WIDTH
+// PLUS PADDING: 1 + 24 for the three flat rows, 3 + 22 for `framed`. Content
+// therefore starts at the same place whatever tone a card wears, so switching
+// one moves nothing by a pixel and a framed card in a grid row keeps its text
+// edges aligned with its neighbours' — the property the old repo's cards did
+// not have. THE PADDING CARRIES THE STEP (§15.25 round 2 — owner, 2026-10-01,
+// the doctors band: "i want card and component and all contents to adjust in
+// size harmonically all at once"): `framed` keeps its frame a 3px border and
+// spells its padding as 6 spacing steps less the frame's extra 2px —
+// `1.5rem − 2px` until then, the same 22px at the default 0.25rem step — so
+// border + padding = 6 steps + 1px, a flat row's own 1px + `p-6`, at any root
+// and inside a box that remaps the step (globals.css's THE DESIGN SCALE, which
+// leaves px borders alone): at a 1.5px design pixel, 3 + 34 = 1 + 36.
+// DECIDED on a measurement (D-C): the first spelling, option A — the frame in
+// steps too, 0.75 steps over 5.25 steps + 1px — renders short, because an
+// engine FLOORS a border width and leaves a padding alone. MEASURED 2026-10-01
+// under Playwright: Chromium floors to whole CSS pixels at every density
+// tried (1 to 3) — a 1.5px design pixel's 4.5px frame renders 4px, a 0.8px
+// one's 2.4px renders 2px, and the band at the owner's own 1401px window
+// under a classic scrollbar (a 0.99983px design pixel, 2.9995px of frame)
+// renders 2px, a whole pixel lost at the very window he named — and WebKit
+// floors to whole device pixels (2.9995px → 2.5px at a density of 2). The
+// same probe found C exactly as exact as the 3px + 22px before it: in
+// Chromium at densities 1, 1.25, 1.5, 2 and 3 and in WebKit at 1, 1.5, 2 and
+// 3, at design pixels of 1, 0.99983, 1.5, 0.8 and 1.25px (the last a 20px
+// user root's step), a framed card's content starts on a flat card's to the
+// layout unit. Its one exception was the old spelling's too: WebKit at a
+// density of 1.25 snaps EVERY border to device pixels — the flat rows' 1px to
+// 0.8px, the frame's 3px to 2.4px — so there a framed card's content starts
+// 0.4px (half a device pixel) nearer its edge. RECORDED LEVERS, not built: A
+// (it floors, above) and B′ — the frame rounded to whole pixels by CSS
+// `round()` behind a `@supports` gate that leaves older engines on C, the
+// padding taking the remainder: a frame that grows with the band in whole
+// pixels, the owner's lever if he wants the frame to grow with it. The frame
+// and its glow's edge stay one 3px spelling (THE GLOW CAN FOLLOW A MARK), and
+// Card.test.tsx's scaled describe holds C's numbers — read from the engine.
+// It also explains why the PADDING lives in the rows rather than in
+// the shared geometry: a row that had to correct the shared `p-6` would emit a
+// second `p-*` on the same element, and which of the two wins is decided by
+// their order in the compiled sheet, not by the code — a coin toss. One
+// padding utility per rendered card, chosen by the row, and the question never
+// arises. The radius rides the same rule — one `rounded-*` per rendered card,
+// chosen by the `corners` row (THE CORNER AXIS below): `rounded-md` for every
+// card on the site, the old site's 16px only where a section asks for `soft`
+// (owner 2026-10-01, §15.29 — until that day the old review card's 16px was
+// deliberately NOT imported, and this sentence said so).
+// (2) EMPHASIS IS FILL AND BORDER COLOUR, NOT THICKNESS — with exactly one
+// owner-decided exception, `framed` (fb-423, pack round 1: "the old website
+// had also a thicker border on the review card. I liked that very much"). For
+// that row the THICKNESS IS THE SITUATION — the old site's frame around a
+// quoted voice, at its own 3px — and the sum rule is what lets it join without
+// costing the axis its promise: the extra 2px of border come out of the
+// padding, not out of the content box. `emphasized` keeps the flat treatment,
+// which is why the old carousel's ring was never imported onto IT: a 3px
+// border with `p-6` would have shrunk that card's inner box by 4px against its
+// neighbours.
+// AND WHAT A TONE DOES NOT DO: it conveys nothing to assistive technology —
+// this atom adds no semantics, and fill, border colour and border width are
+// all colour and geometry. A section that gives a tone MEANING (a recommended
+// tier, a featured review) owes that meaning in TEXT as well — an eyebrow, a
+// badge, a word in the heading — because colour may never be the sole
+// indicator (§9, SC 1.4.1).
+//
+// ── TONE CROSSFADE (owner D1b, 2026-09-10) — switching `tone` FADES THE
+// PAINT and moves nothing. Two properties on the list, and the list is the
+// decision: `background-color` and `border-color`, both on the system's own
+// --fade clock (400ms, ease-in-out). That is this repo's standing hover
+// doctrine applied rather than re-argued — ui/Button's contract (fb-37/38)
+// bought exactly ONE animation, the colours fading on one clock, after the
+// owner read a moving control as "2 animations at once"; a card is the same
+// promise with a different trigger.
+// THE GEOMETRY IS NOT ON THE CLOCK, and that is what keeps the content still.
+// `border-width` and `padding` change inside ONE style recalculation, so the
+// sum rule holds on both sides of that single frame — 3 + 22 before, 1 + 24
+// after, 25px either way — and the text edge never moves at all: measured in
+// this repo's own Chromium, in both directions, the content's inset is 25px
+// at rest AND at every sampled frame of a live flip. DRIFT ZERO, pinned in
+// Card.test.tsx's "Card — the tone crossfade" describe ("keeps the content
+// exactly 25px in, at every frame of a live %s → %s flip").
+// THE VARIANT THAT WAS MEASURED AND REJECTED (same lane, same Chromium):
+// putting `border-width,padding` on the list too, so the frame would thin
+// gradually. It does not do what it promises. The two values would be
+// interpolated on one clock with equal end-sums — algebraically 25px
+// throughout — but the browser SNAPS a used border width down to whole
+// device pixels while padding keeps sub-pixel precision, so mid-fade the pair
+// really measures e.g. 2 + 22.0008 = 24.0008: the content jumps ~1 device
+// pixel toward the edge, walks back as the padding grows, and jumps again
+// when the border crosses 2→1. A 1px shuffle under a 400ms fade is the second
+// animation the doctrine bans, so the calm option is the one that moves
+// nothing.
+// THE VISIBLE CONSEQUENCE, stated rather than discovered: on a framed ⇄
+// emphasized swap the 3px frame thins to 1px INSTANTLY while the fill and the
+// border colour fade over 400ms. That is the trade — a geometry cut under a
+// colour dissolve — and it is deliberate.
+// WHY `border-color` IS ON THE LIST AT ALL: not because today's rows need it
+// — `framed` and `emphasized` share ONE border colour, `--card-tint` (the ONE
+// TINT paragraph below), so nothing interpolates between those two — but
+// because a tone row whose border colour DOES differ (a future row, or an
+// edit to an existing one) must fade with its fill instead of cutting under
+// it. The list is the axis's contract, not a description of its current
+// members.
+// NOT `transition-colors`: that shorthand also covers `outline-color`, and a
+// focus ring may never ride an animation clock — the Button/GlyphButton
+// lesson, inherited rather than re-learned (a card's own root takes no focus,
+// but a consumer's `asChild` element can — the price band's category cards
+// are focus targets — and this string travels onto it).
+// `box-shadow` stays off for its own reason, and the reason changed on
+// 2026-09-29: the glow CAN now follow a mark at runtime (`aura="current"`,
+// THE GLOW CAN FOLLOW A MARK below), but what travels then is a LAYER'S
+// OPACITY, never the shadow itself — so there is still nothing of a
+// box-shadow's to put on a clock, and a painted property stays off this one.
+// KEEP IN SYNC with the system's other two spellings of this clock (fb-44):
+// ui/Button's `base` and ui/disc.ts's `discBase` (which serves GlyphButton and
+// SpeedDial). 400ms in three files, deliberately independent, so changing the
+// system's feel stays a conscious multi-file edit and can never drift; all
+// three carry the matching pointer back to THIS paragraph. What Card does not
+// copy from them is the property list — a card has no hover, no press and no
+// focus style of its own, so `active:duration-0` and their box-shadow channel
+// would be clocks for states that do not exist here.
+// --fade is INTERNAL: className is merged last, so a caller could stretch the
+// clock with nondeterministic precedence (the className paragraph above).
+// Change the number HERE instead.
+// `motion-reduce:transition-none` is the clean snap for anyone who asked for
+// less motion (§9): the tone still changes — nothing this atom communicates is
+// carried by the animation — only the dissolve is gone.
+// AND WHAT CAN EVEN START IT: cards are not interactive (no hover state, no
+// focus style of their own — the last paragraph below), so the only thing that
+// can move a tone is a CONSUMER re-rendering the card with a different one. A
+// rotation-driven selection is the case this was built for; a hover repaint is
+// not, and would be a card growing an interaction it does not have. The GLOW
+// has its own trigger — an attribute on the card's element, set by whoever
+// composes the card — argued in THE GLOW CAN FOLLOW A MARK.
+//
+// ── `aura` IS A PROP BY OWNER DECISION (fb-378/381): the lavender glow the
+// Header pill and the fixed corner discs wear is chosen per card KIND in the
+// section that composes it, not per card instance and not by the atom. This
+// file therefore NAMES the shared utility, which is the opposite of what
+// ui/SpeedDial does — and the difference is geometric, not doctrinal: the
+// dial's className lands on a square wrapper around a round bulb, so a shadow
+// there would glow a rectangle, and the section feeds it a CSS variable
+// instead. A card's className lands on the card itself, so the utility is
+// simply worn. tests/unit/aura-token.test.ts's census counts this file as
+// wearing it exactly TWICE in code — the worn glow's lookup and the armed
+// glow's layer — and prose (stripped before counting) may discuss it freely.
+//
+// ── THE GLOW CAN FOLLOW A MARK (`aura="current"`, owner 2026-09-29: "add aura
+// shadow just to currently selected/viewed price box … what category card is
+// not selected gets no aura … aura has to be smooth when selected, like not
+// sudden and upon deselect again smooth"). Until that day a glow was worn or
+// not worn for good. The third value ARMS it instead: the card carries the
+// glow at opacity 0 and shows it only while its element carries
+// `data-current` (CARD_CURRENT_ATTRIBUTE — present while current, absent
+// otherwise, sections/DoctorCourses/CourseTimeline's idiom), fading in and
+// out on this atom's own --fade clock.
+// WHO SETS THE ATTRIBUTE is the consumer's business, never this atom's: a
+// client component renders it as a prop (`data-current={isCurrent ? '' :
+// undefined}`, which rides the native-prop spread), or an island stamps it on
+// an inert, server-rendered card (sections/PriceList/PriceMenu, the first
+// consumer). Either way this file keeps no state and ships no JavaScript.
+// WHAT FADES IS A LAYER'S OPACITY, NOT THE SHADOW — and that is the decision.
+// A box-shadow is PAINTED: on a clock it makes the browser repaint the whole
+// card, every row of text in it, once per frame of the fade and on the main
+// thread. Opacity is COMPOSITED: the glow is painted into a layer of its own
+// and the compositor blends that layer in and out. MEASURED on 2026-09-29 on
+// the built services page (Chromium 151 under a fourfold CPU throttle, a
+// phone-sized screen at three times the pixel density, the tallest price card
+// on screen), ONE HAND-OVER — one card's glow fading out while the next
+// card's fades in: with the shadow on the clock the trace holds some 90 Paint
+// events, the whole interior of both cards each time, 23–26 ms of paint and
+// 20–21 ms of raster work, and the engine reports the animation as one it
+// could not composite (`unsupportedProperties: ["box-shadow"]`); with this
+// layer it holds 4, all of them where the fades START and where they END (the
+// layers being made and unmade), none in between, and about 3 ms of paint and
+// raster work together. It matters because of what the first consumer is:
+// four of the eleven price cards are over a thousand pixels tall on a phone
+// (the tallest 2112px at 390), the fade starts while the visitor is
+// scrolling, and §1's measure of success is an older patient on a phone that
+// is not always a new one.
+// So the glow lives on the card's `::before` — a PSEUDO-ELEMENT and not a
+// nested element, because `asChild` leaves no element of Card's own in the
+// DOM (ui/TextButton's underline, for the same reason) — and that layer wears
+// the SAME utility a worn glow does, so it is the same glow:
+//   · `before:absolute` + THE EDGE (`glowEdge`): the layer is stretched over
+//     the card's BORDER box. An absolutely positioned box is resolved against
+//     its containing block's PADDING box, so the layer reaches out by the
+//     tone's own border width — 1px on the flat rows, 3px on `framed`.
+//     KEEP-IN-SYNC with `toneClasses`: two lookups, one relation, and
+//     Card.test.tsx measures the pair on every tone;
+//   · `before:rounded-[inherit]`: the card's own radius, so the glow's
+//     corners are the card's;
+//   · `before:pointer-events-none`: a positioned box paints ABOVE the in-flow
+//     content, and although this one paints nothing inside its own box (a
+//     box-shadow is drawn outside the border edge only) it would otherwise be
+//     what a click or a text selection over the card lands on;
+//   · THE FOCUS RING IS NOT ON THIS CLOCK. The first consumer's card is a
+//     focus target (a fragment target with tabindex="-1"), and its ring is an
+//     OUTLINE on the root — the shell's `:focus-visible` rule. Only the
+//     layer's `opacity` rides the layer's clock, so the ring appears and
+//     leaves at once whatever the glow is doing; and the glow can at most
+//     tint it, never hide it (the a11y review's arithmetic, not a
+//     measurement: about 9:1 against the page even under the glow, 17:1
+//     without it);
+//   · NO NEGATIVE z-index, on purpose, and the reason is per engine (THE
+//     CONTAINER MARK's COSTS sentence has the split). Where the card is NOT
+//     a stacking context — every current engine — a `z-index: -1` layer
+//     sinks under the BAND's own background and the glow is simply not
+//     drawn: measured, 0 pixels changed against 47,272 for this layer. Where
+//     an older engine makes the card one, the layer would sit between the
+//     card's background and its text, a composited layer under the very text
+//     it belongs to (the painting-order rules, not a measurement). Above the
+//     content it is right in both;
+//   · `relative` on the root, and it is LOAD-BEARING: in every current
+//     engine a card is not a positioning scope (THE CONTAINER MARK's COSTS
+//     sentence), so without it the layer resolves against the nearest
+//     positioned ancestor and the glow wraps the wrong box — measured, 702px
+//     wide around a 620px card; Card.test.tsx pins it. Where an older engine
+//     makes the card a scope by itself the class is redundant, and free.
+//     CONSEQUENCE FOR PLACEMENT: a card in this mode is `relative`, so a
+//     caller className that sets `position` (`sticky`, `absolute`) would
+//     fight it by stylesheet order — such a card takes the WORN glow, or a
+//     wrapper;
+//   · THE CLOCK RIDES THE LAYER (`before:transition-opacity
+//     before:duration-(--fade) before:ease-in-out`), declared
+//     unconditionally, so BOTH directions ease — the mark's arrival and its
+//     removal. `motion-reduce:before:transition-none` is its §9 reset: the
+//     glow still moves from card to card, at once. The state variant sets the
+//     VALUE only (`data-current:before:opacity-100`), never a transition
+//     property: a two-class selector would outrank the reset.
+//   · A consumer's own `before:` utilities on an `asChild` element would
+//     land on the same pseudo-element and fight these — a card in this mode
+//     owns its `::before`.
+// The WORN glow (`aura`) is untouched: `shadow-aura` on the root, static.
+// What the glow still does NOT do is carry meaning (§9, SC 1.4.1): it is
+// decoration, and whatever "current" means is said in text or in ARIA by the
+// consumer that marks the card.
+//
+// ── `asChild` PUTS THE LOOK ON THE CONSUMER'S OWN ELEMENT (D2, the
+// Heading/Button precedent through ui/slot.ts): a team card IS an <article>
+// with its own aria-labelledby, a services card IS an <li> inside a real list,
+// and a wrapper div between the <ul> and its items would cost the list its
+// semantics. The default host is a plain <div>, like ui/Container's — the
+// honest element for a box that adds no meaning. There is no `as` prop: the
+// tag-generic surface ui/Text's D5 documents (ref variance, unions across
+// tags) buys nothing that cloning the consumer's own element does not already
+// give.
+//
+// No 'use client', no hooks, no state, no t() and no message key (§8.1 — the
+// children arrive finished): composing a card must not cost a band its
+// zero-island contract, and Card.test.tsx's ?raw guard pins the directive's
+// absence mechanically because no runtime assertion can see it (§16). Cards
+// are not interactive — no hover state and no focus style of their own. A
+// consumer's `asChild` element may still TAKE focus (a fragment target with
+// tabindex="-1", the price band's category cards), and then it wears the
+// shell's outline ring, which nothing in this file touches. When a whole card
+// must be clickable, the consumer nests a real <a>/<button> inside it (§9:
+// semantic HTML first), which brings its own focus-visible styling with it.
+
+// ── ONE TINT, TWO ROWS (owner 2026-09-12, pack round 2: "the current card
+// the same shade as the border of the non-current card" — which is also the
+// old site's own arithmetic, measured: idle frame `3px rgb(229 228 236)`,
+// selected ground `rgb(229 228 236)`, the SAME colour). `--card-tint` is
+// spelled ONCE, in `cardClock`, as `--accent-decorative` mixed at 20% over
+// the surface — what the old site's rgb(229 228 236) is (its accent at ~20%
+// over white) — and both rows READ it: `framed` as its 3px border,
+// `emphasized` as its ground AND its 1px border (a border the colour of the
+// ground is an edge the eye does not see: the old site's `3px transparent`,
+// without breaking the sum rule). One value, so the two can never drift;
+// Card.test.tsx reads the framed border and the emphasized ground back from
+// the engine and asserts they are equal.
+// THE MIX IS OPAQUE, AND SAYS SO TWICE (G2 a11y HIGH ×2, reviews-deck run,
+// 2026-09-10 — the reasoning outlived the value). A wash over TRANSPARENT
+// (the `/20` opacity spelling) would let a deck's neighbouring cards show
+// through the one card the visitor is meant to read (SC 1.4.3 — no contrast
+// ratio exists for text over text); mixing over `--color-surface` instead
+// gives the same hue at the same strength with nothing behind it visible. The
+// second half is the FALLBACK, because every `color-mix()` Tailwind emits is
+// `@supports`-gated: `--card-tint` starts as the SOLID accent (what the frame
+// degrades to on engines without color-mix — Safari < 16.2, every iPhone
+// frozen on iOS 15, §1), a variant gated on color-mix support re-declares it
+// as the mix, and the `emphasized` row keeps an explicit `bg-surface` base
+// under its own gated tint ground — so an old engine paints a solid-lavender
+// FRAME (harmless) and a WHITE ground, never lavender under text (1.57:1 for
+// muted body copy). Modern engines paint the tint on both. Measured on the
+// tint: muted body text 5.8:1, the mono eyebrow the same, display ink above
+// 10:1 — every text role on the selected card clears AA with room.
+// The 20% is the ONE number to move if the frame should ever read heavier:
+// 30% still clears AA for muted text (5.1:1); 40% does not (4.4:1).
+//
+/** Named SITUATIONS — which look, never which CSS. */
+export type CardTone = 'surface' | 'tinted' | 'emphasized' | 'framed';
+
+/** WHEN a card wears the glow — a named situation, like `tone`:
+ *  `false` never · `true` always (worn, static) · `'current'` only while the
+ *  card's element carries CARD_CURRENT_ATTRIBUTE, faded in and out. */
+export type CardAura = boolean | 'current';
+
+/** WHICH CORNER a card wears — a named situation, like `tone`:
+ *  `house` = §15.1's 6px default (`rounded-md`, every card on the site) ·
+ *  `soft` = the old site's card corner, `--radius-soft` 1rem (§15.29). */
+export type CardCorners = 'house' | 'soft';
+
+/** The attribute `aura="current"` answers to: PRESENT while the card is the
+ *  current one, ABSENT otherwise. Exported so that whoever STAMPS the
+ *  attribute on the DOM imports the name instead of retyping it
+ *  (sections/PriceList/PriceMenu); a client component that renders it as a
+ *  prop spells the attribute in JSX, where the `CardOwnProps` row of the same
+ *  name checks its value; the variant in `glowLayer` below spells it as a
+ *  LITERAL, because Tailwind reads class names from source text, and a
+ *  `satisfies` ties the two at compile time. */
+export const CARD_CURRENT_ATTRIBUTE = 'data-current';
+
+type CardOwnProps = {
+  /** Render the single child element AS the card (Heading/Button precedent, ui/slot.ts):
+   *  the child keeps its element, attributes and classes and wears the card's classes.
+   *  <Card asChild><article aria-labelledby="t">…</article></Card>
+   *  A `ref` meant for the slotted element goes ON the child element — it wins, and the
+   *  engine never disallows `ref`; a `ref` on <Card> reaches the clone only when the child
+   *  declares none, and it is typed for a <div>, so for an <article>/<li> put it on the
+   *  child. */
+  asChild?: boolean;
+  /** Which look this card sits in. @default 'surface' */
+  tone?: CardTone;
+  /** WHEN this card wears the pill's / corner discs' lavender glow — chosen per card KIND in
+   *  its section (owner fb-381): `false` never · `true` always, worn and static ·
+   *  `'current'` armed, shown only while the card's element carries CARD_CURRENT_ATTRIBUTE
+   *  and faded in and out on the card's own --fade clock (owner 2026-09-29).
+   *  @default false */
+  aura?: CardAura;
+  /** WHICH CORNER this card wears — chosen per card KIND in its section, like `aura`:
+   *  `house` = the 6px default every card wears · `soft` = the old site's 1rem card corner
+   *  (owner 2026-10-01: sections/PersonnelCard, both kinds; the Header pill, ui/TextButton
+   *  and ui/Modal wear the same token, §15.29). @default 'house' */
+  corners?: CardCorners;
+  /** THE MARK `aura="current"` answers to, when a client component renders it
+   *  as a prop: the EMPTY STRING while the card is current, `undefined`
+   *  otherwise — `data-current={isCurrent ? '' : undefined}`. Every other
+   *  spelling is refused on purpose: the stylesheet's rule is a PRESENCE
+   *  selector and React prints `data-current="false"` for the boolean
+   *  `false`, so `data-current={isCurrent}` would leave the card glowing for
+   *  good. An island that stamps the attribute on the DOM never passes this
+   *  prop. */
+  [CARD_CURRENT_ATTRIBUTE]?: '';
+};
+
+export type CardProps = CardOwnProps &
+  Omit<ComponentProps<'div'>, keyof CardOwnProps>; // React 19: ref is a prop
+
+// THE card surface's geometry — ONE spelling in src/ (fence test:
+// tests/unit/card-single-spelling.test.ts pins this literal's four utilities
+// as a contiguous signature, so keep them contiguous). Not exported.
+// The PADDING is not here: it rides each tone row, so a rendered card carries exactly one
+// `p-*` utility and a thicker frame can compensate its own border (see below) — and it is
+// deliberately NOT on the transition list, which is what keeps the content still through a
+// tone swap (the TONE CROSSFADE paragraph above). The RADIUS is not here either, for the
+// padding's own reason: it rides the `corners` row below, so a rendered card carries exactly
+// one `rounded-*` utility — never two of one property left to the sheet's order to settle.
+const cardGeometry = '@container flex flex-col gap-3';
+
+// THE CORNER AXIS (owner 2026-10-01: "i want that rounded corner effect that
+// the doctor card from old webpage has … implemented in all mentioned parts";
+// §15.29). Situations, never CSS knobs — `house` is §15.1's 6px default, worn
+// by every card on the site; `soft` is the old site's card corner, the
+// `rounded-2xl` its doctor, staff and review cards wore, imported as the ONE
+// token `--radius-soft` (1rem, globals.css) that the Header pill, NavMenu's
+// panel, ui/TextButton and ui/Modal wear too, so the four cannot drift. A
+// section chooses per card KIND (sections/PersonnelCard passes `soft` for
+// both of its kinds); no other card wears it until a decision says so — and
+// one decision went the other way the same evening: the services page's
+// menu and category cards wore it for an hour ("apply to all cards on
+// services page too") and lost it on the owner's "i liked card from before
+// better for services. it looked perfect." A card KIND's corner is taste,
+// chosen per kind and recorded (§15.29), never inferred from a neighbour.
+// Emitted right after the geometry, where `rounded-md` always stood, so every
+// card that does not ask keeps its class string byte for byte — the
+// consumers' pins (ReviewCard, CategoryCard, CredoCard, ScheduleCard) never
+// noticed the axis arrive. The glow's `before:rounded-[inherit]` follows
+// whichever corner the card wears. tests/unit/soft-corner-census.test.ts
+// counts this file's one spelling of the token among the wearers.
+const cornerClasses: Record<CardCorners, string> = {
+  house: 'rounded-md',
+  soft: 'rounded-soft',
+};
+
+// THE TONE CLOCK and THE TINT, worn after the corner. The clock: the two
+// paint properties on the shared 400ms --fade (the TONE CROSSFADE paragraph
+// above). THE TINT (the ONE TINT paragraph above): the solid accent first —
+// the fallback every engine understands — then the opaque 20% mix over the
+// surface wherever color-mix exists. Declared on every card so the two rows
+// below can read ONE value; a row that never uses it costs nothing.
+const cardClock =
+  '[--fade:400ms] transition-[background-color,border-color] ' +
+  'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
+  '[--card-tint:var(--color-accent-decorative)] ' +
+  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]';
+
+// THE SUM RULE: border-width + padding = 25px per side on EVERY row (1 + 24, or 3 + 22 for
+// `framed`), so switching tone never moves content and a framed card's text edges still line
+// up with its neighbours'. `framed` is the ONE thickness situation (owner fb-423). Its frame
+// stays a 3px border — an engine floors a border width, so a frame in steps renders short —
+// and its PADDING carries the spacing step (§15.25 round 2, D-C): 6 steps less the frame's
+// extra 2px, so border + padding = 6 steps + 1px, a flat row's 1px + `p-6`, at any root and
+// inside a scaled design (globals.css's THE DESIGN SCALE). THE SUM RULE paragraph above has
+// the measurement and the two recorded levers.
+const toneClasses: Record<CardTone, string> = {
+  surface: 'border border-line-subtle bg-surface p-6',
+  tinted: 'border border-transparent bg-page p-6',
+  emphasized:
+    'border border-(--card-tint) bg-surface supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint) p-6',
+  framed:
+    'border-[3px] border-(--card-tint) bg-surface p-[calc(var(--spacing)*6_-_2px)]',
+};
+
+// THE ARMED GLOW'S LAYER (`aura="current"`) — every utility in it is argued in
+// THE GLOW CAN FOLLOW A MARK above; Card.test.tsx byte-pins it as GLOW_LAYER.
+// Not exported.
+const glowLayer =
+  'relative ' +
+  'before:pointer-events-none before:absolute before:rounded-[inherit] ' +
+  "before:shadow-aura before:opacity-0 before:content-[''] " +
+  'before:transition-opacity before:duration-(--fade) before:ease-in-out ' +
+  'motion-reduce:before:transition-none ' +
+  ('data-current:before:opacity-100' satisfies `${typeof CARD_CURRENT_ATTRIBUTE}:before:opacity-100`);
+
+// THE EDGE: minus each tone's own border width, so the layer covers the card's
+// BORDER box. KEEP-IN-SYNC with `toneClasses` — two lookups, one relation,
+// measured on every tone in Card.test.tsx.
+const glowEdge: Record<CardTone, string> = {
+  surface: 'before:-inset-px',
+  tinted: 'before:-inset-px',
+  emphasized: 'before:-inset-px',
+  framed: 'before:-inset-[3px]',
+};
+
+// WHICH GLOW a card wears — ONE lookup, TOTAL over `CardAura`. The armed
+// answer is the layer AND the edge as TWO parts, so a tone that escaped the
+// types is dropped by `cx` instead of being printed as the class `undefined`;
+// the worn answer is the pill's utility on the root; `false` is nothing. The
+// `never` line stops a fourth answer compiling until it is classified here,
+// and at runtime a value that escaped the types wears NOTHING — the lookup
+// fails CLOSED, never into a glow worn for good. Not exported.
+function glowClasses(
+  aura: CardAura,
+  tone: CardTone,
+): ReadonlyArray<string | undefined> {
+  if (aura === 'current') return [glowLayer, glowEdge[tone]];
+  if (aura === true) return ['shadow-aura'];
+  if (aura === false) return [];
+  const unclassified: never = aura;
+  void unclassified;
+  return [];
+}
+
+export function Card({
+  asChild = false,
+  tone = 'surface',
+  corners = 'house',
+  aura = false,
+  className,
+  children,
+  ...rest
+}: CardProps): ReactElement {
+  // §6.8 merge order: the atom's own classes first, the caller's className
+  // LAST — the geometry, the corner, the clock and tint, then the tone row,
+  // then the optional glow. A deterministic convention the tests pin, NOT a
+  // cascade mechanism (see the className paragraph above: attribute order
+  // never decides CSS specificity, which is precisely why the paint, the
+  // padding and the corner are props).
+  const own = cx(
+    cardGeometry,
+    cornerClasses[corners],
+    cardClock,
+    toneClasses[tone],
+    ...glowClasses(aura, tone),
+    className,
+  );
+
+  if (asChild) {
+    // The child element becomes the card. The engine lives in ui/slot.ts
+    // (owner decision fb-64) — single-child guard first, child-wins merge,
+    // className merged last. NO disallow set, unlike Button's
+    // BUTTON_ONLY_PROPS: a <div> has no element-only props, so everything the
+    // caller passes is equally meaningful on an <article> or an <li> —
+    // including `id`, which a section's aria-labelledby pairs with.
+    return slotClone('Card', children, own, rest);
+  }
+
+  return (
+    <div className={own} {...rest}>
+      {children}
+    </div>
+  );
+}

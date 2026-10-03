@@ -12,11 +12,17 @@ description: Build or rework one ui/ atom for Premium Smile — branch-first, lo
   hookify rule points here), or **"change/extend/rework the … atom"** → run in `rework` mode.
 - Phase 2 of `MIGRATION_PLAYBOOK.md` order: `Image` → `Heading`/`Text` → `Button` → `Icon`
   → `Card` → `Badge`/`Tag`.
+- `/new-atom from <dossier path>` — **dossier mode**: the atom was planned by
+  `/section-breakdown`; the dossier pre-fills the S1–S3 evidence. Claim its epic issue
+  first (first claim wins — stop if already claimed), open a worktree lane per
+  `../new-section/references/lane-and-epic-glue.md` when running in parallel, and if the
+  dossier status is `approved` the contract board is settled → straight to the S4 dispatch.
 
-Read `CLAUDE.md` first (§6, §8, §9, §13, §15.7–8). Old project is **read-only**:
+Read `CLAUDE.md` first (§6, §8, §9, §13, §15.7–8, §15.12). Old project is **read-only**:
 `/Users/cosminneamtiu/Work/premium-smile-webpage`.
 
-**Modes:** `migrate` (old component → new atom) · `rework` (existing NEW atom changes).
+**Modes:** `migrate` (old component → new atom) · `rework` (existing NEW atom changes) ·
+`dossier` (from a `/section-breakdown` workspace).
 **Owner's roles:** describe at the start · point-and-approve the pack · say "commit it" ·
 merge the PR. Promotion `develop → main` is **entirely owner-timed** — many atom branches
 merge into develop in parallel; main waits until the owner feels develop is ready.
@@ -24,6 +30,34 @@ merge into develop in parallel; main waits until the owner feels develop is read
 ## How It Works
 
 Stop-and-ask only for: ambiguous mapping, merge/drop verdicts, brief-§15 parked decisions.
+
+### Model routing (owner decisions 2026-08-03 + 2026-10-01)
+
+Planning and judgment run in the **main loop** (session model — Fable by owner
+preference): S0–S3, every canvas interaction, G2 finding-verification, V, S7,
+S8. The mechanical build **S4–S6 is dispatched in ONE Agent call** to the
+`atom-builder` subagent (`.claude/agents/atom-builder.md`, pinned
+`model: opus`), passing: the approved prop contract, the animation/interaction
+spec incl. amendments, the expected-diff manifest, fixture strings, and the
+atom path. On return the main loop **re-runs G1 itself** (trust but verify)
+and continues G2 → V → S7. **G2 reviewers run as the project-shadow agents**
+in `.claude/agents/` (`react-reviewer`, `typescript-reviewer`,
+`a11y-architect` — verbatim ecc copies pinned `model: opus` + `effort: max`;
+project scope beats plugin scope, so dispatch the UNSCOPED names, passing
+`model: "opus"` too). Every reviewer runs on Opus at max effort — the owner,
+2026-10-01: "NO MORE FABLE REVIEWERS FROM NOW ON UNLESS I EXPLICITLY SAY SO.
+ALL REVIEWERS MUST USE OPUS" (the 2026-08-03 Fable pin is history); a Fable
+review only on his explicit word in the current conversation, as a model
+override at dispatch. Finding-verification stays in the main loop; the
+S4–S6 build runs on Opus. The main loop's own effort floor is
+persisted as `effortLevel: xhigh` in `.claude/settings.json` (`max` is
+session-only — the owner may top up with `/effort max`). If the Agent tool
+or an agent type is unavailable, do that stage inline and note it in the
+pack.
+
+Plans live in `.claude/plans/` which is **gitignored** — the plan file exists
+to feed the canvas and the dispatch prompt, never a commit; inventory rows
+cite the canvas date, not a plan path.
 
 ### S0 · BRANCH
 `git switch -c migrate/<atom>` (or `fix/…`, `rework/…`) off up-to-date `develop`.
@@ -53,18 +87,18 @@ non-text (§6.3); semantic tokens only; `rem`; no outer margins; container queri
 `'use client'` only if inherently stateful (justified in PR). Consult `ecc:react-patterns`
 + `ecc:coding-standards`; Context7 for exact-minor APIs; verify with the TypeScript LSP.
 
-### S4 · EXECUTABLE SPEC — failing tests + skeleton story
+### S4 · EXECUTABLE SPEC — failing tests + skeleton story *(inside `atom-builder`)*
 Via `ecc:react-test`: Vitest + RTL role queries, **Romanian fixtures with diacritics**;
 tests exist and fail. **Create the skeleton story now** — argTypes mirroring the S3
 contract. The story is the spec made visible, not documentation written afterwards.
 
-### S5 · BUILD — with the live story open
+### S5 · BUILD — with the live story open *(inside `atom-builder`)*
 Implement against the running Storybook, inspecting the story **across widths
 continuously** (Storybook viewport toolbar / chrome-devtools `resize_page`). Nothing about
 the atom's look should be a surprise later. Tailwind utilities; focus-visible;
 motion-reduce; props spread; `ref` as prop; `className` merged.
 
-### S6 · FINALIZE STORIES
+### S6 · FINALIZE STORIES *(inside `atom-builder`)*
 One story per state, controls wired, Romanian demo args ("Programează-te", "Ședință de
 consultație"), DE-longest-word + pseudo-locale **stress variants**, opt-in 320 tag when
 layout-relevant.
@@ -73,9 +107,12 @@ layout-relevant.
 `npx tsc --noEmit` · `npm run lint` · `npx prettier --check .` · `npm run test -- --run` ·
 `npm run build-storybook` · axe = 0 violations. Red → `/debug-deep`. Never tweak-and-retry.
 
-### G2 · AGENT GATE
-`ecc:react-reviewer` + `ecc:typescript-reviewer` (parallel); `ecc:a11y-architect` for
-interactive atoms. Verify findings before applying; CRITICAL/HIGH → S5.
+### G2 · AGENT GATE *(reviewers = Opus @ max effort — Fable only on the owner's explicit word)*
+`react-reviewer` + `typescript-reviewer` (parallel); `a11y-architect` for
+interactive atoms — the UNSCOPED names resolve to the project shadows in
+`.claude/agents/`, pinned `model: opus` + `effort: max` (owner rule
+2026-10-01, replacing the 2026-08-03 Fable pin). Verify findings before
+applying; CRITICAL/HIGH → S5.
 **Iteration economy:** on pack-annotation loops, G2 re-runs **only if the diff since the
 last G2 touches types/logic** — pure class-string/token tweaks skip straight to V.
 

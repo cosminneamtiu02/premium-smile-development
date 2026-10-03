@@ -1,11 +1,14 @@
 import type { Decorator, Preview } from '@storybook/nextjs-vite';
+import type { ViewportMap } from 'storybook/viewport';
 import { NextIntlClientProvider } from 'next-intl';
+import { useEffect } from 'react';
 import { locales, nativeNames } from '../src/i18n/locales';
 import de from '../src/messages/de.json';
 import en from '../src/messages/en.json';
 import fr from '../src/messages/fr.json';
 import it from '../src/messages/it.json';
 import ro from '../src/messages/ro.json';
+import { VIEWPORTS } from '../tests/viewports';
 import '../src/styles/globals.css';
 import './preview-fonts.css';
 
@@ -70,6 +73,18 @@ const MESSAGES: Record<string, Messages> = {
   pseudo: pseudoMessages(ro),
 };
 
+/** The real shell stamps `<html lang>` per locale (§8.10); the workbench must
+    match, or language-conditional CSS — hyphenation first of all (§15.14, the
+    dictionary is picked by `lang`) — silently behaves differently in stories
+    and their baselines than on the built site. An effect, not render-time DOM
+    mutation; pseudo rides the `ro` dictionary like its messages do. */
+function DocumentLang({ lang }: { lang: string }) {
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+  return null;
+}
+
 const withIntlAndTheme: Decorator = (Story, context) => {
   const selected = (context.globals.locale as string) ?? 'ro';
   const locale = selected === 'pseudo' ? 'ro' : selected;
@@ -79,6 +94,7 @@ const withIntlAndTheme: Decorator = (Story, context) => {
       messages={MESSAGES[selected]}
       timeZone="Europe/Bucharest"
     >
+      <DocumentLang lang={locale} />
       {/* Font variables come from preview-fonts.css (:root) — same files,
           Storybook-local loading; see that file's header comment. */}
       <div className="bg-page font-body text-ink">
@@ -114,36 +130,43 @@ const preview: Preview = {
   parameters: {
     // Zero violations is a merge gate (§9, §13): the vitest addon turns every
     // axe violation into a test failure, not just a panel warning.
-    a11y: { test: 'error' },
+    a11y: {
+      test: 'error',
+      // THE ONE EXEMPTION, and it is WCAG's own (2026-10-01): SC 1.4.3 — "Text
+      // that is part of a logo or brand name has no minimum contrast
+      // requirement". The clinic's wordmark paints „Premium" in the brand
+      // grey and „Smile" in the brand lilac (the owner's colours; 2.85:1 and
+      // 3.82:1 on the page ground, measured), and axe cannot tell a logotype
+      // from a paragraph — so sections/Wordmark's two words carry
+      // `data-logotype`, and the color-contrast rule keeps its WHOLE reach
+      // except those nodes: `axe.configure`'s per-rule `selector` (measured:
+      // an unmarked neighbour in the same document is still flagged). Not the
+      // run-context `exclude`, which would lift EVERY rule off the two words.
+      // Every other node in every story is still judged at 4.5:1. The marker
+      // is worn by sections/Wordmark and nowhere else, and
+      // tests/unit/logotype-census.test.ts pins both the wearer and this
+      // selector — rename either and the census turns red.
+      config: {
+        rules: [{ id: 'color-contrast', selector: '*:not([data-logotype])' }],
+      },
+    },
 
     viewport: {
-      // The named test viewports (§7) + the 320px accessibility stress width.
-      options: {
-        stress320: {
-          name: 'Stress 320',
-          styles: { width: '320px', height: '568px' },
-        },
-        smartphone: {
-          name: 'Smartphone 390',
-          styles: { width: '390px', height: '844px' },
-        },
-        tablet: {
-          name: 'Tablet 768',
-          styles: { width: '768px', height: '1024px' },
-        },
-        notebook: {
-          name: 'Notebook 1280',
-          styles: { width: '1280px', height: '800px' },
-        },
-        laptop: {
-          name: 'Laptop 1536',
-          styles: { width: '1536px', height: '864px' },
-        },
-        desktop: {
-          name: 'Desktop 1920',
-          styles: { width: '1920px', height: '1080px' },
-        },
-      },
+      // The named test viewports (§7) + the 320px accessibility stress width,
+      // DERIVED from tests/viewports.ts — the one place the six geometries are
+      // spelled, shared with playwright.config.ts's projects (org-review F13a).
+      // The KEYS are a public surface: pinned stories cite them by name in
+      // `globals: { viewport: { value: 'laptop' } }`, and a renamed key fails
+      // silently by falling back to the default viewport, so the derivation
+      // must reproduce them exactly. `satisfies ViewportMap` pins the VALUE
+      // shape (name + px styles) — the keys stay prose-guarded, because
+      // Object.fromEntries widens them to string and no type reaches them.
+      options: Object.fromEntries(
+        VIEWPORTS.map(({ key, name, width, height }) => [
+          key,
+          { name, styles: { width: `${width}px`, height: `${height}px` } },
+        ]),
+      ) satisfies ViewportMap,
     },
   },
 };

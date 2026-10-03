@@ -1,0 +1,308 @@
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Instagram } from '@/assets/glyphs/Instagram';
+import { Phone } from '@/assets/glyphs/Phone';
+import { Tiktok } from '@/assets/glyphs/Tiktok';
+import {
+  GlyphButton,
+  type GlyphButtonMotion,
+  type GlyphButtonShape,
+  type GlyphButtonSize,
+  type GlyphButtonTone,
+  type GlyphButtonVariant,
+} from './GlyphButton';
+
+// One story per meaningful state (§13). Demo values are Romanian with
+// diacritics (§15.7); there are no DE/pseudo-locale or 320px stress variants
+// on purpose (plan D6 — the control carries no visible text and its box is a
+// fixed ≤56px square, so neither text expansion nor reflow can move it).
+// The children here are real glyph components — exactly what the footer
+// socials and the floating call CTA will pass (plan D8, amended round 5).
+// Stories may compose atoms; GlyphButton.tsx itself never imports a glyph, and
+// its unit tests use a raw <svg> to keep that independence honest. The one
+// exception is the burger below: a deliberately BESPOKE inline svg — the
+// Header replaces it with the animated morph control (BurgerToggle).
+// Hrefs are placeholders: the real phone number and profile URLs arrive from
+// lib/clinic/clinic.ts, the single source of NAP (§10.1), when sections get built.
+
+const meta = {
+  title: 'UI/GlyphButton',
+  component: GlyphButton,
+  args: {
+    children: <Phone />,
+    'aria-label': 'Sună clinica',
+    variant: 'solid',
+    tone: 'cta',
+    motion: 'still',
+    shape: 'round',
+    size: 'md',
+  },
+  argTypes: {
+    variant: {
+      control: 'radio',
+      options: ['solid', 'outline', 'ghost'] satisfies GlyphButtonVariant[],
+      description:
+        'Named color pair — solid = filled call CTA, drains on hover / outline = socials, fills on hover / ghost = quiet, dim tray on hover',
+    },
+    tone: {
+      control: 'radio',
+      options: ['cta', 'accent'] satisfies GlyphButtonTone[],
+      description:
+        'The colour family — cta, the green of the one conversion goal (the default; no disc on the site wears it since the fixed corner turned) / accent, the menu buttons’ lavender (the Footer’s discs, the reviews deck’s chevrons, the map band’s row discs, the fixed corner’s two — owner 2026-10-01); ghost ignores it',
+    },
+    motion: {
+      control: 'radio',
+      options: ['still', 'jump'] satisfies GlyphButtonMotion[],
+      description:
+        'What moves on hover — still, nothing (the default) / jump, the old round button’s 105 % pop on its own 200ms clock, Button’s cell byte for byte (the fixed corner’s two discs alone — owner 2026-10-01); hover the canvas to see it',
+    },
+    shape: {
+      control: 'radio',
+      options: ['round', 'square'] satisfies GlyphButtonShape[],
+      description:
+        'Geometry only — round = the circle (phone, socials) / square = 6px radius (the Header burger)',
+    },
+    size: {
+      control: 'radio',
+      options: ['md', 'lg'] satisfies GlyphButtonSize[],
+      description: 'Box scale — md 2.75rem/44px · lg 3.5rem/56px',
+    },
+    'aria-label': {
+      control: 'text',
+      description:
+        'REQUIRED (§6.3) — the control has no visible text; already-translated string',
+    },
+    children: {
+      control: false,
+      description:
+        'The icon slot — always an inline SVG, normally a glyph component (<Phone />)',
+    },
+    asChild: {
+      control: false,
+      description:
+        'Render no <button> of its own — the single child element becomes the control (see AsChildTel)',
+    },
+    disabled: { control: 'boolean' },
+  },
+} satisfies Meta<typeof GlyphButton>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+/** Solid — the filled call CTA: white phone glyph on the green circle. */
+export const Default: Story = {};
+
+/** Outline — the socials tone: green glyph on surface, fills green on hover. */
+export const Outline: Story = {
+  args: {
+    variant: 'outline',
+    children: <Instagram />,
+    'aria-label': 'Deschide profilul Instagram',
+  },
+};
+
+/**
+ * Ghost — the quiet tone: nothing at all at rest, a dim tray fading in on
+ * hover (`bg-line-subtle`, byte-parity with Button's ghost so the two atoms
+ * speak one ghost language). Transparent at rest means the PARENT owns the
+ * rest contrast: light grounds only.
+ */
+export const Ghost: Story = {
+  args: { variant: 'ghost' },
+};
+
+/**
+ * SquareGhost — THE Header burger cell of the D2 grid: same ghost bundle, same
+ * 44px box as its round siblings, only the radius differs (6px, §15.1).
+ * The glyph is a BESPOKE inline svg on purpose — not a glyphs/ file: the
+ * real one ships with the Header section (D12) as an
+ * aria-expanded-driven animated morph. This atom only enables that — it
+ * guarantees `group` on its root and holds no state of its own.
+ * Two rules travel with this cell into the Header dossier (G2 a11y,
+ * 2026-08-06): keep ONE state-invariant label + aria-expanded (no
+ * Deschide/Închide label swapping, no aria-haspopup — the nav panel is a
+ * disclosure, not a menu widget), and the morph SVG brings its OWN
+ * motion-reduce guard — the atom's transition-none never reaches the
+ * parent's transforms.
+ */
+export const SquareGhost: Story = {
+  args: {
+    variant: 'ghost',
+    shape: 'square',
+    'aria-label': 'Deschide meniul',
+    children: (
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        strokeWidth={2}
+        strokeLinecap="round"
+      >
+        <path d="M4 6h16" stroke="currentColor" fill="none" />
+        <path d="M4 12h16" stroke="currentColor" fill="none" />
+        <path d="M4 18h16" stroke="currentColor" fill="none" />
+      </svg>
+    ),
+  },
+};
+
+/** Both box scales side by side (gap owned by the parent, §6.4). */
+export const Sizes: Story = {
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-4">
+      <GlyphButton {...args} size="md" />
+      <GlyphButton {...args} size="lg" />
+    </div>
+  ),
+};
+
+/** asChild: the nested tel: anchor IS the circle — the floating CTA's shape. */
+export const AsChildTel: Story = {
+  args: { size: 'lg' },
+  render: (args) => (
+    <GlyphButton {...args} asChild>
+      <a href="tel:+40700000000">
+        <Phone />
+      </a>
+    </GlyphButton>
+  ),
+};
+
+/** asChild ×2: the footer socials — external anchors, each named in Romanian. */
+export const AsChildExternal: Story = {
+  args: { variant: 'outline' },
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-4">
+      <GlyphButton {...args} asChild aria-label="Deschide profilul Instagram">
+        <a
+          href="https://example.com/instagram"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Instagram />
+        </a>
+      </GlyphButton>
+      <GlyphButton {...args} asChild aria-label="Deschide profilul TikTok">
+        <a
+          href="https://example.com/tiktok"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Tiktok />
+        </a>
+      </GlyphButton>
+    </div>
+  ),
+};
+
+/** Disabled, both variants — plain-button mode (an anchor cannot be disabled). */
+export const Disabled: Story = {
+  args: { disabled: true },
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-4">
+      <GlyphButton {...args} variant="solid" aria-label="Sună clinica">
+        <Phone />
+      </GlyphButton>
+      <GlyphButton
+        {...args}
+        variant="outline"
+        aria-label="Deschide profilul Instagram"
+      >
+        <Instagram />
+      </GlyphButton>
+    </div>
+  ),
+};
+
+/**
+ * Sizing precedence in situ: an md circle keeps its glyph at 20px even when the
+ * Icon asks for lg (2rem) — the circle owns its icon's geometry (plan §4c).
+ */
+export const IconSizePrecedence: Story = {
+  render: (args) => (
+    <div className="flex flex-col items-start gap-2">
+      <GlyphButton {...args} size="md">
+        <Phone size="lg" />
+      </GlyphButton>
+      {/* Developer note, not site copy — untranslated on purpose. */}
+      <p className="text-sm text-ink-muted">
+        &lt;Phone size=&quot;lg&quot;&gt; inside an md GlyphButton → 20px, not
+        32px: the circle&apos;s
+        [&amp;_svg]:size-[calc(var(--disc-size,2.75rem)*5/11)] scores (0,1,1)
+        and outranks the glyph&apos;s own (0,1,0).
+      </p>
+    </div>
+  ),
+};
+
+/**
+ * Hover END state of the solid disc, pinned as real pixels — Button's
+ * 'pin-hover' pattern: the visual spec performs a true mouse hover before the
+ * (animation-disabled) screenshot, because synthetic play() events cannot
+ * activate CSS :hover. Pinned the day the face changed (the 2026-09-06 mirror
+ * law): the END face must read as Outline's rest face — surface disc, cta
+ * glyph, 1px cta hairline. If this frame and Outline's rest ever show the
+ * line in different places, the inset-ring stand-in drifted off the border's
+ * position and the mirror broke.
+ */
+export const HoverSolid: Story = {
+  tags: ['pin-hover'],
+};
+
+/**
+ * THE LAVENDER FAMILY (owner, 2026-10-01): the same bundles cut from the menu
+ * buttons' `accent` role — GlyphButton.tsx's THE TWO FAMILIES, Button.tsx's
+ * measured pairs. Accent is the map band's two row discs and, since the evening
+ * of the same day, the fixed corner's call and WhatsApp discs (solid);
+ * AccentOutline the Footer's four discs and the reviews deck's chevrons
+ * (outline). No call site the site ships wears Default's green any more.
+ */
+export const Accent: Story = {
+  args: { tone: 'accent' },
+};
+
+export const AccentOutline: Story = {
+  args: {
+    tone: 'accent',
+    variant: 'outline',
+    children: <Instagram />,
+    'aria-label': 'Deschide profilul Instagram',
+  },
+};
+
+/**
+ * THE JUMP (owner, 2026-10-01: "call hover button in bottom right and
+ * whatsapp button … to have that jump at you animation on hover. this should
+ * not affect buttons from footer"): `motion="jump"`, Button's cell byte for
+ * byte — the old round button's hover:scale-105 on its own 200ms clock, worn
+ * by the fixed corner's two discs and nothing else, lavender since the same
+ * evening ("i thaught i told you to refactor the whatsapp and call buttons to
+ * be lilla too"), so the story wears `tone: 'accent'` like them. HOVER IT in
+ * the workbench; the net runs under reduced motion, where the disc holds
+ * still by rule, so a frame would show a still disc and never the jump:
+ * 'no-visual'.
+ */
+export const Jump: Story = {
+  tags: ['no-visual'],
+  args: { tone: 'accent', motion: 'jump', size: 'lg' },
+};
+
+/**
+ * The lavender pair's hover END states, pinned as real pixels ('pin-hover',
+ * as HoverSolid above): the solid disc drains to the white face with a lilac
+ * glyph and hairline — AccentOutline's rest face; the outline disc FILLS
+ * lavender with a white glyph — Accent's rest face (this atom's two-way
+ * mirror).
+ */
+export const HoverAccent: Story = {
+  tags: ['pin-hover'],
+  args: { tone: 'accent' },
+};
+
+export const HoverAccentOutline: Story = {
+  tags: ['pin-hover'],
+  args: {
+    tone: 'accent',
+    variant: 'outline',
+    children: <Instagram />,
+    'aria-label': 'Deschide profilul Instagram',
+  },
+};

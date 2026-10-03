@@ -1,0 +1,83 @@
+// ui/disc.ts — shared CONTROL-BOX GEOMETRY: what a fixed-box control's box IS,
+// independent of what sits inside it (an svg, two letters), of its radius, and
+// of the colours it wears. Extracted when the second consumer arrived — the
+// repo's stated extraction moment (the ui/slot.ts play, owner fb-64; language-
+// dial board .claude/plans/language-dial.plan.md D17 Road 3, 2026-08-27).
+//
+// NOT a component and NOT public API: ui-layer plumbing that sits flat beside
+// the atom folders and may be imported by `ui/` atoms ONLY — never by
+// `sections/`, never by `app/`. Importing a class-string module is not
+// composing a component, which is what keeps both consumers leaves under the
+// /classify-component rubric.
+//
+// STANDING RULE — editing this file = editing every atom that imports it
+// (GlyphButton and SpeedDial today). The editing run's visual manifest must
+// declare all consumers' stories: the visual net is what turns a silent
+// cross-atom regression into a loud undeclared diff.
+
+/**
+ * The box, the ring and the clock — everything two disc-shaped controls share.
+ *
+ * · `inline-flex shrink-0 items-center justify-center` — a box that centres one
+ *   thing and never collapses in a flex row.
+ * · the focus ring (§9, SC 2.4.7): 2px, offset OUTSIDE the box, painted with
+ *   --focus. LIGHT GROUNDS ONLY — the ring vanishes on dark surfaces (1.11:1 on
+ *   inverse-surface); GlyphButton.tsx carries the full standing caveat.
+ * · `--fade` — ONE clock for the whole system (fb-44), spelled in THREE places
+ *   that must agree: this file (GlyphButton + SpeedDial), ui/Button's `base`,
+ *   and — since 2026-09-10 — ui/Card's `cardClasses`, whose tone crossfade runs
+ *   on the same 400ms (see Card.tsx's TONE CROSSFADE paragraph; the clock is
+ *   shared, its property list is not). Here it comes with `active:duration-0`
+ *   snapping press feedback and `motion-reduce:transition-none` giving clean
+ *   snaps to anyone who asked for less motion (§9). The NUMBER only: the
+ *   `duration-(--fade) ease-in-out` pair that reads it rode here until
+ *   2026-10-01 and now sits on each atom's own transition line (GlyphButton's
+ *   `motionClasses.still`, SpeedDial's `discTransition` — the same two tokens
+ *   on the same elements, zero pixels), because GlyphButton's opt-in JUMP
+ *   spells two clocks as per-property lists on the transition longhands, and
+ *   a `duration-*` utility beside such a list would fight it for one property
+ *   (Button.tsx's THE JUMP).
+ *
+ * What is deliberately NOT in here: the `transition-[…]` PROPERTY LIST (and,
+ * since the jump, its duration and easing). Each
+ * atom names its own — GlyphButton fades background-color, color and
+ * box-shadow (exactly three at rest; the third exists for solid's inset-ring
+ * hairline, the 2026-09-06 mirror law, while border-color stays out so
+ * outline's border can never move — and `scale` joins as a fourth under
+ * `motion="jump"`), and SpeedDial's list is still the bare
+ * color pair since the owner reversed D5's border-color + box-shadow creep
+ * (2026-08-27). The corner auras therefore freeze by TWO different
+ * mechanisms, and the difference matters to any future lane: the bulb's
+ * --bulb-shadow is off-clock BY OMISSION (box-shadow is not in SpeedDial's
+ * list — SpeedDial.test.tsx's shadow fence argues that case), but the call/
+ * WhatsApp discs' `shadow-aura` now rides a transitioning property and holds
+ * still by VALUE-CONSTANCY alone: the aura layer of the composed box-shadow
+ * is byte-identical at both ends, so only the inset-ring slot lerps
+ * (computed-style probe, solid-hover lane 2026-09-06). Give a GlyphButton
+ * consumer a hover-varying shadow and its aura ANIMATES; only on SpeedDial
+ * is it frozen by construction. A shared list would still be wrong: it would
+ * drag one atom's animation into the other.
+ */
+export const discBase =
+  'inline-flex shrink-0 items-center justify-center ' +
+  'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
+  '[--fade:400ms] active:duration-0 motion-reduce:transition-none';
+
+/**
+ * The square box, in rem so browser zoom scales the whole control (§7).
+ *
+ * D16 · F2: the step is the FALLBACK of one variable, `--disc-size`, that a HOST
+ * may set per screen type through className — `[--disc-size:4rem] xl:…` on the
+ * corner pair, so the call CTA and the language bulb scale from ONE number and
+ * keep reading as one row. The atoms themselves query nothing (§6.5: an atom
+ * never reads the screen); `size` picks which number the fallback is.
+ *
+ * md 2.75rem/44px is the §9 touch target · lg 3.5rem/56px is the primary-CTA
+ * scale. Both are pixel-identical to the `size-11` / `size-14` they replaced.
+ * There is no `sm` step: SpeedDial's stem discs derive from the bulb's own
+ * variable (`--disc`), so a third entry would have no consumer.
+ */
+export const discBox = {
+  md: 'size-[var(--disc-size,2.75rem)]',
+  lg: 'size-[var(--disc-size,3.5rem)]',
+} as const;

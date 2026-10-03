@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   ...(pagesBasePath ? { basePath: pagesBasePath } : {}),
 
+  // next dev ONLY (no effect on the export): Next 16's dev server accepts its
+  // HMR WebSocket from localhost alone, and under 16.3 that socket also
+  // carries React's debug channel, which the RSC client waits on before it
+  // hydrates. A page opened at http://127.0.0.1:3000 therefore stayed inert
+  // HTML (no rotators, no menu, no modal) with nothing but a failing socket in
+  // the console (root cause 2026-09-25). Add the LAN address (e.g.
+  // '192.168.*.*') here if the "Network:" URL is ever used.
+  allowedDevOrigins: ['127.0.0.1'],
+
   // next-image-export-optimizer (owner decision 2026-08-01, brief §15.5): the runtime
   // optimizer doesn't exist under static export, so images are pre-generated at build
   // time and served from srcset baked into the HTML (brief §11).
@@ -25,6 +34,15 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: ['next-image-export-optimizer'],
   env: {
+    // The visitor's browser has no `process` object, so src/lib/base-path —
+    // the one reader behind every link (i18n/href.ts) and every picture
+    // (ui/Image, the Wordmark's mark, the Footer's badge) — can only read this
+    // in a client island if the text is already a literal by build time, and
+    // `env` is Next's inliner for exactly that, the same one the image
+    // optimizer's browser-side reads below rely on. It is the SAME variable as
+    // `basePath` above, on purpose: Next's own prefix and the one this site
+    // writes cannot disagree if there is only one source (§15.13, §15.2).
+    PAGES_BASE_PATH: pagesBasePath ?? '',
     nextImageExportOptimizer_imageFolderPath: 'public/images',
     nextImageExportOptimizer_exportFolderPath: 'out',
     nextImageExportOptimizer_quality: '75',

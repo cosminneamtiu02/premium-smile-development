@@ -17,6 +17,96 @@ export default defineConfig([
     name: 'jsx-a11y/full-recommended-rules',
     rules: jsxA11y.flatConfigs.recommended.rules,
   },
+  // Map design-system wrappers to the native element they render so jsx-a11y
+  // rules also inspect their call sites (G2 review, Button migration).
+  {
+    name: 'jsx-a11y/component-mapping',
+    settings: { 'jsx-a11y': { components: { Button: 'button' } } },
+  },
+  // `role="list"` on a <ul> is redundant in the SPEC and load-bearing in
+  // WebKit: Safari drops list semantics from any list styled `list-style: none`
+  // outside a <nav>, and Tailwind's preflight sets that on every <ul> in the
+  // project — so without the explicit role VoiceOver announces loose links
+  // instead of "list, N items" (ui/SpeedDial's stem, G2 a11y 2026-08-27). The
+  // rule looks exceptions up PER ELEMENT and falls back to its own defaults for
+  // any element absent from this map, so `nav` keeps its default either way —
+  // it is restated here only so the map reads complete in one place.
+  {
+    name: 'jsx-a11y/list-role-for-webkit',
+    rules: {
+      'jsx-a11y/no-redundant-roles': [
+        'error',
+        { nav: ['navigation'], ul: ['list'], ol: ['list'] },
+      ],
+    },
+  },
+  // Every internal link is a plain <a href={localeHref(locale, path)}> and every
+  // navigation is a full document load (brief §15.13). Layer 1 of that decision
+  // is src/i18n/navigation.ts exporting nothing else; this is layer 2, because
+  // a module boundary cannot stop someone importing next/link directly.
+  {
+    name: 'navigation/full-document-only',
+    rules: {
+      // Next's own rule tells the author of a literal internal <a href="/de/">
+      // to reach for next/link — the exact move §15.13 forbids, and this repo
+      // has no pages/ directory for it to be right about in the first place.
+      '@next/next/no-html-link-for-pages': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'next/link',
+              message:
+                'Internal links are plain <a href={localeHref(locale, path)}> — every navigation is a full document load (brief §15.13).',
+            },
+            {
+              // `notFound` stays allowed: it is a build-time signal, not a
+              // navigation.
+              name: 'next/navigation',
+              importNames: [
+                'useRouter',
+                'redirect',
+                'permanentRedirect',
+                'usePathname',
+              ],
+              message:
+                'No client-side navigation (§15.13). For the current path use usePathname from @/i18n/navigation.',
+            },
+            {
+              // Nothing imports this any more (D9 replaced createNavigation
+              // with our own three-line usePathname) — the entry stays as a
+              // tripwire, so reaching back for the family fails at lint.
+              name: 'next-intl/navigation',
+              message:
+                'next-intl navigation is not used at all (§15.13, D9): the current path comes from usePathname in @/i18n/navigation, and links from localeHref in @/i18n/href.',
+            },
+            {
+              // Retired by §15.16 Phase C (G2 LOW): the locale reaches
+              // next-intl through the [locale] root param resolved in
+              // src/i18n/request.ts — pages never thread it by hand, and a
+              // Phase-4 lane copying an old recipe must fail at lint, not
+              // compile quietly. importNames keeps getTranslations and
+              // getRequestConfig importable.
+              name: 'next-intl/server',
+              importNames: ['setRequestLocale'],
+              message:
+                'setRequestLocale is retired (§15.16 Phase C) — the locale arrives via next/root-params in src/i18n/request.ts; pages never call it.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // The one module allowed to reach for the primitive it wraps: since D9
+  // src/i18n/navigation.ts calls next/navigation's usePathname itself, three
+  // lines of its own rather than next-intl's createNavigation family (which
+  // dragged next/link into the Header island as dead code).
+  {
+    name: 'navigation/full-document-only/boundary-module',
+    files: ['src/i18n/navigation.ts'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
   globalIgnores([
     '.next/**',
     'out/**',

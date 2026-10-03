@@ -4,8 +4,9 @@
 #      visual suite, inside the pinned Playwright image, comparing the LINUX
 #      baseline set (maintained by visual-baseline.yml), so unverified visual
 #      changes can never reach production unnoticed.
-#   2) push to main        = production build; deploy step is a placeholder
-#      until the hosting provider is chosen (brief §15.2).
+#   2) push to main        = production build, link-checked under its base
+#      path, then deployed to the interim GitHub Pages host behind the
+#      production environment's approval (brief §15.2, amended 2026-08-02).
 #
 # NOTE: the container tag below must stay in lockstep with the playwright
 # version in package.json. Dependabot bumps the npm side; bump this tag in the
@@ -32,6 +33,15 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
     steps:
+      # PRs into main are promotions from develop, full stop (GITHUB_SETUP §2,
+      # amended 2026-08-02). Any other source branch fails the required check
+      # immediately — which makes its merge button unusable.
+      - name: Guard — promotions come only from develop
+        if: github.head_ref != 'develop'
+        run: |
+          echo "::error::PRs into main must originate from develop — this one is from '${{ github.head_ref }}'."
+          exit 1
+
       - uses: actions/checkout@v7
 
       - name: Install
@@ -56,10 +66,22 @@ jobs:
         if: failure()
         run: echo "::notice::If the visual diffs are INTENTIONAL, the linux baseline set is stale — run the 'Visual baselines (linux set)' workflow on develop and update this PR (GITHUB_SETUP §7)."
 
-      - name: Build site + link check
+      # The export this gate checks is the one production DEPLOYS — the interim
+      # Pages shape, under its base path — crawled the way github.io serves it
+      # (tools/check-export-links.mjs), so a URL that forgot the prefix fails
+      # HERE and not on the live site: on 2026-10-03 every picture 404'd on a
+      # Pages-shaped build while the root-served crawl stayed green
+      # (pages-base-path lane, CLAUDE.md §15.2). The root shape is ci.yml's
+      # crawl, on the same develop commit. STEP-level env on purpose: built
+      # with the prefix, Storybook would move every story's picture and the
+      # visual suite above would fail on nothing.
+      - name: Build site (production shape) + link check as Pages serves it
+        env:
+          PAGES_BASE_PATH: /premium-smile-development
+          NOINDEX: '1'
         run: |
           npm run build
-          npx linkinator out --recurse --skip "^https?://" --verbosity error
+          node tools/check-export-links.mjs
 
       - name: Upload visual diff report on failure
         if: failure()
@@ -89,6 +111,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # The exact artifact about to deploy, crawled under its base path the way
+      # github.io will serve it — a broken export never reaches the approval
+      # click (pages-base-path lane, 2026-10-03).
+      - name: Link check as Pages serves it
+        run: node tools/check-export-links.mjs
       - name: Upload production export (rollback record)
         uses: actions/upload-artifact@v7
         with:

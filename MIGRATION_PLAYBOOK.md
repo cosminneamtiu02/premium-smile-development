@@ -36,8 +36,11 @@ project exists to eliminate. Copying markup for reference is fine; copying style
 - [ ] Hosting: production is NOT GitHub Pages. Confirm the host (recommended:
       Cloudflare Pages) → tokens into the two environments → replace both DEPLOY
       PLACEHOLDER blocks. Staging must always build with `STAGING=1` (noindex).
-- [ ] In parallel (owner track): obtain the logo file (settles the purple + favicon +
-      OG image); start drafting Romanian content per page.
+- [x] In parallel (owner track): obtain the logo file — the clinic's tooth MARK and its two
+      lettering colours landed 2026-10-01 (`public/images/brand/mark.svg`, sections/Wordmark;
+      CLAUDE.md §15.28). The purple hue is now a known number the owner may adopt for
+      `accent-decorative` (his call); the favicon and the OG image are still open items of §15.6.
+- [ ] In parallel (owner track): start drafting Romanian content per page.
 
 **Phase gate:** repo settings, branches, protections, and environments exist. Note that
 `ci.yml` needs `package.json` to run — the CI-green check on a trivial PR becomes
@@ -78,7 +81,7 @@ release gate runs the visual suite against a real Storybook.)
       `ecc:skill-health` (moved here per flow-audit F15).
 - [ ] Translation-parity test: all five `messages/*.json` share one identical key set
       (Vitest).
-- [ ] `lib/clinic.ts` created with placeholder NAP values, typed and exported.
+- [ ] `lib/clinic/clinic.ts` created with placeholder NAP values, typed and exported.
 - [ ] **Resolve the image-optimizer parked decision now** (ask the owner per brief §15), then
       build `ui/Image` as the very first component.
 
@@ -131,7 +134,7 @@ the owner's explicit instruction (brief §15.7).**
 ## Phase 3 — `sections/` compositions
 
 **Order (shell first):** `Header` (+ `LanguageSwitcher`) → `ContactModal` → `Footer` →
-`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `TeamMemberCard` → `TeamSection` →
+`Hero` → `ServiceCard` → `ServicesTeaser`/`ServicesGrid` → `PersonnelCard` *(was TeamMemberCard — owner 2026-09-10, new design; reworked 2026-09-21 with the two links; reworked again 2026-09-30, §15.25: ONE link, the cutout, the reviews deck's idle frame, the ribbon's seam)* → `TeamRoster` *(was TeamSection — the Team page's band, 2026-09-21; the staff tiles alone since 2026-09-30)* → `DoctorShowcase` *(the doctors band on Home and on the Team page, the floss ribbon's first mount — 2026-09-30, §15.25)* → the doctor-page bands `DoctorIntro` (+ its `CredoCard`) → `DoctorProfile` (+ its `ScheduleCard`) → `DoctorCourses` (+ its `CourseTimeline` island, round 2g) → `TintedBand` (extracted) → `DoctorStats` (+ its `StatNumber` island) *(2026-09-21; rounds 2–2g 2026-09-25/26 — `DoctorTeam` dropped, §15.23)* → *[future: the doctor's blog-articles band, above the map]* →
 `CTABanner` → `FAQAccordion` (if kept) → `PostCard`.
 
 ### Per-section checklist
@@ -155,9 +158,65 @@ the owner's explicit instruction (brief §15.7).**
 
 ## Phase 4 — Routes & pages
 
-**Order:** locale layout shell (real Header/Footer + skip-link) → root `/` redirect script →
-Home → Services → Team → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts`
-(JSON-LD builder, metadata helper, sitemap + robots generation).
+**Order** *(amended 2026-09-02, org-review board — seo.ts split so the per-page checklist's
+items 3–4 have their helpers from page one instead of refactoring four pages at the end)*:
+locale layout shell (real Header/Footer + skip-link — **the mount contract below**) → root
+`/` redirect script → `seo.ts` **part 1**: JSON-LD builder + metadata helper → Home →
+Services → Team → Doctor pages (`/team/[slug]`, one per `lib/team` row — 2026-09-21, reshaped 2026-09-25) → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts` **part 2**:
+sitemap + robots generation (needs every route to exist — stays last).
+
+### Shell mount contract (assembled 2026-09-02, org-review board)
+
+Pointers only — each number keeps its ONE home in the named file's header; the mount lane
+ticks every box and the numbers never fork. Ticked 2026-09-03 by the app-shell-mount lane
+(boards `.claude/plans/app-shell-layers.plan.md` + `.claude/plans/app-shell-mount.plan.md`);
+`src/app/[locale]/shell.test.tsx` is where the ticked boxes are pinned at runtime. Three
+boxes stay open BY DESIGN, annotated below — they are not lane debt:
+
+- [x] `scroll-padding-top: 5rem` on `<html>` — Header.tsx "THE MOUNT CONTRACT" (a). The 5rem
+      reach is currently derived independently in Header.tsx, NavMenu's panel cap and
+      FloatingActions' `--stem-inset` arithmetic — the three move together or the debt reopens.
+- [x] header · main · footer · FloatingActions as **body-level siblings** — Header.tsx (b);
+      NavMenu's dev tripwire guards this one (and only this one) at runtime.
+- [x] `scroll-padding-bottom` in **three steps**, each keeping its `env()` term —
+      FloatingActions.tsx mount-contract block (a).
+- [x] FloatingActions mounts **after** `{children}` + Footer — its clearance spacer must be
+      the last box in normal flow.
+      *(**REVERSED by owner decision 2026-09-04**: spacer removed; the section now renders
+      nothing in normal flow, so the mount order buys DOM/tab order rather than geometry and
+      the FOOTER ends the flow. The footer keeps corner-band focusables centred/inset, which
+      makes box 5's rule load-bearing rather than belt-and-braces; `scroll-padding-bottom`
+      (box 3) is RETAINED and now carries the scroll-clearance duty alone. Same round added
+      the sticky footer — `flex min-h-dvh flex-col` on `<body>`, `flex-1` on `<main>`.)*
+- [ ] Page-composition rule: no standalone focusable narrower than ~72px flush at the
+      left/right margins in blocks that scroll past the corners (FloatingActions b); keyboard
+      walkthrough at several scroll positions (FloatingActions c).
+      *(standing rule — every page lane; never "done", so the box never ticks. **Promoted to
+      the PRIMARY guarantee on 2026-09-04** when the clearance spacer was removed: it is what
+      makes "the corner discs cover nothing operable" true.)*
+- [ ] The dormant `viewport-fit` decision (FloatingActions header caveat) — decide with the
+      first full-bleed hero.
+      *(dormant — decide with the first full-bleed hero; the `env()` terms are already
+      written, so that day changes one export and no expression)*
+- [x] ContactModalProvider wraps the whole shell; the dialog renders **last**
+      (ContactModalProvider header). Header/NavMenu → ContactModalTrigger wiring is ONE
+      commit that closes the menu and opens the dialog (inventory row 34) **plus** the
+      focus-return decision + interaction test (org-review board F1 — the opener unmounts
+      when the menu closes, so the platform's focus restore needs a named target).
+      *(the trigger-wiring half shipped earlier, in PR #63; this lane added the provider
+      that makes it live — a Header outside one THROWS by design, which is what the mount
+      discharges)*
+- [x] Wordmark's declared two-line home-link wiring diff — DROPPED, not parked (owner,
+      2026-09-06: "i am dropping wordmark home link"); fb-179 is closed by removal. The three
+      files that still described it as parked were cleaned on 2026-10-01 (Wordmark.tsx D9,
+      Footer.test.tsx, the header-step e2e). *(LANDED 2026-10-02 on the owner's word — "i just
+      want the "premium smile" logo from top bar and from footer … to be a component that takes
+      you to home": the logo is a link to the locale home in the Header AND the Footer, fb-179
+      reversed with it; CLAUDE.md §15.33)*
+- [x] **Skip-link** — named in the Order above and carried by NO section header: it is a NEW
+      build item of this shell lane, not a mount of something that exists.
+- [x] Delete the placeholder header/footer markup in `layout.tsx` (and its duplicate
+      copyright/NAP lines).
 
 ### Per-page checklist
 1. **Route:** page under `app/[locale]/…`; `generateStaticParams` covers all five locales

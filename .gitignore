@@ -11,6 +11,12 @@ test-results/
 # personal Claude config (project settings.json and skills ARE committed)
 .claude/*.local.md
 .claude/settings.local.json
+# working plans for the plan-canvas — session artifacts, never shipped
+# (owner decision 2026-08-03; the one committed button plan stays as history)
+.claude/plans/
+# section-breakdown workspaces — datetime-rooted dossier trees (§15.12), session artifacts;
+# the durable record is MIGRATION_INVENTORY.md + epic issues, never the workspace
+.claude/section-runs/
 
 # os noise
 .DS_Store
@@ -19,8 +25,18 @@ test-results/
 tsconfig.tsbuildinfo
 
 # next-image-export-optimizer build artifacts (regenerated at build)
-public/images/nextImageExportOptimizer/
+public/images/**/nextImageExportOptimizer/
 public/images/next-image-export-optimizer-hashes.json
 
 # local env files — host tokens etc. must never enter the repo (SETUP_VERIFICATION Findings #4)
 .env*
+
+# local runner artifacts
+.vitest-attachments/
+.claude/checkpoints.log
+# vitest browser-mode failure screenshots — Vitest's DEFAULT writes them beside
+# the failing suite on every red run (22 were committed by accident in #34);
+# vitest.config.ts now routes them into .vitest-attachments/ (browser.
+# screenshotDirectory), this line stays as the belt. Playwright's VISUAL
+# BASELINES live under tests/visual/__screenshots__/ and stay tracked
+src/**/__screenshots__/

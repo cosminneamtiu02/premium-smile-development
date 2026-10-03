@@ -1,0 +1,240 @@
+import type { ComponentPropsWithRef, ReactElement } from 'react';
+import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
+import { Heading } from '@/components/ui/Heading/Heading';
+import { cx } from '@/lib/cx/cx';
+
+// sections/SectionHeading — the opener every content section starts with: the
+// mono kicker over the display title, 8px apart, aligned start or centre.
+// Built to the owner-approved composition contract (board fb-314, 2026-09-01).
+// Six call sites in the old repo — clinic-location, doctor-showcase and its
+// card, helping-staff-grid and its card, the home page's reviews block — which
+// is the whole reason it exists ahead of any page that needs it: without it
+// that pair is spelled six times, and a pair spelled six times can disagree
+// six ways.
+//
+// ── TIER: SECTION, decided on the IMPORT GRAPH and not on size. It has five
+// props, no state, no message key and it would sit happily in ui/ by feel —
+// but rule 3 of /classify-component looks at what a thing COMPOSES, and this
+// composes two atoms (ui/Eyebrow, ui/Heading), so it is a composition and §4's
+// dependency direction then forbids ui/ from importing it back. Wordmark
+// already named the trap after this component: heavy reuse ("the SectionHeading
+// paradox") schedules a composite EARLY in the build order, it never promotes
+// it to ui/.
+//
+// ── PROPS IN, NOTHING ELSE — the Wordmark precedent (§8.1). Both strings
+// arrive FINISHED and already translated; this file calls no t(), owns no
+// message key and adds none. The CONSUMING section keeps the keys, because
+// only it knows whether its title lives under `services` or `team` — a shared
+// opener that reached for a namespace would have to invent one that fits
+// nobody. No 'use client', no hooks, no handlers either: this compiles into
+// the static HTML of every page that uses it and ships zero bytes of
+// JavaScript (§16). The tests prove all of that from the source text, because
+// no runtime assertion can see a directive.
+//
+// ── D3 · THE STACK IS GONE (owner, 2026-09-01). The old component wrapped the
+// pair in `ui/Stack direction="column" gap="sm" align={…}`, an atom this repo
+// deliberately does not migrate (MIGRATION_INVENTORY, drop-flagged: §6.4 says
+// parents own spacing, and a component whose entire body is three flex
+// utilities is a rename of CSS, not an abstraction). So the layout is those
+// utilities, written here, on the root: `flex flex-col gap-2`. **gap-2 IS the
+// old gap="sm"** — the Stack's own table mapped that name to this exact
+// utility (0.5rem/8px on Tailwind's untouched scale, measured back at 8px in
+// the story's play), so the eyebrow sits where it always sat rather than where
+// a fresh guess would put it. The inventory reserved that flag's final verdict
+// for consumer runs like this one; D3 is it.
+//
+// ── THE SIZE STEP IS `band` — 30px on a column under 28rem, 36px from it —
+// since D48 (the planner's, 2026-09-26), which corrected D47 (the owner's,
+// the same day) within the hour. The step came FROM here first: ui/Heading
+// grew its second step (`size="section"` → `font-display text-3xl
+// text-ink-strong`, 30px) with THIS component as its measured consumer (epic
+// #54, D2), and every band title on the site wore it until the owner read
+// them on the doctor page — „Alte păreri ale pacienților noștri”, „Vizitează
+// clinica noastră”, „Filozofia mea”, „Despre Dr. Elena Marin”, „Cursuri și
+// specializări” — and ruled them "too small … bring those headings to the
+// next order of heading height, so to make them larger … i do not want them
+// so large [as the h1], but larger definitely".
+// D47 took "the next order" literally: `page` (`font-display text-4xl
+// text-ink-strong`, a fixed 36px, the step the 404 band measured in on
+// 2026-09-07). It lasted an hour, because the relation to the h1 is
+// WIDTH-DEPENDENT: the h1 wears `hero`, the fluid `clamp(2rem, 1rem + 3.5vw,
+// 4.5rem)`, which floors at 32px on the Smartphone 390 and the 320 stress
+// width — so a fixed 36px title OUTRANKED the page's own h1 on every phone,
+// the one reading the owner's second clause forbids. That inversion was
+// found here and returned to the planner with D47; D48 is the answer:
+// `band` (`font-display text-3xl @md:text-4xl text-ink-strong`) — `section`'s
+// 30px byte for byte on a column narrower than the container's 28rem `@md`
+// step, `page`'s 36px from it. The ARITHMETIC — where the h1 crosses 36px,
+// the residual window in which the two may briefly meet — is not repeated
+// here: it lives in ui/Heading's header, in the paragraph that opens
+// "'band' JOINED 2026-09-26", beside the row it argues for. What THIS file
+// needs is the consequence: the `@md:` half queries the NEAREST ANCESTOR
+// container, which every consumer already supplies (ui/Container's
+// `containerClasses`, ui/Card's root); with none above it the title stays at
+// 30px — it can fail small, never large. This component still writes no
+// container query of its own (§6.5): the response rides the atom's row.
+// ONE step, same face, same ink, unbolded, no size invented (§6.6); it lands
+// on the title in every consumer at once — that is what one opener is for —
+// and the eyebrow row does not move. §15.24's one-size-per-level table is
+// the planner's to amend with it (<h2> through this opener = `band`).
+// The division of labour is the atom's own rule — Heading answers "how big is
+// this title", never "which element is it", so `asChild` lets this section
+// hand it a REAL <h2>/<h3>. The heading in the document outline and the look
+// on the screen are therefore two independent decisions, which is exactly
+// what the old repo needed `visualLevel` for and no longer does.
+//
+// ── THE `id` LANDS ON THE HEADING, NEVER ON THE ROOT. Every old call site that
+// passes one pairs it with `aria-labelledby` on the wrapping <section>, and
+// that only works if the id is on the element carrying the heading's TEXT: an
+// id on this wrapper would name the section with the eyebrow and the title read
+// together ("NE GĂSEȘTI Vizitează clinica noastră"). It rides a conditional
+// spread (`{...(id ? { id } : {})}`) so no empty attribute ships when nobody
+// asked for one, and it goes on the CHILD of Heading rather than through
+// Heading's props — ui/slot.ts merges child-wins, so both routes land in the
+// same place, and the direct one keeps the element's own attributes on the
+// element in the source.
+//
+// ── V1 CUTS FIVE AXES the old component carried (fb-300's YAGNI precedent —
+// an unused prop is public API that costs review, tests and compatibility
+// forever). The counts are the old repo's, not a hunch:
+//   · `trailing` (a slot for an "all services" button) — 0 call sites;
+//   · `align="end"` — 0 call sites;
+//   · `level` 1 and 4–6 — 0 call sites; every one of the six is 2 or 3, and an
+//     <h1> belongs to the page, never to a repeated section opener;
+//   · `mdAlign` (centre on mobile, start at md) — 1 call site, doctor-card. It
+//     also shipped `md:items-start` from a shared component, which is the §6.5
+//     smell: media queries are the page's judgement, not a fragment's;
+//   · `visualLevel` — 1 call site, doctor-card (level 3 that reads like a
+//     section title). RETIRED rather than deferred: `asChild` already decouples
+//     the element from the look, so `<Heading size="band" asChild><h3>` IS
+//     that call site (`section` when v1 was cut; D47 and D48 moved the step,
+//     not the argument) — which is precisely what this component renders for
+//     `level={3}`. The axis has nothing left to do.
+// The first four join ADDITIVELY when a real design measures them, defaults
+// pinned (§6.6), breaking nobody.
+//
+// ── Classes join through lib/cx — importable from every tier since the
+// cx-to-lib lane (org-review F2, 2026-09-02) retired the ui-only fence.
+// MERGE ORDER: this component's classes first, the caller's className LAST. A
+// deterministic convention the tests pin — NOT a cascade mechanism: attribute
+// order never decides CSS specificity, and §6.8 limits caller utilities to
+// positioning/spacing, so a real conflict has no way to arise.
+//
+// ── IT OWNS NO MARGIN AND NO WIDTH (§6.4/§6.8). Five old call sites passed
+// `mb-12 sm:mb-16` through className and that stays the parent's business; the
+// old root's own `w-full` is gone too, because a block-level flex column is
+// already as wide as the box it is given, and the one arrangement where the
+// class mattered — a flex-row parent — is the parent's to write.
+//
+// ── KNOWN LIMIT, recorded rather than patched: `align="center"` with an
+// eyebrow long enough to WRAP. globals.css sets `p, li, blockquote {
+// text-align: start }` in the base layer (§15.1 — long prose aligns logically),
+// and a declaration that matches the element itself always beats a value
+// inherited from an ancestor, in any layer. So `text-center` on this root
+// reaches the <h2> (which no base rule names) but not the eyebrow's <p>. On one
+// line it is invisible — `items-center` centres the BOX and the box hugs its
+// text — and every centred eyebrow in the repo today is one line. A wrapping
+// one would centre its box and start-align its lines. The fix is DECIDED
+// (text-align board, §15.15 b, owner 2026-09-04): the base rule stays; when a
+// centred eyebrow first needs to wrap, THIS component hands its Eyebrow
+// `text-center` through className — the ContactModal/Footer per-element
+// pattern one tier down (ui/Eyebrow merges the caller's className onto its
+// host <p>) — deliberately unbuilt until that evidence exists.
+//
+// ── The root is a plain <div>. <hgroup> technically fits this exact shape (one
+// heading plus <p> taglines) but maps to a generic in every screen reader, so
+// it would buy structure nobody can hear; the landmark belongs to the <section>
+// that consumes this, which is also where `aria-labelledby` points at the id
+// above.
+
+/** Real heading levels this opener may render (§9: logical heading order). */
+export type SectionHeadingLevel = 2 | 3;
+
+/** Where the block sits and how its lines read. */
+export type SectionHeadingAlign = 'start' | 'center';
+
+type SectionHeadingOwnProps = {
+  /**
+   * The mono micro-label above the title, finished and already translated
+   * (§8.1). Omitted → no eyebrow row at all, rather than an empty <p>: a blank
+   * paragraph is a stray stop for a screen reader and a phantom child for the
+   * flex gap.
+   */
+  eyebrow?: string;
+  /** The section title, finished and already translated (§8.1). */
+  title: string;
+  /**
+   * Which REAL heading element the title becomes — the document outline, kept
+   * independent of the size step (which is always `band`, D48). Default 2: a
+   * page's one <h1> is the page's, and 3 is the shape a card uses inside a
+   * section that already opened with an <h2>.
+   */
+  level?: SectionHeadingLevel;
+  /**
+   * How the block sits in the box the parent gives it — the flex cross axis
+   * and the text alignment together, on the root. Default 'start'. (Centring
+   * a WRAPPING eyebrow has a documented limit; see the header.)
+   */
+  align?: SectionHeadingAlign;
+  /**
+   * Set on the HEADING element, never on the root — the half of the
+   * `aria-labelledby` pair a wrapping <section> points at.
+   */
+  id?: string;
+};
+
+export type SectionHeadingProps = SectionHeadingOwnProps &
+  // `children` is Omitted along with the own props: content arrives as
+  // `eyebrow`/`title`, and without the Omit a caller could nest something,
+  // type-check, and watch it vanish (JSX children always beat spread ones) —
+  // the exact shape someone reaches for now that v1 cut the `trailing` slot.
+  // `title` and `id` leave with them too: both are native div attributes whose
+  // meaning here is this component's, not HTML's.
+  Omit<ComponentPropsWithRef<'div'>, keyof SectionHeadingOwnProps | 'children'>;
+
+// Record<> rather than a lookup object, so widening the union above cannot
+// compile until this table names the new value (the ui/Heading growth gate).
+const ALIGN: Record<SectionHeadingAlign, string> = {
+  // text-start, not text-left: the repo leans logical properties (§3) and the
+  // globals base rule is text-align: start — all five locales are LTR so the
+  // rendering is identical, but the class matches the house direction
+  // (G2 LOW, 2026-09-01). text-center is direction-neutral.
+  start: 'items-start text-start',
+  center: 'items-center text-center',
+};
+
+const ELEMENT: Record<SectionHeadingLevel, 'h2' | 'h3'> = {
+  2: 'h2',
+  3: 'h3',
+};
+
+export function SectionHeading({
+  eyebrow,
+  title,
+  level = 2,
+  align = 'start',
+  id,
+  className,
+  ...rest
+}: SectionHeadingProps): ReactElement {
+  // A closed two-member union resolved through a Record — never `h${level}`,
+  // the old repo's heading atom's move, which turns a typed level into an
+  // unvalidatable string and is how h1 and h4–h6 quietly come back. The
+  // Record (not a ternary) is the same widening gate ALIGN celebrates above:
+  // growing SectionHeadingLevel cannot compile until this table names the
+  // new level's element (G2 MEDIUM, 2026-09-01 — a ternary mapped any
+  // widened value to h2 silently).
+  const HeadingElement = ELEMENT[level];
+
+  return (
+    <div
+      className={cx('flex flex-col gap-2', ALIGN[align], className)}
+      {...rest}
+    >
+      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+      <Heading size="band" asChild>
+        <HeadingElement {...(id ? { id } : {})}>{title}</HeadingElement>
+      </Heading>
+    </div>
+  );
+}

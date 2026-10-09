@@ -4201,6 +4201,47 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     4px into the burger's transparent box — on a real 320 phone, with no gutter, it clears it by 3px; §15.28's
     two levers (the placeholder `<a>` → `<span>`, striking the key) are void.
 
+34. **The map on a phone, taller — ON THE OWNER'S WORD (2026-10-09, verbatim: "i need map on phone to be like
+    50% taller. it is too small."; lane `rework/map-phone-taller`):** sections/ClinicLocation's map tray — 2:1 at
+    every width since the old site — is **4:3 below the band's own `@lg` step** (ui/Container's box under 32rem:
+    the phone layout, where the two contact rows stack — board D7's old `sm:`) and keeps its 2:1 from that step up:
+    `aspect-[4/3] @lg:aspect-[2/1]` on the tray, the component header's OLD → NEW item 4. Three quarters of the
+    width tall instead of half is exactly half again as tall at the same width, so the owner's "50%" holds on every
+    phone by construction. "On phone" read as the band's phone layout — the step its rows already turn at, so the
+    band changes shape in one place; every tablet, a phone held sideways past the step and every laptop or desktop
+    draw the 2:1 box as before. MEASURED on the built export (Chromium, touch emulation, overlay scrollbars; before
+    = develop a6b072f): a 320 × 568 phone 256 × 128 → 256 × 192px (22.5 → 33.8 % of the screen's height), 360 × 800
+    288 × 144 → 288 × 216, 390 × 844 312 × 156 → 312 × 234 (18.5 → 27.7 %), 412 × 915 329.6 × 164.8 → 329.6 × 247.2,
+    430 × 932 344 × 172 → 344 × 258 — Home, Team and the doctor pages alike, the one band; 667 × 375 and 844 × 390
+    phones held sideways, 768 × 1024 and 820 × 1180 tablets and a 1280 laptop unchanged to the pixel; no sideways
+    scroll anywhere. The compiled stylesheet gains exactly two rules and loses none (+72 bytes); the bare 2:1 rule
+    keeps shipping, now unused, because MIGRATION_INVENTORY's ClinicLocation row (41) spells it — §15.25 round 2's
+    recorded `@source not` lever. GOOGLE'S FRAME, measured with the real embed on emulated phones (a Pixel 7 and an
+    iPhone 13, in Chromium): a ONE-finger swipe over the map's centre still scrolls the page (150px of 150, before
+    and after), so the larger map is no larger trap; and the taller frame gives Google room for its full „Deschide
+    în Maps." label, its satellite toggle and its move control, where the strip showed a bare „Maps". PINS:
+    ClinicLocation.test.tsx — exactly the two ratio tokens on the tray, and, on the real stylesheet, the map 4:3 at
+    the 256, 312 (Home's band too) and 344px columns and at 511, 2:1 at 512 and 614.4 — and the stories'
+    `expectMapShape`, whose MEASURED column decides the shape the Smartphone and Scaled plays expect, so the visual
+    net's 390 frames assert the phone's map; both mutants proven red (the 2:1 box everywhere fails 7 tests, the 4:3
+    everywhere 8). **Visual, MEASURED** at ZERO tolerance against a pristine build of develop a6b072f (464 cells,
+    private port 6191): exactly the declared 16 cells move — Sections/ClinicLocation's four stories at 390 (43 004px
+    each) and Pages/Home, Pages/Team and Pages/Doctor at 320 and 390 in RO and DE (each page 60px taller at 320 and
+    74px at 390, the map's own growth on the net's 241 and 297px columns) — 442 identical, plus 6 cells of 1–29px in
+    the known flicker families (the Services page, the price list, SpeedDial's disc): re-shot, only 2 of them differed
+    again (the Services page at 1920, 22–25px), and the pristine build re-shot against itself differs on that page too
+    (2 and 26–29px). **Recorded, the owner's calls:** THE JUMP — across the step the map loses a third of its height (a
+    511px column draws it 383px tall, a 512px one 256px), beside the rows' own rearrangement; THE SMALLEST PHONE HELD
+    SIDEWAYS — the 2016 iPhone SE at 568 × 320 stays under the step, and its map grows 454 × 227 → 454 × 341, taller
+    than its screen (106.5 %); the one-finger swipe still scrolls the page there (measured, emulated) and a height cap
+    in `svh` on the tray is the one-class lever; the probe ran in Chromium only — one look on a real iPhone's Safari
+    is the check worth making; THE OVERLAP — the phone-gutter lane (`rework/phone-gutter`, §15.35, in flight the same
+    day) halves the gutter on the narrowest windows, which widens a phone's column (351px at 390) and with it this
+    map (≈ 351 × 263 there, +69 % over the 156px of before); from a 600px window its columns are develop's, so this
+    band's `@lg` step stays at a 640px window (both read off that lane's formula on 2026-10-09 — §15.35 has its
+    numbers); both lanes move the same 320 and 390 cells, and whichever merges second rebases and re-records them.
+    No reviewer round — one class and its pins, the recolour lanes' precedent; Opus reviewers on the owner's word.
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —

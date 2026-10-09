@@ -287,8 +287,9 @@ lane's no-consent branch dissolves both for free (G2 a11y review, 2026-09-09 —
 lane-local fix without changing decided geometry):**
 - At 320/390 the site's fixed corner discs (FloatingActions, bottom-right) can sit over
   Google's zoom/attribution cluster in the frame's bottom-right corner when the map's lower
-  edge is scrolled into the bottom ~136px — a thumb aiming at "+" may hit the WhatsApp or
-  phone disc. Keyboard focus is protected by the site's `scroll-padding-bottom`; pointer
+  edge is scrolled into the bottom ~152px (~136px until 2026-10-09, when the corner rose
+  from 1rem to 2rem above the bottom edge — CLAUDE.md §15.36) — a thumb aiming at "+" may
+  hit the WhatsApp or phone disc. Keyboard focus is protected by the site's `scroll-padding-bottom`; pointer
   use is not. Walk it at several scroll positions in the §9 page-tier keyboard/pointer
   pass; the band cannot re-inset third-party UI.
 - The embed precedes the rows in the tab sequence: keyboard and switch users Tab through

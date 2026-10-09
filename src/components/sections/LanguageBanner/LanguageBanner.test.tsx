@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import {
   afterAll,
   beforeAll,
@@ -429,17 +429,46 @@ describe('LanguageBanner — it never takes focus, and it never leaves the page'
     // DOM. Nothing else in the repo can catch a change to this number.
     expect(style.position).toBe('fixed');
     expect(style.zIndex).toBe('30');
-    // 11.5rem = 184px above the bottom edge — the tallest of globals'
+    // 12.5rem = 200px above the bottom edge — the tallest of globals'
     // scroll-padding-bottom steps since fb-353 stacked the right corner
-    // (re-derived 2026-09-05; the first instantiation, 6.5rem/104px, predates
-    // the WhatsApp disc — the derivation is in LanguageBanner.tsx' anchor
-    // comment, and THIS pin is what went red when the corner moved under the
-    // rule, exactly as intended). Matched by PATTERN because the value carries
-    // an `env(safe-area-inset-bottom)` term and engines differ on whether they
-    // collapse `calc(184px + 0px)` — shell.test.tsx matches the same family
+    // (re-derived 2026-09-05, and again 2026-10-09, when the corner rose from
+    // 1rem to 2rem so its glow ends above Safari's bottom bar and every step
+    // rose with it; the first instantiation, 6.5rem/104px, predates the
+    // WhatsApp disc — the derivation is in LanguageBanner.tsx' anchor
+    // comment). This pin follows the card's OWN class only; the bond with the
+    // steps is asserted by the next case, against the shell's real rule.
+    // Matched by PATTERN because the value carries an
+    // `env(safe-area-inset-bottom)` term and engines differ on whether they
+    // collapse `calc(200px + 0px)` — shell.test.tsx matches the same family
     // the same way. `(^|\D)` closes the left boundary a plain substring would
-    // leave open ('1184px').
-    expect(style.bottom).toMatch(/(^|\D)184px/);
+    // leave open ('1200px').
+    expect(style.bottom).toMatch(/(^|\D)200px/);
+  });
+
+  it('lifts the card at least as high as the TALLEST scroll-padding-bottom step (the SC 2.4.11 bond)', async () => {
+    // The bond is an inequality (THE ANCHOR and the SC 2.4.11 note): a
+    // Tab-scrolled target rests one step above the viewport's bottom, and the
+    // card must not rest above it, or the target could sit wholly under the
+    // card. Checked against globals.css' REAL rule at 1536px, where the step is
+    // tallest — so a corner that rises and takes the steps with it fails HERE
+    // until the card follows (G2 typescript, 2026-10-09).
+    const before = { width: window.innerWidth, height: window.innerHeight };
+    await page.viewport(1536, 864);
+    try {
+      mount('ro');
+      const firstPx = (value: string): number =>
+        Number(/(-?[\d.]+)px/.exec(value)?.[1] ?? NaN);
+      const lift = firstPx(getComputedStyle(card() as HTMLElement).bottom);
+      // `min(<step>, 100% - 9.5rem)`: the step is the first length — the
+      // cap's term keeps its percentage, the viewport's height, unresolved.
+      const step = firstPx(
+        getComputedStyle(document.documentElement).scrollPaddingBottom,
+      );
+      expect(step).toBeGreaterThan(0);
+      expect(lift).toBeGreaterThanOrEqual(step);
+    } finally {
+      await page.viewport(before.width, before.height);
+    }
   });
 });
 

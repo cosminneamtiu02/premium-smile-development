@@ -93,7 +93,14 @@ Decisions still go to CLAUDE.md §15.
     card covers the site map; Firefox and Safari keep 76 to 95 % of those links visible, and develop
     before that day hid none (measured on the built export). The page cannot scroll past its end, so
     the cure belongs to the banner: keep room for the card at the page's end while it is open — the
-    planner's recommendation, declined for now (LanguageBanner.tsx, its SC 2.4.11 record);
+    planner's recommendation, declined for now (LanguageBanner.tsx, its SC 2.4.11 record). Those
+    numbers were taken with the card 16px lower than today (it rose with the corner buttons on
+    2026-10-09, CLAUDE.md §15.36), so the walk re-measures which footer links hide at 1024–1280px;
+  - the language banner on SHORT screens (CLAUDE.md §15.36, computed by the a11y review, not yet
+    measured): the card's top slides under the sticky top bar on a viewport under about 408px tall
+    (392 before 2026-10-09), and between about 277 and 315px both of its controls hide entirely —
+    1366 × 768 at 200 % zoom and phones held sideways are the cases; the lever, the owner's, is to
+    drop the card to the corner row on short, wide screens;
   - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5); and, since
     the band scale reached it (CLAUDE.md §15.32 round 2), two zoom paths never measured: open
     `/de/services/` in a 1920 window in FIREFOX with View → Zoom → "Zoom Text Only" at 150 and 200 % —

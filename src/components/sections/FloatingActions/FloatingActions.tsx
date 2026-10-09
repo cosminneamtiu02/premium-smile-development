@@ -73,6 +73,13 @@ import { clinic } from '@/lib/clinic/clinic';
 // obligation (b) below as the reason), so the two bands cover page GROUND and
 // nothing operable. The cost of keeping it was a screen-height strip of blank
 // page under every footer on every route.
+// ONE MEASURED EXCEPTION, below a ~344px window (G2 a11y, 2026-10-09): there
+// the Footer's centred contact row is wider than the gap between the corner
+// columns, and at the page's end its outer discs (Instagram, the phone) sit
+// level with the corners — measured at 320 × 568, each 44px disc's box is 44 %
+// under a corner disc (32 % while the corner sat on 1rem). Never entirely
+// hidden, the uncovered part well over 24 × 24, so SC 2.4.11 holds; a row
+// that wraps in two below that width is the owner's lever.
 //
 // WHAT THAT SHIFTS ONTO THE REMAINING THREE OBLIGATIONS — SC 2.4.11 Focus Not
 // Obscured (Minimum), AA and new in WCAG 2.2 (G2 a11y review, 2026-08-12). The
@@ -87,12 +94,14 @@ import { clinic } from '@/lib/clinic/clinic';
 //      scroll-clearance story rather than the invisible half of a pair (WCAG
 //      technique C43). Still THREE STEPS, because the corners grow with the
 //      screen — and each step GREW by a disc plus the row gap on 2026-09-04,
-//      when the right corner became a stacked pair (fb-353): the deepest thing
-//      the page must be able to scroll clear of is now two discs, not one.
-//        base   calc(9.5rem  + env(safe-area-inset-bottom))
-//        xl     calc(10.5rem + env(safe-area-inset-bottom))
-//        2xl    calc(11.5rem + env(safe-area-inset-bottom))
-//      Each is: 1rem corner offset + disc + 0.5rem stack gap + disc + 1rem
+//      when the right corner became a stacked pair (fb-353), and by 1rem more
+//      on 2026-10-09, when the corner rose to give its glow room (THE GLOW'S
+//      ROOM, below): the deepest thing the page must be able to scroll clear
+//      of is two discs standing on a 2rem edge.
+//        base   calc(10.5rem + env(safe-area-inset-bottom))
+//        xl     calc(11.5rem + env(safe-area-inset-bottom))
+//        2xl    calc(12.5rem + env(safe-area-inset-bottom))
+//      Each is: 2rem corner offset + disc + 0.5rem stack gap + disc + 1rem
 //      headroom, at that width's --disc-size (3.5 / 4 / 4.5rem).
 //      The env() term belongs to EVERY step: drop it from the upper two and a
 //      viewport-fit=cover phone under-clears by the inset it lifted the
@@ -135,16 +144,19 @@ import { clinic } from '@/lib/clinic/clinic';
 // ui/GlyphButton's contract); tests/unit/jump-census.test.ts names the two
 // beside the Hero's pair, the doctor card's link and the Header's bar Contact.
 //
-// Both controls sit 1rem above the bottom edge PLUS the device's safe-area
-// inset, and every `scroll-padding-bottom` step adds the same inset back, so
-// the scroll clearance grows by exactly as much as the controls were lifted.
+// Both controls sit 2rem above the bottom edge (THE GLOW'S ROOM, below, gives
+// the reason it is 2rem and not 1rem) PLUS the device's safe-area inset, and
+// every `scroll-padding-bottom` step adds the same inset back, so the scroll
+// clearance grows by exactly as much as the controls were lifted.
 // CAVEAT, so nobody files a false bug: env(safe-area-inset-bottom) resolves to
 // 0px until a page opts in with viewport-fit=cover, and the shell does not set
 // it today (there is no `export const viewport` in app/). So on an iPhone the
-// calc currently collapses to a plain 1rem — harmless, because without the
-// opt-in the UA already keeps the layout viewport inside the safe area. The
-// term is here for the moment Phase 4 ships `viewport: { viewportFit: 'cover' }`
-// (which a full-bleed hero will want); it is forward-compatible, not active.
+// calc currently collapses to a plain 2rem — harmless, because without the
+// opt-in the UA already keeps the layout viewport inside the safe area (and,
+// on iOS 26, above Safari's bottom bar: the very edge whose cut the 2rem
+// clears). The term is here for the moment Phase 4 ships
+// `viewport: { viewportFit: 'cover' }` (which a full-bleed hero will want); it
+// is forward-compatible, not active.
 //
 // ── THE SWAP (language-dial lane, 2026-08-28 — this section's one real change
 // since 08-12). The bottom-left corner used to be an inert `<p aria-hidden>`
@@ -181,7 +193,27 @@ const discSteps =
 
 // The shared bottom edge — the "one row" contract: two corners are only a pair
 // if they sit on the same line.
-const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
+//
+// ── THE GLOW'S ROOM (owner, 2026-10-09: "their shadow finished abruptley as it
+// hits the bottom bar of the browser" → "go with 1"). 2rem, not the 1rem the
+// corner sat on until then, because the aura below needs it: Safari on iOS 26
+// draws no FIXED paint below the layout viewport's bottom edge — the top of its
+// bottom-bar zone — while the page itself scrolls on under its see-through
+// bar, so the part of a glow that reaches past that edge is sliced off by a
+// straight line in the middle of the visible page. MEASURED on the owner's
+// iPhone screenshot: the cut sat exactly 1rem (48 device px at 3×) below both
+// corners, and the glow just above it was still ~10 % of the way from white to
+// the full lilac — `--shadow-aura` is `0 8px 22px`, so it paints offset + blur
+// = 30px below a disc, and the old 16px of room cut its lower half. 2rem =
+// 32px holds all of it; at the edge it is under one colour step in 255 (the
+// Gaussian of half the blur radius). During the 105 % hover jump it is about
+// one and a half — but the jump sits in `@media (hover: hover)`, so it never
+// happens on the touch screens where the cut lives. On a laptop the edge is
+// the window's own, so the change there is only a corner 16px higher whose
+// whole glow now shows.
+// Pinned by what the browser COMPUTES, not by these tokens: the Default
+// story's play measures every resident's glow against the room under it.
+const cornerBottom = 'bottom-[calc(2rem+env(safe-area-inset-bottom))]';
 
 // ── THE AURA ON THE CORNER (owner, 2026-09-05: "implement that aura on the
 // buttons for calling and whatsapp and for the language switcher, so all
@@ -208,9 +240,10 @@ const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
 // `--stem-inset` is the atom's second public variable: how much of the viewport
 // its extreme-zoom cap must leave alone, measured from the BULB'S CENTRE (the
 // atom adds the half-bulb itself). Only the host knows the number, so the host
-// does the arithmetic — and it is 6rem + the safe area:
-//   1rem  this corner's own offset from the bottom edge (cornerBottom), plus
-//         env(safe-area-inset-bottom), because the bulb was lifted by it;
+// does the arithmetic — and it is 8rem + the safe area:
+//   2rem  this corner's own offset from the bottom edge (cornerBottom — the
+//         glow's room since 2026-10-09), plus env(safe-area-inset-bottom),
+//         because the bulb was lifted by it;
 //   6rem  the Header pill's REACH — `sticky top-4` + `h-20` (Header.tsx's mount
 //         contract, which books the very same 6rem for the shell's
 //         `scroll-padding-top`). The bar is blurred glass and always on top, so
@@ -219,15 +252,16 @@ const cornerBottom = 'bottom-[calc(1rem+env(safe-area-inset-bottom))]';
 // past ~300% the cap turns the capsule into its own scroll box instead of
 // letting it climb behind the sticky pill or off the top of the viewport
 // (SC 1.4.10 / 2.4.11).
-// ONE VALUE, EVERY WIDTH: 7rem = this corner's own 1rem offset + the Header
+// ONE VALUE, EVERY WIDTH: 8rem = this corner's own 2rem offset + the Header
 // pill's 6rem reach (`top-4` + `h-20`), plus the safe-area inset the bulb was
-// lifted by. The bar is the same height on every screen since the owner's
-// 2026-09-04 "make top bar same size on every screen as it is on a standard pc
-// screen now" — an earlier spelling the same day carried a second `xl:` step
-// for a bar that grew only on desktop, and it went out with that step.
+// lifted by (7rem while the corner sat on 1rem, until 2026-10-09). The bar is
+// the same height on every screen since the owner's 2026-09-04 "make top bar
+// same size on every screen as it is on a standard pc screen now" — an earlier
+// spelling the same day carried a second `xl:` step for a bar that grew only
+// on desktop, and it went out with that step.
 const languageCorner =
   `fixed ${cornerBottom} left-4 z-40 ${discSteps} ` +
-  '[--stem-inset:calc(7rem+env(safe-area-inset-bottom))] ' +
+  '[--stem-inset:calc(8rem+env(safe-area-inset-bottom))] ' +
   '[--bulb-shadow:var(--shadow-aura)]';
 
 // THE CALL CORNER — the same bottom edge, the same size steps. GlyphButton's
@@ -237,16 +271,18 @@ const callCorner = `fixed ${cornerBottom} right-4 z-40 ${discSteps} shadow-aura`
 
 // THE WHATSAPP DISC — the call corner's exact mirror, one disc higher (fb-353).
 // The offset is written in the disc's OWN variable rather than in a pixel
-// count: `1rem + safe area` is the corner's edge, `var(--disc-size)` is the
-// phone disc it stands on, and `0.5rem` is the gap between them — so at xl and
-// 2xl, where the discs step up to 4rem and 4.5rem, the stack follows for free
-// and the gap stays 0.5rem. A hardcoded `bottom-[5rem]` would overlap the phone
-// at exactly the widths the fb-295 steps exist for.
+// count: `2rem + safe area` is the corner's edge (cornerBottom's own spelling,
+// repeated here and pinned equal by the test at every disc step),
+// `var(--disc-size)` is the phone disc it stands on, and `0.5rem` is the gap
+// between them — so at xl and 2xl, where the discs step up to 4rem and 4.5rem,
+// the stack follows for free and the gap stays 0.5rem. A hard-coded 6rem
+// offset, right for the base 3.5rem discs, would close the gap at xl and
+// overlap the phone at 2xl — exactly the widths the fb-295 steps exist for.
 // (Tailwind restores the whitespace CSS math requires when it compiles the
 // arbitrary value — the same normalisation ui/Modal's `min(100%,32rem)` steps
 // leave to it.)
 const whatsappCorner =
-  'fixed bottom-[calc(1rem+env(safe-area-inset-bottom)+var(--disc-size)+0.5rem)] ' +
+  'fixed bottom-[calc(2rem+env(safe-area-inset-bottom)+var(--disc-size)+0.5rem)] ' +
   `right-4 z-40 ${discSteps} shadow-aura`;
 
 export function FloatingActions(): ReactElement {

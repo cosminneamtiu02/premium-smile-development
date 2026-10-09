@@ -441,6 +441,12 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     net sees it — neither story mounts FloatingActions. ROUND 6 moved the
 //     block to the screen's centre, so on every screen tall enough to hold
 //     the content the buttons sit mid-screen, far from the corner discs.
+//     RE-MEASURED 2026-10-09 on the built export, after the corner rose from
+//     1rem to 2rem (CLAUDE.md §15.36; G2 typescript): the WhatsApp disc's top
+//     is now at y 692 (390 × 844) and 872 (768 × 1024), and the services link
+//     clears it by 48.5 and 164.5px; at 320 × 568, scroll 0, the link's last
+//     40 × 49.1px lie under the CALL disc and the WhatsApp disc no longer
+//     touches it — still never entirely hidden.
 //   · TAB ORDER runs beads → Contact → Services, i.e. the bottom of the
 //     picture before its middle: the APG's controls-before-slides order is a
 //     DOM decision, the beads' placement a picture one, and SC 2.4.3 asks for

@@ -4242,6 +4242,82 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     numbers); both lanes move the same 320 and 390 cells, and whichever merges second rebases and re-records them.
     No reviewer round — one class and its pins, the recolour lanes' precedent; Opus reviewers on the owner's word.
 
+36. **The corner rises to 2rem — room for its glow above Safari's bar — ON THE OWNER'S WORD (2026-10-09, verbatim:
+    "on my iphone on safary you have language button, and phone button always sticky to botto left and right of the
+    screen. their shadow finished abruptley as it hits the bottom bar of the browser. give me 3-4 fixes for that" →
+    "go with 1"; lane `fix/corner-glow-room`):** THE CAUSE, MEASURED on the owner's iPhone screenshot (3×, read pixel
+    by pixel with node + sharp, `/debug-deep`): Safari on iOS 26 draws no `position: fixed` paint below the layout
+    viewport's bottom edge — with no `viewport-fit=cover` (the shell sets none: FloatingActions' CAVEAT, and
+    app/[locale]/layout.tsx records the opt-in as DORMANT) that edge is the top of Safari's bottom-bar zone — while
+    in-flow content scrolls on under its see-through floating bar. So
+    sections/FloatingActions' `shadow-aura` (`0 8px 22px`: the glow reaches offset + blur = 30px below a disc; the
+    language bulb wears the same token through `--bulb-shadow`) was cut by a straight line exactly 1rem (48 device px)
+    under both corners — the glow still at ~10 % of its colour just above the cut, the open page ground without any
+    step at that line, the footer's rule and tagline drawn crisply below it. An Apple Developer Forums report
+    describes the same rule (fixed content "cut off rather than rendering behind the navigation elements"). On a
+    laptop the edge is the window's own, so the lost tail was never visible there. Four fixes were offered — lift the
+    corner, a tighter corner-only glow, `viewport-fit=cover` (a shell lane), a 0.99-opacity compositing quirk — and
+    the owner took the first. THE FIX: the corner's offset 1rem → **2rem** (`cornerBottom`, the WhatsApp disc's stack
+    on it), so the whole 30px glow ends inside 32px of room — under one colour step in 255 at the edge at rest, about
+    one and a half during the 105 % hover jump. Everything derived from the offset rose by the same 1rem: the dial's
+    `--stem-inset` 7rem → 8rem (Header.tsx's MOUNT CONTRACT register); globals.css' `scroll-padding-bottom` steps
+    9.5 / 10.5 / 11.5rem → 10.5 / 11.5 / 12.5rem (FloatingActions' obligation (a), the SC 2.4.11 clearance);
+    sections/LanguageBanner's lift 11.5rem → 12.5rem (the tallest step — still 1rem over the 2xl stack and 3rem over
+    the phone's, the focus slivers under the card unchanged at 2rem / 1rem); COOKIES.md's map-overlap band ~136 →
+    ~152px. PINNED by what the browser COMPUTES: the Sections/FloatingActions Default story's play measures each
+    resident's glow — offset-y + blur + spread of every outer computed box-shadow — against the room between its box
+    and the viewport's bottom; RED before the fix ("expected 16 to be greater than or equal to 30"), green after; the
+    token suites and shell.test.tsx moved with the numbers. MEASURED on the built export in WebKit and Chromium
+    (393 × 852, 320 × 568, 1536 × 864): the bulb and the call disc 32px of room against a 30px glow, the WhatsApp disc
+    96px (112 at the laptop's larger discs). NOT PROVABLE ON THIS WORKSTATION: no Xcode, so no iOS Simulator, and
+    Playwright's WebKit draws no browser bar — the owner's iPhone is the check (a LAN preview of the lane's export).
+    **Visual, MEASURED** at zero tolerance against a pristine build of develop 6c1d917 (464 cells, private ports
+    6231/6232): exactly the declared 13 cells move — Sections/FloatingActions' eight (Default at 390 / 1536,
+    Clearance320 and GermanOpen at 320 / 390 / 1536) and Sections/LanguageBanner's five (Default at 390 / 1536,
+    LongestFit320 at 320 / 390 / 1536), 17.6–30.9k px each; 6 more of 1–29px are the harness's known flicker —
+    develop re-shot against its OWN reference differs in five of them by the same counts, the sixth passed on
+    re-shoot. Re-shot after the rebase onto develop 27e7801 (the Home hero's seam fix): the same 13 cells by the
+    same counts, plus 8 of 1–14px that develop re-shot against its own reference also produced (a different set on
+    each of two runs). The 13 darwin cells are re-recorded under classic scrollbars (a 15px gutter, read off the
+    body's width) and verified, with Sections/ContactModal's seven passing against the committed set as the mode's
+    control. Gates on the rebased tree: prettier · eslint · tsc clean; vitest 147 files / 3821 tests with the image
+    optimizer's variants hidden (CI's condition); build-storybook and `next build` green; e2e 250 passed / 140
+    skipped. The owner looked on his iPhone over a LAN preview of the lane's export: "it looks very good".
+    **Reviews (G2 — react-reviewer, typescript-reviewer and a11y-architect, all on Opus):** three times APPROVE WITH
+    CHANGES, 0 critical / 0 high, every finding folded or recorded in one round. FOLDED: (1) **THE CAP ON SHORT
+    SCREENS** (a11y, measured before it was taken): top + bottom padding (6rem + 10.5rem) is taller than a viewport at
+    ~400 % zoom, the area a browser aims focus at inverts, and FIREFOX parked focused controls entirely behind the
+    sticky pill — Tab through /ro/ and /ro/services/ on the built exports at 320px wide: develop hid 18 of 320 stops at
+    a 208px-tall viewport, the 2rem corner 26 there and 18 at 222px (about the WCAG 400 % reference), where develop hid
+    none; with every bottom step written `min(<step>, 100% - 9.5rem)` — always 3.5rem of room between the paddings, the
+    bottom one giving way first — 0 at 208 / 222 / 240 / 256px (Chromium hid none in any variant; WebKit's Tab reaches
+    form controls only by default and proved nothing). The cap never engages on a viewport taller than 20 / 21 / 22rem,
+    so no frame of the visual net sees it. (2) the shell's two media queries in rem (80rem / 96rem — Tailwind's own xl /
+    2xl, where the discs step), not px. (3) THE CHAIN, PINNED (typescript): FloatingActions.test holds every clearance
+    step EQUAL to the tallest reach + 1rem (it only held `>=`, which the pre-lane table still passed);
+    shell.test.tsx DERIVES each step from the mounted WhatsApp disc; LanguageBanner.test.tsx asserts the card's lift
+    ≥ the real 2xl step; the WhatsApp disc's offset is pinned to the call disc's at every disc size — each mutation
+    check turned red (the stack left on 1rem; the corner at 1.5rem with the shell untouched; the banner at 12rem).
+    (4) the play reads the viewport's visible height (`clientHeight`), names the control in its message, and its
+    length regex reads exponent notation. (5) stale words: the WhatsApp disc's comment and two test docs still said
+    1rem, and its counter-example, spelled as a class until now (a 5rem bottom offset), had been shipping a dead
+    rule since 2026-09-04 — prose now;
+    Hero.tsx's SC 2.4.11 record re-measured (the WhatsApp disc's top at 692 / 872px, the services link clear of it by
+    48.5 / 164.5px, at 320 × 568 partly under the call disc, never entirely); scroll-spy's ~38px nudge dated; the hover
+    jump noted as `@media (hover: hover)` — it never runs on the touch screens where the cut lives. (6) ui/SpeedDial's
+    CornerFit story takes plain `bottom-4` (the same pixels where `env()` is 0), so no rule only a story spells
+    ships. **Recorded, the owner's calls:** the language banner on SHORT screens (a11y, computed): its top slides
+    under the sticky pill below a ~408px-tall viewport (392 before the 16px), both its controls hidden between ~277
+    and ~315px (261–299 before) — high zoom and phones held sideways; the lever is to drop the card to the corner row
+    on short, wide screens (LanguageBanner.tsx's SC 2.4.11 note, BACKLOG.md entry 2, whose §15.33 footer-gap numbers
+    were taken with the card 16px lower and are re-measured in the §9 walk); the Footer's contact row below a ~344px
+    window: at the page's end its outer discs are now 44 % under the corner discs (32 % before — measured at 320 ×
+    568, never entirely; a two-row strip there is the lever); at 400 % zoom on a desktop the WhatsApp disc meets the
+    pill below a 250px-tall viewport (234 before; never entirely hidden) and the dial's stem window shrinks — the
+    lever the a11y review named is the 2rem lift under `(pointer: coarse)` alone, since the cut is a touch-Safari
+    problem; `viewport-fit=cover` stays dormant — if it ever ships, the corner's `env(safe-area-inset-bottom)` terms
+    wake and the room must be re-measured on a device in Safari's three tab layouts.
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —

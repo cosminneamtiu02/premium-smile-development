@@ -166,6 +166,11 @@ const longestUnbreakable = (value: string): string =>
  *     wider than it looks: PersonnelCard D5 records 21 characters as the
  *     ceiling inside the card's own 206px box, and it opts out of hyphenation
  *     for the same reason.
+ * RE-MEASURED 2026-10-09, after ui/Container's THE PHONE GUTTER (§15.35): at
+ * 320 the column is 288px on a phone (273 under the runner's scrollbar), a
+ * tile 288px with a 238px content box (273 / 223), so ~18 name characters
+ * fill the column (15.35px a character at 32px) and 24 position characters
+ * fit the box (22 in 223px). Both ceilings stand, with room.
  * A row over either is a DATA fix — a shorter word — never a letter-level
  * emergency break through a person's name or title (D5's own rule).
  */
@@ -196,6 +201,17 @@ const POSITION_CEILING = 21;
  * one („Constantinescu", 202px) withholds it under a ~345px window and draws
  * from 360. The lever for a longer real surname is the card's — the name's
  * step on a narrow card (PersonnelCard's NAME_STEP) — never this file's.
+ *
+ * RE-MEASURED 2026-10-09 by the same method on the built Team page, after
+ * ui/Container's THE PHONE GUTTER (§15.35) widened a phone's column: at the
+ * 320px stress window the column is 273px under the runner's scrollbar and
+ * the name block's line 204.2px, so 20 characters fit (196px; 21 are
+ * 205.8px) — on a phone, with no scrollbar, 288px and 218.1px, where 22 fit
+ * (215.6px; 23 are 225.4px). The ceiling stays 17, with room. A 22-character
+ * word now withholds the ribbon only at the runner's 320 — it is drawn from a
+ * 324px window, and on a real 320 phone; „Constantinescu" (202.3px) is drawn
+ * at every window from 320 (withheld under ~345 before), „Alexandrescu"
+ * (178.4px) as before.
  */
 const DOCTOR_POSITION_CEILING = 17;
 

@@ -35,8 +35,19 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 
 /** The distinctive half of the pair — the margin utility. `@container` alone
  * is legitimately everywhere (every band context); this string is the number
- * the promotion de-duplicated. */
-const CLAMP_SPELLING = 'mx-[clamp(1rem,10vw,12.5rem)]';
+ * the promotion de-duplicated. Since 2026-10-09 its middle term is a clamp of
+ * its own (THE PHONE GUTTER, CLAUDE.md §15.35). */
+const CLAMP_SPELLING = 'mx-[clamp(1rem,clamp(5vw,30vw_-_7.5rem,10vw),12.5rem)]';
+
+/** The spelling it replaced — the one-slope gutter, 10vw on a phone too.
+ * RETIRED, so it may appear NOWHERE in src/: a band that pasted it from an
+ * older record would quietly bring back the phone gutter the owner halved —
+ * and, Tailwind generating a rule for every class-like string it scans, even
+ * a comment spelling it would ship that rule as dead CSS. Built from two
+ * halves for that very reason: written whole here, this guard would be the
+ * one file still making Tailwind ship it (measured on the lane's first
+ * build, 2026-10-09). */
+const RETIRED_SPELLING = 'mx-[clamp(1rem,' + '10vw,12.5rem)]';
 
 const ALLOWED = [
   'components/sections/Footer/Footer.test.tsx',
@@ -66,6 +77,13 @@ describe('the gutter clamp has ONE definition in src/ (board fb-343)', () => {
       readFileSync(join(SRC_DIR, name), 'utf8').includes(CLAMP_SPELLING),
     );
     expect(spelling).toEqual(ALLOWED);
+  });
+
+  it('finds the RETIRED one-slope spelling nowhere in src/ (§15.35)', () => {
+    const retired = sourceFiles.filter((name) =>
+      readFileSync(join(SRC_DIR, name), 'utf8').includes(RETIRED_SPELLING),
+    );
+    expect(retired).toEqual([]);
   });
 
   it('the definition itself is present (the allowlist is not stale)', () => {

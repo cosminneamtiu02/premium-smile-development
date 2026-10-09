@@ -398,8 +398,9 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     owner named the buttons. MEASURED on the built export (RO, a classic
 //     15px scrollbar): 378 × 56 with an 18px label at 1280, at his 1500 and
 //     at 1536, under a one-line slogan of 71 / 84 / 86px; 472 × 70 with a
-//     22.5px label at 1920 under the 107px slogan; 294 × 56 at 768 and
-//     297 × 56 stacked at 390, as before. The atoms' `min-h` lets
+//     22.5px label at 1920 under the 107px slogan; 294 × 56 at 768 and,
+//     stacked at 390, 336 × 56 (297 × 56 as before until THE PHONE GUTTER
+//     widened the phone column, 2026-10-09). The atoms' `min-h` lets
 //     a long DE/FR label wrap between words (§8.4); syllable splits are the
 //     atoms' own ban (§15.14). THE WORDS BLOCK IS THE COLUMN, UNCAPPED
 //     (round 12, 2026-10-01): rounds 1–11 held it to `max-w-4xl`, the old
@@ -433,8 +434,9 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     — centred, ~72 px wide — never reach the corner column at any width.
 //     What remains is the 320 × 568 stress case only (a 320-wide screen
 //     just 568 tall: the content is taller than the screen, so the rows sit
-//     wherever the scroll puts them): at scroll 0 the link's last 40 × 48 px
-//     lie under the disc and part with the first scroll. Not a failure of
+//     wherever the scroll puts them): at scroll 0 the stacked link lies
+//     partly under the corner and parts with the first scroll (the numbers,
+//     re-measured twice on 2026-10-09, close this paragraph). Not a failure of
 //     2.4.11 (never entirely hidden) nor of 2.5.8; the three levers round 1
 //     offered (`pb-18 @xl:pb-0` on the row's div · a ≥ 88 px right inset at
 //     phone widths · accept) stay the OWNER'S CALL for that one width. No
@@ -446,7 +448,15 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     is now at y 692 (390 × 844) and 872 (768 × 1024), and the services link
 //     clears it by 48.5 and 164.5px; at 320 × 568, scroll 0, the link's last
 //     40 × 49.1px lie under the CALL disc and the WhatsApp disc no longer
-//     touches it — still never entirely hidden.
+//     touches it — still never entirely hidden. AND ONCE MORE THE SAME DAY, on
+//     the export that carries both the 2rem corner and THE PHONE GUTTER
+//     (ui/Container, CLAUDE.md §15.35 — a phone's column wider): at 390 × 844
+//     the link clears the WhatsApp disc by 68.5px in Romanian (its slogan a
+//     line shorter in the wider column) and 48.5 in German; at 320 × 568,
+//     scroll 0, the link spans the whole column, 16 to 304px, so its first
+//     56 × 49.1px lie under the language bulb and its last 56 × 49.1 under
+//     the call disc, in Romanian and German alike — the middle 176px, its
+//     label among them, uncovered, and the WhatsApp disc clear of it.
 //   · TAB ORDER runs beads → Contact → Services, i.e. the bottom of the
 //     picture before its middle: the APG's controls-before-slides order is a
 //     DOM decision, the beads' placement a picture one, and SC 2.4.3 asks for
@@ -800,7 +810,12 @@ export function Hero({
             the round-9 24px above the buttons, whatever its line count.
             Below the tablet the phone stays as it is (the owner: "leave on
             phone as is"): a 40px float there predates this lane (Romanian
-            at 360 and 390, German at 320) — dropping `md:` is the lever. */}
+            at 360 and 390, German at 320 when round 12e measured it). It
+            moves with the wraps: since THE PHONE GUTTER (2026-10-09,
+            ui/Container, CLAUDE.md §15.35) widened the phone column, a
+            phone shows it in Romanian from 300 to 350px and in German from
+            360 to 390px (measured on the lane's export). Dropping `md:` is
+            the lever. */}
         <div
           aria-live={isCarousel ? liveRegion(status) : undefined}
           className="col-start-1 row-start-2 grid md:items-end"

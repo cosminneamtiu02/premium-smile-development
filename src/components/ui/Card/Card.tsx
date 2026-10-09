@@ -297,9 +297,10 @@ import { slotClone } from '../slot';
 // layers being made and unmade), none in between, and about 3 ms of paint and
 // raster work together. It matters because of what the first consumer is:
 // four of the eleven price cards are over a thousand pixels tall on a phone
-// (the tallest 2112px at 390), the fade starts while the visitor is
-// scrolling, and §1's measure of success is an older patient on a phone that
-// is not always a new one.
+// (the tallest 2088px at 390 — 2112 until ui/Container's phone gutter of
+// 2026-10-09 widened the column; both measured on the built page), the fade
+// starts while the visitor is scrolling, and §1's measure of success is an
+// older patient on a phone that is not always a new one.
 // So the glow lives on the card's `::before` — a PSEUDO-ELEMENT and not a
 // nested element, because `asChild` leaves no element of Card's own in the
 // DOM (ui/TextButton's underline, for the same reason) — and that layer wears

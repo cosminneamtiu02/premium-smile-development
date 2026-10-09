@@ -231,9 +231,12 @@ import { slotClone } from '../slot';
 // traded for a container step.
 // THE STEP ANSWERS TO THE NEAREST `@container`, and that decides who reads
 // which size. A band title answers to ui/Container's column
-// (`containerClasses`), 80 % of the viewport under its 10vw gutters: 30px on
-// every phone column, 36px from a 560px viewport — every band on a tablet or
-// wider. A title inside a ui/Card answers to the CARD, whose root carries
+// (`containerClasses`) — 90 % of the viewport under a phone's 5vw gutters,
+// 80 % under the 10vw ones from a 600px window (its THE PHONE GUTTER,
+// 2026-10-09): 30px on every upright phone's column, 36px from a ~520px
+// viewport (~558 under a classic scrollbar — the gutter's arithmetic; 560 and
+// ~579 until that day) — every band on a tablet or wider. A title inside a
+// ui/Card answers to the CARD, whose root carries
 // `@container` (Card.tsx `cardClasses`), and a card's content box is its
 // border-box less 25px per side on every tone (Card.tsx's SUM RULE: 1 + 24,
 // or 3 + 22 for `framed`), so a card title reaches 36px only on a card at
@@ -266,11 +269,15 @@ import { slotClone } from '../slot';
 // plus whatever surrounds it, while the h1 reaches 36px only at 571px. In
 // between, the h2 may exceed the h1 by at most 4px — that ceiling needs a
 // container as wide as the viewport itself at 448px, where the h1 sits on its
-// 32px floor. Inside the band recipe the window is far narrower:
-// ui/Container's 10vw gutters make a 448px column at a 560px viewport, where
-// the h1 is already 35.6px — under half a pixel, over an 11px strip of
-// viewport widths; a card sits inside that column and reaches the step later
-// still. Unbolded like every elder; each named step brings its own line-height
+// 32px floor. Inside the band recipe the window is narrower: ui/Container's
+// gutters (THE PHONE GUTTER, 2026-10-09: 5vw a side up to a 480px window, a
+// ramp to 10vw at 600) make a 448px column at a ~520px viewport, where the
+// h1 is 34.2px — up to 1.8px, over a ~51px strip of viewport widths, 520–571
+// (under the 10vw gutters until that day it was under half a pixel over an
+// 11px strip, 560–571; the doctor page is where the h1 stands beside band
+// titles, and four of them answer to that column); a card sits inside that
+// column and reaches the step later still. Unbolded like every elder; each
+// named step brings its own line-height
 // (36px, then 40px), so nothing else rides the row. The elders are
 // byte-identical; only the union and one table row grew.
 //

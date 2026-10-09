@@ -192,11 +192,15 @@ import type { ARRIVAL_BY_KEYBOARD, ARRIVAL_KEY } from './arrival';
 // (§6.5). ui/Card marks its root `@container`, and `@sm` is read against that
 // box's CONTENT width — the card minus its own 25px per side: at 24rem =
 // 384px of inner width a row stops stacking. At the 390 viewport the column is
-// 312px and the card's inside is ~262px, so the row stacks — name on one line,
-// price under it, right-aligned — because 80-character treatment names are the
-// NORMAL case here, not the exception (board §5.3), and a name sharing a line
-// with its price in 262px would be a two-word column beside a number. From the
-// tablet up the inside clears 384px and the pair shares a baseline-aligned
+// 351px and the card's inside is ~301px (312 and ~262 until ui/Container's
+// THE PHONE GUTTER halved a phone's margins, 2026-10-09, §15.35), so the row
+// stacks — name on one line, price under it, right-aligned — because
+// 80-character treatment names are the NORMAL case here, not the exception
+// (board §5.3), and a name sharing a line with its price in 301px would be a
+// two-word column beside a number. Every phone held upright stacks it (346px
+// inside at 440, the widest, measured on the built page); from a ~485px
+// window (~543 before the halving) — a small phone held sideways, every
+// tablet — the inside clears 384px and the pair shares a baseline-aligned
 // line. Inside the band scale (PriceList.tsx's THE BAND SCALE) the card's
 // inside is at least 574px — at the scale's step, where the band's floor keeps
 // the theme's own pixels — 784 at the reference and ≈ 1090 at the cap, while

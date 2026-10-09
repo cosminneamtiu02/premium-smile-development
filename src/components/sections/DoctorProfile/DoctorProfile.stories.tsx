@@ -16,8 +16,9 @@ import { DoctorProfile } from './DoctorProfile';
 // The `Sections/*` title prefix routes every one of them to 390 + 1536
 // (tests/visual/stories.spec.ts, §13); the 'stress-320' tag adds the
 // accessibility width to the three whose layout has something to say there
-// (18px prose 256px wide, a white card under it at the same width, a German
-// compound, a 40%-expanded heading).
+// (18px prose 288px wide since 2026-10-09's phone gutter — 256 before — a
+// white card under it at the same width, a German compound, a 40%-expanded
+// heading).
 //
 // ── EVERY STORY PINS ITS OWN LANGUAGE AND ITS OWN VIEWPORT with per-story
 // `globals`, and both halves are load-bearing:
@@ -215,8 +216,9 @@ const sitsBeside = (grid: HTMLElement): boolean => {
  * wide, the column's own width only where it is narrower (a box cannot outgrow
  * its container without a sideways scroll, §7), and CENTRED on the grid within
  * 1px — so it shares the grid's left edge exactly when the column is narrower
- * than 20rem (every phone), and sits inset by the same margin on both sides
- * otherwise (the StackedTablet story).
+ * than 20rem (the 320 frames; every phone until 2026-10-09's phone gutter,
+ * ui/Container's THE PHONE GUTTER), and sits inset by the same margin on both
+ * sides otherwise (the 390 frames since then, and the StackedTablet story).
  */
 const expectArrangement = async (
   canvasElement: HTMLElement,
@@ -358,7 +360,7 @@ const expectSevenDays = async (card: HTMLElement): Promise<void> => {
  * that the card prints no eyebrow.
  *
  * **1536 · 320 (`stress-320`):** at the stress width the same markup is one
- * column 256px wide — the prose, then the card under it at the same width —
+ * column 288px wide — the prose, then the card under it at the same width —
  * and 18px prose still has to fit without a sideways scroll.
  */
 export const Default: Story = {
@@ -419,13 +421,16 @@ export const Default: Story = {
 };
 
 /**
- * THE STACKED ARRANGEMENT — the phone, where the column (312px at 390) is far
+ * THE STACKED ARRANGEMENT — the phone, where the column (351px at 390) is far
  * under the 48rem step, so the prose comes first and the white card follows
  * it: the owner's adaptability rule, "one above the other" below the step.
- * The column is ALSO under the card's 20rem here (D53), so the card takes the
- * column's width — the one place its fixed width yields, because a wider box
- * would scroll sideways (§7). StackedTablet is the same stack with room to
- * spare.
+ * Since 2026-10-09's phone gutter (ui/Container's THE PHONE GUTTER) the
+ * column is WIDER than the card's 20rem here (D53) — 351px, 336 beside the
+ * runner's classic scrollbar, where it was 312 — so the card keeps its one
+ * width, centred under the prose, ~15.5px of tint aside (~8 beside the
+ * scrollbar). It yields to the column only at the 320 stress width (288px),
+ * because a wider box would scroll sideways (§7). StackedTablet is the same
+ * stack with more room to spare.
  *
  * It is the same markup as `Default` and deliberately so: the subject is the
  * ONE grid changing its track list at the step, with DOM order = reading order
@@ -462,12 +467,17 @@ export const Stacked: Story = {
  * owner's words, in the stacked half of the page.
  *
  * WHY A STORY OF ITS OWN: every other stacked frame here is pinned to the
- * phone, whose column (312px at 390, 256 at 320) is narrower than 20rem — so
- * there the card takes the column's width and "centred" is true by
- * construction, proving nothing. Pinned to the tablet, the play measures a
- * card strictly narrower than its column and centres it for real. The visual
- * runner photographs `Sections/*` at 390 + 1536 only (§13), where this frame
- * is `Stacked`'s and `Default`'s; the width it exists for is the Vitest pin.
+ * phone, whose column was narrower than 20rem until 2026-10-09 (312px at 390,
+ * 256 at 320) — so there the card took the column's width and "centred" was
+ * true by construction, proving nothing. Since the phone gutter
+ * (ui/Container's THE PHONE GUTTER) the 390 frames centre a card narrower than
+ * their column too, by ~8px a side in the runner — a margin a pixel's
+ * tolerance can still tell; this story keeps the wide case, ~140px of tint
+ * aside, and the guard below, which fires only between a 30rem and a 48rem
+ * window. Pinned to the tablet, the play measures a card strictly narrower
+ * than its column and centres it for real. The visual runner photographs
+ * `Sections/*` at 390 + 1536 only (§13), where this frame is `Stacked`'s and
+ * `Default`'s; the width it exists for is the Vitest pin.
  */
 export const StackedTablet: Story = {
   globals: { locale: 'ro', viewport: { value: 'tablet' } },
@@ -478,7 +488,8 @@ export const StackedTablet: Story = {
 
     // NOT VACUOUS: whenever the window is no wider than the step (48rem) yet
     // wide enough that its column clears 20rem (a 30rem window: its column is
-    // 24rem less any classic scrollbar), the arrangement MUST be stacked and
+    // 27rem under the 2026-10-09 phone gutter — 24 before — a little less
+    // beside a classic scrollbar), the arrangement MUST be stacked and
     // the card MUST sit strictly inside its column, a margin on each side. At
     // the visual runner's 390 and 1536 this guard stands down and the derived
     // branch in expectArrangement stands alone.
@@ -510,7 +521,7 @@ export const StackedTablet: Story = {
  * `lang="de"` rides the native prop spread onto the <section> (the
  * Card/Heading/PersonnelCard precedent) and inherits to every child, which is
  * the whole mechanism: the body's site-wide `hyphens: auto` (§15.14) picks the
- * GERMAN dictionary, so a compound in a 256px column breaks at a syllable
+ * GERMAN dictionary, so a compound in a 288px column breaks at a syllable
  * instead of pushing the layout open. ONE element in this band opts out of it:
  * the biography's title, because it carries a person's name (DoctorProfile's
  * THE NAME IS NEVER SPLIT, 2026-09-30) — so this story's „Über Dr. Elena Marin"

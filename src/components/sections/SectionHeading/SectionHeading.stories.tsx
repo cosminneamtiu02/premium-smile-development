@@ -46,8 +46,10 @@ import {
 // title stretched across 1536px, which no page produces. `max-w-3xl` with a
 // gutter is the ordinary content column every consumer of this opener sits in,
 // and it is also what makes the 320 stress honest: 20rem minus 2 × 1.5rem of
-// gutter is the real column a phone gives a 30px serif line (the narrow half
-// of ui/Heading's `band` step, D48). It is ALSO a `@container`, because the
+// gutter is no wider than the column a phone gives a 30px serif line (the
+// narrow half of ui/Heading's `band` step, D48) — ui/Container's is 288px at
+// a 320 phone since its PHONE GUTTER of 2026-10-09, so this frame is the
+// stricter of the two. It is ALSO a `@container`, because the
 // column every consumer sits in is one — ui/Container's `containerClasses`
 // and ui/Card's root both carry the mark — and since D48 the title's size
 // depends on it: the `band` step reads its `@md:` half off the nearest

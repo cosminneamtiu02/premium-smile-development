@@ -75,10 +75,13 @@ import type { HoursRow } from '@/lib/hours/hours';
 // găsiți la clinică", „Wann Sie mich in der Praxis finden"), and it WRAPS
 // between words in the card's content box — the card's ONE width, 20rem (the
 // band's D53), less 2 × 25px of frame and inset, 270px — to two lines at the
-// `band` step (30px in this card), and narrower only on a phone, whose column
-// is under 20rem (206px at 320), where the Romanian title does break once at a
-// syllable („gă-siți", measured 2026-09-30) — ordinary words, which §15.14
-// allows; only a person's name is never split, and there is none here.
+// `band` step (30px in this card), and narrower only on a phone whose column
+// is under 20rem — under a ~356px window since 2026-10-09's phone gutter
+// (ui/Container, §15.35): 238px of content at 320, where no title breaks at a
+// syllable any more. With the old gutter the content was 206px there and the
+// Romanian title did break once („gă-siți", measured 2026-09-30) — ordinary
+// words, which §15.14 allows; only a person's name is never split, and there
+// is none here.
 // The id comes from React's useId(), which is server-safe and
 // hydration-stable, so two schedules on one page can never collide; it rides
 // SectionHeading's `id` prop, which lands it on the HEADING and never on the

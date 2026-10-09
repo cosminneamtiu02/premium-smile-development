@@ -344,8 +344,9 @@ export const Rotating: Story = {
 
 /**
  * DE is the longest language (§8.4), on the phone: the 32px slogan floor in a
- * 256px column at 320, the two buttons stacked at full width. The stress
- * width rides the tag.
+ * 288px column at 320 (273 in the runner's 15px scrollbar gutter; 256 until
+ * THE PHONE GUTTER, 2026-10-09 — ui/Container, CLAUDE.md §15.35), the two
+ * buttons stacked at full width. The stress width rides the tag.
  */
 export const GermanStress: Story = {
   tags: ['stress-320'],

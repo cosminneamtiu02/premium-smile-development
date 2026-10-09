@@ -12,8 +12,8 @@ import { TintedBand } from './TintedBand';
 // pictures; this list IS the component's contribution to the run's visual
 // manifest (round 2f, D29). The `Sections/*` title prefix routes both to
 // 390 + 1536 (tests/visual/stories.spec.ts, §13); the 'stress-320' tag adds the
-// accessibility width to `Default`, where 18px prose 256px wide has to sit on
-// the tint without a sideways scroll.
+// accessibility width to `Default`, where 18px prose 288px wide (256 before
+// 2026-10-09's phone gutter) has to sit on the tint without a sideways scroll.
 //
 // ── NO PSEUDO-LOCALE STORY, and none is owed: the band holds no words of its
 // own (its strings are its consumers', §8.1), so there is nothing for §8.9's
@@ -231,7 +231,7 @@ const expectTintedGround = async (
  * cannot — the tint's exact ratio and the fades resolving to the same colour
  * (the seam argument), the fades' 6rem, and no padding of the band's own.
  *
- * **1536 · 320 (`stress-320`):** at the stress width the column is 256px and
+ * **1536 · 320 (`stress-320`):** at the stress width the column is 288px and
  * 18px prose still has to sit on the tint without a sideways scroll.
  */
 export const Default: Story = {

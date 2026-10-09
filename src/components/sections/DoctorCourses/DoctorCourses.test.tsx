@@ -91,6 +91,7 @@ const GROUPS = [
 ] as const satisfies readonly CourseGroup[];
 
 // ── THE BYTE PINS. The band's class strings as it renders AT REST — the
+// band outer under its belt (since 2026-10-09), the
 // rhythm box, the timeline's rail (the column of groups itself since round
 // 2j), one faded group (easing opacity AND scale, the recede of the G2-R2
 // tier-2 fold, react F1), its grey stretch of line, its grey dot (easing
@@ -106,6 +107,11 @@ const GROUPS = [
 // they are ui/Heading's, derived below from a rendered atom
 // (`restTitleClasses`), so a retuned tone row moves this suite with it
 // instead of against it.
+/** The band outer: the page ground under THE BELT (DoctorCourses.tsx's header,
+ *  2026-10-09) — `clip` for every engine that knows it, `hidden` only behind
+ *  the `@supports not` gate, the reviews band's spelling. */
+const BAND =
+  'overflow-x-clip supports-[not_(overflow:clip)]:overflow-x-hidden wrap-anywhere bg-page';
 const RHYTHM_BOX = 'py-12 @lg:py-16 @3xl:py-20';
 const RAIL = 'mt-8 flex max-w-4xl flex-col gap-20 @lg:mt-10 @3xl:mt-12';
 const GROUP_REST =
@@ -121,8 +127,11 @@ const LIST_REST =
   'mt-3 flex list-disc flex-col gap-3 ps-5 transition-colors motion-reduce:transition-none text-ink marker:text-ink-muted';
 const ITEM = 'text-lg';
 
+/** An element's class tokens, read off the ATTRIBUTE: an SVG's `className` is
+ *  an SVGAnimatedString, not a string, and the belt test — like the two
+ *  every-element walks further down — reads every element of the band. */
 const tokensOf = (element: Element): string[] =>
-  element.className.split(/\s+/).filter(Boolean);
+  (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
 
 /**
  * The class string ui/Heading emits for a RESTING year label, read off a
@@ -255,14 +264,47 @@ describe('DoctorCourses — the region landmark (§9)', () => {
   });
 
   it('stands on the page ground and merges the caller className LAST', () => {
-    // BAND OUTER: the semantic element, full-bleed, owning the paint and
-    // nothing else — no gutter here, no outer margin (§6.4: the page owns the
-    // rhythm between its bands, D18).
+    // BAND OUTER: the semantic element, full-bleed, owning the paint and the
+    // sideways belt and nothing else — no gutter here, no outer margin (§6.4:
+    // the page owns the rhythm between its bands, D18).
     const { container } = renderBand();
-    expect(bandOf(container).className).toBe('bg-page');
+    expect(bandOf(container).className).toBe(BAND);
+    expect(tokensOf(bandOf(container))).toContain('bg-page');
 
     const { container: placed } = renderBand({ className: 'scroll-mt-10' });
-    expect(bandOf(placed).className).toBe('bg-page scroll-mt-10');
+    expect(bandOf(placed).className).toBe(`${BAND} scroll-mt-10`);
+  });
+
+  it('wears the sideways belt on its full-bleed outer — and on no box inside it (THE BELT)', () => {
+    // 2026-10-09, THE PHONE GUTTER (ui/Container, §15.35): the current year's
+    // overshoot ran 2.6–3.5px past a phone's screen (DoctorCourses.tsx's THE
+    // BELT has the measurements). `clip` for engines that know it; `hidden`
+    // only behind the `@supports not` gate for Safari ≤ 15 — bare, it would
+    // be emitted after `clip`, win everywhere and make the band a scroll
+    // container. On the OUTER only: on ui/Container or anything inside it the
+    // belt would cut the current group at rest, which already reaches ~14px
+    // into a 390 phone's gutter.
+    const { container } = renderBand();
+    const band = tokensOf(bandOf(container));
+
+    expect(band).toContain('overflow-x-clip');
+    expect(band).toContain('supports-[not_(overflow:clip)]:overflow-x-hidden');
+    expect(band).not.toContain('overflow-x-hidden');
+    expect(band).not.toContain('overflow-hidden');
+
+    // Never vacuous: the column, the rhythm box, the rail and every group are
+    // really there, and none of them — nor anything else in the band —
+    // carries an overflow token of any spelling.
+    expect(columnOf(container).className).toBe(containerClasses);
+    expect(groupsOf(container)).toHaveLength(GROUPS.length);
+    const inside = [...bandOf(container).querySelectorAll('*')];
+    expect(inside).toContain(columnOf(container));
+    expect(inside).toContain(railOf(container));
+    for (const element of inside) {
+      expect(
+        tokensOf(element).filter((token) => /(^|:)overflow-/.test(token)),
+      ).toEqual([]);
+    }
   });
 
   it('takes its gutter from ui/Container, never a second spelling', () => {

@@ -62,8 +62,10 @@ import { cx } from '@/lib/cx/cx';
 //      restated here on purpose — tests/unit/gutter-single-spelling.test.ts
 //      fences src/ against a second spelling, and that fence is the whole
 //      product of the promotion. Geometry: identical to the old band from
-//      480px up; below that the floor is 16px instead of 48px, which is the
-//      margin every other band on the site already wears.
+//      600px up; up to a 480px window it is HALF the old band's 10vw since
+//      2026-10-09 (ui/Container's THE PHONE GUTTER, CLAUDE.md §15.35 — 19.5px
+//      a side at 390), a ramp between, and the floor is 16px instead of 48px —
+//      the margin every other band on the site wears.
 //   2. The disc's colours. The old disc was the old palette's accent; from
 //      2026-09-09 to 2026-10-01 every disc on this site was the green CTA
 //      family, and since 2026-10-01 these two wear ui/GlyphButton's LAVENDER
@@ -113,12 +115,16 @@ import { cx } from '@/lib/cx/cx';
 //
 // ── D7 · THE CONTAINER-STEP MAPPING, and why there is a rhythm box. §6.5
 // forbids a component from measuring the window, so the old media queries
-// become steps on ui/Container's gutter box (viewport − 2×10vw):
-//   · old `sm:` (640) → `@lg` (container 512px) — EXACT, because 640−128 = 512;
+// become steps on ui/Container's gutter box (viewport − 2×10vw from a 600px
+// window; − 2×5vw up to a 480px one since 2026-10-09, THE PHONE GUTTER):
+//   · old `sm:` (640) → `@lg` (container 512px) — EXACT, because 640−128 =
+//     512 (the phone gutter narrows the gutter only under 600, so this step is
+//     untouched);
 //   · old `lg:` (1024) → `@3xl` (container 768px) — fires around a 960px
-//     viewport, i.e. identical at every §7 sampling point: 390 → box 312 and
-//     768 → box 614 stack the rows BELOW the map, 1280 → box 1024, 1536 and
-//     1920 put them beside it (the owner's fb-393 rule, checked with numbers).
+//     viewport, i.e. identical at every §7 sampling point: 390 → box 351 (312
+//     until 2026-10-09) and 768 → box 614 stack the rows BELOW the map, 1280 →
+//     box 1024, 1536 and 1920 put them beside it (the owner's fb-393 rule,
+//     checked with numbers).
 // An element cannot query its OWN size, and Container IS the container — so
 // the stepped `py` cannot ride on Container itself. It sits on the rhythm box
 // one level in. The band still owns its vertical rhythm (Container's PAGE-BAND

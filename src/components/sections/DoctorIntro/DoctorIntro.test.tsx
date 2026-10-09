@@ -513,19 +513,24 @@ describe('DoctorIntro — the cutout, decorative by construction', () => {
 
   it('derives the `sizes` numbers from the gutter, the step and the cap — never a second spelling of them', () => {
     // The hint restates facts that live elsewhere (the Opus TypeScript
-    // review): ui/Container's gutter — `clamp(…,10vw,12.5rem)` a side, so
-    // the column is 80vw while 10vw binds and the viewport less 25rem from
-    // the 125rem window where 12.5rem does — the `@3xl` step (48rem of
-    // column → a 60rem window under the 10vw gutter), and the cutout's cap
-    // over its share of the column (`max-w-[140%]` of a third → 7/15). Each
-    // number is read off its source here, so an edit to the gutter, the
-    // third or the cap that forgot the hint fails by name.
+    // review): ui/Container's gutter — 10vw a side from the tablet up (half
+    // of it on a phone since 2026-10-09, §15.35, a width no breakpoint of
+    // this hint reaches), so the column is 80vw while 10vw binds and the
+    // viewport less 25rem from the 125rem window where the 12.5rem cap does —
+    // the `@3xl` step (48rem of column → a 60rem window under the 10vw
+    // gutter), and the cutout's cap over its share of the column
+    // (`max-w-[140%]` of a third → 7/15). Each number is read off its source
+    // here, so an edit to the gutter, the third or the cap that forgot the
+    // hint fails by name.
     const { container } = mount();
     const cutout = within(container).getByRole('presentation');
 
-    const gutter = /clamp\([\d.]+rem,([\d.]+)vw,([\d.]+)rem\)/.exec(
-      containerClasses,
-    );
+    // `clamp(floor, clamp(Pvw, Rvw − Krem, Tvw), cap)`: [1] R, [2] K, [3] T,
+    // [4] the cap.
+    const gutter =
+      /clamp\([\d.]+rem,clamp\([\d.]+vw,([\d.]+)vw_-_([\d.]+)rem,([\d.]+)vw\),([\d.]+)rem\)/.exec(
+        containerClasses,
+      );
     const cap = /@3xl:max-w-\[(\d+)%\]/.exec(cutout.className);
     const third = /--picture:min\(calc\(100cqi\/(\d+)\)/.exec(
       gridOf(container).className,
@@ -537,12 +542,17 @@ describe('DoctorIntro — the cutout, decorative by construction', () => {
     if (!gutter || !cap || !third || !hint)
       throw new Error('DoctorIntro test: a source of the sizes hint moved');
 
-    const vw = Number(gutter[1]);
-    const maxRem = Number(gutter[2]);
+    const vw = Number(gutter[3]);
+    const maxRem = Number(gutter[4]);
+    // The window from which the gutter is the tablet's 10vw: R vw − K rem =
+    // T vw, i.e. 37.5rem. Both breakpoints of the hint lie past it.
+    const rampEndRem = (100 * Number(gutter[2])) / (Number(gutter[1]) - vw);
     const share = Number(cap[1]) / 100 / Number(third[1]);
     const [fixedWindow, fixedLess, n1, d1, stepWindow, columnVw, n2, d2] = hint
       .slice(1)
       .map(Number);
+    expect(rampEndRem).toBe(37.5);
+    expect(stepWindow).toBeGreaterThanOrEqual(rampEndRem);
     expect(fixedWindow).toBe(maxRem / (vw / 100));
     expect(fixedLess).toBe(2 * maxRem);
     expect(stepWindow).toBe(48 / ((100 - 2 * vw) / 100));

@@ -94,8 +94,11 @@ describe('Footer — the contentinfo landmark', () => {
     // …and the measured box is the gutter box, one level in.
     const gutter = footer().firstElementChild as HTMLElement;
     expect(classesOf(gutter)).toContain('@container');
-    // The SAME clamp the Header pill wears — one number, two sections.
-    expect(classesOf(gutter)).toContain('mx-[clamp(1rem,10vw,12.5rem)]');
+    // The SAME clamp the Header pill wears — one number, two sections (half
+    // of it on a phone since 2026-10-09, CLAUDE.md §15.35).
+    expect(classesOf(gutter)).toContain(
+      'mx-[clamp(1rem,clamp(5vw,30vw_-_7.5rem,10vw),12.5rem)]',
+    );
   });
 
   it('flips its grids on NAMED container steps only', () => {
@@ -369,7 +372,11 @@ describe('Footer — row 2, the ANPC/SAL badge', () => {
     expect(img.getAttribute('width')).toBe('250');
     expect(img.getAttribute('height')).toBe('62');
     expect(img).toHaveAttribute('loading', 'lazy');
-    // …and it must still be able to shrink inside a narrow column (320px, §7).
+    // …and it must still be able to shrink inside a column narrower than its
+    // 250px (§7) — no longer the 320px stress width's, 273px under the
+    // runner's scrollbar since ui/Container's THE PHONE GUTTER (2026-10-09),
+    // but a window under ~297px still is (Footer.tsx's COLUMN 3 · THE
+    // ANPC/SAL BADGE).
     expect(classesOf(img)).toEqual(
       expect.arrayContaining(['h-auto', 'max-w-full']),
     );

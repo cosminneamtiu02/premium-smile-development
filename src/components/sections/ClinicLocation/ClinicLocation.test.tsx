@@ -484,9 +484,10 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
   });
 
   it('flips the map/rows grid on NAMED container steps only (board D7)', () => {
-    // @lg ≡ the old `sm:` (640 − 128 = 512) and @3xl ≡ the old `lg:` at every
-    // §7 sampled width: phone 390 → box 312 and tablet 768 → box 614 stack the
-    // rows BELOW the map; notebook 1280 → box 1024 puts them beside it.
+    // @lg ≡ the old `sm:` (640 − 128 = 512; the phone gutter, §15.35, narrows
+    // only under 600) and @3xl ≡ the old `lg:` at every §7 sampled width:
+    // phone 390 → box 351 and tablet 768 → box 614 stack the rows BELOW the
+    // map; notebook 1280 → box 1024 puts them beside it.
     const { band } = mount();
     const grid = band().querySelector('[class*="grid-cols"]') as HTMLElement;
     const tokens = classesOf(grid);
@@ -879,8 +880,10 @@ describe('ClinicLocation — THE BAND SCALE, computed (§15.32 — the real styl
 // (the component header's OLD → NEW, item 4). Measured on the real
 // stylesheet through `renderColumn` above, at columns a phone hands the band
 // — on develop a6b072f, measured 2026-10-09, a 320 phone's was 256px, a
-// 390's 312 and a 430's 344, and a 768 tablet's 614.4; a phone's column moves
-// with ui/Container's gutter, the ratio does not — and on both sides of the
+// 390's 312 and a 430's 344 (288, 351 and 387 since ui/Container's PHONE
+// GUTTER the same day, CLAUDE.md §15.35, the map 4:3 on each), and a 768
+// tablet's 614.4; a phone's column moves with ui/Container's gutter, the
+// ratio does not — and on both sides of the
 // step itself. The band asked to scale (Home's and Team's) is the same band
 // here: the regime starts far above a phone's column.
 

@@ -235,16 +235,20 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // `hyphens-none` through its className merge (§6.8: it lands on the root and
 // inherits to the <h2> and the eyebrow); DoctorProfile's „Despre {name}" is
 // the precedent. Safe by measure: the longest word of any title in the five
-// languages is ~180px at the phone step against a 241px column at 320. Its
-// cost, measured: at 320 the Romanian and the German titles take one line
-// more (+36px, „Experiență / confirmată în / timp"). Its BELT, `wrap-anywhere`
-// beside it (the Opus re-review the same day): a larger default text size eats
-// that margin — ~268px at 150 % by the reviewer's arithmetic — and from about
-// 175 % a word too long for a line by itself would push the page sideways
-// where hyphenation used to break it. `overflow-wrap: anywhere` breaks ONLY
-// such a word — it engages when a line holds no other break — so at every
-// ordinary size not one line moves; the band's own idiom on its lead and its
-// descriptions.
+// languages is ~180px at the phone step against a 273px column at 320 (beside
+// a classic scrollbar; 288 on a phone — 241 before 2026-10-09's phone gutter,
+// ui/Container's THE PHONE GUTTER). Its cost, measured then: at 320 the
+// Romanian and the German titles took one line more (+36px, „Experiență /
+// confirmată în / timp"); in the wider column neither does — both take two
+// lines at 320 with hyphenation on or off (re-measured 2026-10-09 on the built
+// doctor page, beside a classic scrollbar and on a phone). Its BELT,
+// `wrap-anywhere` beside it (the Opus re-review the same day): a larger
+// default text size eats that margin — ~268px at 150 % by the reviewer's
+// arithmetic — and from about 175 % a word too long for a line by itself
+// would push the page sideways where hyphenation used to break it.
+// `overflow-wrap: anywhere` breaks ONLY such a word — it engages when a line
+// holds no other break — so at every ordinary size not one line moves; the
+// band's own idiom on its lead and its descriptions.
 //
 // ── THE TILES — ORDER, THEN DRESS. Inside the <li>, the reference's order ON
 // SCREEN: disc → number → label → description. In the DOM the label comes
@@ -326,8 +330,9 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     11.7:1 (TintedBand's D23 paragraph), both over §9's 4.5:1.
 //
 // ── THE STEPS, MEASURED ON ui/Container's COLUMN (§6.5 — no media query in
-// this file). At §7's sampling points the column is 256 (320) · 312 (390) ·
-// 614 (768) · 1024 (1280) · 1229 (1536) · 1536 (1920):
+// this file). At §7's sampling points the column is 288 (320) · 351 (390) —
+// since 2026-10-09's phone gutter, 256 and 312 before — · 614 (768) · 1024
+// (1280) · 1229 (1536) · 1536 (1920):
 //   · below `@md` (28rem = 448px) — ONE column, one tile above the other (the
 //     D21 rider: what stands side by side on the wide step stacks below it);
 //   · `@md` to `@3xl` — TWO per row (the tablet: two tiles of ~287px);

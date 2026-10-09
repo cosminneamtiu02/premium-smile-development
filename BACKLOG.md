@@ -101,6 +101,12 @@ Decisions still go to CLAUDE.md §15.
     (392 before 2026-10-09), and between about 277 and 315px both of its controls hide entirely —
     1366 × 768 at 200 % zoom and phones held sideways are the cases; the lever, the owner's, is to
     drop the card to the corner row on short, wide screens;
+  - the phone gutter (CLAUDE.md §15.35) — in SAFARI on a phone (320 to 480px), Tab a short footer
+    site-map link („Acasă", "Home", "Team") into the bottom strip: WebKit leaves a focused control
+    where it is, and with the halved gutter the label can sit almost entirely under the 56px language
+    bulb (the G2 a11y review's arithmetic: the label at x ≈ 16–61 against the bulb's 16–72 at 320;
+    it used to end clear of it); confirm that its ring and part of the label stay visible (SC 2.4.11,
+    met by that arithmetic) or move the strip's links in;
   - the price menu — Firefox, a real iPhone and screen readers never run (§15.20 round 5); and, since
     the band scale reached it (CLAUDE.md §15.32 round 2), two zoom paths never measured: open
     `/de/services/` in a 1920 window in FIREFOX with View → Zoom → "Zoom Text Only" at 150 and 200 % —

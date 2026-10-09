@@ -166,7 +166,9 @@ import type { IsoDate } from '@/lib/time-ago/time-ago';
 //     the owner approved on 2026-09-12.
 // The vertical numbers are the old deck's: `--fan-drop` 2.5rem on phones and
 // 3.75rem from the `@md` container step (ui/Container's box ≥ 28rem, i.e.
-// viewports from ~560px — the step is queried against the Container, which
+// viewports from ~520px — ~560 until ui/Container's THE PHONE GUTTER widened
+// a phone's column, 2026-10-09, §15.35; every phone held upright still reads
+// 2.5rem, measured to 440 — the step is queried against the Container, which
 // the stage is still a descendant of), `--fan-stagger` 0.9rem alternating,
 // `--fan-tilt` ±2.5°. `overflow-x-clip` on the stage clips the outer cards at
 // the viewport's edges without ever making the PAGE scroll sideways; the

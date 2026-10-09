@@ -862,16 +862,30 @@ describe('the cutout’s `sizes` — every number derived from the band’s, rea
   const cell =
     Number(/(?:^|\s)w-(\d+)(?:\s|$)/.exec(constant(card, 'PICTURE'))?.[1]) *
     (steps.get('--spacing') ?? NaN);
-  /** The share of a window ui/Container leaves its column: 1 − 2 × the
-   *  gutter's vw. */
-  const column =
-    1 - (2 * Number(/mx-\[clamp\([^,]+,(\d+)vw,/.exec(container)?.[1])) / 100;
+  /** ui/Container's gutter, `clamp(floor, clamp(Pvw, Rvw − Krem, Tvw), cap)`:
+   *  P vw on a phone, T vw from the tablet up, the ramp R vw − K rem between
+   *  (THE PHONE GUTTER, CLAUDE.md §15.35). */
+  const gutter =
+    /mx-\[clamp\([^,]+,clamp\((\d+)vw,(\d+)vw_-_([\d.]+)rem,(\d+)vw\),/.exec(
+      container,
+    );
+  const tabletVw = Number(gutter?.[4]);
+  /** The window, in rem, from which the gutter is T vw: R vw − K rem = T vw. */
+  const rampEndRem =
+    (100 * Number(gutter?.[3])) / (Number(gutter?.[2]) - tabletVw);
+  /** The share of a window ui/Container leaves its column from the ramp's
+   *  end up — where every window these hints ask from lies: 1 − 2 × T vw. */
+  const column = 1 - (2 * tabletVw) / 100;
 
   it('reads its inputs (never vacuous): REFERENCE 1106, the 56rem step, the 288px cell, a 0.8 column', () => {
     expect(reference).toBe(1106);
     expect(stepRem).toBe(56);
     expect(cell).toBe(288);
     expect(column).toBe(0.8);
+    // The 0.8 holds only from the ramp's end (37.5rem) up, and both hints ask
+    // from a 70rem window — past it, so the phone half never enters them.
+    expect(rampEndRem).toBe(37.5);
+    expect(stepRem / column).toBeGreaterThanOrEqual(rampEndRem);
   });
 
   it('is exactly the string the band’s numbers give', () => {

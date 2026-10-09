@@ -281,7 +281,7 @@ export const Default: Story = {
  * (owner fb-422 — the old site centred each row on its own line; the owner
  * asked for one shared start on phone and tablet). That is the owner's fb-393
  * rule — desktop beside, tablet and phone below — and at 390 the gutter box is
- * 312px, well under the 768px step.
+ * 351px, well under the 768px step.
  *
  * And the map is TALLER here than anywhere else (the owner, 2026-10-09: "i
  * need map on phone to be like 50% taller. it is too small."): under the

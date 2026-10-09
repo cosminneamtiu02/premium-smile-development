@@ -22,8 +22,9 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // prefix routes every photographed one to 390 + 1536
 // (tests/visual/stories.spec.ts, §13); the 'stress-320' tag adds the
 // accessibility width to the four whose layout has something to say there (a
-// 256px column of 18px prose, German labels in it, a 40%-expanded lead, the
-// Home shape's three tiles one above the other).
+// 288px column of 18px prose — 256 before 2026-10-09's phone gutter — German
+// labels in it, a 40%-expanded lead, the Home shape's three tiles one above
+// the other).
 //
 // ── THE SECOND PAGE — HOME AND THE TEAM PAGE (owner, 2026-10-01, verbatim:
 // "i want it on home page too with just 3 components. experience, patients
@@ -175,7 +176,7 @@ const TILES = [
 ] as const satisfies readonly DoctorStatTile[];
 
 /** The same four in German (DRAFTED, §15.17 — lib/team's drafts): the
- *  longest locale's words in a 256px column are the case this frame exists
+ *  longest locale's words in a 288px column are the case this frame exists
  *  for: „Jahre Erfahrung" the longest label since round 2s shortened
  *  „Erfolgreiche Eingriffe" to „Eingriffe", and the interventions sentence
  *  the longest of the four. */
@@ -971,8 +972,10 @@ const expectBandScale = async (
  * THE SCALE IS NOT VACUOUS where the story is pinned to see it (the
  * `expectBranch` guard's reasoning, for THE BAND SCALE): under open gates, a
  * window whose column MUST be past the step — 80 % of it less 17px of classic
- * scrollbar at most, the gutter's 10vw governing every window up to its
- * 2000px cap and the column only wider beyond — must have drawn the scale.
+ * scrollbar at most, the gutter's 10vw governing every window from 600px up
+ * to its 2000px cap (5vw on a phone since 2026-10-09's phone gutter, far
+ * below any window this guard reads) and the column only wider beyond — must
+ * have drawn the scale.
  * Conditioned on the live window and browser, so a Playwright project
  * photographing the story at a phone's width runs it without a false failure.
  */
@@ -1067,7 +1070,7 @@ const LABELS = TILES.map((tile) => tile.label);
  * under reduced motion).
  *
  * **1536 · 320 (`stress-320`):** at the stress width the same markup is ONE
- * column, one tile above the other, 18px prose wrapping in a 256px column and
+ * column, one tile above the other, 18px prose wrapping in a 288px column and
  * nothing scrolling sideways. The play reads back what a picture cannot: the
  * outline, the SPOKEN finals in the screen reader's twins („peste 3.000", the
  * page's word and never the sign, round 2s), the still branch
@@ -1110,7 +1113,7 @@ export const Default: Story = {
 
 /**
  * THE PHONE — the owner's adaptability rule made visible (D21): at 390 the
- * column is 312px, far short of `@md`, so the four tiles stand one above the
+ * column is 351px, far short of `@md`, so the four tiles stand one above the
  * other, each centred in the column. The play pins the one-column geometry
  * and the painted order inside each tile (the number above its <h3>); the
  * tiles below the fold keep their final values until they scroll in.
@@ -1175,7 +1178,7 @@ export const GermanLongest: Story = {
  * PSEUDO-LOCALE (§8.9) — accented and ~40% expanded, TYPED OUT as a fixture
  * because the toolbar transforms message files and this band reads none.
  * EVERY string is transformed (the PSEUDO fixture's note): the expanded h2
- * and the long lead absorb the growth by WRAPPING in a 312px — then 256px —
+ * and the long lead absorb the growth by WRAPPING in a 351px — then 288px —
  * column, and the padding runs are the stress: a row of `·` is one
  * unbreakable token, the longest here the lead's 49 (70 before round 2s
  * shortened the lead — DoctorStats.tsx's NO TOKEN paragraph).
@@ -1337,7 +1340,7 @@ export const PageGround: Story = {
 
 /**
  * THE SECOND PAGE ON A PHONE — the owner's adaptability rule (D21): at 390
- * the column is 312px, far short of the container's `@xl` (36rem), so the
+ * the column is 351px, far short of the container's `@xl` (36rem), so the
  * three tiles stand one above the other — every top strictly under the one
  * before, every tile as wide as the column, never two and one. The opener
  * stays at the start (a wrapping title fills the column; its lines still read

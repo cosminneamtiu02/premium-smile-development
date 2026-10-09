@@ -126,7 +126,8 @@ import { CourseTimeline } from './CourseTimeline';
 // side at any width, so nothing has to stack.
 //   · at every width — ONE column: the line down the left edge, every year
 //     under the last, each group as wide as the rail with its words 40px in
-//     from the line (the phone at 312px of column, the tablet at 614px);
+//     from the line (the phone at 351px of column since 2026-10-09's phone
+//     gutter — 312 before — the tablet at 614px);
 //   · `@lg` (32rem of column, ≈ a 640px viewport) — the second rhythm step,
 //     `py` and the rail's top margin opening up;
 //   · `@3xl` (48rem of column, ≈ a 960px viewport) — the third, the same
@@ -161,12 +162,37 @@ import { CourseTimeline } from './CourseTimeline';
 //
 // ── THE BAND'S OWN SHAPE IS ui/Container's PAGE-BAND RECIPE (the standing law
 // in Container.tsx's header): the semantic full-bleed <section> owns the paint
-// (`bg-page`) and nothing else — no gutter, no outer margin, because the page
-// owns the rhythm BETWEEN bands (§6.4, D18/D33: this band follows
-// DoctorProfile's fade-out and precedes DoctorStats' fade-in). The
-// Container inside owns the width and the container-query context; the stepped
-// `py` sits on the rhythm box one level in, because an element cannot query
-// its own size (ClinicLocation's spelling, and DoctorIntro's).
+// (`bg-page`) and the sideways belt (THE BELT, next) and nothing else — no
+// gutter, no outer margin, because the page owns the rhythm BETWEEN bands
+// (§6.4, D18/D33: this band follows DoctorProfile's fade-out and precedes
+// DoctorStats' fade-in). The Container inside owns the width and the
+// container-query context; the stepped `py` sits on the rhythm box one level
+// in, because an element cannot query its own size (ClinicLocation's
+// spelling, and DoctorIntro's).
+//
+// ── THE BELT (2026-10-09, THE PHONE GUTTER — ui/Container, CLAUDE.md §15.35).
+// The current year COMES FORWARD from its left edge (./CourseTimeline's THE
+// FORWARD MOTION): `scale-104` × the `--animate-forward` overshoot, drawn
+// ~1.065 at its peak, so for a few frames the group's right edge runs ~6.5 %
+// of its width past the column — ~19px at 320, ~23px at 390 — into the
+// gutter. The old phone gutter, 32–43px a side, held it; the halved one,
+// 16–21.5px, does not: MEASURED on the built doctor page (ro + de, emulated
+// phones, every frame of a walk through the rail) the group ran 2.6 / 3.0 /
+// 3.2 / 3.5px past the screen's right edge at 320 / 360 / 390 / 430 and the
+// page was 3–5px wider than the screen for those frames. So this outer wears
+// the reviews band's belt (sections/ReviewsCarousel's ONE DELIBERATE BREACH
+// OF THAT RECIPE, AND ITS BELT): `overflow-x: clip` trims paint at the band's
+// own box, which is the screen's width, and — unlike `hidden` — makes no
+// scroll container, so nothing vertical changes; the
+// `supports-[not_(overflow:clip)]` twin spells it `hidden` for Safari ≤ 15,
+// which does not know `clip`. It sits on the FULL-BLEED OUTER on purpose:
+// there it trims only what passes the screen's edge, while on ui/Container it
+// would cut every group at rest (1.04 already reaches ~14px into the gutter
+// on a 390 phone). Measured with the belt applied: the document never widens.
+// A clipped box still REPORTS its overflow as its own `scrollWidth` (the
+// reviews stories measure the document for that reason) — 3–4px at the peak,
+// measured; the page is what §7 protects. DoctorCourses.test.tsx pins the
+// belt on this box and on no other in the band.
 //
 // ── A NAMED REGION: the `id` lands on the <h2>, which names the <section>
 // through `aria-labelledby`. It comes from useId() rather than a hard-coded
@@ -234,13 +260,28 @@ export function DoctorCourses({
   if (groups.length === 0) return null;
 
   return (
-    // BAND OUTER: the semantic element, full-bleed, owning the paint and
-    // nothing else. `{...rest}` rides FIRST so a caller's stray attribute can
-    // never replace the name pair; className is merged caller-last (§6.8).
+    // BAND OUTER: the semantic element, full-bleed, owning the paint and the
+    // sideways belt (the header's THE BELT) and nothing else. `{...rest}`
+    // rides FIRST so a caller's stray attribute can never replace the name
+    // pair; className is merged caller-last (§6.8).
     <section
       {...rest}
       aria-labelledby={headingId}
-      className={cx('bg-page', className)}
+      // `overflow-x-clip` is the belt; the `supports-[not_(overflow:clip)]`
+      // twin is its legacy fallback, the reviews band's spelling: Safari ≤ 15
+      // drops an unknown `clip`, and `hidden` rides ONLY behind that gate —
+      // emitted bare it would win on every engine (Tailwind orders it after
+      // `clip`) and turn the band into a scroll container. `wrap-anywhere`
+      // (inherited by every text inside) is the belt's other half (the G2
+      // a11y review, 2026-10-09): a clip HIDES what passes the screen edge,
+      // where develop let it scroll, so a word wider than the column — only
+      // at a very large text size without a hyphenation dictionary, e.g.
+      // „Spezialisierungen" at 200 % Android text — now breaks instead of
+      // being cut. At ordinary sizes no word is that wide and nothing moves.
+      className={cx(
+        'overflow-x-clip supports-[not_(overflow:clip)]:overflow-x-hidden wrap-anywhere bg-page',
+        className,
+      )}
     >
       <Container>
         {/* The rhythm box — band-owned `py` on container steps (see the

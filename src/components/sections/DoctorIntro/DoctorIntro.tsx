@@ -256,8 +256,9 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // on, so the site's bands flip together (§6.5: container queries for component
 // responsiveness, media queries only for page-level layout), and it is the
 // owner's adaptability rule (2026-09-25, round 2's D21): beside on the wide
-// step, one above the other below it. At §7's sampling points: 390 → 312px of
-// column and 768 → 614px are the stacked arrangement, 1280 → 1024px, 1536 →
+// step, one above the other below it. At §7's sampling points: 390 → 351px of
+// column (312 before 2026-10-09's phone gutter, ui/Container's THE PHONE
+// GUTTER) and 768 → 614px are the stacked arrangement, 1280 → 1024px, 1536 →
 // 1228px and 1920 → 1536px are the row.
 //   BESIDE is D62's two containers across the whole column, spaced by D63
 //   and standing on D64's one floor — their own paragraphs below.
@@ -267,10 +268,15 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   were before D62 gave them a box of their own beside the picture: the
 //   pair climbs above the
 //   picture (`-order-1`), centred; the picture follows, capped at 20rem and
-//   centred in the column — at every phone width the column is narrower than
-//   that cap, so the figure fills it, and at the 320px stress width 241px of
-//   column (the runner's scrollbar included) still hold the whole figure with
-//   nothing scrolling sideways (§7, §9); then the credo card across the full
+//   centred in the column — below a ~356px window (~372 beside a classic
+//   scrollbar) the column is narrower than that cap, so the figure fills it,
+//   and at the 320px stress width 273px of column (the runner's scrollbar
+//   included; 288 on a phone) still hold the whole figure with nothing
+//   scrolling sideways (§7, §9); from the 360 class of phones up the cap binds
+//   and the 20rem figure stands centred in a wider column (MEASURED on the
+//   built page: 320px wide in a 351px column at 390 — until 2026-10-09's
+//   phone gutter, ui/Container's THE PHONE GUTTER, every phone width up to
+//   ~400px was under the cap); then the credo card across the full
 //   column, then the slot — the grid's `gap-8` between all of them. The band
 //   owns its own `py` on container steps (the PAGE-BAND RECIPE's rule 3, in
 //   Container.tsx's header) and no outer margin at all — the page owns the
@@ -306,7 +312,8 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // `grid-cols-[minmax(0,1fr)]` makes the column exactly the Container's width
 // whatever any item's min-content, so `w-full` on the picture's box resolves
 // against the column and `max-w-xs` caps it only where the column is WIDER
-// than 20rem (a tablet). At the step D63's two tracks,
+// than 20rem (a tablet — and, since 2026-10-09's phone gutter, every phone
+// from a ~356px window up). At the step D63's two tracks,
 // `@3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)]`, replace it — a
 // compile probe of this repo's own stylesheet emits the base rule among the
 // utilities and the `@3xl` rule after it, inside its container query, at

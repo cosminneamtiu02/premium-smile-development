@@ -28,9 +28,9 @@ import {
 // section's contribution to the run's visual manifest. The `Sections/*` title prefix
 // routes every one of them to 390 + 1536 (tests/visual/stories.spec.ts, §13);
 // the 'stress-320' tag adds the accessibility width to the three whose layout
-// has something to say there (a 256px column around a 900×1200 cutout and a
-// framed card in its aura, a German compound with hyphenation switched off,
-// a 40%-expanded name).
+// has something to say there (a 288px column — 256 before 2026-10-09's phone
+// gutter — around a 900×1200 cutout and a framed card in its aura, a German
+// compound with hyphenation switched off, a 40%-expanded name).
 //
 // ── NO CredoCard STORY OF ITS OWN (round 2's D12): the card has one consumer
 // and is photographed inside EVERY story below, so a separate frame would only
@@ -381,9 +381,12 @@ const expectEyebrowsMatch = async (
     2,
   );
   // THE BOXES: whole lines of ONE line height each. Box-for-box equality holds
-  // only while both fit on one line — at 320 the 27-character specialty wraps
-  // and the 17-character label does not — so what is compared is the line
-  // each box is built from, never an accident of the width.
+  // only while both fit on one line — the 27-character specialty (~265px)
+  // wrapped at 320 in the old column, 256px at most, and fits one line in
+  // the 273–288px one since 2026-10-09's phone gutter, while the German
+  // story's specialty wraps still, and the 17-character label never does —
+  // so what is compared is the line each box is built from, never an
+  // accident of the width.
   const line = parseFloat(a.lineHeight);
   await expect(line).toBeGreaterThan(0);
   for (const element of [specialty, label]) {
@@ -602,8 +605,10 @@ const expectArrangement = async (
       await expect(getComputedStyle(line).textAlign).toBe('center');
       await expect(getComputedStyle(line).textWrapStyle).toBe('auto');
     }
-    // The figure centred in the column (capped at 20rem) — and at every
-    // phone width, where the column is narrower than that cap, filling it.
+    // The figure centred in the column (capped at 20rem) — and wherever the
+    // column is narrower than that cap, filling it: since 2026-10-09's phone
+    // gutter only below a ~356px window (~372 beside a classic scrollbar),
+    // the 320 frames; every phone width before it.
     await expect(
       Math.abs(
         pictureBox.left - column.left - (column.right - pictureBox.right),
@@ -781,9 +786,12 @@ const expectArrangement = async (
  * untouched by D51 and D62–D64.
  *
  * **1536 · 390 · 320 (`stress-320`):** the split, the stack, and the stack at
- * the accessibility width, where 256px of column has to hold a 900×1200 figure,
+ * the accessibility width, where 288px of column has to hold a 900×1200 figure,
  * a 32px name with hyphenation switched off and the framed card in its glow
- * (the 32px gutter at 320 holds the glow's ~24px sideways reach) — the stack
+ * (the 32px gutter at 320 held the glow's ~24px sideways reach until
+ * 2026-10-09's phone gutter; the 16px one lets the screen's edge cut the
+ * glow's faint outer tail, 4/255 off the ground at the edge — CredoCard.tsx's
+ * D61 paragraph; nothing scrolls) — the stack
  * now reading name and specialty CENTRED on top, then the figure, then the
  * card (D51c). The play
  * reads back what a picture cannot: that the name really is the page's `<h1>`
@@ -1192,7 +1200,7 @@ export const GermanLongest: Story = {
  * wears the accents without the padding (the `ELENA_PSEUDO_SEGMENTS` note:
  * it is data the toolbar never reaches). The name and the specialty are
  * `hyphens-none`, so their expansion has to be absorbed by wrapping inside a
- * 256px column at the 320 stress width.
+ * 288px column at the 320 stress width.
  *
  * STACKED at its pin, like the German frame — the play walks the same rule.
  */

@@ -685,10 +685,12 @@ export const GermanLongText: Story = {
 };
 
 /**
- * THE NARROWEST WINDOW — 320px, the accessibility stress width (§7): a 256px
- * column, the ribbon at its thinnest, and nothing — no card, no tile of the
- * ribbon — scrolling the page sideways. Pinned there in the workbench and
- * photographed there too ('stress-320').
+ * THE NARROWEST WINDOW — 320px, the accessibility stress width (§7): a 288px
+ * column on a phone since ui/Container's PHONE GUTTER of 2026-10-09 (256
+ * before it; 273 under the classic scrollbar the net photographs it with),
+ * the ribbon at its thinnest, and nothing — no card, no tile of the ribbon —
+ * scrolling the page sideways. Pinned there in the workbench and photographed
+ * there too ('stress-320').
  */
 export const Narrowest: Story = {
   tags: ['stress-320'],

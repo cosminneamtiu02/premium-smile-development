@@ -50,10 +50,13 @@ const HERO_FOLDER = '/images/hero/';
  */
 const LARGEST_DEVICE_SIZE = 1920;
 /**
- * ~16 characters of a 32px serif fill a 256px column — the `hero` step's
- * floor at 320 (lib/team's NAME_CEILING, the same step, the same column).
- * A slogan word longer than this cannot wrap and would push the stage
- * sideways or hyphenate mid-word at the largest size on the site.
+ * ~16 characters of a 32px serif filled the 256px column a 320px window left
+ * until 2026-10-09 — the `hero` step's floor at 320 (lib/team's NAME_CEILING,
+ * the same step, the same column). Since ui/Container's THE PHONE GUTTER
+ * (§15.35) that column is 288px, where ~18 fit (measured on the built page:
+ * „Constantinescu" sets 214.9px at 32px, 15.35px a character), so 16 holds
+ * with room. A slogan word longer than this cannot wrap and would push the
+ * stage sideways or hyphenate mid-word at the largest size on the site.
  */
 const SLOGAN_CEILING = 16;
 /** D-DASH: a spaced dash of any kind, or an em/en dash anywhere, inside a sentence. */

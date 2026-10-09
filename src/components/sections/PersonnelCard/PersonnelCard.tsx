@@ -82,11 +82,13 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // fixed-ratio cell (`aspect-3/4 w-48 max-w-full`) where ui/Image's `framed`
 // recipe (h-full w-full object-cover, Image D2) fills and crops it: 3:4 is the
 // headshot ratio and ONE ratio for the whole team (§11's uniform aspect
-// ratios), 12rem/192px wide so 206px of content still survives inside Card's
-// 25px of border-plus-padding at the 320 stress width (`max-w-full` is the
-// belt). The radius is the atom's own 12px (Image D3) — a circular portrait
-// would be an Image variant question, never a className here (§6.8 bans
-// restyling an atom's internals). A DOCTOR's picture is D17's cutout instead.
+// ratios), 12rem/192px wide so 238px of content still survives inside Card's
+// 25px of border-plus-padding at the 320 stress width — 223 behind a
+// desktop's classic scrollbar, and 206 before ui/Container's PHONE GUTTER of
+// 2026-10-09 (`max-w-full` is the belt). The radius is the atom's own 12px
+// (Image D3) — a circular portrait would be an Image variant question, never
+// a className here (§6.8 bans restyling an atom's internals). A DOCTOR's
+// picture is D17's cutout instead.
 // `alt=""` IS THE DECISION, for both kinds, not a missing string: the heading
 // beside the picture (an <h3> by default, an <h2> under `headingLevel={2}` —
 // D4) carries the person's name, so a portrait alt would be announced twice in
@@ -184,20 +186,26 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // "Medic specialist ortodonție" wraps at 320px, so the evidence exists here.
 // `hyphens-none` for D4's reason: a specialisation is a title, not prose.
 // KNOWN CEILING (G2 a11y): with hyphenation off, ONE word of the position
-// longer than the content box (21 mono characters at 320's 206px; 16 in a
-// 162px grid track) protrudes into the padding instead of breaking. No fixture
-// reaches it and no page-level scroll follows; the page lane keeps it that way
-// by giving the tiles a floor — `minmax(16rem, 1fr)` tracks until 2026-10-02,
-// since then sections/TeamRoster's FIXED 18rem tiles (its D9), 16rem at the
-// 320 stress width — rather than by letter-level emergency breaks inside a
-// person's title. Since 2026-09-21 the
+// longer than the content box (21 mono characters at 320's 206px — since
+// ui/Container's PHONE GUTTER of 2026-10-09 the 320 tile's box is 238px on a
+// phone and 223 behind a desktop's classic scrollbar, where 24 and 22 fit;
+// 16 in a 162px grid track) protrudes into the padding instead of breaking.
+// No fixture reaches it and no page-level scroll follows; the page lane keeps
+// it that way by giving the tiles a floor — `minmax(16rem, 1fr)` tracks until
+// 2026-10-02, since then sections/TeamRoster's FIXED 18rem tiles (its D9),
+// the full 18rem at a phone's 320 since THE PHONE GUTTER (16rem before it;
+// 273px behind a classic scrollbar) — rather than by letter-level emergency
+// breaks inside a person's title. Since 2026-09-21 the
 // ceiling is ENFORCED on the data rather than merely recorded here:
 // tests/unit/team-data.test.ts measures the longest unbreakable run of every
 // `position` in every locale against those 21 characters (and of every `name`
 // against the h1's own 16), which is what caught a German draft. Since the
 // ribbon's mount (2026-09-30) a DOCTOR's position is held to 17 instead: the
 // lanes leave its line 174.5px at the 320px window, where 17 mono characters
-// fit and 18 do not (measured — CLAUDE.md §15.25); an auxiliary's stays 21.
+// fit and 18 do not (measured — CLAUDE.md §15.25; since THE PHONE GUTTER that
+// line is 204.2px there, behind the classic scrollbar, and 218.1 on a phone,
+// where 20 and 22 fit — both ceilings hold with room, neither relaxed); an
+// auxiliary's stays 21.
 //
 // ── D6 · THE BLOCK (amended by D15, and for the doctor by D17). An
 // auxiliary's is `flex flex-col items-center gap-3 text-center` — photo, then
@@ -220,9 +228,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // default and the grid from `@3xl`. Container variants query the NEAREST
 // container ancestor, so `@3xl` measures 48rem/768px of the INSET's content
 // width — never the band and never the window (§6.5). Outside a ribbon that is
-// the card's content box; with ui/Container's gutter the card is 312px at the
-// 390 phone and 614px at the 768 tablet (both stacked), 1024px at 1280 and
-// 1228px at 1536 (both beside): the owner's fb-393 rule from ClinicLocation —
+// the card's content box; with ui/Container's gutter the card is 351px at the
+// 390 phone (312 before its PHONE GUTTER, 2026-10-09) and 614px at the 768
+// tablet (both stacked), 1024px at 1280 and 1228px at 1536 (both beside): the
+// owner's fb-393 rule from ClinicLocation —
 // desktop beside, tablet and phone below — and the first brief, "where stuff
 // doesn't fit … place first left side and then text below still in justify".
 // Both tracks are `minmax(0, …)`, whose 0 floor is what stops one unbreakable
@@ -551,11 +560,17 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // preload link carries the same `sizes` — next/image hands one value to both.
 // Wherever `sizes` answers 18rem — every touch screen, a mouse under a 70rem
 // window — the G2 react note stands: `18rem` over-asks wherever the cell is
-// narrower than 18rem — a 390px phone at 3× fetches the 1080w candidate for a
-// 226px box — and `min(18rem, calc(80vw - 4.5rem))` would ask for less (the
-// filter takes the SMALLEST share, so beside `21vw` an `80vw` it read would
-// change nothing), but the gain is unproven on the demo art: measure with a
-// real cutout before moving it.
+// narrower than 18rem — on a phone under 404px since ui/Container's PHONE
+// GUTTER (2026-10-09; 455 before it): a 360px phone at 3× fetches the 1080w
+// candidate for a 251.5px box the 828w would cover (the 390 phone's box is
+// 276.6px now and needs the 1080w at 3× anyway; the 226px first named here
+// was a 390 window behind a classic scrollbar) — and a `min(18rem, calc(…))`
+// on the phone column's share would ask for less (the filter takes the
+// SMALLEST share, so beside `21vw` a larger one it read would change
+// nothing). That share is 90vw up to a 480px window since that day: the
+// `calc(80vw - 4.5rem)` first named here would now ask 240px of the 390
+// phone's 276.6px box, too little. The gain is unproven on the demo art:
+// measure with a real cutout before moving it.
 // THE FRAME — the owner, later the same day (2026-09-30), verbatim: "one more
 // thing to mention. i want to use for this card the border of the non current
 // review from the review carrousel. can you do that." That border is ui/Card's
@@ -603,8 +618,11 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // Team page, which sections/DoctorShowcase opens, the FIRST doctor's cutout IS
 // the page's LCP element (§10.6) — MEASURED by the planner on the lane's built
 // export with Chromium's largest-contentful-paint entries: 226 × 302 on a 390
-// phone, 288 × 384 at 1280 and 1920, still the LCP at 1366 × 633 — and it
-// shipped `loading="lazy"`, with no `fetchpriority` and no preload link. So
+// phone (since ui/Container's PHONE GUTTER of 2026-10-09: 276.6 × 368.8 on a
+// 390 phone, 262.7 × 350.2 at a 390 window behind a classic scrollbar — the
+// geometry the 226 × 302 was — still the LCP, re-measured), 288 × 384 at 1280
+// and 1920, still the LCP at 1366 × 633 — and it shipped `loading="lazy"`,
+// with no `fetchpriority` and no preload link. So
 // the doctor kind takes `preload` (default false), and when it is true
 // ui/Image receives the pair sections/DoctorIntro hands its own cutout (its IT
 // IS THE DOCTOR PAGE'S LCP ELEMENT paragraph), `preload` and

@@ -854,9 +854,11 @@ const expectBandScale = async (
 /**
  * THE SCALE IS NOT VACUOUS where the story is drawn to see it (DoctorStats'
  * `expectScaled`): under open gates, a window whose column MUST be past the
- * step — 80 % of it less 17px of classic scrollbar at most, the gutter's 10vw
- * governing every window up to its 2000px cap and the column only wider
- * beyond — must have drawn the scale. `applied` is what the SHEET did
+ * step — 80 % of it less 17px of classic scrollbar at most, the gutter never
+ * more than 10vw a side up to its 2000px cap (exactly that from a 600px
+ * window, half of it on a phone since ui/Container's THE PHONE GUTTER,
+ * 2026-10-09 — a narrower gutter only widens the column) and the column only
+ * wider beyond — must have drawn the scale. `applied` is what the SHEET did
  * (`expectBandScale`'s remap), never the play's prediction, so a regime the
  * sheet skipped fails here even where the band's floor makes every size of
  * the theme and of the scale agree — the unpinned stories' 1200px canvas.
@@ -969,8 +971,10 @@ export const German: Story = {
  * table of contents (board §5.2, option A — the pattern every printed
  * brochure uses, one DOM, no second menu), then the cards. Inside a card the
  * rows stack — the name on its line, the price under it — because at 390 the
- * card's inside is ~262px and an 80-character treatment name needs the whole
- * of it (board §5.3).
+ * card's inside is ~301px (~262 until ui/Container's THE PHONE GUTTER halved
+ * a phone's margins, 2026-10-09; 286px in the test runner, under its 15px
+ * scrollbar) and an 80-character treatment name needs the whole of it
+ * (board §5.3).
  */
 export const Smartphone390: Story = {
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },

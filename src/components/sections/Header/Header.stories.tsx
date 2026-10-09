@@ -152,9 +152,11 @@ const expectContactAtItsFloor = async (contact: HTMLElement) => {
  * row tall, centring the lockup's hugging link in it (2026-10-02, Wordmark's
  * D9), so in the bar the mark is 68.85% of the row (90% × 85% × 90%) and the
  * name Heading's `section` step, 1.875rem — and below the Wordmark's
- * `@max-sm` step (a pill under 24rem: a phone up to ~482px wide, the 390
- * smartphone pin included) the mark is 30.6% of the row and the name the old
- * 20px, 1.25rem (the phone fitting, 2026-10-01). Measured off the layout as
+ * `@max-md` step (a pill under 28rem: a phone up to ~525px wide, the 390
+ * smartphone pin included; `@max-sm`, 24rem, until 2026-10-09, when
+ * ui/Container's THE PHONE GUTTER widened the pill by a tenth of the window)
+ * the mark is 30.6% of the row and the name the old 20px, 1.25rem (the
+ * phone fitting, 2026-10-01). Measured off the layout as
  * RATIOS of the row and the root, so the pin holds at any root font size and
  * at every width the visual runner samples — which step applies is read off
  * the pill itself, the box the container query measures. And the smaller mark
@@ -174,7 +176,7 @@ const expectMarkAtTopBarSize = async (bar: HTMLElement): Promise<void> => {
     );
   }
   const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const phone = bar.clientWidth < 24 * rem;
+  const phone = bar.clientWidth < 28 * rem;
   const share = phone ? 0.306 : 0.6885;
   const r = row.getBoundingClientRect();
   await expect(box.getBoundingClientRect().height).toBeCloseTo(r.height, 3);
@@ -376,10 +378,13 @@ export const GermanStress: Story = {
  * THE BRAND GREW).
  *
  * HOW THE FRAME REACHES THE STEP at any window width: the pill's side margins
- * are `clamp(1rem, 10vw, 12.5rem)` each (ui/Container's `containerClasses`),
- * so a box of 62rem + 6px + twice that clamp leaves the bar's border box at
- * 62rem + 6px and its CONTENT box at exactly 62rem + 4px — four pixels above
- * the step, so sub-pixel rounding can never drop it under. The wrapper sits
+ * are ui/Container's `containerClasses`, `clamp(1rem, 10vw, 12.5rem)` each
+ * from a 600px window up (half that on a phone since THE PHONE GUTTER,
+ * 2026-10-09 — widths where this box never binds: its 62rem branch wins the
+ * `min()` only from a ~1260px window), so a box of 62rem + 6px + twice that
+ * clamp leaves the bar's border box at 62rem + 6px and its CONTENT box at
+ * exactly 62rem + 4px — four pixels above the step, so sub-pixel rounding
+ * can never drop it under. The wrapper sits
  * INSIDE the shared Ground, so the page ground is the other stories'. At the
  * 390 phone width the `100%` branch of the `min()` wins and the frame is the
  * ordinary phone — the burger, as it must be. The Sections/* tier photographs

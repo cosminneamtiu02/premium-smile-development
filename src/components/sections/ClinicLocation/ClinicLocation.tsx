@@ -52,10 +52,10 @@ import { cx } from '@/lib/cx/cx';
 // pair on `--fade` (fb-44): the two spellings are deliberately independent, so
 // changing the system's feel is a two-file edit and never a drift.
 //
-// ── OLD → NEW: three deviations from "exactly the same", listed so no reviewer
+// ── OLD → NEW: four deviations from "exactly the same", listed so no reviewer
 // reads them as drift — the first two STANDING SITE LAW rather than this
 // band's taste, the third a size this file got wrong for three weeks and now
-// keeps on purpose.
+// keeps on purpose, the fourth the owner's word on the phone's map.
 //   1. The gutter. The old band spelled its own `pl/pr-[clamp(48px,10vw,200px)]`;
 //      this one composes ui/Container, whose `containerClasses` is the ONE
 //      gutter definition on the site (§15.15 a, fb-343). The number is NOT
@@ -91,12 +91,25 @@ import { cx } from '@/lib/cx/cx';
 //      card's body is ui/Text's `text-base` too, and the owner's base
 //      reference is the two read 1 to 1 (THE BAND SCALE, below, which also
 //      names the step up as a lever).
-// Everything else is ported: the 2:1 map box, the `-m-3 p-3` hit-area trick,
-// the single-anchor row, the whole-row hover, the 44px disc with its 20px
-// glyph (44 and 20 DESIGN px inside the band scale — DISC_SIZE below),
-// `loading="lazy"` and `allow=""`. The radius (D4) and the shadow (D3) take
-// the house values — `rounded-md`, `shadow-aura` — and the aura happens to be
-// numerically the old site's `shadow-cta`.
+//   4. The phone's map — TALLER (2026-10-09, CLAUDE.md §15.34; the owner,
+//      verbatim: "i need map on phone to be like 50% taller. it is too
+//      small."). The old box was 2:1 at every width, and so was this one
+//      until that day: a map half as tall as it is wide, which on a phone's
+//      column is a strip about a fifth of the screen's height. Below the
+//      band's `@lg` step — D7's phone layout, where the two rows stack — the
+//      tray is 4:3 now: three quarters of its width tall instead of half,
+//      which is exactly half again as tall at the same width. From `@lg` up
+//      (every tablet, a phone held sideways past the step, every laptop) it
+//      is the 2:1 box as before. ONE step, the one the rows already turn at,
+//      so the band changes shape in one place; the price is a jump there —
+//      across the step the map loses a third of its height, beside the rows'
+//      own rearrangement. The lever is the phone's ratio, one token.
+// Everything else is ported: the 2:1 map box (from `@lg` up — item 4), the
+// `-m-3 p-3` hit-area trick, the single-anchor row, the whole-row hover, the
+// 44px disc with its 20px glyph (44 and 20 DESIGN px inside the band scale —
+// DISC_SIZE below), `loading="lazy"` and `allow=""`. The radius (D4) and the
+// shadow (D3) take the house values — `rounded-md`, `shadow-aura` — and the
+// aura happens to be numerically the old site's `shadow-cta`.
 //
 // ── D7 · THE CONTAINER-STEP MAPPING, and why there is a rhythm box. §6.5
 // forbids a component from measuring the window, so the old media queries
@@ -408,8 +421,10 @@ export function ClinicLocation({
                 baselines photograph: `overflow-hidden` is what makes the frame
                 respect the house `rounded-md` corners (D4), `bg-line-subtle` is
                 the on-brand ground behind it, and `shadow-aura` is the EXISTING
-                token (D3), not a new one. */}
-            <div className="aspect-[2/1] overflow-hidden rounded-md border border-line-subtle bg-line-subtle shadow-aura">
+                token (D3), not a new one. The tray's SHAPE is the header's OLD
+                → NEW, item 4: 4:3 on a phone's column, half again as tall as
+                the 2:1 it keeps from `@lg` up (the owner, 2026-10-09). */}
+            <div className="aspect-[4/3] @lg:aspect-[2/1] overflow-hidden rounded-md border border-line-subtle bg-line-subtle shadow-aura">
               {/* `title` is the frame's accessible name — without it a screen
                   reader announces an unnavigable "frame" and axe fails the
                   story. `referrerPolicy="no-referrer"` sends Google no page

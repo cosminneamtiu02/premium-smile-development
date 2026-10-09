@@ -414,6 +414,56 @@ describe('Hero — the region and its slides (lib/rotation’s markup duties)', 
     expect(fade?.className).toContain('var(--color-page)_100%');
   });
 
+  it("keeps the band's last 2px for the page colour alone — the photograph and the veil both stop short of the edge (owner, 2026-10-09)", () => {
+    // The thin dark line the owner saw on a phone: wherever the band's edge
+    // lands between device pixels, the clipped photograph and veil took more
+    // of that last row than the fade drawn over them (the header's THE BAND'S
+    // LAST PIXELS bullet; tests/e2e/hero-seam.spec.ts measures the pixels on
+    // seven devices). Stopping only one of the two left the line in 28 of 112
+    // measured combinations, so both are pinned, and to the SAME margin.
+    const { region } = mount();
+    const stage = region.firstElementChild;
+    if (!stage) throw new Error('no stage');
+    // Every slide's picture: a clip-path on the wrapper, applied AFTER its
+    // blur — the overshoot's one spacing step (`-inset-1`, which the clip's
+    // `var(--spacing)` term undoes) plus the margin, read off each wrapper.
+    const wrappers = screen
+      .getAllByRole('img', { hidden: true })
+      .map((picture) => picture.parentElement?.className ?? '');
+    expect(wrappers).toHaveLength(WORDS.length);
+    const pictureMargins = wrappers.map((wrapper) => {
+      expect(wrapper).toContain('-inset-1');
+      const clip = wrapper.match(
+        /\[clip-path:inset\(0_0_calc\(var\(--spacing\)\+(\d+(?:\.\d+)?)px\)_0\)\]/,
+      );
+      if (!clip) {
+        throw new Error(
+          `a picture wrapper is no longer clipped above the band's edge: ${wrapper}`,
+        );
+      }
+      return clip[1];
+    });
+    // The veil: held to the margin above the bottom, then a hard stop.
+    const ground = [...stage.children].find((el) =>
+      el.className.includes('rgb(0_0_0_/_0.4)_8rem'),
+    );
+    if (!ground) throw new Error('no ground');
+    const veilEnd = ground.className.match(
+      /rgb\(0_0_0_\/_0\.4\)_calc\(100%-(\d+(?:\.\d+)?)px\),transparent_calc\(100%-(\d+(?:\.\d+)?)px\)\)/,
+    );
+    if (!veilEnd) {
+      throw new Error(
+        `the veil no longer ends in a hard stop to transparent above the band's edge: ${ground.className}`,
+      );
+    }
+    // KEEP-IN-SYNC, the relation and not a number: the veil's stop, its
+    // transparent start and every picture's clip are ONE margin — so the two
+    // may be retuned together, never apart — and it stays clear of the edge.
+    expect(veilEnd[1]).toBe(veilEnd[2]);
+    for (const margin of pictureMargins) expect(margin).toBe(veilEnd[1]);
+    expect(Number(veilEnd[1])).toBeGreaterThan(0);
+  });
+
   it('remaps the focus token to the inverse ink on the band — the first dark band', () => {
     const { region } = mount();
     expect(region.className).toContain('[--focus:var(--ink-inverse)]');

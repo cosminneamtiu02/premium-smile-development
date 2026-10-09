@@ -1416,7 +1416,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     at the band's edge — here the fade's last pixel, the band's ground and the next band's
     ground are one colour, and the words/buttons/beads ground is ONE element (two
     translucent boxes meeting at a fractional row edge leave a hairline), so no seam can
-    exist by construction. CONSEQUENCE, measured: the corner-disc overlap round 1 recorded
+    exist by construction *(annotated 2026-10-09, round 13: false where the band's edge lands
+    between device pixels — the photograph and the veil also reached that edge, under the fade,
+    and leaked as a one-device-pixel line on the owner's iPhone)*. CONSEQUENCE, measured: the corner-disc overlap round 1 recorded
     is gone — the fade and the beads now sit between the buttons and the phone's bottom
     edge (Hero.tsx's header carries the numbers). Visual: the Sections/Hero and Pages/Home
     frames all change; the darwin re-record remains the owner's (§15.7).
@@ -1735,6 +1737,58 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     full-page capture expands the viewport to ~7000px, every doctor card comes into view and the ribbon paints DURING
     the capture, so under load two consecutive screenshots keep differing past Playwright's 5 s; the committed
     playwright.config.ts is untouched — the budget is the lever if `npm run visual` ever times out there.
+    **Round 13 (owner, 2026-10-09 — THE LINE UNDER THE HERO, a bug report from an iPhone on the production site;
+    verbatim: "on phone there is a slim thn dark line  that appears between hero section and "in numbers section".
+    check if it appears on other devices … i need it fixed and gone on every device"; lane `fix/hero-bottom-seam`,
+    `/debug-deep`):** THE CAUSE, measured: the band paints three layers down to its bottom edge — the photograph
+    (`-inset-1`, 4px past it, trimmed by the band's clip), the 0.40 veil (`groundClasses`) and, over both, round 6's
+    fade into the page colour. Wherever that edge lands BETWEEN device pixels — 839 CSS px × 2.625 on a Pixel 7,
+    721 × 1.5 on a laptop at 150 % display scaling, a hero a fraction taller than an iPhone's screen at 3× — each
+    engine resolves the band's last, partial row of pixels layer by layer, and the clipped photograph and veil took
+    more of it than the fade drawn over them: the veiled photograph leaked as a one-device-pixel line, its darkness
+    following the photograph's (read off the owner's screenshot: ≈1.5 device rows of the veiled photograph, darker
+    where the photograph is). Round 2's "no seam can exist by construction" reasoned about the fade alone. A sweep of
+    112 engine × scale × window combinations on develop a6b072f: a line in 30 — Chromium at every fractional scale
+    (1.25, 1.5, 1.75, 2.625, 2.75, 3.5: Windows laptops at 125–175 % and Android phones), WebKit at 1.5 and at one 3×
+    phone size — 15 to 58 levels darker than the fade's row above it (96 with the photograph forced onto its own GPU
+    layer, the path an iPhone takes eagerly); never in Firefox, never on a
+    whole device-pixel edge, never in the visual net (it shoots at 1× on whole-pixel windows). The fade pushed 2px
+    past the edge did NOT cure it (165 → 221 on the Pixel config), nor a page-coloured strip under it (227); stopping
+    the photograph alone or the veil alone left 28 of 112. THE FIX — both dark layers stop 2px above the edge: the
+    picture wrapper wears `[clip-path:inset(0_0_calc(var(--spacing)+2px)_0)]` (applied after the `filter`, so it
+    trims the BLURRED picture; the overshoot's one spacing step plus the 2px) and the veil's gradient hard-stops to
+    transparent at `calc(100% - 2px)` — one margin, KEEP-IN-SYNC, pinned in Hero.test.tsx; the fade and every other
+    line are untouched (Hero.tsx's THE BAND'S LAST PIXELS bullet). Result: 0 of 112, the worst dip 1.2 levels, the
+    ring still or running — and still 0 of 112 with the photograph forced onto its own GPU layer (Core Animation in
+    WebKit, the compositor in Chromium), where the clip could have met the blur in another order. Why 2px and hard
+    edges: 2px above the edge the fade is already 100 − 2000 / H % page on a stage H px tall (96.5 % at 568, 97.5 % at
+    800), so the new edge could leak only the rest — ≤ 4 levels on the clinic's photographs, ~5.5 on a black one; 1.2
+    at worst, measured — and every row above it is the band it was (compared row by row in three engines; the fade
+    arrives a pixel sooner, a light step of ~3.5 levels); a shorter
+    picture box instead had to stop 8px up (the blur's soft edge creeps back down) and lightened the fade's last 16px
+    by up to 10 levels — declined. GUARDED twice: Hero.test.tsx pins the ONE margin of the clip and the veil, and the
+    overshoot the clip undoes (in CI); NEW `tests/e2e/hero-seam.spec.ts` (Chromium, seven devices × RO + EN; an instant
+    scroll to a whole device pixel, the premise first — the edge IS fractional — then no row at the edge darker than
+    the fade above it by more than 2 levels) is RED on develop's export (14 of 14, depths 18.9–44.0) and GREEN on the
+    fix (≤ 0.12) — on demand, `npm run e2e`: that suite runs in no workflow, and its config's header now says one spec
+    reads pixels. VISUAL, measured
+    at zero tolerance against a pristine Storybook of develop a6b072f — the 27 cells that render the Hero (Sections/Hero,
+    Pages/Home; develop re-shot against itself: 27 identical): every cell moves on exactly two rows, the band's last
+    2px, by ≤ 4 levels; at the net's own tolerance all 27 pass, so no darwin or linux baseline is re-recorded. Gates:
+    prettier · eslint · tsc clean; vitest 147 files / 3812 tests with the optimizer variants hidden; build-storybook
+    and `next build` green; e2e 250 passed / 140 skipped. The crossfade's cost, measured (Chromium, a 390 × 844 phone
+    at 3×, the CPU four times slower, five runs each): p50 12.0 → 11.1 ms, p95 24.4 → 26.0 ms, worst 30.8 → 27.9 ms,
+    no frame over 50 ms either way. G2 on Opus (react-reviewer, typescript-reviewer): APPROVE WITH CHANGES twice,
+    0 critical / 0 high; the one medium folded — the spec's scroll was instant only because reduced motion was
+    emulated (globals.css glides every other scroll, and mid-glide the spec passed on the defect, measured; the lane's
+    own sweeps were re-run with an instant scroll, and the figures above are those); every low and nit folded. NOT
+    VERIFIABLE HERE: iOS Safari itself (no Xcode on the
+    workstation) — desktop WebKit reproduced the line only faintly at 3× where the owner's iPhone showed it strongly;
+    the fix takes the dark paint off the edge in every engine by construction, and a look on the owner's phone is the
+    confirmation owed. RECORDED: WebKit and Firefox are swept by the lane's probe, not pinned (the e2e suite is
+    Chromium-only, the owner's call, §15.20); if the owner's iPhone still shows anything, the lever is the React
+    review's alternative — an unfiltered `overflow-clip` wrapper ending 2px above the edge around each picture (a plain
+    rectangle, no mask); `onLaptopOnly` is now in its fourth spec (the §15.19 helper-promotion census).
 
 22. **Header brand-to-nav gap — DECIDED (owner, 2026-09-26, verbatim: "small refactor on top
     bar. it should maintain at least a little space between 'premium smile' and first button of

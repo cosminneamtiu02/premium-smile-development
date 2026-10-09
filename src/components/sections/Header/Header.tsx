@@ -316,8 +316,10 @@ export function Header(): ReactElement {
           = 1rem + 5rem = 6rem, everywhere:
             globals.css      `scroll-padding-top: 6rem` — one value, the xl
                              media step deleted;
-            FloatingActions  `--stem-inset: calc(7rem + env(…))` — one value
-                             (1rem corner offset + 6rem reach), xl step deleted;
+            FloatingActions  `--stem-inset: calc(8rem + env(…))` — one value
+                             (2rem corner offset + 6rem reach — 7rem until the
+                             corner rose to its 2rem edge, 2026-10-09), xl step
+                             deleted;
             NavMenu          the panel cap MOVED this round, unlike last:
                              `100dvh − 6.5rem` (reach 6rem + the `mt-2` gap).
                              Last round it deliberately stayed at 5.5rem because

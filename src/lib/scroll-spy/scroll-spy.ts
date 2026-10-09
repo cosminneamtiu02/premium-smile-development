@@ -385,7 +385,9 @@ import {
 // (an `isLocked()` it does not have; reading the root's inline `overflow`
 // here would couple this module to that one's mechanism). (b) Tab-focusing a
 // link low in the sticky menu nudges the page by ~38px (the shell's
-// `scroll-padding-bottom` keeping the focused link clear of the corner) — a
+// `scroll-padding-bottom` keeping the focused link clear of the corner —
+// measured while its steps stood 1rem lower; they rose with the corner on
+// 2026-10-09, CLAUDE.md §15.36, so expect a larger nudge, not re-measured) — a
 // scroll event no hand made, which drops a settled pin onto the walk's
 // answer. Both are viewport-truthful.
 //

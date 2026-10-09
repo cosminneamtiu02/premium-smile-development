@@ -123,17 +123,18 @@ export interface LanguageBannerProps {
 }
 
 // ── THE ANCHOR (board §2 · Q-A, owner-approved; re-derived 2026-09-05 for
-// fb-353): a centred toast LIFTED ABOVE the corner row, never a card in a
-// corner.
+// fb-353, and on 2026-10-09 for the corner's 2rem edge): a centred toast
+// LIFTED ABOVE the corner row, never a card in a corner.
 //
-// `bottom-[calc(11.5rem+env(safe-area-inset-bottom))]` — ONE value, no steps,
+// `bottom-[calc(12.5rem+env(safe-area-inset-bottom))]` — ONE value, no steps,
 // and the number is a CLEARANCE, not a mirror. The tall corner is the RIGHT one
 // since fb-353 (owner, 2026-09-04) stacked the WhatsApp disc above the phone:
-// 1rem offset + disc + 0.5rem gap + disc (discs 3.5 → 4 → 4.5rem by
-// breakpoint) = 8.5 / 9.5 / 10.5rem of reach; globals.css'
-// `scroll-padding-bottom` steps (9.5 / 10.5 / 11.5rem — their authoritative
-// home is FloatingActions.tsx' mount-contract obligation (a)) add the same
-// breathing room for focus. Taking the TALLEST of those steps once clears the
+// 2rem offset (FloatingActions' THE GLOW'S ROOM — 1rem until 2026-10-09, when
+// the corner rose so its glow ends above Safari's bottom bar) + disc + 0.5rem
+// gap + disc (discs 3.5 → 4 → 4.5rem by breakpoint) = 9.5 / 10.5 / 11.5rem of
+// reach; globals.css' `scroll-padding-bottom` steps (10.5 / 11.5 / 12.5rem —
+// their authoritative home is FloatingActions.tsx' mount-contract obligation
+// (a)) add the same breathing room for focus. Taking the TALLEST of those steps once clears the
 // 2xl stack by 1rem and the phone stack by 3rem. The bond is "at least the
 // stack's reach" — an inequality, not an equality — so this is deliberately
 // NOT an fb-44 KEEP-IN-SYNC pair: the values need not agree, only exceed, and a
@@ -191,7 +192,7 @@ export interface LanguageBannerProps {
 // (0,2,0) specificity silently outranked the reduced-motion opt-out.
 const cardClasses =
   'fixed inset-x-4 z-30 mx-auto w-fit max-w-md ' +
-  'bottom-[calc(11.5rem+env(safe-area-inset-bottom))] ' +
+  'bottom-[calc(12.5rem+env(safe-area-inset-bottom))] ' +
   'flex flex-col gap-2 rounded-lg border border-line-subtle bg-surface ' +
   'p-4 text-ink shadow-xl ' +
   'transition-[opacity,translate] duration-200 ease-out ' +
@@ -410,18 +411,32 @@ export interface LanguageBannerCardProps {
  * user-dismissible with a keyboard-reachable control (asserted), it is
  * transient by purpose, and the §9 page-tier keyboard walkthrough already tabs
  * at several scroll positions. THE LOAD-BEARING HALF IS GEOMETRIC AND NAMED
- * (G2 a11y review, 2026-09-04; numbers re-derived 2026-09-05 for fb-353):
+ * (G2 a11y review, 2026-09-04; numbers re-derived 2026-09-05 for fb-353, and
+ * 2026-10-09 when the corner rose 1rem and every number with it):
  * globals' `scroll-padding-bottom` rests a Tab-scrolled target's bottom edge
- * 9.5/10.5rem above the viewport bottom below 1536px while this card's lift is
- * 11.5rem, so a 2rem/1rem sliver of the focused element stays visible under
+ * 10.5/11.5rem above the viewport bottom below 1536px while this card's lift is
+ * 12.5rem, so a 2rem/1rem sliver of the focused element stays visible under
  * the card — "not entirely hidden", the AA minimum. At ≥1536px the step EQUALS
  * the lift and a Tab-scrolled target rests flush against the card's bottom
- * edge. The bond is therefore an
- * inequality — the lift must EXCEED every scroll-padding-bottom step it
- * overlaps — and the first centered bottom-band focusable narrower than this
- * card (§14's CTABanner, by design) is the named re-open trigger; the
- * walkthrough owns the entirely-hidden check, and globals' C43 block records
- * the same bond from the shell's side.
+ * edge. The bond is therefore an inequality — the lift must EXCEED every
+ * scroll-padding-bottom step it overlaps (LanguageBanner.test.tsx asserts it
+ * against globals' real rule at 1536px since 2026-10-09) — and the first
+ * centered bottom-band focusable narrower than this card (§14's CTABanner, by
+ * design) is the named re-open trigger; the walkthrough owns the
+ * entirely-hidden check, and globals' C43 block records the same bond from the
+ * shell's side.
+ * THE BOND HAS A SECOND SIDE NOBODY ASSERTS — the card's TOP must stay under
+ * the sticky pill (its bottom edge 98px down), and on a SHORT viewport it
+ * cannot: the pill (z-50) paints over the card (z-30), and no scroll moves a
+ * fixed card. By the G2 a11y review's arithmetic (2026-10-09, computed, not
+ * measured on a device): a one-line card (~110px) needs a viewport at least
+ * 12.5rem + 110 + 98 = 408px tall (432 for two lines; 392 before the corner
+ * rose 1rem the same day), and between about 277 and 315px both of its
+ * controls sit entirely behind the pill (261–299 before) — high zoom (1366 ×
+ * 768 at 200 % is about 317px) and phones held sideways. The lever, the
+ * owner's: on short, wide screens drop the card to the corner row, where a
+ * centred card no wider than 28rem clears both corner columns. BACKLOG.md
+ * entry 2 lists it.
  * THE TRIGGER FIRED on 2026-10-03 (CLAUDE.md §15.33): the Footer's logo became
  * a link — centred, 278px with its ring, narrower than this card (291–309px).
  * MEASURED on the built export (Chromium, Firefox, WebKit, 390–1920px): the
@@ -434,6 +449,10 @@ export interface LanguageBannerCardProps {
  * can reveal what the page's end holds under the card, so the cure is this
  * component's: keep the card's reach free at the page's end while it shows.
  * ACCEPTED by the owner the same day, not built — BACKLOG.md entry 2.
+ * Those numbers were measured with the card at an 11.5rem lift; on 2026-10-09
+ * it rose to 12.5rem with the corner, while the Footer's centred logo rose
+ * only half as far, so the set of hidden Footer stops may differ — the §9
+ * walkthrough re-measures it at 1024–1280px.
  */
 export function LanguageBannerCard({
   suggested,

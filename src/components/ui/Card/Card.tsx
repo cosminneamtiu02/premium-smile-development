@@ -392,6 +392,14 @@ import { slotClone } from '../slot';
 // without breaking the sum rule). One value, so the two can never drift;
 // Card.test.tsx reads the framed border and the emphasized ground back from
 // the engine and asserts they are equal.
+// A THIRD READER, outside this file (2026-10-10): sections/PersonnelCard's
+// CIRCLE — its D20, the round photo of the doctor card's phone header —
+// paints its ground with `--card-tint` behind the same color-mix gate, the
+// `line-subtle` grey below the gate and as the variable's own fallback. KEEP
+// IN SYNC both ways (§4): renaming the variable, moving its mix or its gate
+// here moves that circle, and PersonnelCard.test.tsx measures the circle's
+// ground EQUAL to the doctor card's frame, which this file paints from the
+// same variable.
 // THE MIX IS OPAQUE, AND SAYS SO TWICE (G2 a11y HIGH ×2, reviews-deck run,
 // 2026-09-10 — the reasoning outlived the value). A wash over TRANSPARENT
 // (the `/20` opacity spelling) would let a deck's neighbouring cards show

@@ -207,13 +207,42 @@ const POSITION_CEILING = 21;
  * 320px stress window the column is 273px under the runner's scrollbar and
  * the name block's line 204.2px, so 20 characters fit (196px; 21 are
  * 205.8px) — on a phone, with no scrollbar, 288px and 218.1px, where 22 fit
- * (215.6px; 23 are 225.4px). The ceiling stays 17, with room. A 22-character
- * word now withholds the ribbon only at the runner's 320 — it is drawn from a
- * 324px window, and on a real 320 phone; „Constantinescu" (202.3px) is drawn
- * at every window from 320 (withheld under ~345 before), „Alexandrescu"
- * (178.4px) as before.
+ * (215.6px; 23 are 225.4px). The ceiling stayed 17, with room. A 22-character
+ * word withheld the ribbon only at the runner's 320 — it was drawn from a
+ * 324px window, and on a real 320 phone; „Constantinescu" (202.3px) at every
+ * window from 320 (withheld under ~345 before), „Alexandrescu" (178.4px) as
+ * before.
+ *
+ * RE-DERIVED 2026-10-10 FOR THE PHONE HEADER (PersonnelCard D20), where the
+ * ceiling now comes from: on a phone the specialty is a line of its own
+ * across the whole INSET, on ui/Eyebrow's `card` step — 13.2px, where JetBrains
+ * Mono advances 0.6em (7.92px) and the `tracking-widest` adds 0.1em (1.32px),
+ * 9.24px a character (MEASURED on the Team page's story twin at 320:
+ * „Kieferorthopädie", 16 characters, 147.8px). AND IT IS TAKEN WITH SC
+ * 1.4.12'S LETTER-SPACING OVERRIDE ON (the G2 fold of the same day): a reader
+ * who sets letter spacing to 0.12em REPLACES the 0.1em tracking, so a
+ * character advances 0.6em + 0.12em = 0.72em, 9.504px at 13.2px. The narrowest
+ * line a 100 %-zoom phone frame gives the specialty is the runner's 320 frame
+ * behind a classic scrollbar — a desktop zoomed to 400 %, the pixel net's 320
+ * cell — 204.2px, where floor(204.2 / 9.504) = 21 characters fit (199.6px; 22
+ * are 209.1px): THE CEILING IS 21. A real 320 phone's 218.1px holds 22, and
+ * without the override 22 and 23 (9.24px a character) — the 21 holds in every
+ * frame with the spacing on. From the INSET's 24rem up (every tablet) the
+ * specialty is 14px again in a line of at least 384px — 38 characters with
+ * the override on (10.08px each) — so a phone binds. Today's longest is German
+ * „Kieferorthopädie" (16); the other four languages' longest are 14.
+ *
+ * A NAME is still not given a ceiling here, and D20 moved where it binds: on
+ * a phone the name stands BESIDE the round photo at 24px, in a column of
+ * 128px on a 320 phone and 146.6 on a 390 one (inside the ribbon), and never
+ * under 110px — D20's FLOOR: under a 200px INSET (a zoomed phone, the Galaxy
+ * Fold's 280px cover screen) the card stacks and the name has the INSET's
+ * whole line. Measured 2026-10-10, the six real doctors' widest word is
+ * „Cătălina", 87.6px — 110.6 with SC 1.4.12's letter spacing on. The lever
+ * for a longer real surname is the card's (PersonnelCard D20's RECORDED
+ * list), never this file's.
  */
-const DOCTOR_POSITION_CEILING = 17;
+const DOCTOR_POSITION_CEILING = 21;
 
 /**
  * A STAT LABEL'S CEILING — the position's 21, as run ledger D32's contract

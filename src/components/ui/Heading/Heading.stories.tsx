@@ -33,12 +33,13 @@ const meta = {
         'title',
         'section',
         'band',
+        'name',
         'page',
         'hero',
         'slogan',
       ] satisfies HeadingSize[],
       description:
-        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's one container-responsive row, joined 2026-09-26 (D48, see Band) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's first container-responsive row, joined 2026-09-26 (D48, see Band) · 'name' = a doctor card's name (2026-10-10, PersonnelCard D20): band, and 24px on a 30px line in a container under 24rem, where the name shares its row with the round photo — band itself on an engine without container queries (see NameStep) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     tone: {
       control: 'select',
@@ -189,6 +190,87 @@ export const Band: Story = {
     await expect(
       titles.map((title) => parseFloat(getComputedStyle(title).fontSize)),
     ).toEqual([30, 30, 36, 36]);
+  },
+};
+
+/**
+ * A doctor card's name (2026-10-10, sections/PersonnelCard D20 — the owner's
+ * phone header: "i'd go with bigger face but i also want eyebrow like 10%
+ * bigger"): `band`, plus ONE override — Tailwind's 24px size on a `/tight`
+ * 30px line in a container under 24rem, where the name shares its row with
+ * the round photo; `band` itself on an engine without container queries.
+ * Three `@container` frames, read by the step the way a card's INSET is: a
+ * `w-xs` one — 20rem, a phone's card, every phone's INSET being under 24rem —
+ * at 24px; a 24rem one — the override's edge, no longer under it, a 7″
+ * tablet's card — at band's 30px; and a `w-md` one — 28rem, `@md` — at
+ * band's 36px. The 24rem frame's width is an inline style,
+ * never a class: a width spelled only here would ship in the site's sheet as
+ * a rule nothing on the site wears (Tailwind reads class names from every
+ * source file, a story's too). In each frame the Romanian line follows the
+ * controls and the German one — a double-barrelled name, the longest
+ * language (§8.4) — is pinned to 'name'. Real <h3>s through asChild, the
+ * card's own level; six consecutive h3s give axe's heading-order no
+ * increment to score. The frames' dashed OUTLINE is not a border — a border
+ * would eat into the content box the container query measures — and the
+ * frames, their gap and their outline are the story's, never the atom's
+ * (§6.4). No 'stress-320' tag: a 448px frame cannot fit a 320px viewport, and
+ * the narrow frame already stands for the phone. The play reads the three
+ * sizes and line heights off the engine.
+ */
+export const NameStep: Story = {
+  args: { size: 'name', children: 'Dr. Elena Marin' },
+  render: (args) => (
+    <div className="flex flex-col gap-6">
+      <div className="@container flex w-xs flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h3>{args.children}</h3>
+        </Heading>
+        <Heading size="name" asChild>
+          <h3 lang="de">Dr. Friederike Schwarzenbeck-Hoffmann</h3>
+        </Heading>
+      </div>
+      <div
+        className="@container flex flex-col gap-4 outline outline-dashed outline-line"
+        style={{ width: '24rem' }}
+      >
+        <Heading {...args} asChild>
+          <h3>{args.children}</h3>
+        </Heading>
+        <Heading size="name" asChild>
+          <h3 lang="de">Dr. Friederike Schwarzenbeck-Hoffmann</h3>
+        </Heading>
+      </div>
+      <div className="@container flex w-md flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h3>{args.children}</h3>
+        </Heading>
+        <Heading size="name" asChild>
+          <h3 lang="de">Dr. Friederike Schwarzenbeck-Hoffmann</h3>
+        </Heading>
+      </div>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // In DOM order — the narrow frame's two lines, the 24rem frame's, the
+    // wide frame's. The frames are measured first, so a width that failed to
+    // apply cannot let the sizes pass for the wrong reason.
+    const names = canvas.getAllByRole('heading', { level: 3 });
+    await expect(
+      names.map(
+        (name) => name.parentElement?.getBoundingClientRect().width ?? 0,
+      ),
+    ).toEqual([320, 320, 384, 384, 448, 448]);
+    await expect(names.map((name) => getComputedStyle(name).fontSize)).toEqual([
+      '24px',
+      '24px',
+      '30px',
+      '30px',
+      '36px',
+      '36px',
+    ]);
+    await expect(
+      names.map((name) => getComputedStyle(name).lineHeight),
+    ).toEqual(['30px', '30px', '36px', '36px', '40px', '40px']);
   },
 };
 

@@ -4604,6 +4604,25 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     known flicker (SpeedDial 1–3px, the price list's glow 14–16px, which develop re-shot against itself also shows);
     the 82 darwin cells recorded under classic scrollbars (15px, probed) and verified, the contact dialog's and the
     language banner's 12 as the mode's control.
+    **Round 2 — THE FULL COLUMN (owner, the same evening, on the preview, verbatim: "too much space on the right side
+    side. alling it iwth top bar width. otherwise it's fine"):** the rhythm box loses its `max-w-3xl` measure, so the
+    policy fills ui/Container's column — the one the top bar's pill imports — and its edges are the bar's, ±1px, at
+    768 / 1280 / 1536 / 1920 (measured on the built page); the measure had left the column's last 36px empty at a 1024
+    window, 241 at 1280, 446 at 1536 and 753 at 1920. NEW in PrivacyPolicy.test.tsx, THE FULL COLUMN: every block of
+    the page — the title block, „Pe scurt", each part and each heading, paragraph, list and card in it — measured edge
+    to edge at 768 / 1280 / 1920; red with the measure back on the rhythm box, and red with one on the paragraphs (both
+    tried). THE TRADE, measured on the built page and recorded, the owner's call: an 18px line now runs a median of 99
+    / 123 / 150 / 187 characters at 1024 / 1280 / 1536 / 1920 in Romanian (German 92 / 117 / 141 / 176), where the
+    measure held 94 (German 87) at every laptop and desktop width — its comment's "near seventy-five" was an estimate;
+    a phone (38) and a tablet (72) are unchanged. Typography and WCAG's AAA guidance (SC 1.4.8, outside the AA bar)
+    put comfortable long reading at about 80. The levers, if the long lines tire an older reader: a measure on the
+    PARAGRAPHS alone with the page's blocks at full width (the empty strip returns, beside the text only), or the width
+    given to a side table of contents — the price list's sticky menu — beside a measured column of text. Visual: the
+    nine cells that draw the page wider than 48rem move — Pages/Privacy at 1280 / 1536 / 1920 in both languages and
+    Sections/PrivacyPolicy's three stories at 1536 — re-recorded under classic scrollbars (the 15px gutter probed) and
+    verified with the other nine privacy cells, which did not move (320 / 390 / 768: there the column is narrower than
+    the measure was); no other cell can move, the band renders in its two story files alone and the class keeps other
+    wearers, so no CSS rule left the stylesheet.
 
 ## 16. Build-time vs runtime contract
 

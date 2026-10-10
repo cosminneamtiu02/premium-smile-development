@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
 import '@/styles/globals.css';
 import { NOTE_LINK } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { LOCALE_COOKIE_MAX_AGE_S } from '@/i18n/cookie';
@@ -308,6 +309,53 @@ describe('PrivacyPolicy — every language renders WHOLE (the TypeScript review,
         within(article).getAllByRole('heading', { level: 2 }),
       ).toHaveLength(10);
       expect(article.querySelector('header p')?.textContent).toMatch(/2026/);
+    },
+  );
+});
+
+// THE FULL COLUMN (the owner, 2026-10-10, on the built page: "too much space
+// on the right side. align it with top bar width"). The policy fills
+// ui/Container's column, the column the top bar's pill imports, so its edges
+// are the bar's at every width. MEASURED rather than read off the classes: a
+// prose measure anywhere — on the rhythm box (the `max-w-3xl` that stood there
+// first), on a part, on a paragraph — pulls a right edge in from a 1280px
+// window up, and fails here. `vw` reads the WINDOW, so each case sizes the
+// test page (the Container suite's own way).
+describe('PrivacyPolicy — THE FULL COLUMN (the owner, 2026-10-10)', () => {
+  let initial = { width: 0, height: 0 };
+  beforeAll(() => {
+    initial = { width: window.innerWidth, height: window.innerHeight };
+  });
+  afterAll(async () => {
+    await page.viewport(initial.width, initial.height);
+  });
+
+  it.each([768, 1280, 1920])(
+    'a %ipx window: the title block, „Pe scurt" and every part, with each of their blocks, span the column edge to edge',
+    async (width) => {
+      await page.viewport(width, 800);
+      const column = mount().firstElementChild;
+      const rhythm = column?.firstElementChild;
+      if (!column || !rhythm)
+        throw new Error('the Container or its rhythm box is missing');
+      const blocks = [...rhythm.children];
+      // The parts' own children (the h2, the paragraphs, the lists, the
+      // cookie card); „Pe scurt"'s list sits inside its card's padding, so
+      // the card itself is the block measured.
+      const inner = blocks
+        .filter((block) => block.id !== 'summary')
+        .flatMap((block) => [...block.children]);
+      expect(blocks.length).toBe(11);
+      const { left, right } = column.getBoundingClientRect();
+      for (const el of [rhythm, ...blocks, ...inner]) {
+        const box = el.getBoundingClientRect();
+        const name =
+          el === rhythm
+            ? 'the rhythm box'
+            : `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''} in ${el.parentElement?.id || el.parentElement?.tagName.toLowerCase()}`;
+        expect(box.left, `${name}: its left edge`).toBeCloseTo(left, 0);
+        expect(box.right, `${name}: its right edge`).toBeCloseTo(right, 0);
+      }
     },
   );
 });

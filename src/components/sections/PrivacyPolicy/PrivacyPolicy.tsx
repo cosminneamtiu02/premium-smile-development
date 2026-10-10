@@ -214,11 +214,15 @@ export function PrivacyPolicy(): ReactElement {
     // reasoning). An <article>, because the policy is one whole document.
     <article>
       <Container>
-        {/* The rhythm box, and the prose MEASURE: `max-w-3xl` keeps an 18px
-            line near seventy-five characters, which Container deliberately
-            does not own (the 404 page's `max-w-xl` precedent). Start-aligned,
-            like all long prose (§15.1). */}
-        <div className="flex max-w-3xl flex-col gap-12 py-12 @lg:py-16 @3xl:py-20">
+        {/* The rhythm box. THE FULL COLUMN, no prose measure: the owner,
+            2026-10-10, on the built page — "too much space on the right side.
+            align it with top bar width" — so the policy's edges are the top
+            bar's (both are ui/Container's column) at every width. A
+            `max-w-3xl` measure (48rem, about 94 characters of Romanian a
+            line) stood here first and left the column's last 241px empty at a
+            1280 window, 753px at 1920 (measured). Start-aligned, like all long
+            prose (§15.1). */}
+        <div className="flex flex-col gap-12 py-12 @lg:py-16 @3xl:py-20">
           <header className="flex flex-col gap-4">
             <Heading size="hero" asChild>
               <h1 id={PRIVACY_TITLE_ID}>{t('title')}</h1>

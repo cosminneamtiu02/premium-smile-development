@@ -11,6 +11,9 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
 // house pattern (Modal, SpeedDial, LanguageSwitcher, LanguageBanner, shell).
 import '@/styles/globals.css';
+// …and its TEXT, for the one pin that reads where the tint is declared since
+// it became a semantic role (the ONE TINT describe).
+import globalsSource from '@/styles/globals.css?raw';
 import {
   CARD_CURRENT_ATTRIBUTE,
   Card,
@@ -55,19 +58,16 @@ const RO_BODY = 'Evaluare completă a danturii și plan de tratament.';
 // contiguous signature catch a pasted dossier root as well as a pasted
 // definition.
 // THE TINT'S TWO DECLARATIONS (owner 2026-09-12 — Card.tsx's ONE TINT
-// paragraph): the solid accent every engine understands, then the opaque 20%
-// mix over the surface behind a `@supports` gate. They are part of
-// `cardClock`, so EVERY card emits them and every byte-pin below carries
-// them — a bare `surface` card included, which never reads the value.
-const TINT_DECLARATION =
-  '[--card-tint:var(--color-accent-decorative)] ' +
-  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]';
-
+// paragraph) were part of `cardClock` until 2026-10-09, so every card emitted
+// them and every byte-pin below carried them. Since then the tint is a
+// SEMANTIC ROLE declared once in globals.css (THE CARD TINT block — CLAUDE.md
+// §15.19 round 3's trigger, fired by ui/PillButton), so no card emits a
+// declaration and the pins below carry none: the ONE TINT describe holds the
+// role where it now lives, and that the rows still read it.
 const DEFAULT_CARD =
   '@container flex flex-col gap-3 rounded-md ' +
   '[--fade:400ms] transition-[background-color,border-color] ' +
   'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
-  `${TINT_DECLARATION} ` +
   'border border-line-subtle bg-surface p-6';
 
 // The same bytes DECOMPOSED into the two halves the atom actually assembles —
@@ -78,8 +78,7 @@ const DEFAULT_CARD =
 const GEOMETRY =
   '@container flex flex-col gap-3 rounded-md ' +
   '[--fade:400ms] transition-[background-color,border-color] ' +
-  'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
-  TINT_DECLARATION;
+  'duration-(--fade) ease-in-out motion-reduce:transition-none';
 
 /** The tone clock's own half of that string, named once so the crossfade
  *  assertions below read as a list of decisions rather than as string soup:
@@ -1346,14 +1345,41 @@ describe('Card — ONE tint: the idle frame IS the selected ground (owner 2026-0
     expect(classes).toContain(
       'supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint)',
     );
-    // The tint is declared exactly once, as its two halves, on every card.
-    expect(classes).toContain('[--card-tint:var(--color-accent-decorative)]');
+    // The card DECLARES no tint since 2026-10-09 — the role is globals.css's
+    // (the next `it`) — and still READS it, by the same two utilities.
     expect(
       classes.filter((token) => token.includes('--card-tint:')),
-    ).toHaveLength(2);
+    ).toHaveLength(0);
     // …and never as a transparent wash, in any spelling.
     expect(classes.some((token) => /accent-decorative\/\d+/.test(token))).toBe(
       false,
+    );
+  });
+
+  it('reads the tint from its ONE declaration in globals.css — the solid accent, then the gated 20% mix (CLAUDE.md §15.19 round 3’s trigger, fired 2026-10-09)', () => {
+    // The two halves Card.tsx's ONE TINT paragraph argues, now in the token
+    // layer: the SOLID accent on the semantic block (an engine without
+    // color-mix paints a solid frame, never lavender under text), the opaque
+    // mix over the surface behind `@supports (color: color-mix(…))`, and the
+    // `@theme inline` line that mints `border-card-tint` for ui/PillButton.
+    // Comments out, whitespace collapsed — the prose names the very values.
+    const css = globalsSource
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/\s+/g, ' ');
+    expect(css.match(/--card-tint:/g)).toHaveLength(2);
+    expect(css).toContain('--card-tint: var(--accent-decorative);');
+    expect(css).toMatch(
+      /@supports \(color: color-mix\(in lab, red, red\)\) \{ :root, \[data-theme='light'\], ::backdrop \{ --card-tint: color-mix\( ?in srgb, var\(--accent-decorative\) 20%, var\(--surface\) ?\); \} \}/,
+    );
+    expect(css).toContain('--color-card-tint: var(--card-tint);');
+    // …and the computed role, read back from the engine at the root, is the
+    // MIX: neither the solid accent nor white.
+    const root = getComputedStyle(document.documentElement)
+      .getPropertyValue('--card-tint')
+      .replace(/\s+/g, ' ')
+      .trim();
+    expect(root).toMatch(
+      /^color-mix\( ?in srgb, ?#7a6d9c 20%, ?#(fff|ffffff) ?\)$/,
     );
   });
 });

@@ -335,7 +335,10 @@ export function Header(): ReactElement {
                              expires the moment the burger widths get the
                              taller bar too.
           Five spellings, one number: change this height and all five move.
-            PriceList        `@3xl:top-[8.5rem]` on the sticky price menu
+            PriceList        `pointer-fine:min-[60rem]:top-[8.5rem]` on the
+                             sticky price menu's RAIL (the band's `@3xl` step
+                             until 2026-10-09, when the gate became a media
+                             query — CLAUDE.md §15.20 round 6)
                              (reach 6rem + 2.5rem of air) — the FIFTH spelling,
                              added by the price-list lane (its board §3.3,
                              2026-09-13; the air widened from 1rem in that
@@ -363,6 +366,19 @@ export function Header(): ReactElement {
                              2026-09-19, board .claude/plans/hero.plan.md §3).
                              Change this height — or the border — and all six
                              move.
+            PriceMenu        the price menu's STRIP (CLAUDE.md §15.20 round 6,
+                             2026-10-09): its <nav> sticks at
+                             `top-[calc(6rem+2px)]` — this pill's flow box, the
+                             Hero's own spelling — with 0.75rem of air as the
+                             strip's top padding, and where the strip shows and
+                             sticks the ROOT's clearance is the stuck chips'
+                             bottom edge, calc(6rem + 2px + 0.75rem + 2.75rem)
+                             = 154px, two `:root:has(&)` rules on its list. The
+                             SEVENTH spelling, three numbers in ONE file. The
+                             chips stand 12px under this pill, inside its aura
+                             (which reaches y = 126px), so the aura tints the
+                             top of the white chips — measured, kept. Change
+                             this height — or the border — and all seven move.
           No max-w cap in here: the PILL is the column — its own side margins
           already narrow it, and the old bar ran brand-to-CTA across its full
           width. All sizing in rem so browser zoom and user font settings

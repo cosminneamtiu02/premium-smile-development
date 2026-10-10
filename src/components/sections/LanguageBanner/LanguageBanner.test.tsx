@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { page, userEvent } from 'vitest/browser';
 import {
   afterAll,
+  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -469,6 +470,55 @@ describe('LanguageBanner — it never takes focus, and it never leaves the page'
     } finally {
       await page.viewport(before.width, before.height);
     }
+  });
+
+  describe('THE ONE OVERRIDE — a short, wide window anchors the card low (G2 a11y, 2026-10-09)', () => {
+    // Under 30rem of window height the lift would put the card over the top
+    // of the page — the price strip's resting chips, ~146–206px (SC 2.4.11) —
+    // so from 40rem of width the card sits 1rem above the bottom edge, beside
+    // the corner discs. Measured in real windows: the runner's own viewport,
+    // set per case and given back after. Where the lift stays it is the
+    // card's own 12.5rem, 200px (11.5rem until the corner rose 1rem on
+    // 2026-10-09, CLAUDE.md §15.36).
+    afterEach(async () => {
+      await page.viewport(414, 896);
+    });
+
+    it.each([
+      {
+        window: '640 × 400 — a laptop at 200%',
+        width: 640,
+        height: 400,
+        bottom: 16,
+      },
+      {
+        window: '844 × 390 — a phone held sideways',
+        width: 844,
+        height: 390,
+        bottom: 16,
+      },
+      {
+        window: '600 × 400 — short but narrow: the lift stays',
+        width: 600,
+        height: 400,
+        bottom: 200,
+      },
+      {
+        window: '640 × 480 — wide but 30rem tall: the lift stays',
+        width: 640,
+        height: 480,
+        bottom: 200,
+      },
+    ])(
+      '$window: $bottom px above the bottom edge',
+      async ({ width, height, bottom }) => {
+        await page.viewport(width, height);
+        mount('ro');
+        const style = getComputedStyle(card() as HTMLElement);
+        // Matched by pattern, the env() term's reason above.
+        expect(style.bottom).toMatch(new RegExp(`(^|\\D)${bottom}px`));
+      },
+    );
   });
 });
 

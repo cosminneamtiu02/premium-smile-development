@@ -27,7 +27,8 @@ import { expect, type Page, test } from '@playwright/test';
 //     tall — and a pixel of the visitor's own scrolling leaves it current;
 //   · a pasted link re-lands on the line, and a reload that restored another
 //     position is left alone;
-//   · on a phone, where the menu is stacked, the same holds;
+//   · on a phone, where the strip of chips stands in for the menu (since
+//     2026-10-09) and its clearance is the root's padding, the same holds;
 //   · a long task right after a click cannot walk the mark through the cards
 //     between (lib/scroll-spy's THE START GRACE).
 //
@@ -52,6 +53,12 @@ import { expect, type Page, test } from '@playwright/test';
 
 const MENU = '#price-categories';
 const CURRENT = 'data-current';
+
+/** The menu's SHOWN links: the rail's on a laptop, the strip's chips on the
+ *  phone (2026-10-09 — PriceMenu.tsx's THE TWO PRESENTATIONS: the <nav> holds
+ *  both lists, the one not shown `display: none`). Playwright's `:visible` in
+ *  locators; a box filter in page code. */
+const LINKS = `${MENU} a[href^="#"]:visible`;
 
 /** The 8.5rem line: the header pill's 6rem reach plus a card's 2.5rem floor
  *  (CategoryCard's `scroll-mt-[2.5rem]`) — where a card too tall to be
@@ -95,6 +102,9 @@ type Reading = Readonly<{
   y: number;
   maxY: number;
   innerHeight: number;
+  /** The root's scroll-padding-top — 96px on a laptop, the strip's
+   *  clearance (its chips' bottom edge) on a phone. */
+  padding: number;
   /** THE READING LINE, as a viewport y, read from the page. */
   line: number;
   fragments: readonly string[];
@@ -110,7 +120,7 @@ const read = (page: Page): Promise<Reading> =>
       const nav = document.querySelector(selector) as HTMLElement;
       const links = Array.from(
         nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-      );
+      ).filter((link) => link.getClientRects().length > 0);
       const padding =
         parseFloat(
           getComputedStyle(document.documentElement).scrollPaddingTop,
@@ -119,6 +129,7 @@ const read = (page: Page): Promise<Reading> =>
         y: window.scrollY,
         maxY: document.documentElement.scrollHeight - window.innerHeight,
         innerHeight: window.innerHeight,
+        padding,
         line: (padding + window.innerHeight) / 2,
         fragments: links.map((link) => link.hash.slice(1)),
         marked: Array.from(
@@ -280,7 +291,7 @@ const walkDown = (page: Page): Promise<Sample[]> =>
         (
           document.querySelector(selector) as HTMLElement
         ).querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-      );
+      ).filter((link) => link.getClientRects().length > 0);
       const cards = links.map(
         (link) => document.getElementById(link.hash.slice(1)) as HTMLElement,
       );
@@ -461,7 +472,7 @@ for (const locale of ['ro', 'de']) {
       for (const [index, id] of fragments.entries()) {
         // Every jump from a freshly loaded page, at its top — judged alike.
         if (index > 0) await open(page, `/${locale}/services/`);
-        const link = page.locator(`${MENU} a[href^="#"]`).nth(index);
+        const link = page.locator(LINKS).nth(index);
         const onScreen = await link.evaluate(
           (element) =>
             element.getBoundingClientRect().top >= 0 &&
@@ -637,7 +648,13 @@ test.describe('ro/services — a reload that restored another position', () => {
   });
 });
 
-test.describe('the phone — the menu stacked above the cards', () => {
+test.describe('the phone — the strip of chips, stuck under the header pill', () => {
+  // Since 2026-10-09 the phone shows the STRIP (PriceMenu.tsx's THE TWO
+  // PRESENTATIONS), not the stacked card: sticky at the window's top, its
+  // chips' bottom edge written as the root's scroll-padding-top — THE STRIP'S
+  // CLEARANCE — so the reading line is the middle of what the STRIP leaves
+  // clear, (clearance + innerHeight) / 2, and a card too tall to be centred
+  // rests 2.5rem under the chips. read() takes both from the page.
   test.use({
     viewport: { width: 390, height: 844 },
     hasTouch: true,
@@ -645,7 +662,7 @@ test.describe('the phone — the menu stacked above the cards', () => {
   });
 
   for (const locale of ['ro', 'de']) {
-    test(`${locale}: a tap on the third link centres the third card, and a scroll marks one card and only it`, async ({
+    test(`${locale}: a tap on the third chip lands the third card on the strip's own reading line, and a scroll marks one card and only it`, async ({
       page,
     }, testInfo) => {
       test.skip(
@@ -658,32 +675,57 @@ test.describe('the phone — the menu stacked above the cards', () => {
         await page
           .locator(MENU)
           .evaluate((nav) => getComputedStyle(nav).position),
-      ).toBe('static');
+      ).toBe('sticky');
 
-      const box = await page
-        .locator(`${MENU} a[href^="#"]`)
+      // The visitor's swipe: the third chip into the middle of the strip —
+      // in German it starts past the phone's right edge.
+      await page
+        .locator(LINKS)
         .nth(2)
-        .boundingBox();
-      if (box === null) throw new Error('the third menu link has no box');
+        .evaluate((chip) => {
+          const strip = chip.closest('ul') as HTMLElement;
+          const at = chip.getBoundingClientRect();
+          const box = strip.getBoundingClientRect();
+          strip.scrollLeft +=
+            at.left +
+            at.width / 2 -
+            (box.left + strip.clientLeft + strip.clientWidth / 2);
+        });
+      await untilRested(page);
+      const box = await page.locator(LINKS).nth(2).boundingBox();
+      if (box === null) throw new Error('the third chip has no box');
       await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
       await markedThenRested(page, fragments[2]);
 
       const reading = await read(page);
       const card = await boxOf(page, fragments[2]);
-      // The premises: it fits, and neither end holds it.
-      expect(card.height).toBeLessThanOrEqual(reading.innerHeight - CLEAR);
-      expect(reading.y).toBeGreaterThan(0);
-      expect(reading.y).toBeLessThan(reading.maxY - 1);
-      expect(
-        Math.abs((card.top + card.bottom) / 2 - reading.line),
-        `its centre from the line ${reading.line}`,
-      ).toBeLessThanOrEqual(3);
+      // The premise: the strip's clearance stands on the root, well below
+      // the header pill's 96px.
+      expect(reading.padding).toBeGreaterThan(96);
+      // Where it rests: centred on the line when it fits the clear area
+      // (the clearance + its 40px floor above and below), its top on the
+      // ceiling — the clearance + 40px — when it is taller; an end of the
+      // page may hold it, and then it is at least below the strip.
+      const fits = card.height <= reading.innerHeight - reading.padding - 80;
+      const held = reading.y <= 0 || reading.y >= reading.maxY - 1;
+      expect(card.top).toBeGreaterThanOrEqual(reading.padding + 40 - 2);
+      if (!held && fits) {
+        expect(
+          Math.abs((card.top + card.bottom) / 2 - reading.line),
+          `its centre from the line ${reading.line}`,
+        ).toBeLessThanOrEqual(3);
+      } else if (!held) {
+        expect(
+          Math.abs(card.top - (reading.padding + 40)),
+          `its top from the ceiling ${reading.padding + 40}`,
+        ).toBeLessThanOrEqual(2);
+      }
       expect(reading.marked).toEqual([fragments[2]]);
       expect(reading.linked).toEqual([fragments[2]]);
 
       // A scroll after the jump has rested drops the pin and hands the page
       // to the walk: with the seventh card's top ten pixels past the line, it
-      // is the one card marked, and its link the one link.
+      // is the one card marked, and its chip the one chip.
       await stepScroll(page, (await crossingOf(page, fragments[6])) + 10);
       await untilRested(page);
       const scrolled = await read(page);
@@ -778,10 +820,7 @@ for (const locale of ['ro', 'de']) {
         },
       );
 
-      const box = await page
-        .locator(`${MENU} a[href^="#"]`)
-        .nth(5)
-        .boundingBox();
+      const box = await page.locator(LINKS).nth(5).boundingBox();
       if (box === null) throw new Error('the sixth menu link has no box');
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();

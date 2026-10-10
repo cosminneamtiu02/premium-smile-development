@@ -125,9 +125,9 @@ import type { ARRIVAL_BY_KEYBOARD, ARRIVAL_KEY } from './arrival';
 // than "glued to it". 2.5rem rather than the 1rem it shipped with on
 // 2026-09-13, because the number now has a SECOND job (owner 2026-09-14): it
 // is the same 2.5rem the sticky menu adds to that same 6rem reach
-// (`@3xl:top-[8.5rem]`), so a jumped-to card's top edge and the stuck menu's
+// (`pointer-fine:min-[60rem]:top-[8.5rem]`), so a jumped-to card's top edge and the stuck menu's
 // top edge come to rest on ONE line instead of a hand's width apart. The two
-// numbers are a pair — PriceList.tsx's `@3xl:top-[8.5rem]` paragraph carries
+// numbers are a pair — PriceList.tsx's THE 8.5rem LINE paragraph carries
 // the measurement they share. It is `scroll-mt-*` — margin on the TARGET — not
 // more padding on the scroller, because only these elements want the extra gap.
 // A REM LITERAL, NOT A SPACING STEP (2026-10-02, PriceList.tsx's THE BAND

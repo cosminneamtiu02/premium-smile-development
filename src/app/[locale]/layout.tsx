@@ -166,7 +166,9 @@ export default async function LocaleLayout({ children, params }: Props) {
                 user ever sees it. The alternative, a fixed overlay pill, would
                 need a NEW top-of-scale z value (a z-50 tie loses to the
                 later-DOM bar) and would add a stacking decision forever; the
-                z-map stays closed at 40/45/50 + the top layer (layers board §2).
+                z-map stays closed at 20 (the price page's chip strip, 2026-10-09)
+                / 30 (the language banner) / 40 / 45 / 50 + the top layer (layers
+                board §2).
                 The focus ring comes from globals' `:focus-visible` safety net.
                 THE PADDING IS PLAIN `focus:px-4`, NOT the gutter pair
                 ui/Container now owns (§15.15 a DECIDED, board fb-343 — the

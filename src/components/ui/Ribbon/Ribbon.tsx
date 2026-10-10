@@ -169,7 +169,8 @@ import { slotClone } from '../slot';
 // ── DECORATIVE. The canvases' box is `aria-hidden`, nothing in it is
 // focusable, clicks fall through it, and it is hidden in forced-colours mode
 // and in print. ITS OWN LAYER: `relative isolate` — no number from the
-// site's closed stacking order (30 / 40 / 45 / 50); the canvases' box comes
+// site's closed stacking order (20 / 30 / 40 / 45 / 50 — the 20 the price
+// page's sticky strip since 2026-10-09); the canvases' box comes
 // AFTER the column in the markup, so it paints above the cards without a
 // z-index.
 //

@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
 // The REAL stylesheet, compiled by the site's own Tailwind pipeline — the
 // reason this file exists apart from PriceList.test.tsx (the header below).
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
@@ -104,9 +105,22 @@ const STEP = Math.max(STEP_REM * ROOT, STEP_FLOOR);
 const LINE_REM = 8.5;
 const AIR_REM = 2.5;
 
-/** The column from which the menu sits beside the cards — `@3xl`, in rem of
- *  the root. */
-const SPLIT_REM = 48;
+/** THE GATE, a media query on the WINDOW since the G2 round (PriceList.tsx's
+ *  THE GATE): the rail where a fine pointer meets a 60rem window. Every case
+ *  here is written as a COLUMN, so each is shown in a window on ITS side of
+ *  the gate: a laptop's for a column the rail sits beside (48rem and wider —
+ *  the column a 60rem window gives, the gate's old container step), a
+ *  tablet's for the one strip case. The column itself is still set through a
+ *  box (renderColumn), whatever the window. Both windows are tall enough for
+ *  the strip to stick (30rem). */
+const RAIL_COLUMN_REM = 48;
+const LAPTOP_WINDOW = { width: 1280, height: 900 } as const;
+const TABLET_WINDOW = { width: 720, height: 900 } as const;
+
+/** The rail's gate, asked of the window the case runs in — the very media
+ *  query the stylesheet spells. */
+const railGateOpen = (): boolean =>
+  window.matchMedia('(pointer: fine) and (min-width: 60rem)').matches;
 
 /** The band's own lengths at the reference column, in design pixels — what
  *  every case multiplies by its design pixel. Measured on develop 3bd21bd at
@@ -166,8 +180,11 @@ const htmlElement = (
 };
 
 /** The band, Romanian, in a box whose Container gets a `width` px column —
- *  and the premise every number rests on, checked before any is read. */
-const renderColumn = (width: number) => {
+ *  in a window on that column's side of THE GATE — and the premise every
+ *  number rests on, checked before any is read. */
+const renderColumn = async (width: number) => {
+  const shown = width >= RAIL_COLUMN_REM * ROOT ? LAPTOP_WINDOW : TABLET_WINDOW;
+  await page.viewport(shown.width, shown.height);
   render(
     <div style={{ width: `${width + 2 * gutter()}px` }}>
       <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} />
@@ -194,7 +211,7 @@ const renderColumn = (width: number) => {
   };
 };
 
-type Scene = ReturnType<typeof renderColumn>;
+type Scene = Awaited<ReturnType<typeof renderColumn>>;
 
 /** What the band draws, read from the engine. */
 const sizesOf = ({ rhythm, menu, cards }: Scene) => {
@@ -321,7 +338,15 @@ const expectPillPairAt = (
     }
   }
 
-  if (width >= SPLIT_REM * root) {
+  // The island writes nothing on the root in either presentation: the
+  // strip's clearance is the stylesheet's (PriceMenu.tsx's THE STRIP'S
+  // CLEARANCE).
+  expect(document.documentElement.style.scrollPaddingTop).toBe('');
+  if (railGateOpen()) {
+    expect(
+      width,
+      'a rail case is a column the rail sits beside',
+    ).toBeGreaterThanOrEqual(RAIL_COLUMN_REM * ROOT);
     // Beside the cards: sticky at the 8.5rem line. The menu FITS this
     // runner's window, so lib/sticky-rail writes nothing over it — no mode,
     // no inline `top` — and the computed line is the stylesheet's.
@@ -331,13 +356,38 @@ const expectPillPairAt = (
     expect(getComputedStyle(menu).top, 'the menu’s line').toBe(
       `${LINE_REM * root}px`,
     );
+    // …and the root keeps the shell's own 6rem: the rail's gate turns the
+    // clearance off.
+    expect(getComputedStyle(document.documentElement).scrollPaddingTop).toBe(
+      `${6 * root}px`,
+    );
   } else {
-    // Stacked: a plain table of contents, the line not asked.
-    expect(getComputedStyle(menu).position).toBe('static');
+    // Under the gate: the STRIP (2026-10-09, PriceMenu.tsx's THE TWO
+    // PRESENTATIONS) — sticky too in a window this tall, under the header
+    // pill's flow box (THE STRIP FLOATS UNDER THE BAR, 2026-10-10), and the
+    // ROOT's padding the stylesheet's clearance: the chips' bottom edge, the
+    // flow box + the 0.75rem of air + 2.75rem. The rail's store is not running
+    // there, so nothing writes over the line.
+    expect(menu).not.toHaveAttribute('data-rail');
+    expect(menu.style.getPropertyValue('top')).toBe('');
+    expect(getComputedStyle(menu).position).toBe('sticky');
+    expect(getComputedStyle(menu).top, 'the strip’s line').toBe(
+      `${6 * root + 2}px`,
+    );
+    expect(
+      getComputedStyle(document.documentElement).scrollPaddingTop,
+      'the root’s clearance — 6rem + 2px + 0.75rem + 2.75rem',
+    ).toBe(`${6 * root + 2 + 0.75 * root + 2.75 * root}px`);
   }
 };
 
 describe('PriceList — THE BAND SCALE, computed (§15.32 — the real stylesheet)', () => {
+  // Every case sets its own window (renderColumn); the runner's default comes
+  // back after the file.
+  afterAll(async () => {
+    await page.viewport(414, 896);
+  });
+
   beforeAll(() => {
     // THE PREMISE: this runner is a place where the regime CAN apply — a fine
     // primary pointer and an engine that registers custom properties, the two
@@ -374,13 +424,13 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
     },
   ])(
     'holds the THEME’S OWN pixels under the reference — THE FLOOR binds at $where: the regime on, s = 1, every length its reference exactly',
-    ({ width }) => {
+    async ({ width }) => {
       // The premise: the column alone would draw the band at or under the
       // reference — the floor, not the column, is what decides here.
       expect(Math.min(width, CAP) / REFERENCE).toBeLessThanOrEqual(1);
       expect(pixelAt(width, ROOT)).toBe(1);
 
-      expectDrawnAt(renderColumn(width), { width, band: width, s: 1 });
+      expectDrawnAt(await renderColumn(width), { width, band: width, s: 1 });
     },
   );
 
@@ -389,13 +439,13 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
     { where: 'a column past the cap', width: 1800 },
   ])(
     'grows menu AND cards past the reference at $where — every length its reference × s, capped and centred',
-    ({ width }) => {
+    async ({ width }) => {
       const s = pixelAt(width, ROOT);
       // The premise: past the reference, the column's pixel is the larger.
       expect(s).toBeGreaterThan(1);
       expect(s).toBeCloseTo(Math.min(width, CAP) / REFERENCE, 10);
 
-      expectDrawnAt(renderColumn(width), {
+      expectDrawnAt(await renderColumn(width), {
         width,
         band: Math.min(width, CAP),
         s,
@@ -403,7 +453,7 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
     },
   );
 
-  it('lifts the floor with a LARGER ROOT — at a 20px root and a 1200px column the pixel is 1.25, the theme’s rem look at that root, and the pill’s pair is that root’s rem', () => {
+  it('lifts the floor with a LARGER ROOT — at a 20px root and a 1200px column the pixel is 1.25, the theme’s rem look at that root, and the pill’s pair is that root’s rem', async () => {
     // A 20px root moves the regime's step to 56rem = 1120px and its cap to
     // 96rem = 1920px, so a 1200px column is INSIDE the regime and under the
     // cap. The column alone would give 1200 / 1106 = 1.085; THE FLOOR's
@@ -422,7 +472,7 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
       expect(s).toBe(1.25);
       expect(width / REFERENCE).toBeLessThan(s);
 
-      const scene = renderColumn(width);
+      const scene = await renderColumn(width);
       expectDrawnAt(scene, { width, band: width, s });
       expect(
         fontSize(within(scene.cards[0]).getByRole('heading', { level: 2 })),
@@ -434,12 +484,13 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
     }
   });
 
-  it('declares NOTHING under the step — the theme’s own rem, the menu on its 15rem floor', () => {
+  it('declares NOTHING under the step — the theme’s own rem, the menu on its 15rem floor', async () => {
     // A column 16px short of the step: the menu still sits beside the cards
-    // (the split is 48rem), and every length is the theme's, in rem of the
-    // 16px root — the band as it was before 2026-10-02, to the pixel.
+    // (a laptop window, the rail's gate met), and every length is the
+    // theme's, in rem of the 16px root — the band as it was before
+    // 2026-10-02, to the pixel.
     const width = STEP - 16;
-    const scene = renderColumn(width);
+    const scene = await renderColumn(width);
     const sizes = sizesOf(scene);
 
     expect(remapped(scene.rhythm)).toBe(false);
@@ -467,7 +518,7 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
   });
 
   it.each([
-    { where: 'a phone-width column, stacked', width: 600 },
+    { where: 'a phone-width column, the strip', width: 600 },
     { where: 'a column under the step', width: STEP - 16 },
     { where: 'a column just past the step, at the floor', width: STEP + 4 },
     { where: 'the owner’s 1392 window', width: 1098.6 },
@@ -475,8 +526,8 @@ describe('PriceList — THE BAND SCALE, computed (§15.32 — the real styleshee
     { where: 'a column past the cap', width: 1800 },
   ])(
     'keeps the pair coupled to the header pill at 136px and 40px at $where — the pill does not scale, so neither do they',
-    ({ width }) => {
-      expectPillPairAt(renderColumn(width), { width, root: ROOT });
+    async ({ width }) => {
+      expectPillPairAt(await renderColumn(width), { width, root: ROOT });
     },
   );
 });

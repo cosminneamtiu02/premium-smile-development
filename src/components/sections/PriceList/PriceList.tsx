@@ -21,14 +21,19 @@ import { PriceMenu } from './PriceMenu';
 // the menu card and on the ONE category card the visitor is at; THE GLOW
 // paragraph below — and again the same evening: the line that decides which
 // card is current moved down to the middle of the window's clear area, a
-// click now brings its card to that line (the `@3xl:top-[8.5rem]` and BARE
+// click now brings its card to that line (THE 8.5rem LINE and BARE
 // `#id` HREFS paragraphs, and PriceMenu.tsx's WHERE THE LINE IS, AND WHERE A
 // CLICK LANDS), and a card a pointer jumped to no longer wears the focus ring
 // (CategoryCard.tsx's THE RING IS THE KEYBOARD'S). And on 2026-10-02 the band
 // took THE BAND SCALE (its paragraph below): on a laptop or a desktop the menu
 // and the cards grow together with the window past the owner's reference, one
 // design at every width — and, by THE FLOOR in the same paragraph, never draw
-// smaller than the theme.
+// smaller than the theme. And on 2026-10-09 the menu took a second shape: on
+// every touch screen and in every window under the step, a STRIP of chips
+// that scrolls sideways, stuck under the header pill on any window at least
+// 30rem tall, in place of the stacked card (PriceMenu.tsx's THE TWO
+// PRESENTATIONS; the gate below, under
+// `pointer-fine:min-[60rem]:items-start`).
 //
 // ── IT IS A DUMB BAND (owner fb-459, board §2c.1) — and that is the whole
 // interface. It imports no data, calls no `t()`, holds no message key, formats
@@ -138,12 +143,13 @@ import { PriceMenu } from './PriceMenu';
 //   · THE PILL'S PAIR — the menu's 8.5rem sticky line and every card's 2.5rem
 //     of landing air — moved the other way, from spacing steps to rem
 //     LITERALS that the scale cannot remap, because the header pill they
-//     clear does not scale (the `@3xl:top-[8.5rem]` paragraph);
+//     clear does not scale (THE 8.5rem LINE paragraph);
 //   · hairlines and the glow stay px — the 1px rules, the focus ring and
 //     ui/Card's `--shadow-aura`, as in every scaled band (THE GLOW's note on
 //     the cards' gap);
 //   · the container-query STEPS read the root's rem, never the band's pixel —
-//     the regime's own rule: the split still falls at a 48rem column, and
+//     the regime's own rule (and the split, a media query on the window
+//     since the G2 round — THE GATE — reads the root's rem as well), and
 //     inside the scale every card's rows sit beside their prices (its `@sm`)
 //     and every title answers its own card (`@md`) exactly as they do at the
 //     reference.
@@ -180,15 +186,35 @@ import { PriceMenu } from './PriceMenu';
 // padding; THE FLOOR removed that.) The German stories are where that is
 // measured, not asserted from a table.
 //
-// ── `@3xl:items-start` IS WHAT MAKES THE MENU STICKY AT ALL, and it looks
-// like cosmetics (board §3.3): a grid item is STRETCHED to its row's height by
+// ── `pointer-fine:min-[60rem]:items-start` IS WHAT MAKES THE RAIL STICKY AT
+// ALL, and it looks like cosmetics (board §3.3; `@3xl:items-start` until the
+// gate below moved): a grid item is STRETCHED to its row's height by
 // default, so without it the menu card would be exactly as tall as the whole
 // cards column and would have nothing left to stick against — `position:
 // sticky` would apply and visibly do nothing. `items-start` on the grid (i.e.
 // `align-self: start` on both tracks) gives the card its content height back,
 // and the sticky then runs against the grid's own box.
+// THE GATE, since 2026-10-09: the two tracks and `items-start` wear the
+// RAIL's gate, `pointer-fine:min-[60rem]:` — a fine pointer AND a window of at
+// least 60rem (PriceMenu.tsx's THE TWO PRESENTATIONS) — because a touch screen
+// at any width, and a window under the step, shows the STRIP instead: one
+// column, the strip in its own row above the cards, sticking against the
+// grid's box all the way down the cards (measured in Chromium and WebKit: a
+// sticky grid item sticks within the grid container, not its own row). A
+// MEDIA QUERY SINCE THE G2 ROUND (2026-10-09; the column's container step,
+// `@3xl` — 48rem of column — for that day's first builds): the strip's
+// clearance lives on the ROOT in CSS, a rule on the root can ask the window
+// but never a container, and the rail, the strip and the clearance must flip
+// on one boundary. With the 10vw gutters the column is 0.8 × the window, so
+// under OVERLAY scrollbars both gates flip at exactly 960px, as before; under
+// a CLASSIC scrollbar (15px) the container step flipped ~19px later, at a
+// ~979px window, the scrollbar eating into the column — between 960 and 979
+// the RAIL now shows (its grid's 15rem floor and `4fr` fit there, measured
+// to fit) where the stacked menu used to. §6.5 allows a media query for
+// page-level layout in a section. The band's `py-*` rhythm, its two
+// band-scale strings and THE FLOOR are untouched.
 //
-// ── `@3xl:top-[8.5rem]` IS THE FIFTH COUPLED SPELLING OF THE HEADER PILL'S
+// ── THE 8.5rem LINE IS THE FIFTH COUPLED SPELLING OF THE HEADER PILL'S
 // REACH, PLUS THE AIR THE GLOW NEEDS (owner 2026-09-14: move the menu "1-2
 // rem" down). It rides the island's <nav> (./PriceMenu) since the card became
 // the island, but it is THIS band's number and this paragraph is where it is
@@ -219,7 +245,7 @@ import { PriceMenu } from './PriceMenu';
 // and the menu's line would have parted from the pill: 149px at a 1536 window
 // (s = 1.10), 189px at the cap, the menu floating ever further under the bar
 // it is meant to sit against — and from the cards' line too (next). Spelled
-// `@3xl:top-[8.5rem]`, an arbitrary value that no theme variable carries, it
+// `pointer-fine:min-[60rem]:top-[8.5rem]`, an arbitrary value that no theme variable carries, it
 // is 136px inside the scale and out: `design-scale` remaps theme variables,
 // and a rem literal reads the root's font size, which no band touches.
 // THE SAME 2.5rem RIDES THE CARDS, which is the point of the pair: each
@@ -276,12 +302,14 @@ import { PriceMenu } from './PriceMenu';
 // So that desktop's 793px no longer hold the menu, and the rail pins it there
 // too, by the same rules. The rail needs no word about it: it measures the
 // card it holds, and the line it pins against is the 8.5rem that never scales
-// (the `@3xl:top-[8.5rem]` paragraph). The bottom air it keeps is
+// (THE 8.5rem LINE paragraph). The bottom air it keeps is
 // lib/sticky-rail's own 1rem of the root.
 // TRAP, recorded because it is invisible: `overflow-x-hidden` anywhere above
 // the menu would turn that ancestor into a scroll container and KILL the
 // sticky. If this band ever needs a horizontal belt it takes the reviews
-// band's `overflow-x-clip` spelling, which clips without creating one.
+// band's `overflow-x-clip` spelling, which clips without creating one — and
+// since 2026-10-09 it does: the strip's (the band root's own comment), WITHOUT
+// the reviews band's `hidden` fallback, for this trap's reason.
 //
 // ── BARE `#id` HREFS, NOT `localeHref` (board §4.1, §15.13). Inside the page
 // the bare fragment is the robust spelling: the browser resolves it against
@@ -429,8 +457,9 @@ const BAND_FLOOR = '[--band-floor:0.0625rem]';
  * Container.tsx.
  *   · THE BAND'S OWN: the grid, its `gap-8` (§6.4: the section owns ALL child
  *     spacing), the stepped `py` (the recipe's rule 3), the two tracks from
- *     `@3xl` — the menu's floor in the spacing step (THE TWO TRACKS) — and
- *     `@3xl:items-start`, load-bearing for the sticky menu (the header).
+ *     the rail's gate, `pointer-fine:min-[60rem]:` — the menu's floor in the
+ *     spacing step (THE TWO TRACKS) — and `pointer-fine:min-[60rem]:items-start`,
+ *     load-bearing for the sticky rail (the header's paragraphs on both).
  *   · `bandColumnClasses`: `mx-auto` and `w-full`, and the 96rem cap behind
  *     `scalable:` — so past the cap the grid centres in its column.
  *   · `bandScaleClasses`: the design pixel and the remap, behind the regime's
@@ -443,7 +472,7 @@ const BAND_FLOOR = '[--band-floor:0.0625rem]';
  * draws with it.
  */
 const RHYTHM = cx(
-  'grid gap-8 py-12 @lg:py-16 @3xl:py-20 @3xl:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr] @3xl:items-start',
+  'grid gap-8 py-12 @lg:py-16 @3xl:py-20 pointer-fine:min-[60rem]:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr] pointer-fine:min-[60rem]:items-start',
   bandColumnClasses,
   bandScaleClasses,
   BAND_FLOOR,
@@ -476,7 +505,24 @@ export function PriceList({
     // nothing else — no gutter here, no outer margin (§6.4: the page owns the
     // rhythm between its bands). `bg-page` is the ground every content band on
     // this site stands on. className is merged caller-last (§6.8).
-    <section {...rest} className={cx('bg-page', className)}>
+    // `overflow-x-clip` IS THE STRIP'S BELT (2026-10-09, PriceMenu.tsx's THE
+    // STRIP'S GEOMETRY): the strip runs 100vw wide, which overshoots the
+    // visible width by a classic scrollbar's thickness, and the band is the
+    // full-bleed box that swallows it, so the PAGE never scrolls sideways
+    // (§7). `clip`, not `hidden`, and with NO `overflow-x-hidden` fallback
+    // behind `@supports not (overflow: clip)` — the ReviewsCarousel's belt
+    // has one, this band must not: `hidden` makes its box a SCROLL CONTAINER,
+    // which would kill BOTH sticky menus (the TRAP paragraph above). The
+    // trade, recorded: on Safari ≤ 15, which does not know `clip`, the belt
+    // is simply absent — a page that scrolls sideways by a scrollbar's width
+    // where a classic scrollbar exists (never on an iPhone, whose bars
+    // overlay), with both menus still sticky. It clips the x axis only: the
+    // rail's glow and every card's reach past the band's edges is the
+    // window's. (The strip reaches no higher than 0.75rem above its chips,
+    // inside the band's own top padding — PriceMenu.tsx's THE STRIP FLOATS
+    // UNDER THE BAR, 2026-10-10; until then its lifted ground rose above the
+    // band's top, on the y axis this belt leaves alone.)
+    <section {...rest} className={cx('overflow-x-clip bg-page', className)}>
       <Container>
         {/* The rhythm box AND the grid, one element (RHYTHM): the band's own
             stepped `py` (the recipe's rule 3) plus the two tracks, and the
@@ -484,17 +530,20 @@ export function PriceList({
             `@lg` = 32rem of column, `@3xl` = 48rem, which with the 10vw
             gutters is a viewport of ~960px, the same step ClinicLocation flips
             on so the site's bands flip together — and so does the scale's
-            own, max(56rem, 896px). `gap-8` is the section owning ALL child
-            spacing (§6.4). `items-start` is load-bearing for the sticky
-            menu — see the header. */}
+            own, max(56rem, 896px). The two tracks wait for a fine pointer and
+            a 60rem WINDOW (the rail's gate, a media query since the G2 round —
+            the header's THE GATE; a touch screen keeps one column and the
+            strip). `gap-8` is the section owning ALL child spacing (§6.4).
+            `items-start` is load-bearing for the sticky rail — see the
+            header. */}
         <div className={RHYTHM}>
-          {/* THE ISLAND: the whole menu card — ui/Card asChild onto the <nav>
-              landmark, its <h2>, the list (PriceMenu.tsx says why the card
-              and not the list). It is the grid's FIRST child, and lib/
-              sticky-rail reads its normal-flow position as this grid's
-              content edge: keep it first, keep `items-start`. Only the
-              finished title and the id/name pairs cross the boundary — never
-              the rows, which are server HTML. */}
+          {/* THE ISLAND: the whole menu — the <nav> landmark holding the
+              rail's card (ui/Card, its <h2>, its list) and the strip of chips
+              (PriceMenu.tsx says why the <nav> and not a list). It is the
+              grid's FIRST child, and lib/sticky-rail reads its normal-flow
+              position as this grid's content edge: keep it first, keep
+              `items-start`. Only the finished title and the id/name pairs
+              cross the boundary — never the rows, which are server HTML. */}
           {/* THE KEY IS THE RING'S IDENTITY (G2 react, 2026-09-14). The
               island freezes the ids it watches in a useState initializer and
               has no `setIds` — deliberately, because page data on this site

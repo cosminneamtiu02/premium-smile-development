@@ -7,8 +7,9 @@ import {
   type PriceListProps,
 } from './PriceList';
 
-// SIX stories: the everyday picture in both languages, and each of them pinned
-// to the two widths §13 samples for this tier. The export NAMES are
+// EIGHT stories: the everyday picture in both languages, each of them pinned
+// to the two widths §13 samples for this tier, and — since 2026-10-09, the
+// strip — each pinned to the tablet as well. The export NAMES are
 // load-bearing — each one names a baseline file
 // (`sections-pricelist--romanian`, `sections-pricelist--german-laptop1536`, …)
 // — so renaming or adding an export re-records pictures; this list IS the
@@ -30,14 +31,18 @@ import {
 // what the German stories exist to photograph.
 //
 // ── EVERY STORY PINS ITS OWN VIEWPORT except the two workbench ones, because
-// this band CHANGES SHAPE with the column it is given: the menu sits beside
-// the cards, sticky, only from `@3xl` — 48rem of Container column, i.e. a
-// viewport of ~960px — and below it the menu is simply the first thing on the
-// page, a plain table of contents above the cards (board §5.2, option A). A
-// manager canvas narrowed by the sidebar sits in the middle of that band.
+// this band CHANGES SHAPE with the window it is shown in: the menu sits beside
+// the cards, sticky, only where a fine pointer meets a WINDOW of 60rem — a
+// media query since the G2 round of 2026-10-09 (PriceList.tsx's THE GATE; the
+// column's `@3xl` until then) — and everywhere else it is the STRIP: a row
+// of chips across the whole screen, stuck under the header pill from 30rem of
+// window height, that scrolls sideways (PriceMenu.tsx's THE TWO
+// PRESENTATIONS). Every runner here is a fine pointer, so the strip shows
+// below the step — the phone and tablet pins — and a touch screen's strip at
+// every width is tests/e2e/price-strip.spec.ts's.
 // Playwright ignores the pin — it sets its own page size per project — which
 // is exactly why the play functions DERIVE the expected arrangement from the
-// measured column instead of assuming the pinned width (the PersonnelCard
+// window they run in instead of assuming the pinned width (the PersonnelCard
 // `sitsBeside` precedent).
 //
 // ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — PriceList.tsx's paragraph
@@ -297,10 +302,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The band must never make the page scroll sideways (§7), in any language.
- *  Band-scoped: nothing here clips or overflows on purpose, so the band's own
- *  box is the honest thing to measure. */
+ *  Measured on the DOCUMENT since 2026-10-09, no longer on the band: the
+ *  strip runs 100vw wide and overshoots by a classic scrollbar's thickness ON
+ *  PURPOSE, and the band's own `overflow-x-clip` swallows it (PriceList.tsx's
+ *  band root) — so the band's box overflows by design, and the page is what
+ *  must not move (the ReviewsCarousel stories' rule, for its stage). */
 const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
-  await expect(band.scrollWidth).toBeLessThanOrEqual(band.clientWidth);
+  const root = band.ownerDocument.documentElement;
+  await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
 };
 
 /** The band root, from the one element every play starts at. */
@@ -314,19 +323,53 @@ const bandOf = (menu: HTMLElement): HTMLElement =>
 const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-/**
- * WHERE THE LAYOUT SPLITS, derived rather than assumed. `@3xl` is 48rem of
- * ui/Container's column, and a container query asks that box's CONTENT width —
- * Container has neither padding nor border, so its border-box width IS the
- * queried number, taken fractionally (`clientWidth` is an integer and would
- * disagree with the engine inside a sub-pixel window around the step). The
- * visual runner renders every `Sections/*` story at 390 AND 1536 regardless of
- * the story's own viewport pin, so a play that assumed the pinned width would
- * be green in the workbench and wrong in the net.
- */
-const splitHasFired = (band: HTMLElement): boolean =>
-  (band.firstElementChild as HTMLElement).getBoundingClientRect().width >=
-  48 * rem();
+/** THE TWO PRESENTATIONS (2026-10-09, PriceMenu.tsx's paragraph of that
+ *  name): the RAIL — the side menu's card — or the STRIP of chips. */
+type Presentation = 'rail' | 'strip';
+
+/** The rail's card: the box the menu's <h2> sits in. */
+const railCardOf = (menu: HTMLElement): HTMLElement => {
+  const title = menu.querySelector('h2');
+  if (title?.parentElement == null) {
+    throw new Error('PriceList story: the menu lost its title');
+  }
+  return title.parentElement;
+};
+
+/** The strip's list. */
+const stripOf = (menu: HTMLElement): HTMLElement => {
+  const strip = menu.querySelector(`#${PRICE_MENU_ID}-strip`);
+  if (!(strip instanceof HTMLElement)) {
+    throw new Error('PriceList story: the menu lost its strip');
+  }
+  return strip;
+};
+
+/** Which presentation the band SHOWS, read off the boxes — the list that is
+ *  not shown is `display: none` and has none. */
+const presentationOf = (menu: HTMLElement): Presentation =>
+  railCardOf(menu).getClientRects().length > 0 ? 'rail' : 'strip';
+
+/** …and which the gate PREDICTS: the rail where a fine pointer meets a
+ *  60rem WINDOW — the media query PriceList.tsx's THE GATE spells, asked of
+ *  the very window the play runs in — the strip everywhere else. */
+const predictedPresentation = (): Presentation =>
+  window.matchMedia('(pointer: fine) and (min-width: 60rem)').matches
+    ? 'rail'
+    : 'strip';
+
+/** Does the STRIP stick here — a window at least 30rem tall, in an engine
+ *  with `:has()` (PriceMenu.tsx's STICKY UNDER THE HEADER PILL, FROM 30rem)?
+ *  The rail sticks at every height. */
+const stripSticks = (): boolean =>
+  window.matchMedia('(min-height: 30rem)').matches &&
+  CSS.supports('selector(:has(*))');
+
+/** The links of the list that is SHOWN, in order. */
+const shownLinks = (menu: HTMLElement): HTMLAnchorElement[] =>
+  Array.from(menu.querySelectorAll('a')).filter(
+    (link) => link.getClientRects().length > 0,
+  );
 
 /** THE BAND SCALE's numbers (PriceList.tsx's THE BAND SCALE; ui/Container's),
  *  written out as the other scaled bands' plays write them: the REFERENCE
@@ -436,7 +479,7 @@ const remapped = (element: Element): boolean =>
  * In EITHER, the menu's own 2.5rem of air over a jump to its id. Both numbers
  * are rem of the root on purpose — inside the band scale too, where every
  * other length is a design length: the pill they clear does not scale
- * (PriceList.tsx's `@3xl:top-[8.5rem]` paragraph). This is the assertion that
+ * (PriceList.tsx's THE 8.5rem LINE paragraph). This is the assertion that
  * needs REAL CSS, which is why it lives in a play function: the components
  * project loads no stylesheet (PriceList.test.tsx's header says so) and can
  * only see class tokens — the one file there that loads it,
@@ -447,11 +490,22 @@ const expectArrangement = async (
   menu: HTMLElement,
 ): Promise<void> => {
   await expect(getComputedStyle(menu).scrollMarginTop).toBe(`${2.5 * rem()}px`);
-  if (splitHasFired(band)) {
+  // The presentation the boxes show is the one the gate predicts.
+  const presentation = presentationOf(menu);
+  await expect(presentation).toBe(predictedPresentation());
+  // The island writes nothing on the root, in either presentation: the
+  // strip's clearance is the stylesheet's (PriceMenu.tsx's THE STRIP'S
+  // CLEARANCE).
+  await expect(document.documentElement.style.scrollPaddingTop).toBe('');
+  if (presentation === 'rail') {
     await expect(getComputedStyle(menu).position).toBe('sticky');
     await expect(getComputedStyle(menu).top).toBe(`${8.5 * rem()}px`);
+    // The rail's gate turns the clearance off: the laptop's numbers stand.
+    await expect(
+      getComputedStyle(document.documentElement).scrollPaddingTop,
+    ).toBe(`${6 * rem()}px`);
   } else {
-    await expect(getComputedStyle(menu).position).toBe('static');
+    await expectStrip(band, menu);
   }
   // The way back to the menu was dropped entirely (owner 2026-09-14): in
   // EITHER arrangement there is no link to the menu's own id anywhere in the
@@ -459,6 +513,141 @@ const expectArrangement = async (
   await expect(
     band.querySelectorAll(`a[href="#${PRICE_MENU_ID}"]`),
   ).toHaveLength(0);
+};
+
+/**
+ * THE STRIP (2026-10-09 — PriceMenu.tsx's THE TWO PRESENTATIONS and THE
+ * STRIP'S GEOMETRY), at rest, read from real CSS: the <nav> sticky at the
+ * header pill's flow box on its z-20 seat; the strip as wide as the window,
+ * its first chip on the content column's left edge at scrollLeft 0; the
+ * chips at the grid's first row, 44px tall, 0.75rem of air above them and
+ * 2rem of glow room below; NO ground and NO fade — neither the <nav> nor the
+ * strip paints a background — and no scrollbar (owner 2026-10-10, THE STRIP
+ * FLOATS UNDER THE BAR and THE ROW); the rail's title out of sight while
+ * the landmark keeps its name; and the root's `scroll-padding-top` — THE
+ * STRIP'S CLEARANCE — the chips' bottom edge when stuck: the <nav>'s
+ * line, the strip's top padding and the chips' row. Nothing here scrolls
+ * (the header's note on what the plays do not do); stuck geometry, the
+ * follower and the clearance's jumps are tests/e2e/price-strip.spec.ts's, on
+ * the built export.
+ */
+const expectStrip = async (
+  band: HTMLElement,
+  menu: HTMLElement,
+): Promise<void> => {
+  const strip = stripOf(menu);
+  const column = (
+    band.firstElementChild as HTMLElement
+  ).getBoundingClientRect();
+  const stripBox = strip.getBoundingClientRect();
+  const chips = shownLinks(menu);
+  const first = chips[0].getBoundingClientRect();
+  const style = getComputedStyle(strip);
+
+  // The <nav>'s sticky line: the header pill's flow box, 6rem + 2px — so
+  // nothing of the strip lies behind the bar (THE STRIP FLOATS UNDER THE
+  // BAR).
+  await expect(getComputedStyle(menu).top).toBe(`${6 * rem() + 2}px`);
+  // FULL BLEED: the strip spans the window — 100vw, a classic scrollbar's
+  // overshoot included, which the band's `overflow-x-clip` swallows.
+  await near(stripBox.width, window.innerWidth, 1, 'the strip’s width');
+  await expect(strip.scrollLeft).toBe(0);
+  await near(
+    first.left,
+    column.left,
+    0.5,
+    'the first chip on the column’s edge',
+  );
+  // THE TRAILING GUTTER IS A REAL BOX (PriceMenu.tsx): at the strip's END the
+  // last chip stands on the content column's right edge — read without
+  // scrolling (the plays move neither the page nor the strip): its box now,
+  // moved left by all the scroll the strip has left. A row that fits scrolls
+  // nothing, and then its last chip simply stays inside the column.
+  const last = chips[chips.length - 1].getBoundingClientRect();
+  const remaining = strip.scrollWidth - strip.clientWidth - strip.scrollLeft;
+  if (remaining > 0) {
+    await near(
+      last.right - remaining,
+      column.right,
+      0.5,
+      'the last chip on the column’s right edge at the strip’s end',
+    );
+  } else {
+    await expect(last.right).toBeLessThanOrEqual(column.right + 0.5);
+  }
+  // THE SCROLLBAR IS HIDDEN (PriceMenu.tsx's THE ROW, owner 2026-10-10:
+  // "there is a scroll bar, a horizontal one on that scrollable menu. remove
+  // it"): for this fine pointer as for a touch, and no colour left for a
+  // thumb nobody sees — and the row takes no height for one: its scrollport
+  // is as tall as its box.
+  await expect(style.scrollbarWidth).toBe('none');
+  await expect(style.scrollbarColor).toBe('auto');
+  await expect(strip.offsetHeight - strip.clientHeight).toBe(0);
+  // …and the `::-webkit-scrollbar` fallback, read off the pseudo-element.
+  await expect(getComputedStyle(strip, '::-webkit-scrollbar').display).toBe(
+    'none',
+  );
+  // The chips: the 44px floor, every one a pill, on one row.
+  for (const chip of chips) {
+    const box = chip.getBoundingClientRect();
+    await near(box.height, 2.75 * rem(), 0.5, `${chip.textContent}: height`);
+    await near(box.top, first.top, 0.5, `${chip.textContent}: on the row`);
+  }
+  // THE STRIP FLOATS UNDER THE BAR (owner 2026-10-10: "i do not want it to
+  // transition into some kid of fog anymore"): neither the <nav> nor the
+  // strip paints anything — no colour, no image — so the cards scroll visibly
+  // under the stuck chips. Its box is the 0.75rem of air above the chips and
+  // the 2rem of glow room below them, the `pb-8`.
+  for (const [what, box] of [
+    ['the <nav>', menu],
+    ['the strip', strip],
+  ] as const) {
+    const paint = getComputedStyle(box);
+    await expect(paint.backgroundImage, `${what}: no image`).toBe('none');
+    await expect(paint.backgroundColor, `${what}: no colour`).toBe(
+      'rgba(0, 0, 0, 0)',
+    );
+  }
+  await near(
+    first.top - stripBox.top,
+    0.75 * rem(),
+    0.5,
+    'the air above the chips',
+  );
+  await near(
+    stripBox.bottom - first.bottom,
+    2 * rem(),
+    0.5,
+    'the glow room under the chips',
+  );
+  // The rail's title is out of sight; the landmark keeps its name (the play's
+  // own role query found it by that name).
+  await expect(
+    (menu.querySelector('h2') as HTMLElement).getClientRects().length,
+  ).toBe(0);
+  // THE STRIP'S CLEARANCE on the root, the STYLESHEET's (PriceMenu.tsx's
+  // paragraph of that name): where the strip sticks, the chips' bottom edge
+  // when stuck — the <nav>'s line (the pill's flow box) + the strip's top
+  // padding + the chips' row; where it does not (a window under 30rem), the
+  // shell's own 6rem.
+  const rootPadding = parseFloat(
+    getComputedStyle(document.documentElement).scrollPaddingTop,
+  );
+  if (stripSticks()) {
+    await expect(getComputedStyle(menu).position).toBe('sticky');
+    await expect(getComputedStyle(menu).zIndex).toBe('20');
+    await near(
+      rootPadding,
+      parseFloat(style.paddingTop) +
+        first.height +
+        parseFloat(getComputedStyle(menu).top),
+      0.5,
+      'the root’s scroll-padding-top',
+    );
+  } else {
+    await expect(getComputedStyle(menu).position).toBe('static');
+    await near(rootPadding, 6 * rem(), 0.5, 'the root’s scroll-padding-top');
+  }
 };
 
 /** The menu and the cards are the same array printed twice (board §1.3), so
@@ -469,7 +658,9 @@ const expectMenuMatchesCards = async (
   categories: readonly PriceCategoryProps[],
 ): Promise<void> => {
   const menu = band.querySelector('nav') as HTMLElement;
-  const links = Array.from(menu.querySelectorAll('a'));
+  // The SHOWN list's links — the rail's or the strip's; the other is
+  // `display: none` (PriceMenu.tsx's THE TWO PRESENTATIONS).
+  const links = shownLinks(menu);
   const document_ = band.ownerDocument;
 
   await expect(links).toHaveLength(categories.length);
@@ -506,9 +697,7 @@ const expectCurrentIsFirst = async (
   band: HTMLElement,
   categories: readonly PriceCategoryProps[],
 ): Promise<void> => {
-  const links = Array.from(
-    (band.querySelector('nav') as HTMLElement).querySelectorAll('a'),
-  );
+  const links = shownLinks(band.querySelector('nav') as HTMLElement);
   const marked = links.filter(
     (link) => link.getAttribute('aria-current') !== null,
   );
@@ -607,8 +796,16 @@ const expectGlowOnCurrentOnly = async (
     await expect(getComputedStyle(card).boxShadow).toBe('none');
   }
 
+  // The menu wears its glow for good, on whichever presentation shows: the
+  // rail's card, or every chip of the strip (ui/PillButton's glow, worn in
+  // both of its states). The <nav> itself paints nothing since 2026-10-09.
   const menu = band.querySelector('nav') as HTMLElement;
-  await expect(getComputedStyle(menu).boxShadow).not.toBe('none');
+  const glowing =
+    presentationOf(menu) === 'rail' ? [railCardOf(menu)] : shownLinks(menu);
+  for (const element of glowing) {
+    await expect(getComputedStyle(element).boxShadow).not.toBe('none');
+  }
+  await expect(getComputedStyle(menu).boxShadow).toBe('none');
   await expect(menu).not.toHaveAttribute(CURRENT);
 };
 
@@ -653,7 +850,8 @@ const queryContainerOf = (element: HTMLElement): HTMLElement | null => {
 };
 
 /** The box a container query measures: the CONTENT width — border and
- *  padding off — taken fractionally, for splitHasFired's sub-pixel reason. */
+ *  padding off — taken fractionally (`clientWidth` is an integer and would
+ *  disagree with the engine inside a sub-pixel window around a step). */
 const contentWidth = (element: HTMLElement): number => {
   const style = getComputedStyle(element);
   return (
@@ -675,8 +873,9 @@ const contentWidth = (element: HTMLElement): number => {
  * one size per outline level): 30 on a container narrower than 28rem, 36 from
  * it — and each title's container is its own card. So the expectation is
  * computed from THAT card's measured content box, which keeps the play true at
- * whatever width the canvas or the visual runner gives it (the splitHasFired
- * precedent) — and drawn in the band's DESIGN PIXEL (`regimeOf`): 30 or 36
+ * whatever width the canvas or the visual runner gives it (the
+ * visual runner renders every `Sections/*` story at 390 AND 1536 whatever its
+ * pin) — and drawn in the band's DESIGN PIXEL (`regimeOf`): 30 or 36
  * design pixels inside the band scale, 30 or 36px outside it, while the 28rem
  * the query asks is ALWAYS the root's (a container query never reads the
  * band's pixel). What that implies, in PriceMenu.tsx's "THE TITLE'S STEP IS
@@ -700,12 +899,14 @@ const expectHeadingOutline = async (
     Array<string>(categories.length + 1).fill('H2'),
   );
 
-  // Each title paired with the card it belongs to — the menu's with the <nav>,
-  // each category's with its <section> — in DOM order, which is the outline's.
+  // Each title paired with the card it belongs to — the menu's with the
+  // rail's card (the <nav> itself until 2026-10-09), each category's with its
+  // <section> — in DOM order, which is the outline's.
   const document_ = band.ownerDocument;
   const menu = band.querySelector('nav') as HTMLElement;
+  const strip = presentationOf(menu) === 'strip';
   const pairs: ReadonlyArray<readonly [HTMLElement, HTMLElement]> = [
-    [menu.querySelector('h2') as HTMLElement, menu],
+    [menu.querySelector('h2') as HTMLElement, railCardOf(menu)],
     ...categories.map(
       (category) =>
         [
@@ -721,8 +922,15 @@ const expectHeadingOutline = async (
   const sizeOf = (title: HTMLElement): number =>
     parseFloat(getComputedStyle(title).fontSize);
   const { unit } = regimeOf(band);
-  for (const [title, card] of pairs) {
+  for (const [index, [title, card]] of pairs.entries()) {
     await expect(queryContainerOf(title)).toBe(card);
+    // In the STRIP's state the menu's title is not displayed at all — it
+    // names the landmark unseen (THE TWO PRESENTATIONS) — so it has no size
+    // on screen to hold to a step; the cards' titles still do.
+    if (index === 0 && strip) {
+      await expect(title.getClientRects().length).toBe(0);
+      continue;
+    }
     const step = contentWidth(card) >= 28 * rem() ? 36 : 30;
     await near(
       sizeOf(title),
@@ -732,12 +940,13 @@ const expectHeadingOutline = async (
     );
   }
 
+  // Beside the cards, the menu's title never outranks a card title. (Until
+  // 2026-10-09 the stacked menu's title read the cards' size exactly; the
+  // strip shows none.)
   const [menuTitle, ...cardTitles] = headings;
-  for (const cardTitle of cardTitles) {
-    if (splitHasFired(band)) {
+  if (!strip) {
+    for (const cardTitle of cardTitles) {
       await expect(sizeOf(menuTitle)).toBeLessThanOrEqual(sizeOf(cardTitle));
-    } else {
-      await expect(sizeOf(cardTitle)).toBe(sizeOf(menuTitle));
     }
   }
 };
@@ -800,8 +1009,9 @@ const expectBandScale = async (
     'the band’s centring',
   );
 
-  // THE TWO TRACKS, beside the cards (PriceList.tsx's THE TWO TRACKS).
-  if (splitHasFired(band)) {
+  // THE TWO TRACKS, beside the cards (PriceList.tsx's THE TWO TRACKS) —
+  // wherever the RAIL shows; the strip's band is one column.
+  if (presentationOf(menu) === 'rail') {
     const gap = 32 * unit;
     const menuTrack = Math.max(240 * unit, (box.width - gap) / 5);
     const firstCard = htmlElement(
@@ -842,7 +1052,7 @@ const expectBandScale = async (
       await near(fontSizeOf(cell), 16 * unit, 0.05, `${category.name}: a row`);
     }
   }
-  for (const link of menu.querySelectorAll('a')) {
+  for (const link of shownLinks(menu)) {
     await near(fontSizeOf(link), 18 * unit, 0.05, `${link.textContent}: label`);
     await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(
       44 * unit - 0.5,
@@ -967,18 +1177,42 @@ export const German: Story = {
 /**
  * The phone, Romanian — one of the two widths §13 samples for this tier.
  *
- * Below the split the band is ONE column: the menu card first, as a plain
- * table of contents (board §5.2, option A — the pattern every printed
- * brochure uses, one DOM, no second menu), then the cards. Inside a card the
- * rows stack — the name on its line, the price under it — because at 390 the
- * card's inside is ~301px (~262 until ui/Container's THE PHONE GUTTER halved
- * a phone's margins, 2026-10-09; 286px in the test runner, under its 15px
- * scrollbar) and an 80-character treatment name needs the whole of it
- * (board §5.3).
+ * Below the split the band is ONE column: since 2026-10-09 the STRIP first —
+ * a row of chips across the whole screen, the current one lavender, that
+ * scrolls sideways and sticks under the header pill as the cards go by
+ * (PriceMenu.tsx's THE TWO PRESENTATIONS; the stacked card of board §5.2's
+ * option A is history) — then the cards, the first starting 2rem under the
+ * chips. Inside a card the rows stack — the name on its line, the price under
+ * it — because at 390 the card's inside is ~301px (~262 until ui/Container's
+ * THE PHONE GUTTER halved a phone's margins, 2026-10-09; 286px in the test
+ * runner, under its 15px scrollbar) and an 80-character treatment name needs
+ * the whole of it (board §5.3).
  */
 export const Smartphone390: Story = {
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },
   play: playDeck(ROMANIAN),
+};
+
+/**
+ * The tablet, Romanian — THE STRIP at a tablet's width (2026-10-09). A 768px
+ * window is under the split for any pointer, and every touch screen shows the
+ * strip at any width, a tablet held sideways included (the owner's "Every
+ * touch screen"; the e2e suite drives a real touch tablet both ways). The
+ * strip still spans the whole screen with its first chip on the column's
+ * edge; the cards below are wide enough for each row to sit beside its price.
+ */
+export const Tablet768: Story = {
+  globals: { locale: 'ro', viewport: { value: 'tablet' } },
+  play: playDeck(ROMANIAN),
+};
+
+/** German on the tablet: the strip's longest chips — „Prothetische
+ *  Versorgung", „Kinderzahnheilkunde" — on one line each, never wrapped,
+ *  the row scrolling sideways to reach them. */
+export const GermanTablet768: Story = {
+  globals: { locale: 'de', viewport: { value: 'tablet' } },
+  args: GERMAN,
+  play: playDeck(GERMAN),
 };
 
 /**
@@ -997,7 +1231,8 @@ export const Laptop1536: Story = {
 
 /** German on the phone: the compound row names at their narrowest measure,
  *  where `hyphens: auto` under `lang="de"` is what keeps them inside the
- *  card — and where the menu labels, which may NOT break, still have to fit. */
+ *  card — and the strip's German chips, which may NOT break (a chip never
+ *  wraps; the strip scrolls instead). */
 export const GermanSmartphone390: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
   args: GERMAN,

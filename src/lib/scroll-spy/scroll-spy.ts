@@ -234,6 +234,102 @@ import {
 //     Back — is left alone; the pin's own check hands its answer to the walk.
 //     A click, and a `hashchange` the browser scrolls for, need nothing: the
 //     margins are written by then, and the browser's own jump lands on them.
+//     start() does NOT finish a fresh navigation's load-time pin while the
+//     document still loads (next bullet): a scroll of ours then would stop the
+//     browser's own corrections for a late webfont and spend the pin's one
+//     finish on a layout about to change — the settle after the load does it.
+//   · THE LOAD-TIME JUMP THAT WENT STALE (2026-10-10, the price strip's
+//     deep-link defect, `/debug-deep`; BOUNDED after the G2 review the same
+//     day): the browser's own jump to a URL's `#fragment` can end where it no
+//     longer meant to. MEASURED on the built price page, Chromium, the webfont
+//     delayed by `page.route`: a SMOOTH jump is not re-aimed when the webfont
+//     reflows the page under it, and leaves the card 4 to 56px off its landing
+//     — its top inside the stuck strip's chips — with JavaScript off too (a
+//     scripted scroll before the jump did far worse, 180 to 811px;
+//     lib/strip-follow's THE BROWSER'S FRAGMENT JUMP GOES FIRST keeps the strip
+//     from making one); and a short glide that had already ended was left 20px
+//     off by a webfont 1200ms late, in WebKit too. So a pin the URL's own
+//     `#fragment` set at start() on a FRESH navigation — a link followed, never
+//     a reload's or a Back's restored position: Navigation Timing's own
+//     answer, read once at start(), and where it is missing, the narrower rule
+//     — is first WAITED for: not judged at all until the document has LOADED
+//     (`readyState` 'complete'; a preloaded webfont holds the load event back,
+//     and its reflow sends no scroll event), and then finished at the first
+//     settle that finds it at rest and not arrived, ONCE PER PIN (the same
+//     `relanded`), by the same `scrollIntoView` — never by start(), which runs
+//     before the browser's jump, where a scroll of ours would cost the page
+//     that jump. BOUNDED, because a page can also move by hands no wheel,
+//     touch or key announces — an iPhone's status-bar tap, VoiceOver's
+//     three-finger scroll, find in page, a scrollbar drag, a Tab's focus
+//     scroll — and pulling such a visitor back is worse than a card a few
+//     pixels off (the G2 reviewers MEASURED the unbounded finish pulling a
+//     page 5660px back in Chromium and 4410px in WebKit, the focus or the
+//     reading cursor left off screen):
+//       – the finish needs FOCUS NOT GONE ELSEWHERE, ALWAYS:
+//         `document.activeElement` the card, inside it, the body or nothing.
+//         A `focusin` outside the card ends the pin's claim for good (a
+//         `focusin` listener, the eighth event below);
+//       – and EITHER THE PAGE UNMOVED since it last rested within A QUARTER OF
+//         A WINDOW of the card's planned landing (STALE_FINISH_REACH; a rest
+//         point is recorded at every quiet settle of the load-time wait that
+//         finds the card within that reach, never at a settle after the load,
+//         and at start() for ANY page — THE HYBRID, the planner's decision of
+//         2026-10-10: for a page already AWAY at start, its card then out of
+//         reach, that rest skips only the distance bound, never the clear
+//         area): then the LAYOUT moved under
+//         it, never the visitor, and the finish lands it from ANY distance,
+//         the card pushed out of the window included. MEASURED on the built
+//         page (2026-10-10): WebKit, which has no scroll anchoring, jumped to
+//         the fragment before the webfont arrived, and the reflow left the
+//         card 378px off inside the window, or 587, 917 and 1211px off and out
+//         of it (3 of 24 loads of a probe), the page never moving again;
+//         Chromium's anchoring absorbs most of a reflow, which is why its
+//         stale jumps measured only 4 to 56px;
+//       – OR, for a page that HAS moved, the card STILL IN THE CLEAR AREA —
+//         between the root's `scroll-padding-top` and the window's bottom
+//         edge — and within that quarter window of its landing: a card taller
+//         than the clear area passes the clear-area test across a scroll as
+//         long as itself — four price cards pass 1000px on a phone whose clear
+//         area is 690px — so a screen reader reading down one during the load
+//         was pulled back 1 to 2 thousand pixels (G2 a11y, 2026-10-10);
+//       – during the wait, a page that has STOPPED with the card out of the
+//         clear area, after moving, is not waited for: the pin goes and the
+//         walk answers — the mark follows what the visitor sees. "Stopped" is
+//         TWO quiet settle windows in a row, never one: a long task during
+//         the load holds a glide's scroll events back and can fake one (G2
+//         typescript, 2026-10-10);
+//       – the wait has a CEILING, LOAD_WAIT_CEILING_MS from start(): a request
+//         that never completes must not hold the pin for the whole visit, and
+//         after it the pin is judged as if the document had loaded.
+//     A click's pin, a `hashchange`'s, are never finished this way. ITS LIMITS,
+//     recorded: a move the visitor made DURING THE LOAD that comes to rest
+//     within reach of the landing — a few pixels of a scrollbar drag during
+//     the load-time glide, a short screen-reader scroll — becomes the rest
+//     point and is finished like the browser's, pulled back at most a
+//     quarter of a window (after the load, such a move is finished only with
+//     the card still in the clear area); THE HYBRID'S PRICE AND ITS GAIN: at
+//     start() a page whose webfont reflowed BEFORE the island hydrated, or
+//     which WebKit never jumped at all (left at the top), looks exactly like
+//     one a visitor moved before hydration — and that window exists on EVERY
+//     phone load, the HTML readable a second or more before the island
+//     hydrates, not only on slow ones — so it is finished only with its card
+//     still in view AND the page ABOVE the card's landing: a webfont reflow
+//     pushes a card DOWN the page (16 to 36px, and up to 2653px, measured in
+//     WebKit), while a reader who scrolled down before hydration sits BELOW
+//     it (G2 react, 2026-10-10: without this direction rule such a reader was
+//     pulled back 900 and 600px in WebKit, 720 and 285px in Chromium). The
+//     start rest point took the WebKit SLOW LOAD e2e from 1 of 4 runs green to
+//     4 of 4. Still REFUSED: a pre-hydration reflow that pushed the card OUT
+//     of view (1141 and 2653px measured), and any pre-hydration move with the
+//     card out of view or the page below its landing. THE RESIDUAL: a reader
+//     who scrolled UP before hydration, the card still in view, is pulled
+//     down to its landing — at most a clear area; the finish is ONCE per pin,
+//     so a layout change after it is not corrected (MEASURED once in 30
+//     WebKit loads of a probe, 2026-10-10: `#prosthetics` 41px off after its
+//     finish); and `freshLoadPin` is derived afresh at every start(), so in
+//     development a Fast Refresh remount with a `#hash` in the URL makes a
+//     new "fresh" pin (production mounts the island once, and the bounds above
+//     hold either way).
 //
 // ── THE POSITION WALK is a pure function of the document's scroll state (on
 // the landing and middle lines; the reading line's walk is its plan's, THE
@@ -286,7 +382,9 @@ import {
 // event while pinned clears and re-arms it, so the timer fires only once the
 // jump's own scrolling has stopped, and the scroll position at that moment is
 // remembered. The next scroll event that reports a DIFFERENT position is the
-// visitor's own hand — the pin is dropped and the walk takes over again.
+// visitor's own hand — the pin is dropped and the walk takes over again —
+// unless a resize came first and moved the page by the browser's own choice:
+// the resize takes the resting position again (THE RESIZE KEEPS THE PIN).
 // While pinned the walk still runs on every scroll and resize, silently: the
 // position is kept up to date so that the moment the pin drops there is an
 // answer ready, and publishing the pin over it is what `pinned ?? position`
@@ -313,6 +411,27 @@ import {
 // What the settle timer still covers is the input this cannot see: a scrollbar
 // DRAG produces neither a wheel nor a key. That is why BOTH halves exist, and
 // why neither is redundant.
+// SIDEWAYS INPUT INSIDE A HORIZONTAL SCROLLER IS NOT PAGE SCROLLING (G2 react,
+// 2026-10-09 — verified: tap a chip of the price strip, swipe the strip 120ms
+// later, and the marks flashed prophylaxis → emergencies → prophylaxis). A
+// consumer names the horizontal scrollers inside its page (the
+// `horizontalScrollers` option, element ids looked up at each event): a
+// `wheel` over one that is SIDEWAYS — |deltaX| > |deltaY|, or Shift held,
+// which every engine turns sideways — scrolls that box and never the page,
+// so it leaves the pin alone; so does a touch gesture that STARTS inside one
+// and pans anything but CLEARLY vertically — |dx| > VERTICAL_PAN_RATIO |dy|
+// since `touchstart` (more than 35° off vertical), decided once, when the
+// finger has travelled DECIDE_PX (before that it is no pan at all: a tap, a
+// wobble), as the browser decides its own pan's axis after its own slop. NOT
+// 45°: MEASURED (the G2 re-review, 2026-10-10), Chromium hands a pan to the
+// STRIP from about 37–40° off vertical, and with a 45° split a chip tap's pin
+// was dropped by the strip's own pan, the mark walking through five
+// categories during the click's glide; iOS Safari's split was not measured.
+// The price, recorded: a pan 35–38° off vertical that Chromium gives to the
+// page keeps the pin while it moves — until the settle verifies arrival, or
+// at once if the pin had already come to rest (any later move drops it). A
+// CLEARLY vertical gesture that starts on the strip still scrolls the page,
+// and still drops the pin; so does any gesture with a second finger.
 //
 // ── THE PIN VERIFIES ARRIVAL, AT THE SETTLE (G2 react, Fable, 2026-09-15).
 // A pin records an INTENT — a click, a `#id` in the URL — and the two halves
@@ -389,19 +508,55 @@ import {
 // measured while its steps stood 1rem lower; they rose with the corner on
 // 2026-10-09, CLAUDE.md §15.36, so expect a larger nudge, not re-measured) — a
 // scroll event no hand made, which drops a settled pin onto the walk's
-// answer. Both are viewport-truthful.
+// answer. Both are viewport-truthful. (The page a RESIZE moves is not one of
+// them: THE RESIZE KEEPS THE PIN, next.)
 //
-// ── EVENTS, six of them on window and — on the reading line only — a
+// ── THE RESIZE KEEPS THE PIN (the price strip, planner's decision of
+// 2026-10-10). A resize may move the page by the BROWSER's choice, with no
+// hand anywhere near it. MEASURED: mobile-mode Chromium — Chrome on an Android
+// phone or tablet — keeps the node at the window's top-centre in place across
+// a rotation; on the price page's 1180×820 touch tablet, once the strip
+// stopped painting a ground under that point (sections/PriceList/PriceMenu's
+// THE STRIP FLOATS UNDER THE BAR, 2026-10-10), the node there was a card, and
+// turning the tablet moved the page 667 → 675px. The settled pin read that
+// move's `scroll` as a hand and dropped: a tapped category handed to the walk
+// by a turn of the device, against onResize's own word that a resize is never
+// a reason to drop the visitor's pin. The browser's `resize` arrives BEFORE
+// that `scroll`, with `scrollY` already moved (measured), so onResize takes
+// the resting position again, first — `settledY` re-read, for a pin that has
+// settled; a pin still gliding has no rest to re-take, and its settle reads
+// the page afresh anyway. A real hand still drops the pin: through its wheel,
+// touch or scrolling key at once (THE VISITOR'S OWN INPUT), or by moving the
+// page past the new rest. What it cannot tell apart, recorded: a scroll of the
+// visitor's own that lands between a resize and that resize's own `scroll`
+// event — a momentum tail, a scrollbar drag — is taken as part of the
+// resize's move, and drops the pin one movement later. `refresh()` takes the
+// same path (THE REFRESH), and keeps the same promise.
+//
+// ── THE LAST PIXELS OF A GLIDE (G2 react, 2026-10-10). A SETTLED pin drops
+// only when the page moves more than LANDED_PX (2px) from where it settled.
+// MEASURED: WebKit's smooth scroll can end in two steps — 665 → 667 against a
+// 666.5 landing — after the settle accepted 665, and its last step read as a
+// hand: the mark lost at a rotation 1–2 times in 6 at 1180×820. The comparison
+// is against the settled position and that position is never re-taken, so a
+// slow scrollbar drag still drops the pin at its third pixel.
+//
+// ── EVENTS, eight of them on window and — on the reading line only — a
 // ResizeObserver on every target; all of them removed by dispose(). Three ask
 // "where are we now?": `scroll`, `{ passive: true }` (this listener never
 // calls preventDefault, and saying so lets the compositor scroll without
 // waiting for it); `resize`, which changes every rect — and the middle line
 // itself, and the reading line's floors, read again then (THE READING LINE) —
-// and therefore the answer; `hashchange`, which is how Back, Forward and any
-// other link to a `#id` on this page reach us. Three ask "is a person doing
-// this?" and exist only to drop the pin: `wheel` and `touchmove` (both
-// passive, same reason) and `keydown`, filtered to the scrolling keys — see
-// THE VISITOR'S OWN INPUT. The observer asks "did a target change size under
+// and therefore the answer, and which re-takes a settled pin's resting
+// position (THE RESIZE KEEPS THE PIN); `hashchange`, which is how Back,
+// Forward and any other link to a `#id` on this page reach us. Four ask "is
+// a person doing this?" and exist only to drop the pin: `wheel`, `touchstart`
+// and `touchmove` (all passive, same reason; the start only remembers where a
+// gesture began) and `keydown`, filtered to the scrolling keys — see THE
+// VISITOR'S OWN INPUT. The eighth, `focusin`, asks "has the visitor moved on
+// from the card a link brought them to?" — a fresh load-time pin's claim to
+// be finished ends at a focus outside it (THE READING LINE's stale load-time
+// jump). The observer asks "did a target change size under
 // us?" — fonts arriving, a zoom, a row wrapping — because on the reading line
 // a target's height decides where it lands; it runs the same evaluation a
 // scroll does, and exists on no other line.
@@ -427,6 +582,26 @@ import {
 // object whenever nothing really moved — identity is the signal React's
 // useSyncExternalStore compares, and that header explains it once for all four
 // stores.
+//
+// ── THE REFRESH — a resize on the consumer's word (`refresh()`, the price
+// strip, owner 2026-10-09). Everything this spy measures against is read on
+// every evaluation — the root's `scroll-padding-top` (the reading line's clear
+// area, the landing line), the window, the targets — and an evaluation runs on
+// every scroll, resize, `hashchange` and target resize. One thing can change
+// with none of those to say so: a CONSUMER changing what is measured. The
+// price menu's strip changes the root's `scroll-padding-top` — its stylesheet
+// sets it to the chips' bottom edge where the strip is shown and sticks
+// (sections/PriceList/PriceMenu's THE STRIP'S CLEARANCE, CSS since the G2
+// round of 2026-10-09; an inline write by the island before that) — and a
+// presentation flip turns that rule on or off with no scroll or resize the
+// spy hears, while on the reading line the margins planned before it would
+// land every card under the strip until the next scroll. `refresh()` is
+// that consumer's way to say "measure again": exactly the resize path — on the
+// reading line the margins lifted and every floor read again, then the
+// evaluation and its write; on the other two the walk — and, like a resize,
+// never a reason to drop the visitor's pin. Outside start()…dispose() it is a
+// no-op, like select(): there are no margins to lift and nothing listening
+// to publish to.
 //
 // ── WHAT IS DELIBERATELY NOT BUILT (each with the reason, so the absence
 // reads as a decision rather than an oversight):
@@ -492,6 +667,18 @@ export type ScrollSpySnapshot = Readonly<{ current: string | null }>;
  */
 export const DEFAULT_SETTLE_MS = 150;
 
+/**
+ * THE LOAD-TIME WAIT'S CEILING, in milliseconds from start(): how long a
+ * fresh navigation's load-time pin waits for the document to load before it
+ * is judged as if it had (the header's THE READING LINE, its stale load-time
+ * jump). A request that never completes must not hold the pin for the whole
+ * visit. Ten seconds: far past every load measured on the price page — the
+ * slowest probe held its webfont back three and a half — and short of a
+ * visitor's patience. KEEP-IN-SYNC with lib/strip-follow's GATE_CEILING_MS,
+ * the same wait on the strip's side.
+ */
+export const LOAD_WAIT_CEILING_MS = 10_000;
+
 export type ScrollSpyOptions = Readonly<{
   /**
    * Fragment ids of the targets, in DOCUMENT order — i.e. the menu's own
@@ -531,6 +718,14 @@ export type ScrollSpyOptions = Readonly<{
    * @default 'landing'
    */
   line?: ScrollSpyLine;
+  /**
+   * Element ids of the HORIZONTAL SCROLLERS inside the page (the header's
+   * SIDEWAYS INPUT INSIDE A HORIZONTAL SCROLLER): a sideways wheel over one,
+   * or a touch gesture that starts in one and pans sideways, scrolls that box
+   * and never the page, so it never drops a pin. Looked up at each event — a
+   * scroller may mount after start(). Non-blank strings. @default []
+   */
+  horizontalScrollers?: readonly string[];
 }>;
 
 /** The two answers the walk can give while the page is above every target's
@@ -561,6 +756,14 @@ export type ScrollSpy = ExternalStore<ScrollSpySnapshot> &
      *  the jump has settled. An unknown id is ignored, and so is any call
      *  outside the start()…dispose() window — a no-op, never a throw. */
     select(id: string): void;
+    /** Re-plan NOW, as a resize would (the header's REFRESH): on the reading
+     *  line lift this spy's margins, read every floor again and write the new
+     *  plan; on every line recompute the answer — for a consumer that has just
+     *  changed what the spy measures against without a resize to say so (the
+     *  price strip's stylesheet turning the root's `scroll-padding-top` on or
+     *  off at a presentation flip). Never drops a pin. A no-op
+     *  outside the start()…dispose() window. */
+    refresh(): void;
   }>;
 
 /** setTimeout's ceiling: 2^31 − 1 ms. Above it — as for anything non-finite —
@@ -573,6 +776,33 @@ const MAX_DELAY_MS = 2_147_483_647;
 function isUsableDelay(delayMs: number): boolean {
   return Number.isFinite(delayMs) && delayMs >= 1 && delayMs <= MAX_DELAY_MS;
 }
+
+/** How far a finger must travel before a gesture that began inside a
+ *  horizontal scroller is judged sideways or not (the header's SIDEWAYS INPUT
+ *  INSIDE A HORIZONTAL SCROLLER) — under it, no pan has begun: a tap, a
+ *  wobble. CSS pixels. Judged ONCE: a gesture that turns afterwards keeps the
+ *  axis it was first judged on, as the browser's own pan keeps its axis.
+ *  KEEP-IN-SYNC with lib/strip-follow's DECIDE_PX, which judges the same
+ *  finger for the strip's hand (strip-follow.test pins the two equal). */
+export const DECIDE_PX = 10;
+
+/** THE CLEARLY VERTICAL PAN (the header's SIDEWAYS INPUT INSIDE A HORIZONTAL
+ *  SCROLLER): a touch gesture that began inside a horizontal scroller is the
+ *  PAGE's — and drops the pin — only when its sideways travel is at most this
+ *  share of its vertical travel, within 35° of vertical (tan 35° ≈ 0.700);
+ *  anything flatter is treated as the scroller's own pan. KEEP-IN-SYNC with
+ *  lib/strip-follow's VERTICAL_PAN_RATIO, which judges the same finger for
+ *  the strip's hand (strip-follow.test pins the two equal). */
+export const VERTICAL_PAN_RATIO = 0.7;
+
+/** THE STALE FINISH'S REACH, as a share of the window's height (THE READING
+ *  LINE's stale load-time jump): a page that has MOVED is finished only with
+ *  its card in the clear area within a quarter of a window of the planned
+ *  landing — a page moved further has been moved by the visitor (a screen
+ *  reader reading down a card taller than the clear area, which the clear
+ *  area alone lets through). A page UNMOVED since it last rested within this
+ *  reach is finished from any distance: only the layout moved under it. */
+export const STALE_FINISH_REACH = 0.25;
 
 /**
  * The keys that scroll a document, and therefore the only keys that mean "the
@@ -589,6 +819,24 @@ const SCROLL_KEYS: ReadonlySet<string> = new Set([
   'End',
   ' ',
 ]);
+
+/**
+ * Was this document reached by a FRESH navigation — a link followed, a URL
+ * typed — rather than a reload or a Back/Forward that restores where the
+ * visitor was (the header's THE READING LINE, its stale load-time jump)?
+ * Navigation Timing's own answer; false wherever it is missing, which keeps
+ * the older, narrower rule.
+ */
+function isFreshNavigation(): boolean {
+  if (
+    typeof performance === 'undefined' ||
+    typeof performance.getEntriesByType !== 'function'
+  ) {
+    return false;
+  }
+  const [entry] = performance.getEntriesByType('navigation');
+  return entry !== undefined && 'type' in entry && entry.type === 'navigate';
+}
 
 /** A computed CSS length in pixels; anything unreadable ('auto', '', a
  *  keyword) is 0 — the same answer the browser's own scrolling gives it. */
@@ -640,6 +888,7 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     settleMs = DEFAULT_SETTLE_MS,
     topFallback = 'first',
     line = 'landing',
+    horizontalScrollers = [],
   } = options;
 
   if (ids.length === 0) {
@@ -678,6 +927,20 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
       `createScrollSpy: line must be 'landing', 'middle' or 'reading' (received ${String(line)}). Omit it to inherit 'landing'.`,
     );
   }
+  const scrollers = new Set<string>();
+  for (const id of horizontalScrollers) {
+    if (id.trim() === '') {
+      throw new RangeError(
+        `createScrollSpy: every horizontalScrollers id must be a non-blank element id (received ${id === '' ? 'an empty' : 'a blank'} one). A scroller that cannot be found would let its own sideways scrolling drop the pin, silently.`,
+      );
+    }
+    if (scrollers.has(id)) {
+      throw new RangeError(
+        `createScrollSpy: horizontalScrollers ids must be unique (received "${id}" twice), like \`ids\` — a repeated id is a mistake at the call site, never a second scroller.`,
+      );
+    }
+    scrollers.add(id);
+  }
 
   /** The visitor's click, until they scroll again (THE PIN above). */
   let pinned: string | null = null;
@@ -694,9 +957,32 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
   let moved = false;
   /** Has the pin's one extra settle window been used? */
   let graceSpent = false;
+  /** During the load-time wait: has ONE settle already found the page stopped
+   *  with the card out of the clear area? A stop needs two in a row. */
+  let stillOnce = false;
+  /** Where the page last RESTED with the load-time pin's card within reach of
+   *  its landing (STALE_FINISH_REACH) — at start() and at every quiet settle
+   *  of the load-time wait that finds it so; null while it never has. A page
+   *  still there has not moved since: only the layout has (THE READING LINE's
+   *  stale load-time jump, UNMOVED). Never at a settle after the load: there a
+   *  rest within reach would make every such page UNMOVED on the spot, and
+   *  the clear area could never refuse a small move that hid the card. */
+  let restY: number | null = null;
+  /** Was that rest point the one start() records for a page already AWAY —
+   *  its card then out of reach? Such a rest skips only the distance bound:
+   *  the card must still show in the clear area (THE HYBRID, in the header). */
+  let restFromStart = false;
   /** Has the spy finished THIS pin's jump — the one scroll this module makes,
    *  once per pin (THE READING LINE)? Reset by every select(), too. */
   let relanded = false;
+  /** Is the pin the one a FRESH NAVIGATION's `#fragment` set at start() — a
+   *  link followed, never a reload's or a Back's restored position (THE
+   *  READING LINE's stale load-time jump)? Cleared by every select(). */
+  let freshLoadPin = false;
+  /** Has the load-time wait reached its ceiling (LOAD_WAIT_CEILING_MS)? */
+  let loadWaitOver = false;
+  /** The ceiling's timer, armed by start() for a fresh load-time pin. */
+  let ceilingTimer: ReturnType<typeof setTimeout> | undefined;
   let settleTimer: ReturnType<typeof setTimeout> | undefined;
   let started = false;
 
@@ -878,13 +1164,25 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
   /** On the reading line a pinned target has ARRIVED when the page rests
    *  within LANDED_PX of its planned landing, measured afresh. */
   function readingArrived(target: HTMLElement): boolean {
+    return distanceFromLanding(target) <= LANDED_PX;
+  }
+
+  /** How far the page rests from `target`'s planned landing, in CSS pixels,
+   *  measured afresh — Infinity for a target the plan does not hold. */
+  function distanceFromLanding(target: HTMLElement): number {
+    const landing = plannedLandingOf(target);
+    return landing === null
+      ? Number.POSITIVE_INFINITY
+      : Math.abs(window.scrollY - landing);
+  }
+
+  /** The scroll position where `target` lands, as planned afresh — null for a
+   *  target the plan does not hold. */
+  function plannedLandingOf(target: HTMLElement): number | null {
     const targets = presentTargets();
     const index = targets.indexOf(target);
     const measure = index === -1 ? null : measureReading(targets);
-    if (measure === null) return false;
-    return (
-      Math.abs(measure.scrollY - measure.plan.landings[index]) <= LANDED_PX
-    );
+    return measure === null ? null : measure.plan.landings[index];
   }
 
   /**
@@ -931,6 +1229,109 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     relanded = true;
     target.scrollIntoView({ block: 'start' });
     return true;
+  }
+
+  /** The load-time wait is over, whatever ended it — the pin judged, gone, or
+   *  no longer the URL's: its ceiling's timer is not left behind. */
+  function endLoadWait(): void {
+    if (ceilingTimer === undefined) return;
+    clearTimeout(ceilingTimer);
+    ceilingTimer = undefined;
+  }
+
+  /** Has the document loaded — or the load-time wait reached its ceiling
+   *  (LOAD_WAIT_CEILING_MS), after which it is judged as if it had? */
+  function loadedOrGivenUp(): boolean {
+    return loadWaitOver || document.readyState === 'complete';
+  }
+
+  /** Does `target` still show in the window's CLEAR area — between the
+   *  root's `scroll-padding-top` and the window's bottom edge? The test of a
+   *  visitor who has not moved on (THE READING LINE's stale load-time jump). */
+  function inClearArea(target: HTMLElement): boolean {
+    const rect = target.getBoundingClientRect();
+    const padding = cssPixels(
+      getComputedStyle(document.documentElement).scrollPaddingTop,
+    );
+    return rect.bottom > padding && rect.top < window.innerHeight;
+  }
+
+  /** Has focus stayed with the visitor's link — on the card, inside it, or
+   *  nowhere (the body)? */
+  function focusStayed(target: HTMLElement): boolean {
+    const active = document.activeElement;
+    return (
+      active === null || active === document.body || target.contains(active)
+    );
+  }
+
+  /**
+   * THE LOAD-TIME JUMP THAT WENT STALE (the header's THE READING LINE): a
+   * fresh navigation's load-time pin that came to rest OFF its landing — the
+   * browser's own jump overtaken by a layout that changed under it — is landed
+   * where the plan says, once per pin (the same `relanded`). Asked by the
+   * settle alone, once the page has stopped and the document has loaded (the
+   * settle waits for that before it judges such a pin at all, up to
+   * LOAD_WAIT_CEILING_MS), and never by start(): a scroll of ours before the
+   * browser's own jump would cost the page that jump. BOUNDED: focus on the
+   * card or nowhere, always; and either a page UNMOVED since it last rested
+   * within a quarter of a window of the landing (from any distance), or the
+   * card in the clear area within that quarter window (STALE_FINISH_REACH) —
+   * a visitor who has moved on is never pulled back.
+   *
+   * @returns whether it scrolled — and the settle must look again.
+   */
+  function finishStaleLoadJump(): boolean {
+    if (line !== 'reading' || pinned === null || relanded || !freshLoadPin) {
+      return false;
+    }
+    const target = document.getElementById(pinned);
+    // BOUNDED, FOCUS FIRST, ALWAYS: never a card whose visitor's focus has
+    // gone elsewhere — a Tab, a screen reader's cursor.
+    if (target === null || !focusStayed(target)) return false;
+    // …and EITHER the page has NOT MOVED since it last rested within a
+    // quarter of a window of the landing — the LAYOUT moved under it, never
+    // the visitor, so the finish lands it from any distance, the card pushed
+    // out of the window included (UNMOVED: WebKit, no scroll anchoring) — OR
+    // the card still shows in the clear area within that quarter window (a
+    // moved page: Chromium's anchored residuals; a reader further down a tall
+    // card is refused).
+    // THE HYBRID: a rest point start() took for a page already AWAY counts
+    // only with the card in view AND the page ABOVE its landing — a webfont
+    // reflow pushes a card DOWN the page, while a reader who scrolled before
+    // the island hydrated sits BELOW it (the header's THE HYBRID).
+    const landing = restFromStart ? plannedLandingOf(target) : null;
+    const unmoved =
+      restY !== null &&
+      Math.abs(window.scrollY - restY) <= LANDED_PX &&
+      (!restFromStart ||
+        (inClearArea(target) && landing !== null && window.scrollY < landing));
+    if (
+      !unmoved &&
+      !(
+        inClearArea(target) &&
+        distanceFromLanding(target) <= STALE_FINISH_REACH * window.innerHeight
+      )
+    ) {
+      return false;
+    }
+    relanded = true;
+    target.scrollIntoView({ block: 'start' });
+    return true;
+  }
+
+  /** The page is at rest: remember where, if the load-time pin's card lies
+   *  within reach of its landing (the stale finish's UNMOVED rule). */
+  function noteRest(): void {
+    if (!freshLoadPin || pinned === null) return;
+    const target = document.getElementById(pinned);
+    if (
+      target !== null &&
+      distanceFromLanding(target) <= STALE_FINISH_REACH * window.innerHeight
+    ) {
+      restY = window.scrollY;
+      restFromStart = false;
+    }
   }
 
   /** A target that changes size re-measures: the same evaluation a scroll
@@ -987,6 +1388,11 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
    * THE SETTLE: the quiet window has ended — the one moment the pin can be
    * checked against the page (THE PIN VERIFIES ARRIVAL, THE START GRACE, THE
    * READING LINE's one scroll).
+   *   0. A fresh navigation's load-time pin while the document still loads
+   *      (and its ceiling has not passed): not judged yet — look again after
+   *      another window; but a page that has stopped AWAY from the card, out
+   *      of the clear area, after moving — still on two windows in a row —
+   *      drops the pin and the walk answers.
    *   1. Arrived: the pin holds, and the position it rests at is remembered.
    *   2. On the reading line, resting where a jump that did not know the plan
    *      put the target — its stylesheet's line: the spy finishes that jump,
@@ -996,12 +1402,60 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
    *      yet. Moved, then — look again after another window.
    *   4. Not arrived and never moved: one more window, once, for a jump that
    *      has not begun.
-   *   5. Otherwise the page has stopped short of the target: the walk answers.
+   *   5. On the reading line, a FRESH navigation's load-time pin at rest off
+   *      its landing — the browser's own jump gone stale — whose card still
+   *      holds focus (or nothing does), and whose page either has not moved
+   *      since it last rested within a quarter of a window of the landing
+   *      (UNMOVED) or shows the card in the clear area within that quarter
+   *      window: the spy finishes it,
+   *      once per pin (THE READING LINE's stale load-time jump).
+   *   6. Otherwise the page has stopped short of the target: the walk answers.
    */
   function judge(): void {
     settleTimer = undefined;
     // Never null here — unpin() clears the timer — but it narrows the type.
     if (pinned === null) return;
+    // A fresh navigation's load-time pin is not judged while the document
+    // still loads: a webfont still to come reflows the page under it, and no
+    // scroll event would follow to say so (THE READING LINE's stale
+    // load-time jump). The settle simply looks again.
+    if (freshLoadPin && !relanded && !loadedOrGivenUp()) {
+      // …unless the page has stopped AWAY from the card — the visitor's own
+      // move, or a screen reader's: then there is nothing to wait for, and
+      // the walk answers. A page still moving is a jump in flight.
+      const y = window.scrollY;
+      if (y !== checkedY) {
+        moved = true;
+        checkedY = y;
+        stillOnce = false;
+        armSettle();
+        return;
+      }
+      noteRest();
+      const target = document.getElementById(pinned);
+      // …but never a page still where it last rested within reach of the
+      // landing: only the layout moved, and the UNMOVED finish lands it after
+      // the load (G2 typescript, 2026-10-10).
+      const atItsRest =
+        restY !== null && !restFromStart && Math.abs(y - restY) <= LANDED_PX;
+      if (moved && !atItsRest && (target === null || !inClearArea(target))) {
+        // STOPPED, on TWO quiet windows in a row, never one: a long task
+        // during the load holds a glide's scroll events back and can fake one
+        // (G2 typescript, 2026-10-10).
+        if (!stillOnce) {
+          stillOnce = true;
+          armSettle();
+          return;
+        }
+        unpin();
+        recompute();
+        return;
+      }
+      stillOnce = false;
+      armSettle();
+      return;
+    }
+    endLoadWait();
     if (arrived(pinned)) {
       settledY = window.scrollY;
       return;
@@ -1023,12 +1477,19 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
       armSettle();
       return;
     }
+    // At rest, loaded and not arrived: a fresh navigation's load-time jump
+    // that went stale is finished, once per pin.
+    if (finishStaleLoadJump()) {
+      armSettle();
+      return;
+    }
     unpin();
     recompute();
   }
 
   function unpin(): void {
     clearSettle();
+    endLoadWait();
     pinned = null;
     settledY = null;
   }
@@ -1040,13 +1501,17 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
         // and it is the proof the page has moved (THE START GRACE).
         moved = true;
         checkedY = window.scrollY;
+        stillOnce = false;
         armSettle();
-      } else if (window.scrollY !== settledY) {
-        // The page has moved since it came to rest — a hand, a wheel, a key.
+      } else if (Math.abs(window.scrollY - settledY) > LANDED_PX) {
+        // The page has moved since it came to rest — a hand, a wheel, a key —
+        // by more than LANDED_PX from the SETTLED position, never re-taken
+        // (THE LAST PIXELS OF A GLIDE, in the header).
         unpin();
       }
-      // else: a scroll event that moved nothing (a bounce at the end of the
-      // page, a programmatic scrollTo to where we already are). Keep the pin.
+      // else: a scroll event that moved nothing, or a glide's last pixel or
+      // two (a bounce at the end of the page, a programmatic scrollTo to where
+      // we already are, WebKit ending its smooth scroll in two steps). Keep it.
     }
     recompute();
   }
@@ -1062,6 +1527,65 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     if (pinned === null) return;
     unpin();
     recompute();
+  }
+
+  /** Is the event's target inside one of the consumer's horizontal scrollers
+   *  (the header's SIDEWAYS INPUT INSIDE A HORIZONTAL SCROLLER)? */
+  function inHorizontalScroller(target: EventTarget | null): boolean {
+    if (horizontalScrollers.length === 0 || !(target instanceof Node)) {
+      return false;
+    }
+    for (const id of horizontalScrollers) {
+      if (document.getElementById(id)?.contains(target) === true) return true;
+    }
+    return false;
+  }
+
+  /** A wheel drops the pin — unless it turns a horizontal scroller sideways. */
+  function onWheel(event: WheelEvent): void {
+    if (pinned === null) return;
+    if (
+      inHorizontalScroller(event.target) &&
+      (Math.abs(event.deltaX) > Math.abs(event.deltaY) || event.shiftKey)
+    ) {
+      return;
+    }
+    onVisitorInput();
+  }
+
+  /** A touch gesture that began inside a horizontal scroller: where, and —
+   *  once the finger has travelled DECIDE_PX — whether it pans sideways. */
+  let gesture: { x: number; y: number; sideways: boolean | null } | null = null;
+
+  function onTouchStart(event: TouchEvent): void {
+    const touch = event.touches.length === 1 ? event.touches[0] : undefined;
+    gesture =
+      touch !== undefined && inHorizontalScroller(event.target)
+        ? { x: touch.clientX, y: touch.clientY, sideways: null }
+        : null;
+  }
+
+  function onTouchMove(event: TouchEvent): void {
+    if (gesture !== null) {
+      const touch = event.touches.length === 1 ? event.touches[0] : undefined;
+      if (touch === undefined) {
+        // A second finger: a pinch, the page's — never the scroller's pan.
+        gesture = null;
+      } else {
+        if (gesture.sideways === null) {
+          const dx = touch.clientX - gesture.x;
+          const dy = touch.clientY - gesture.y;
+          // Not a pan yet: a tap, a wobble — nothing to judge.
+          if (Math.hypot(dx, dy) < DECIDE_PX) return;
+          // Only a CLEARLY vertical pan — within 35° of vertical — is the
+          // page's; anything flatter is the scroller's (VERTICAL_PAN_RATIO).
+          gesture.sideways = Math.abs(dx) > VERTICAL_PAN_RATIO * Math.abs(dy);
+        }
+        // The scroller's own sideways pan: the page does not move.
+        if (gesture.sideways) return;
+      }
+    }
+    onVisitorInput();
   }
 
   function onKeyDown(event: KeyboardEvent): void {
@@ -1089,6 +1613,11 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
   }
 
   function onResize(): void {
+    // THE RESIZE KEEPS THE PIN (the header): a SETTLED pin takes the page's
+    // resting position again, first — the browser may have moved the page as
+    // part of this resize, and that move's `scroll` event comes after this
+    // one. A pin still gliding is its settle's to judge, untouched.
+    if (pinned !== null && settledY !== null) settledY = window.scrollY;
     // Every rect changed — and on a middle-line spy the line itself, which
     // lineY() reads afresh — so the answer may have; a resize is never a
     // reason to drop the visitor's pin. On the reading line a breakpoint may
@@ -1096,6 +1625,13 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     // off first and the evaluation reads every floor again (THE READING LINE).
     if (line === 'reading') liftWrites();
     recompute();
+  }
+
+  /** THE REFRESH (the header): the resize path, on a consumer's word — and
+   *  only while started, where the listeners it re-plans for exist. */
+  function refresh(): void {
+    if (!started) return;
+    onResize();
   }
 
   /** The URL's own `#id`, if it names one of ours. Covers Back/Forward, a
@@ -1145,7 +1681,14 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     checkedY = window.scrollY;
     moved = false;
     graceSpent = false;
+    stillOnce = false;
+    restY = null;
+    restFromStart = false;
     relanded = false;
+    // A click's pin, a `hashchange`'s: never the load-time one (start() marks
+    // that one after this call returns).
+    freshLoadPin = false;
+    endLoadWait();
     // Arm BEFORE publishing: a subscriber notified of the new current item may
     // synchronously dispose (React runs store listeners during the same task),
     // and a timer armed afterwards would outlive the very call that cleaned it
@@ -1164,9 +1707,11 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
     window.addEventListener('hashchange', onHashChange);
-    window.addEventListener('wheel', onVisitorInput, { passive: true });
-    window.addEventListener('touchmove', onVisitorInput, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('focusin', onFocusIn);
 
     recompute();
     selectFromHash();
@@ -1174,11 +1719,39 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     // that disposes this spy, and a disposed spy must neither scroll the page
     // nor observe anything.
     if (!started) return;
+    // THE LOAD-TIME JUMP THAT WENT STALE: a pin the URL's own `#fragment` set
+    // on a FRESH navigation, never a reload's or a Back's restored position.
+    freshLoadPin = line === 'reading' && pinned !== null && isFreshNavigation();
+    // Where the page rests as the spy begins to watch — the browser's jump,
+    // or whatever came before the island hydrated (ITS LIMITS, in the header).
+    // A card within reach makes it a full rest point; for a page already
+    // AWAY it is still one, but it skips only the distance bound — the card
+    // must show in the clear area (THE HYBRID).
+    restY = null;
+    noteRest();
+    restFromStart = false;
+    if (restY === null && freshLoadPin) {
+      restY = window.scrollY;
+      restFromStart = true;
+    }
+    // …and its wait has a ceiling (LOAD_WAIT_CEILING_MS).
+    loadWaitOver = false;
+    if (freshLoadPin && document.readyState !== 'complete') {
+      ceilingTimer = setTimeout(() => {
+        ceilingTimer = undefined;
+        loadWaitOver = true;
+      }, LOAD_WAIT_CEILING_MS);
+    }
     // THE READING LINE: finish the browser's load-time jump if it already
     // rests on the stylesheet's line — now that the first evaluation has
     // written the margins and the hash has pinned (a no-op on the other two
-    // lines) — and watch every target's size.
-    finishTheJump();
+    // lines) — and watch every target's size. NOT for a fresh load-time pin
+    // while the document still loads: a scroll of ours then would stop the
+    // browser's own corrections for a late webfont and spend this pin's one
+    // finish on a layout about to change — the settle after the load finishes
+    // it instead, still once (G2 react and typescript, 2026-10-10: fitting
+    // cards 10 to 20px off with the scripts 700ms late and the webfont 1800ms).
+    if (!freshLoadPin || document.readyState === 'complete') finishTheJump();
     if (line === 'reading') observeTargets();
   }
 
@@ -1186,15 +1759,37 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     selectFromHash();
   }
 
+  /** A focus that lands OUTSIDE the pinned card ends a fresh load-time pin's
+   *  claim to be finished (THE READING LINE's stale load-time jump): a Tab
+   *  that went on, a screen reader's cursor — the visitor has moved on. The
+   *  browser's own focus of the fragment's card is inside it. */
+  function onFocusIn(event: FocusEvent): void {
+    if (!freshLoadPin || pinned === null) return;
+    const target = document.getElementById(pinned);
+    const element = event.target;
+    if (
+      target !== null &&
+      element instanceof Node &&
+      target.contains(element)
+    ) {
+      return;
+    }
+    freshLoadPin = false;
+    endLoadWait();
+  }
+
   function dispose(): void {
     clearSettle();
+    endLoadWait();
     if (started) {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('hashchange', onHashChange);
-      window.removeEventListener('wheel', onVisitorInput);
-      window.removeEventListener('touchmove', onVisitorInput);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('focusin', onFocusIn);
       observer?.disconnect();
       observer = undefined;
       started = false;
@@ -1208,6 +1803,11 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     pinned = null;
     position = null;
     settledY = null;
+    gesture = null;
+    freshLoadPin = false;
+    loadWaitOver = false;
+    restY = null;
+    restFromStart = false;
     store.sync();
   }
 
@@ -1218,5 +1818,6 @@ export function createScrollSpy(options: ScrollSpyOptions): ScrollSpy {
     start,
     dispose,
     select,
+    refresh,
   };
 }

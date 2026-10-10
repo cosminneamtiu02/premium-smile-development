@@ -108,8 +108,16 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   - the language banner on SHORT screens (CLAUDE.md §15.36, computed by the a11y review, not yet
     measured): the card's top slides under the sticky top bar on a viewport under about 408px tall
     (392 before 2026-10-09), and between about 277 and 315px both of its controls hide entirely —
-    1366 × 768 at 200 % zoom and phones held sideways are the cases; the lever, the owner's, is to
-    drop the card to the corner row on short, wide screens;
+    1366 × 768 at 200 % zoom and phones held sideways are the cases. The lever — drop the card to the
+    corner row on short, wide screens — was TAKEN on 2026-10-09 for the price strip's sake (CLAUDE.md
+    §15.20 round 6: under 30rem of height and from 40rem of width); a short window NARROWER than 40rem
+    keeps the lift. MEASURED there since (Chromium, an Italian browser on `/ro/services/`, before any
+    scroll): an SC 2.4.11 FAILURE, older than the strip — on develop the stacked menu's first link
+    „Consultații" is wholly hidden at 390×500 and 390×525, and with the strip the first two chips are
+    at 390 × up to ~481px (partly to ~525), so a link or chip focused there is entirely hidden. The
+    a11y review's recommended cure, the banner's own lane: no suggestion on windows narrower than
+    40rem and shorter than about 32rem (§8.6 makes it optional; the corner language button is one tap
+    away), and Escape to dismiss it everywhere;
   - the phone gutter (CLAUDE.md §15.35) — in SAFARI on a phone (320 to 480px), Tab a short footer
     site-map link („Acasă", "Home", "Team") into the bottom strip: WebKit leaves a focused control
     where it is, and with the halved gutter the label can sit almost entirely under the 56px language
@@ -122,6 +130,10 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     the price rows must read ≈ 1.5× and 2× their 100 % size (not 2.25× and 4×, the double zoom the
     rem floor may cause), and no menu label may cross into the cards column; and compare SAFARI's page
     zoom at 125 / 150 / 200 % against the Chromium numbers below;
+  - the price STRIP (CLAUDE.md §15.20 round 6) — on a real iPhone: its touch scrolling, the hidden
+    scroll indicator (iOS 18.2 and later), a link straight to a category on a slow connection (the
+    load wait) and VoiceOver's reading order through the chips; on a laptop window under 60rem with
+    a mouse only: whether the row stays discoverable with its scrollbar hidden (the owner's call);
   - SC 1.4.4 Resize Text on Home, Team and Services — the band scale (CLAUDE.md §15.25 round 2, §15.32
     and its round 2): on a laptop or desktop every band there — the Services page's price list since
     the same evening, which a floor holds at the theme's own size under the reference, so there it

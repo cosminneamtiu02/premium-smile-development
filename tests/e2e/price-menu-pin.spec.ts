@@ -19,7 +19,7 @@ import { expect, type Page, test } from '@playwright/test';
 // Both locales the owner measured (Romanian and German — the menu is the same
 // height in each) run the tall story. The numbers below are the site's own:
 // 136px = the 8.5rem line (the header pill's 6rem reach + 2.5rem of air,
-// sections/PriceList's `@3xl:top-[8.5rem]` paragraph), 16px = the 1rem of air
+// sections/PriceList's THE 8.5rem LINE paragraph), 16px = the 1rem of air
 // under the bottom pin (lib/sticky-rail's default, one root em).
 //
 // ── A PRESS MUST LAND WHERE IT WAS AIMED (owner 2026-09-29, of the defect the
@@ -38,6 +38,13 @@ import { expect, type Page, test } from '@playwright/test';
 const MENU = '#price-categories';
 const LINE = 136;
 const GAP = 16;
+
+/** The menu's SHOWN links — the rail's, on every geometry here. Since
+ *  2026-10-09 the <nav> also holds the phone-and-tablet strip's chips, a
+ *  second list `display: none` beside the rail (PriceMenu.tsx's THE TWO
+ *  PRESENTATIONS), so `${MENU} a` alone would count both: Playwright's
+ *  `:visible` in locators, a box filter in page code. */
+const LINKS = `${MENU} a[href^="#"]:visible`;
 
 type Box = Readonly<{ top: number; bottom: number; height: number }>;
 
@@ -102,9 +109,9 @@ async function stepScroll(page: Page, to: number, step = 120): Promise<void> {
 
 const lastCardLanding = (page: Page): Promise<number> =>
   page.evaluate((selector) => {
-    const links = document.querySelectorAll<HTMLAnchorElement>(
-      `${selector} a[href^="#"]`,
-    );
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>(`${selector} a[href^="#"]`),
+    ).filter((link) => link.getClientRects().length > 0);
     const last = links[links.length - 1];
     const card = document.getElementById(last.hash.slice(1)) as HTMLElement;
     return Math.round(card.getBoundingClientRect().top + window.scrollY);
@@ -154,8 +161,9 @@ async function pressLink(
   const id = await page.evaluate(
     ({ selector, index }) => {
       const nav = document.querySelector(selector) as HTMLElement;
-      const link =
-        nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')[index];
+      const link = Array.from(
+        nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
+      ).filter((shown) => shown.getClientRects().length > 0)[index];
       const moments: PressMoment[] = [];
       (window as unknown as { __press: PressMoment[] }).__press = moments;
       for (const kind of ['mousedown', 'mouseup', 'click']) {
@@ -178,10 +186,7 @@ async function pressLink(
     },
     { selector: MENU, index },
   );
-  const box = await page
-    .locator(`${MENU} a[href^="#"]`)
-    .nth(index)
-    .boundingBox();
+  const box = await page.locator(LINKS).nth(index).boundingBox();
   if (box === null) throw new Error(`menu link ${index} has no box to press`);
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
@@ -217,7 +222,7 @@ async function expectThePressNavigated(
     '',
   );
   await expect(
-    page.locator(`${MENU} a[aria-current="location"]`),
+    page.locator(`${MENU} a[aria-current="location"]:visible`),
   ).toHaveAttribute('href', `#${press.id}`);
 }
 
@@ -273,7 +278,7 @@ for (const locale of ['ro', 'de']) {
       const box = await menuBox(page);
       expect(box.bottom).toBeLessThanOrEqual(windowHeight(page) - GAP + 1);
       const last = await page
-        .locator(`${MENU} a`)
+        .locator(LINKS)
         .last()
         .evaluate((link) => {
           const rect = link.getBoundingClientRect();
@@ -305,7 +310,7 @@ for (const locale of ['ro', 'de']) {
     test('Tab through all eleven links, and back — every focused link on screen', async ({
       page,
     }) => {
-      const links = page.locator(`${MENU} a`);
+      const links = page.locator(LINKS);
       const count = await links.count();
       expect(count).toBe(11);
       await stepScroll(page, 1_200);
@@ -313,7 +318,9 @@ for (const locale of ['ro', 'de']) {
       const focusedOnScreen = async (index: number): Promise<void> => {
         const state = await page.evaluate((selector) => {
           const active = document.activeElement as HTMLElement | null;
-          const all = Array.from(document.querySelectorAll(`${selector} a`));
+          const all = Array.from(
+            document.querySelectorAll(`${selector} a`),
+          ).filter((link) => link.getClientRects().length > 0);
           const rect = active?.getBoundingClientRect();
           return {
             index: active === null ? -1 : all.indexOf(active),
@@ -354,7 +361,7 @@ for (const locale of ['ro', 'de']) {
           (
             document.querySelector(selector) as HTMLElement
           ).querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-        );
+        ).filter((link) => link.getClientRects().length > 0);
         const low = links
           .map((link, at) => ({ link, at }))
           .filter(({ link, at }) => {
@@ -403,7 +410,7 @@ for (const locale of ['ro', 'de']) {
             (
               document.querySelector(selector) as HTMLElement
             ).querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-          );
+          ).filter((link) => link.getClientRects().length > 0);
           return links.findIndex((link) => {
             const rect = link.getBoundingClientRect();
             return (

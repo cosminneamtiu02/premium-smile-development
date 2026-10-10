@@ -124,10 +124,13 @@ import { cx } from '@/lib/cx/cx';
 // (2026-09-30, MEASURED by the planner on this lane's built export with
 // Chromium's largest-contentful-paint entries). On the Team page, which this
 // band opens, the FIRST doctor's cutout is the page's LCP element (§10.6) —
-// 226 × 302 on a 390 phone, 288 × 384 at 1280 and 1920, still the LCP at
-// 1366 × 633 — and it shipped lazy, with no `fetchpriority` and no preload
-// link. On Home the band sits under the Hero and, since 2026-10-01, under the
-// clinic's numbers too (the owner's order), the first cutout at y ≈ 1655 at a
+// 226 × 302 on a 390 phone (since ui/Container's PHONE GUTTER of 2026-10-09:
+// 276.6 × 368.8 on a 390 phone, 262.7 × 350.2 at a 390 window behind a
+// classic scrollbar — the geometry the 226 × 302 was — still the LCP,
+// re-measured), 288 × 384 at 1280 and 1920, still the LCP at 1366 × 633 —
+// and it shipped lazy, with no `fetchpriority` and no preload link. On Home
+// the band sits under the Hero and, since 2026-10-01, under the clinic's
+// numbers too (the owner's order), the first cutout at y ≈ 1655 at a
 // 1280 × 800 window (≈ 1103 right under the Hero, before the band scaled),
 // and the hero's picture is the LCP: lazy is RIGHT there (§11 — "lazy-loading
 // below the fold, eager + high-priority for the hero"). The band cannot tell
@@ -345,15 +348,17 @@ import { cx } from '@/lib/cx/cx';
 // RECORDED FOR THE OWNER — what the regime trades, derived from the numbers
 // above and checked on the built page (a zoom z: the CSS viewport is the
 // screen ÷ z and a classic scrollbar 15 ÷ z CSS px; the column is the
-// viewport less the scrollbar and 2 × clamp(1rem, 10vw, 12.5rem); s =
-// min(column, 96rem) / 1106 from a max(56rem, 896px) column; on screen a CSS
-// px is z device px). Inside the regime the band's lengths follow its
-// column, not the root font, so — and since 2026-10-02 the same holds for
+// viewport less the scrollbar and 2 × clamp(1rem, 10vw, 12.5rem) — the
+// gutter from a 600px viewport up, all the regime ever meets (ui/Container's
+// PHONE GUTTER narrows it below since 2026-10-09); s = min(column, 96rem) /
+// 1106 from a max(56rem, 896px) column; on screen a CSS px is z device px).
+// Inside the regime the band's lengths follow its column, not the root font,
+// so — and since 2026-10-02 the same holds for
 // every band that wears ui/Container's THE BAND SCALE, each at its own sizes;
 // the figures below are this band's quote and name (THE PROMOTION):
 // (1) A BROWSER ZOOM narrows the column, in CSS px, by the very factor it
-// enlarges a CSS px (the gutter is 10vw wherever its 12.5rem cap does not
-// bind), so between the step and the cap the band's text stays the SAME size
+// enlarges a CSS px (the regime's gutter is 10vw, its 12.5rem cap aside), so
+// between the step and the cap the band's text stays the SAME size
 // on screen — WCAG's F94 pattern under SC 1.4.4. It grows only where the cap
 // binds (a fixed design pixel there, like rem text) and once the column
 // falls under the step (the theme's rem again — at a 16px root a jump of

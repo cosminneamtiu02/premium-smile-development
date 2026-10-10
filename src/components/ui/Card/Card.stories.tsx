@@ -42,8 +42,9 @@ import {
 // ── HOW TO READ THE FRAMES: `UI/*` routes to 1280 (§13); the 'stress-320' tag
 // adds the accessibility width (§7/§9) to Default, InAGrid and GermanLongest —
 // the three whose layout actually has something to say there (a card at a
-// 256px column, a three-track grid collapsing to one, a German compound that
-// must break rather than push the border).
+// 288px column, 256 until ui/Container's phone gutter of 2026-10-09; a
+// three-track grid collapsing to one; a German compound that must break
+// rather than push the border).
 //
 // Demo copy is Romanian with diacritics (§15.7) and factual — no superlatives,
 // no promotions, no result guarantees (CMSR advertising rules for dental
@@ -179,9 +180,10 @@ const renderServiceTier: NonNullable<Story['render']> = ({
  * the `p-6` inset and the inner column's rhythm between heading, body and
  * price.
  *
- * **320 (`stress-320`, §7/§9):** the same card in a 256px column, with the
- * padding intact and no horizontal scrolling — the width the atom is *not*
- * allowed to fight.
+ * **320 (`stress-320`, §7/§9):** the same card in a 288px column (273 under
+ * the runner's scrollbar; 256 until ui/Container's phone gutter of
+ * 2026-10-09), with the padding intact and no horizontal scrolling — the
+ * width the atom is *not* allowed to fight.
  *
  * What the picture does NOT show is as decided as what it does: the paint
  * behind the card and the band's vertical rhythm belong to the `<section>` and

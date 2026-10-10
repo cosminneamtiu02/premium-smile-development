@@ -257,13 +257,30 @@ import type { CourseGroup } from './DoctorCourses';
 //     line is on, so the line and the dot stay where the eye left them
 //     (a 6px centre moves by a quarter of a pixel) and the growth goes into
 //     the column's free right-hand side.
-//   · IT OPENS NO SIDEWAYS SCROLL (§7). A transform counts towards a page's
-//     scrollable overflow, and a group is as wide as the rail — on a phone as
-//     wide as the column — so 1.04 pushes its right edge 4 % past the column,
-//     into the gutter: ~12px at 390 against a 39px gutter, ~10px at 320
-//     against 32px (the gutter is `clamp(1rem, 10vw, 12.5rem)`, ui/Container),
-//     and ~17px at 320 for the few frames of the ~1.065 peak.
-//     Every story and the page twin assert no sideways scroll.
+//   · IT OPENS NO SIDEWAYS SCROLL (§7) — since 2026-10-09 thanks to the
+//     band's BELT. A transform counts towards a page's scrollable overflow,
+//     and a group is as wide as the rail — on a phone as wide as the column —
+//     so 1.04 pushes its right edge 4 % past the column, into the gutter:
+//     ~14px at 390 against a 19.5px gutter, ~11.5px at 320 against 16px (the
+//     gutter is ui/Container's, 5vw a side on a phone since THE PHONE GUTTER,
+//     CLAUDE.md §15.35 — 39 and 32px before). The ~1.065 peak (measured
+//     1.0647) pushes it ~6.5 % for a few frames, ~19px at 320 and ~23px at
+//     390 — PAST the screen: MEASURED on the built doctor page (ro + de,
+//     emulated phones, every frame of a walk through the rail), 2.6 / 3.0 /
+//     3.2 / 3.5px past the right edge at 320 / 360 / 390 / 430, the page
+//     3–5px wider than the screen for those frames, where the old gutter had
+//     held the peak 15–21px inside it. So DoctorCourses.tsx's outer <section>
+//     wears `overflow-x-clip` (its THE BELT): on the full-bleed outer it trims
+//     only what passes the screen's edge, never a group at rest, and with it
+//     applied the document never widened (measured). The page twin asserts no
+//     sideways scroll on the DOCUMENT. The band's own stories read the
+//     document AND the band's title and each group: the band's box still
+//     reports a clipped overshoot as its `scrollWidth` — 2–3px for ~0.15s,
+//     from ~0.1s after a year lights, at 320 and 390 beside a classic
+//     scrollbar (measured in Storybook) — so a check on it would race, while
+//     a box's OWN transform never counts toward its own `scrollWidth`: each
+//     group is a race-free witness of its words, which the document, behind
+//     the belt, can no longer see (the G2 react and typescript reviews).
 //   · The year no longer pops on its own (round 2g's `origin-left
 //     animate-pop` on the <h3> is gone, and with it the `w-fit` that kept
 //     that pop inside the column): it comes forward WITH its subsection, and
@@ -320,12 +337,17 @@ import type { CourseGroup } from './DoctorCourses';
 //     width (the `Current` story, 1536×864, a one-line year 76px tall,
 //     settled at 1.04): 4.56px on — the end 0.56px past the next group's top,
 //     7.44px clear of the next dot's ring. Worked from the heights the
-//     stories measure: the tallest group sampled, German 2024 at 390 (256px),
-//     settles 8.16px on, 3.84px clear. The end reaches the next ring only for
+//     stories measure: the tallest group sampled, German 2024 at 390, is
+//     200px since 2026-10-09's phone gutter widened the column to 351px
+//     (336 beside the visual net's scrollbar) — it was 256px in the old 312px
+//     column — and settles 7.04px on, 4.96px clear; in a 320 phone's 288px
+//     column the same group is 256px, 8.16px on, 3.84px clear (measured in
+//     Storybook, 2026-10-09). The end reaches the next ring only for
 //     a group taller than ~448px at 1.04 (~13 wrapped course lines) — ~217px
 //     at the overshoot's drawn peak of ~1.065 (THE FORWARD MOTION), where
-//     that German group runs about a pixel into the ring for a few frames
-//     (G2-R2 tier 2 re-derived the peak; the curve itself is unchanged):
+//     that German group runs about a pixel into the ring for a few frames at
+//     320 (at 390 too until the phone gutter; at 390 it now stays ~0.6px
+//     clear) (G2-R2 tier 2 re-derived the peak; the curve itself is unchanged):
 //     under the ground-coloured ring,
 //     which the next group paints over it, still short of the grey disc, and
 //     never under reduced motion (no overshoot). Recorded, accepted;

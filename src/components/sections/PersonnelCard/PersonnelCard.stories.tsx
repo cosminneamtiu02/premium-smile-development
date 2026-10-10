@@ -22,8 +22,10 @@ import {
 // lane's visual manifest. The `Sections/*` title prefix routes every one of
 // them to 390 + 1536 (tests/visual/stories.spec.ts, §13); the 'stress-320' tag
 // adds the accessibility width to the four whose layout has something to say
-// there (a 256px column around a 192px portrait, a justified quote and a
-// full-width link in a 206px measure, a German compound, a 40%-expanded name).
+// there (a 288px column around a 192px portrait — 273 under the classic
+// scrollbar the baselines are recorded with, and 256 before ui/Container's
+// PHONE GUTTER of 2026-10-09 — a justified quote and a full-width link in a
+// 238px measure (223), a German compound, a 40%-expanded name).
 //
 // ── EVERY STORY PINS ITS OWN LANGUAGE AND ITS OWN VIEWPORT with per-story
 // `globals`, and both halves are load-bearing:
@@ -586,8 +588,9 @@ type Story = StoryObj<typeof meta>;
  * its `about` and its `profile` are REQUIRED by the types).
  *
  * **390 · 320 (`stress-320`):** the 192px portrait inside `p-6`, with the name
- * and the position centred under it and 208px of content still fitting at the
- * accessibility width. The play reads back the four facts a picture cannot:
+ * and the position centred under it and 238px of content still fitting at the
+ * accessibility width (223 under the classic scrollbar the baselines are
+ * recorded with). The play reads back the four facts a picture cannot:
  * the article is NAMED by its heading; the name wears ui/Heading's `band`
  * step at this default level 3 — 30px, the card being narrower than the 28rem
  * `@md` the step reads against its own container (D4: the step of every
@@ -916,8 +919,9 @@ export const GermanLongest: Story = {
  * the same ACCENT map, the same `·`-padding at 40% of the source length — so
  * what is sampled is the width the real pipeline would produce, not a longer
  * string someone invented. Both lines are `hyphens-none` (D4, D5), so the
- * expansion has to be absorbed by WRAPPING inside a 256px column at the 320
- * stress width.
+ * expansion has to be absorbed by WRAPPING inside a 288px column at the 320
+ * stress width (273 under the classic scrollbar the baselines are recorded
+ * with; 256 before ui/Container's PHONE GUTTER of 2026-10-09).
  */
 export const PseudoLocale: Story = {
   tags: ['stress-320'],

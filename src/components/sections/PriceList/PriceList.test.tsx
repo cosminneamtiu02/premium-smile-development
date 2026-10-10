@@ -992,8 +992,10 @@ describe('PriceList — the price rows', () => {
     // make only one" — so the <dl> carries no class at all, and no row needs
     // `break-inside-avoid` any more. What survives is the one step that reads
     // ui/Card's own @container: `@sm` (24rem of INNER width) is where a row
-    // stops stacking — at 390 the card's inside is ~262px and an 80-character
-    // treatment name needs the whole line (board §5.3).
+    // stops stacking — at 390 the card's inside is ~301px (~262 until
+    // ui/Container's THE PHONE GUTTER, 2026-10-09; 346 at 440, so every phone
+    // held upright still stacks) and an 80-character treatment name needs the
+    // whole line (board §5.3).
     mount();
     const card = screen.getByRole('region', { name: CATEGORIES[0].name });
     const list = card.querySelector('dl') as HTMLElement;

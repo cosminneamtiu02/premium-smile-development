@@ -99,6 +99,8 @@ interface PageShape {
     readonly disc: number;
   }[];
   readonly quote: number | null;
+  /** The first doctor card's width — the staff tile's measure on a phone. */
+  readonly doctorCard: number | null;
   readonly map: {
     readonly width: number;
     readonly height: number;
@@ -203,6 +205,8 @@ const readPage = (page: Page, staffTitle: string): Promise<PageShape> =>
       openers,
       tiles,
       quote: quote ? size(quote) : null,
+      doctorCard:
+        quote?.closest('article')?.getBoundingClientRect().width ?? null,
       map: frame
         ? {
             width: frame.getBoundingClientRect().width,
@@ -384,8 +388,12 @@ for (const locale of ['ro', 'de'] as const) {
           expect(shape.map?.address).toBe(16);
           expect(shape.map?.disc).toBe(44);
           if (staff) {
-            // The staff tile's ONE width on phones and tablets: 18rem.
-            for (const tile of shape.staff) expect(tile.width).toBe(288);
+            // The staff tile's width under the step: the column's own under
+            // the named `md` step, 28rem — a phone's (since 2026-10-09,
+            // CLAUDE.md §15.35) — and 18rem from it.
+            for (const tile of shape.staff) {
+              expect(tile.width).toBe(shape.column < 448 ? shape.column : 288);
+            }
           }
         });
       }
@@ -421,10 +429,16 @@ for (const locale of ['ro', 'de'] as const) {
     });
   }
 
-  test.describe(`/${locale}/team/ — the staff tiles hold one width on every phone`, () => {
+  test.describe(`/${locale}/team/ — on every phone a staff tile is the column, like a doctor card`, () => {
     // A PHONE: touch, and overlay scrollbars — a desktop window this narrow
-    // would reserve a classic scrollbar's 15px and squeeze the column under
-    // 288 at 360, which no phone does.
+    // reserves a classic scrollbar's 15px, which no phone does. The owner,
+    // 2026-10-09 (CLAUDE.md §15.35): "also make "our support team" part
+    // readctive on phone as the doctor cards are" — so on a phone, a column
+    // under the named `md` step (28rem), every staff tile is the column's own
+    // width, the first doctor card's, from a Galaxy Fold's 280px cover screen
+    // to the largest iPhone; and the first window off a phone, a 7″ tablet's
+    // 600, keeps the fixed 288 (the owner's 2026-10-02 "fixed size" for a
+    // tablet).
     test.use({
       locale: BROWSER_LOCALE[locale],
       isMobile: true,
@@ -432,18 +446,34 @@ for (const locale of ['ro', 'de'] as const) {
     });
     onLaptopOnly();
 
-    for (const width of [320, 360, 390, 412, 430] as const) {
-      test(`at ${width}px a tile is ${width === 320 ? 'the column (256px)' : '288px'} and nothing scrolls sideways`, async ({
+    for (const width of [280, 320, 360, 390, 412, 430, 440] as const) {
+      test(`at ${width}px every staff tile is the column and a doctor card’s width, and nothing scrolls sideways`, async ({
         page,
       }) => {
         await openAt(page, `/${locale}/team/`, { width, height: 844 });
         const shape = await readPage(page, STAFF_TITLE[locale]);
         expect(shape.sideways).toBeLessThanOrEqual(0);
         expect(shape.staff).toHaveLength(3);
+        // Never vacuous: a phone's column is under the step, and wider than
+        // the old fixed 288 from 360 up.
+        expect(shape.column).toBeLessThan(448);
+        if (width >= 360) expect(shape.column).toBeGreaterThan(288);
         for (const tile of shape.staff) {
-          expect(tile.width).toBe(width === 320 ? shape.column : 288);
+          expect(tile.width).toBe(shape.column);
+          expect(tile.width).toBe(shape.doctorCard);
         }
       });
     }
+
+    test('at 600px — a 7″ tablet, the first window off a phone — every staff tile keeps its fixed 288px', async ({
+      page,
+    }) => {
+      await openAt(page, `/${locale}/team/`, { width: 600, height: 960 });
+      const shape = await readPage(page, STAFF_TITLE[locale]);
+      expect(shape.sideways).toBeLessThanOrEqual(0);
+      expect(shape.column).toBeGreaterThanOrEqual(448);
+      expect(shape.staff).toHaveLength(3);
+      for (const tile of shape.staff) expect(tile.width).toBe(288);
+    });
   });
 }

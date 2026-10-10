@@ -95,8 +95,11 @@ import { toStatTiles } from '../stat-tiles';
 // „Über Dr. Malea (Sabău) Oana Bianca" is the h2 that must not break inside
 // the NAME — sections/DoctorProfile opts that one title out of the site-wide
 // `hyphens: auto` (2026-09-30; the other band titles inherit it and may break
-// at a syllable in a 256px column, „Über die Jahre bestätig-te Erfahrung",
-// which §15.14 allows); the „Despre" paragraphs are built out of
+// at a syllable in a narrow column, which §15.14 allows — the old 256px
+// column at 320 broke the map's „Besuchen Sie un-sere Klinik"; the 288px one
+// since 2026-10-09's phone gutter breaks no title on this page, measured on
+// the built export, and „Über die Jahre bestätigte Erfahrung" has worn
+// `hyphens-none` since 2026-10-01); the „Despre" paragraphs are built out of
 // compounds like „Zahnfleischerkrankungen" and „Behandlungsmöglichkeiten",
 // which must break at syllable points instead of pushing the tint open; and
 // the course lines are the kind of long German sentence §8.4's expansion
@@ -562,8 +565,10 @@ const expectProfile = async (
   }
   await expect(card.top).toBeGreaterThanOrEqual(last.bottom);
   // Stacked: the same 20rem wherever the column allows it, centred under the
-  // prose; only a column narrower than 20rem shrinks it — every phone column
-  // (312px at 390, 256px at 320) is, so a phone shows the column's width.
+  // prose; only a column narrower than 20rem shrinks it — since 2026-10-09's
+  // phone gutter only the narrowest phones' is (288px at 320; at 390 the
+  // column is 351px, so the card keeps its 20rem, centred), where every phone
+  // column was before (312px at 390, 256 at 320).
   const stackedColumn = columnOf(schedule).getBoundingClientRect();
   await expect(
     Math.abs(card.width - Math.min(20 * rem(), stackedColumn.width)),

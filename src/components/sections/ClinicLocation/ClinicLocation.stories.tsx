@@ -117,6 +117,30 @@ const near = async (
 };
 
 /**
+ * The map tray's SHAPE (the component header's OLD → NEW, item 4; the owner,
+ * 2026-10-09: "i need map on phone to be like 50% taller"), asserted where
+ * the play finds itself: under the band's `@lg` step — 32rem of ui/Container's
+ * box, a phone's column — the tray is 4:3, three quarters of its width tall;
+ * from the step up it is 2:1, half its width. The column is MEASURED, never
+ * read off the pin: the visual net shoots every story at 390 and at 1536,
+ * whatever the story's pin says.
+ */
+const expectMapShape = async (band: HTMLElement): Promise<void> => {
+  const column = band.firstElementChild;
+  const tray = band.querySelector('iframe')?.parentElement;
+  if (!(column instanceof HTMLElement) || !(tray instanceof HTMLElement)) {
+    throw new Error('ClinicLocation story: the band lost its structure');
+  }
+  const phone = column.getBoundingClientRect().width < 32 * rem();
+  const map = tray.getBoundingClientRect();
+  await near(
+    map.height,
+    map.width * (phone ? 3 / 4 : 1 / 2),
+    phone ? 'the map on a phone, 4:3' : 'the map, 2:1',
+  );
+};
+
+/**
  * THE BAND SCALE (§15.32), asserted where the play finds itself — the column
  * read off ui/Container, the band's first box, and the two GATES read off the
  * browser (a fine primary pointer; the relative colour syntax that rides with
@@ -126,7 +150,8 @@ const near = async (
  * band capped and centred at the cap. Outside it — a phone, a column under
  * the step, or a band that was not asked to scale — the band declares nothing
  * and every length is the theme's rem: the h2 on `band`'s 30 or 36, the rest
- * as above at s = 1. The map's tray is 2:1 in both.
+ * as above at s = 1. The map's tray is `expectMapShape`'s in both: a ratio
+ * reads the column alone, never the design pixel.
  */
 const expectBandScale = async (
   band: HTMLElement,
@@ -136,12 +161,10 @@ const expectBandScale = async (
   const column = band.firstElementChild;
   const rhythm = column?.firstElementChild;
   const disc = band.querySelector('span[aria-hidden="true"]');
-  const tray = band.querySelector('iframe')?.parentElement;
   if (
     !(column instanceof HTMLElement) ||
     !(rhythm instanceof HTMLElement) ||
-    disc === null ||
-    !(tray instanceof HTMLElement)
+    disc === null
   ) {
     throw new Error('ClinicLocation story: the band lost its structure');
   }
@@ -205,8 +228,7 @@ const expectBandScale = async (
   const discBox = disc.getBoundingClientRect();
   await near(discBox.width, 44 * unit, 'the disc’s width');
   await near(discBox.height, 44 * unit, 'the disc’s height');
-  const map = tray.getBoundingClientRect();
-  await near(map.height, map.width / 2, 'the map, 2:1');
+  await expectMapShape(band);
 };
 
 /**
@@ -259,7 +281,14 @@ export const Default: Story = {
  * (owner fb-422 — the old site centred each row on its own line; the owner
  * asked for one shared start on phone and tablet). That is the owner's fb-393
  * rule — desktop beside, tablet and phone below — and at 390 the gutter box is
- * 312px, well under the 768px step.
+ * 351px, well under the 768px step.
+ *
+ * And the map is TALLER here than anywhere else (the owner, 2026-10-09: "i
+ * need map on phone to be like 50% taller. it is too small."): under the
+ * `@lg` step the tray is 4:3, three quarters of its width tall, where the
+ * tablet and the laptop keep the 2:1 box — so a phone's map is half again as
+ * tall as it was at the same width. The play checks the shape the measured
+ * column calls for (`expectMapShape`).
  *
  * 320px is not pinned here: the visual matrix gives `Sections/*` 390 + 1536,
  * and the no-horizontal-scroll assertion below is width-agnostic — it holds
@@ -279,6 +308,7 @@ export const Smartphone: Story = {
     ).toBeInTheDocument();
     await expect(canvas.getAllByRole('link')).toHaveLength(2);
     await expect(band).toHaveTextContent(clinic.phoneDisplay);
+    await expectMapShape(band);
     await expectNoSidewaysScroll(band);
   },
 };

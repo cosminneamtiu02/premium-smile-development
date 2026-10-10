@@ -279,9 +279,13 @@ const WIDTHS = {
   desktop: 'w-[63.0625rem]',
   /** 599px: the stacked card, the ribbon 13.8px. */
   tablet: 'w-[37.4375rem]',
-  /** 297px: the bolder phone, the ribbon 9.3px. */
+  /** 297px: the bolder phone, the ribbon 9.3px — the 390 window's column
+   *  under the runner's scrollbar until 2026-10-09 (336 since: ui/Container's
+   *  THE PHONE GUTTER, §15.35). */
   phone: 'w-[18.5625rem]',
-  /** 241px: the column a 320px window leaves, the ribbon 8.4px. */
+  /** 241px: the column a 320px window left under the runner's scrollbar until
+   *  2026-10-09 (273 since, §15.35) — kept as the narrowest case, under the
+   *  column of any window from 320 up — the ribbon 8.4px. */
   narrowest: 'w-[15.0625rem]',
 } as const;
 

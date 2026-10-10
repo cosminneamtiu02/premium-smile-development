@@ -246,7 +246,9 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     neighbour of the old 3px (§3: untouched scales). A blur bleeds
 //     transparency at the edge, so the wrapper overshoots by 4px (`-inset-1`)
 //     and the band's `overflow-clip` trims it (with the Safari ≤ 15
-//     `overflow-hidden` twin, the ReviewsCarousel belt). The old 20 % wash
+//     `overflow-hidden` twin, the ReviewsCarousel belt) — at the sides and
+//     the top; at the bottom a `clip-path` trims the blurred picture 2px
+//     ABOVE the band's edge instead (THE BAND'S LAST PIXELS). The old 20 % wash
 //     RETURNS as the picture's resting opacity: `opacity-80` over the band's
 //     `bg-page` ground is the page colour at 20 % over the photograph — the
 //     old `--bg` wash, same arithmetic, one property (the crossfade runs
@@ -260,7 +262,8 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     rows 2–4 (words, buttons, the bottom spacer — i.e. to the stage's
 //     bottom edge, under the absolute beads and fade), pulled 9rem up into
 //     row 1 by `-mt-36`, whose background is ONE gradient: transparent at its
-//     top, the veil from 8rem down, held to the stage's bottom. So every word,
+//     top, the veil from 8rem down, held to 2px above the stage's bottom (THE
+//     BAND'S LAST PIXELS). So every word,
 //     button and bead sits on the veil BY CONSTRUCTION, whatever the
 //     content's height: the dark stop is anchored to the words' own row, not
 //     to a percentage of a stage whose height changes with the language —
@@ -302,16 +305,59 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     52 % at 70 %, 72 % at 80 %, 90 % at 90 %) — the first fifth is
 //     invisible, so the transition the eye sees starts LOWER although the
 //     row is taller, and no segment is straight enough to show a corner.
-//     Across ~108px the tone runs through ~150 steps, more levels than
+//     Across ~86px on a laptop (~108px at 1080, round 3's `h-27` once
+//     everywhere) the tone runs through ~150 steps, more levels than
 //     pixels, so it cannot band. Its bottom edge is `bottom-0` of the
-//     stage — the same box's own edge, no rounding between two boxes — and
-//     the band's own ground is `bg-page`: the old line was an absolute fade
-//     over a stage of ANOTHER colour meeting the next section at the band's
-//     edge; here the fade's last pixel, the band's ground and the next
-//     band's ground are all `--page`, so no rounding can expose a strip of
-//     anything else. THE BEADS are absolute too, `bottom-[8%]` (owner, round
+//     stage, and the band's own ground is `bg-page`: the old line was an
+//     absolute fade over a stage of ANOTHER colour meeting the next section
+//     at the band's edge; here the fade's last pixel, the band's ground and
+//     the next band's ground are all `--page`. That alone did NOT make the
+//     edge safe — the photograph and the veil ran to it UNDER the fade, and
+//     the owner found the line again on a phone (THE BAND'S LAST PIXELS,
+//     next). THE BEADS are absolute too, `bottom-[8%]` (owner, round
 //     6: "move the dots … lower") — their box sits over the fade's invisible
 //     first fifth, on the veil, as the old dots sat on the fade's top edge.
+//   · THE BAND'S LAST PIXELS ARE THE PAGE'S (owner, 2026-10-09, from an
+//     iPhone: "on phone there is a slim thn dark line that appears between
+//     hero section and "in numbers section" … i need it fixed and gone on
+//     every device"): the photograph stops 2px above the band's bottom edge
+//     — a `clip-path` on its wrapper, `inset(0 0 calc(var(--spacing) + 2px)
+//     0)`, the overshoot's one spacing step plus the 2px — and so does the
+//     veil — its gradient's hard stop to transparent at `calc(100% - 2px)` —
+//     so under the fade's last stops lies the band's own `bg-page` alone.
+//     WHY: wherever the edge lands BETWEEN two device pixels (839 CSS px ×
+//     2.625 on a Pixel 7, 721 × 1.5 on a laptop at 150 % display scaling, a
+//     hero a fraction taller than an iPhone's screen at 3×), each engine
+//     resolves the band's last, partial row of pixels layer by layer, and
+//     the clipped photograph and veil took more of it than the fade drawn
+//     over them: the veiled photograph leaked as a one-device-pixel line,
+//     darker where the photograph is darker (measured in the owner's
+//     screenshot). MEASURED on develop a6b072f, 112 combinations of engine ×
+//     scale × window: a line in 30 — Chromium at every fractional scale
+//     (1.25 … 3.5), WebKit at 1.5 and one 3× phone size — 15 to 58 levels
+//     darker than the fade's row above (96 with the photograph on its own GPU
+//     layer, the path an iPhone takes eagerly); none in Firefox, none on a
+//     whole device-pixel edge. The fade pushed 2px PAST the edge did not cure
+//     it (the photograph and the veil still won the row), and stopping only
+//     one of the two left 28 of 112: both, 0 of 112, the ring running or
+//     still, the photograph on its own GPU layer or not (where the clip could
+//     have met the blur in another order). WHY 2px AND A HARD STOP: 2px
+//     above the edge the fade is already 100 − 2000 / H % page on a stage
+//     H px tall (96.5 % at 568, 97.5 % at 800, 98.1 % at 1080), so the most
+//     an engine could leak at THAT edge is the rest of the veiled
+//     photograph — ≤ 4 levels on the
+//     clinic's photographs, ~5.5 for a black one; measured, the worst row
+//     anywhere in the band's last 8px dips 1.2 levels — and every row above
+//     it is the band it was (compared row by row in three engines: only the
+//     last 2px move, by ≤ 4 levels, to the page colour; the fade arrives
+//     there a pixel sooner, a light step of ~3.5 levels). WHY `clip-path`
+//     AND NOT A SHORTER BOX: CSS applies it after the `filter`, so it trims
+//     the BLURRED picture; a box ending higher lets the blur's soft edge creep
+//     back down — it had to stop 8px up to clear the edge and lightened the
+//     fade's last 16px by up to 10 levels. Guarded twice: Hero.test.tsx pins
+//     the one margin (in CI), and tests/e2e/hero-seam.spec.ts measures the
+//     rows on seven devices in Romanian and English (`npm run e2e`, on demand
+//     — that suite runs in no workflow).
 //   · `[--focus:var(--ink-inverse)]` on the band — the first dark band on the
 //     site. Every control inside draws its ring from `outline-focus` =
 //     `var(--focus)`, near-black, invisible on the scrim. Remapping the ONE
@@ -352,8 +398,9 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     owner named the buttons. MEASURED on the built export (RO, a classic
 //     15px scrollbar): 378 × 56 with an 18px label at 1280, at his 1500 and
 //     at 1536, under a one-line slogan of 71 / 84 / 86px; 472 × 70 with a
-//     22.5px label at 1920 under the 107px slogan; 294 × 56 at 768 and
-//     297 × 56 stacked at 390, as before. The atoms' `min-h` lets
+//     22.5px label at 1920 under the 107px slogan; 294 × 56 at 768 and,
+//     stacked at 390, 336 × 56 (297 × 56 as before until THE PHONE GUTTER
+//     widened the phone column, 2026-10-09). The atoms' `min-h` lets
 //     a long DE/FR label wrap between words (§8.4); syllable splits are the
 //     atoms' own ban (§15.14). THE WORDS BLOCK IS THE COLUMN, UNCAPPED
 //     (round 12, 2026-10-01): rounds 1–11 held it to `max-w-4xl`, the old
@@ -387,14 +434,29 @@ import { liveRegion } from '@/lib/rotation/rotation';
 //     — centred, ~72 px wide — never reach the corner column at any width.
 //     What remains is the 320 × 568 stress case only (a 320-wide screen
 //     just 568 tall: the content is taller than the screen, so the rows sit
-//     wherever the scroll puts them): at scroll 0 the link's last 40 × 48 px
-//     lie under the disc and part with the first scroll. Not a failure of
+//     wherever the scroll puts them): at scroll 0 the stacked link lies
+//     partly under the corner and parts with the first scroll (the numbers,
+//     re-measured twice on 2026-10-09, close this paragraph). Not a failure of
 //     2.4.11 (never entirely hidden) nor of 2.5.8; the three levers round 1
 //     offered (`pb-18 @xl:pb-0` on the row's div · a ≥ 88 px right inset at
 //     phone widths · accept) stay the OWNER'S CALL for that one width. No
 //     net sees it — neither story mounts FloatingActions. ROUND 6 moved the
 //     block to the screen's centre, so on every screen tall enough to hold
 //     the content the buttons sit mid-screen, far from the corner discs.
+//     RE-MEASURED 2026-10-09 on the built export, after the corner rose from
+//     1rem to 2rem (CLAUDE.md §15.36; G2 typescript): the WhatsApp disc's top
+//     is now at y 692 (390 × 844) and 872 (768 × 1024), and the services link
+//     clears it by 48.5 and 164.5px; at 320 × 568, scroll 0, the link's last
+//     40 × 49.1px lie under the CALL disc and the WhatsApp disc no longer
+//     touches it — still never entirely hidden. AND ONCE MORE THE SAME DAY, on
+//     the export that carries both the 2rem corner and THE PHONE GUTTER
+//     (ui/Container, CLAUDE.md §15.35 — a phone's column wider): at 390 × 844
+//     the link clears the WhatsApp disc by 68.5px in Romanian (its slogan a
+//     line shorter in the wider column) and 48.5 in German; at 320 × 568,
+//     scroll 0, the link spans the whole column, 16 to 304px, so its first
+//     56 × 49.1px lie under the language bulb and its last 56 × 49.1 under
+//     the call disc, in Romanian and German alike — the middle 176px, its
+//     label among them, uncovered, and the WhatsApp disc clear of it.
 //   · TAB ORDER runs beads → Contact → Services, i.e. the bottom of the
 //     picture before its middle: the APG's controls-before-slides order is a
 //     DOM decision, the beads' placement a picture one, and SC 2.4.3 asks for
@@ -589,15 +651,18 @@ const wordsShown =
 const wordsHidden = 'translate-y-3 opacity-0 duration-500 ease-in-out';
 
 /**
- * THE GROUND: transparent at the top, the veil from 8rem down, held to the
- * bottom — one paint under every word, button and bead (the header's THE
- * GROUND bullet). `-mt-36` pulls it 9rem into the picture row, so the veil
- * is reached 1rem above the first slogan line. THE VEIL IS 0.40, the old
- * site's own, spelled here and not as the `--scrim` token (0.55, the modal's
- * dim): §15.1's rider, the owner's call of 2026-09-20 — THE LEVER.
+ * THE GROUND: transparent at the top, the veil from 8rem down, held to 2px
+ * above the bottom — one paint under every word, button and bead (the
+ * header's THE GROUND bullet). `-mt-36` pulls it 9rem into the picture row, so
+ * the veil is reached 1rem above the first slogan line. THE VEIL IS 0.40, the
+ * old site's own, spelled here and not as the `--scrim` token (0.55, the
+ * modal's dim): §15.1's rider, the owner's call of 2026-09-20 — THE LEVER.
+ * Its last 2px are transparent, a hard stop: the band's last pixels are the
+ * page's alone (the header's THE BAND'S LAST PIXELS bullet) — the same 2px the
+ * picture's `clip-path` keeps, KEEP-IN-SYNC, both pinned in Hero.test.tsx.
  */
 const groundClasses =
-  'relative col-start-1 row-start-2 row-end-5 -mt-36 bg-[linear-gradient(to_bottom,transparent,rgb(0_0_0_/_0.4)_8rem,rgb(0_0_0_/_0.4))]';
+  'relative col-start-1 row-start-2 row-end-5 -mt-36 bg-[linear-gradient(to_bottom,transparent,rgb(0_0_0_/_0.4)_8rem,rgb(0_0_0_/_0.4)_calc(100%-2px),transparent_calc(100%-2px))]';
 
 /**
  * THE FADE into the page ground: ten stops on a slow-in curve — invisible
@@ -745,7 +810,12 @@ export function Hero({
             the round-9 24px above the buttons, whatever its line count.
             Below the tablet the phone stays as it is (the owner: "leave on
             phone as is"): a 40px float there predates this lane (Romanian
-            at 360 and 390, German at 320) — dropping `md:` is the lever. */}
+            at 360 and 390, German at 320 when round 12e measured it). It
+            moves with the wraps: since THE PHONE GUTTER (2026-10-09,
+            ui/Container, CLAUDE.md §15.35) widened the phone column, a
+            phone shows it in Romanian from 300 to 350px and in German from
+            360 to 390px (measured on the lane's export). Dropping `md:` is
+            the lever. */}
         <div
           aria-live={isCarousel ? liveRegion(status) : undefined}
           className="col-start-1 row-start-2 grid md:items-end"
@@ -775,10 +845,13 @@ export function Hero({
                 {/* THE PICTURE — escapes to the stage (unpositioned slide),
                     overshoots by 4px for the blur's edge, veiled grey, and
                     rests at 80 % over the page ground (the old 20 % wash).
-                    The first row is the LCP element and preloads (§10.6). */}
+                    Clipped, AFTER its blur, 2px above the band's bottom: the
+                    overshoot's one spacing step plus the 2px (the header's
+                    THE BAND'S LAST PIXELS bullet). The first row is the LCP
+                    element and preloads (§10.6). */}
                 <div
                   className={cx(
-                    'absolute -inset-1 grayscale blur-xs',
+                    'absolute -inset-1 grayscale blur-xs [clip-path:inset(0_0_calc(var(--spacing)+2px)_0)]',
                     slideMotion,
                     current ? 'opacity-80' : 'opacity-0',
                   )}
@@ -793,8 +866,9 @@ export function Hero({
                     className="object-cover"
                   />
                 </div>
-                {/* THE WORDS — gutted, above the ground (z-10), fading in
-                    lockstep with the picture. */}
+                {/* THE WORDS — gutted, above the ground (z-10), changing
+                    hands on their own sequence, not the picture's crossfade
+                    (the header's THE WORDS CHANGE HANDS bullet). */}
                 <Container
                   className={cx(
                     // pt-10: the struck line's room, above the slogan (the
@@ -833,9 +907,10 @@ export function Hero({
         </div>
 
         {/* THE GROUND — one static gradient under the words, the buttons
-            and the bottom spacer (rows 2–4, to the stage's bottom edge,
-            pulled 9rem into the picture row). After the slides in the DOM:
-            above their pictures, below everything that carries z-10. */}
+            and the bottom spacer (rows 2–4, to the stage's bottom edge — its
+            paint stops 2px short of it, THE BAND'S LAST PIXELS — pulled 9rem
+            into the picture row). After the slides in the DOM: above their
+            pictures, below everything that carries z-10. */}
         <div aria-hidden="true" className={groundClasses} />
 
         {/* THE TWO CALLS TO ACTION — row 3, static across slides, above the

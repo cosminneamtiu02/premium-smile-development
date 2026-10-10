@@ -79,16 +79,67 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
+ * How far below its box an element's glow is painted, in CSS px: the largest
+ * `offset-y + blur + spread` among its OUTER box-shadows, as the browser
+ * COMPUTED them — never as the class names promise.
+ *
+ * Tailwind's shadow utilities compose a LIST (inset shadow, inset ring, ring
+ * offset, ring, shadow — the unused ones as transparent zero shadows), and a
+ * colour may carry commas of its own (`rgba(0, 0, 0, 0)`), so the list is split
+ * at top-level commas only, and each shadow's colour is dropped before its
+ * lengths are read — exponent notation included, since an engine prints a huge
+ * or a tiny length as `1e+06px` / `1e-7px` and a plain digit match would
+ * under-read it. The blur RADIUS is the honest bound: CSS blurs a shadow with a
+ * Gaussian whose standard deviation is half the radius, so at `offset + blur`
+ * the glow is down to about 2 % of the shadow's own colour (the aura's 40 %
+ * lilac) — on white, about one step in 255, the depth below which a cut stops
+ * being visible.
+ */
+const glowReachBelow = (element: Element): number => {
+  const value = getComputedStyle(element).boxShadow;
+  if (value === 'none') return 0;
+  const shadows: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    if (char === '(') depth += 1;
+    else if (char === ')') depth -= 1;
+    else if (char === ',' && depth === 0) {
+      shadows.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+  shadows.push(value.slice(start));
+  return Math.max(
+    0,
+    ...shadows
+      .filter((shadow) => !/\binset\b/.test(shadow))
+      .map((shadow) => {
+        const [, offsetY = 0, blur = 0, spread = 0] = Array.from(
+          shadow
+            .replace(/[a-z-]+\([^)]*\)/gi, ' ')
+            .matchAll(/(-?[\d.]+(?:e[+-]?\d+)?)px/gi),
+          (match) => Number(match[1]),
+        );
+        return offsetY + blur + spread;
+      }),
+  );
+};
+
+/**
  * The everyday picture: a short page with content at the top, the language dial
  * bottom-left and — since fb-353 — the WhatsApp disc above the call CTA
  * bottom-right. All three boxes are the SAME size (3.5rem up to xl, 4rem at xl,
- * 4.5rem at 2xl), the dial and the phone sit 1rem clear of the bottom edge and
- * the WhatsApp disc one disc plus 0.5rem above the phone, on one z-40 layer
- * over ordinary page ground.
+ * 4.5rem at 2xl), the dial and the phone sit 2rem clear of the bottom edge
+ * (1rem until 2026-10-09 — the glow's room, below) and the WhatsApp disc one
+ * disc plus 0.5rem above the phone, on one z-40 layer over ordinary page ground.
  *
  * The play pins what the picture cannot say out loud: the new disc is a LINK to
  * the single-source wa.me number, named from the message file rather than from
- * a literal, and it opens in a new tab with the noopener pair (PR #68's law).
+ * a literal, and it opens in a new tab with the noopener pair (PR #68's law) —
+ * and every resident's glow ends INSIDE the room under it, measured off the
+ * computed styles (iOS 26 Safari draws no fixed paint below that edge).
  */
 export const Default: Story = {
   globals: { locale: 'ro' },
@@ -119,6 +170,32 @@ export const Default: Story = {
     const call = canvas.getByRole('link', { name: ro.common.actions.call });
     await expect(call).toHaveAttribute('href', `tel:${clinic.phone}`);
     await expect(call).not.toHaveAttribute('target');
+
+    // THE GLOW'S ROOM (the owner's iPhone, 2026-10-09). Safari on iOS 26
+    // draws no FIXED paint below the layout viewport's bottom edge — the top
+    // of its bottom-bar zone — while the page itself scrolls on under the bar,
+    // so a glow reaching past that edge is sliced by a straight line in the
+    // middle of the visible page (measured on his screenshot: the cut sat
+    // exactly the corner's offset below the discs). Every resident's glow
+    // must therefore END inside the room between its box and the viewport's
+    // bottom — read off what the browser computed, so a later aura or offset
+    // change fails here, with both numbers.
+    const bulb = canvas.getByRole('button', {
+      name: ro.common.language.switch.replace('{name}', nativeNames.ro),
+    });
+    for (const control of [bulb, write, call]) {
+      const name = control.getAttribute('aria-label') ?? 'corner control';
+      const reach = glowReachBelow(control);
+      // The viewport's VISIBLE height: `innerHeight` would count a horizontal
+      // scrollbar, which the fixed boxes stand above, and overstate the room.
+      const room =
+        document.documentElement.clientHeight -
+        control.getBoundingClientRect().bottom;
+      // The glow is really there — a missing aura would pass vacuously…
+      await expect(reach, `${name}: glow reach`).toBeGreaterThan(0);
+      // …and all of it fits under the control.
+      await expect(room, `${name}: room below`).toBeGreaterThanOrEqual(reach);
+    }
   },
 };
 
@@ -148,7 +225,9 @@ export const Default: Story = {
  * the page-composition rule (FloatingActions' obligation (b), playbook
  * mount-contract box 5), which the removal promoted from belt-and-braces to the
  * primary guarantee — and the Footer's legal strip already complies (centred
- * below @3xl, inset >= 88px above).
+ * below @3xl, inset >= 88px above). The one measured exception is the
+ * Footer's contact row below a ~344px window: partly under the corners at the
+ * page's end, never entirely (FloatingActions.tsx §3).
  *
  * The last line is a marked one so a diff is readable at a glance, and nothing
  * here may require horizontal scrolling at 320px.
@@ -236,7 +315,7 @@ const openPlay = async ({
  *    bulb's own variable, so at 1536 the whole thermometer scales together
  *    (72px bulb over ≈57px discs) while the call CTA grows to match — one
  *    number, two corners (D16 · F2);
- *  · `--stem-inset` doing its job: the corner passes its own 1rem offset + the
+ *  · `--stem-inset` doing its job: the corner passes its own 2rem offset + the
  *    safe area + the Header pill's 6rem reach, and the atom's extreme-zoom cap
  *    reads it;
  *  · at 320 (the 'stress-320' tag) the D6 claim itself — an `up` stem clears

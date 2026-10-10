@@ -15,8 +15,9 @@ import { DoctorCourses, type CourseGroup } from './DoctorCourses';
 // routes every one of them to 390 + 1536 (tests/visual/stories.spec.ts, §13)
 // — except `Current`, tagged 'no-visual' (its own comment says why); the
 // 'stress-320' tag adds the accessibility width to the three whose layout has
-// something to say there (a 256px column of 18px course lines, a German
-// compound inside it, a 40%-expanded section title). Round 2e's `OneYear`
+// something to say there (a 288px column of 18px course lines since
+// 2026-10-09's phone gutter — 256 before — a German compound inside it, a
+// 40%-expanded section title). Round 2e's `OneYear`
 // story is GONE with the alternation it pictured (D34): a single year is now
 // drawn exactly like any other, and the band's suite pins it.
 //
@@ -148,8 +149,9 @@ const GROUPS = [
 ] as const satisfies readonly CourseGroup[];
 
 /** The same four years in German (DRAFTED, §15.17): the longest locale's long
- *  compounds — „Fachzahnarztausbildung", „Kieferorthopädie" — in a 256px
- *  column is the case this frame exists for. */
+ *  compounds — „Fachzahnarztausbildung", „Kieferorthopädie" — in a 288px
+ *  column (320's, since the 2026-10-09 phone gutter) is the case this frame
+ *  exists for. */
 const GERMAN_GROUPS = [
   {
     year: '2024',
@@ -178,9 +180,30 @@ const GERMAN_GROUPS = [
   },
 ] as const satisfies readonly CourseGroup[];
 
-/** Nothing may require horizontal scrolling, at any sampled width (§7, §9). */
-const expectNoSidewaysScroll = async (element: HTMLElement): Promise<void> => {
-  await expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth);
+/**
+ * Nothing may require horizontal scrolling, at any sampled width (§7, §9) —
+ * checked where it can be seen WITHOUT timing: the DOCUMENT (what a visitor
+ * would pan) and every box whose words could overflow, the band's title and
+ * each year group. Not the band's own box: since 2026-10-09 (THE PHONE
+ * GUTTER) the band wears an `overflow-x-clip` belt (DoctorCourses.tsx, THE
+ * BELT) that hides whatever passes the screen's edge — so the document alone
+ * could no longer see a word too wide for the column — while the band's
+ * `scrollWidth` still counts the current group's forward peak (2–3px for
+ * ~0.15s after a year lights), a race. A box's OWN transform never counts
+ * toward its own `scrollWidth`, so each group is a race-free witness of its
+ * words (the G2 react and typescript reviews).
+ */
+const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
+  const root = document.documentElement;
+  await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+  const title = band.querySelector('h2');
+  await expect(title).not.toBeNull();
+  // Never vacuous: the title and every group are read.
+  const boxes = [title as HTMLElement, ...groupsOf(band)];
+  await expect(boxes.length).toBeGreaterThan(1);
+  for (const box of boxes) {
+    await expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth);
+  }
 };
 
 /**
@@ -710,7 +733,7 @@ const YEARS = GROUPS.map((group) => group.year);
  * a quarter rem above each dot (D50).
  *
  * **1536 · 320 (`stress-320`):** the same markup at every width — at the
- * stress width a 256px column of 18px course lines wrapping 40px in from the
+ * stress width a 288px column of 18px course lines wrapping 40px in from the
  * line, nothing scrolling sideways. The play reads back what a picture
  * cannot: the outline, the computed bold, and the geometry against the
  * measured column.
@@ -731,7 +754,7 @@ export const Default: Story = {
 /**
  * THE PHONE — the owner's adaptability rule, held by construction (D21,
  * D34): the same line down the left, every year stacked under the last, its
- * dot on the line and its words 40px in from it. At 390 the column is 312px
+ * dot on the line and its words 40px in from it. At 390 the column is 351px
  * and the rail fills it. The play pins the geometry: the line 1.5 spacing
  * units in from the rail's edge, every dot on it, one year per row.
  */
@@ -805,7 +828,7 @@ export const GermanLongest: Story = {
  * produces.
  *
  * **390 · 320 (`stress-320`):** the expanded h2 has to absorb the growth by
- * WRAPPING inside a 312px — then 256px — column; every dot on the line (the
+ * WRAPPING inside a 351px — then 288px — column; every dot on the line (the
  * play pins it), nothing sideways.
  */
 export const PseudoLocale: Story = {

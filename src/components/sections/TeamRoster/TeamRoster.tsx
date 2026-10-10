@@ -12,7 +12,9 @@ import {
 import { cx } from '@/lib/cx/cx';
 
 // sections/TeamRoster — the Team page's STAFF band: the auxiliary personnel
-// under an eyebrow and an <h2> of their own, as a row of FIXED tiles. Built on
+// under an eyebrow and an <h2> of their own, as a row of tiles of ONE width
+// per regime — fixed on a tablet and a laptop, the column's own on a phone
+// (D9). Built on
 // the doctor-pages run's N2 composition contract
 // (.claude/section-runs/2026-09-21_11-58_doctor-pages, unit 7); the D-numbers
 // below are that run's ledger decisions and the anchors other files quote
@@ -128,15 +130,21 @@ import { cx } from '@/lib/cx/cx';
 // every window. Now the <ul> is a wrapping flex row that STARTS AT THE
 // COLUMN'S START (TILES) and every <li> carries the width (TILE), ONE per
 // regime:
-//   · OUTSIDE THE BAND SCALE — every phone, every tablet held either way, any
-//     touch screen at any width, a column under the step: `w-72`, 18rem =
-//     288px, FIXED, 20px apart (`gap-x-5`). A 360px phone's column is exactly
-//     288 (the gutter is 10vw a side), so every phone from 360 up shows the
-//     same tile; `max-w-full` gives way only under a narrower column — 256px
-//     at the 320 stress width (§7) — and never pushes the page sideways. A 768
-//     window: two per row (596 of a 614px column on a tablet, of 599.4 on a
-//     desktop with a classic scrollbar), the third under the first; an iPad
-//     held sideways (1180): three, 904 of 944.
+//   · ON A PHONE — a column under Tailwind's named `md` step, 28rem (448px):
+//     every phone held upright (the widest, 440, a 396px column) and the
+//     ramp's windows up to ~520 (THE PHONE GUTTER — ui/Container, CLAUDE.md
+//     §15.35): `@max-md:w-full`, THE COLUMN'S OWN WIDTH, the doctor cards'
+//     width above it — 288px at 320, 351 at 390, 387 at 430 — one tile a row
+//     (the next paragraph, the owner's of 2026-10-09).
+//   · OFF A PHONE, OUTSIDE THE BAND SCALE — every tablet held either way, a
+//     phone held sideways, any touch screen at any width, a column under the
+//     step: `w-72`, 18rem = 288px, FIXED, 20px apart (`gap-x-5`). Such a
+//     column is 28rem or more, so the tile always fits it with room to spare
+//     — the `max-w-full` it wore until 2026-10-09 could only ever bind under
+//     an 18rem column, and every such column is a phone's, where the tile is
+//     the column now. A 768 window: two per row (596 of a 614px column on a
+//     tablet, of 599.4 on a desktop with a classic scrollbar), the third
+//     under the first; an iPad held sideways (1180): three, 904 of 944.
 //   · INSIDE IT — a laptop or a desktop from a max(56rem, 896px) column:
 //     `w-88`, 352 DESIGN pixels, 24 design pixels apart (`gap-x-6` behind the
 //     regime's chain), three to the band's 1106-design-pixel row — 3 × 352 +
@@ -145,6 +153,27 @@ import { cx } from '@/lib/cx/cx';
 //     ≈ 1594 (his 404), ≈ 484 at 1920, the cap's ≈ 489 past it. Their
 //     proportions never move again: the 192-design-pixel portrait, the
 //     30-design-pixel name and the eyebrow grow with the tile.
+// THE PHONE'S TILE IS THE COLUMN (2026-10-09 — SUPERSEDES, on a phone alone,
+// the fixed 288 above and that morning's centring). The owner, verbatim, on
+// THE PHONE GUTTER's preview: "also make "our support team" part readctive on
+// phone as the doctor cards are". A doctor card is its column's own width on a
+// phone — measured on the lane's build, 288px at 320, 351 at 390, 387 at 430 —
+// and the halved gutter left the 288px tile 63px narrower than the doctor card
+// above it at 390, 99px at 430, centred under it since the same day's first
+// look ("it fucked up the dcentering of the 'our support team' section"). Read
+// as WIDTH — follow the phone's screen the way the doctor cards do, the
+// planner's reading, recorded: the tile takes the column, and, as the doctor
+// card's cutout keeps its 18rem cell, the portrait keeps its 12rem one
+// (PersonnelCard D3), centred in the wider surface — so a phone's tile grows
+// sideways and never in height. A tile as wide as its line has nothing to
+// centre, so that morning's centring (a `justify-center` behind the phone
+// step) left again. The
+// 2026-10-02 sentence this reverses on a phone ("also here important for phone
+// and tablet make them a fixed size or smth. i do not want them o nthose
+// screens to widen or retract on those screens") still holds on a tablet: 288
+// at every tablet width. The phone's line is the named `md` step, the one the
+// band's opener already answers (its <h2> 30px under it, 36 from it), never a
+// number of the band's own.
 // WHY 20 OUTSIDE THE SCALE AND 24 INSIDE IT (the planner's, the same day, on
 // two measurements). A DESKTOP window held at 768 is not a tablet: its
 // classic scrollbar takes 15px, which the shell reserves (globals.css,
@@ -167,13 +196,16 @@ import { cx } from '@/lib/cx/cx';
 // tests/unit/design-scale.test.ts the band-scale wearers and every re-spelled
 // chain in src/.
 // KNOWN CONSEQUENCES, stated rather than discovered: a short row leaves its
-// END empty — the tablet's third tile alone under the first, every phone's
-// one, the two-up rows of a 1024 to 1138px mouse window, a two-member staff's
-// row on a laptop. At THE STEP the tile jumps: 1px under it two 288px tiles a
-// row (three would need 904 of an 895px column), at it three 285px ones
-// (s = 0.810) — the band scale's own jump (DoctorShowcase's D10, (3)).
-// `justify-center` on TILES is the one-word change if the owner wants a short
-// row centred instead.
+// END empty — the tablet's third tile alone under the first, the two-up rows
+// of a 1024 to 1138px mouse window, a two-member staff's row on a laptop; a
+// phone's row has no end to leave, its one tile being the row. At THE STEP the
+// tile jumps: 1px under it two 288px tiles a row (three would need 904 of an
+// 895px column), at it three 285px ones (s = 0.810) — the band scale's own
+// jump (DoctorShowcase's D10, (3)). At the PHONE's step it jumps too: one
+// pixel under a 448px column the tile is 447 wide, at it 288 at the column's
+// start — a ~520px window, on the gutter's ramp, where no phone held upright
+// and no tablet is. `justify-center` on TILES is the one-word change if the
+// owner wants a short row centred instead.
 //
 // ── `h-full` ON EVERY TILE. A flex item is stretched to its line's height by
 // default, and a stretched item's height is DEFINITE (CSS Flexbox §9.8), while
@@ -210,10 +242,11 @@ import { cx } from '@/lib/cx/cx';
 // band there scales (the owner, above: "the other page you have to implement
 // the same thing once done is the team page"). Below the step, on every touch
 // device and in an engine that cannot register custom properties, the strings
-// declare nothing and remap nothing: the band is its rem self — its 18rem
-// tiles (D9) and its opener at the theme's sizes, the phone's and the tablet's
-// look the owner asked for in the same breath ("also here important for phone
-// and tablet make them a fixed size or smth").
+// declare nothing and remap nothing: the band is its rem self — its opener at
+// the theme's sizes and its tiles at D9's two widths off the scale, 18rem on a
+// tablet, the look the owner asked for in the same breath ("also here
+// important for phone and tablet make them a fixed size or smth"), and the
+// column's own on a phone since 2026-10-09 (D9's phone paragraph).
 //
 // ── `id` IS THE REACT KEY, and deliberately nothing else: the tiles are
 // spelled prop by prop, so no id reaches the DOM. TRIGGER, recorded so the
@@ -290,17 +323,22 @@ const RHYTHM = cx(
 /** The tiles' row (D9): a wrapping flex row that starts at the column's start
  *  — 20px between two tiles of a row outside the band scale (`gap-x-5`), 24
  *  design pixels inside it (the gated `gap-x-6`, the regime's chain, KEEP IN
- *  SYNC like TILE's), 24 (design) px between rows (`gap-y-6`). */
+ *  SYNC like TILE's), 24 (design) px between rows (`gap-y-6`). Never spread
+ *  (`justify-between` opened holes, the G2 review of 2026-10-02), and on a
+ *  phone nothing to align: its one tile is the whole row (TILE). */
 const TILES =
   'flex flex-wrap gap-x-5 gap-y-6 scalable:@4xl:@min-[896px]:gap-x-6';
 
-/** One tile's width (D9): 18rem FIXED outside the band scale, never wider than
- *  the row (`max-w-full`, the 320 stress width's 256px); 352 design pixels
- *  inside it, three to the 1106-design-pixel row. The regime's chain is
+/** One tile's width (D9), one per regime: on a phone — a column under the
+ *  named `md` step, 28rem — the COLUMN'S OWN (`@max-md:w-full`), the width
+ *  of the doctor cards above it (the owner, 2026-10-09: "as the doctor cards
+ *  are"); off a phone and outside the band scale 18rem FIXED, in a column of
+ *  28rem or more that always holds it; 352 design pixels inside the scale,
+ *  three to the 1106-design-pixel row. The regime's chain is
  *  bandScaleClasses' own, re-spelled because Tailwind reads classes whole from
  *  source text — KEEP IN SYNC with Container.tsx (TeamRoster.test.tsx holds
  *  the two chains equal). */
-const TILE = 'w-72 max-w-full scalable:@4xl:@min-[896px]:w-88';
+const TILE = 'w-72 @max-md:w-full scalable:@4xl:@min-[896px]:w-88';
 
 export function TeamRoster({
   eyebrow,

@@ -22,9 +22,11 @@ import { Footer } from './Footer';
 // proving nothing.
 //
 // ── 2. Every story PINS ITS OWN VIEWPORT, and here that pin is what makes the
-// story mean anything: the grid steps measure the GUTTER BOX (canvas − 2×10vw),
-// so the four-column row appears only from a ~1280px canvas and the two-column
-// one from ~960px. A manager canvas narrowed by the sidebar sits in the middle
+// story mean anything: the grid steps measure the GUTTER BOX (canvas − 2×10vw
+// from a 600px canvas up; a phone's gutter is half that since ui/Container's
+// THE PHONE GUTTER, 2026-10-09), so the four-column row appears only from a
+// ~1280px canvas and the two-column one from ~960px. A manager canvas
+// narrowed by the sidebar sits in the middle
 // of that band. Playwright ignores the pin — it sets its own page size per
 // project — so the visual net still samples every story at 390 + 1536 (§13,
 // `Sections/*` prefix → tests/visual/stories.spec.ts).
@@ -198,7 +200,8 @@ export const Default: Story = {
     ).toHaveAttribute('href', '/ro/');
     await expectNoSidewaysScroll(band);
     // Row 1's lockup, at the width where the tighten step is OFF (the gutter
-    // box here is ~1214px, far past the 20rem container step).
+    // box here is ~1214px, far past the 28rem container step — Wordmark.tsx's
+    // `@max-md` since 2026-10-09; 20rem until 2026-10-01, 24rem between).
     await expectLockupChain(band, true);
   },
 };
@@ -231,7 +234,8 @@ export const Smartphone: Story = {
     ).toHaveAttribute('href', '#top');
     await expectNoSidewaysScroll(band);
     // The TIGHTENED half of the lockup chain (G2 react r2, M1): at the phone
-    // width the gutter box is under the @max-sm step, so the artwork must be
+    // width the gutter box is under the @max-md step (28rem since the halved
+    // phone gutter of 2026-10-09 — Wordmark.tsx), so the artwork must be
     // at its phone share (30.6% since 2026-10-01). This is the ONE assertion that notices the Footer losing its
     // `@container` (the gutter-box `@container` comment in Footer.tsx) — the
     // query then never matches, the

@@ -23,8 +23,9 @@ import {
 // column at a fixed width in rem inside the one window the net uses
 // (Ribbon.fixtures.tsx's StandInFrame): 1009px, the approved desktop · 599px,
 // the stacked card · 297px, the bolder phone · 241px, the column a 320px
-// window leaves. The cards are the fixture's stand-in for the doctor card the
-// owner saw under the prototype.
+// window left until 2026-10-09 (273 since, ui/Container's THE PHONE GUTTER,
+// §15.35 — kept as the narrowest case). The cards are the fixture's stand-in
+// for the doctor card the owner saw under the prototype.
 //
 // ── STILL IN THE NET, LIVE IN THE WORKBENCH. The net's projects ask for
 // reduced motion (playwright.config.ts, THE STILLNESS LEVER), under which the
@@ -172,8 +173,10 @@ export const Phone: Story = {
 };
 
 /**
- * The narrowest column the site has — the 241px a 320px window leaves — and a
- * ribbon 8.4px wide. Photographed at 1280 AND at a real 320 window
+ * The narrowest column — 241px, the one a 320px window left under the
+ * runner's scrollbar until 2026-10-09 (273 since, ui/Container's THE PHONE
+ * GUTTER, §15.35), kept as a case under the column of any window from 320
+ * up — and a ribbon 8.4px wide. Photographed at 1280 AND at a real 320 window
  * ('stress-320'): a tile overhangs the column by the few px the ribbon sticks
  * out round a card's edge, and that must never scroll the page sideways.
  */

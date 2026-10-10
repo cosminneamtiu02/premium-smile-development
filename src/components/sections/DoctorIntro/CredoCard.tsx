@@ -67,9 +67,23 @@ import { Card } from '@/components/ui/Card/Card';
 //   container's `gap-6` — the WithActions story; the page passes none.
 //   STACKED: the picture above crosses the grid's `gap-8` = 32px and a filled
 //   slot below would cross the same 32px (both clear); the gutter beside the
-//   card is ui/Container's `clamp(1rem, 10vw, 12.5rem)`, 32px at 320 (clears
-//   the 24px). But on the page the card is the band's LAST item, standing on
-//   the band's bottom padding, with the next band — sections/TintedBand,
+//   card is ui/Container's — and since 2026-10-09 (THE PHONE GUTTER, CLAUDE.md
+//   §15.35) it is 5vw a side on a phone: 16px at 320, 18 at 360, 19.5 at 390,
+//   21.5 at 430, where it was 32–43px. It no longer clears the 24px: the
+//   screen's edge now cuts the glow's faint outer tail. MEASURED on the built
+//   doctor page (ro, emulated phones, the card's middle row, a pixel counted
+//   while it differs from the ground): the glow still reaches 25px out of
+//   the card's side, and the pixel AT the screen's edge reads 4/255 off the
+//   ground at 320, 3 at 360, 2–3 at 390, 1 at 430 — the outer ~9px of the
+//   glow off screen at 320, ~5.5px at 390 — where the old gutter showed all
+//   of it and ended on the bare ground. A box-shadow is ink overflow, never
+//   scrollable overflow, so nothing scrolls (the document's scroll width
+//   stays its client width, measured); what changes is that the lightest
+//   steps of the tail run off the screen instead of fading out on it — the
+//   same order as the ~5/255 step D61 removed at the band's floor, but at
+//   the screen's edge, where nothing lies beyond it. And on the page the
+//   card is the band's LAST item, standing on the band's bottom padding,
+//   with the next band — sections/TintedBand,
 //   whose `relative` outer paints over an earlier sibling's shadow — right
 //   under it: `@lg:py-8` = 32px on a tablet (clears — the last glow pixel
 //   before the edge is 1/255 off the ground), and on the phone the floor is

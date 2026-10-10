@@ -333,8 +333,13 @@ export function Footer(): ReactElement {
               bytes arrive (§11, zero CLS), the intrinsic file is 500×124 and is
               drawn at half that (a free 2× for retina), `w-[15.625rem]` states
               the same 250px in rem so browser zoom scales it (§7), and
-              `max-w-full h-auto` lets it shrink inside a narrow column at 320px
-              without ever overflowing.
+              `max-w-full h-auto` lets it shrink inside a column narrower than
+              its 250px without ever overflowing — the 320px stress width's
+              was one (241px under a classic scrollbar) until ui/Container's
+              THE PHONE GUTTER (2026-10-09, §15.35); measured on the built
+              page it is 273px there now (288 on a phone) and the badge keeps
+              its 250, so the belt waits for a window under ~297px (~282
+              without a scrollbar: a Galaxy Fold's 280px cover screen).
               alt="" makes the artwork DECORATIVE and the LINK carries the
               accessible name (aria-label) — announced once, not twice. The
               focus ring comes from the globals.css :focus-visible safety net

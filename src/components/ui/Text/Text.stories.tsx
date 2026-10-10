@@ -81,8 +81,10 @@ export const Tones: Story = {
  * copy over the §15.1 scrim. The wrapper paints `bg-scrim` over `bg-page`,
  * which is the scrim's worst case on this site — the 0.55 token over a white
  * photograph — and where white body copy still measures 4.77:1. The German
- * line is the wrap stress at 320 (a supporting line wraps to three rows in a
- * 256px column); the wrapper owns the padding, never the atom (§6.4).
+ * line is the wrap stress at 320 (three rows in this frame's 240px, 225 under
+ * the runner's scrollbar — measured; the site's own column at 320 is 288px
+ * since ui/Container's phone gutter of 2026-10-09, 256 before); the wrapper
+ * owns the padding, never the atom (§6.4).
  */
 export const InverseTone: Story = {
   tags: ['stress-320'],

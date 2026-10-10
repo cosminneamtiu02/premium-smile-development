@@ -81,10 +81,12 @@ import { ScheduleCard } from './ScheduleCard';
 // Container itself — an element cannot query its OWN size — so it sits on the
 // grid one level in, the ClinicLocation precedent; TintedBand adds no padding
 // of its own for exactly that reason. Two container steps, measured against
-// the gutter box (viewport − 2×10vw), never a media query (§6.5):
+// the gutter box (the viewport less two gutters — 10vw a side from a 600px
+// window, 5vw on a phone since 2026-10-09's phone gutter, ui/Container's THE
+// PHONE GUTTER), never a media query (§6.5):
 //   · `@lg` (container 512px, ≈ a 640px viewport) buys the second `py` step;
 //   · `@3xl` (container 768px, ≈ a 960px viewport) is where the prose and the
-//     card go side by side. At §7's sampling points the box is 256 (320) · 312
+//     card go side by side. At §7's sampling points the box is 288 (320) · 351
 //     (390) · 614 (768) · 1024 (1280) · 1229 (1536) · 1536 (1920), so phone
 //     and tablet stack and notebook upward sits beside — the same split every
 //     band on the site draws at this step, and the owner's adaptability rule:
@@ -109,9 +111,13 @@ import { ScheduleCard } from './ScheduleCard';
 //   · below it the card is `w-full max-w-80 mx-auto`: 20rem when the column
 //     allows it, centred under the prose. It shrinks only where the column
 //     ITSELF is narrower than 20rem — a box wider than its container would
-//     scroll sideways (§7) — and that is every phone: the column is the
-//     window less two 10vw gutters, so it reaches 20rem from a ~400px window
-//     (~419 beside a classic 15px scrollbar), past both 320 AND 390. `w-full`
+//     scroll sideways (§7) — and since 2026-10-09 that is only the narrowest
+//     phones: the column is the window less two 5vw gutters there
+//     (ui/Container's THE PHONE GUTTER), so it reaches 20rem from a ~356px
+//     window (~372 beside a classic 15px scrollbar) — under it at 320 (288px
+//     of column), past it at 360 and 390 (324 and 351px), where the card keeps
+//     its 20rem, centred. Until then it was every phone: two 10vw gutters
+//     reached 20rem only from a ~400px window, past both 320 AND 390. `w-full`
 //     is load-bearing: a grid item with auto inline margins no longer
 //     stretches (it shrinks to fit), so without it the card would size to its
 //     longest row. At the step the three change nothing — `w-full` of a 20rem
@@ -130,7 +136,12 @@ import { ScheduleCard } from './ScheduleCard';
 // So both of the owner's directions hold from a ~400px window up: a wider
 // window no longer widens it (1920), and below the step the stacked card no
 // longer follows the column (768) — it only ever yields to a column narrower
-// than itself. The narrower card at 1920 is TALLER (290 → 326, its title back
+// than itself. (Since 2026-10-09's phone gutter — ui/Container's THE PHONE
+// GUTTER, CLAUDE.md §15.35 — the two phone rows read 273 [288] at 320, still
+// the column's width, and 320 [320] at 390, centred in a 336 [351]px
+// column with ~8 [~15.5]px of tint aside, MEASURED on the built page; so the
+// directions now hold from a ~356px window up, ~372 beside the scrollbar.)
+// The narrower card at 1920 is TALLER (290 → 326, its title back
 // on two lines) and still shorter than the capped prose (368), so D37's one
 // caveat below does not fire. The GRID ITSELF is outdented 2rem into the
 // gutter (`@3xl:-ms-8`, the PROSE OUTDENT paragraph), so its box is the
@@ -203,9 +214,10 @@ import { ScheduleCard } from './ScheduleCard';
 // edge moved. A RECORDED DEPARTURE from the page-band recipe (Container.tsx: the
 // Container owns the width and the gutter), the owner's call, kept to one
 // utility on one element. Why the step only: below it the gutter is 1rem at
-// 320 and ~4.9rem at 768, and a 2rem outdent there would put the prose within
-// 16px of the screen's edge or break the one-column alignment with the card
-// under it — the owner was looking at the wide row. "A bit" = 2rem (32px).
+// 320 (since 2026-10-09's phone gutter; 2rem before) and ~4.8rem at 768, and
+// a 2rem outdent there would push the prose 16px past the screen's edge at
+// 320 or break the one-column alignment with the card under it — the owner
+// was looking at the wide row. "A bit" = 2rem (32px).
 // THE ONE LEVER ON THE MEASURE is `max-w-4xl` (56rem) on the paragraphs'
 // block: at 1920 the prose track is ~1200px (1536 + 32 − 48 − 320, D53),
 // which at 18px (~9.4px per character of Source Serif — an estimate, not a

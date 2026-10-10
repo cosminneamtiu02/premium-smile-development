@@ -137,8 +137,9 @@ export const SectionStep: Story = {
  * the card's content box, 25px inside its border-box on every side
  * (Heading.tsx's `'band' JOINED` paragraph). The same words in two
  * `@container` frames: a `w-xs` one — a 320px CONTAINER, the narrow case:
- * the 20rem schedule card (270px of content) and a 390px phone's column
- * (312px) both land under it, and every container under 448px reads 30px —
+ * the 20rem schedule card (270px of content) lands under it and a 390px
+ * phone's column (351px since ui/Container's phone gutter of 2026-10-09, 312
+ * before) just over it, and every container under 448px reads 30px —
  * where the step rests on section's 30px, and a `w-md` one (28rem = 448px —
  * the container's `@md` threshold itself, which is inclusive) where it
  * reaches page's 36px. That is how a band title stays under the `hero` h1's
@@ -221,8 +222,10 @@ export const PageStep: Story = {
  * atom scales with the PAGE (the gutter's own licence) and never with a
  * container it cannot see. Same dual-line shape as its elders: the Romanian
  * line follows the controls, the German line is pinned to 'hero'. The fixtures
- * are the old site's own slogans. 'stress-320': a 32px serif line in a 256px
- * column is the wrap case, and the step's floor is what this width proves.
+ * are the old site's own slogans. 'stress-320': a 32px serif line in a 288px
+ * column (the 320 window's since ui/Container's phone gutter of 2026-10-09;
+ * 256 before) is the wrap case, and the step's floor is what this width
+ * proves.
  * THE h1 STEP of §15.24 since 2026-09-26 (the doctor page's name, the 404
  * title); the opener's own reshape is SloganStep, beside it.
  */

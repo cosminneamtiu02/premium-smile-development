@@ -28,14 +28,58 @@ import { cx } from '@/lib/cx/cx';
 // promotion's aftermath was seven regrown copies nobody's file-local guard
 // could see).
 //
-// ── THE NUMBERS THE CLAMP ACTUALLY PRODUCES. 10vw governs from a 160px
-// viewport up to a 2000px one; the 1rem floor only exists below that, the
-// 12.5rem ceiling only above it. Gutter per side: 320→32px · 390→39px ·
-// 768→77px · 1280→128px · 1536→154px · 1920→192px · ≥2000→200px cap. Content
-// column: 256px at the 320px accessibility stress width (§7), 1536px at 1920.
-// ABOVE 2000px the column grows unbounded — practiced policy, accepted by both
-// shipped bands because their grids are fr-based. Prose MEASURE is explicitly
-// NOT this atom's problem (see the trigger list at the end).
+// ── THE NUMBERS THE CLAMP ACTUALLY PRODUCES. The middle term has two slopes
+// since 2026-10-09 (THE PHONE GUTTER, next): 5vw up to a 480px window, 10vw
+// from 600px to 2000px, a straight ramp between; the 1rem floor only exists
+// below 320, the 12.5rem ceiling only above 2000. Gutter per side: 320→16px
+// · 390→19.5px · 440→22px · 480→24px · 540→42px · 600→60px · 768→77px ·
+// 1280→128px · 1536→154px · 1920→192px · ≥2000→200px cap. Content column
+// (no scrollbar, as on a phone): 288px at the 320px accessibility stress
+// width (§7), 351px at the 390 Smartphone, 480px at 600, 614px at the 768
+// Tablet, 1536px at 1920. ABOVE 2000px the column grows unbounded —
+// practiced policy, accepted by both shipped bands because their grids are
+// fr-based. Prose MEASURE is explicitly NOT this atom's problem (see the
+// trigger list at the end).
+//
+// ── THE PHONE GUTTER (2026-10-09, CLAUDE.md §15.35). The owner, verbatim:
+// "on phones there is smth like an allignment of left and right space that is
+// established by an imaginary line … i want that space to remain but to be
+// like 50% thinner … so that they cover the recovered space in width. this
+// must be done only on phones." Until that day the middle term was one slope,
+// 10vw at every width — 39px a side at 390, 32 at 320. It is now a clamp of
+// its own, `clamp(5vw, 30vw − 7.5rem, 10vw)`:
+//   · 5vw — EXACTLY HALF — up to a 30rem (480px) window: every phone held
+//     upright (the largest, an iPhone Pro Max, is 440px wide). The column
+//     grows 39px at 390 and 32px at 320, and every band, the Header pill and
+//     the Footer with it.
+//   · 10vw — EXACTLY THE OLD GUTTER — from a 37.5rem (600px) window: every
+//     tablet held upright (the narrowest, a 7″ Android, is 600px; the iPad
+//     mini 744) and everything wider draw byte-identical, the 12.5rem cap
+//     included (Container.test.tsx measures both halves and the ramp).
+//   · between them the straight line 30vw − 7.5rem, which meets 5vw at 30rem
+//     and 10vw at 37.5rem — in the gap between the largest phone and the
+//     narrowest tablet, where only a phone held sideways lands. The first cut
+//     ran the ramp from 40rem to 48rem, Tailwind's own `sm` and `md`; the G2
+//     react review (the same day) measured it reaching real tablets — an iPad
+//     mini held upright went 74.4 → 68.4px a side and its staff tiles from one
+//     a row to two, and a 7″ tablet got the whole phone half — against the
+//     owner's "only on phones", so the ramp moved below 600.
+// WHY A RAMP, NOT A STEP. "Half below 600, whole from it" is shorter to say,
+// but at 600 the gutter would double in one pixel and the column SHRINK by
+// 59px while the window grows (539 → 480) — a jolt in a widening window or an
+// unfolding foldable. On the ramp the column grows at every width, per pixel
+// of window: 1.0 below 320 (the floor holds), 0.9 to 480, 0.4 on the ramp,
+// 0.8 to 2000, 1.0 past the cap.
+// WHY NO MEDIA QUERY. This box carries no viewport variant (§6.5; the test
+// "carries no viewport variant" pins it). The gutter was always written in
+// viewport units — the one page-level number here — and the inner clamp keeps
+// it a single expression with no breakpoint in the markup.
+// WHY rem IN THE RAMP. 30rem and 37.5rem move WITH every rem step when a
+// reader enlarges the browser's default font size: at a 20px default the
+// ramp runs from 600 to 750px, and a 744 iPad mini then takes part of the
+// phone gutter — more room for larger text, the way every `@`-step on the
+// site already treats a large-text reader as a narrower screen. At the
+// default 16px no tablet moves by a pixel.
 //
 // ── THE PAGE-BAND RECIPE (board Q3) — standing law; every page lane consumes
 // it as a precondition, starting with Hero:
@@ -216,9 +260,11 @@ import { cx } from '@/lib/cx/cx';
  * THE page gutter pair — the container context and the side margins, together,
  * as one string. Exported for the ONE consumer that needs the number without
  * the box (sections/Header's pill); everything else composes the component
- * below. Quoted nowhere else in src/, by construction and by test.
+ * below. Quoted nowhere else in src/, by construction and by test. The
+ * margins are half as wide on a phone (THE PHONE GUTTER, the header).
  */
-export const containerClasses = '@container mx-[clamp(1rem,10vw,12.5rem)]';
+export const containerClasses =
+  '@container mx-[clamp(1rem,clamp(5vw,30vw_-_7.5rem,10vw),12.5rem)]';
 
 /**
  * THE BAND SCALE's pixel (the header's THE BAND SCALE): on a laptop or desktop

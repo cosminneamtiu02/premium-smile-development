@@ -229,7 +229,6 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
 
     expect(classesOf(tray)).toEqual(
       expect.arrayContaining([
-        'aspect-[2/1]',
         'overflow-hidden',
         'rounded-md',
         'border',
@@ -238,6 +237,25 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
         'shadow-aura',
       ]),
     );
+  });
+
+  it('shapes the tray 4:3 on a phone and 2:1 from the `@lg` step — two ratio tokens, nothing else', () => {
+    // The owner, 2026-10-09: "i need map on phone to be like 50% taller. it is
+    // too small." (the component header's OLD → NEW, item 4; §15.34). Under
+    // `@lg` — the phone layout, D7 — the tray is three quarters of its width
+    // tall instead of half; from the step up it keeps the 2:1 it always had.
+    // EXACTLY these two: a third ratio token (a `@3xl:` one, say) would move
+    // the tablet or the laptop, which the owner did not ask for; the computed
+    // block at the bottom shows what the two draw.
+    const { band } = mount();
+    const tray = (band().querySelector('iframe') as HTMLElement)
+      .parentElement as HTMLElement;
+
+    expect(
+      classesOf(tray)
+        .filter((c) => c.includes('aspect-'))
+        .sort(),
+    ).toEqual(['@lg:aspect-[2/1]', 'aspect-[4/3]']);
   });
 });
 
@@ -466,9 +484,10 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
   });
 
   it('flips the map/rows grid on NAMED container steps only (board D7)', () => {
-    // @lg ≡ the old `sm:` (640 − 128 = 512) and @3xl ≡ the old `lg:` at every
-    // §7 sampled width: phone 390 → box 312 and tablet 768 → box 614 stack the
-    // rows BELOW the map; notebook 1280 → box 1024 puts them beside it.
+    // @lg ≡ the old `sm:` (640 − 128 = 512; the phone gutter, §15.35, narrows
+    // only under 600) and @3xl ≡ the old `lg:` at every §7 sampled width:
+    // phone 390 → box 351 and tablet 768 → box 614 stack the rows BELOW the
+    // map; notebook 1280 → box 1024 puts them beside it.
     const { band } = mount();
     const grid = band().querySelector('[class*="grid-cols"]') as HTMLElement;
     const tokens = classesOf(grid);
@@ -850,6 +869,67 @@ describe('ClinicLocation — THE BAND SCALE, computed (§15.32 — the real styl
       expect(sizes.disc.height).toBeCloseTo(44 * s, 1);
       expect(sizes.glyph.width).toBeCloseTo(20 * s, 1);
       expect(sizes.tray.height).toBeCloseTo(sizes.tray.width / 2, 1);
+    },
+  );
+});
+
+// ── THE PHONE'S MAP, COMPUTED (2026-10-09, §15.34) ──────────────────────────
+// The owner: "i need map on phone to be like 50% taller. it is too small."
+// Under the band's `@lg` step — 32rem of ui/Container's box, D7's phone
+// layout — the tray is 4:3, and from the step up it is the 2:1 it always was
+// (the component header's OLD → NEW, item 4). Measured on the real
+// stylesheet through `renderColumn` above, at columns a phone hands the band
+// — on develop a6b072f, measured 2026-10-09, a 320 phone's was 256px, a
+// 390's 312 and a 430's 344 (288, 351 and 387 since ui/Container's PHONE
+// GUTTER the same day, CLAUDE.md §15.35, the map 4:3 on each), and a 768
+// tablet's 614.4; a phone's column moves with ui/Container's gutter, the
+// ratio does not — and on both sides of the
+// step itself. The band asked to scale (Home's and Team's) is the same band
+// here: the regime starts far above a phone's column.
+
+/** The `@lg` step in px at this runner's root — a container query's rem is
+ *  the root's, so the step follows the user's font size like any rem. */
+const lgStep = (): number =>
+  32 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/** The map tray's box — the iframe's parent, the element that wears the
+ *  ratio. */
+const trayOf = (band: HTMLElement): DOMRect =>
+  (
+    (band.querySelector('iframe') as HTMLElement).parentElement as HTMLElement
+  ).getBoundingClientRect();
+
+describe('ClinicLocation — the phone’s map, computed (§15.34 — the real stylesheet)', () => {
+  it.each([
+    { where: 'a 256px column', width: 256, scaled: false },
+    { where: 'a 312px column', width: 312, scaled: false },
+    { where: 'a 312px column, Home’s band', width: 312, scaled: true },
+    { where: 'a 344px column', width: 344, scaled: false },
+    { where: 'the last whole pixel under the step', width: 511, scaled: false },
+  ])(
+    'draws the map 4:3 on $where — the column’s full width, three quarters of it tall',
+    ({ width, scaled }) => {
+      expect(width).toBeLessThan(lgStep());
+      const tray = trayOf(renderColumn(width, scaled).band);
+
+      expect(tray.width).toBeCloseTo(width, 1);
+      expect(tray.height).toBeCloseTo((width * 3) / 4, 1);
+      // The owner's "50% taller": half again the 2:1 box this width had.
+      expect(tray.height / (width / 2)).toBeCloseTo(1.5, 2);
+    },
+  );
+
+  it.each([
+    { where: 'the step itself', width: 512 },
+    { where: 'a 768 tablet’s column', width: 614.4 },
+  ])(
+    'keeps the 2:1 map from the `@lg` step up — $where, untouched',
+    ({ width }) => {
+      expect(width).toBeGreaterThanOrEqual(lgStep());
+      const tray = trayOf(renderColumn(width, false).band);
+
+      expect(tray.width).toBeCloseTo(width, 1);
+      expect(tray.height).toBeCloseTo(width / 2, 1);
     },
   );
 });

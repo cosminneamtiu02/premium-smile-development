@@ -133,12 +133,14 @@ import type { PriceCategoryProps } from './CategoryCard';
 // „Categorii" reads 30px while every category card — its own container, four
 // shares of the row — reads 36px. WITHOUT the band scale — a touch screen at
 // these widths, an engine that cannot register custom properties — by the
-// band's own arithmetic at the named widths (ui/Container's 10vw gutters, the
-// grid's gap-8; the stories' expectHeadingOutline reads each title back from
-// real CSS against its own container):
+// band's own arithmetic at the named widths (ui/Container's gutters — 10vw a
+// side from a 600px window, half that on a phone since its THE PHONE GUTTER,
+// 2026-10-09, §15.35 — and the grid's gap-8; the stories'
+// expectHeadingOutline reads each title back from real CSS against its own
+// container):
 //
 //     viewport   arrangement   menu content   card content   menu / cards
-//          390   stacked              262px          262px     30 / 30
+//          390   stacked              301px          301px     30 / 30
 //          768   stacked              564px          564px     36 / 36
 //         1280   beside               190px          702px     30 / 36
 //         1536   beside               190px          907px     30 / 36
@@ -146,8 +148,9 @@ import type { PriceCategoryProps } from './CategoryCard';
 //
 // (Read back in the Storybook test browser, whose classic scrollbar takes
 // 15px off the column, 2026-09-26 — before the band scale: 247/247px → 30/30
-// at 390, 190/892px → 30/36 at 1536, 190/623px → 30/36 on its 1200px default
-// canvas — the 15rem floor held the menu at 190px beside the cards up to a
+// at 390 (286/286px since THE PHONE GUTTER, re-read 2026-10-09), 190/892px →
+// 30/36 at 1536, 190/623px → 30/36 on its 1200px default canvas — the 15rem
+// floor held the menu at 190px beside the cards up to a
 // ~1540px viewport, where its 1fr share took over. Since 2026-10-02 that
 // runner's 1200 canvas draws the band inside the scale but at its floor —
 // the theme's own pixels, so those readings stand — and its 1536 canvas past

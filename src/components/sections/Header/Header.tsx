@@ -221,12 +221,17 @@ export function Header(): ReactElement {
     // aspect; reverses the CHROME half of D1). `mt-4` floats the bar 1rem off
     // the viewport top at rest and `sticky top-4` holds that same 1rem while
     // the page scrolls, so the bar sits at one visual y at every scroll
-    // position. The side margins are the old site's 10vw clamp (rem-ified per
-    // §7) with the floor lowered 3rem → 1rem: the old bar hid its brand TEXT
-    // below `sm` behind a logo mark, but this corner is all text until §15.6
-    // delivers the logo, and 2×3rem next to "Premium Smile" leaves no slack at
-    // the 320px stress width (§7). Above ~480px viewport the 10vw term governs
-    // and the two clamps are identical. THE NUMBER NOW ARRIVES AS ui/Container's
+    // position. The side margins began as the old site's 10vw clamp (48px,
+    // 10vw, 200px; rem-ified per §7) with the floor lowered 3rem → 1rem: the
+    // old bar hid its brand TEXT below `sm` behind a logo mark, but this
+    // corner was all text until §15.6 delivered the logo (2026-10-01), and
+    // 2×3rem next to "Premium Smile" left no slack at the 320px stress width
+    // (§7). Since 2026-10-09 they are HALF that on a phone — 5vw a side up to
+    // a 480px window, a ramp to 10vw at 600 (ui/Container's THE PHONE GUTTER,
+    // CLAUDE.md §15.35) — so on a phone the pill is 0.9 × the window: 288px
+    // at 320, 351 at 390, where the old bar's 3rem floor left the window less
+    // 96px. From a 600px window up the two clamps are identical again (10vw,
+    // the same 200px cap). THE NUMBER NOW ARRIVES AS ui/Container's
     // `containerClasses` constant (board .claude/plans/container-gutter.plan.md,
     // fb-343, 2026-09-04) instead of a recorded copy — but the margins here
     // stay CHROME GEOMETRY, not a column: the pill IS the column, and it can
@@ -263,8 +268,10 @@ export function Header(): ReactElement {
     // KNOWN CONSEQUENCE of margins on a @container root: the breakpoint
     // measures the BAR, not the window, so the burger → row flip happens
     // where the BAR reaches the step. In a window V wide the bar's content
-    // box is V − the scrollbar gutter − 2 × 10vw − 2px of borders (`vw`
-    // counts the gutter, the containing block does not), so 62rem arrives at
+    // box is V − the scrollbar gutter − 2 × 10vw − 2px of borders (10vw a
+    // side from a 600px window up — the margins are half that on a phone,
+    // ui/Container's THE PHONE GUTTER, far below the step; `vw` counts the
+    // gutter, the containing block does not), so 62rem arrives at
     // 0.8 × V − gutter − 2 ≥ 992: ≈ 1261px with the 15px classic gutter
     // `scrollbar-gutter: stable` reserves in the Chromium measured, ≈ 1243
     // with none (it was ≈ 1221 / ≈ 1203 at 60rem from 2026-09-26, the
@@ -316,8 +323,10 @@ export function Header(): ReactElement {
           = 1rem + 5rem = 6rem, everywhere:
             globals.css      `scroll-padding-top: 6rem` — one value, the xl
                              media step deleted;
-            FloatingActions  `--stem-inset: calc(7rem + env(…))` — one value
-                             (1rem corner offset + 6rem reach), xl step deleted;
+            FloatingActions  `--stem-inset: calc(8rem + env(…))` — one value
+                             (2rem corner offset + 6rem reach — 7rem until the
+                             corner rose to its 2rem edge, 2026-10-09), xl step
+                             deleted;
             NavMenu          the panel cap MOVED this round, unlike last:
                              `100dvh − 6.5rem` (reach 6rem + the `mt-2` gap).
                              Last round it deliberately stayed at 5.5rem because
@@ -493,18 +502,24 @@ export function Header(): ReactElement {
             (the grid's RECORDED TRADE-OFF above). The bar's step is what
             keeps every shown track wider than the brand.
             AT THE STEP ONLY, since 2026-10-01 (the wordmark-brand lane).
-            Below it this row is flex and the cell is exactly as wide as the
-            burger leaves it — 163px at 320 (§7's stress width, with a 15px
-            scrollbar gutter) and 219px at 390, against a one-line lockup of
+            Below it this row is flex and the cell has at most the room the
+            burger leaves it — 0.9 × the window − 78px on a phone since THE
+            PHONE GUTTER (2026-10-09, ui/Container, CLAUDE.md §15.35): 210px at
+            320 and 273 at 390, or 195 and 258 with a 15px scrollbar gutter
+            (163 and 219 before that day) — against a one-line lockup of
             170.9px at the Wordmark's phone sizes (the 20px name kept below
-            its step, 2026-10-01) — so at 320 the name MUST be free to wrap,
-            which is what sections/Wordmark's D10 arithmetic has always
-            promised (two 28px lines inside the 5rem row). An unconditional
-            nowrap made that impossible: the one-line name overflowed its
-            cell and „Smile" was painted 32px under the burger at 320
-            (measured on develop's preview; flagged by the real-clinic-data
-            lane on 2026-09-30, fixed here). The grid's reason for nowrap
-            starts where the grid starts, so the class now wears the step. */}
+            its step, 2026-10-01). So the name MUST stay free to wrap: at 320
+            it did until 2026-10-09, and a bar narrower than the lockup still
+            gets the two 28px lines inside the 5rem row that sections/
+            Wordmark's D10 arithmetic promises — under a ~281px window on a
+            phone (a Galaxy Fold's 280px cover screen), ~296 with the gutter,
+            or a phone at a large zoom (Wordmark's Stress320 story keeps a
+            241px pill to prove it). An unconditional nowrap made that
+            impossible: the one-line name overflowed its cell and „Smile" was
+            painted 32px under the burger at 320 (measured on develop's
+            preview; flagged by the real-clinic-data lane on 2026-09-30, fixed
+            here). The grid's reason for nowrap starts where the grid starts,
+            so the class now wears the step. */}
         <div className="flex self-stretch items-center @min-[62rem]:col-start-1 @min-[62rem]:justify-self-start @min-[62rem]:whitespace-nowrap">
           <Wordmark
             href={localeHref(locale, '/')}

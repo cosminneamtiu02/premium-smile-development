@@ -107,7 +107,7 @@ const tokenStartingWith = (el: Element, prefix: string): string =>
 // passing. Corollary: never use these with a negated numeric matcher — that
 // would invert the safety and let a miss slip through silently.
 
-/** First rem length inside an arbitrary value, e.g. bottom-[calc(1rem+…)] → 1. */
+/** First rem length inside an arbitrary value, e.g. bottom-[calc(2rem+…)] → 2. */
 const remIn = (token: string): number =>
   Number(/([\d.]+)rem/.exec(token)?.[1] ?? NaN);
 
@@ -116,11 +116,12 @@ const remIn = (token: string): number =>
  * in the arbitrary value summed, plus one `--disc-size` step per `var()` the
  * expression contains.
  *
- * `remIn` alone was enough while every control sat on the same 1rem edge; the
+ * `remIn` alone was enough while every control sat on the same edge; the
  * stacked WhatsApp disc (fb-353) offsets itself by
- * `calc(1rem + env(…) + var(--disc-size) + 0.5rem)`, where reading only the
- * FIRST rem would report 1rem and quietly under-count its reach by a whole disc
- * — i.e. exactly the confident-wrong number the clearance test exists to catch.
+ * `calc(2rem + env(…) + var(--disc-size) + 0.5rem)` (1rem until 2026-10-09),
+ * where reading only the FIRST rem would report 2rem and quietly under-count
+ * its reach by a whole disc — i.e. exactly the confident-wrong number the
+ * clearance test exists to catch.
  * The NaN invariant above holds: no rem literal at all still yields NaN.
  */
 const offsetRem = (token: string, discRem: number): number => {
@@ -242,8 +243,9 @@ describe('FloatingActions — the WhatsApp disc (fb-353)', () => {
   it('sits ONE disc plus the row gap above the phone, in the same corner', () => {
     // The stack is expressed in the disc's own variable rather than in pixels,
     // so it follows the fb-295 size steps for free: at 2xl both discs are 4.5rem
-    // and the gap between them is still 0.5rem. A hardcoded `bottom-[5rem]`
-    // would overlap the phone disc at exactly the widths the steps exist for.
+    // and the gap between them is still 0.5rem. A hard-coded 6rem offset —
+    // right for the base 3.5rem discs on the 2rem edge — would close the gap at
+    // xl and overlap the phone at 2xl, exactly the widths the steps exist for.
     const { write, call } = mount();
     const stacked = tokenStartingWith(write, 'bottom-');
     const base = tokenStartingWith(call, 'bottom-');
@@ -252,8 +254,19 @@ describe('FloatingActions — the WhatsApp disc (fb-353)', () => {
     expect(stacked).toContain('env(safe-area-inset-bottom)');
     expect(stacked).toContain('0.5rem');
     // …and it is the phone's own edge it stacks on: same corner, same offset,
-    // one disc higher.
+    // one disc higher. The two offsets are spelled separately, so the second
+    // half is PINNED at every disc step (G2, 2026-10-09): a stack left on the
+    // old 1rem edge would overlap the phone by 0.5rem while the clearance test
+    // and the glow play both stayed green.
     expect(base).not.toContain('var(--disc-size)');
+    const discs = Object.values(stepsIn(call, DISC_STEP));
+    expect(discs).toHaveLength(3);
+    for (const disc of discs) {
+      // A positive-direction guard first: `toBe` alone would let NaN equal
+      // NaN, the one miss this file's parser invariant must never pass.
+      expect(offsetRem(base, disc)).toBeGreaterThan(0);
+      expect(offsetRem(stacked, disc)).toBe(offsetRem(base, disc) + disc + 0.5);
+    }
     expect(tokenStartingWith(write, 'right-')).toBe(
       tokenStartingWith(call, 'right-'),
     );
@@ -520,14 +533,21 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     // src/app/[locale]/shell.test.tsx ("mirrors the corner stack … in three
     // steps").
     // The numbers GREW on 2026-09-04 with the stacked WhatsApp disc (fb-353):
-    // the right corner is two discs and a 0.5rem gap tall now, so each step is
-    // 1rem offset + disc + 0.5rem + disc + 1rem headroom.
+    // the right corner is two discs and a 0.5rem gap tall now — and again on
+    // 2026-10-09, when the corner rose from 1rem to 2rem to give its glow room
+    // above Safari's bottom bar (FloatingActions.tsx' THE GLOW'S ROOM), so
+    // each step is 2rem offset + disc + 0.5rem + disc + 1rem headroom.
     const CLEARANCE_REM: Record<string, number> = {
-      '': 9.5,
-      xl: 10.5,
-      '2xl': 11.5,
+      '': 10.5,
+      xl: 11.5,
+      '2xl': 12.5,
     };
     const { dial, write, call } = mount();
+    // The TALLEST reach per breakpoint, across all three controls — the step
+    // must equal it plus the 1rem of headroom, not merely exceed it (G2
+    // typescript, 2026-10-09: with `>=` alone, the pre-2026-10-09 table still
+    // passed against the 2rem corner, and the headroom was never asserted).
+    const tallest: Record<string, number> = {};
 
     for (const el of [dial, write, call]) {
       const steps = stepsIn(el, DISC_STEP);
@@ -547,7 +567,11 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
         // NaN from either parser fails here rather than reaching the comparison.
         expect(reach).toBeGreaterThan(0);
         expect(CLEARANCE_REM[prefix]).toBeGreaterThanOrEqual(reach);
+        tallest[prefix] = Math.max(tallest[prefix] ?? 0, reach);
       }
+    }
+    for (const [prefix, reach] of Object.entries(tallest)) {
+      expect(CLEARANCE_REM[prefix]).toBe(reach + 1);
     }
   });
 
@@ -559,7 +583,8 @@ describe('FloatingActions — layering, safe area, and clearance', () => {
     // behind blurred glass (SC 1.4.10 / 2.4.11).
     // ONE STEP, at every width — the bar is the same height on every screen
     // since the owner's 2026-09-04 uniform-height ask, so its reach is a single
-    // 6rem and this inset a single 7rem. (Earlier the same day it briefly
+    // 6rem and this inset a single 8rem (7rem until the corner rose to its 2rem
+    // edge, 2026-10-09). (Earlier on 2026-09-04 it briefly
     // carried an `xl:` twin, for a bar that grew only on desktop.) Still read
     // as a per-breakpoint TABLE rather than as one token, so that a step
     // reappearing without the matching arithmetic fails here — the lesson the

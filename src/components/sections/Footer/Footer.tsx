@@ -15,7 +15,7 @@ import { withBasePath } from '@/lib/base-path/base-path';
 import type { ClinicInfo } from '@/lib/clinic/clinic';
 import { clinic } from '@/lib/clinic/clinic';
 import { formatHoursRows } from '@/lib/hours/hours';
-import { primaryRoutes } from '@/lib/routes/routes';
+import { LEGAL_ROUTES, primaryRoutes } from '@/lib/routes/routes';
 
 // sections/Footer — the band that closes every page: brand · four info columns
 // (contact · site map · the ANPC/SAL badge · opening hours) · legal strip.
@@ -435,21 +435,35 @@ export function Footer(): ReactElement {
             above it (10vw of the ≥960px canvas the step needs), is exactly the
             arrangement that section asks for. */}
         <div className="grid grid-cols-1 items-center justify-items-center gap-4 border-t border-line-subtle pt-6 @3xl:grid-cols-3">
-          {/* text-center must sit on the <p> ITSELF: globals.css' base layer
-              gives every p `text-align: start`, and a utility on the parent
-              would only be inherited — losing to that direct rule. Text merges
-              this className onto its own host <p> (§6.8, caller last), which
-              is exactly "on the p itself". */}
-          <Text
-            tone="muted"
-            className="text-center @3xl:justify-self-start @3xl:text-start"
-          >
-            {/* ICU with two placeholders — never a sentence glued from
-                fragments (§8.2). The year crosses as a STRING on purpose: a
-                number would be handed to Intl.NumberFormat by the message
-                formatter and could come back grouped ("2.026") in ro/de. */}
-            {t('footer.copyright', { year: YEAR, name: clinic.name })}
-          </Text>
+          {/* THE LEGAL CELL — the copyright, and under it the legal links
+              (lib/routes' LEGAL_ROUTES: the privacy and cookie policy, §12 —
+              the nav board's R1, "consumed only by the Footer's legal strip").
+              One cell, so the strip keeps its three columns and its centring:
+              the stack centres below the step and hugs the start edge above
+              it, where the wrapper takes over the old `justify-self-start`.
+              A legal link is a SITE link — ui/TextButton like „Înapoi sus" —
+              and wide enough (≈ 150px or more in every language — Italian's „Privacy e
+              cookie" is the narrowest, 149.8px measured) that SC 2.4.11's
+              ~72px rule for flush-left controls never applies. */}
+          <div className="flex flex-col items-center gap-2 @3xl:items-start @3xl:justify-self-start">
+            {/* text-center must sit on the <p> ITSELF: globals.css' base
+                layer gives every p `text-align: start`, and a utility on the
+                parent would only be inherited — losing to that direct rule.
+                Text merges this className onto its own host <p> (§6.8, caller
+                last), which is exactly "on the p itself". */}
+            <Text tone="muted" className="text-center @3xl:text-start">
+              {/* ICU with two placeholders — never a sentence glued from
+                  fragments (§8.2). The year crosses as a STRING on purpose: a
+                  number would be handed to Intl.NumberFormat by the message
+                  formatter and could come back grouped ("2.026") in ro/de. */}
+              {t('footer.copyright', { year: YEAR, name: clinic.name })}
+            </Text>
+            {LEGAL_ROUTES.map((route) => (
+              <TextButton key={route.path} asChild>
+                <a href={localeHref(locale, route.path)}>{t(route.key)}</a>
+              </TextButton>
+            ))}
+          </div>
 
           {/* "#top" is the HTML spec's own name for the top of the document —
               it needs no element with that id and, crucially, no JavaScript.

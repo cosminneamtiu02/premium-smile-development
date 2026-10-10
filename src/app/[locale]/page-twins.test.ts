@@ -3,6 +3,8 @@ import homeTwin from './(home)/Home.stories.tsx?raw';
 import homePage from './(home)/page.tsx?raw';
 import doctorTwin from './team/[slug]/Doctor.stories.tsx?raw';
 import doctorPage from './team/[slug]/page.tsx?raw';
+import privacyTwin from './privacy/Privacy.stories.tsx?raw';
+import privacyPage from './privacy/page.tsx?raw';
 import teamTwin from './team/Team.stories.tsx?raw';
 import teamPage from './team/page.tsx?raw';
 
@@ -374,6 +376,23 @@ describe('a doctor’s page and its story twin — read off their source', () =>
       expect(propsOf(jsx, 'DoctorStats')).not.toContain('scaled');
       expect(propsOf(jsx, 'ClinicLocation')).toEqual([]);
     }
+  });
+});
+
+describe('the privacy page and its story twin — read off their source', () => {
+  // The page is ONE band with no props (sections/PrivacyPolicy translates
+  // itself and reads lib/clinic), so its whole render is one line — too
+  // short for `returned`, which reads a parenthesised block. What a drift
+  // would change is the band itself: the page must return it bare, and the
+  // twin must mount the very same component (CLAUDE.md §15.38).
+  it('the page returns sections/PrivacyPolicy alone, with no props', () => {
+    expect(stripComments(privacyPage)).toMatch(
+      /export default function PrivacyPage\(\) \{\s*return <PrivacyPolicy \/>;\s*\}/,
+    );
+  });
+
+  it('the twin mounts that same component', () => {
+    expect(stripComments(privacyTwin)).toMatch(/component: PrivacyPolicy,/);
   });
 });
 

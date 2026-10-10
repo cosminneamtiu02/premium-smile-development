@@ -12,6 +12,12 @@
 > ships LIVE and UNGATED on develop.** Row 3 and §3 were corrected against a measurement,
 > and **§7 (new)** records the deferral and the exact checklist a future consent
 > implementation must complete. The disclosure obligation moved to §8.
+>
+> **Amended 2026-10-10 (owner: "build all things mentioned and all fixes"; CLAUDE.md §15.38):**
+> the map's frame is **`credentialless`** — the cookie-READING half §3 now records is closed; the
+> **privacy and cookie policy page** exists (`/{locale}/privacy`, §8's disclosure, done) and a
+> note under the map says, where it happens, that Google receives the visitor's IP. The IP
+> transfer itself stays the accepted, deferred risk of §7.
 
 ---
 
@@ -34,7 +40,7 @@ treats it differently.
 |---|---|---|---|---|---|---|---|
 | 1 | `NEXT_LOCALE` | First-party (ours) | LanguageSwitcher click · LanguageBanner accept/dismiss | Only on the visitor's explicit click | Remember the chosen language; root `/` and the 404 dispatcher read it to route | **Exempt-functional** — no consent needed, disclosure only | **LIVE** on develop |
 | 2 | `MAP_CONSENT` | First-party (ours) | The future consent mechanism (Accept/Reject) | Only on the visitor's explicit click | Remember whether the visitor allowed the Google-Maps embed (`granted` / `rejected`) | **Exempt** (a consent *record* is itself strictly necessary) | **NOT BUILT** — design documented in §6; implementation deleted 2026-09-07 on owner instruction |
-| 3 | Google's cookies (whatever Google decides — not under our control) | **Third-party** (google.com) | Google's page inside the maps-embed iframe | The moment the iframe loads — **IF Google sets any. Measured 2026-09-09, and again on 2026-09-30 against the real Sibiu embed: it set NONE** (positive control: 3 cookies, then 4, on a top-level maps.google.com visit in the same browser — see §3) | Google's own purposes | The **storage** question (ePrivacy) did not fire in measurement; the **transfer** question (GDPR — every visitor's IP reaches Google on load) is the exposure that remains. **Consent DEFERRED** — accepted risk on the owner's word (§7) | **LIVE, UNGATED** on develop since the ClinicLocation lane (owner 2026-09-09) |
+| 3 | Google's cookies (whatever Google decides — not under our control) | **Third-party** (google.com) | Google's page inside the maps-embed iframe | The moment the iframe loads — **IF Google sets any. Measured 2026-09-09, and again on 2026-09-30 against the real Sibiu embed: it set NONE** (positive control: 3 cookies, then 4, on a top-level maps.google.com visit in the same browser — see §3) | Google's own purposes | The **storage** question (ePrivacy) did not fire in measurement; the **transfer** question (GDPR — every visitor's IP reaches Google on load) is the exposure that remains. **Consent DEFERRED** — accepted risk on the owner's word (§7) | **LIVE, UNGATED** on develop since the ClinicLocation lane (owner 2026-09-09); **`credentialless`** since 2026-10-10 — no stored Google cookie travels or is read (§3) |
 
 That is the whole list. Nothing else on the site stores anything on the visitor's
 device: no analytics (banned by owner decision, §12), no sessionStorage/localStorage
@@ -100,6 +106,21 @@ device, not about cookies alone). The control, same browser and jar: a top-level
 to `maps.google.com`, which lands on Google's EU consent page, stored **four** (`AEC`,
 `SOCS`, `__Secure-ENID`, `OTZ`). Limit (2) stands: re-run the probe whenever that URL
 changes.
+
+**What the empty-browser probes could not see, and its fix (2026-10-01 → 2026-10-10).** Every
+probe above started from an EMPTY browser, so it could only catch Google WRITING to the device —
+and the cookie rule also covers READING what the device already stores. Measured on 2026-10-01 in
+Chromium holding a stand-in Google sign-in cookie: the shipped frame SENT it on 19 of 46 requests
+(Chrome and Edge keep third-party cookies on), and Google's page could read it. Safari sent none
+(third-party cookies blocked, measured in WebKit); Firefox keeps each site's cookies apart by
+default (documented). **Since 2026-10-10 the frame wears `credentialless`** (CLAUDE.md §15.38;
+spelled `credentialless="credentialless"`, because Next's bundled React, which renders the export,
+drops an empty string as false): an anonymous frame with a fresh, empty cookie jar of its own,
+thrown away when the page closes —
+19 → 0 on the same probe, the map, its dragging and its card buttons unchanged, no extra download.
+Chrome, Edge, Opera and Samsung Internet honour it; Safari and Firefox were already covered. With
+it, nothing the map does touches the device's storage: the cookie limb is closed in every current
+browser, and what remains is the GDPR limb below.
 
 **What the measurement does NOT retire.** Cookies are the ePrivacy question (storage on the
 device). The GDPR question is different and still stands: on every load of a page that
@@ -248,7 +269,10 @@ IP-transfer limb did not, and the owner chose to ship and revisit.
 - the `<iframe>` whose `src` is `clinic.mapEmbedUrl` in the page's own language
   (`mapEmbedUrlFor`, 2026-09-30), rendered in the build HTML, live at page load;
 - `referrerPolicy="no-referrer"` (Google learns the IP, never the page URL) · `allow=""`
-  (no frame permissions) · `loading="lazy"`;
+  (no frame permissions) · `loading="lazy"` · `credentialless` since 2026-10-10 (no stored
+  Google cookie travels or can be read — §3);
+- a note under the map (`home.location.mapNote`, since 2026-10-10) saying Google receives the
+  visitor's IP address, linked to the privacy page's map part (`/{locale}/privacy/#map`);
 - **no consent record, no banner, no `lib/consent`** — the site still stores exactly one
   cookie (row 1). §2 of CLAUDE.md stays literally true.
 - The **`CONSENT SEAM`** comment block sits directly above the `<iframe>`; `ClinicLocation.test.tsx`
@@ -278,7 +302,9 @@ IP-transfer limb did not, and the owner chose to ship and revisit.
    activation · per-story axe on BOTH branches. Stories for both branches (the no-consent
    branch is what the visual net photographs — the fence in `tests/visual/stories.spec.ts`
    stays, D9).
-8. **Disclosure** on the policy page (§8) + the withdrawal path.
+8. **Disclosure** on the policy page (§8) + the withdrawal path. *(The page exists since
+   2026-10-10 and already discloses the map; this lane adds the consent record's row and how to
+   withdraw.)*
 9. **Close the loop in the records:** delete CLAUDE.md §12's "ungated" rider, rewrite row 3
    above from "LIVE, UNGATED" to the gated state, and retire this section.
 
@@ -304,6 +330,13 @@ probe whenever `mapEmbedUrl` changes (done for the real Sibiu URL on 2026-09-30 
 never load the iframe from a `display:none` box.
 
 ## 8 · The disclosure obligation that exists NO MATTER WHAT
+
+**DISCHARGED 2026-10-10 (CLAUDE.md §15.38):** `/{locale}/privacy` (sections/PrivacyPolicy, five
+languages) lists the language cookie — its name and lifetime read from `src/i18n`, Safari's ~7
+days — says the map hands the frame to Google with the visitor's IP, and is linked from every
+page's footer and from the note under the map. The clinic's legal facts on it are placeholders
+until the owner supplies them (BACKLOG.md entry 3). The paragraph below is the original
+requirement, kept as the checklist the page answers.
 
 Whichever path is chosen, the future §12 privacy-policy page must disclose: the
 language cookie (name, purpose, lifetime, the Safari ~7-day note), the consent record

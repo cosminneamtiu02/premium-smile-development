@@ -41,6 +41,7 @@
       "salLabel": "Alternative dispute resolution",
       "backToTop": "Back to top",
       "copyright": "© {year} {name}. All rights reserved.",
+      "privacy": "Privacy and cookies",
       "socialInstagram": "{name} on Instagram",
       "socialTiktok": "{name} on TikTok",
       "contactWhatsapp": "{name} on WhatsApp",
@@ -64,6 +65,7 @@
       "eyebrow": "Find us",
       "title": "Visit our clinic",
       "mapAlt": "Map showing the {name} clinic location",
+      "mapNote": "The map is shown by Google, which receives your device's IP address. <link>Details in the privacy policy</link>",
       "directionsLabel": "Get directions to {address}",
       "callLabel": "Call {phone}"
     },
@@ -81,7 +83,8 @@
     "title": "Our services",
     "prices": {
       "menu": "Categories",
-      "amount": "{amount, number} RON"
+      "amount": "{amount, number} RON",
+      "taxNote": "Prices are in RON and include all taxes."
     }
   },
   "team": {

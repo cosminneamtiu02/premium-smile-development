@@ -97,6 +97,41 @@ export const PRIMARY_ROUTES: readonly PrimaryRoute[] = [
 ];
 
 /**
+ * THE LEGAL ROUTES — a SEPARATE list, read by the Footer's legal strip alone
+ * and never by the bar, the panel or the site map (the nav board's R1, owner
+ * fb-181, 2026-08-18: "legal links go in a SEPARATE LEGAL_ROUTES list … never
+ * appended to PRIMARY_ROUTES"). One page today: the privacy and cookie policy
+ * (CLAUDE.md §12, BACKLOG.md entry 3), in all five locales — so the switcher's
+ * `equivalentPath` keeps it as it is, the case its own comment names.
+ *
+ * The path is §5's shared English slug; a localised one (/ro/confidentialitate)
+ * is the parked §15.3 decision and would move with it — one row here.
+ */
+export type LegalRouteKey = 'footer.privacy';
+
+export interface LegalRoute {
+  /** Locale-less, no trailing slash — the PrimaryRoute['path'] contract. */
+  readonly path: `/${string}`;
+  /** Key under the `common` namespace, resolved by the Footer. */
+  readonly key: LegalRouteKey;
+}
+
+/** The privacy and cookie policy's path — one spelling for every link to it. */
+export const PRIVACY_PATH = '/privacy' satisfies `/${string}`;
+
+/**
+ * The policy's map paragraph — the fragment the map band's note links to
+ * (`${PRIVACY_PATH}#${PRIVACY_MAP_ANCHOR}`) and the id that paragraph's
+ * section wears, so the link and its target are one string. English, like
+ * every fragment id on the site (§15.20).
+ */
+export const PRIVACY_MAP_ANCHOR = 'map';
+
+export const LEGAL_ROUTES: readonly LegalRoute[] = [
+  { path: PRIVACY_PATH, key: 'footer.privacy' },
+];
+
+/**
  * The routes this locale actually OFFERS: the full list minus every row scoped
  * to a different locale, minus every row hidden for now.
  *

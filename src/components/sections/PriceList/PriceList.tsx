@@ -4,6 +4,7 @@ import {
   bandColumnClasses,
   bandScaleClasses,
 } from '@/components/ui/Container/Container';
+import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
 import { CategoryCard, type PriceCategoryProps } from './CategoryCard';
 import { PriceMenu } from './PriceMenu';
@@ -374,6 +375,14 @@ type PriceListOwnProps = Readonly<{
    * An empty list renders NOTHING at all (see the guard in the body).
    */
   categories: readonly PriceCategoryProps[];
+  /**
+   * One line under the last card — the page's statement of what the prices
+   * include (CLAUDE.md §15.38: Law 365/2002 art. 5 asks a site that shows
+   * prices to say whether taxes are in them). Finished text, like every
+   * string here (§8.1). OPTIONAL and additive (§6.6): absent, the band is
+   * byte-identical to the band without it.
+   */
+  note?: string;
 }>;
 
 export type PriceListProps = PriceListOwnProps &
@@ -443,6 +452,7 @@ const RHYTHM = cx(
 export function PriceList({
   menuTitle,
   categories,
+  note,
   className,
   ...rest
 }: PriceListProps): ReactElement | null {
@@ -511,6 +521,12 @@ export function PriceList({
             {categories.map((category) => (
               <CategoryCard key={category.id} {...category} />
             ))}
+            {/* THE NOTE, last in the column (§15.38) — after every card, so no
+                card, no landing line and no menu height moves when it is
+                there: the reading line and the sticky rail measure the cards
+                and the menu, never the column's tail. ui/Text, muted — the
+                price rows' own size, a step under the body text. */}
+            {note ? <Text tone="muted">{note}</Text> : null}
           </div>
         </div>
       </Container>

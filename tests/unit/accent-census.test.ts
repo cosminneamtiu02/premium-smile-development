@@ -82,7 +82,7 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 const WEARS_ACCENT =
   /\b(?:text|bg|border(?:-[trblxyse])?|outline|decoration|fill|stroke|ring|shadow|from|via|to|caret|divide|placeholder)-accent(?:\/\d+)?(?![\w-])|var\(--(?:color-)?accent\)/g;
 
-/** The wearers — five atoms and two sections — and how many spellings each carries. */
+/** The wearers — five atoms and three sections — and how many spellings each carries. */
 const WEARERS: Readonly<Record<string, number>> = {
   // The hover label, the underline and the active label — TextButton.tsx's
   // COLOR INVARIANT: one colour for all three.
@@ -97,8 +97,15 @@ const WEARERS: Readonly<Record<string, number>> = {
   'components/ui/GlyphButton/GlyphButton.tsx': 6,
   // The map band's whole-row hover: GlyphButton's solid.accent hover face
   // re-spelled with the `group-` prefix (ClinicLocation's ROW_HOVER, its
-  // KEEP-IN-SYNC with the atom) — the glyph and the hairline.
-  'components/sections/ClinicLocation/ClinicLocation.tsx': 2,
+  // KEEP-IN-SYNC with the atom) — the glyph and the hairline. And since
+  // 2026-10-10 (CLAUDE.md §15.38) the hover label of the note's link under the
+  // map (NOTE_LINK), a 14px label on the band's page ground: 4.81:1.
+  'components/sections/ClinicLocation/ClinicLocation.tsx': 3,
+  // The privacy page's inline links (POLICY_LINK, KEEP-IN-SYNC with the map
+  // note's NOTE_LINK), lavender under the pointer only — underlined ink at
+  // rest. Every one sits in the page's prose on the page ground, 4.81:1; none
+  // inside its two cards (2026-10-10, CLAUDE.md §15.38).
+  'components/sections/PrivacyPolicy/PrivacyPolicy.tsx': 1,
   // The reviewer's initials disc — its letters' ground (owner 2026-10-01: "the
   // circle of persons initials to be in lilla, not in current green"; the
   // avatar board's D3 green until then). White on it 5.06:1, measured below.
@@ -302,7 +309,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2026-10-01)', () => {
-  it('is worn by the five atoms, the map band and the language banner, each exactly as many times as named', () => {
+  it('is worn by the five atoms, the map band, the language banner and the privacy page, each exactly as many times as named', () => {
     for (const [file, count] of Object.entries(WEARERS)) {
       expect(wearings(stripComments(read(file))), file).toBe(count);
     }

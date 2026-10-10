@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "description": "Welche Daten bei uns oder bei Google ankommen, wenn Sie die Website von {name} besuchen, das einzige Cookie, das wir verwenden, und Ihre Rechte."
+  },
+  "title": "Datenschutz und Cookies",
+  "updated": "Zuletzt aktualisiert: {date}",
+  "intro": "Auf dieser Seite erklären wir Ihnen in einfachen Worten, was mit Ihren Daten geschieht, wenn Sie die Website von {name} besuchen, und welche Rechte Sie haben. Wenn wir DSGVO schreiben, meinen wir die Verordnung (EU) 2016/679, die Datenschutz-Grundverordnung.",
+  "missing": "[wird ergänzt]",
+  "summary": {
+    "title": "Kurz gesagt",
+    "noTracking": "Wir verwenden keine Cookies für Analyse, Werbung oder Tracking.",
+    "oneCookie": "Die Website speichert ein einziges Cookie, und auch das nur, wenn Sie eine Sprache wählen oder den Hinweis schließen, der Ihnen eine Sprache vorschlägt: Damit merkt sie sich die Sprache für Ihren nächsten Besuch.",
+    "map": "Die Karte im Abschnitt „{band}“ stammt von Google. Google erhält die IP-Adresse Ihres Geräts, wenn die Karte geladen wird.",
+    "noForms": "Die Website hat keine Formulare und fragt Sie nicht nach persönlichen Daten."
+  },
+  "controller": {
+    "title": "Wer wir sind",
+    "company": "Ihre Daten verarbeitet {company}, Betreiber der Klinik {name} unter der Adresse {address}.",
+    "identity": "Eindeutige Registrierungsnummer (CUI): {cui}. Registernummer: {tradeRegister}. Eingetragener Sitz: {registeredOffice}.",
+    "contact": "Sie können uns an <email>{emailAddress}</email> schreiben oder unter <phone>{phoneNumber}</phone> anrufen.",
+    "profession": "Alle, die in der Klinik zahnärztlich tätig sind, tragen die in Rumänien verliehene Berufsbezeichnung „medic dentist“ und sind Mitglieder der rumänischen Zahnärztekammer (Colegiul Medicilor Stomatologi din România). Die Berufsregeln sind auf der <cmsr>Website der Kammer</cmsr> veröffentlicht."
+  },
+  "visit": {
+    "title": "Wenn Sie die Website besuchen",
+    "logs": "{host} hostet die Seiten dieser Website. Wie bei jeder Website erhalten die Server, die sie ausliefern, bei jedem Besuch automatisch einige technische Daten: die IP-Adresse, Datum und Uhrzeit, die aufgerufene Seite und den Browsertyp.",
+    "purpose": "Der Anbieter verwendet diese Daten, damit die Seiten bei Ihnen ankommen und die Website vor Missbrauch geschützt ist. Die Rechtsgrundlage ist das berechtigte Interesse an einer sicheren und funktionierenden Website (Art. 6 Abs. 1 lit. f DSGVO).",
+    "provider": "Diese Daten erhält und speichert der Anbieter für die Sicherheit seines Dienstes, und zwar so lange, wie er es selbst festlegt. Er kann sie auf Grundlage des Datenschutzrahmens EU-USA in die USA übermitteln. Wir erhalten sie nicht. Details finden Sie in der <policy>Datenschutzerklärung des Anbieters</policy>."
+  },
+  "cookies": {
+    "title": "Cookies",
+    "what": "Ein Cookie ist eine kleine Textdatei, die eine Website in Ihrem Browser speichert, um sich etwas von einem Besuch zum nächsten zu merken.",
+    "ours": "Unsere Website speichert ein einziges Cookie, und zwar erst, nachdem Sie eine Sprache gewählt oder den Hinweis geschlossen haben, der Ihnen eine Sprache vorschlägt:",
+    "nameLabel": "Name",
+    "purposeLabel": "Wozu es dient",
+    "purpose": "Es merkt sich die gewählte Sprache, damit Sie beim nächsten Besuch direkt auf die Seiten in dieser Sprache kommen. Es enthält nur den Sprachcode, zum Beispiel „ro“.",
+    "whenLabel": "Wann es gespeichert wird",
+    "when": "Nur wenn Sie über die Sprachschaltfläche eine Sprache wählen oder den Hinweis annehmen oder schließen, der Ihnen Ihre Sprache vorschlägt; wenn Sie ihn schließen, merkt es sich die Sprache der Seite, auf der Sie gerade sind.",
+    "durationLabel": "Wie lange",
+    "duration": "{months, plural, one {# Monat} other {# Monate}}. Manche Browser, zum Beispiel Safari, löschen es früher, spätestens nach 7 Tagen.",
+    "typeLabel": "Art",
+    "type": "Unser eigenes Cookie, unbedingt erforderlich für eine Funktion, die Sie gewünscht haben. Deshalb fragen wir Sie dafür nicht nach Ihrer Einwilligung.",
+    "none": "Wir verwenden keine Cookies für Analyse, Werbung oder Tracking und auch keine andere Form der Speicherung in Ihrem Browser.",
+    "delete": "Sie können das Cookie jederzeit in den Einstellungen Ihres Browsers löschen. Die Website funktioniert dann genauso, nur merkt sie sich die Sprache nicht mehr."
+  },
+  "map": {
+    "title": "Die Google-Karte",
+    "what": "Im Abschnitt „{band}“ zeigen wir eine Karte von Google Maps, damit Sie sehen, wo die Klinik liegt. Die Karte wird in der Regel geladen, wenn Sie auf der Seite in ihre Nähe kommen.",
+    "data": "Dann verbindet sich Ihr Browser direkt mit den Servern von Google. Diese erhalten die IP-Adresse Ihres Geräts und technische Informationen über Ihren Browser. Wir senden Google nicht die Adresse der Seite, die Sie gerade lesen. In aktuellen Browsern wird die Karte außerdem ohne die Google-Cookies geladen, die bei Ihnen schon gespeichert sind.",
+    "basis": "Für das Laden der Karte und die Übermittlung Ihrer IP-Adresse an Google sind wir gemeinsam mit Google Ireland Limited verantwortlich; für das, was Google danach mit den Daten macht, ist Google verantwortlich. Unsere Rechtsgrundlage ist das berechtigte Interesse, Ihnen zu helfen, die Klinik zu finden (Art. 6 Abs. 1 lit. f DSGVO). Google kann die Daten auf Grundlage des Datenschutzrahmens EU-USA an Google LLC in den USA übermitteln. Details finden Sie in der <google>Datenschutzerklärung von Google</google>.",
+    "without": "Adresse und Telefonnummer der Klinik stehen neben der Karte und unten auf jeder Seite. Sie können sie also auch ohne die Karte nutzen."
+  },
+  "contact": {
+    "title": "Wenn Sie uns kontaktieren",
+    "phone": "Wenn Sie uns anrufen oder auf WhatsApp schreiben, erhalten wir Ihre Telefonnummer, den Namen und das Foto aus Ihrem WhatsApp-Profil, sofern diese sichtbar sind, und das, was Sie uns mitteilen, damit wir Ihnen antworten und einen Termin vereinbaren können. Die Rechtsgrundlage sind Maßnahmen, um die Sie uns vor einer Behandlung bitten, und die Behandlung selbst (Art. 6 Abs. 1 lit. b DSGVO). Wir bewahren diese Nachrichten nur so lange auf, wie wir sie für Ihren Termin und Ihre medizinische Versorgung brauchen.",
+    "health": "Angaben zu Ihrer Gesundheit, die Sie uns mitteilen möchten, verwenden wir nur für Ihre medizinische Versorgung (Art. 9 Abs. 2 lit. h DSGVO).",
+    "whatsapp": "WhatsApp ist ein Dienst von WhatsApp Ireland Limited, einem Unternehmen des Meta-Konzerns. Die Nachrichten sind Ende-zu-Ende-verschlüsselt, aber WhatsApp sieht, wer uns wann schreibt, und Meta kann diese Daten auf Grundlage des Datenschutzrahmens EU-USA in die USA übermitteln. Details finden Sie in der <whatsapp>Datenschutzerklärung von WhatsApp</whatsapp>.",
+    "patient": "Die Daten in Ihrer Patientenakte verarbeiten wir in der Klinik, getrennt von dieser Website."
+  },
+  "reviews": {
+    "title": "Patientenbewertungen",
+    "text": "Auf der Startseite zeigen wir einige Bewertungen, die unsere Patienten auf Google veröffentlicht haben, mit ihrem Namen und bei manchen auch mit dem Foto aus ihrem Profil. Wenn Sie eine dieser Bewertungen geschrieben haben und möchten, dass sie nicht mehr auf der Website erscheint, sagen Sie es uns, und wir entfernen sie."
+  },
+  "links": {
+    "title": "Links zu anderen Websites",
+    "text": "Die Links zu Instagram, TikTok, WhatsApp oder Google Maps führen Sie auf die Websites dieser Unternehmen. Dort gelten deren Regeln zu Datenschutz und Cookies, nicht unsere."
+  },
+  "rights": {
+    "title": "Ihre Rechte",
+    "intro": "Sie haben das Recht:",
+    "access": "zu erfahren, welche Daten wir über Sie haben, und eine Kopie davon zu erhalten;",
+    "rectify": "sie korrigieren zu lassen;",
+    "erase": "zu verlangen, dass wir sie löschen;",
+    "restrict": "zu verlangen, dass wir sie nur eingeschränkt verwenden;",
+    "port": "sie in einem Format zu erhalten, das Sie anderswohin mitnehmen können.",
+    "object": "Sie können jederzeit aus Gründen, die sich aus Ihrer besonderen Situation ergeben, der Verarbeitung Ihrer Daten widersprechen, soweit sie auf unserem berechtigten Interesse beruht, etwa beim Laden der Google-Karte: Teilen Sie uns das mit, und wir prüfen Ihren Widerspruch.",
+    "automated": "Wir treffen über Sie keine automatisierten Entscheidungen.",
+    "ask": "Wenn Sie eines dieser Rechte nutzen möchten, schreiben Sie uns an <email>{emailAddress}</email>, rufen Sie uns unter <phone>{phoneNumber}</phone> an oder sprechen Sie uns in der Klinik an. Wir antworten Ihnen unverzüglich, spätestens innerhalb eines Monats; wenn Ihr Antrag komplex ist, kann sich diese Frist um weitere zwei Monate verlängern, und wir teilen Ihnen mit, warum.",
+    "complain": "Wenn Sie glauben, dass wir Ihre Rechte nicht beachtet haben, können Sie bei der rumänischen Datenschutzbehörde eine Beschwerde einreichen: Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP), bd. G-ral Gheorghe Magheru nr. 28-30, sector 1, 010336 Bukarest, Rumänien, <anspdcp>www.dataprotection.ro</anspdcp>. Sie können die Beschwerde auch bei der Datenschutzbehörde des EU-Mitgliedstaats einreichen, in dem Sie wohnen oder arbeiten oder in dem der mutmaßliche Verstoß stattgefunden hat."
+  },
+  "changes": {
+    "title": "Änderungen",
+    "text": "Wenn sich etwas ändert, zum Beispiel das Unternehmen, das die Website hostet, aktualisieren wir diese Seite und das Datum ganz oben."
+  }
+}

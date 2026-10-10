@@ -41,6 +41,7 @@
       "salLabel": "Soluționarea alternativă a litigiilor",
       "backToTop": "Înapoi sus",
       "copyright": "© {year} {name}. Toate drepturile rezervate.",
+      "privacy": "Confidențialitate și cookie-uri",
       "socialInstagram": "{name} pe Instagram",
       "socialTiktok": "{name} pe TikTok",
       "contactWhatsapp": "{name} pe WhatsApp",
@@ -64,6 +65,7 @@
       "eyebrow": "Ne găsești",
       "title": "Vizitează clinica noastră",
       "mapAlt": "Hartă cu locația clinicii {name}",
+      "mapNote": "Harta este afișată de Google, care primește adresa IP a dispozitivului tău. <link>Detalii în politica de confidențialitate</link>",
       "directionsLabel": "Vezi direcțiile către {address}",
       "callLabel": "Sună la {phone}"
     },
@@ -81,7 +83,8 @@
     "title": "Serviciile noastre",
     "prices": {
       "menu": "Categorii",
-      "amount": "{amount, number} RON"
+      "amount": "{amount, number} RON",
+      "taxNote": "Prețurile sunt exprimate în RON și includ toate taxele."
     }
   },
   "team": {

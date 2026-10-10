@@ -80,7 +80,11 @@ function ServicesPageBand(): ReactElement {
       <h1 id={SERVICES_TITLE_ID} className="sr-only">
         {t('title')}
       </h1>
-      <PriceList menuTitle={t('prices.menu')} categories={categories} />
+      <PriceList
+        menuTitle={t('prices.menu')}
+        categories={categories}
+        note={t('prices.taxNote')}
+      />
     </>
   );
 }

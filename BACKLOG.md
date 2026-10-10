@@ -20,25 +20,30 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **Today:** the „Ne găsești" map (`sections/ClinicLocation`, on Home, Team and every doctor page)
   loads Google's `<iframe>` with the page, with no consent gate. The only cookie the site itself
   writes is the language cookie (COOKIES.md §2).
-- **Known since 2026-10-01, not yet in COOKIES.md:** §3's "the embed set zero cookies" holds for
-  WRITES only. In Chrome and Edge, which keep third-party cookies on, the frame SENDS a signed-in
-  visitor's existing Google cookies and Google's page can read them: 19 of 46 requests carried one
-  in a probe of the shipped `<iframe>` (the real Romanian map with the band's own attributes, on a
-  test page, in Chromium holding a stand-in Google sign-in cookie). The EU cookie rule covers
-  reading what a device stores, not only writing it. Safari blocks these cookies (0 sent, measured
-  in WebKit); Firefox keeps each site's cookies apart by default (documented, not measured).
-- **The smaller first step, no modal — `credentialless`:** the attribute gives the frame a fresh,
-  empty cookie jar, thrown away when the page closes. Measured on the same probe: 19 → 0 requests
-  carrying the visitor's cookie; the same picture and the same dragging; the place card's „larger
-  map" and directions buttons open the same Google pages in a new tab as without it; no extra
-  download (about 637 kB on a first visit and 2 kB on the next, either way). Chrome, Edge, Opera
-  and Samsung Internet support it; Safari and Firefox ignore it and are covered above. The job:
-  `credentialless=""` on the `<iframe>` under the `CONSENT SEAM` comment in ClinicLocation.tsx —
-  the empty string, because React drops `credentialless={true}` with a warning (checked on
-  19.2.8) — a few lines declaring the attribute for TypeScript (`@types/react` does not list it),
-  a pin beside the attribute pins in ClinicLocation.test.tsx, and the read finding written into
-  COOKIES.md §3 and §7 and CLAUDE.md §12's rider. No visual baseline moves: the visual net already
-  blocks the map's traffic (`THE NETWORK FENCE` in `tests/visual/stories.spec.ts`).
+- **DONE 2026-10-10 — the smaller first step, `credentialless` (CLAUDE.md §15.38):** since
+  2026-10-01 we knew §3's "the embed set zero cookies" held for WRITES only — in Chrome and Edge,
+  which keep third-party cookies on, the frame SENT a signed-in visitor's existing Google cookies
+  (19 of 46 requests in a probe of the shipped `<iframe>`), and the EU cookie rule covers reading
+  what a device stores. The map's `<iframe>` now wears `credentialless` (spelled as its own name,
+  because the export's React drops an empty string; a fresh, empty cookie jar, thrown away when
+  the page closes: measured 19 → 0, the map, its dragging and its card
+  buttons unchanged); Safari blocks those cookies anyway and Firefox keeps each site's cookies
+  apart. The finding and the fix are in COOKIES.md §3 and §7 and CLAUDE.md §12's rider; the
+  privacy page discloses the map (entry 3) and a note under the map says it where it happens.
+- **The owner's direction, 2026-10-10 (advice session, no code changed by it):** "i want that thing
+  with the map to work automatically when you open the website". The advice given, recorded here
+  for the day this entry is picked up: automatic + Google's map + no consent — the law allows two
+  of the three. KEEP IT AUTOMATIC for now (the accepted risk of 2026-09-09, its cookie half now
+  closed); switch to click-to-load (below) the day any complaint or letter arrives, or BEFORE the
+  site is marketed to German patients (the Google Fonts letters came from Germany, and GDPR lets a
+  visitor sue at home); if "automatic AND no risk" is ever wanted, the answer is our own map
+  (MapLibre), never a banner for one map. Measured the same day for comparison: jonaclinic.ro sets
+  16 cookies before any click (Google Analytics, Google Ads, the Facebook and TikTok pixels,
+  YouTube, reCAPTCHA) and keeps loading them after „Refuz" — the pattern ANSPDCP has fined
+  (5,000–40,000 lei in 2024–2026, every case trackers without consent, none a map).
+- **The rule that keeps the site banner-free:** no analytics, no Facebook or TikTok pixel, no
+  Google Ads tracking, ever, without a consent tool that BLOCKS them until a "yes" (COOKIES.md §5).
+  The day one is wanted, this entry's work becomes due.
 - **What no attribute fixes:** the visitor's IP address reaching Google whenever the map loads by
   itself — the risk accepted and postponed on 2026-09-09 (COOKIES.md §3, the Google Fonts case).
   Routing the map through our own address does not help: Google's page fetches its pieces
@@ -134,18 +139,49 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 
 ## 3 · The privacy and cookie policy page
 
-- **Why it waits:** CLAUDE.md §12 asks for "a short privacy/cookie policy page (all locales)
-  disclosing the language cookie". Nothing exists yet: no route, no Footer link, no message keys
-  (§14's Footer row names the link).
-- **What it must say, gathered from the records:** the language cookie — its name, purpose,
-  lifetime and Safari's ~7-day cap (§8.7, §15.14); the consent record, if entry 1 ships one; that
-  loading the map hands the frame to Google, and how to withdraw consent (COOKIES.md §8, which
-  notes the disclosure is owed even for an exempt cookie); and the clinic's legal identity and an
-  e-mail address, which the site shows nowhere today — company name, CUI, trade-register number
-  (§15.27).
-- **Who writes what:** the words are the owner's (§15.17); the machinery — the route in five
-  languages, the Footer link, the page itself — is built on his dispatch. Entry 1's disclosure
-  lands here.
+- **BUILT 2026-10-10 (CLAUDE.md §15.38; the owner: "build all things mentioned and all fixes and
+  add to backlog what needs to be done"):** `/{locale}/privacy` in all five languages
+  (`sections/PrivacyPolicy`), linked from the Footer's legal strip („Confidențialitate și
+  cookie-uri") and from a note under the map that points at the page's map part; the Services page
+  says under its last card that the prices include all taxes. The page states what the site
+  measurably does: the host's logs, the ONE language cookie (its name and its 12 months read from
+  the code, Safari's ~7 days), the Google map and its IP transfer, phone and WhatsApp contact, the
+  links out, the visitor's rights and the complaint to ANSPDCP, and who runs the clinic.
+- **Why it still waits — the owner's part, before launch:**
+  - **the clinic's legal facts** — `legal` in `src/lib/clinic/clinic.ts`: the company's registered
+    name, CUI, Trade Register number, registered office, and an e-mail for privacy requests. All
+    five are on the registration certificate (Certificat de înregistrare) or with the accountant.
+    Until each arrives the page prints „[de completat]" in its place and the e-mail is no link;
+  - **the professional details** the page states (Law 365/2002 art. 5 for a regulated profession):
+    that the doctors hold the title „medic dentist", granted in Romania, and are members of the
+    Colegiul Medicilor Stomatologi din România — `controller.profession` in
+    `src/messages/privacy/*.json`; correct it if any doctor's title was granted elsewhere;
+  - **the prices line** — „Prețurile sunt exprimate în RON și includ toate taxele."
+    (`services.prices.taxNote` ×5): confirm it is true of every price on the list;
+  - **the patient part** — the page says the patient file is handled at the clinic, where the
+    patient is informed about it (`contact.patient`); align it with the clinic's own patient
+    privacy notice, if one exists, and say whether the clinic has a data protection officer
+    (none is named today; a single clinic is normally not required to have one);
+  - **a lawyer's read of the Romanian text**, then the four translations confirmed — EN, DE, FR
+    and IT are Claude's drafts, flagged in this lane's record (§15.38 lists the points the drafts
+    raised: the GDPR wording for art. 6(1)(b), the one-month reply that GDPR lets extend by two,
+    the gloss for the College's name in each language);
+  - **from the five-language copy review (2026-10-10), the owner's or the lawyer's to settle:**
+    the clinic's LEGAL FORM first (an SRL, or a cabinet medical individual or societate civilă
+    medicală, which registers with the DSP's Registrul unic al cabinetelor medicale and holds a
+    CIF — the page's labels were made form-neutral until then); how long phone and WhatsApp
+    messages are kept (the page states criteria today, „cât timp ne trebuie", not a number);
+    whether the Law 365/2002 art. 5 information should name the DSP as the authority that
+    authorises the clinic; whether the 12-month language cookie fits the cookie law's exemption
+    as Romania applies it (Opinion 04/2012 reads it narrowly; the CNIL and the Garante treat
+    language cookies as exempt — a shorter `LOCALE_COOKIE_MAX_AGE_S` is the lever); the reviews
+    part's legal basis, which the reviewers' written consent (entry 7) would settle;
+- **At launch (the host changes):** the page names the interim host, GitHub Pages
+  (`HOST` in `PrivacyPolicy.tsx`, `TODO(launch)`); switch it to the launch host and move
+  `POLICY_UPDATED` the same day. On Cloudflare keep bot protection off, or the page must list its
+  `__cf_bm` cookie (entry 1). Any later change to the words moves `POLICY_UPDATED` too.
+- **If entry 1 ever ships a consent record:** the page lists that cookie as well (COOKIES.md §4)
+  and says how to withdraw consent.
 
 ## 4 · New words for the doctors band's eyebrow, „Familia Premium Smile"
 
@@ -205,7 +241,10 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     number, i'll modify that", §15.27);
   - the production domain — still `https://example.com`. The metadata §10 asks for needs it
     (canonical URLs, hreflang links, the sitemap, the Open Graph tags), and the interim host stays
-    noindex until it is attached (§15.2).
+    noindex until it is attached (§15.2);
+  - the company's five legal facts (`legal`, since 2026-10-10) — name, CUI, Trade Register number,
+    registered office, a privacy e-mail; the privacy page prints „[de completat]" until each
+    arrives. Entry 3 has the whole list of what that page still needs.
 - **`src/lib/team/team.ts`:**
   - the six doctors — their names and specialties are the owner's; everything else is a random
     placeholder under those real names, in all five languages: the pictures (demo silhouettes),
@@ -241,7 +280,8 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **Why it waits:** each is recorded as the owner's to make before launch, and none blocks the
   work in progress. Added on the owner's word, 2026-10-10.
 - **The decisions:**
-  - translated URLs — `/de/leistungen` instead of today's shared English slugs (`/de/services`).
+  - translated URLs — `/de/leistungen` instead of today's shared English slugs (`/de/services`,
+    and since 2026-10-10 `/ro/privacy` for the policy page, which could be `/ro/confidentialitate`).
     Decide before launch: changing a published URL afterwards needs redirects (CLAUDE.md §5,
     §15.3);
   - EUR prices on the four foreign-language pages — every price is in RON today, on every page

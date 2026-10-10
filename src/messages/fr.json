@@ -41,6 +41,7 @@
       "salLabel": "Règlement alternatif des litiges",
       "backToTop": "Retour en haut",
       "copyright": "© {year} {name}. Tous droits réservés.",
+      "privacy": "Confidentialité et cookies",
       "socialInstagram": "{name} sur Instagram",
       "socialTiktok": "{name} sur TikTok",
       "contactWhatsapp": "{name} sur WhatsApp",
@@ -64,6 +65,7 @@
       "eyebrow": "Nous trouver",
       "title": "Visitez notre clinique",
       "mapAlt": "Carte indiquant l'emplacement de la clinique {name}",
+      "mapNote": "La carte est affichée par Google, qui reçoit l'adresse IP de votre appareil. <link>Détails dans la politique de confidentialité</link>",
       "directionsLabel": "Voir l'itinéraire vers {address}",
       "callLabel": "Appeler le {phone}"
     },
@@ -81,7 +83,8 @@
     "title": "Nos soins",
     "prices": {
       "menu": "Catégories",
-      "amount": "{amount, number} RON"
+      "amount": "{amount, number} RON",
+      "taxNote": "Prix en RON, toutes taxes comprises."
     }
   },
   "team": {

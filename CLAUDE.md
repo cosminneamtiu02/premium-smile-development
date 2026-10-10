@@ -92,6 +92,7 @@ src/
       blog/page.tsx      # ro only       → /ro/blog
       blog/[slug]/page.tsx
       404/page.tsx       # localized 404 → /ro/404 — real shell page ×5 (S6, §5; dispatcher = out/404.html)
+      privacy/page.tsx   # the privacy and cookie policy → /ro/privacy ×5, sections/PrivacyPolicy (§12, §15.38)
     icon.svg             # THE BROWSER TAB'S ICON — a byte copy of public/images/brand/mark.svg (Next's icon convention; §15.31)
     favicon.ico          # its raster twin, the mark at 16 · 32 · 48px PNG-in-ICO, for every Safari before 26 (§15.31)
     (no page.tsx)        # root "/" is out/index.html, the client-side locale redirect tools/generate-root-redirect.ts writes at build (see §5)
@@ -130,6 +131,7 @@ src/
   fonts/                 # self-hosted variable subsets via next/font (shell-only import)
   messages/
     ro.json en.json de.json fr.json it.json   # namespaces: common, home, services, team, blog, contact
+    privacy/{ro,en,de,fr,it}.json   # the privacy policy's own words, read by its one page — never serialised into every page by the shell's provider (§15.38)
   content/blog/          # MDX posts (ro)
   styles/globals.css     # Tailwind theme tokens
 public/                  # pre-optimized images, self-hosted fonts, robots.txt
@@ -185,6 +187,7 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 | Team | `/ro/team` | ✓ | ✓ | ✓ | ✓ |
 | Blog index + posts | `/ro/blog`, `/ro/blog/[slug]` | — | — | — | — |
 | Doctor pages *(2026-09-21, §15.23)* | `/ro/team/[slug]` — one per `lib/team` doctor id, every locale (`generateStaticParams` over the list, `dynamicParams = false`); no `lib/routes` row: `matchesRoute` already files them under Team and `equivalentPath` keeps the slug across languages | ✓ | ✓ | ✓ | ✓ |
+| Privacy & cookies *(2026-10-10, §15.38)* | `/ro/privacy` — the privacy and cookie policy (§12), every locale; linked from the Footer's legal strip through `lib/routes`' separate `LEGAL_ROUTES` list (never the nav's), and its `#map` part from the note under the map; the shared English slug, a translated one the §15.3 decision | ✓ | ✓ | ✓ | ✓ |
 | Contact | modal, no route (see §14) | | | | |
 
 - **Home lives at `/{locale}` itself.** Do not create `/{locale}/home`.
@@ -365,6 +368,14 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   banned as written; **§2 is untouched** — no banner exists, and the only storage on the
   visitor's device remains the language cookie.
 - A short **privacy/cookie policy page** (all locales) disclosing the language cookie.
+  **BUILT 2026-10-10 (§15.38):** `/{locale}/privacy`, linked from every page's footer; it lists
+  the one cookie (its name and lifetime read from `src/i18n`), the host's logs, the map's IP
+  transfer, contact, links out, the visitor's rights, and the clinic's legal identity —
+  placeholders until the owner supplies them (BACKLOG.md entry 3).
+  **The map rider, AMENDED 2026-10-10 (§15.38):** the frame is `credentialless` — the
+  cookie-READING limb measured on 2026-10-01 (a signed-in Chrome visitor's Google cookies sent on
+  19 of 46 requests) is closed — and a note under the map says the IP goes to Google, linked to
+  the policy's map part. The IP transfer stays the accepted, deferred risk recorded above.
 - **Analytics is out of scope by owner decision** — historical data explicitly not needed,
   so never install any analytics script. If this ever changes: cookieless only (Plausible/
   Umami/Cloudflare) = one script tag, no banner. Search Console + GBP insights already cover
@@ -424,7 +435,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step; on a laptop and a desktop, since 2026-10-01 (§15.23 round 6), the owner's TWO CONTAINERS across the whole column — the picture's track a third of the column after an inset of 15 % of the gutter, a gap of a sixth of the column clamped to 3–10.5rem, the words in the rest: the specialty over the name a ninth of the column down and the credo card under them on ONE left edge 1.5rem into the words, the card up to 36rem wide and centred in the height the name leaves (as much space above it as below), and the cutout drawn out of flow as tall as the row, growing (centred, up to 1.4 × its third) until it stands on the words' floor, so the two containers share ONE floor — the `align` seat axis (rounds 2e–2l's `lowered`) and round 2k's centred content-sized columns retired with it; the band's own rhythm halved in round 2j ("it starts height wise too low … also the image, so the whole thing"), the credo's quote on `text-xl`; and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred (round 2k: "name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the doctor card button's lavender `accent` since 2026-10-02 (§15.1's keyword rider — "i want that highlighted text to actually be the color of the current mai multe despre mine button"; the deep violet `accent-strong` until then) (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorProfile** (the soft-lavender band — accent-decorative at 30 % over the page, half again ui/Card's 20 % tint ratio, the owner's „too faded” verdict of 2026-09-25 — with the Hero's ten eased stops fading in above and out below: „Biografie / Despre {name}” third-person paragraphs on ~75 % of the row ‖ the **ScheduleCard** on ~25 % — ui/Card `framed`, the deck's idle card like the credo card, on a named `<section>`, the h2 „Când mă găsiți la clinică” alone (its „Program” eyebrow struck 2026-09-26) centred over the doctor's own Mon→Sun week through `lib/hours` as a centred two-column block, closed days muted; ONE width, 20rem, at every screen (round 2k: "should not be widening as you widen the screen or tighten when you tighten it" — it shrinks only under a column narrower than 20rem); the biography a NAMED REGION of its own beside the week's (G2-R2 tier 2, a11y: the one content block a landmark walk skipped), the card `self-center` beside it in a one-row grid — its middle the band's vertical middle by construction, pixel-identical to round 2g's two-row placement (owner 2026-09-26, "center it also vertically in the lila section"); no divider, no rule) · **DoctorCourses** („Formare continuă / Cursuri și specializări”: h2 over a CV TIMELINE — the line down the LEFT at every width (owner 2026-09-26: "the line should be on the left side, not centered" — round 2e's alternating layout is history), one YEAR per row with a dot on the line, the year an `<h3>` on Heading's `title` step over a bulleted list, the rail capped at the prose's `max-w-4xl`; and ONE CURRENT YEAR on scroll through the **CourseTimeline** island on `lib/scroll-spy` (`topFallback: 'none'`), the years on Heading's `section` step over a doubled `gap-20` (round 2j): the line is PER-GROUP SEGMENTS, so at rest every subsection recedes — its segment and dot `bg-line`, the year in the `accent-idle` tone, the list muted, the whole group faded — and the last year whose top has crossed the CENTRE of the screen (round 2k, `line: 'middle'`) COMES FORWARD: the group scales toward the viewer (`--animate-forward`, settling at 1.04, `origin-left`), its segment and dot take the accent, the dot pops, the year turns `accent`, the list full ink; reduced motion = the colours and the fade without movement; the server HTML carries no current mark; owner 2026-09-25 round 2e, 2026-09-26 round 2g) · **DoctorStats** (the second lilac band — on the shared **TintedBand** ground — „În cifre / Experiență confirmată în timp” (the reference's „Excelență" until round 2s) centred over a lead sentence and four tiles: a light disc with a line glyph — LILAC (`accent-decorative`) since 2026-10-01, the owner: "paint it's svgs lilla"; green until then —, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the twin (`sr-only` until 2026-10-01, since then an invisible copy laid exactly over the digits on one line, so a screen reader's cursor outlines the number and VoiceOver touch finds it — §15.23 round 5) SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"; a space grouping the spoken number's digits dropped since round 5 — « plus de 3000 »); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation**. Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned) | `team` |
 | Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
-| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher) · Footer (the logo, the same link + **full NAP** + hours + policy link) | `common` |
+| Privacy & cookies (`/privacy`, 2026-10-10 — §15.38) | **PrivacyPolicy** (the whole page, one band wired to site data: the `<h1>`, „Pe scurt" in the deck's idle frame, then nine parts, each an `<h2>` on a plain `<section>` with an English id — who runs the clinic, the visit, the one cookie as a definition list, the Google map (`#map`), contact, the patients' reviews, links out, rights, changes; zero client JavaScript; the clinic's legal facts placeholders until supplied) | its own files, `messages/privacy/*.json` |
+| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher) · Footer (the logo, the same link + **full NAP** + hours + the policy link, built 2026-10-10 — „Confidențialitate și cookie-uri" under the copyright, `LEGAL_ROUTES`, §15.38) | `common` |
 
 ## 15. Parked decisions — ASK before deciding, do not improvise
 
@@ -4538,6 +4550,60 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     lever the a11y review named is the 2rem lift under `(pointer: coarse)` alone, since the cut is a touch-Safari
     problem; `viewport-fit=cover` stays dormant — if it ever ships, the corner's `env(safe-area-inset-bottom)` terms
     wake and the room must be re-measured on a device in Safari's three tab layouts.
+
+38. **The privacy and cookie policy, the footer's legal link, the map's `credentialless` and the prices line — ON THE
+    OWNER'S WORD (2026-10-10, verbatim, after an advice session on cookies: "build all things mentioned and all fixes
+    and add to backlog what needs to be done"; lane `feat/privacy-policy`; numbered 38 because the price-rows lane in
+    flight holds 37):** the advice is BACKLOG.md entry 1's record — no cookie banner (the language cookie is exempt, a
+    preference set on an explicit click); the map stays AUTOMATIC as the accepted risk, its cookie half now closed;
+    click-to-load the day a complaint arrives or before the site is marketed to German patients; our own map if
+    "automatic and no risk" is ever wanted; banner-free only while tracker-free. jonaclinic.ro, measured the same day:
+    16 cookies before any click (Analytics, Ads, the Facebook and TikTok pixels), all reloaded after „Refuz".
+    (1) **THE PAGE** — `/{locale}/privacy` ×5, sections/PrivacyPolicy: one band wired to site data, zero client
+    JavaScript; the `<h1>`, „Pe scurt" in ui/Card `framed`, nine parts each an `<h2>` on an unnamed `<section>` with an
+    English id. It states what the site MEASURABLY does — the host's logs (the host's, not ours: we never receive
+    them), ONE cookie (its name and its 12 months READ from `src/i18n`, the new `LOCALE_COOKIE_MAX_AGE_S`), the map
+    (joint responsibility with Google Ireland for loading it and sending the IP, Fashion ID), calls and WhatsApp,
+    the patients' Google reviews on Home with a way to have one removed, links out, the rights (the right to object
+    on its own, art. 21(4); e-mail, phone or the clinic; GDPR's reply times), complaints to ANSPDCP or the visitor's
+    own authority (art. 77), and who runs the clinic with the profession's details (Law 365/2002 art. 5). The words
+    live in their OWN files, `src/messages/privacy/*.json`, read through next-intl's `createTranslator`: the shell's
+    provider serialises every key of the main files into every page, and a policy there would ride all 55. Typed
+    against `ro.json` (a missing key does not compile); the translator THROWS on any formatting error (next-intl's
+    default only logs and prints the key path, with `next build` green); held by tests/unit/privacy-parity.test.ts
+    (keys in order, ICU arguments, link tags, D-DASH, and never a tag sharing an argument's name — the lane's own
+    first draft did) and by rendering all five in PrivacyPolicy.test.tsx. RO by Claude from the code, EN/DE/FR/IT by
+    Opus agents: DRAFTS for the owner and a lawyer (BACKLOG.md entry 3). The clinic's legal facts — lib/clinic's new
+    `legal` (five fields) — are `null` and print „[de completat]"; nothing is invented; a LAUNCH GUARD in
+    clinic.test.ts fails CI the day `url` leaves its placeholder while any fact is still null.
+    (2) **THE LEGAL LINK** — `LEGAL_ROUTES` in lib/routes (the nav board's R1, fb-181) under the copyright in the
+    Footer's legal strip; `PRIVACY_PATH` and `PRIVACY_MAP_ANCHOR` the one spelling of the page and its `#map` part;
+    the shared English slug (a translated one is §15.3's, BACKLOG entry 8). The policy's sources open in the SAME tab
+    with no referrer (the a11y review: G201, Back must work for an older reader).
+    (3) **THE MAP** — `credentialless` on the frame (BACKLOG entry 1's first step): a signed-in Chrome or Edge
+    visitor's Google cookies no longer travel or can be read (19 of 46 → 0, measured 2026-10-01). FOUND IN THE LANE,
+    by the built HTML alone: Next's bundled React (19.3.0-canary — the export AND Storybook) treats the attribute as
+    BOOLEAN and drops an empty string, npm react-dom 19.2.8 (the unit and components tests) drops `true`; the first
+    build shipped `credentialless=""` and the export carried nothing, every test green. The one spelling both write
+    is `credentialless="credentialless"` (./credentialless.ts, a checked module — `skipLibCheck` would skip a
+    `.d.ts`); tests/unit/credentialless-render.test.ts renders it through both Reacts. A note under the map (16px,
+    `home.location.mapNote`) says Google receives the IP and links to `/{locale}/privacy/#map`; at @3xl it takes its
+    own grid row so the contact rows stay centred on the map (measured 15–28px low before; a test holds ±1px).
+    (4) **THE PRICES LINE** — PriceList's optional `note`, printed last in the cards column; the Services page passes
+    „Prețurile sunt exprimate în RON și includ toate taxele." ×5 (TODO(owner) confirm); absent or empty, nothing.
+    **Reviews (four Opus agents — react, typescript, a11y, a five-language copy read):** APPROVE WITH CHANGES ×3, 0
+    critical / 0 high; every finding folded or recorded in BACKLOG entry 3 (the legal form, the retention period,
+    the DSP question, the 12-month cookie under Law 506/2004, Romanian names `lang="ro"` in the other languages —
+    LOW, proper names). **Evidence:** prettier · eslint (0 errors) · tsc clean; vitest 152 files / 3 923 passed + 2
+    skipped (the two legal-fact checks) with the optimizer variants hidden (CI's condition); `next build` and
+    build-storybook green; the export: five policy pages, `credentialless=""` on every map, the links, the line;
+    the link crawl 613 links / 53 pages / 0 broken in BOTH shapes (root, and the Pages base path); e2e 331 passed /
+    221 skipped; the visual differential at zero tolerance against a pristine Storybook of develop 8ee3c8e (private
+    port 6262): exactly 82 declared cells — Pages/Home, Team and Doctor ×12 each (the note), Pages/Services ×12 (the
+    line), Sections/ClinicLocation 8, Sections/Footer 8, NEW Pages/Privacy 12 and Sections/PrivacyPolicy 6 — plus the
+    known flicker (SpeedDial 1–3px, the price list's glow 14–16px, which develop re-shot against itself also shows);
+    the 82 darwin cells recorded under classic scrollbars (15px, probed) and verified, the contact dialog's and the
+    language banner's 12 as the mode's control.
 
 ## 16. Build-time vs runtime contract
 

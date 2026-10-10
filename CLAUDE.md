@@ -823,6 +823,15 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the target; only WHO writes the content changed. No archived code lands without the
     owner's word — the recorded first candidate is the S1 cherry-pick plus the
     `next typegen && tsc` typecheck hardening (#83's flagged-not-taken item).
+    *(Annotated 2026-10-10 — the branch is DELETED, locally and on GitHub, on the owner's
+    word: "if it is completley irellevant you drop it, but you are the judge of that". Its
+    commits are not irrelevant — S1 `cc749de` still cherry-picks CLEANLY onto develop
+    `d2bbf3d` (4 files, measured that day), while S2 and S3 conflict in 24 and 40 files, the
+    pages they built having been rebuilt since — but the branch was: closed PR #81 keeps the
+    same head, `13408db`, on GitHub for good, so `git fetch origin pull/81/head:phase4-archive`
+    brings all three commits back (or the PR page's "Restore branch"). PHASE4_SEO_PLAN.md §2
+    carries the command; the run's S4 leftover, one superseded test file, is kept machine-local
+    in the main checkout's `.claude/plans/_worktree-records/phase4-content/`.)*
 
 18. **Rotation clock — DECIDED (owner, board `.claude/plans/rotation-lib.plan.md`,
     fb-399–424 + G2 amendments, 2026-09-09):** the two old auto-iterators (the Hero's
@@ -4075,8 +4084,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     "decide for me on decisions and create pr"): the band never draws SMALLER than the theme. ui/Container's design
     pixel gained an opt-in floor — `max(var(--band-floor,0px), …)` around the formula, its header's THE FLOOR — and the
     price list sets `--band-floor` to 0.0625rem (1rem / 16, the theme's own pixel at ANY root) on its rhythm box; every
-    other wearer leaves it unset, 0px, and computes exactly what it did. Why: the owner's own BACKLOG entry 5 asks for
-    LARGER price text for older patients, never smaller, and his complaint was the wide screens — so up to the
+    other wearer leaves it unset, 0px, and computes exactly what it did. Why: the owner's own BACKLOG entry 5 asked for
+    LARGER price text for older patients (dropped 2026-10-10), never smaller, and his complaint was the wide screens — so up to the
     reference the band is develop's look, and only past it does it grow. What it changes, measured: no jump at the
     regime's step at the default root (an 880 and a 900px column draw alike); under the reference a larger default font
     size and a browser zoom enlarge the band as rem does (a 20px root at a 1200px column: the card titles 45px, where an

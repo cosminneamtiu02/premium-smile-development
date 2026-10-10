@@ -17,33 +17,44 @@
 - Claude's remaining Phase-4 scope is **machinery, not copy**: the SEO plumbing described
   here, and whatever plumbing the owner dispatches later. §14's content model (which
   sections exist on which page) remains the target — only WHO writes the content changed.
-- Nothing from the run reached `develop`. The branch `feat/phase4-content` is kept as an
-  **archive** so no work is lost; see the resurrection map below.
+- Nothing from the run reached `develop`. Its three commits are kept as an **archive** so no
+  work is lost — on closed PR #81 itself since 2026-10-10, when the branch
+  `feat/phase4-content` was deleted; see the resurrection map below.
 
-## 2. Resurrection map — what the archived branch holds
+## 2. Resurrection map — what the archive holds
 
-Branch `feat/phase4-content` (PR #81, closed 2026-09-06), three sealed commits, every one
-gate-green at its seal (machine gates, two Fable reviews each, visual net, Lighthouse):
+PR #81 (closed 2026-09-06), three sealed commits, every one gate-green at its seal (machine
+gates, two Fable reviews each, visual net, Lighthouse). Its branch, `feat/phase4-content`, was
+deleted on 2026-10-10 (the owner: "if it is completley irellevant you drop it, but you are the
+judge of that"); GitHub keeps a closed PR's head for good, so one command brings all three
+commits back — or the PR page's "Restore branch" button:
+
+```sh
+git fetch origin pull/81/head:phase4-archive   # a branch at 13408db; cc749de and f7eec73 are its ancestors
+```
+
+Every `git` command below assumes that fetch.
 
 | Commit | Stage | Contents | Content or machinery? |
 | --- | --- | --- | --- |
-| `cc749de` | S1 | `lib/seo.ts` (Dentist JSON-LD builder + metadata/hreflang helpers, 191 lines) + `tests/unit/seo.test.ts` (198 lines) + the JSON-LD mount in `[locale]/layout.tsx` + shell-test pin | **Pure machinery — zero content.** `git cherry-pick cc749de` is expected to apply near-clean onto develop whenever the owner wants it. *(Lib-foldering rider, 2026-09-06: the pick lands the since-retired FLAT `src/lib/seo.ts` — follow with `git mv` into `src/lib/seo/seo.ts` and respell its importers to `@/lib/seo/seo` in the same motion, per the §4 folder convention.)* |
+| `cc749de` | S1 | `lib/seo.ts` (Dentist JSON-LD builder + metadata/hreflang helpers, 191 lines) + `tests/unit/seo.test.ts` (198 lines) + the JSON-LD mount in `[locale]/layout.tsx` + shell-test pin | **Pure machinery — zero content.** `git cherry-pick cc749de` applied CLEANLY onto develop `d2bbf3d` on 2026-10-10 (4 files, measured), so it still lands near-clean whenever the owner wants it. *(Lib-foldering rider, 2026-09-06: the pick lands the since-retired FLAT `src/lib/seo.ts` — follow with `git mv` into `src/lib/seo/seo.ts` and respell its importers to `@/lib/seo/seo` in the same motion, per the §4 folder convention.)* |
 | `f7eec73` | S2 | Home page (Hero · ServicesTeaser · CTABanner), 20 keys × 5 locales (provisional), `lib/services.ts` price data, the `next typegen` typecheck fix, 24 visual baselines | Content, except two machinery nuggets: the typecheck fix (§5 below) and `lib/services.ts`'s data-vs-copy split (D-S2-6). Reference only. |
 | `13408db` | S3 | Services page + `sections/ServiceCard` + `servicesJsonLd` (ItemList/Service) + D-DASH string sweep + 34 baselines | Mostly content; `servicesJsonLd` inside it is machinery and extractable. |
 
 Also part of the archive:
 
 - **S4 leftover:** the halted Team builder left ONE untracked folder,
-  `src/components/sections/TeamMemberCard/`, in the worktree
-  `premium-smile-worktrees/phase4-content` — inspect or delete at will; the branch itself
-  is clean at `13408db`.
+  `src/components/sections/TeamMemberCard/`, holding only its test file — the component was
+  never written, and `sections/PersonnelCard` has since replaced the design. The worktree was
+  removed on 2026-10-10; the file is kept machine-local in the main checkout's
+  `.claude/plans/_worktree-records/phase4-content/`.
 - **The full run record** (every D-numbered decision, gate evidence, Lighthouse numbers,
   owner mid-run asks): `.claude/plans/phase4-content-ledger.md` in the main checkout
   (gitignored, machine-local).
 - **Provisional five-locale strings** for Home/Services live in the commits' diffs
-  (`git show f7eec73 -- src/messages/ro.json`, same for S3); drafted 404 strings and two
-  Romanian blog drafts live in the ledger. All were flagged PROVISIONAL for the owner's
-  rewrite — which is now simply the owner's authorship.
+  (`git show f7eec73 -- src/messages/ro.json` after the fetch above, same for S3); drafted
+  404 strings and two Romanian blog drafts live in the ledger. All were flagged PROVISIONAL
+  for the owner's rewrite — which is now simply the owner's authorship.
 
 ## 3. SEO part 1 — machinery that already exists as code (design recap)
 

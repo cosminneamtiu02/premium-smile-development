@@ -4,8 +4,12 @@ Started 2026-10-01 on the owner's word: "create also in this pr a list with stuf
 it doesn't exist already. add there coookies, complete accesibility test rerun and policy page for
 the moment". Each entry says what the work is, why it waits and where its record already lives.
 The records stay the source of truth (CLAUDE.md, COOKIES.md); this file points at them. An entry
-leaves the list in the lane that does the work, and a new one joins it on the owner's word.
-Decisions still go to CLAUDE.md §15.
+leaves the list in the lane that does the work, or when the owner drops it, and a new one joins it
+on the owner's word. Decisions still go to CLAUDE.md §15.
+
+An entry keeps its number for good, because CLAUDE.md and code comments cite the numbers: one that
+leaves takes its number with it. Entry 5 — larger text on the Services page — left on 2026-10-10
+on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 
 ## 1 · Cookies — consent for the Google Maps embed
 
@@ -165,48 +169,6 @@ Decisions still go to CLAUDE.md §15.
   people — „Echipa medicală", „Medicii noștri"; not „Echipa noastră", which is already the Team
   page's own `<h1>` (hidden, but read by screen readers just before this band).
 
-## 5 · Larger text on the Services page, for older patients
-
-- **Why it waits:** the owner, 2026-10-02: "add to backlog … larger text on services page" · "it is
-  a measurte for old people" — CLAUDE.md §1's patients skew older. No size is chosen yet.
-- **What kind of change it is:** a larger default, not a fix. WCAG 2.2 AA sets no minimum text
-  size (SC 1.4.4 asks that text can be enlarged to 200%, which entry 2's pass checks), and a
-  visitor who has set a larger font size in the browser already gets it on this page, which is
-  sized in rem (§7). The entry is about what every patient sees without touching a setting.
-- **Today, read from the code (at the browser's default 16px):** the service names and prices in
-  each category card are `ui/Text` rows at `text-base`, 16px on a 24px line — one step UNDER the
-  18px body text of the rest of the site (§15.1's 1.125rem). ui/Text has one size by design; its
-  header names `text-base` the smaller step under that body text. Around the rows: each card's
-  eyebrow at 14px (ui/Eyebrow, the same on every page), the category titles at 30px on a phone
-  and 36px on a card at least 498px wide (Heading's `band` step, §15.24) and the menu's eleven
-  links at 18px (ui/TextButton).
-- **Since 2026-10-02, on a laptop or desktop — the band scale (CLAUDE.md §15.32 round 2):** the price
-  list draws in the band's own design pixel there, FLOORED at the theme's own (1rem / 16), so it never
-  draws smaller than today: the rows are 16px from the step up to the 1401 reference, then grow with
-  the window — 17.6 at 1536, 21.6 at 1882, 22.2 past the cap (measured on the built page) — while every
-  phone and touch tablet keeps 16px. Whatever size this entry picks becomes a DESIGN size the scale
-  carries, and the floor holds it as the smallest a laptop shows.
-- **The work:**
-  - the rows' size belongs to ui/Text, not to the band: §6.8 lets a parent's `className` place an
-    atom, never restyle it. Two routes, the owner's call between them — a size axis on ui/Text
-    that only the price rows ask for (a change to the atom's contract, through `/new-atom`), or a
-    larger size for every `ui/Text`, which also enlarges its five other users: the Footer, the
-    contact dialog, the review cards, a doctor's schedule card and the number tiles on Home, Team
-    and every doctor page;
-  - the cards and the menu grow with their text. The reading line plans each card's landing from
-    its measured height, and `lib/sticky-rail` already pins a menu taller than the window, so both
-    follow by themselves — re-run the three `tests/e2e/price-*.spec.ts` on the built page anyway,
-    in Romanian and German;
-  - phones: at 320px and at 200% zoom the longest German names wrap onto more lines, and no row may
-    push the page sideways;
-  - the screenshots: every Sections/PriceList and Pages/Services cell (and every changed `ui/Text`
-    user's on the second route); the records: CLAUDE.md §15.20, the price list's run, and a new
-    §15 item for the decision.
-- **Directions, if useful when the time comes (drafts, not decisions):** the rows at the site's
-  own 18px body size is the smallest step, and it ends the rows being smaller than everything
-  else; a bigger step is a look to try on the built page at 390 and 1280. The 14px eyebrows are
-  site-wide (§15.24), so enlarging them widens this entry — on the owner's word.
-
 ## 6 · Re-optimise the site for all its static content
 
 - **Why it waits:** the owner, 2026-10-02, while the ribbon's white specks were being fixed: "add also
@@ -232,3 +194,61 @@ Decisions still go to CLAUDE.md §15.
 - **How to measure it:** on the built export, served the way the host will serve it, never the dev
   server — `next dev` ships unminified bundles and a different image pipeline. Record each page
   type's numbers before and after, in five languages where the words change the weight.
+
+## 7 · What only the owner can supply — the placeholders
+
+- **Why it waits:** these are the clinic's facts and words, and the owner authors the site's
+  content (CLAUDE.md §15.17). Each is marked `TODO(owner)` where it lives; until it arrives, the
+  site shows a placeholder. Added on the owner's word, 2026-10-10.
+- **`src/lib/clinic/clinic.ts`:**
+  - the WhatsApp number — the phone's for now, on the owner's word ("for the moment leave same
+    number, i'll modify that", §15.27);
+  - the production domain — still `https://example.com`. The metadata §10 asks for needs it
+    (canonical URLs, hreflang links, the sitemap, the Open Graph tags), and the interim host stays
+    noindex until it is attached (§15.2).
+- **`src/lib/team/team.ts`:**
+  - the six doctors — their names and specialties are the owner's; everything else is a random
+    placeholder under those real names, in all five languages: the pictures (demo silhouettes),
+    the weekly hours, the course rows, the four „în cifre" numbers, the quotes and the three
+    biography paragraphs (§15.23 round 3, and the file's `TODO(owner): REAL DOCTORS, PLACEHOLDER
+    DETAILS` block, which also flags Claude's two edits to the names and the specialties for
+    confirmation). The hours matter most: a patient could act on a placeholder "Thursday: closed".
+    The reviewers' interim fix is the clinic's own week for all six until each doctor's is known;
+    the uncommitted `rework/drop-doctor-schedule` lane takes the doctors' weeks off the site
+    altogether — if it merges, the hours leave this entry;
+  - the clinic's three numbers on Home and Team — 16+ years, 8.000+ patients, 11.000+ procedures —
+    placeholders too (`clinicStats`, §15.23 round 5): no clinic-wide count exists in the
+    repository or on the old site.
+- **`src/lib/prices/prices.ts`:** five rows read off a skewed photograph of the printed tariff
+  carry `TODO(owner): verify against the printed sheet` (§15.20).
+- **`src/lib/hero-slides/hero-slides.ts`:** the Home opener's three slogans and their picture
+  descriptions are Claude's drafts in all five languages (§15.21 round 11) — to confirm or rewrite.
+- **Consent (GDPR):** written consent from the patients whose seven Google reviews show their
+  names, three with their photographs — a name beside a dental review is health data, art. 9
+  (§15.19 round 4, `src/lib/reviews/reviews.ts`); and the same from every doctor and every member
+  of staff the site names, pictures and describes (`lib/team`'s block). The staff's portraits are
+  still demo silhouettes (§15.23 round 4).
+- **Already public:** nothing in CI refuses a release while these placeholders remain — the
+  release gate recorded in §15.23 round 3, a test that refuses a production build while `lib/team`
+  is flagged placeholder, was never built — and the 2026-10-03 promotion published them on the
+  interim host, which is built with `NOINDEX=1` (`.github/workflows/release.yml`), so search
+  engines skip it.
+- **The work:** the owner sends each value; it lands in its file, where the data tests and the
+  CMSR scan (§13) check it.
+
+## 8 · Decisions parked until launch
+
+- **Why it waits:** each is recorded as the owner's to make before launch, and none blocks the
+  work in progress. Added on the owner's word, 2026-10-10.
+- **The decisions:**
+  - translated URLs — `/de/leistungen` instead of today's shared English slugs (`/de/services`).
+    Decide before launch: changing a published URL afterwards needs redirects (CLAUDE.md §5,
+    §15.3);
+  - EUR prices on the four foreign-language pages — every price is in RON today, on every page
+    (§8.3, §15.4; §15.20 records a EUR column "maybe, on every language");
+  - the share image — the picture WhatsApp and Facebook show beside a link to the site, the Open
+    Graph image (§10.3; §15.6's last open item, for which the logo mark is the natural source);
+  - the final host — Cloudflare Pages is the recommendation, not yet confirmed; GitHub Pages is
+    the interim host only and will not be the launch host (§15.2);
+  - the purple — whether `accent-decorative` #7A6D9C moves to the logo's own lilac #8576B1, which
+    re-tints the lilac tints, the auras and the ribbon with it (§15.1's one open sub-item, §15.28).

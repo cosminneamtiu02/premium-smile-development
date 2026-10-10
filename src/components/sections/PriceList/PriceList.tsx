@@ -108,7 +108,7 @@ import { PriceMenu } from './PriceMenu';
 // min(column, 96rem) / 1106): the band's own floor class (BAND_FLOOR, below)
 // sets the first term on the rhythm box, where ui/Container's pixel
 // declaration reads it (that file's THE FLOOR — this band its one wearer).
-// WHY: the owner's own BACKLOG entry 5 asks for LARGER price text for older
+// WHY: the owner's own BACKLOG entry 5 asked for LARGER price text for older
 // patients, never smaller, and what he complained of was the wide screens —
 // "i do not want the cards jsut to wide". The plain scale would have answered
 // the wide screens and, on every laptop under the reference, drawn the prices

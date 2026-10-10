@@ -4623,6 +4623,19 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     verified with the other nine privacy cells, which did not move (320 / 390 / 768: there the column is narrower than
     the measure was); no other cell can move, the band renders in its two story files alone and the class keeps other
     wearers, so no CSS rule left the stylesheet.
+    **Rebased onto develop 8525665 (#156, the doctor card on phones — §15.25 round 3), the same evening, on the owner's
+    "there are conflicts":** git merged CLAUDE.md by itself and MIGRATION_INVENTORY's two appended blocks were kept,
+    #156's row first; the eight cells both PRs had moved — Pages/Home and Pages/Team at 320 and 390 in both languages —
+    are re-recorded on the combined tree under classic scrollbars (the 15px gutter probed), the card's phone layout and
+    the note under the map together (each page 84px taller than #156's at 390 and 108px at 320: the note), and verified
+    with every other page and policy cell, 42 of 42, twice. The full suite against the committed set fails 49 more cells,
+    every one develop's own: 29 with no darwin baseline at all (Sections/DoctorCourses, DoctorIntro, DoctorProfile and
+    TintedBand at 1536, thirteen UI/Heading and UI/Text cells) and 20 stale (Pages/NotFound at 768 and wider,
+    Sections/ReviewCard, Sections/SectionHeading at 1536, UI/Button's Hover Outline, UI/Glyphs' Gallery) — the same 20
+    fail on develop 8ee3c8e's own Storybook, before this lane and #156; left as develop has them. Gates on the rebased
+    tree: prettier · eslint · tsc clean; vitest 152 files / 3 981 passed + 2 skipped with the optimizer variants hidden
+    (CI's condition); `next build` and build-storybook green; the link crawl 613 links / 53 pages / 0 broken; e2e 333
+    passed / 223 skipped.
 
 ## 16. Build-time vs runtime contract
 

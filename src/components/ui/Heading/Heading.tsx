@@ -281,6 +281,46 @@ import { slotClone } from '../slot';
 // (36px, then 40px), so nothing else rides the row. The elders are
 // byte-identical; only the union and one table row grew.
 //
+// 'name' JOINED 2026-10-10 with sections/PersonnelCard as its measured
+// consumer (its D20 — the doctor card's phone header). The owner had the
+// card's phone layout reworked (verbatim: "i'd go with bigger face but i
+// also want eyebrow like 10% bigger. get to implementing it" — the picked
+// rendition drew the name at 24px beside a round photo) while "On tablet and
+// desktop it's fine and should remain as is". So the step is `band` with ONE
+// size under it, spelled as `band` itself plus ONE override:
+// `font-display text-3xl @md:text-4xl @max-sm:text-2xl/tight` — 24px
+// (`/tight`, 1.25 → a 30px line) in a container narrower than 24rem (384px),
+// where the name shares its row with the photo, and from there up `band` to
+// the computed value: `section`'s 30px with its own 36px line, then `page`'s
+// 36px with its 40px line from `@md`. The 24px is Tailwind's own `text-2xl`
+// (§6.6 — no invented size); `/tight` is the line-height the step spells
+// where the size is, the `hero` row's own modifier, and the step of
+// Tailwind's leading scale nearest the 1.2 the picked rendition set its name
+// on: each line of a wrapped name stands 1.2px taller than the rendition's,
+// where text-2xl's own 32px pair would stand 3.2px taller.
+// WHY TODAY'S LOOK PLUS AN OVERRIDE, and not the small size as the base with
+// `@sm` lifting it (the step's first spelling, the G2 fold of 2026-10-10):
+// an engine WITHOUT container queries (Safari and every iPadOS 15 browser)
+// ignores every container row, so the base is what it draws — and spelled
+// this way the base is `band`'s 30px, the name every such engine drew before
+// the step existed, instead of a 24px name nothing else on its page reads at.
+// With container queries the two spellings compute the same (the override's
+// condition, under 24rem, and `@md`'s, from 28rem, never overlap; the test
+// file measures the step EQUAL to `band` at 24rem, 27.9rem, 28rem and 40rem).
+// Under 24rem a `/` modifier sets the line-height itself and no
+// `--tw-leading`, so nothing of the 30px line reaches the rows above it.
+// WHY A STEP AND NOT A CLASSNAME (§6.8): a consumer's className positions an
+// atom, it never re-sizes one — and the card's name is spelled ONCE for both
+// of its kinds (NAME_STEP), so a size overriding `band` there would have to
+// out-rank the step's own container rows in the stylesheet's order, the very
+// cascade accident the axis exists to keep out of call sites. Named by ROLE —
+// a person's name on a doctor card — never by its smallest size, so the day
+// another card wants its name to give way to a picture it wears this row.
+// THE FAILURE MODE IS `band`'s, to the pixel: with no container above it —
+// or no container queries at all — the variants never match and the heading
+// is `band`'s 30px. The elders are byte-identical; only the union and one
+// table row grew.
+//
 // Server-safe and zero-JS: no 'use client', no hooks, no state — slotClone is
 // render-time cloneElement, which is why TextButton asChild already runs
 // inside the zero-island Footer. Keep it that way.
@@ -290,7 +330,7 @@ import { slotClone } from '../slot';
 // ring belongs to the globals' :focus-visible net, not to this atom.
 
 export type HeadingSize =
-  'title' | 'section' | 'band' | 'page' | 'hero' | 'slogan';
+  'title' | 'section' | 'band' | 'name' | 'page' | 'hero' | 'slogan';
 export type HeadingTone =
   | 'default'
   | 'inverse'
@@ -306,8 +346,12 @@ type HeadingOwnProps = {
    * 'section' — the section-title look SectionHeading passes (D2) —
    * 'band' — THE h2 step (2026-09-26, D48): 30px on a column narrower than
    * the container's 28rem `@md` step, 36px from it, so an h2 never outranks
-   * the `hero` h1's 32px floor on a phone — the axis's one
+   * the `hero` h1's 32px floor on a phone — the axis's first
    * container-responsive row (see the header) —
+   * 'name' — a person's name on a doctor card (2026-10-10, PersonnelCard
+   * D20): `band`, one size smaller in a container under 24rem — 24px on a
+   * 30px line — where the name shares its row with the round photo; `band`
+   * itself on an engine without container queries (see the header) —
    * 'page' — the page-hero step the 404 band measured in (2026-09-07) —
    * 'hero' — the fluid full-screen step sections/Hero measured in
    * (2026-09-19; 32px → 72px with the viewport, see the header), THE h1
@@ -367,6 +411,10 @@ const sizeClasses: Record<HeadingSize, string> = {
   // Container-responsive (header, D48): section's 30px under a 28rem column,
   // page's 36px from it — never over the hero h1's 32px floor on a phone.
   band: 'font-display text-3xl @md:text-4xl',
+  // A doctor card's name (header, 'name' JOINED): `band`, and 24px on a
+  // `/tight` 30px line in a container under 24rem — `band` itself wherever
+  // container queries are not understood.
+  name: 'font-display text-3xl @md:text-4xl @max-sm:text-2xl/tight',
   page: 'font-display text-4xl',
   // Fluid: 32px floor (the 320px column), 3.5vw slope, 72px cap — the old
   // site's four-prefix staircase as one curve (header). `/tight` = 1.25.

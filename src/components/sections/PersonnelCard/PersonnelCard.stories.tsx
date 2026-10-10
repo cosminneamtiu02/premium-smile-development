@@ -104,6 +104,24 @@ import {
 // `PseudoLocale` re-record — 390 and 1536, and 320 for the two `stress-320`
 // ones: eight cells — and the Default play reads the size back; the three
 // doctor stories do not move.
+//
+// ── THE DOCTOR FRAMES' PHONE CELLS CHANGED on 2026-10-10 (D20, the owner's
+// pick of "S09.1 · Kicker, bigger face": "i'd go with bigger face but i also
+// want eyebrow like 10% bigger"): an INSET from a 12.5rem floor to its 24rem
+// `@sm` — every upright phone at 100 % zoom — the specialty spans the card on
+// top at 13.2px, then a round
+// photo (112px at a 390 phone, giving way to 72px on a narrower card) stands
+// on the LEFT beside the name at 24px — ui/Heading's `name` step, `band` from
+// `@sm` up — every line starting at the same left edge, and the words and the
+// link follow as before. ONE header for every card, the mirrored one included
+// (D20's ONE SIDE ON A PHONE — the owner, the same day, after flipping between
+// both builds on his iPhone: "i prefer only left on phone"); `side` mirrors
+// the card from the INSET's `@3xl` alone. `Doctor`, `DoctorMirrored` and
+// `GermanLongest` re-record at 390, and
+// the two `stress-320` ones at 320; their 1536 frames and every auxiliary
+// frame do not move. expectArrangement reads the branch off the INSET it
+// measures — the phone header, the stacked column or the grid — never off
+// the pinned width.
 
 const Band = ({ children }: { children: ReactNode }): ReactElement => (
   <section className="bg-page">
@@ -234,24 +252,49 @@ const expectNoSidewaysScroll = async (element: HTMLElement): Promise<void> => {
 const rem = (n: number): number =>
   n * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-/**
- * WHERE THE DOCTOR GRID FLIPS, derived rather than assumed. `@3xl` is 48rem of
- * the INSET's width (D7, D17) and a container query asks the CONTENT box — so
- * the inset's own padding (0 outside a ribbon, the lanes' surplus inside one)
- * comes off before the comparison, from the FRACTIONAL border-box width
- * (`clientWidth` is an integer and would disagree with the engine inside a
- * sub-pixel window around the step — G2 react). Deriving it here is what lets
- * these plays hold at ANY width: the visual runner ignores the viewport pin
- * and renders every `Sections/*` story at 390 and 1536, and the workbench
- * canvas is whatever the sidebar leaves.
- */
-const sitsBeside = (inset: HTMLElement): boolean => {
+/** The INSET's CONTENT box width — what every container step of the doctor
+ *  card asks — from the FRACTIONAL border-box width less the inset's own
+ *  padding (0 outside a ribbon, the lanes' surplus inside one): `clientWidth`
+ *  is an integer and would disagree with the engine inside a sub-pixel window
+ *  around a step (G2 react). */
+const insetContent = (inset: HTMLElement): number => {
   const { paddingLeft, paddingRight } = getComputedStyle(inset);
-  const contentWidth =
+  return (
     inset.getBoundingClientRect().width -
     parseFloat(paddingLeft) -
-    parseFloat(paddingRight);
-  return contentWidth >= rem(48);
+    parseFloat(paddingRight)
+  );
+};
+
+/**
+ * WHERE THE DOCTOR GRID FLIPS, derived rather than assumed. `@3xl` is 48rem of
+ * the INSET's width (D7, D17) and a container query asks the CONTENT box.
+ * Deriving it here is what lets these plays hold at ANY width: the visual
+ * runner ignores the viewport pin and renders every `Sections/*` story at 390
+ * and 1536, and the workbench canvas is whatever the sidebar leaves.
+ */
+const sitsBeside = (inset: HTMLElement): boolean =>
+  insetContent(inset) >= rem(48);
+
+/** WHERE THE PHONE HEADER IS (D20), derived the same way: an INSET content
+ *  box from THE FLOOR, 12.5rem, to the step, 24rem — every upright phone at
+ *  100 % zoom; under the floor (a zoomed phone) the card is the stacked one. */
+const inHeader = (inset: HTMLElement): boolean => {
+  const content = insetContent(inset);
+  return content >= rem(12.5) && content < rem(24);
+};
+
+/** The face the play measures text in: Storybook's fonts are `font-display:
+ *  block`, so text laid out before the woff2 arrives is laid out in the
+ *  fallback serif — load the real face first (the DoctorIntro / Hero
+ *  idiom). */
+const loadFace = async (element: HTMLElement): Promise<void> => {
+  const style = getComputedStyle(element);
+  await document.fonts.load(
+    `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+    element.textContent ?? '',
+  );
+  await document.fonts.ready;
 };
 
 /** A doctor card's boxes, reached from the <article>: the INSET is its one
@@ -347,10 +390,15 @@ const expectArrangement = async (
 ): Promise<void> => {
   const { inset, grid, block, picture, pair, heading, eyebrow, quote, link } =
     partsOf(card);
+  // The real faces first: every box below sits on how the name, the
+  // specialty and the words wrap.
+  await loadFace(heading);
+  await loadFace(eyebrow);
+  await loadFace(quote);
 
   // Reading order is "who, then what they say, then what you can do" whichever
   // way the card faces — `side` is a visual-only mirror, so a screen reader
-  // and the stacked phone layout see the same sequence in both stories.
+  // and the stacked layouts see the same sequence in both stories.
   await expect(
     block.compareDocumentPosition(quote) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
@@ -371,12 +419,24 @@ const expectArrangement = async (
   const quoteBox = quote.getBoundingClientRect();
   const linkBox = link.getBoundingClientRect();
   // A collapsed box (zero height) would satisfy an ordering comparison by
-  // accident — every one must occupy real space first (G2 react).
-  for (const box of [pictureBox, pairBox, quoteBox, linkBox]) {
+  // accident — every one must occupy real space first (G2 react). The name
+  // and the specialty are measured themselves: on a phone their PAIR has no
+  // box at all (`display: contents`, D20), and ITS box is asked for only
+  // where it has one.
+  for (const box of [
+    pictureBox,
+    heading.getBoundingClientRect(),
+    eyebrow.getBoundingClientRect(),
+    quoteBox,
+    linkBox,
+  ]) {
     await expect(box.height).toBeGreaterThan(0);
   }
+  await expect(getComputedStyle(pair).display).toBe(
+    inHeader(inset) ? 'contents' : 'flex',
+  );
 
-  // THE LINK, in both layouts: as wide as the words up to 28rem and centred
+  // THE LINK, in every layout: as wide as the words up to 28rem and centred
   // under them — the words span their column, so on a phone the link spans
   // the content width (D17: "be wider", then "too wide", then 28rem).
   await expect(
@@ -386,10 +446,80 @@ const expectArrangement = async (
     Math.abs(linkBox.left - quoteBox.left - (quoteBox.right - linkBox.right)),
   ).toBeLessThanOrEqual(1);
 
+  if (!beside && inHeader(inset)) {
+    // ON A PHONE — an INSET between THE FLOOR's 12.5rem and the step's 24rem —
+    // THE PHONE HEADER (D20):
+    // the specialty across the card on top, then the round photo on the LEFT
+    // beside the name, every line starting at the same left edge; then the
+    // words and the link as before. ONE header for every card: `side` acts
+    // from the step alone, so a mirrored card's phone header is the first
+    // card's (D20's ONE SIDE ON A PHONE — the owner, 2026-10-10: "i prefer
+    // only left on phone"). Painted specialty → [photo | name] → words →
+    // link; the DOM keeps the picture's cell, the name, the specialty — the
+    // reorder is paint.
+    const content = insetContent(inset);
+    await expect(gridStyle.flexDirection).toBe('column');
+    await expect(getComputedStyle(block).display).toBe('grid');
+    const specialtyBox = eyebrow.getBoundingClientRect();
+    const nameBox = heading.getBoundingClientRect();
+    // THE SPECIALTY spans the INSET, at the `card` step's 0.825rem; THE NAME
+    // at the `name` step's 1.5rem; both start-aligned, whatever the side.
+    await expect(Math.abs(specialtyBox.width - content)).toBeLessThanOrEqual(
+      0.5,
+    );
+    await expect(parseFloat(getComputedStyle(eyebrow).fontSize)).toBeCloseTo(
+      rem(0.825),
+      1,
+    );
+    await expect(parseFloat(getComputedStyle(heading).fontSize)).toBeCloseTo(
+      rem(1.5),
+      1,
+    );
+    await expect(getComputedStyle(eyebrow).textAlign).toBe('start');
+    await expect(getComputedStyle(heading).textAlign).toBe('start');
+    // THE CIRCLE: clamp(4.5rem, 100cqi − 10rem, 7rem) a side, round.
+    const diameter = Math.min(Math.max(rem(4.5), content - rem(10)), rem(7));
+    await expect(Math.abs(pictureBox.width - diameter)).toBeLessThanOrEqual(
+      0.5,
+    );
+    await expect(Math.abs(pictureBox.height - diameter)).toBeLessThanOrEqual(
+      0.5,
+    );
+    await expect(
+      parseFloat(getComputedStyle(picture).borderTopLeftRadius),
+    ).toBeGreaterThanOrEqual(diameter / 2);
+    // ROW 1 over ROW 2, the photo and the name centred on one line, 18px
+    // apart (four and a half spacing steps), the photo at the INSET's left
+    // edge and the name to its right — for `end` exactly as for `start`.
+    await expect(specialtyBox.bottom).toBeLessThanOrEqual(
+      Math.min(pictureBox.top, nameBox.top) + 0.5,
+    );
+    await expect(
+      Math.abs(centreY(pictureBox) - centreY(nameBox)),
+    ).toBeLessThanOrEqual(1);
+    const contentLeft =
+      inset.getBoundingClientRect().left +
+      parseFloat(getComputedStyle(inset).paddingLeft);
+    await expect(Math.abs(pictureBox.left - contentLeft)).toBeLessThanOrEqual(
+      0.5,
+    );
+    await expect(
+      Math.abs(nameBox.left - pictureBox.right - rem(1.125)),
+    ).toBeLessThanOrEqual(0.5);
+    // …then the words and the link, under the row.
+    await expect(quoteBox.top).toBeGreaterThanOrEqual(
+      Math.max(pictureBox.bottom, nameBox.bottom) - 0.5,
+    );
+    await expect(linkBox.top).toBeGreaterThanOrEqual(quoteBox.bottom - 0.5);
+    return;
+  }
+
   if (!beside) {
-    // Below the step: one column, PAINTED specialty → name → picture → words
-    // → link — the owner's phone order (D17). The DOM keeps the name before
-    // the specialty and both before the picture; the reversal is paint.
+    // From the INSET's `@sm` to the step, and under D20's FLOOR (a zoomed
+    // phone): one column, PAINTED specialty → name → picture → words → link
+    // — D17's stacked order, every tablet held
+    // upright. The DOM keeps the name before the specialty and both before
+    // the picture; the reversal is paint.
     await expect(gridStyle.flexDirection).toBe('column');
     await expect(getComputedStyle(block).display).toBe('flex');
     const painted = [eyebrow, heading, picture, quote, link].map((element) =>
@@ -527,7 +657,7 @@ const meta = {
     name: {
       control: 'text',
       description:
-        'The full name, finished and already translated (§8.1) — becomes the card’s real heading — an <h3> by default, an <h2> under `headingLevel={2}` (cards straight under a page’s h1), on ui/Heading’s `band` step either way — and, through aria-labelledby, the article’s accessible name (D4). Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
+        'The full name, finished and already translated (§8.1) — becomes the card’s real heading — an <h3> by default, an <h2> under `headingLevel={2}` (cards straight under a page’s h1), on one step either way — ui/Heading’s `band` for an auxiliary, its `name` for a doctor (`band`, and 24px beside the round photo of the phone header, D20) — and, through aria-labelledby, the article’s accessible name (D4). Never hyphenates: a person’s name wraps between words (§15.14’s rider) — and in a doctor’s phone header a word wider than its whole column breaks where it must, never at a syllable (D20’s THE NAME’S BELT)',
     },
     position: {
       control: 'text',
@@ -548,13 +678,13 @@ const meta = {
       control: 'inline-radio',
       options: Object.values(SIDE_OPTIONS),
       description:
-        'Which side the picture and the name sit on at the wide step. Default `start`. It mirrors the COLUMNS ONLY: the DOM order stays block → quote → link for both values, so reading order never moves (D7)',
+        'Which side the picture and the name sit on at the wide step. Default `start`. It mirrors the COLUMNS ONLY: the DOM order stays block → quote → link for both values, so reading order never moves (D7). Under the step it changes nothing — on a phone every card’s photo is on the left (D20)',
     },
     headingLevel: {
       control: 'inline-radio',
       options: [2, 3],
       description:
-        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1. ONLY the ELEMENT follows it: since 2026-10-02 a person’s name wears ui/Heading’s `band` step at both levels, for both kinds (§15.32 — 30px on a card narrower than 28rem, 36px from it; an auxiliary’s level 3 was `title` until then), so flipping it changes the outline and no pixel; the id and the aria-labelledby pair never change',
+        'The heading level of the name (D4): 3 by default — the level under a band’s own h2 — or 2 when the cards sit directly under a page’s h1. ONLY the ELEMENT follows it: since 2026-10-02 a person’s name wears ONE step at both levels — `band` for an auxiliary (§15.32 — 30px on a card narrower than 28rem, 36px from it; an auxiliary’s level 3 was `title` until then), and since 2026-10-10 `name` for a doctor (`band`, and 24px in the phone header, D20) — so flipping it changes the outline and no pixel; the id and the aria-labelledby pair never change',
     },
     profile: {
       control: false,
@@ -701,9 +831,10 @@ export const AuxiliaryGrid: Story = {
  * card's edge, 25px, exactly where they did on the flat 1px card.
  *
  * The arrangement assertion is DERIVED from the inset's measured content
- * width, not from the pinned viewport: at 1536 the card is the grid and at
- * 390 and 320 it is the stacked one column, and one assertion covers all
- * three.
+ * width, not from the pinned viewport: at 1536 the card is the grid, and at
+ * 390 and 320 it is the phone's header — the specialty across the top, the
+ * round photo beside the name (D20) — over the words and the link; one
+ * assertion covers all three, and the stacked column between them too.
  */
 export const Doctor: Story = {
   tags: ['stress-320'],
@@ -802,9 +933,13 @@ export const Doctor: Story = {
  * asserts the words now sit left of the cutout — and the link left of the
  * name — while the DOM order is still block → quote → link, which is what the
  * mirrored COLUMN placement buys and why the mirror costs a screen reader
- * nothing (D7). Below the step this story is identical in arrangement to
- * `Doctor` — specialty, name, cutout, words, link — and the derived assertion
- * says so at whatever width it is rendered.
+ * nothing (D7). The mirror is the wide step's ALONE: on a phone this card's
+ * header is `Doctor`'s, the round photo on the LEFT, the name right of it and
+ * the specialty above, all at the start (D20's ONE SIDE ON A PHONE — the
+ * owner, 2026-10-10: "i prefer only left on phone"), and the play asserts
+ * exactly that; between the phone and the step the column is `Doctor`'s too —
+ * specialty, name, cutout, words, link — and the derived assertion says which
+ * at whatever width it is rendered.
  */
 export const DoctorMirrored: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -852,9 +987,18 @@ export const DoctorMirrored: Story = {
  * read „…”, with not one character of it in any string (D8).
  *
  * The name and the position are the exception that proves the rule: both wear
- * `hyphens-none` (D4, D5), so they may only wrap between words. If the name
- * ever clips at 320, the fix is the page's measure, never a syllable break
- * through a person's surname.
+ * `hyphens-none` (D4, D5), so they never break at a syllable. SINCE D20
+ * (2026-10-10) THIS FRAME SHOWS THE NAME'S BELT AT WORK, BY DESIGN: on a phone
+ * the name stands beside the round photo at 24px, and this invented name's
+ * widest word, „Schwarzenbeck-", is 172px — wider than its column under a
+ * 302px INSET — so `overflow-wrap: anywhere` breaks it inside its column
+ * rather than letting it run past the card. MEASURED (overlay scrollbars, no
+ * ribbon here): at the pinned 390 a 301px INSET leaves a 171px column and the
+ * word takes two lines; at 320 a 238px INSET, a 142px column, two lines
+ * again; behind the pixel net's classic scrollbar (a 157.5px and a 133px
+ * column) the same — and in none of them does the card scroll sideways. The
+ * six real doctors' widest word is 87.6px, inside the header's narrowest
+ * column (D20's THE FLOOR, 110px), so on the site no real name breaks.
  *
  * The LABEL is German too — „Mehr über mich" — and the link it sits in spans
  * the phone's column: ui/Button's `hyphens-none` (§15.14's rider) means a

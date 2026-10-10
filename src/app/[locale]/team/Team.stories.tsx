@@ -40,8 +40,9 @@ import { toStatTiles } from './stat-tiles';
 //
 // ── TWO STORIES, the `Pages/*` tier's RO + DE (§13): Romanian pinned at the
 // Laptop window, where the doctor card sits in two columns; German at the
-// Smartphone, where it stacks — the longest language at the narrowest named
-// width. Playwright ignores the pin (it sets its own page size per project),
+// Smartphone, where it stacks under the phone's header (PersonnelCard D20) —
+// the longest language at the narrowest named width. Playwright ignores the
+// pin (it sets its own page size per project),
 // which is why every geometry assertion below asks the PAGE which branch it
 // is in instead of assuming the pinned width.
 //
@@ -126,18 +127,31 @@ const columnOf = (element: Element): HTMLElement => {
   throw new Error('team story: no size container above the element');
 };
 
-/** Is the card in its two-column branch? Asked of the container, never of the window. */
-const sitsBeside = (element: Element): boolean => {
+/** The content box of the container an element reads — for a doctor card,
+ *  its own INSET (PersonnelCard D17). */
+const contentOf = (element: Element): number => {
   const column = columnOf(element);
   const { paddingLeft, paddingRight, borderLeftWidth, borderRightWidth } =
     getComputedStyle(column);
-  const content =
+  return (
     column.getBoundingClientRect().width -
     parseFloat(paddingLeft) -
     parseFloat(paddingRight) -
     parseFloat(borderLeftWidth) -
-    parseFloat(borderRightWidth);
-  return content >= 48 * rem();
+    parseFloat(borderRightWidth)
+  );
+};
+
+/** Is the card in its two-column branch? Asked of the container, never of the window. */
+const sitsBeside = (element: Element): boolean =>
+  contentOf(element) >= 48 * rem();
+
+/** Is the card in its PHONE header (PersonnelCard D20)? Its INSET from the
+ *  12.5rem floor to 24rem — every upright phone at 100 % zoom — asked the
+ *  same way; under the floor the card stacks. */
+const inHeader = (element: Element): boolean => {
+  const content = contentOf(element);
+  return content >= 12.5 * rem() && content < 24 * rem();
 };
 
 /**
@@ -186,19 +200,23 @@ const cardName = (card: HTMLElement): string | null =>
 /**
  * The first doctor card, coarsely: the picture beside the text and the name
  * level with the button when the card has two columns; specialty → name →
- * picture → text → button when it stacks. The fine numbers are
- * sections/PersonnelCard's own stories' business.
+ * picture → text → button when it stacks; and on a phone (PersonnelCard D20)
+ * the specialty on top, then the round photo on the LEFT beside the name — as
+ * on every card, the mirrored ones too (D20's ONE SIDE ON A PHONE) — then the
+ * text and the button. The picture is
+ * measured by its CELL: on a phone the <img> is drawn 165 % of its circle and
+ * clipped. The fine numbers are sections/PersonnelCard's own stories' business.
  */
 const expectFirstCard = async (card: HTMLElement): Promise<void> => {
   const quote = within(card).getByRole('blockquote');
   const heading = within(card).getByRole('heading');
   const position = heading.parentElement?.querySelector('p');
-  const image = card.querySelector('img');
+  const cell = card.querySelector('img')?.parentElement;
   const link = within(card).getByRole('link');
-  if (!image || !position)
+  if (!cell || !position)
     throw new Error('team story: the first card lost its picture or position');
 
-  const picture = image.getBoundingClientRect();
+  const picture = cell.getBoundingClientRect();
   const name = heading.getBoundingClientRect();
   const specialty = position.getBoundingClientRect();
   const words = quote.getBoundingClientRect();
@@ -214,6 +232,20 @@ const expectFirstCard = async (card: HTMLElement): Promise<void> => {
     await expect(name.right).toBeLessThanOrEqual(button.left);
     await expect(name.top).toBeLessThan(button.bottom);
     await expect(button.top).toBeLessThan(specialty.bottom);
+    return;
+  }
+  if (inHeader(quote)) {
+    // Row 1 the specialty; row 2 the round photo ‖ the name; then the text
+    // and the button (D20).
+    await expect(specialty.bottom).toBeLessThanOrEqual(
+      Math.min(picture.top, name.top),
+    );
+    await expect(Math.abs(picture.width - picture.height)).toBeLessThan(0.5);
+    await expect(picture.right).toBeLessThanOrEqual(name.left);
+    await expect(Math.max(picture.bottom, name.bottom)).toBeLessThanOrEqual(
+      words.top,
+    );
+    await expect(words.bottom).toBeLessThanOrEqual(button.top);
     return;
   }
   await expect(specialty.bottom).toBeLessThanOrEqual(name.top);
@@ -305,6 +337,19 @@ const playPage =
     const [firstCard] = doctorCards;
     if (!firstCard) throw new Error('lib/team has no doctor to story');
     await expectFirstCard(firstCard);
+    // ONE SIDE ON A PHONE (PersonnelCard D20): in the phone header EVERY
+    // card's round photo stands left of its name — the mirrored, odd cards
+    // too ("i prefer only left on phone", the owner, 2026-10-10); `side`
+    // mirrors a card from its wide step alone.
+    for (const card of doctorCards) {
+      if (!inHeader(within(card).getByRole('blockquote'))) continue;
+      const cell = card.querySelector('img')?.parentElement;
+      if (!cell)
+        throw new Error(`team story: ${cardName(card)} lost its picture`);
+      await expect(cell.getBoundingClientRect().right).toBeLessThanOrEqual(
+        within(card).getByRole('heading').getBoundingClientRect().left,
+      );
+    }
 
     // THE RIBBON IS MOUNTED: one canvas per doctor in its decorative layer,
     // each sized — its guard zeroes them all when the strip would touch a
@@ -418,8 +463,9 @@ export const Romanian: Story = {
 };
 
 /** GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
- *  every card is one column (D21): the longest button label, the 27-letter
- *  tile compound and the longer quotes (see this file's header). With six
+ *  every card is one column (D21) under the phone's header — the round photo
+ *  beside the name, PersonnelCard D20: the longest button label, the
+ *  27-letter tile compound and the longer quotes (see this file's header). With six
  *  doctors this is also the page's TALLEST frame — the one whose last pictures
  *  lie beyond the browser's lazy-loading distance (`settled` above). */
 export const German: Story = {

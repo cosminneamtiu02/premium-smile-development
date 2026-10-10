@@ -48,7 +48,9 @@ import { DoctorShowcase, type DoctorShowcaseDoctor } from './DoctorShowcase';
 //     language;
 //   · the viewport pin, because a doctor card changes shape with the column
 //     it is handed — two columns from a card of ~893px inside the ribbon, one
-//     below it (PersonnelCard D17). The Vitest runner applies the pin;
+//     below it (PersonnelCard D17), and under a ~567px window the phone's
+//     header, a round photo beside the name (its D20). The Vitest runner
+//     applies the pin;
 //     Playwright ignores it and sets its own page size per project — which is
 //     why every play DERIVES the branch it is in from the measured card, never
 //     from the pinned width.
@@ -292,23 +294,36 @@ const containerOf = (element: Element): HTMLElement => {
   throw new Error('DoctorShowcase story: no size container above the card');
 };
 
+/** The content box of the container an element's card reads — the doctor
+ *  card's own INSET (PersonnelCard D17) — from its fractional width. */
+const containerContent = (element: Element): number => {
+  const box = containerOf(element);
+  const { paddingLeft, paddingRight, borderLeftWidth, borderRightWidth } =
+    getComputedStyle(box);
+  return (
+    box.getBoundingClientRect().width -
+    parseFloat(paddingLeft) -
+    parseFloat(paddingRight) -
+    parseFloat(borderLeftWidth) -
+    parseFloat(borderRightWidth)
+  );
+};
+
 /**
  * Is this card in its two-column branch? Asked of the container its grid
  * reads — its content box against 48rem — never of the window: Playwright
  * ignores the viewport pin, and the workbench canvas is whatever the sidebar
  * leaves.
  */
-const sitsBeside = (element: Element): boolean => {
-  const box = containerOf(element);
-  const { paddingLeft, paddingRight, borderLeftWidth, borderRightWidth } =
-    getComputedStyle(box);
-  const content =
-    box.getBoundingClientRect().width -
-    parseFloat(paddingLeft) -
-    parseFloat(paddingRight) -
-    parseFloat(borderLeftWidth) -
-    parseFloat(borderRightWidth);
-  return content >= 48 * rem();
+const sitsBeside = (element: Element): boolean =>
+  containerContent(element) >= 48 * rem();
+
+/** Is this card in its PHONE header (PersonnelCard D20)? Its INSET's content
+ *  box from the 12.5rem floor to 24rem — every upright phone at 100 % zoom —
+ *  asked the same way; under the floor the card stacks. */
+const inHeader = (element: Element): boolean => {
+  const content = containerContent(element);
+  return content >= 12.5 * rem() && content < 24 * rem();
 };
 
 /** D10's numbers, written out — the band's REFERENCE column, where its
@@ -427,7 +442,14 @@ type Expected = Readonly<{
  *     text or a button — and nothing focusable in that layer;
  *   · the sides (D5): at the two-column branch the picture LEFT of the words
  *     on every even card and RIGHT of them on every odd one; below it, the
- *     picture ABOVE the words (the owner's adaptability rule, §14);
+ *     picture ABOVE the words (the owner's adaptability rule, §14) — and on a
+ *     phone, the picture's round CELL LEFT of the name on EVERY card, odd ones
+ *     included, under the specialty and on its left edge (PersonnelCard D20's
+ *     ONE SIDE ON A PHONE — the owner, 2026-10-10: "i prefer only left on
+ *     phone"; the ribbon still alternates). The picture is measured by its
+ *     CELL: on a phone the <img> is drawn 165 % of its circle and clipped,
+ *     so its own box reaches past the circle on EVERY side — at a 112px
+ *     circle 36.4px left and right, 20.2px above and 114.2px below;
  *   · THE SCALE (D10, `expectScale`): from the Container's step the band in
  *     its design pixel, below it the theme's own sizes;
  *   · nothing scrolls sideways (§7).
@@ -483,14 +505,42 @@ const expectBand = async (
   for (const [index, card] of cards.entries()) {
     const quote = within(card).getByRole('blockquote');
     const image = card.querySelector('img');
-    if (image === null) {
+    const cell = image?.parentElement;
+    if (!image || !cell) {
       throw new Error(`DoctorShowcase story: card ${index + 1} has no picture`);
     }
-    const picture = image.getBoundingClientRect();
+    const picture = cell.getBoundingClientRect();
     const words = quote.getBoundingClientRect();
     await expect(picture.height).toBeGreaterThan(0);
     await expect(words.height).toBeGreaterThan(0);
-    if (!sitsBeside(quote)) {
+    if (inHeader(quote)) {
+      // THE PHONE HEADER (PersonnelCard D20): the specialty on top, then the
+      // round photo on the LEFT beside the name — on EVERY card, the odd,
+      // mirrored ones too (D20's ONE SIDE ON A PHONE) — every line at the
+      // same left edge, and the words under both.
+      const heading = within(card).getByRole('heading', { level: 3 });
+      const name = heading.getBoundingClientRect();
+      // The specialty is the eyebrow after the name in the DOM (PersonnelCard
+      // D17's PAIR) — painted above it on a phone.
+      const eyebrow = card.querySelector('h3 + p');
+      if (eyebrow === null) {
+        throw new Error(
+          `DoctorShowcase story: card ${index + 1} has no specialty`,
+        );
+      }
+      const specialty = eyebrow.getBoundingClientRect();
+      await expect(specialty.bottom).toBeLessThanOrEqual(
+        Math.min(picture.top, name.top) + 0.5,
+      );
+      await expect(Math.abs(picture.width - picture.height)).toBeLessThan(0.5);
+      await expect(Math.abs(picture.left - specialty.left)).toBeLessThan(0.5);
+      await expect(picture.right).toBeLessThanOrEqual(name.left);
+      await expect(getComputedStyle(heading).textAlign).toBe('start');
+      await expect(getComputedStyle(eyebrow).textAlign).toBe('start');
+      await expect(Math.max(picture.bottom, name.bottom)).toBeLessThanOrEqual(
+        words.top,
+      );
+    } else if (!sitsBeside(quote)) {
       await expect(picture.bottom).toBeLessThanOrEqual(words.top);
     } else if (index % 2 === 0) {
       await expect(picture.right).toBeLessThanOrEqual(words.left);
@@ -617,9 +667,12 @@ export const Desktop: Story = {
 };
 
 /**
- * THE PHONE — every card one column, the specialty, the name, the picture,
- * the words and the link one above the other (PersonnelCard D17's phone
- * order), and the ribbon at its bolder phone gauge (§15.26, fb-501).
+ * THE PHONE — every card one column: the specialty across the top, the round
+ * photo on the LEFT beside the name on BOTH cards, the mirrored second
+ * included (PersonnelCard D20, the owner's picks of 2026-10-10 — "S09.1 ·
+ * Kicker, bigger face", then "i prefer only left on phone"), then the words
+ * and the link; and the ribbon at its bolder phone gauge, still alternating
+ * from card to card (§15.26, fb-501).
  */
 export const Smartphone: Story = {
   globals: { locale: 'ro', viewport: { value: 'smartphone' } },

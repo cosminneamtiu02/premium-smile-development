@@ -1688,13 +1688,20 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
         const { inset, grid, picture, quote, name, link } = partsOf(card);
         const room = contentWidth(inset);
         const at = `${width}px, card ${index + 1}`;
-        // Stacked — the card every phone keeps, and every column under the
-        // card's own flip.
+        // One column — every column under the card's own flip. Under its
+        // INSET's 24rem the two atom steps are their phone sizes — the
+        // specialty at the `card` eyebrow's 0.825rem, the name at the `name`
+        // step's 1.5rem — and from the 12.5rem FLOOR to there the header is
+        // THE PHONE HEADER (PersonnelCard D20), the name beside a round photo
+        // (the 300px column's cards, every phone's at 100 % zoom); from 24rem
+        // up, and under the floor, the stacked card of before.
+        const small = room < 24 * rem;
+        const phone = small && room >= 12.5 * rem;
         expect(getComputedStyle(grid).display, at).toBe('flex');
         exact(lengthOf(quote, 'font-size'), 18, `${at}: the quote`);
         exact(
           lengthOf(name, 'font-size'),
-          room >= 28 * rem ? 36 : 30,
+          small ? 1.5 * rem : room >= 28 * rem ? 36 : 30,
           `${at}: the name`,
         );
         exact(
@@ -1702,14 +1709,39 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
             within(card).getByText(DOCTORS[index].position),
             'font-size',
           ),
-          14,
+          small ? 0.825 * rem : 14,
           `${at}: the specialty`,
         );
-        // The cutout's 18rem cell — the whole column where that is less.
-        const cell = Math.min(18 * rem, room);
         const shot = picture.getBoundingClientRect();
-        exact(shot.width, cell, `${at}: the picture's width`);
-        exact(shot.height, (cell * 4) / 3, `${at}: the picture's height`);
+        if (phone) {
+          // The circle, clamp(4.5rem, 100cqi − 10rem, 7rem) a side, and the
+          // cutout drawn 165 % of it inside, clipped (D20's THE CROP).
+          const circle = (
+            picture.parentElement as HTMLElement
+          ).getBoundingClientRect();
+          const side = Math.min(Math.max(4.5 * rem, room - 10 * rem), 7 * rem);
+          exact(circle.width, side, `${at}: the circle's width`);
+          exact(circle.height, side, `${at}: the circle's height`);
+          exact(shot.width, 1.65 * side, `${at}: the cropped picture's width`);
+          // ONE SIDE ON A PHONE (PersonnelCard D20 — the owner, 2026-10-10:
+          // "i prefer only left on phone"): the circle at the inset's LEFT
+          // edge and the name 18px right of it on BOTH cards — the second is
+          // the band's `end` (D5), whose mirror waits for the wide step.
+          const edge =
+            inset.getBoundingClientRect().left +
+            parseFloat(getComputedStyle(inset).paddingLeft);
+          exact(circle.left, edge, `${at}: the photo at the left edge`);
+          exact(
+            name.getBoundingClientRect().left,
+            circle.right + 1.125 * rem,
+            `${at}: the name right of the photo`,
+          );
+        } else {
+          // The cutout's 18rem cell — the whole column where that is less.
+          const cell = Math.min(18 * rem, room);
+          exact(shot.width, cell, `${at}: the picture's width`);
+          exact(shot.height, (cell * 4) / 3, `${at}: the picture's height`);
+        }
         // The link: as wide as the words up to 28rem, the lg box's 3.5rem.
         const action = link.getBoundingClientRect();
         exact(action.width, Math.min(28 * rem, room), `${at}: the link`);

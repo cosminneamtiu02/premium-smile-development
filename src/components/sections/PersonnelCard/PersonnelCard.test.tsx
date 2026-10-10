@@ -1,5 +1,5 @@
 import { createRef, type CSSProperties, type Ref } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import {
   afterAll,
   beforeAll,
@@ -9,10 +9,12 @@ import {
   it,
   vi,
 } from 'vitest';
-// The REAL stylesheet, for ONE block of this suite since 2026-10-01 (D19):
+// The REAL stylesheet, for TWO blocks of this suite: since 2026-10-01 (D19)
 // THE INSET measured — at the theme's step and inside a design drawn at
 // another pixel (globals.css's THE DESIGN SCALE) — because a subtraction of
-// six spacing steps is a COMPUTED length that no class string can answer.
+// six spacing steps is a COMPUTED length that no class string can answer;
+// and since 2026-10-10 (D20) THE PHONE HEADER measured against the INSET's
+// `@sm`, on both of its sides, and today's card measured from it.
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
 // house pattern (Card, Ribbon, Modal, ContactModal …). The STYLES note below
 // says what that changes for the rest of the file: nothing.
@@ -54,15 +56,18 @@ import source from './PersonnelCard.tsx?raw';
 // stylesheet), and until 2026-10-01 this file loaded none either, so the
 // utility TOKENS are the contract almost everywhere here — the convention
 // every component test in this repo follows. Since D19 the file imports
-// globals.css (top of file) for ONE describe block, "THE INSET, measured":
-// the INSET's subtraction is six SPACING STEPS, and only an engine can say
-// what that comes to at the theme's step and inside a design drawn at
-// another pixel. Every other assertion still reads tokens, attributes and
-// roles — none reads a computed value, so each holds with the sheet or
-// without it. What else needs real CSS — the justified quote, the faint ink,
-// the lilac keywords, the language's own quotation marks, the doctor card's
-// frame on all four sides and the two arrangements of the doctor card — is
-// asserted one tier up, in PersonnelCard.stories.tsx's play functions.
+// globals.css (top of file) for the describe blocks that MEASURE — "THE
+// INSET, measured" (the INSET's subtraction is six SPACING STEPS, and only an
+// engine can say what that comes to at the theme's step and inside a design
+// drawn at another pixel) and, since D20, "THE PHONE HEADER, measured" (a
+// container query on the INSET's content box, the circle's clamp and the
+// crop, and today's card from the step up). Every other assertion still
+// reads tokens, attributes and roles — none reads a computed value, so each
+// holds with the sheet or without it. What else needs real CSS — the
+// justified quote, the faint ink, the lilac keywords, the language's own
+// quotation marks, the doctor card's frame on all four sides and the
+// arrangements of the doctor card at a page's real widths — is asserted one
+// tier up, in PersonnelCard.stories.tsx's play functions.
 //
 // ── HARNESS NOTE — why a `process` shim, copied verbatim from Image.test.tsx
 // with its reason. The `components` vitest project is bare Vite in a real
@@ -219,13 +224,23 @@ const FRAMED_ROW = [
 const CARD_SURFACE = [...CARD_BASE, ...SURFACE_ROW].join(' ');
 const CARD_FRAMED = [...CARD_BASE, ...FRAMED_ROW].join(' ');
 
-/** ui/Heading's `band` step (its sizeClasses table, run D48) — every person's
- *  name since 2026-10-02, both kinds, both levels (D4, §15.32). Its `title`
- *  step left this file that day with the auxiliary's level-3 cell. */
+/** ui/Heading's `band` step (its sizeClasses table, run D48) — an auxiliary's
+ *  name at both levels since 2026-10-02 (D4, §15.32), and a doctor's until
+ *  2026-10-10. Its `title` step left this file on 2026-10-02 with the
+ *  auxiliary's level-3 cell. */
 const BAND_STEP = 'font-display text-3xl @md:text-4xl text-ink-strong';
-/** ui/Eyebrow's RECIPE constant. */
+/** ui/Heading's `name` step — a doctor's name at both levels since
+ *  2026-10-10 (D4, D20): `band`, plus one override — 24px under the INSET's
+ *  24rem. */
+const NAME_STEP_CLASSES =
+  'font-display text-3xl @md:text-4xl @max-sm:text-2xl/tight text-ink-strong';
+/** ui/Eyebrow's RECIPE, its `default` row — an auxiliary's position. */
 const EYEBROW_RECIPE =
   'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase';
+/** ui/Eyebrow's `card` row — a doctor's specialty since 2026-10-10 (D5, D20):
+ *  the default, plus one override — 13.2px under the INSET's 24rem. */
+const EYEBROW_CARD_RECIPE =
+  'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase @max-sm:text-[0.825rem]/snug';
 /** ui/Image's `framed` row (its variantClasses table). */
 const FRAMED_RECIPE = 'h-full w-full rounded-xl object-cover';
 /** ui/Image's `artwork` row (its variantClasses table). */
@@ -260,9 +275,12 @@ const buttonFace = (variant: ButtonVariant, tone: ButtonTone): string => {
 const BLOCK = 'flex flex-col items-center gap-3 text-center';
 const NAME_PAIR = 'flex flex-col items-center gap-3';
 
-/** The doctor's rows (D17): the inset, the grid, which column each half takes,
- *  the block and the pair turned upward below the step, the cutout's cell, the
- *  three row placements, the quote's dress and the link's width — byte for
+/** The doctor's rows (D17, D20): the inset, the grid, which column each half
+ *  takes, the block and the pair — THE PHONE HEADER's grid and its dissolved
+ *  pair from the INSET's 12.5rem FLOOR to its `@sm`, turned upward from it to
+ *  the step and under the floor — the
+ *  cutout's cell and its circle, the phone's cells, the three row placements,
+ *  the cutout as drawn, the quote's dress and the link's width — byte for
  *  byte. */
 const INSET =
   '@container pt-[max(0px,calc(var(--ribbon-lane-top,calc(var(--spacing)*6))_-_calc(var(--spacing)*6)))] px-[max(0px,calc(var(--ribbon-lane-side,calc(var(--spacing)*6))_-_calc(var(--spacing)*6)))]';
@@ -281,11 +299,35 @@ const COLUMN = {
   start: { block: '@3xl:col-start-1', words: '@3xl:col-start-2' },
   end: { block: '@3xl:col-start-2', words: '@3xl:col-start-1' },
 } satisfies Record<PersonnelSide, Record<'block' | 'words', string>>;
+/** THE BLOCK — ONE string for both sides since the owner's "i prefer only left
+ *  on phone" (D20's ONE SIDE ON A PHONE): the phone header's photo track
+ *  first, the text at the start, on every card. */
 const DOCTOR_BLOCK =
-  'flex flex-col-reverse items-center gap-3 text-center @3xl:contents';
+  'flex flex-col-reverse items-center gap-3 text-center @min-[12.5rem]:@max-sm:grid @min-[12.5rem]:@max-sm:grid-cols-[auto_minmax(0,1fr)] @min-[12.5rem]:@max-sm:gap-x-4.5 @min-[12.5rem]:@max-sm:text-start @3xl:contents';
 const DOCTOR_PAIR =
-  'flex flex-col-reverse items-center gap-3 @3xl:flex-col @3xl:justify-self-center';
+  'flex flex-col-reverse items-center gap-3 @min-[12.5rem]:@max-sm:contents @3xl:flex-col @3xl:justify-self-center';
 const PICTURE = 'w-72 max-w-full';
+/** THE PHONE HEADER's two container variants (D20): THE FLOOR's 12.5rem and
+ *  the step's 24rem — every token the header adds opens with both. */
+const PHONE_HEADER_VARIANTS = '@min-[12.5rem]:@max-sm:';
+/** THE PHONE HEADER's circle (D20): 112px from a 272px INSET up, giving way
+ *  to a 72px floor, clipped round over ui/Card's own tint behind its colour-mix
+ *  gate, the light line-subtle grey without it. */
+const CIRCLE =
+  '@min-[12.5rem]:@max-sm:relative @min-[12.5rem]:@max-sm:size-[clamp(4.5rem,calc(100cqi_-_10rem),7rem)] @min-[12.5rem]:@max-sm:overflow-hidden @min-[12.5rem]:@max-sm:rounded-full @min-[12.5rem]:@max-sm:bg-line-subtle @min-[12.5rem]:@max-sm:supports-[color:color-mix(in_lab,red,red)]:bg-[var(--card-tint,var(--color-line-subtle))]';
+/** THE PHONE HEADER's cells (D20) — ONE set for every card, whatever its side
+ *  (D20's ONE SIDE ON A PHONE): the photo in the left column, the name in the
+ *  right one, the specialty across both, at the start. */
+const PHONE = {
+  photo:
+    '@min-[12.5rem]:@max-sm:row-start-2 @min-[12.5rem]:@max-sm:col-start-1',
+  name: '@min-[12.5rem]:@max-sm:row-start-2 @min-[12.5rem]:@max-sm:col-start-2 @min-[12.5rem]:@max-sm:wrap-anywhere',
+  eyebrow:
+    '@min-[12.5rem]:@max-sm:col-span-2 @min-[12.5rem]:@max-sm:row-start-1 @min-[12.5rem]:@max-sm:text-start',
+} satisfies Record<'photo' | 'name' | 'eyebrow', string>;
+/** The cutout as drawn (D17, D20): the `artwork` row, then the phone's crop. */
+const FIGURE =
+  'h-auto max-w-full object-contain @min-[12.5rem]:@max-sm:absolute @min-[12.5rem]:@max-sm:left-[-32.5%] @min-[12.5rem]:@max-sm:top-[-18%] @min-[12.5rem]:@max-sm:w-[165%] @min-[12.5rem]:@max-sm:max-w-none';
 const PHOTO_CELL = '@3xl:row-start-1 @3xl:self-end @3xl:justify-self-center';
 const TEXT_CELL = '@3xl:row-start-1 @3xl:self-center';
 const BOTTOM = '@3xl:row-start-2 @3xl:self-center';
@@ -297,8 +339,10 @@ const ACTION = 'mx-auto w-full max-w-md';
 const doctorRows = (side: PersonnelSide) => ({
   grid: GRID[side],
   block: DOCTOR_BLOCK,
-  picture: `${PICTURE} ${COLUMN[side].block} ${PHOTO_CELL}`,
+  picture: `${PICTURE} ${CIRCLE} ${PHONE.photo} ${COLUMN[side].block} ${PHOTO_CELL}`,
   pair: `${DOCTOR_PAIR} ${COLUMN[side].block} ${BOTTOM}`,
+  name: `${NAME_STEP_CLASSES} hyphens-none ${PHONE.name}`,
+  eyebrow: `${EYEBROW_CARD_RECIPE} hyphens-none text-center ${PHONE.eyebrow}`,
   quote: `${QUOTE} ${COLUMN[side].words} ${TEXT_CELL}`,
   link: `${buttonFace('solid', 'accent')} ${ACTION} ${COLUMN[side].words} ${BOTTOM}`,
 });
@@ -730,7 +774,11 @@ describe('PersonnelCard — auxiliary is the column alone (D2)', () => {
     expect(container.querySelector('blockquote')).toBeNull();
   });
 
-  it('carries no wide-step row anywhere — nothing to sit beside', () => {
+  it('carries no wide-step row and no phone row anywhere — nothing to sit beside, nothing to re-lay (D20)', () => {
+    // THE PHONE HEADER is the doctor's (D20): a staff tile keeps its column
+    // at every width, so not one token under 24rem may reach it — neither the
+    // header's nor the two atom steps' overrides — its name and its position
+    // included, which are spelled once for both kinds.
     const { container } = renderAuxiliary();
 
     for (const element of [
@@ -739,6 +787,7 @@ describe('PersonnelCard — auxiliary is the column alone (D2)', () => {
     ]) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/^@3xl:/);
+        expect(token).not.toMatch(/@max-sm:/);
       }
     }
     expect(layoutOf(container).className).toBe('flex flex-col gap-6');
@@ -984,6 +1033,390 @@ describe('PersonnelCard — doctor: THE INSET, measured (D17, D19 — real style
   );
 });
 
+/** A box's rectangle, the shorthand the measured blocks below read. */
+const boxOf = (element: Element): DOMRect => element.getBoundingClientRect();
+
+/**
+ * A card measured at a given INSET width — a doctor's (either side) or an
+ * auxiliary tile at the same outer box. Outside a ribbon the INSET adds
+ * nothing (D17), so the card's box is the content plus its six steps + 1px of
+ * border and padding a side (ui/Card's SUM RULE) — 25px at the theme's step.
+ * The box's width rides an inline style, never an arbitrary class (Tailwind
+ * reads class names from this file too: a width spelled as a class here would
+ * ship as a rule nothing on the site wears).
+ */
+const renderAtInset = (
+  inset: number,
+  card: { kind: 'doctor'; side?: PersonnelSide } | { kind: 'auxiliary' },
+) => {
+  const style: CSSProperties = {
+    width: `${inset + 2 * (6 * themeStep() + 1)}px`,
+  };
+  render(
+    <div style={style}>
+      {card.kind === 'doctor' ? (
+        <PersonnelCard
+          kind="doctor"
+          name={DOCTOR_NAME}
+          position={DOCTOR_ROLE}
+          photo={CUTOUT}
+          about={ABOUT}
+          profile={PROFILE}
+          {...(card.side ? { side: card.side } : {})}
+        />
+      ) : (
+        <PersonnelCard
+          kind="auxiliary"
+          name={AUX_NAME}
+          position={AUX_ROLE}
+          photo={PHOTO}
+        />
+      )}
+    </div>,
+  );
+  const article = screen.getByRole('article');
+  const inner = article.firstElementChild as HTMLElement;
+  const insetStyle = getComputedStyle(inner);
+  return {
+    article,
+    /** The INSET's content box — what every container step of the card reads
+     *  (for a tile, its layout <div>, which spans the card's content box). */
+    content:
+      boxOf(inner).width -
+      parseFloat(insetStyle.paddingLeft) -
+      parseFloat(insetStyle.paddingRight),
+    contentBox: boxOf(inner),
+    heading: screen.getByRole('heading'),
+    position: screen.getByText(card.kind === 'doctor' ? DOCTOR_ROLE : AUX_ROLE),
+    image: within(article).getByRole('presentation'),
+  };
+};
+
+/** The doctor card's measured parts, by structure (D7, D17, D20). */
+const doctorBoxes = (article: HTMLElement) => {
+  const inset = article.firstElementChild as HTMLElement;
+  const grid = inset.firstElementChild as HTMLElement;
+  const block = grid.children[0] as HTMLElement;
+  return {
+    grid,
+    block,
+    cell: block.children[0] as HTMLElement,
+    quote: within(article).getByRole('blockquote'),
+    link: within(article).getByRole('link'),
+  };
+};
+
+const centreY = (box: DOMRect): number => box.top + box.height / 2;
+
+describe('PersonnelCard — doctor: THE PHONE HEADER, measured (D20 — real stylesheet)', () => {
+  // THE STILLNESS RULE, as in the block above: the card's colour fade and the
+  // link's jump never run under a reading.
+  let still: HTMLStyleElement | undefined;
+  beforeAll(() => {
+    still = document.createElement('style');
+    still.textContent =
+      '*, *::before, *::after { transition: none !important; animation: none !important; }';
+    document.head.append(still);
+  });
+  afterAll(() => {
+    still?.remove();
+  });
+
+  it.each(['start', 'end'] as const)(
+    'lays a 390 phone’s card (a 277px INSET) out as the owner picked it — the specialty across the top, then the round photo on the LEFT beside the name — side "%s" alike',
+    (side) => {
+      const { article, content, contentBox, heading, position } = renderAtInset(
+        277,
+        { kind: 'doctor', side },
+      );
+      const { grid, block, cell, quote, link } = doctorBoxes(article);
+      // The premise: under the INSET's 24rem `@sm`, the card's one column.
+      expect(content).toBeCloseTo(277, 1);
+      expect(content).toBeLessThan(24 * 4 * themeStep());
+      expect(getComputedStyle(grid).display).toBe('flex');
+      expect(getComputedStyle(block).display).toBe('grid');
+
+      const photo = boxOf(cell);
+      const name = boxOf(heading);
+      const specialty = boxOf(position);
+
+      // ROW 1 — the specialty, across the whole INSET, at the `card` step's
+      // 13.2px, starting at the card's left edge on EVERY card (D20's ONE SIDE
+      // ON A PHONE); 12px above the row.
+      expect(specialty.left).toBeCloseTo(contentBox.left, 1);
+      expect(specialty.width).toBeCloseTo(content, 1);
+      expect(getComputedStyle(position).fontSize).toBe('13.2px');
+      expect(getComputedStyle(position).textAlign).toBe('start');
+      expect(Math.min(photo.top, name.top) - specialty.bottom).toBeCloseTo(
+        12,
+        1,
+      );
+
+      // ROW 2 — a 112px CIRCLE on the left beside the name, 18px apart, both
+      // centred in the row; the name at the `name` step's 24px on its 30px
+      // line, starting at its column's left edge — for either `side`.
+      expect(photo.width).toBeCloseTo(112, 1);
+      expect(photo.height).toBeCloseTo(112, 1);
+      const cellStyle = getComputedStyle(cell);
+      expect(parseFloat(cellStyle.borderTopLeftRadius)).toBeGreaterThanOrEqual(
+        photo.width / 2,
+      );
+      expect(cellStyle.overflow).toBe('hidden');
+      // THE COUPLING (D20's THE CIRCLE): the circle's ground is ui/Card's own
+      // `--card-tint`, read through the card's colour-mix gate — the very
+      // colour of the card's frame, which reads the same variable. EQUAL, so
+      // a renamed or re-mixed tint in ui/Card turns this red here, and never
+      // a transparent circle (the gated rule falls back to the grey).
+      expect(cellStyle.backgroundColor).toBe(
+        getComputedStyle(article).borderTopColor,
+      );
+      expect(cellStyle.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(getComputedStyle(heading).fontSize).toBe('24px');
+      expect(getComputedStyle(heading).lineHeight).toBe('30px');
+      expect(getComputedStyle(heading).textAlign).toBe('start');
+      expect(getComputedStyle(heading).overflowWrap).toBe('anywhere');
+      expect(Math.abs(centreY(photo) - centreY(name))).toBeLessThanOrEqual(0.5);
+      expect(photo.left).toBeCloseTo(contentBox.left, 1);
+      expect(name.left - photo.right).toBeCloseTo(18, 1);
+      expect(name.right).toBeCloseTo(contentBox.right, 1);
+
+      // THEN the quote and the link, exactly as before: 24px apart, the link
+      // the INSET's whole width up to its 28rem cap.
+      expect(
+        boxOf(quote).top - Math.max(photo.bottom, name.bottom),
+      ).toBeCloseTo(24, 1);
+      expect(boxOf(link).top - boxOf(quote).bottom).toBeCloseTo(24, 1);
+      expect(boxOf(link).width).toBeCloseTo(content, 1);
+
+      // Nothing scrolls the card sideways — the crop is clipped by its circle.
+      expect(article.scrollWidth).toBeLessThanOrEqual(article.clientWidth);
+    },
+  );
+
+  it.each([200, 218, 277, 383])(
+    'draws side="end" EXACTLY as side="start" on a phone — a %ipx INSET: the photo at the left edge, the name right of it, every line at the start (D20’s ONE SIDE ON A PHONE)',
+    (inset) => {
+      // The regression pin against mirroring creeping back into the phone
+      // header (the owner, 2026-10-10: "i prefer only left on phone"). Every
+      // box of the header is measured on both sides and must agree, relative
+      // to the INSET's own left edge — from THE FLOOR to a pixel under the
+      // step. The `@3xl` mirror stays ('mirrors the columns for side="end"').
+      const read = (side: PersonnelSide) => {
+        const { article, contentBox, heading, position } = renderAtInset(
+          inset,
+          { kind: 'doctor', side },
+        );
+        const { block, cell } = doctorBoxes(article);
+        const at = (box: DOMRect) => ({
+          left: box.left - contentBox.left,
+          top: box.top - contentBox.top,
+          width: box.width,
+        });
+        const reading = {
+          display: getComputedStyle(block).display,
+          photo: at(boxOf(cell)),
+          name: at(boxOf(heading)),
+          specialty: at(boxOf(position)),
+          nameAlign: getComputedStyle(heading).textAlign,
+          specialtyAlign: getComputedStyle(position).textAlign,
+        };
+        cleanup();
+        return reading;
+      };
+      const start = read('start');
+      const end = read('end');
+      expect(start.display).toBe('grid');
+      expect(start.photo.left).toBeCloseTo(0, 1);
+      expect(start.name.left).toBeGreaterThan(
+        start.photo.left + start.photo.width,
+      );
+      expect(start.nameAlign).toBe('start');
+      expect(start.specialtyAlign).toBe('start');
+      expect(end).toEqual(start);
+    },
+  );
+
+  it.each([
+    {
+      inset: 200,
+      photo: 72,
+      nameColumn: 110,
+      at: 'THE FLOOR itself (inclusive)',
+    },
+    { inset: 218, photo: 72, nameColumn: 128, at: 'a 320 phone' },
+    { inset: 250, photo: 90, nameColumn: 142, at: 'the photo giving way' },
+    { inset: 272, photo: 112, nameColumn: 142, at: 'the 112px photo’s first' },
+    { inset: 309.95, photo: 112, nameColumn: 179.95, at: 'a 430 phone' },
+    { inset: 383, photo: 112, nameColumn: 253, at: 'a pixel under the step' },
+  ])(
+    'gives the PHOTO way on a narrower card so the name keeps its column — $at ($inset px INSET)',
+    ({ inset, photo, nameColumn }) => {
+      // clamp(4.5rem, 100cqi − 10rem, 7rem): the circle is 112px from a 272px
+      // INSET up and gives way below it, the name keeping 142px of row (100cqi
+      // − 10rem, less the 18px gap) down to a 232px INSET, where the photo
+      // meets its 72px floor and the name's column is the rest — never under
+      // THE FLOOR's 110px (the widest real name word, 87.6px, with SC 1.4.12's
+      // letter spacing on), because under a 200px INSET there is no header.
+      // The 383px row is the step's other edge: a phone header still, which a
+      // step mistyped one size down (`@max-xs`, 20rem) would have lost.
+      const { article, content, heading } = renderAtInset(inset, {
+        kind: 'doctor',
+      });
+      const { block, cell } = doctorBoxes(article);
+      expect(content).toBeCloseTo(inset, 1);
+      expect(getComputedStyle(block).display).toBe('grid');
+      expect(boxOf(cell).width).toBeCloseTo(photo, 1);
+      expect(boxOf(cell).height).toBeCloseTo(photo, 1);
+      expect(boxOf(heading).width).toBeCloseTo(nameColumn, 1);
+      expect(boxOf(heading).width).toBeGreaterThanOrEqual(110 - 0.05);
+    },
+  );
+
+  it.each([190, 199])(
+    'is TODAY’s stacked card UNDER THE FLOOR — a %ipx INSET, a zoomed phone’s: the whole cutout across the column, the name and the specialty centred, no grid, no belt (D20’s THE FLOOR)',
+    (inset) => {
+      // A 390 phone at 200 % zoom lays out at 195px — an INSET under 12.5rem.
+      // There the header would leave the name a column of a few px (measured
+      // on the built export before the floor: at 195 „Dr. Malea (Sabău) Oana
+      // Bianca" one letter a line), so the card is develop's stacked one:
+      // specialty → name → picture → words, centred, the cutout in its cell
+      // as wide as the column, and no `overflow-wrap: anywhere` — a word stays
+      // whole. The two atom steps keep their phone sizes (24px, 13.2px): they
+      // answer 24rem alone.
+      const { article, content, heading, position, image } = renderAtInset(
+        inset,
+        { kind: 'doctor' },
+      );
+      const { grid, block, cell, quote } = doctorBoxes(article);
+      expect(content).toBeCloseTo(inset, 1);
+      expect(getComputedStyle(grid).display).toBe('flex');
+      expect(getComputedStyle(block).display).toBe('flex');
+      expect(getComputedStyle(block).flexDirection).toBe('column-reverse');
+      expect(getComputedStyle(heading.parentElement as Element).display).toBe(
+        'flex',
+      );
+
+      const cellStyle = getComputedStyle(cell);
+      expect(cellStyle.borderTopLeftRadius).toBe('0px');
+      expect(cellStyle.overflow).toBe('visible');
+      expect(cellStyle.position).toBe('static');
+      expect(getComputedStyle(image).position).toBe('static');
+      expect(boxOf(cell).width).toBeCloseTo(content, 1);
+      expect(boxOf(image).width).toBeCloseTo(content, 1);
+      expect(boxOf(image).height).toBeCloseTo((content * 4) / 3, 1);
+
+      expect(getComputedStyle(heading).textAlign).toBe('center');
+      expect(getComputedStyle(position).textAlign).toBe('center');
+      expect(getComputedStyle(heading).overflowWrap).toBe('normal');
+      expect(getComputedStyle(heading).fontSize).toBe('24px');
+      expect(getComputedStyle(position).fontSize).toBe('13.2px');
+
+      const painted = [position, heading, cell, quote].map(boxOf);
+      for (const [index, box] of painted.entries()) {
+        if (index === 0) continue;
+        expect(box.top).toBeGreaterThanOrEqual(painted[index - 1].bottom);
+      }
+    },
+  );
+
+  it('crops the cutout into the circle — the <img> 165 % of it, 32.5 % out to the left and 18 % above — while the PORTRAIT marker stays on the cell', () => {
+    // THE CROP shows the file's square (177, 98)–(723, 643): head and
+    // shoulders. lib/ribbon-layout measures `portrait` by the cell's OWN box,
+    // so the oversized <img> — laid out past the circle, clipped by it — is
+    // never a keep-out; marked plainly, the circle would be measured with its
+    // contents and the ribbon's guard would withhold the whole ribbon.
+    const { article, image } = renderAtInset(277, { kind: 'doctor' });
+    const { cell } = doctorBoxes(article);
+    const circle = boxOf(cell);
+    const drawn = boxOf(image);
+
+    expect(drawn.width).toBeCloseTo(1.65 * circle.width, 1);
+    expect(drawn.height).toBeCloseTo(1.65 * circle.width * (4 / 3), 1);
+    expect(circle.left - drawn.left).toBeCloseTo(0.325 * circle.width, 1);
+    expect(circle.top - drawn.top).toBeCloseTo(0.18 * circle.width, 1);
+    expect(drawn.width).toBeGreaterThan(circle.width);
+    // The square the circle shows, in the file's own pixels.
+    const scale = CUTOUT.width / drawn.width;
+    expect((circle.left - drawn.left) * scale).toBeCloseTo(177.3, 0);
+    expect((circle.top - drawn.top) * scale).toBeCloseTo(98.2, 0);
+    expect((circle.right - drawn.left) * scale).toBeCloseTo(722.7, 0);
+
+    expect(cell).toHaveAttribute('data-ribbon-keepout', 'portrait');
+    expect(image).not.toHaveAttribute('data-ribbon-keepout');
+    expect(image.parentElement).toBe(cell);
+    expect(getComputedStyle(cell).position).toBe('relative');
+    expect(getComputedStyle(image).position).toBe('absolute');
+  });
+
+  it.each([
+    { inset: 384, name: 30, columns: 1, at: 'the INSET’s `@sm` itself' },
+    { inset: 396, name: 30, columns: 1, at: 'a 600px tablet window' },
+    { inset: 517, name: 36, columns: 1, at: 'a 768 tablet' },
+    { inset: 850, name: 36, columns: 2, at: 'two columns' },
+  ])(
+    'is TODAY’s doctor card from the INSET’s `@sm` up — $at ($inset px INSET)',
+    ({ inset, name, columns }) => {
+      // The owner: "On tablet and desktop it's fine and should remain as is".
+      // Read off the engine at the step's own edge and beyond it: no circle,
+      // no crop, the 18rem cutout cell drawn whole (3:4), the name on `band`'s
+      // sizes and the specialty on the default eyebrow's 14px, centred — and
+      // stacked specialty → name → picture → words → link until the two
+      // columns.
+      const { article, content, heading, position, image } = renderAtInset(
+        inset,
+        { kind: 'doctor' },
+      );
+      const { grid, block, cell, quote } = doctorBoxes(article);
+      expect(content).toBeCloseTo(inset, 1);
+      expect(getComputedStyle(grid).display).toBe(
+        columns === 2 ? 'grid' : 'flex',
+      );
+      expect(getComputedStyle(block).display).toBe(
+        columns === 2 ? 'contents' : 'flex',
+      );
+
+      const cellStyle = getComputedStyle(cell);
+      expect(cellStyle.borderTopLeftRadius).toBe('0px');
+      expect(cellStyle.overflow).toBe('visible');
+      expect(cellStyle.position).toBe('static');
+      expect(getComputedStyle(image).position).toBe('static');
+      expect(boxOf(cell).width).toBeCloseTo(Math.min(288, content), 1);
+      expect(boxOf(image).width).toBeCloseTo(boxOf(cell).width, 1);
+      expect(boxOf(image).height).toBeCloseTo((boxOf(cell).width * 4) / 3, 1);
+
+      expect(getComputedStyle(heading).fontSize).toBe(`${name}px`);
+      expect(getComputedStyle(position).fontSize).toBe('14px');
+      expect(getComputedStyle(position).textAlign).toBe('center');
+      expect(getComputedStyle(heading).textAlign).toBe('center');
+
+      if (columns === 1) {
+        const painted = [position, heading, cell, quote].map(boxOf);
+        for (const [index, box] of painted.entries()) {
+          if (index === 0) continue;
+          expect(box.top).toBeGreaterThanOrEqual(painted[index - 1].bottom);
+        }
+      }
+    },
+  );
+
+  it.each([277, 396])(
+    'leaves an AUXILIARY tile as it was at every width — the band step, the default eyebrow, the 3:4 portrait (a %ipx content box)',
+    (inset) => {
+      // THE PHONE HEADER is the doctor's: a staff tile keeps its column, its
+      // `band` name (30px on a card under its 28rem `@md`), its 14px position
+      // and its 192px portrait at a phone's width as at a tablet's.
+      const { heading, position, image } = renderAtInset(inset, {
+        kind: 'auxiliary',
+      });
+      expect(getComputedStyle(heading).fontSize).toBe('30px');
+      expect(getComputedStyle(position).fontSize).toBe('14px');
+      expect(getComputedStyle(position).textAlign).toBe('center');
+      expect(boxOf(image).width).toBeCloseTo(192, 1);
+      expect(boxOf(image).height).toBeCloseTo(256, 1);
+    },
+  );
+});
+
 describe('PersonnelCard — doctor: the block, the words, the link (D7, D17)', () => {
   it('runs block → quote → link in the DOM — for both sides (D7)', () => {
     // Reading order is "who, then what they say, then what you can do"
@@ -1021,17 +1454,28 @@ describe('PersonnelCard — doctor: the block, the words, the link (D7, D17)', (
       '@3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]',
     );
     // The block DISSOLVES at the step so its two boxes become grid items of
-    // their own (D15); below the step it paints upward (D17's phone order).
+    // their own (D15); from the INSET's `@sm` to the step it paints upward
+    // (D17's stacked order); under `@sm` it is THE PHONE HEADER's grid, the
+    // photo's track first (D20).
     expect(block.className).toBe(rows.block);
     expect(picture.className).toBe(rows.picture);
     expect(pair.className).toBe(rows.pair);
+    expect(
+      screen.getByRole('heading', { level: 3, name: DOCTOR_NAME }).className,
+    ).toBe(rows.name);
+    expect(screen.getByText(DOCTOR_ROLE).className).toBe(rows.eyebrow);
     expect(screen.getByRole('blockquote').className).toBe(rows.quote);
     expect(theLink().className).toBe(rows.link);
   });
 
-  it('mirrors the columns for side="end" — the same grid, reversed', () => {
-    // Every cell swaps column and nothing else: the rows, the alignments and
-    // the DOM stay exactly as they are for `start` (D7's visual-only mirror).
+  it('mirrors the columns for side="end" — the same grid, reversed — and leaves the PHONE HEADER exactly the start card’s', () => {
+    // Every cell swaps column at the step and nothing else: the rows, the
+    // alignments and the DOM stay exactly as they are for `start` (D7's
+    // visual-only mirror). On a phone NOTHING mirrors (the owner: "i prefer
+    // only left on phone" — D20's ONE SIDE ON A PHONE): the RENDERED cards of
+    // both sides carry the same classes once their `@3xl` tokens are set
+    // aside, so the photo sits left on every card — compared element by
+    // element below, never through this file's own tables.
     const { container } = renderDoctor('end');
 
     const rows = doctorRows('end');
@@ -1043,8 +1487,66 @@ describe('PersonnelCard — doctor: the block, the words, the link (D7, D17)', (
     expect(block.className).toBe(rows.block);
     expect(picture.className).toBe(rows.picture);
     expect(pair.className).toBe(rows.pair);
+    expect(
+      screen.getByRole('heading', { level: 3, name: DOCTOR_NAME }).className,
+    ).toBe(rows.name);
+    expect(screen.getByText(DOCTOR_ROLE).className).toBe(rows.eyebrow);
     expect(screen.getByRole('blockquote').className).toBe(rows.quote);
     expect(theLink().className).toBe(rows.link);
+
+    // THE RENDERED PROOF of ONE SIDE ON A PHONE: both sides rendered afresh and
+    // compared element by element — every class but the wide step's `@3xl:`
+    // ones identical, so nothing below the step can tell the two cards apart.
+    const belowTheStep = (element: Element): string =>
+      [...element.classList]
+        .filter((token) => !token.startsWith('@3xl:'))
+        .join(' ');
+    const classesOf = (side: PersonnelSide): string[] => {
+      const { container: card } = renderDoctor(side);
+      const classes = [...card.querySelectorAll('*')].map(belowTheStep);
+      cleanup();
+      return classes;
+    };
+    cleanup();
+    const startClasses = classesOf('start');
+    expect(startClasses.length).toBeGreaterThan(8);
+    expect(classesOf('end')).toEqual(startClasses);
+  });
+
+  it('adds nothing but the header’s two-variant tokens for THE PHONE HEADER — every class from the INSET’s `@sm` up, and under THE FLOOR, is today’s (D20)', () => {
+    // The owner: "On tablet and desktop it's fine and should remain as is".
+    // So the phone's header is spelled ENTIRELY in tokens that carry BOTH
+    // container variants — THE FLOOR's and the step's — and with them taken
+    // away every element of the card wears exactly the classes it wore before
+    // D20 — the measured block below proves the computed half. The steps of
+    // the name and the specialty are the one other change, and they are
+    // `band` and the default eyebrow plus one override under 24rem
+    // (ui/Heading's and ui/Eyebrow's own suites measure that).
+    const BEFORE = {
+      block:
+        'flex flex-col-reverse items-center gap-3 text-center @3xl:contents',
+      pair: 'flex flex-col-reverse items-center gap-3 @3xl:flex-col @3xl:justify-self-center',
+    };
+    const today = (classes: string): string =>
+      classes
+        .split(' ')
+        .filter((token) => !token.startsWith(PHONE_HEADER_VARIANTS))
+        .join(' ');
+    for (const side of ['start', 'end'] as const) {
+      const rows = doctorRows(side);
+      expect(today(rows.block)).toBe(BEFORE.block);
+      expect(today(rows.pair)).toBe(
+        `${BEFORE.pair} ${COLUMN[side].block} ${BOTTOM}`,
+      );
+      expect(today(rows.picture)).toBe(
+        `${PICTURE} ${COLUMN[side].block} ${PHOTO_CELL}`,
+      );
+      expect(today(rows.name)).toBe(`${NAME_STEP_CLASSES} hyphens-none`);
+      expect(today(rows.eyebrow)).toBe(
+        `${EYEBROW_CARD_RECIPE} hyphens-none text-center`,
+      );
+      expect(today(FIGURE)).toBe(ARTWORK_RECIPE);
+    }
   });
 
   it('takes the start columns for an explicit side={undefined} too (the ?? path)', () => {
@@ -1091,14 +1593,54 @@ describe('PersonnelCard — doctor: the cutout (D3, D17)', () => {
     expect(cutout).toHaveAttribute('alt', '');
   });
 
-  it('draws the whole cutout — ui/Image’s artwork recipe, never the framed crop', () => {
+  it('draws the whole cutout — ui/Image’s artwork recipe, never the framed crop — and on a phone crops it into the circle (D20)', () => {
     // The doctor from the waist up, no background: cropping it into a 3:4
-    // frame would cut the figure, and `artwork` draws the whole image.
+    // frame would cut the figure, and `artwork` draws the whole image. Since
+    // D20 the recipe is spelled at the call site (FIGURE, on `plain`) so a
+    // phone can crop it; it OPENS with the atom's own row, and every token
+    // after it is a phone's.
     const { container } = renderDoctor();
 
     const cutout = within(container).getByRole('presentation');
-    expect(cutout.className).toBe(ARTWORK_RECIPE);
+    expect(cutout.className).toBe(FIGURE);
+    expect(cutout.className.startsWith(`${ARTWORK_RECIPE} `)).toBe(true);
+    for (const token of tokensOf(cutout).slice(
+      ARTWORK_RECIPE.split(' ').length,
+    )) {
+      expect(token.startsWith(PHONE_HEADER_VARIANTS)).toBe(true);
+    }
     expect(cutout.parentElement).toBe(doctorPartsOf(container).picture);
+  });
+
+  it('is the `artwork` picture attribute for attribute but for the phone’s classes — `plain` + `artwork`’s empty placeholder (D20)', () => {
+    // ui/Image's own rule for a consumer whose geometry differs: `plain`,
+    // the geometry spelled by the caller — DoctorIntro's cutout is the
+    // precedent. COMPARED with the atom's `artwork` variant rather than
+    // trusted: the same src, srcset, sizes, size, alt, loading and NO blur
+    // placeholder (`artwork` defaults it to "empty", `plain` would not).
+    const { container, unmount } = render(
+      <Image
+        variant="artwork"
+        src={CUTOUT.src}
+        width={CUTOUT.width}
+        height={CUTOUT.height}
+        alt=""
+        sizes={CUTOUT_SIZES}
+      />,
+    );
+    const { class: artworkClass, ...artwork } = attributesOf(
+      cutoutOf(container),
+    );
+    unmount();
+    const { class: cardClass, ...card } = attributesOf(
+      cutoutOf(renderDoctor().container),
+    );
+
+    expect(card).toEqual(artwork);
+    expect(cardClass?.startsWith(`${artworkClass} `)).toBe(true);
+    // Never vacuous: the picture really carries no blur ghost — the style a
+    // blur placeholder writes is absent on both.
+    expect(card.style ?? '').not.toMatch(/background-image/);
   });
 
   it('keeps the cutout’s intrinsic size, declares its box — 18rem, and 21vw where the band scales it — and loads lazily (§11)', () => {
@@ -1180,20 +1722,24 @@ const cutoutOf = (container: HTMLElement): HTMLElement =>
   within(container).getByRole('presentation');
 
 /**
- * The cutout as this card rendered it BEFORE D18 — ui/Image with the card's
- * own six props and nothing else (its `sizes` D19's CUTOUT_SIZES) — mounted
- * and unmounted inside the helper, so "attribute for attribute what it is
- * today" is a comparison, never a belief.
+ * The cutout as this card renders it when no band asks for it EARLY — ui/Image
+ * with the card's own props and nothing else (its `sizes` D19's CUTOUT_SIZES;
+ * since D20 `plain` with the `artwork` recipe spelled in FIGURE and the empty
+ * placeholder passed — the test above holds that pair to the atom's own
+ * `artwork`) — mounted and unmounted inside the helper, so "attribute for
+ * attribute what it is without D18" is a comparison, never a belief.
  */
 const bareCutout = (): Record<string, string | null> => {
   const { container, unmount } = render(
     <Image
-      variant="artwork"
+      variant="plain"
       src={CUTOUT.src}
       width={CUTOUT.width}
       height={CUTOUT.height}
       alt=""
+      placeholder="empty"
       sizes={CUTOUT_SIZES}
+      className={FIGURE}
     />,
   );
   const attributes = attributesOf(cutoutOf(container));
@@ -1297,8 +1843,11 @@ describe('PersonnelCard — doctor: eager only when the band asks (D18)', () => 
   });
 });
 
-describe('PersonnelCard — doctor: the name wears `band` at both levels (D4, D17)', () => {
-  it('renders an <h3> by default, on the `band` step, unhyphenatable', () => {
+describe('PersonnelCard — doctor: the name wears `name` at both levels (D4, D17, D20)', () => {
+  it('renders an <h3> by default, on the `name` step, unhyphenatable, placed in THE PHONE HEADER’s row', () => {
+    // ui/Heading's `name` step since 2026-10-10: `band` from the INSET's
+    // `@sm` up — what the doctor's name wore until then — and 24px under it,
+    // beside the round photo (D20); `band` itself stays the auxiliary's.
     renderDoctor();
 
     const heading = screen.getByRole('heading', {
@@ -1306,7 +1855,10 @@ describe('PersonnelCard — doctor: the name wears `band` at both levels (D4, D1
       name: DOCTOR_NAME,
     });
     expect(heading.tagName).toBe('H3');
-    expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
+    expect(heading.className).toBe(
+      `${NAME_STEP_CLASSES} hyphens-none ${PHONE.name}`,
+    );
+    expect(heading.className).not.toContain(BAND_STEP);
   });
 
   it('renders an <h2> for headingLevel={2} — the element follows the level, the step does not', () => {
@@ -1327,17 +1879,32 @@ describe('PersonnelCard — doctor: the name wears `band` at both levels (D4, D1
       name: DOCTOR_NAME,
     });
     expect(heading.tagName).toBe('H2');
-    expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
+    expect(heading.className).toBe(
+      `${NAME_STEP_CLASSES} hyphens-none ${PHONE.name}`,
+    );
     expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
     expect(cardOf(container)).toHaveAttribute('aria-labelledby', heading.id);
   });
 
-  it('dresses the specialty exactly as an auxiliary’s position (D5)', () => {
+  it('dresses the specialty in ui/Eyebrow’s `card` step — an auxiliary’s position plus the phone’s cell (D5, D20)', () => {
+    // The default eyebrow's dress, centred per element and unhyphenatable,
+    // on the atom's `card` step — the default's 14px from the INSET's `@sm`
+    // up — and, on a phone, across both columns of THE PHONE HEADER's first
+    // row, starting at the card's left edge ON THE ELEMENT (§15.15 b), on
+    // every card whatever its side (D20's ONE SIDE ON A PHONE).
     renderDoctor();
 
     const position = screen.getByText(DOCTOR_ROLE);
     expect(position.tagName).toBe('P');
     expect(position.className).toBe(
+      `${EYEBROW_CARD_RECIPE} hyphens-none text-center ${PHONE.eyebrow}`,
+    );
+  });
+
+  it('keeps an auxiliary’s position on the DEFAULT eyebrow step — the card step is the doctor’s alone', () => {
+    renderAuxiliary();
+
+    expect(screen.getByText(AUX_ROLE).className).toBe(
       `${EYEBROW_RECIPE} hyphens-none text-center`,
     );
   });
@@ -1586,20 +2153,28 @@ describe('PersonnelCard — the ribbon’s seam: four literal keep-outs (§15.26
 
 describe('PersonnelCard — container steps only, zero islands (D7, D11)', () => {
   it('carries no media queries anywhere — those are the page’s (§6.5)', () => {
-    // Container variants (@3xl:) are the allowed shape: they measure the CARD,
-    // which is what makes the same card right in a grid track and in a
-    // full-width band.
+    // Container variants (@3xl:, and D20's @min-[12.5rem]: and @max-sm:) are
+    // the allowed shape: they measure the CARD, which is what makes the same
+    // card right in a grid track and in a full-width band. A VIEWPORT
+    // variant — a bare breakpoint or an arbitrary `min-[…]` / `max-[…]` — is
+    // what this refuses, wherever it stands in a token's chain; an `@` in
+    // front marks the container form.
     const { container } = renderDoctor('end');
 
+    let containerVariants = 0;
     for (const element of [
       cardOf(container),
       ...container.querySelectorAll('*'),
     ]) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
-        expect(token).not.toMatch(/(min|max)-\[/);
+        expect(token).not.toMatch(/(^|:)(min|max)-\[/);
+        if (token.startsWith('@min-[12.5rem]:')) containerVariants += 1;
       }
     }
+    // Never vacuous: the arbitrary CONTAINER variant is really there — the
+    // regexes above are what let it through.
+    expect(containerVariants).toBeGreaterThan(0);
   });
 
   it('ships NO client directive — the card is inert HTML (§16)', () => {
@@ -1860,17 +2435,19 @@ describe('PersonnelCard — the heading level is an additive axis (D4, 2026-09-2
   });
 
   it.each([
-    ['auxiliary', 2],
-    ['auxiliary', 3],
-    ['doctor', 2],
-    ['doctor', 3],
+    ['auxiliary', 2, `${BAND_STEP} hyphens-none`],
+    ['auxiliary', 3, `${BAND_STEP} hyphens-none`],
+    ['doctor', 2, `${NAME_STEP_CLASSES} hyphens-none ${PHONE.name}`],
+    ['doctor', 3, `${NAME_STEP_CLASSES} hyphens-none ${PHONE.name}`],
   ] as const)(
-    'keeps the name on the band step for the %s kind at level %i — ONE look at either level, for both kinds (D4, 2026-10-02)',
-    (kind, level) => {
+    'keeps the %s kind’s name on ONE step at level %i — the level is the outline’s, never the look’s (D4, 2026-10-02; D20)',
+    (kind, level, classes) => {
       // NAME_STEP stays a table, so a cell can move again on the owner's
-      // word; this pins all four as they stand. "i have attatched the sizes i
-      // want for responsiveness to be mentained in desired screens": the
-      // staff tiles keep their 30px names at level 3, beside the doctors'.
+      // word — D20 moved the doctor's pair to `name`; this pins all four as
+      // they stand. "i have attatched the sizes i want for responsiveness to
+      // be mentained in desired screens": the staff tiles keep their 30px
+      // names at level 3, and a doctor's name is `band` from the INSET's
+      // `@sm` up at either level, 24px beside the photo under it.
       const name = kind === 'doctor' ? DOCTOR_NAME : AUX_NAME;
       render(
         kind === 'doctor' ? (
@@ -1896,7 +2473,7 @@ describe('PersonnelCard — the heading level is an additive axis (D4, 2026-09-2
 
       const heading = screen.getByRole('heading', { level, name });
       expect(heading.tagName).toBe(`H${level}`);
-      expect(heading.className).toBe(`${BAND_STEP} hyphens-none`);
+      expect(heading.className).toBe(classes);
     },
   );
 

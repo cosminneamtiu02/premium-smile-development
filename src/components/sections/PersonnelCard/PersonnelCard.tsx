@@ -6,7 +6,7 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/Button/Button';
 import { Card, type CardTone } from '@/components/ui/Card/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
+import { Eyebrow, type EyebrowSize } from '@/components/ui/Eyebrow/Eyebrow';
 import { Heading, type HeadingSize } from '@/components/ui/Heading/Heading';
 import { Image } from '@/components/ui/Image/Image';
 import { cx } from '@/lib/cx/cx';
@@ -38,6 +38,13 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // heading level, for both kinds — the auxiliary's level-3 cell moved from
 // `title` to `band` (D4) — and the scale D19 follows became every band's
 // (ui/Container's THE BAND SCALE), the staff tiles' band among them.
+// On 2026-10-10 D20 gave the doctor kind a PHONE HEADER — under its INSET's
+// `@sm` and over a 12.5rem floor, the specialty across the top, then a round
+// photo on the left beside the name, on every card whatever its `side` —
+// while every tablet, laptop and desktop keeps the
+// card to the computed value, and a zoomed phone under the floor keeps its
+// stacked layout;
+// it amends D4–D7, D15, D17 and D18, and the auxiliary kind is byte-identical.
 //
 // ── NO OLD COUNTERPART, deliberately. The owner's brief opens with "do not
 // inspire yourself from the old website, as this will be a new card", so the
@@ -116,17 +123,22 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // on a 2× screen instead of the 1080px one (Image's own G2 a11y A5 note).
 //
 // ── D4 · THE NAME. `Heading` on a REAL heading through asChild, for BOTH
-// kinds — and ONE STEP for both, at either level: a person's name wears
-// `band`, a doctor's and an auxiliary's alike, at `headingLevel` 2 and at the
-// default 3. THE LEVEL IS THE OUTLINE'S, NEVER THE LOOK'S (2026-10-02,
-// CLAUDE.md §15.32): the element follows `headingLevel`, the size does not.
-// `band` is ui/Heading's one container-responsive row (run D48, its header):
+// kinds — and ONE STEP per kind, at either level: an auxiliary's name wears
+// `band`, and a doctor's wore it too until 2026-10-10, when D20 moved it to
+// ui/Heading's `name` step — `band` to the computed value from the INSET's
+// 24rem `@sm` up, 24px on a 30px line under it, where the name shares its row
+// with the round photo — at `headingLevel` 2 and at the default 3 alike. THE
+// LEVEL IS THE OUTLINE'S, NEVER THE LOOK'S (2026-10-02, CLAUDE.md §15.32): the
+// element follows `headingLevel`, the size does not.
+// `band` is ui/Heading's first container-responsive row (run D48, its header):
 // 30px on a column narrower than the container's 28rem `@md` step, 36px from
 // it — and the container it reads is THIS CARD (its own `@container`,
 // ui/Card) or, for a doctor, the INSET inside it (D17), never the screen. So
-// a doctor card is wider than 28rem from a tablet up (36px) and narrower on a
-// phone (30px, under the hero h1's 32px floor), while an auxiliary tile in
-// TeamRoster's grid can be narrower than 28rem on a laptop too (30px there).
+// a doctor card's INSET is wider than 28rem from a ~672px window up (36px),
+// between 24rem and 28rem from a ~567px one — a 7″ tablet's 600 among them
+// (30px) — and under 24rem on every upright phone (24px, D20; windows inside
+// the ribbon, measured 2026-10-10), while an auxiliary tile in TeamRoster's
+// grid can be narrower than 28rem on a laptop too (30px there).
 // THE HISTORY, short. From 2026-09-26 an auxiliary's name wore THE STEP OF
 // ITS LEVEL (§15.24: one size per outline level app-wide, the doctor page's)
 // — `band` at 2, the Team page's tiles straight under its h1, and `title`
@@ -147,9 +159,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // pixel (D19's last paragraph) — and the only frames this cell moves are the
 // default-level auxiliary stories in PersonnelCard.stories.tsx. §15.24's
 // per-level sentence is superseded for a person's name.
-// The NAME_STEP table (kind × level) stays a TABLE although its four cells
-// now hold one answer: any cell can move again on the owner's word, and a
-// third kind or level cannot compile until it names its step. The atom
+// The NAME_STEP table (kind × level) stays a TABLE although each kind's two
+// cells hold one answer: any cell can move again on the owner's word — D20
+// moved the doctor's pair — and a third kind or level cannot compile until it
+// names its step. The atom
 // answers "how big is this title" and never "which element is it", which is
 // why the outline slot stays this section's decision.
 // `hyphens-none` on the heading: the site-wide `hyphens: auto` (§15.14) is for
@@ -177,7 +190,12 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //
 // ── D5 · THE POSITION. ui/Eyebrow — the only consumer of the §3 mono token —
 // so the uppercase is CSS and the string stays sentence case (Ș/Ț case mapping
-// is the browser's job, §8.2/§8.8). `text-center` rides the atom's className
+// is the browser's job, §8.2/§8.8). An auxiliary's wears the atom's one
+// default step; a doctor's, since D20, its `card` step (EYEBROW_STEP) — the
+// default's 14px from the INSET's `@sm` up, 13.2px under it, where in the
+// phone header it spans the card over the photo's row and starts at the
+// card's left edge (on the element, for the reason that follows).
+// `text-center` rides the atom's className
 // because globals.css aligns every <p> to `start` in the base layer, and a
 // declaration matching the element itself beats a value inherited from an
 // ancestor: centring prose is a PER-ELEMENT act (§15.15 b, the text-align
@@ -200,12 +218,19 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // tests/unit/team-data.test.ts measures the longest unbreakable run of every
 // `position` in every locale against those 21 characters (and of every `name`
 // against the h1's own 16), which is what caught a German draft. Since the
-// ribbon's mount (2026-09-30) a DOCTOR's position is held to 17 instead: the
-// lanes leave its line 174.5px at the 320px window, where 17 mono characters
-// fit and 18 do not (measured — CLAUDE.md §15.25; since THE PHONE GUTTER that
+// ribbon's mount (2026-09-30) a DOCTOR's position was held to 17 instead: the
+// lanes left its line 174.5px at the 320px window, where 17 mono characters
+// fit and 18 did not (measured — CLAUDE.md §15.25; since THE PHONE GUTTER that
 // line is 204.2px there, behind the classic scrollbar, and 218.1 on a phone,
-// where 20 and 22 fit — both ceilings hold with room, neither relaxed); an
-// auxiliary's stays 21.
+// where 20 and 22 fitted at 14px). Since D20 the specialty spans the INSET's
+// whole line on a phone at 13.2px, and the ceiling is taken WITH SC 1.4.12's
+// letter-spacing override on (the G2 fold of 2026-10-10): its 0.12em replaces
+// the 0.1em tracking, so a character advances 0.6em + 0.12em = 0.72em,
+// 9.504px, and the narrowest line a 100 %-zoom phone frame gives it — the
+// runner's 320 frame behind a classic scrollbar, 204.2px — holds
+// floor(204.2 / 9.504) = 21 of them: the ceiling is 21 (a real 320 phone's
+// 218.1px holds 22). tests/unit/team-data.test.ts holds it; today's longest
+// is 16. An auxiliary's stays 21.
 //
 // ── D6 · THE BLOCK (amended by D15, and for the doctor by D17). An
 // auxiliary's is `flex flex-col items-center gap-3 text-center` — photo, then
@@ -219,7 +244,11 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // the step the wrapper changes nothing a visitor can see: three items at 12px
 // in one column read identically to a pair at 12px nested in a column at 12px.
 // The doctor's block and pair are `flex-col-reverse` below the step (D17's
-// phone order), and at the step his pair HUGS its words (D17's HUG RULE).
+// stacked order), and at the step his pair HUGS its words (D17's HUG RULE).
+// On a phone — an INSET between D20's FLOOR, 12.5rem, and the `@sm`, 24rem —
+// his block is THE PHONE HEADER's grid and his pair dissolves into it
+// (`contents`, D20) — ONE string for every card, whatever its side (D20's
+// ONE SIDE ON A PHONE): `side` reaches GRID and COLUMN alone.
 //
 // ── D7 · THE DOCTOR LAYOUT, MEASURED AGAINST ITS OWN BOX (amended by D15
 // from the flex row to the 2×2 grid, and by D17 to the 40 / 60 grid inside the
@@ -230,8 +259,8 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // width — never the band and never the window (§6.5). Outside a ribbon that is
 // the card's content box; with ui/Container's gutter the card is 351px at the
 // 390 phone (312 before its PHONE GUTTER, 2026-10-09) and 614px at the 768
-// tablet (both stacked), 1024px at 1280 and 1228px at 1536 (both beside): the
-// owner's fb-393 rule from ClinicLocation —
+// tablet (both one column — the phone under D20's header), 1024px at 1280 and
+// 1228px at 1536 (both beside): the owner's fb-393 rule from ClinicLocation —
 // desktop beside, tablet and phone below — and the first brief, "where stuff
 // doesn't fit … place first left side and then text below still in justify".
 // Both tracks are `minmax(0, …)`, whose 0 floor is what stops one unbreakable
@@ -241,8 +270,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // given.
 // **DOM ORDER IS FIXED — block, quote, link — for BOTH sides.** Reading
 // order stays "who, then what they say, then what you can do" for a screen
-// reader and for the stacked phone layout; `side="end"` only swaps which
-// COLUMN each half is placed in (the COLUMN table), a VISUAL-ONLY mirror. The
+// reader and for the stacked layouts; `side="end"` only swaps which COLUMN
+// each half is placed in at the step (the COLUMN table), a VISUAL-ONLY
+// mirror — under the step it does nothing (D20's ONE SIDE ON A PHONE). The
 // measure at desktop is the page's lever (a max-w-* on the band's grid), never
 // this card's.
 //
@@ -406,12 +436,14 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     ("at the same level on the oy axis") whichever is taller. The block
 //     DISSOLVES into it — `@3xl:contents` — rather than being split into two
 //     wrappers, because below the step its two children must stay ONE flex
-//     column at 12px (D6), and `display: contents` is the only value that
+//     column at 12px (D6) — on a phone, since D20, one grid — and
+//     `display: contents` is the only value that
 //     drops a box without dropping the element: CSS inheritance still flows
-//     through it, so the block's `text-center` keeps reaching the name in both
-//     layouts. The wrapper is a semantically empty <div>, so the old `display:
+//     through it, so the block's alignment keeps reaching the name in every
+//     layout. The wrapper is a semantically empty <div>, so the old `display:
 //     contents` accessibility bug (an element with a ROLE losing it in the
-//     a11y tree) has nothing to bite here.
+//     a11y tree) has nothing to bite here — nor on the pair D20 dissolves on
+//     a phone, another empty <div>.
 //
 // ── D17 · ONE LINK, THE CUTOUT, A CARD THE RIBBON CAN WRAP (the owner's
 // direct dispatch, 2026-09-30, on a stand-in iterated live that day: "make this
@@ -437,11 +469,13 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     record stands).
 //   · THE PICTURE is the transparent CUTOUT the doctor page's opener shows —
 //     one 3:4 ratio for the team (§11; the demo files 900 × 1200) — drawn
-//     whole by ui/Image's `artwork` variant (never cropped, no frame, no blur
+//     whole in ui/Image's `artwork` recipe (never cropped, no frame, no blur
 //     placeholder) in an 18rem cell (`w-72`: about the width of the name and
-//     the specialty under it; `max-w-full` on a narrow phone), whose `sizes`
+//     the specialty under it; `max-w-full` on a narrow card), whose `sizes`
 //     names that cell — and the cell the doctors band scales (THE PICTURE'S
-//     `sizes` below, D19).
+//     `sizes` below, D19). Since D20 the recipe is spelled at the call site
+//     (FIGURE, on `variant="plain"`) and a phone crops the figure into a
+//     circle; from the INSET's `@sm` up it is this picture to the byte.
 //   · THE GRID at the step is 40 / 60 (`2fr` / `3fr`): row 1 the picture ‖ the
 //     words, row 2 the name + specialty ‖ the link, 32px across and 12px down,
 //     columns mirrored by `side`. The picture stands on its row's FLOOR
@@ -449,11 +483,15 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     words run; the words sit on the picture's centre line. The link is as
 //     wide as the words up to 28rem (`max-w-md`), centred under them, and
 //     spans the column on a phone.
-//   · THE PHONE ORDER below the step: specialty → name → picture → words →
+//   · THE STACKED ORDER below the step: specialty → name → picture → words →
 //     link. Paint only — the block and the pair are `flex-col-reverse`, the
 //     DOM keeps D7's order and no control moves, so the focus order is
-//     untouched (SC 2.4.3).
-//   · THE NAME wears `band` at both levels (D4).
+//     untouched (SC 2.4.3). It holds from the INSET's `@sm` up — every tablet
+//     held upright — and under D20's FLOOR (a zoomed phone); on a phone at
+//     100 % zoom D20's header replaces it: specialty → [photo | name] →
+//     words → link, paint only again.
+//   · THE NAME wore `band` at both levels (D4) — `name` since D20, `band`
+//     from the INSET's `@sm` up.
 // "D16" was the parked two-section rework of 2026-09-29 (Storybook 6007) that
 // never merged; its 40 / 60 split and its phone order are carried here.
 // THE INSET — the ribbon's lanes without touching ui/Card. Inside ui/Ribbon a
@@ -560,16 +598,19 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // preload link carries the same `sizes` — next/image hands one value to both.
 // Wherever `sizes` answers 18rem — every touch screen, a mouse under a 70rem
 // window — the G2 react note stands: `18rem` over-asks wherever the cell is
-// narrower than 18rem — on a phone under 404px since ui/Container's PHONE
-// GUTTER (2026-10-09; 455 before it): a 360px phone at 3× fetches the 1080w
-// candidate for a 251.5px box the 828w would cover (the 390 phone's box is
-// 276.6px now and needs the 1080w at 3× anyway; the 226px first named here
-// was a 390 window behind a classic scrollbar) — and a `min(18rem, calc(…))`
-// on the phone column's share would ask for less (the filter takes the
-// SMALLEST share, so beside `21vw` a larger one it read would change
-// nothing). That share is 90vw up to a 480px window since that day: the
-// `calc(80vw - 4.5rem)` first named here would now ask 240px of the 390
-// phone's 276.6px box, too little. The gain is unproven on the demo art:
+// narrower than 18rem. Until D20 that was a phone under 404px (ui/Container's
+// PHONE GUTTER of 2026-10-09; 455 before it), where a 360px phone at 3×
+// fetched the 1080w candidate for a 251.5px box the 828w would cover, and
+// the 390 phone's 276.6px box needed the 1080w anyway. SINCE D20 every
+// upright phone draws the cutout CROPPED, 165 % of its circle — 118.8 to
+// 184.8px wide — and `sizes` still answers 18rem there, ON PURPOSE: the
+// same file as before, so the page fetches nothing new; but a 390 phone at
+// 3× now fetches the 1080w for a 554-device-pixel box the 640w would cover.
+// THE LEVER, recorded and not built: a phone entry ahead of the fallback —
+// the circle's own share of the window times 1.65 — after the filter's rule
+// (it takes the SMALLEST `vw` share it reads, so a phone share smaller than
+// `21vw` would shed candidates the scaled cell needs: spell it in rem or in
+// `calc()`, never as a bare `vw`). The gain is unproven on the demo art:
 // measure with a real cutout before moving it.
 // THE FRAME — the owner, later the same day (2026-09-30), verbatim: "one more
 // thing to mention. i want to use for this card the border of the non current
@@ -607,9 +648,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // 28rem — 24rem was "not wide enough", the whole text box "too wide") · the
 // picture's width (`w-72`, with CUTOUT_SIZES — its `18rem`, and its `21vw`
 // and its media condition whenever the band's reference, step or gates move)
-// · the name's step on level 3 (NAME_STEP's doctor row) · the phone order
+// · the name's step on level 3 (NAME_STEP's doctor row) · the stacked order
 // (the two `flex-col-reverse`) · the corner (`corners`, `soft` ↔ `house`,
-// THE CORNER — both kinds at once).
+// THE CORNER — both kinds at once) · and on a phone, D20's own levers.
 //
 // ── D18 · THE EAGER PATH — a band asks, the card never guesses (the
 // doctor-showcase lane, 2026-09-30). A card does not know where it sits on a
@@ -638,6 +679,15 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // bare ui/Image instead of trusting `preload={false}` to be a no-op. Typed
 // `never` on the auxiliary kind (D2): no page opens on a staff tile — the day
 // one does, the key joins that branch additively.
+// SINCE D20, ON A PHONE, THE CUTOUT IS NO LONGER THE LARGEST PAINT: the circle
+// shows 112 × 112px of it at a 390 phone (12 544px²), and the first card's
+// quote, ≈ 277 × 168px, outranks it — Chromium's largest-contentful-paint
+// entries on the Team page's story twin at a 390 phone name the cutout
+// first and then the <blockquote> (45 870px², 2026-10-10). The pair still
+// rides the first card's picture, unchanged (one image at high priority, its
+// preload link the same `sizes`); from the INSET's `@sm` up the cutout is the
+// page's LCP as measured above. Whether a phone should keep the preload is a
+// recorded lever, measured first on the built export.
 //
 // ── D19 · THE BAND'S SCALE (2026-10-01). The owner, verbatim: "i like how it
 // looks on phone and tablet and i want to keep that unchanged. but on laptop
@@ -715,6 +765,161 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // 70rem window behind the same pointer condition, `12rem` the fallback — and
 // tests/unit/design-scale.test.ts derives the string like the cutout's.
 //
+// ── D20 · THE PHONE HEADER (owner 2026-10-10). The doctor card was too tall
+// on a phone — 800 to 884px on a 390 × 844 screen, its waist-up cutout alone
+// 277 × 369px — and the owner chose, out of seventeen renditions drawn over
+// the real doctors under the real ribbon, "S09.1 · Kicker, bigger face",
+// verbatim: "i'd go with bigger face but i also want eyebrow like 10% bigger.
+// get to implementing it" — having said before it: "On tablet and desktop
+// it's fine and should remain as is". So, ON A PHONE ONLY:
+//   · ROW 1, THE SPECIALTY, across the card on top, starting at the card's
+//     left edge — ui/Eyebrow's `card` step (EYEBROW_STEP): the rendition's
+//     12px × 1.1 = 13.2px, on a snug 18.15px line;
+//   · ROW 2, THE ROUND PHOTO BESIDE THE NAME — the BLOCK a two-column grid,
+//     the photo's track `auto` on the left and the name's `minmax(0, 1fr)`
+//     on the right, on every card (ONE SIDE ON A PHONE, below), 18px between
+//     them (four and a half spacing steps) and the base 12px row gap down from
+//     row 1, both centred in the row. The name wears ui/Heading's `name`
+//     step (NAME_STEP): 24px on a 30px line;
+//   · THEN THE QUOTE AND THE LINK, exactly as before — GRID's column and its
+//     24px gaps, QUOTE and ACTION byte for byte.
+// The PAIR dissolves (`display: contents` — D15's, on the other side of the
+// card's range) so the name and the specialty are the BLOCK's own grid
+// items, and every cell is placed explicitly (PHONE): placement, never a
+// size (§6.8). No separator line — the rendition's third panel had one, and
+// the owner did not pick it.
+// THE STEP IS THE INSET'S `@sm`, 24rem — the box the header really has,
+// never the screen (§6.5) — and THE FLOOR, below, is its other edge: every
+// class D20 adds to this file is spelled with BOTH container variants, the
+// floor's `@min-[12.5rem]` and the step's `@max-sm`, so the header lives
+// between the two and nowhere else. The two ATOM steps it wears answer the
+// step alone (ui/Heading's `name`, ui/Eyebrow's `card`: today's look, with a
+// smaller size under `@sm`), so under the floor the stacked card keeps their
+// 24px name and 13.2px specialty — smaller than develop's 30 and 14, never
+// larger.
+// MEASURED inside the ribbon (2026-10-10, overlay scrollbars): the INSET's
+// content is 218.1px on a 320 phone, 276.6 on a 390, 309.9 on a 430 and 318.3
+// on a 440, so every upright phone at 100 % zoom is in the header's range; it
+// reaches 384px at a ~567px window — at ≈ 603 behind a classic scrollbar, so
+// a 600px DESKTOP window still draws the phone header — 396.1 at the 600px
+// window of a 7″ tablet, 517 at 768 — so every tablet is over it and its card
+// is today's to the computed value; PersonnelCard.test.tsx measures the
+// doctor card at a 384, a 396 and a 517px INSET and in two columns, and the
+// auxiliary tile at a phone's width and a tablet's. A doctor card measured
+// 481 to 538px tall at a 390 phone in Romanian, 519 to 547 in German, over
+// the six real doctors (the Team page's story twin).
+// THE FLOOR (the G2 fold of 2026-10-10 — a11y HIGH-1, react MEDIUM): a phone
+// with page zoom lays out NARROWER — a 390 phone at 150 % is a 260px layout,
+// at 200 % a 195px one — and under a 232px INSET the photo held its 72px
+// floor while the name's column took all the loss: measured on the built
+// export before the floor, at 260 four of the six real names broke inside a
+// word („(Sab|ău)", „Căt|ălina", „Mirc|ea", „Bozd|og") and at 195 the column
+// was 12px, „Dr. Malea (Sabău) Oana Bianca" one letter a line, twenty-five
+// lines. So the header has a LOWER bound: from an INSET of 12.5rem (200px)
+// down, the card is TODAY'S STACKED CARD — the specialty, the name and the
+// whole cutout one under the other, centred, as on develop. 12.5rem is the
+// photo's 72px floor + the 18px gap + 110px, the widest real name word
+// („Cătălina", 87.6px at 24px) under SC 1.4.12's 0.12em letter spacing
+// (110.6px — its eight letters each 2.88px wider). So NO REAL NAME BREAKS
+// INSIDE A WORD, by construction: in the header the name's column is never
+// under 110px (an INSET of 200px less 90) — 22px more than the widest real
+// word needs at the page's own spacing, and enough with the override on
+// everywhere but the first 0.6px of INSET above the floor — and under the
+// floor THE NAME'S BELT is off with the rest of the header: a word stays
+// whole in the stacked card's full-width line, as on develop. Every phone at
+// 100 % zoom stays above the floor: a real 320 phone's INSET is 218.1px, the
+// runner's 320 frame behind a classic scrollbar 204.2. The Galaxy Fold's
+// 280px cover screen (181px) draws the stacked card. PersonnelCard.test.tsx
+// measures both sides of the floor, and tests/e2e/doctor-showcase.spec.ts
+// reads every real name's words at windows from 195 to 390.
+// THE CIRCLE (CIRCLE): `clamp(4.5rem, 100cqi − 10rem, 7rem)` a side — the
+// `cqi` the INSET's content, its nearest `@container` — so 112px from a
+// 272px INSET up (the rendition's 112 at a 390 phone), and on a narrower card
+// the PHOTO gives way: the name keeps 142px of row (100cqi − 10rem, less the
+// 18px gap) down to a 232px INSET, where the photo meets its 72px floor —
+// the 72px photo and the 128px name column of a 320 phone — and on down to
+// THE FLOOR's 200px, where the name's column is 110. Clipped round (hidden
+// overflow, a full radius) over ui/Card's own `--card-tint`, the frame's
+// lavender, and positioned: the containing block the crop is placed in (a
+// `container-type` no longer is one — CLAUDE.md §15.20 round 4). The tint
+// rides ui/Card's own color-mix() `supports` gate: an engine without
+// color-mix() reads `--card-tint` as the SOLID accent (ui/Card's ONE TINT —
+// Safari before 16.2), a dark disc behind a pale figure, so there the circle
+// is the light `line-subtle` grey instead — the lavender's lightness, without
+// its hue. And the gated rule reads the variable WITH that grey as its
+// fallback: were `--card-tint` ever renamed or dropped in ui/Card, a bare
+// `var()` would turn the declaration invalid at computed-value time and the
+// circle transparent; with the fallback it stays grey. THE COUPLING, held
+// both ways: ui/Card's ONE TINT names this circle as the variable's third
+// reader (§4's KEEP-IN-SYNC row), and PersonnelCard.test.tsx measures the
+// circle's ground EQUAL to the card's own frame colour. No flex-shrink guard:
+// a grid item does not flex-shrink.
+// THE NAME'S BELT: on a phone the name stands in a column of its own — 128px
+// on a 320 phone, 146.6 on a 390 one — and `hyphens-none` (D4) never splits
+// it at a syllable, so a word wider than that whole column would run past the
+// card (and the ribbon's guard would withhold the ribbon). `wrap-anywhere`
+// (overflow-wrap: anywhere) breaks such a word where it must — the numbers
+// band's own belt on its title (CLAUDE.md §15.23 round 5). It engages only
+// for a word wider than the whole line: the six real doctors' widest word is
+// „Cătălina", 87.6px at 24px, and the header's narrowest name column is
+// THE FLOOR's 110px, so no real name breaks (THE FLOOR says why that holds by
+// construction); a 14-letter surname („Constantinescu", ~154px) would, rather
+// than overflow. From the INSET's `@sm` up, and under THE FLOOR, the belt is
+// off — it wears the header's two variants like every class D20 adds.
+// THE CROP (FIGURE): the 900 × 1200 cutout drawn 165 % of the circle's
+// width, its left edge 32.5 % and its top 18 % of the circle beyond it, so
+// the circle shows the file's square (177, 98)–(723, 643) — head and
+// shoulders, the face a little above the middle. `variant="plain"`, the
+// geometry spelled at this call site (ui/Image's own rule for a consumer
+// whose geometry differs; DoctorIntro's cutout is the precedent): FIGURE
+// opens with `artwork`'s recipe and `placeholder="empty"` is passed
+// explicitly, so from `@sm` up and under THE FLOOR the picture is the
+// `artwork` cutout to the byte — the test file derives it from the atom's own
+// row, and ui/Image's `artwork` row points back here (KEEP IN SYNC) — and
+// only the header's tokens add the crop. The crop overruns its circle on
+// every side, clipped: at a 112px circle 36.4px left and right, 20.2px above
+// and 114.2px below.
+// THE PORTRAIT MARKER STAYS ON THE CELL, and it is load-bearing:
+// lib/ribbon-layout measures `data-ribbon-keepout="portrait"` by the cell's
+// OWN box, inset, and never by its contents, so the cropped <img> — clipped,
+// but laid out 165 % wide and reaching past the card's edge — never becomes
+// a keep-out. Marked as a plain keep-out, the circle would be measured with
+// its contents' boxes, the picture's among them, and the ribbon's guard would
+// withhold the whole ribbon (found on the exploration's first renders,
+// 2026-10-10: 15 of 16 withheld).
+// ONE SIDE ON A PHONE (the owner, 2026-10-10, after flipping between a
+// mirrored and a one-sided build on his iPhone: "i prefer only left on
+// phone"): on a phone EVERY card has its photo on the LEFT, the name beside
+// it and the specialty above, and every line of the specialty and the name
+// starts at the same left edge — so BLOCK and PHONE are ONE value each, not a
+// row per side. It also settles the a11y review's LOW-1: right-aligned text
+// over several lines is harder to scan, and worse under magnification, where
+// a reader follows one edge. `side` therefore acts from the INSET's `@3xl`
+// alone — the two-column grid's columns, GRID and COLUMN — as it did before
+// D20; nothing from `@sm` up changed for either side. The RIBBON keeps
+// alternating by itself: lib/ribbon-layout mirrors every second card by its
+// INDEX, never by `side`, so on a phone the ribbon still swings left, right,
+// left down the column while every photo sits left. The DOM keeps D7's
+// order — the picture's cell, the name, the specialty, the quote, the link —
+// so a screen reader still hears the name before the specialty, and only the
+// paint moves: specialty → [photo | name] → quote → link (SC 1.3.2, 2.4.3).
+// SUPERSEDED for this header row: the doctor-pages run's D21 adaptability rule
+// — "sections that are next to each other when in phone mode … must come one
+// above the other" (CLAUDE.md §15.23) — on the owner's own pick: the photo and
+// the name stand side by side on a phone; every other row of the card stacks.
+// RECORDED, NOT BUILT — each one class or one string away:
+//   · CUTOUT_SIZES is unchanged on purpose (D17's THE PICTURE'S `sizes`): a
+//     phone fetches the very file it fetched before, for a picture now drawn
+//     118.8 to 184.8px wide; a phone entry in `sizes` is the lever.
+//   · A phone held SIDEWAYS keeps the stacked card: its INSET is wider than
+//     24rem.
+//   · The German stress story's invented „Schwarzenbeck-" (172px at 24px)
+//     fits no phone column under a 302px INSET, so THE NAME'S BELT breaks it
+//     there — the story shows the belt at work, by design; the lever for a
+//     real doctor with such a surname is the photo's floor or the name's step.
+//   · On a phone the Team page's largest paint is the first card's quote, no
+//     longer its cutout (D18's last paragraph).
+//
 // ── D12–D14 live where they belong rather than here: the fixtures and the
 // stories in PersonnelCard.stories.tsx (synthetic portraits and cutouts, no
 // real people, nothing to license), and the records this lane carries in its
@@ -725,7 +930,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 /** Which of the two cards this is (D2). Required: no default discriminant. */
 export type PersonnelKind = 'auxiliary' | 'doctor';
 
-/** Which side the doctor's picture and name sit on at the wide step (D7). */
+/** Which side the doctor's picture and name sit on at the wide step — the
+ *  INSET's `@3xl` (D7). A visual-only mirror. Under the step it changes
+ *  nothing — every card draws alike there (on a phone, the photo left of the
+ *  name: D20's ONE SIDE ON A PHONE). */
 export type PersonnelSide = 'start' | 'end';
 
 /** The card title's heading level (D4): 3 under a band's h2 (the default), 2
@@ -803,7 +1011,12 @@ type DoctorProps = PersonnelCardBaseProps & {
    * doctor card without it would be a different card (D17).
    */
   profile: PersonnelLink;
-  /** Which side the picture and the name sit on at the wide step. @default 'start' */
+  /**
+   * Which side the picture and the name sit on at the wide step — the
+   * INSET's `@3xl` (D7). Paint only: the DOM order never moves. Under the
+   * step it changes nothing — every card draws alike there (on a phone, the
+   * photo left of the name: D20's ONE SIDE ON A PHONE). @default 'start'
+   */
   side?: PersonnelSide;
   /**
    * The picture is its PAGE'S LCP element: load it at once, at high fetch
@@ -839,19 +1052,31 @@ export type PersonnelCardProps = (AuxiliaryProps | DoctorProps) &
     | keyof PersonnelCardBaseProps
   >;
 
-/** The name's Heading step, kind × level (D4): `band` in every cell since
- *  2026-10-02 — a person's name has ONE look at either level, for both kinds,
- *  and the level is the outline's alone (§15.32, superseding §15.24's
+/** The name's Heading step, kind × level (D4): ONE look at either level for
+ *  each kind — the level is the outline's alone (§15.32, superseding §15.24's
  *  per-level rule for a name; the auxiliary's level 3 was `title` until
- *  then). `band` is read against the nearest container (run D48). A Record of
- *  Records, so neither a third kind nor a third level compiles until it names
- *  its step — and any one cell can move again on the owner's word. */
+ *  2026-10-02). An auxiliary's name wears `band`; a doctor's, since
+ *  2026-10-10, `name` — `band` from the INSET's `@sm` up and 24px under it,
+ *  where it shares its row with the round photo (D20). Both are read against
+ *  the nearest container (run D48). A Record of Records, so neither a third
+ *  kind nor a third level compiles until it names its step — and any one cell
+ *  can move again on the owner's word. */
 const NAME_STEP: Record<
   PersonnelKind,
   Record<PersonnelHeadingLevel, HeadingSize>
 > = {
   auxiliary: { 2: 'band', 3: 'band' },
-  doctor: { 2: 'band', 3: 'band' },
+  doctor: { 2: 'name', 3: 'name' },
+};
+
+/** The position's ui/Eyebrow step, per kind (D5, D20) — NAME_STEP's twin: a
+ *  doctor's specialty wears the atom's `card` step — 13.2px under the INSET's
+ *  `@sm`, where it spans the card over the photo's row, the default's 14px from
+ *  it — and an auxiliary's the site's one eyebrow. A Record, so a third kind
+ *  cannot compile until it names its step. */
+const EYEBROW_STEP: Record<PersonnelKind, EyebrowSize> = {
+  auxiliary: 'default',
+  doctor: 'card',
 };
 
 /** The element behind `headingLevel` (D4) — a lookup, so a widened union
@@ -899,22 +1124,65 @@ const COLUMN: Record<PersonnelSide, Record<'block' | 'words', string>> = {
   end: { block: '@3xl:col-start-2', words: '@3xl:col-start-1' },
 };
 
-/** The picture and the name's pair, painted upward below the step —
- *  specialty → name → picture — and dissolved at it (`contents`, D15) so each
- *  takes its own cell; the element stays, so `text-center` still reaches the
- *  name by inheritance (D6, D17). */
+/** The picture and the name's pair: on a phone — an INSET from THE FLOOR's
+ *  12.5rem to its `@sm` — THE PHONE HEADER's grid (D20): the specialty across
+ *  the top, then the round photo on the LEFT beside the name, 18px apart, the
+ *  text starting at the card's left edge — on EVERY card, whatever its side
+ *  (D20's ONE SIDE ON A PHONE), so ONE string; from `@sm`, and under THE
+ *  FLOOR, painted upward — specialty → name → picture — and dissolved at
+ *  `@3xl` (`contents`, D15) so each takes its own cell; the element stays, so
+ *  its alignment still reaches the name by inheritance (D6, D17). */
 const BLOCK =
-  'flex flex-col-reverse items-center gap-3 text-center @3xl:contents';
+  'flex flex-col-reverse items-center gap-3 text-center @min-[12.5rem]:@max-sm:grid @min-[12.5rem]:@max-sm:grid-cols-[auto_minmax(0,1fr)] @min-[12.5rem]:@max-sm:gap-x-4.5 @min-[12.5rem]:@max-sm:text-start @3xl:contents';
 
-/** The name over the specialty — the specialty first below the step — and at
- *  the step a box that HUGS its words (D17's HUG RULE: a keep-out is what is
- *  painted). */
+/** The name over the specialty — the specialty first from `@sm` up to the
+ *  step, and under THE FLOOR — dissolved on a phone (`contents`, D20) so the
+ *  two are THE PHONE HEADER's own grid items, and at the step a box that HUGS
+ *  its words (D17's HUG RULE: a keep-out is what is painted). */
 const PAIR =
-  'flex flex-col-reverse items-center gap-3 @3xl:flex-col @3xl:justify-self-center';
+  'flex flex-col-reverse items-center gap-3 @min-[12.5rem]:@max-sm:contents @3xl:flex-col @3xl:justify-self-center';
 
 /** The cutout's cell (D17): 18rem, about the width of the name block; the
- *  whole column on a narrow phone. */
+ *  whole column on a narrow card. On a phone CIRCLE re-dresses it (D20). */
 const PICTURE = 'w-72 max-w-full';
+
+/** THE PHONE HEADER's photo (D20): the cutout's cell as a CIRCLE, 112px a side
+ *  from a 272px INSET up and giving way below it — 100cqi − 10rem, so the
+ *  name keeps 142px of row — to a 72px floor, at THE FLOOR's 200px INSET;
+ *  clipped round over ui/Card's own `--card-tint` where the engine mixes
+ *  colours (ui/Card's own `supports-` gate — the variable falling back to the
+ *  grey should it ever vanish, never to transparent) and the light
+ *  `line-subtle` grey where it cannot, and `relative`, the containing block
+ *  the cropped picture is placed in. KEEP IN SYNC with ui/Card's ONE TINT,
+ *  which names this circle as the variable's third reader (§4). */
+const CIRCLE =
+  '@min-[12.5rem]:@max-sm:relative @min-[12.5rem]:@max-sm:size-[clamp(4.5rem,calc(100cqi_-_10rem),7rem)] @min-[12.5rem]:@max-sm:overflow-hidden @min-[12.5rem]:@max-sm:rounded-full @min-[12.5rem]:@max-sm:bg-line-subtle @min-[12.5rem]:@max-sm:supports-[color:color-mix(in_lab,red,red)]:bg-[var(--card-tint,var(--color-line-subtle))]';
+
+/** THE PHONE HEADER's cells (D20) — ONE set for every card, whatever its
+ *  side (D20's ONE SIDE ON A PHONE): row 1 the specialty across both columns,
+ *  starting at the card's left edge ON THE ELEMENT (a <p> — §15.15 b); row 2
+ *  the photo in the left column and the name beside it, with the name's one
+ *  belt — `wrap-anywhere`, a word wider than its whole column breaks where it
+ *  must instead of running past the card (D20's THE NAME'S BELT). Placement
+ *  and wrapping only, never a size (§6.8) — and none of it under THE FLOOR,
+ *  where the card is the stacked one. A Record, so a fourth cell cannot be
+ *  read until it is named here. */
+const PHONE: Record<'photo' | 'name' | 'eyebrow', string> = {
+  photo:
+    '@min-[12.5rem]:@max-sm:row-start-2 @min-[12.5rem]:@max-sm:col-start-1',
+  name: '@min-[12.5rem]:@max-sm:row-start-2 @min-[12.5rem]:@max-sm:col-start-2 @min-[12.5rem]:@max-sm:wrap-anywhere',
+  eyebrow:
+    '@min-[12.5rem]:@max-sm:col-span-2 @min-[12.5rem]:@max-sm:row-start-1 @min-[12.5rem]:@max-sm:text-start',
+};
+
+/** The cutout as drawn (D17, D20): ui/Image's `artwork` recipe — the whole
+ *  figure in its cell, from `@sm` up and under THE FLOOR the `artwork` picture
+ *  to the byte — and, on a phone, THE CROP: 165 % of the circle's width,
+ *  32.5 % of it out to the left and 18 % above, so the circle shows the
+ *  900 × 1200 file's square (177, 98)–(723, 643) — head and shoulders. KEEP IN
+ *  SYNC with ui/Image's `artwork` row, which points back here. */
+const FIGURE =
+  'h-auto max-w-full object-contain @min-[12.5rem]:@max-sm:absolute @min-[12.5rem]:@max-sm:left-[-32.5%] @min-[12.5rem]:@max-sm:top-[-18%] @min-[12.5rem]:@max-sm:w-[165%] @min-[12.5rem]:@max-sm:max-w-none';
 
 /** The cutout's `sizes` (D17's THE PICTURE'S `sizes`, D19): from a 70rem
  *  window on a mouse or trackpad — `(pointer: fine)`, the band's own gate —
@@ -988,17 +1256,24 @@ export function PersonnelCard({
   // auxiliary markup in silence.
   void (kind satisfies 'auxiliary' | 'doctor');
 
-  // THE NAME AND THE POSITION, spelled ONCE for both kinds (D2, D4, D5): only
-  // the box that holds them differs.
-  const title = (
+  // THE NAME AND THE POSITION, spelled ONCE for both kinds (D2, D4, D5): their
+  // steps are the kind's (NAME_STEP, EYEBROW_STEP) and only the box that holds
+  // them differs — plus, for a doctor, the cell each takes in THE PHONE
+  // HEADER (D20), handed in by the doctor's branch.
+  const title = (cell?: string) => (
     <Heading size={NAME_STEP[kind][headingLevel]} asChild>
-      <HeadingElement id={headingId} className="hyphens-none">
+      <HeadingElement id={headingId} className={cx('hyphens-none', cell)}>
         {name}
       </HeadingElement>
     </Heading>
   );
-  const eyebrow = (
-    <Eyebrow className="hyphens-none text-center">{position}</Eyebrow>
+  const eyebrow = (cell?: string) => (
+    <Eyebrow
+      size={EYEBROW_STEP[kind]}
+      className={cx('hyphens-none text-center', cell)}
+    >
+      {position}
+    </Eyebrow>
   );
 
   return (
@@ -1014,30 +1289,43 @@ export function PersonnelCard({
           <div className={INSET}>
             <div className={GRID[mirror]}>
               <div className={BLOCK}>
+                {/* The portrait marker stays on the CELL — on a phone the
+                    circle — whose own box lib/ribbon-layout measures, never
+                    the cropped picture overflowing it (D20). */}
                 <div
                   data-ribbon-keepout="portrait"
-                  className={cx(PICTURE, column.block, PHOTO_CELL)}
+                  className={cx(
+                    PICTURE,
+                    CIRCLE,
+                    PHONE.photo,
+                    column.block,
+                    PHOTO_CELL,
+                  )}
                 >
                   {/* Lazy unless the band asks (D18) — then DoctorIntro's
                       pair: preloaded, at high fetch priority, the preload
-                      link carrying the same CUTOUT_SIZES (D19). */}
+                      link carrying the same CUTOUT_SIZES (D19). `plain` with
+                      the `artwork` recipe spelled in FIGURE, its crop on a
+                      phone, and `artwork`'s empty placeholder (D20). */}
                   <Image
-                    variant="artwork"
+                    variant="plain"
                     src={photo.src}
                     width={photo.width}
                     height={photo.height}
                     alt=""
+                    placeholder="empty"
                     sizes={CUTOUT_SIZES}
                     preload={preload}
                     fetchPriority={preload ? 'high' : undefined}
+                    className={FIGURE}
                   />
                 </div>
                 <div
                   data-ribbon-keepout=""
                   className={cx(PAIR, column.block, BOTTOM)}
                 >
-                  {title}
-                  {eyebrow}
+                  {title(PHONE.name)}
+                  {eyebrow(PHONE.eyebrow)}
                 </div>
               </div>
               <blockquote
@@ -1092,8 +1380,8 @@ export function PersonnelCard({
                   the doctor's grid made it (D15), and the auxiliary keeps it
                   byte for byte (D17 moved nothing here). */}
               <div className="flex flex-col items-center gap-3">
-                {title}
-                {eyebrow}
+                {title()}
+                {eyebrow()}
               </div>
             </div>
           </div>

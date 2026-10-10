@@ -82,7 +82,7 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 const WEARS_ACCENT =
   /\b(?:text|bg|border(?:-[trblxyse])?|outline|decoration|fill|stroke|ring|shadow|from|via|to|caret|divide|placeholder)-accent(?:\/\d+)?(?![\w-])|var\(--(?:color-)?accent\)/g;
 
-/** The wearers — five atoms and three sections — and how many spellings each carries. */
+/** The wearers — six atoms and three sections — and how many spellings each carries. */
 const WEARERS: Readonly<Record<string, number>> = {
   // The hover label, the underline and the active label — TextButton.tsx's
   // COLOR INVARIANT: one colour for all three.
@@ -123,6 +123,12 @@ const WEARERS: Readonly<Record<string, number>> = {
   // has"; `text-cta` until then). Its hover label is `accent-strong`, which the
   // lookahead refuses — so one spelling. Both pairs are measured below.
   'components/sections/LanguageBanner/LanguageBanner.tsx': 1,
+  // The price strip's chip (owner 2026-10-09: "the currently selected one with
+  // current selected mecanism should be lilla"): ui/PillButton's ACTIVE face —
+  // the ground and the edge, white label on it (5.06:1, ui/Button's lavender
+  // face at rest) — and its resting HOVER, the label and the edge on the white
+  // face (5.06:1). Its renderers are named in PILL_RENDERERS.
+  'components/ui/PillButton/PillButton.tsx': 4,
 };
 
 /**
@@ -181,6 +187,23 @@ const RENDERERS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Every file that RENDERS ui/PillButton, with the ground its chips sit on. A
+ * chip paints its OWN face — white at rest, the lavender when current — so
+ * its label never meets the band's ground; what does is the chip's edge and
+ * the lavender fill (4.81:1 on --page, SC 1.4.11's 3:1 for the state). Never
+ * on the tint. A second renderer names itself and its ground here first.
+ */
+const PILL_RENDERERS: Readonly<Record<string, string>> = {
+  // The strip paints no ground of its own since 2026-10-10 (PriceMenu.tsx's
+  // THE STRIP FLOATS UNDER THE BAR): at rest its chips stand on the page,
+  // stuck they float over the category cards scrolling under them — white
+  // `--surface` — and the page between those cards; the lavender fill reads
+  // 4.81:1 on the one and 5.06:1 on the other.
+  'components/sections/PriceList/PriceMenu.tsx':
+    '--page at rest, and the category cards’ white --surface scrolling under the stuck strip — each chip paints its white or lavender face',
+};
+
+/**
  * Every file that passes `tone="accent"` to ui/Button or ui/GlyphButton —
  * the owner's list of 2026-10-01, one row per band, with the ground. A button
  * paints its OWN ground (the solid's lavender face, the outline's white box),
@@ -235,6 +258,7 @@ const TINTED = [
 ];
 
 const IMPORTS_TEXT_BUTTON = /ui\/TextButton\/TextButton['"]/;
+const IMPORTS_PILL_BUTTON = /ui\/PillButton\/PillButton['"]/;
 const IMPORTS_AVATAR = /ui\/Avatar\/Avatar['"]/;
 const IMPORTS_KEYWORD = /ui\/Keyword\/Keyword['"]/;
 const PASSES_ACCENT_TONE = /\btone=["']accent["']/;
@@ -309,7 +333,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2026-10-01)', () => {
-  it('is worn by the five atoms, the map band, the language banner and the privacy page, each exactly as many times as named', () => {
+  it('is worn by the six atoms, the map band, the language banner and the privacy page, each exactly as many times as named', () => {
     for (const [file, count] of Object.entries(WEARERS)) {
       expect(wearings(stripComments(read(file))), file).toBe(count);
     }
@@ -356,6 +380,18 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     // it. The closed list above is the whole pin now.)
   });
 
+  it('reaches the page as chips through the named renderer only — each chip on its own face, never the tint', () => {
+    const renderers = sourceFiles.filter((file) =>
+      IMPORTS_PILL_BUTTON.test(read(file)),
+    );
+    expect(renderers.sort()).toEqual(Object.keys(PILL_RENDERERS).sort());
+    for (const [file, ground] of Object.entries(PILL_RENDERERS)) {
+      const source = stripComments(read(file));
+      expect(source, `${file} — ${ground}`).not.toContain('--tint');
+      expect(source, `${file} — ${ground}`).not.toMatch(/TintedBand/);
+    }
+  });
+
   it('grounds the initials disc through the named renderer only', () => {
     const renderers = sourceFiles.filter((file) =>
       IMPORTS_AVATAR.test(read(file)),
@@ -395,6 +431,7 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
       const source = stripComments(read(file));
       expect(wearings(source), file).toBe(0);
       expect(IMPORTS_TEXT_BUTTON.test(source), file).toBe(false);
+      expect(IMPORTS_PILL_BUTTON.test(source), file).toBe(false);
       expect(IMPORTS_AVATAR.test(source), file).toBe(false);
       expect(IMPORTS_KEYWORD.test(source), file).toBe(false);
       expect(PASSES_ACCENT_TONE.test(source), file).toBe(false);

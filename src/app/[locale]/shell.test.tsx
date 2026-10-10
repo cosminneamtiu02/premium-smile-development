@@ -86,7 +86,8 @@ vi.mock('@/i18n/navigation', () => ({ usePathname: () => '/services/' }));
  * focus:block` puts it back into NORMAL FLOW at the top of the document while
  * focused, pushing the page down — the sticky pill simply rides lower for that
  * moment, which IS the visible feedback. Zero additions to the z-map (§2 of the
- * layers board: 40/45/50 + top layer, closed), zero overlap cases.
+ * layers board, closed: 20 (the price page's chip strip, 2026-10-09) / 30 (the
+ * language banner) / 40 / 45 / 50 + the top layer), zero overlap cases.
  *
  * The padding is deliberately plain `focus:px-4` and NOT the gutter pair
  * ui/Container now owns (§15.15 a DECIDED, board fb-343): the skip link is

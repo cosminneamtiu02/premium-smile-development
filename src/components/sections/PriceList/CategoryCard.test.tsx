@@ -195,7 +195,7 @@ describe('CategoryCard — the fragment target (board §4.2)', () => {
   it('spells that air as a rem LITERAL, never a spacing step — the band scale must not reach it (2026-10-02)', () => {
     // Inside the band scale every spacing step is a DESIGN length, and the
     // header pill this air sits under does not scale (PriceList.tsx's
-    // `@3xl:top-[8.5rem]` paragraph): the rider is an arbitrary rem value,
+    // THE 8.5rem LINE paragraph): the rider is an arbitrary rem value,
     // 40px inside the scale and out — and no `scroll-mt` step is left on the
     // card. What the engine computes is PriceList.scale.test.tsx's.
     const { container } = render(<CategoryCard {...CATEGORY} />);

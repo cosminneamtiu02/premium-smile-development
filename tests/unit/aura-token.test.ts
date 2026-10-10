@@ -122,6 +122,14 @@ const CONSUMERS = [
     '../../src/components/sections/Hero/Hero.tsx',
     1,
   ],
+  // The price strip's chip joined on the owner's 2026-10-09 "they should have
+  // aura and thin edge like dr cards": ui/PillButton wears the glow in BOTH of
+  // its states, ONE spelling in its shared base.
+  [
+    'PillButton.tsx (the selectable chip, both states)',
+    '../../src/components/ui/PillButton/PillButton.tsx',
+    1,
+  ],
 ] as const;
 
 describe('the aura token (header-aura board, fb-359)', () => {

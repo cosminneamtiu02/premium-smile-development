@@ -384,40 +384,54 @@ import { slotClone } from '../slot';
 // the same shade as the border of the non-current card" — which is also the
 // old site's own arithmetic, measured: idle frame `3px rgb(229 228 236)`,
 // selected ground `rgb(229 228 236)`, the SAME colour). `--card-tint` is
-// spelled ONCE, in `cardClock`, as `--accent-decorative` mixed at 20% over
-// the surface — what the old site's rgb(229 228 236) is (its accent at ~20%
-// over white) — and both rows READ it: `framed` as its 3px border,
-// `emphasized` as its ground AND its 1px border (a border the colour of the
-// ground is an edge the eye does not see: the old site's `3px transparent`,
-// without breaking the sum rule). One value, so the two can never drift;
-// Card.test.tsx reads the framed border and the emphasized ground back from
-// the engine and asserts they are equal.
-// A THIRD READER, outside this file (2026-10-10): sections/PersonnelCard's
-// CIRCLE — its D20, the round photo of the doctor card's phone header —
-// paints its ground with `--card-tint` behind the same color-mix gate, the
-// `line-subtle` grey below the gate and as the variable's own fallback. KEEP
-// IN SYNC both ways (§4): renaming the variable, moving its mix or its gate
-// here moves that circle, and PersonnelCard.test.tsx measures the circle's
-// ground EQUAL to the doctor card's frame, which this file paints from the
-// same variable.
+// `--accent-decorative` mixed at 20% over the surface — what the old site's
+// rgb(229 228 236) is (its accent at ~20% over white) — and both rows READ
+// it: `framed` as its 3px border, `emphasized` as its ground AND its 1px
+// border (a border the colour of the ground is an edge the eye does not see:
+// the old site's `3px transparent`, without breaking the sum rule). One value,
+// so the two can never drift; Card.test.tsx reads the framed border and the
+// emphasized ground back from the engine and asserts they are equal.
+// A SEMANTIC ROLE SINCE 2026-10-09 (the price-menu-strip lane — CLAUDE.md
+// §15.19 round 3's recorded trigger, "the 20% tint as a §15.1 token at its
+// second consumer", FIRED: ui/PillButton's resting border, the price strip's
+// "thin edge like dr cards"). Until then this file spelled the value ONCE, in
+// `cardClock`, declared on every card root; the same two declarations now live
+// in globals.css (THE CARD TINT block), resolved at the root — one theme, one
+// value — and this atom READS the role with the same utilities as before,
+// `border-(--card-tint)` on the frame and
+// `supports-[color:color-mix(in_lab,red,red)]:bg-(--card-tint)` on the
+// emphasized ground, so every row and every
+// consumer's pin kept its bytes (the pixels: measured identical, the lane's
+// before/after differential).
+// A READER OUTSIDE THIS FILE, beside ui/PillButton (2026-10-10):
+// sections/PersonnelCard's CIRCLE — its D20, the round photo of the doctor
+// card's phone header — paints its ground with `--card-tint` behind the same
+// color-mix gate, the `line-subtle` grey below the gate and as the variable's
+// own fallback. KEEP IN SYNC both ways (§4): renaming the role, moving its
+// mix or its gate (globals.css's THE CARD TINT since the promotion) moves
+// that circle, and PersonnelCard.test.tsx measures the circle's ground EQUAL
+// to the doctor card's frame, which this file paints from the same role.
 // THE MIX IS OPAQUE, AND SAYS SO TWICE (G2 a11y HIGH ×2, reviews-deck run,
 // 2026-09-10 — the reasoning outlived the value). A wash over TRANSPARENT
 // (the `/20` opacity spelling) would let a deck's neighbouring cards show
 // through the one card the visitor is meant to read (SC 1.4.3 — no contrast
 // ratio exists for text over text); mixing over `--color-surface` instead
 // gives the same hue at the same strength with nothing behind it visible. The
-// second half is the FALLBACK, because every `color-mix()` Tailwind emits is
-// `@supports`-gated: `--card-tint` starts as the SOLID accent (what the frame
-// degrades to on engines without color-mix — Safari < 16.2, every iPhone
-// frozen on iOS 15, §1), a variant gated on color-mix support re-declares it
-// as the mix, and the `emphasized` row keeps an explicit `bg-surface` base
-// under its own gated tint ground — so an old engine paints a solid-lavender
-// FRAME (harmless) and a WHITE ground, never lavender under text (1.57:1 for
-// muted body copy). Modern engines paint the tint on both. Measured on the
-// tint: muted body text 5.8:1, the mono eyebrow the same, display ink above
-// 10:1 — every text role on the selected card clears AA with room.
+// second half is the FALLBACK, because a `color-mix()` must be `@supports`-
+// gated: `--card-tint` starts as the SOLID accent (what the frame degrades to
+// on engines without color-mix — Safari < 16.2, every iPhone frozen on iOS 15,
+// §1), a block gated on color-mix support re-declares it as the mix (both in
+// globals.css's THE CARD TINT since 2026-10-09; on this file's own root, as a
+// variant, until then), and the `emphasized` row keeps an explicit
+// `bg-surface` base under its own gated tint ground — so an old engine paints
+// a solid-lavender FRAME (harmless) and a WHITE ground, never lavender under
+// text (1.57:1 for muted body copy). Modern engines paint the tint on both.
+// Measured on the tint: muted body text 5.8:1, the mono eyebrow the same,
+// display ink above 10:1 — every text role on the selected card clears AA
+// with room.
 // The 20% is the ONE number to move if the frame should ever read heavier:
-// 30% still clears AA for muted text (5.1:1); 40% does not (4.4:1).
+// 30% still clears AA for muted text (5.1:1); 40% does not (4.4:1) — and
+// since the promotion it moves ui/PillButton's resting border with it.
 //
 /** Named SITUATIONS — which look, never which CSS. */
 export type CardTone = 'surface' | 'tinted' | 'emphasized' | 'framed';
@@ -514,17 +528,14 @@ const cornerClasses: Record<CardCorners, string> = {
   soft: 'rounded-soft',
 };
 
-// THE TONE CLOCK and THE TINT, worn after the corner. The clock: the two
-// paint properties on the shared 400ms --fade (the TONE CROSSFADE paragraph
-// above). THE TINT (the ONE TINT paragraph above): the solid accent first —
-// the fallback every engine understands — then the opaque 20% mix over the
-// surface wherever color-mix exists. Declared on every card so the two rows
-// below can read ONE value; a row that never uses it costs nothing.
+// THE TONE CLOCK, worn after the corner: the two paint properties on the
+// shared 400ms --fade (the TONE CROSSFADE paragraph above). It carried THE
+// TINT's two declarations too until 2026-10-09; the tint is a semantic role
+// now (the ONE TINT paragraph above), declared once in globals.css and read
+// by the two rows below.
 const cardClock =
   '[--fade:400ms] transition-[background-color,border-color] ' +
-  'duration-(--fade) ease-in-out motion-reduce:transition-none ' +
-  '[--card-tint:var(--color-accent-decorative)] ' +
-  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]';
+  'duration-(--fade) ease-in-out motion-reduce:transition-none';
 
 // THE SUM RULE: border-width + padding = 25px per side on EVERY row (1 + 24, or 3 + 22 for
 // `framed`), so switching tone never moves content and a framed card's text edges still line
@@ -593,7 +604,7 @@ export function Card({
   ...rest
 }: CardProps): ReactElement {
   // §6.8 merge order: the atom's own classes first, the caller's className
-  // LAST — the geometry, the corner, the clock and tint, then the tone row,
+  // LAST — the geometry, the corner, the clock, then the tone row,
   // then the optional glow. A deterministic convention the tests pin, NOT a
   // cascade mechanism (see the className paragraph above: attribute order
   // never decides CSS specificity, which is precisely why the paint, the

@@ -240,7 +240,9 @@
    the one additional accent-decorative role, and the floss ribbon's colour
    and its shadow's, --ribbon and --ribbon-shadow (§15.26): raw values read
    by lib/ribbon-draw for its canvases, so they get NO utility name in the
-   `@theme inline` block below — nothing paints with a class.
+   `@theme inline` block below — nothing paints with a class — and, since
+   2026-10-09, ONE DERIVED role, --card-tint (its THE CARD TINT block below
+   the theme): a mix of accent-decorative, not a 23rd colour.
 
    `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
    modal's scrim IS the backdrop pseudo-element, `backdrop:bg-scrim` compiles to
@@ -437,6 +439,39 @@
      holds the pair in sync. */
   --brand-grey: #939598;
   --brand-lilac: #8576b1;
+  /* THE CARD TINT's fallback — the SOLID accent, for an engine without
+     color-mix (its THE CARD TINT block, right below). */
+  --card-tint: var(--accent-decorative);
+}
+
+/* THE CARD TINT — the doctor card's lavender frame, a semantic role since
+   2026-10-09 (the price-menu-strip lane; CLAUDE.md §15.19 round 3's recorded
+   trigger "the 20% tint as a §15.1 token at its second consumer" FIRED: the
+   price strip's pill, ui/PillButton, wears it as its resting border — "aura
+   and thin edge like dr cards, the lilla edge", the owner, 2026-10-09).
+   Until then ui/Card declared it LOCALLY on every card root — the solid accent
+   first, the 20% mix behind a color-mix gate (its ONE TINT paragraph keeps
+   the argument for both halves) — and read it as the `framed` row's 3px border
+   and the `emphasized` row's ground. The same two declarations moved here,
+   whole: the solid accent on the semantic block above, then this gated mix,
+   so an engine without color-mix paints the solid lavender frame (harmless)
+   and every current engine the opaque 20% mix over the surface — the old
+   site's own rgb(229 228 236). PIXEL-IDENTICAL by construction: the same
+   tokens, resolved at the root instead of at each card (one theme, one
+   value). ui/Card reads it as `border-(--card-tint)` / `bg-(--card-tint)`,
+   unchanged bytes on every card; ui/PillButton as `border-card-tint`, the
+   utility the `@theme inline` line below mints. A literal mix, never pasted:
+   §15.1's hue confirm re-tints both wearers through --accent-decorative. */
+@supports (color: color-mix(in lab, red, red)) {
+  :root,
+  [data-theme='light'],
+  ::backdrop {
+    --card-tint: color-mix(
+      in srgb,
+      var(--accent-decorative) 20%,
+      var(--surface)
+    );
+  }
 }
 
 /* THE RIBBON'S LANES, REGISTERED (§15.26). ui/Ribbon DECLARES these on the box
@@ -621,6 +656,7 @@
   --color-accent-decorative: var(--accent-decorative);
   --color-brand-grey: var(--brand-grey);
   --color-brand-lilac: var(--brand-lilac);
+  --color-card-tint: var(--card-tint);
 }
 
 @layer base {

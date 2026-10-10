@@ -109,7 +109,12 @@ const readBand = (page: Page): Promise<BandShape> =>
     const cardsColumn = rhythm?.children[1];
     const card = cardsColumn?.firstElementChild;
     const title = card?.querySelector('h2');
-    const link = nav?.querySelector('ul a');
+    // The SHOWN list's first link: the rail's on a laptop, the strip's chip
+    // under the step and on a touch tablet (2026-10-09 — the <nav> holds both
+    // lists, the one not shown `display: none`).
+    const link = Array.from(nav?.querySelectorAll('ul a') ?? []).find(
+      (shown) => shown.getClientRects().length > 0,
+    );
     if (
       !nav ||
       !rhythm ||
@@ -305,7 +310,8 @@ for (const locale of ['ro', 'de'] as const) {
         expect(band.eyebrow).toBe(DESIGN.eyebrow);
         expect(band.row).toBe(DESIGN.row);
         expect(band.landing).toBe(`${LANDING}px`);
-        // Stacked: the menu is the column's width, above the cards.
+        // The STRIP (2026-10-09): the <nav> is the column's width, above the
+        // cards; its chips the menu's links, at the theme's own sizes.
         expect(band.menu.width).toBeCloseTo(band.column.width, 0);
       });
     }
@@ -317,7 +323,7 @@ for (const locale of ['ro', 'de'] as const) {
       test.describe(`a ${tablet.width} × ${tablet.height} touch tablet`, () => {
         test.use({ viewport: tablet, hasTouch: true, isMobile: true });
 
-        test('declares nothing — the menu and the cards the theme’s own size (the owner: “Touch devices unchanged”)', async ({
+        test('declares nothing — the strip and the cards the theme’s own size (the owner: “Touch devices unchanged”; since 2026-10-09 every touch screen shows the strip)', async ({
           page,
         }) => {
           await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -328,8 +334,14 @@ for (const locale of ['ro', 'de'] as const) {
           expect(band.pointerFine).toBe(false);
           expect(band.scalePx).toBe('1px');
           expect(band.remapped, 'nothing redrawn').toBe(false);
-          expect(band.menu.width).toBe(DESIGN.menu);
+          // A touch screen shows the STRIP at any width (2026-10-09, the
+          // owner's "Every touch screen"): one column, the <nav> as wide as
+          // it, the chips the theme's own 18px labels on 44px boxes — and the
+          // rail's title, not displayed, still the theme's size where it
+          // names the landmark unseen.
+          expect(band.menu.width).toBeCloseTo(band.column.width, 0);
           expect(band.menuTitle).toBe(DESIGN.menuTitle);
+          expect(band.link.height).toBe(DESIGN.linkBox);
           expect(band.link.size).toBe(DESIGN.link);
           expect(band.cardTitle).toBe(DESIGN.cardTitle);
           expect(band.row).toBe(DESIGN.row);

@@ -177,7 +177,7 @@ const linkName = (label: string, name = DOCTOR_NAME): string =>
 // contiguous geometry string, so spelling it here — even inside a test — would
 // turn that src-wide fence red. Joining the tokens produces the same expected
 // value while this file never contains the fenced spelling.
-/** ui/Card's geometry, corner row, tone clock and one tint — the bytes every
+/** ui/Card's geometry, corner row and tone clock — the bytes every
  *  tone row follows (its `cardGeometry` + `cornerClasses` + `cardClock`). */
 const CARD_BASE = [
   '@container',
@@ -196,11 +196,10 @@ const CARD_BASE = [
   'duration-(--fade)',
   'ease-in-out',
   'motion-reduce:transition-none',
-  // The ONE TINT declarations (ui/Card, owner 2026-09-12): the solid accent,
-  // then the opaque 20% mix behind a @supports gate — worn by every card,
-  // read only by the `framed`/`emphasized` rows. Part of `cardClock` too.
-  '[--card-tint:var(--color-accent-decorative)]',
-  'supports-[color:color-mix(in_lab,red,red)]:[--card-tint:color-mix(in_srgb,var(--color-accent-decorative)_20%,var(--color-surface))]',
+  // (The ONE TINT declarations rode here until 2026-10-09 — part of
+  // ui/Card's `cardClock` then. The tint is a semantic role in globals.css
+  // since, read by the `framed` row below exactly as before, so a card emits
+  // no declaration of it.)
 ];
 
 /** ui/Card's `surface` row (its toneClasses table) — the auxiliary tile's. */

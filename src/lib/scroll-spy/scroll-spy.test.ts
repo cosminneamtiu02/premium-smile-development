@@ -16,7 +16,9 @@ import {
 import {
   createScrollSpy,
   DEFAULT_SETTLE_MS,
+  LOAD_WAIT_CEILING_MS,
   type ScrollSpy,
+  STALE_FINISH_REACH,
 } from './scroll-spy.ts';
 
 // Runs in the `components` project (real chromium, vitest.config.ts) because
@@ -144,7 +146,11 @@ afterEach(() => {
   document.documentElement.style.scrollPaddingTop = '';
   // The hash survives a test file (it is the page's URL, not the DOM), so put
   // it back — a leftover `#endodontics` would pin the next spy at start().
-  window.history.replaceState(null, '', window.location.pathname);
+  window.history.replaceState(
+    null,
+    '',
+    window.location.pathname + window.location.search,
+  );
   window.scrollTo(0, 0);
   vi.restoreAllMocks();
   vi.useRealTimers();
@@ -1161,24 +1167,783 @@ describe("createScrollSpy — line: 'reading' (owner 2026-09-29)", () => {
     expect(window.scrollY).toBeLessThan(end - 2);
   });
 
-  it('the load-time hash: a page RESTORED anywhere else is not moved — its pin is handed to the walk after two windows', async () => {
-    // A reload or a Back restores the old position instead of jumping: that
-    // page is not where the browser's jump would have put the target, so the
-    // spy leaves it alone and the pin's own check does the rest (THE START
-    // GRACE: a page that never moved is judged at the second window).
+  /** The navigation that brought this document, as Navigation Timing reports
+   *  it — the spy reads it to tell a link followed from a restored position
+   *  (THE READING LINE's stale load-time jump). PINNED to a fresh navigation
+   *  for every test of this block (the beforeEach below): the runner's own
+   *  page happens to be one, and a test that means otherwise says so. Restored
+   *  by the suite's afterEach. */
+  function navigationIs(type: NavigationTimingType): void {
+    vi.spyOn(performance, 'getEntriesByType').mockImplementation((kind) =>
+      kind === 'navigation'
+        ? [{ type } as unknown as PerformanceNavigationTiming]
+        : [],
+    );
+  }
+
+  beforeEach(() => {
+    navigationIs('navigate');
+  });
+
+  /** A load-time pin on the fourth target resting a few pixels OFF its
+   *  landing — the stale jump the G2 round measured (4 to 56px) — and off the
+   *  stylesheet's line too, so only the stale finish could land it. */
+  async function parkedNearTheLanding(): Promise<
+    Readonly<{ ids: readonly string[]; landing: number; parked: number }>
+  > {
     const ids = buildReadingPage(READING_PAGE);
-    await scrollToY(1_000);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    const parked = landing + 40;
+    const stylesheetLanding = Math.round(
+      documentTop(ids[4]) - PADDING - MARGIN,
+    );
+    expect(Math.abs(parked - stylesheetLanding)).toBeGreaterThan(2);
+    await scrollToY(parked);
+    expect(window.scrollY).toBe(parked);
     window.history.replaceState(null, '', `#${ids[4]}`);
+    return { ids, landing, parked };
+  }
+
+  for (const restored of ['reload', 'back_forward'] as const) {
+    it(`the load-time hash: a page RESTORED — a ${restored} — is not moved, even a few pixels off its landing; its pin is handed to the walk after two windows`, async () => {
+      // A reload or a Back restores the old position instead of jumping: that
+      // page is not where the browser's jump would have put the target, so the
+      // spy leaves it alone and the pin's own check does the rest (THE START
+      // GRACE: a page that never moved is judged at the second window).
+      // Parked NEAR the landing — in the clear area, focus on nothing — so that
+      // only the navigation's type keeps it from the stale finish.
+      navigationIs(restored);
+      const { ids, parked } = await parkedNearTheLanding();
+      const spy = makeSpy({ ids, line: 'reading' });
+
+      spy.start();
+
+      expect(spy.getSnapshot().current).toBe(ids[4]);
+      vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+      expect(window.scrollY).toBe(parked);
+      const { frame, plan } = expected(ids);
+      expect(spy.getSnapshot().current).toBe(
+        ids[readingIndex(frame, plan, parked)],
+      );
+    });
+  }
+
+  it('THE LOAD-TIME JUMP THAT WENT STALE: on a FRESH navigation, a load-time pin resting a few pixels off its landing is landed at the settle — never by start() — and then holds', async () => {
+    // Measured on the built price page (2026-10-10): Chromium's smooth
+    // fragment jump at load is not re-aimed when a late webfont reflows the
+    // page under it, and leaves the card 4–56px off its landing — with
+    // JavaScript off too. The settle, the one moment the page has provably
+    // stopped, lands it where the plan says. RE-DERIVED in the G2 round: the
+    // page used to be parked at 1000px, 754px off and the card below the
+    // window — a page the BOUNDED finish now rightly leaves alone (the
+    // visitor has moved on); 40px off, the card in the clear area, is the
+    // stale jump it exists for.
+    const { ids, landing, parked } = await parkedNearTheLanding();
     const spy = makeSpy({ ids, line: 'reading' });
 
     spy.start();
 
-    expect(window.scrollY).toBe(1_000);
-    expect(spy.getSnapshot().current).toBe(ids[4]);
+    // start() leaves the page alone: a scroll before the browser's own jump
+    // would cost the page that jump.
+    expect(window.scrollY).toBe(parked);
+    // The start grace's two windows, then the finish (a teleport in this
+    // runner, which glides nothing)…
     vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+    expect(Math.abs(window.scrollY - landing)).toBeLessThanOrEqual(2);
+    // …whose own scroll event re-arms the settle, which finds it arrived.
+    await nextFrame();
+    await nextFrame();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  it('…but not before the document has LOADED: while it still loads, the settle keeps the pin and looks again', async () => {
+    // A webfont still to come would move the target again (preloaded fonts
+    // hold the load event back), so the finish waits for it.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const { ids, landing, parked } = await parkedNearTheLanding();
+    const spy = makeSpy({ ids, line: 'reading' });
+
+    spy.start();
+    vi.advanceTimersByTime(6 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(parked);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    // Loaded: now it is judged — the start grace's one window for a page that
+    // never moved, then the finish.
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    expect(Math.abs(window.scrollY - landing)).toBeLessThanOrEqual(2);
+  });
+
+  it('…and a pin that had ARRIVED before the load is judged after it: a late reflow that moved its FITTING card 30px off the landing is still finished', async () => {
+    // Measured on the built page: the browser's short glide to the second
+    // card had ended — on its landing — when the webfont, 1200ms late,
+    // reflowed the page under it, and no scroll event followed. Judged before
+    // the load, that pin would have been ARRIVED, and the card left off. The
+    // BOUNDED finish still lands it: the card is in the clear area, and the
+    // page never moved (the reflow moved the card, not the page).
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    await scrollToY(Math.round(expected(ids).plan.landings[4]));
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+    // The webfont arrives: a card above grows 30px, the target with it — with
+    // no scroll anchoring to follow it, as in WebKit, which has none (and as on
+    // the real page in Chromium, whose anchor did not hold the card: 20px off).
+    document.documentElement.style.overflowAnchor = 'none';
+    try {
+      target(ids[1]).style.height = `${READING_PAGE.heights[1] + 30}px`;
+      await nextFrame();
+      await nextFrame();
+      const { plan } = expected(ids);
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeGreaterThan(2);
+
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(
+        2,
+      );
+      await nextFrame();
+      await nextFrame();
+      vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+      expect(spy.getSnapshot().current).toBe(ids[4]);
+    } finally {
+      document.documentElement.style.overflowAnchor = '';
+    }
+  });
+
+  it('…and a CLICK’s pin is never finished this way — after the load-time one, a select() resting a few pixels off its landing is handed to the walk', async () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const parked = Math.round(expected(ids).plan.landings[1]) + 40;
+    await scrollToY(parked);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+
+    // A click on another target before the load-time pin was judged: that
+    // pin is no longer the URL's, and the page — left 40px off the clicked
+    // card's landing, in the clear area — has not arrived. The start grace's
+    // two windows, then the walk.
+    spy.select(ids[1]);
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(parked);
     const { frame, plan } = expected(ids);
-    expect(readingIndex(frame, plan, 1_000)).toBe(3);
-    expect(spy.getSnapshot().current).toBe(ids[3]);
+    expect(spy.getSnapshot().current).toBe(
+      ids[readingIndex(frame, plan, parked)],
+    );
+  });
+
+  // ── BOUNDED (G2, 2026-10-10): a visitor who moved on is never pulled back.
+
+  it('BOUNDED: the visitor moved the page 1500px on and focus to another control before the load — the page is NOT moved after it', async () => {
+    // The G2 reviewers measured the unbounded finish pulling such a page
+    // 5660px back (Chromium) and 4410px (WebKit): a Tab's focus scroll, an
+    // iPhone's status-bar tap, VoiceOver's three-finger scroll — none of them
+    // a wheel, a touch or a key this spy hears.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const { ids, parked } = await parkedNearTheLanding();
+    const elsewhere = document.createElement('button');
+    host?.append(elsewhere);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    elsewhere.focus();
+    await scrollToY(parked - 1_500);
+    const away = window.scrollY;
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(away);
+  });
+
+  it('BOUNDED: a page already AWAY from the card when the spy starts — the card below the window, focus on nothing — is not pulled to it', async () => {
+    // The visitor scrolled before the island hydrated (or the browser's jump
+    // never happened): the page never moves while the spy watches, so only
+    // the clear area keeps the finish from yanking it 754px down.
+    const ids = buildReadingPage(READING_PAGE);
+    await scrollToY(1_000);
+    expect(
+      target(ids[4]).getBoundingClientRect().top,
+      'the premise: the card lies below the window',
+    ).toBeGreaterThan(window.innerHeight);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+
+    spy.start();
+    vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(1_000);
+    expect(spy.getSnapshot().current).not.toBe(ids[4]);
+  });
+
+  it('BOUNDED: the page moved back to the TOP during the load stays at the top — the card out of the clear area is not pulled back', async () => {
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const { ids } = await parkedNearTheLanding();
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    await scrollToY(0);
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(0);
+  });
+
+  it('BOUNDED: a page that left the card DURING the wait drops the pin once it has STOPPED there — two quiet windows in a row — the walk answers, the mark follows what the visitor sees', async () => {
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('interactive');
+    const { ids } = await parkedNearTheLanding();
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    // Still loading: the page goes back up to the first cards and stops.
+    await scrollToY(0);
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current, 'one quiet window is no stop').toBe(
+      ids[4],
+    );
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+
+    const { frame, plan } = expected(ids);
+    expect(spy.getSnapshot().current).toBe(ids[readingIndex(frame, plan, 0)]);
+    expect(spy.getSnapshot().current).not.toBe(ids[4]);
+  });
+
+  it('BOUNDED: a focus that LEFT the card ends the claim for good — even with focus back on nothing and the card still in view, the page is not moved', async () => {
+    // A Tab to the footer and a press on the page's own ground (focus back on
+    // the body): the visitor has moved on, though the card is still on screen.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const { ids, parked } = await parkedNearTheLanding();
+    const elsewhere = document.createElement('button');
+    host?.append(elsewhere);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+
+    // Without scrolling to it: the card must stay in view, so that only the
+    // focus rule keeps the page where it is.
+    elsewhere.focus({ preventScroll: true });
+    elsewhere.blur();
+    expect(document.activeElement).toBe(document.body);
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(parked);
+  });
+
+  it('BOUNDED: focus already elsewhere when the spy starts — moved before the island hydrated — keeps the page where it is', async () => {
+    const { ids, parked } = await parkedNearTheLanding();
+    const elsewhere = document.createElement('button');
+    host?.append(elsewhere);
+    elsewhere.focus({ preventScroll: true });
+    const spy = makeSpy({ ids, line: 'reading' });
+
+    spy.start();
+    vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+    expect(document.activeElement).toBe(elsewhere);
+    expect(window.scrollY).toBe(parked);
+  });
+
+  it('THE CEILING: a load that never completes stops being waited for after LOAD_WAIT_CEILING_MS — the pin is judged, and the stale jump finished', async () => {
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('interactive');
+    const { ids, landing, parked } = await parkedNearTheLanding();
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+
+    vi.advanceTimersByTime(LOAD_WAIT_CEILING_MS - DEFAULT_SETTLE_MS);
+    expect(window.scrollY).toBe(parked);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+    expect(Math.abs(window.scrollY - landing)).toBeLessThanOrEqual(2);
+  });
+
+  it('BOUNDED: a LONG TASK mid-glide during the load — 200ms without a scroll event — is no stop: the pin holds through it, and the glide arrives', async () => {
+    // G2 typescript (2026-10-10): one quiet window used to decide "stopped",
+    // and a long task holding the glide's scroll events back faked one — the
+    // card still below the window, the pin dropped mid-glide.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+
+    // The browser's glide to the card: a few steps down…
+    await scrollToY(120);
+    await scrollToY(240);
+    expect(
+      target(ids[4]).getBoundingClientRect().top,
+      'the premise: the card still below the window',
+    ).toBeGreaterThan(window.innerHeight);
+    // …then a long task: no scroll event for 200ms.
+    vi.advanceTimersByTime(200);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+    // The glide goes on, still short of the card, and a SECOND long task
+    // comes: the first one's quiet window must not count towards it.
+    await scrollToY(360);
+    await scrollToY(480);
+    expect(target(ids[4]).getBoundingClientRect().top).toBeGreaterThan(
+      window.innerHeight,
+    );
+    vi.advanceTimersByTime(200);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    // The glide resumes, and arrives; the document loads.
+    await scrollToY(Math.round((480 + landing) / 2));
+    await scrollToY(landing);
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(landing);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  it('BOUNDED: a page moved 900px WITHIN a card taller than the clear area before the load — a screen reader reading down it — is not pulled back after it (STALE_FINISH_REACH)', async () => {
+    // G2 a11y (2026-10-10): a card taller than the clear area passes the
+    // clear-area test across a scroll as long as itself — four price cards
+    // pass 1000px on a phone whose clear area is 690px — so only the distance
+    // from the landing tells a reader from a stale jump (4 to 56px, measured).
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[3]);
+    await scrollToY(landing);
+    window.history.replaceState(null, '', `#${ids[3]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    await scrollToY(landing + 900);
+    const read = window.scrollY;
+    expect(read).toBe(landing + 900);
+    const card = target(ids[3]).getBoundingClientRect();
+    expect(card.bottom, 'the premise: still in the clear area').toBeGreaterThan(
+      PADDING,
+    );
+    expect(card.top).toBeLessThan(window.innerHeight);
+    expect(900).toBeGreaterThan(STALE_FINISH_REACH * window.innerHeight);
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(read);
+  });
+
+  it('…but a page that has NOT MOVED since it rested near its landing — the LAYOUT moved under it, by more than a quarter of a window — is finished from any distance (UNMOVED: WebKit, no scroll anchoring, 378px measured)', async () => {
+    // The round's own e2e (2026-10-10): WebKit jumped to #oral-surgery before
+    // the webfont arrived, and the reflow left the card 378px off with the
+    // page never moving again; the quarter window alone refused to finish it.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    await scrollToY(landing);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    // The webfont arrives: a card above grows by 400px — with no scroll
+    // anchoring (WebKit has none), so the page stays and the card moves.
+    document.documentElement.style.overflowAnchor = 'none';
+    try {
+      target(ids[1]).style.height = `${READING_PAGE.heights[1] + 400}px`;
+      await nextFrame();
+      await nextFrame();
+      expect(window.scrollY, 'the premise: the page never moved').toBe(landing);
+      const { plan } = expected(ids);
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeGreaterThan(
+        STALE_FINISH_REACH * window.innerHeight,
+      );
+      expect(
+        target(ids[4]).getBoundingClientRect().top,
+        'the premise: still in the clear area',
+      ).toBeLessThan(window.innerHeight);
+
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(
+        2,
+      );
+    } finally {
+      document.documentElement.style.overflowAnchor = '';
+    }
+  });
+
+  it('…UNMOVED counts from where the page last RESTED near its landing — a browser jump that came after the island started, then the reflow under it', async () => {
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    // The island starts at the top: the browser has not jumped yet…
+    spy.start();
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    // …then it does, and comes to rest on the landing.
+    await scrollToY(landing);
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    document.documentElement.style.overflowAnchor = 'none';
+    try {
+      target(ids[1]).style.height = `${READING_PAGE.heights[1] + 400}px`;
+      await nextFrame();
+      await nextFrame();
+      expect(window.scrollY).toBe(landing);
+      const { plan } = expected(ids);
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeGreaterThan(
+        STALE_FINISH_REACH * window.innerHeight,
+      );
+
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(
+        2,
+      );
+    } finally {
+      document.documentElement.style.overflowAnchor = '';
+    }
+  });
+
+  it('…and UNMOVED skips the clear area too: a reflow that pushed the card OUT of the window under a page that never moved is finished (WebKit: 587, 917 and 1211px, 3 of 24 loads of a probe)', async () => {
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    await scrollToY(landing);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    document.documentElement.style.overflowAnchor = 'none';
+    try {
+      const push = window.innerHeight + 200;
+      target(ids[1]).style.height = `${READING_PAGE.heights[1] + push}px`;
+      await nextFrame();
+      await nextFrame();
+      expect(window.scrollY, 'the premise: the page never moved').toBe(landing);
+      expect(
+        target(ids[4]).getBoundingClientRect().top,
+        'the premise: the card pushed out of the window',
+      ).toBeGreaterThanOrEqual(window.innerHeight);
+
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+      const { plan } = expected(ids);
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(
+        2,
+      );
+    } finally {
+      document.documentElement.style.overflowAnchor = '';
+    }
+  });
+
+  it('…but a page that HAS MOVED, its card out of the clear area, is not finished — the visitor moved on', async () => {
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    await scrollToY(landing);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    // Loaded — and before the next settle the page goes back up to the first
+    // cards, the pinned card below the window.
+    readyState.mockReturnValue('complete');
+    await scrollToY(0);
+    expect(target(ids[4]).getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      window.innerHeight,
+    );
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(0);
+  });
+
+  it('…and for a MOVED page the clear area still decides, even within the quarter window: a short last card a small move after the load pushed below the window is not finished', async () => {
+    // The one geometry where the two bounds part: a short card resting at the
+    // page's end, a move of 130px — inside the quarter window — hides it.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage({ heights: [400, 400, 400, 120] });
+    const last = ids.length - 1;
+    const landing = Math.round(expected(ids).plan.landings[last]);
+    await scrollToY(landing);
+    expect(
+      target(ids[last]).getBoundingClientRect().bottom,
+      'the premise: the card shows at its landing',
+    ).toBeLessThanOrEqual(window.innerHeight);
+    window.history.replaceState(null, '', `#${ids[last]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    readyState.mockReturnValue('complete');
+    await scrollToY(landing - 130);
+    expect(130).toBeLessThan(STALE_FINISH_REACH * window.innerHeight);
+    expect(
+      target(ids[last]).getBoundingClientRect().top,
+      'the premise: the move hid the card',
+    ).toBeGreaterThanOrEqual(window.innerHeight);
+    vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+    expect(window.scrollY).toBe(landing - 130);
+  });
+
+  it('…and FOCUS is required ALWAYS: an UNMOVED page whose card a reflow moved off its landing is not finished while focus is elsewhere', async () => {
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    await scrollToY(landing);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    // Focus moved before the island hydrated: no focusin for the spy to hear,
+    // so only the finish's own focus rule keeps the page where it is.
+    const elsewhere = document.createElement('button');
+    host?.append(elsewhere);
+    elsewhere.focus({ preventScroll: true });
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+
+    document.documentElement.style.overflowAnchor = 'none';
+    try {
+      target(ids[1]).style.height = `${READING_PAGE.heights[1] + 400}px`;
+      await nextFrame();
+      await nextFrame();
+      expect(window.scrollY).toBe(landing);
+
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+      expect(document.activeElement).toBe(elsewhere);
+      expect(window.scrollY).toBe(landing);
+    } finally {
+      document.documentElement.style.overflowAnchor = '';
+    }
+  });
+
+  it('THE HYBRID: a page already AWAY at start, its card still IN VIEW — a webfont reflow before the island hydrated (WebKit) — is finished from beyond the quarter window', async () => {
+    // The start's rest point for a page away skips only the distance bound;
+    // the AWAY-at-start test above keeps the clear area (its card below the
+    // window). Without it the WebKit SLOW LOAD e2e passed 1 run in 4.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const landing = Math.round(expected(ids).plan.landings[4]);
+    await scrollToY(landing);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    document.documentElement.style.overflowAnchor = 'none';
+    try {
+      // The reflow BEFORE start: the card 400px below its landing, in view.
+      target(ids[1]).style.height = `${READING_PAGE.heights[1] + 400}px`;
+      await nextFrame();
+      await nextFrame();
+      expect(window.scrollY).toBe(landing);
+      const { plan } = expected(ids);
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeGreaterThan(
+        STALE_FINISH_REACH * window.innerHeight,
+      );
+      expect(target(ids[4]).getBoundingClientRect().top).toBeLessThan(
+        window.innerHeight,
+      );
+      const spy = makeSpy({ ids, line: 'reading' });
+      spy.start();
+
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+      expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(
+        2,
+      );
+    } finally {
+      document.documentElement.style.overflowAnchor = '';
+    }
+  });
+
+  for (const loading of [false, true] as const) {
+    it(`THE HYBRID'S DIRECTION: a reader 900px DOWN the tall card before the island hydrated, focus on the card${loading ? ', the document still loading' : ', the document already loaded'} — is not pulled back (the page sits BELOW the landing)`, async () => {
+      // G2 react (2026-10-10): a start rest point for a page away, card in
+      // view, pulled such a reader back to the card's top — 900px in WebKit.
+      const readyState = vi
+        .spyOn(document, 'readyState', 'get')
+        .mockReturnValue(loading ? 'interactive' : 'complete');
+      const ids = buildReadingPage(READING_PAGE);
+      const landing = Math.round(expected(ids).plan.landings[3]);
+      await scrollToY(landing + 900);
+      const read = window.scrollY;
+      expect(read).toBe(landing + 900);
+      window.history.replaceState(null, '', `#${ids[3]}`);
+      target(ids[3]).tabIndex = -1;
+      target(ids[3]).focus({ preventScroll: true });
+      expect(
+        target(ids[3]).getBoundingClientRect().bottom,
+        'the premise: the card still in view',
+      ).toBeGreaterThan(PADDING);
+      const spy = makeSpy({ ids, line: 'reading' });
+      spy.start();
+      vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+      readyState.mockReturnValue('complete');
+      vi.advanceTimersByTime(4 * DEFAULT_SETTLE_MS);
+
+      expect(document.activeElement).toBe(target(ids[3]));
+      expect(window.scrollY).toBe(read);
+    });
+  }
+
+  for (const jump of ['after start()', 'before start()'] as const) {
+    it(`STEP 0 KEEPS A PIN STILL AT ITS REST POINT (the browser's jump ${jump}): a reflow that pushes the card OUT of the window settles before the load is no stop — the UNMOVED finish lands it after the load`, async () => {
+      // G2 typescript (2026-10-10, its H5): step 0's "moved" meant ever, the
+      // finish means since the last rest point within reach — and step 0
+      // dropped the very pin the finish exists to land.
+      const readyState = vi
+        .spyOn(document, 'readyState', 'get')
+        .mockReturnValue('interactive');
+      const ids = buildReadingPage(READING_PAGE);
+      const landing = Math.round(expected(ids).plan.landings[4]);
+      window.history.replaceState(null, '', `#${ids[4]}`);
+      if (jump === 'before start()') await scrollToY(landing);
+      const spy = makeSpy({ ids, line: 'reading' });
+      spy.start();
+      vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+      if (jump === 'after start()') await scrollToY(landing);
+      vi.advanceTimersByTime(2 * DEFAULT_SETTLE_MS);
+      expect(spy.getSnapshot().current).toBe(ids[4]);
+
+      document.documentElement.style.overflowAnchor = 'none';
+      try {
+        target(ids[1]).style.height =
+          `${READING_PAGE.heights[1] + window.innerHeight + 200}px`;
+        await nextFrame();
+        await nextFrame();
+        expect(window.scrollY, 'the premise: the page never moved').toBe(
+          landing,
+        );
+        expect(
+          target(ids[4]).getBoundingClientRect().top,
+          'the premise: the card out of the window',
+        ).toBeGreaterThanOrEqual(window.innerHeight);
+        // A later resource still holds the load: three more settles.
+        vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+        expect(spy.getSnapshot().current).toBe(ids[4]);
+        readyState.mockReturnValue('complete');
+        vi.advanceTimersByTime(3 * DEFAULT_SETTLE_MS);
+
+        const { plan } = expected(ids);
+        expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(
+          2,
+        );
+      } finally {
+        document.documentElement.style.overflowAnchor = '';
+      }
+    });
+  }
+
+  it('dispose() of a WAITING fresh pin takes EVERY listener with it — the very functions start() attached — and every timer, its ceiling’s included', async () => {
+    // G2 typescript (2026-10-10): before this test, deleting dispose()'s
+    // endLoadWait(), its focusin removal or its keydown removal survived the
+    // whole suite.
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('interactive');
+    const { ids } = await parkedNearTheLanding();
+    const added = vi.spyOn(window, 'addEventListener');
+    const removed = vi.spyOn(window, 'removeEventListener');
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    // Waiting for the load: the pin's settle and its ceiling.
+    expect(vi.getTimerCount()).toBe(2);
+
+    spy.dispose();
+
+    expect(vi.getTimerCount()).toBe(0);
+    expect(
+      added.mock.calls
+        .map(([type]) => String(type))
+        .sort((a, b) => a.localeCompare(b)),
+    ).toEqual([
+      'focusin',
+      'hashchange',
+      'keydown',
+      'resize',
+      'scroll',
+      'touchmove',
+      'touchstart',
+      'wheel',
+    ]);
+    const unpaired = added.mock.calls
+      .filter(
+        ([type, listener]) =>
+          !removed.mock.calls.some(
+            ([gone, fn]) => gone === type && fn === listener,
+          ),
+      )
+      .map(([type]) => String(type));
+    expect(unpaired).toEqual([]);
+  });
+
+  it('start() leaves a fresh load-time pin resting on its STYLESHEET line alone while the document still loads — the settle after the load finishes it, once', async () => {
+    // G2 react and typescript (2026-10-10): finished at start(), with the
+    // webfont still to come, the jump was spent on a layout about to change —
+    // fitting cards 10 to 20px off with the scripts 700ms late.
+    const readyState = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('interactive');
+    const ids = buildReadingPage(READING_PAGE);
+    const scrolls = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const stylesheetLanding = Math.round(
+      documentTop(ids[4]) - PADDING - MARGIN,
+    );
+    await scrollToY(stylesheetLanding);
+    window.history.replaceState(null, '', `#${ids[4]}`);
+    const spy = makeSpy({ ids, line: 'reading' });
+    const { plan } = expected(ids);
+
+    spy.start();
+    expect(scrolls).not.toHaveBeenCalled();
+    expect(window.scrollY).toBe(stylesheetLanding);
+
+    readyState.mockReturnValue('complete');
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(scrolls).toHaveBeenCalledTimes(1);
+    expect(Math.abs(window.scrollY - plan.landings[4])).toBeLessThanOrEqual(2);
   });
 
   // THE JUMP THAT DID NOT KNOW THE PLAN (the header's THE ONE SCROLL THIS
@@ -1369,6 +2134,129 @@ describe("createScrollSpy — line: 'reading' (owner 2026-09-29)", () => {
 
     expect(spy.getSnapshot()).toBe(before);
   });
+
+  // ── THE REFRESH (the header; owner 2026-10-09 — the price strip): a consumer
+  // that rewrites what the spy measures against — the price menu's island,
+  // writing the root's scroll-padding-top while its strip is shown — asks the
+  // spy to measure again, with no resize to say so.
+
+  /** The plan lib/reading-line makes of the page at `padding` — the header's
+   *  `expected`, with the root's scroll padding as a parameter. */
+  const plannedAt = (ids: readonly string[], padding: number): ReadingPlan =>
+    planReadingLine({
+      viewport: window.innerHeight,
+      maxScrollY: maxScrollY(),
+      padding,
+      targets: ids.map((id) => ({
+        top: documentTop(id),
+        height: target(id).getBoundingClientRect().height,
+        floor: MARGIN,
+      })),
+    });
+
+  it('refresh() re-plans every landing for a root scroll-padding the consumer just changed — where, without it, the old plan stands', () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    const before = ids.map(writtenOn);
+    expect(before).toEqual(
+      plannedAt(ids, PADDING).margins.map((margin) => px(margin)),
+    );
+
+    // The consumer's write — the strip's pills' bottom edge, 154px.
+    document.documentElement.style.scrollPaddingTop = '154px';
+    // The premise: nothing re-planned by itself — no scroll, no resize.
+    expect(ids.map(writtenOn)).toEqual(before);
+
+    spy.refresh();
+
+    const after = plannedAt(ids, 154);
+    expect(ids.map(writtenOn)).toEqual(
+      after.margins.map((margin) => px(margin)),
+    );
+    // …and the plan really moved: a card too tall to centre now rests on the
+    // NEW ceiling, 154 + its 40px floor below the top — its margin is the
+    // floor still, so the change shows on the cards that fit, centred lower.
+    expect(ids.map(writtenOn)).not.toEqual(before);
+  });
+
+  it('refresh() re-reads every floor, as a resize does — the stylesheet’s new margin is planned from', () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    expect(writtenOn(ids[3])).toBe(`${MARGIN}px`);
+
+    (sheet as HTMLStyleElement).textContent =
+      '.reading-target { scroll-margin-top: 60px; }';
+    spy.refresh();
+
+    expect(writtenOn(ids[3])).toBe('60px');
+  });
+
+  it('refresh() never drops a pin — the visitor’s choice outranks a re-plan', () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    spy.start();
+    spy.select(ids[4]);
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+
+    document.documentElement.style.scrollPaddingTop = '154px';
+    spy.refresh();
+
+    expect(spy.getSnapshot().current).toBe(ids[4]);
+  });
+
+  it('refresh() is a no-op before start() and after dispose() — nothing written, nothing published, no throw', () => {
+    const ids = buildReadingPage(READING_PAGE);
+    const spy = makeSpy({ ids, line: 'reading' });
+    const listener = vi.fn();
+    spy.subscribe(listener);
+
+    expect(() => spy.refresh()).not.toThrow();
+    for (const id of ids) expect(writtenOn(id)).toBe('');
+    expect(spy.getSnapshot().current).toBeNull();
+
+    spy.start();
+    spy.dispose();
+    listener.mockClear();
+    spy.refresh();
+    for (const id of ids) expect(writtenOn(id)).toBe('');
+    expect(spy.getSnapshot().current).toBeNull();
+    expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('createScrollSpy — refresh() on the landing line', () => {
+  it('re-walks against the root scroll-padding as it is NOW — a target the new line reaches becomes current without a scroll', async () => {
+    const ids = buildPage();
+    const spy = makeSpy();
+    spy.start();
+    // A position where the second target sits 30px BELOW its landing line.
+    const y = landingOf(ids[1]) - 30;
+    await scrollToY(y);
+    expect(spy.getSnapshot().current).toBe(ids[0]);
+
+    // The consumer moves the line 60px down: the second target is past it.
+    document.documentElement.style.scrollPaddingTop = `${PADDING + 60}px`;
+    expect(spy.getSnapshot().current).toBe(ids[0]);
+    spy.refresh();
+
+    expect(window.scrollY).toBe(y);
+    expect(spy.getSnapshot().current).toBe(ids[1]);
+  });
+
+  it('writes nothing on the landing line — refresh() lifts no margin it never wrote', () => {
+    const ids = buildPage();
+    const before = ids.map((id) =>
+      document.getElementById(id)?.getAttribute('style'),
+    );
+    const spy = makeSpy();
+    spy.start();
+    spy.refresh();
+    expect(
+      ids.map((id) => document.getElementById(id)?.getAttribute('style')),
+    ).toEqual(before);
+  });
 });
 
 describe('createScrollSpy — the pin (both directions, safely)', () => {
@@ -1451,6 +2339,99 @@ describe('createScrollSpy — the pin (both directions, safely)', () => {
 
     expect(spy.getSnapshot().current).toBe(IDS[2]);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  /** A pin on the last target, its jump landed and its settle passed — the
+   *  page RESTING, `settledY` taken (THE RESIZE KEEPS THE PIN's starting
+   *  point). */
+  async function settledOnTheLast(): Promise<ScrollSpy> {
+    buildPage();
+    const spy = makeSpy();
+    spy.start();
+    spy.select(IDS[3]);
+    await scrollToY(landingOf(IDS[3]));
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    expect(vi.getTimerCount()).toBe(0);
+    return spy;
+  }
+
+  /** The browser moving the page AS PART OF a resize, in the order it does it
+   *  (measured on the built price page, 2026-10-10): the page has moved, the
+   *  `resize` event comes first, the `scroll` event at the next frame. */
+  async function resizeThatMovesThePage(by: number): Promise<void> {
+    window.scrollTo(0, window.scrollY + by);
+    window.dispatchEvent(new Event('resize'));
+    await nextFrame();
+    await nextFrame();
+  }
+
+  it('THE RESIZE KEEPS THE PIN: a resize that MOVED the page — its scroll event after it — leaves a settled pin where it was', async () => {
+    // Mobile-mode Chromium keeps the node at the window's top-centre in place
+    // across a rotation: on the price page's 1180×820 touch tablet the page
+    // moved 667 → 675px, and the settled pin read that `scroll` as a hand. The
+    // move here is UPWARDS, 8px, so a dropped pin would show: the last
+    // target's edge then sits below its line and the walk names the one before.
+    const spy = await settledOnTheLast();
+
+    await resizeThatMovesThePage(-8);
+
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    // …and the rest is simply taken again: no settle re-armed, nothing to judge.
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('THE LAST PIXELS OF A GLIDE: a settled pin keeps through a 2px trailing step — WebKit ending its smooth scroll in two steps', async () => {
+    const spy = await settledOnTheLast();
+
+    await scrollToY(window.scrollY - 2);
+
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('…and drops at the THIRD pixel from where it settled — measured from the settled position, never re-taken, so a slow scrollbar drag still takes it away', async () => {
+    const spy = await settledOnTheLast();
+    const settled = window.scrollY;
+
+    await scrollToY(settled - 2);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    await scrollToY(settled - 3);
+
+    expect(spy.getSnapshot().current).toBe(IDS[2]);
+  });
+
+  it('…and after that resize, a hand that moves the page past the new rest still drops the pin — at once', async () => {
+    const spy = await settledOnTheLast();
+    await resizeThatMovesThePage(-8);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+
+    await scrollToY(landingOf(IDS[2]));
+
+    expect(spy.getSnapshot().current).toBe(IDS[2]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('a resize WHILE the jump still glides changes nothing about the settle — the glide’s next scroll is still the jump’s, and the settle judges as before', async () => {
+    buildPage();
+    const spy = makeSpy();
+    spy.start();
+    spy.select(IDS[3]);
+    // Mid-glide: the settle armed, no rest taken yet.
+    await scrollToY(landingOf(IDS[1]));
+    expect(vi.getTimerCount()).toBe(1);
+
+    window.dispatchEvent(new Event('resize'));
+
+    expect(vi.getTimerCount()).toBe(1);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    // The glide goes on: its next scroll event re-arms the settle, it does not
+    // drop the visitor's choice…
+    await scrollToY(landingOf(IDS[2]));
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    // …and it lands, where the settle finds the target arrived.
+    await scrollToY(landingOf(IDS[3]));
+    vi.advanceTimersByTime(DEFAULT_SETTLE_MS);
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
   });
 
   it('drops the pin the moment the visitor touches the wheel, mid-glide', async () => {
@@ -1812,6 +2793,282 @@ describe('createScrollSpy — the URL’s own #id', () => {
   });
 });
 
+describe('createScrollSpy — horizontalScrollers: sideways input inside a strip is not page scrolling (G2 react, 2026-10-09)', () => {
+  /** A horizontal scroller inside the page, with a child to aim events at. */
+  function addStrip(): HTMLElement {
+    const strip = document.createElement('ul');
+    strip.id = 'strip';
+    const chip = document.createElement('li');
+    chip.textContent = 'Profilaxie';
+    strip.append(chip);
+    host?.append(strip);
+    return chip;
+  }
+
+  /** A pin in play, mid-glide — the state a tap leaves. */
+  async function pinnedMidGlide(): Promise<ScrollSpy> {
+    const spy = makeSpy({ ids: IDS, horizontalScrollers: ['strip'] });
+    spy.start();
+    spy.select(IDS[3]);
+    await scrollToY(landingOf(IDS[1]));
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    return spy;
+  }
+
+  const touchAt = (target: Element, x: number, y: number): Touch =>
+    new Touch({ identifier: 1, target, clientX: x, clientY: y });
+
+  function swipe(target: Element, to: { dx: number; dy: number }): void {
+    target.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [touchAt(target, 100, 100)],
+      }),
+    );
+    for (let step = 1; step <= 4; step += 1) {
+      target.dispatchEvent(
+        new TouchEvent('touchmove', {
+          bubbles: true,
+          touches: [
+            touchAt(target, 100 + (to.dx * step) / 4, 100 + (to.dy * step) / 4),
+          ],
+        }),
+      );
+    }
+  }
+
+  it('a SIDEWAYS wheel over the strip leaves the pin alone — and so does Shift with a vertical wheel', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    chip.dispatchEvent(
+      new WheelEvent('wheel', { deltaX: 80, deltaY: 10, bubbles: true }),
+    );
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+    chip.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: 120, shiftKey: true, bubbles: true }),
+    );
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('a VERTICAL wheel over the strip scrolls the page: it drops the pin', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    chip.dispatchEvent(
+      new WheelEvent('wheel', { deltaX: 5, deltaY: 120, bubbles: true }),
+    );
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('a sideways wheel ELSEWHERE still drops it — only the named scrollers are excused', async () => {
+    buildPage();
+    addStrip();
+    const spy = await pinnedMidGlide();
+
+    window.dispatchEvent(new WheelEvent('wheel', { deltaX: 80 }));
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('a touch gesture that starts on the strip and pans SIDEWAYS never drops the pin', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    swipe(chip, { dx: -120, dy: 12 });
+
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('a VERTICAL gesture that starts on the strip scrolls the page: it still counts as a hand', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    swipe(chip, { dx: 8, dy: -120 });
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('a wobble under the 10px decision is no pan at all — nothing is judged yet', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    swipe(chip, { dx: 2, dy: 6 });
+
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('a gesture that starts OFF the strip drops the pin as before, sideways or not', async () => {
+    buildPage();
+    addStrip();
+    const spy = await pinnedMidGlide();
+    const elsewhere = document.getElementById(IDS[2]) as HTMLElement;
+
+    swipe(elsewhere, { dx: -120, dy: 0 });
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('a second finger is a pinch, the page’s — never the strip’s pan', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+    chip.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [touchAt(chip, 100, 100)],
+      }),
+    );
+
+    chip.dispatchEvent(
+      new TouchEvent('touchmove', {
+        bubbles: true,
+        touches: [
+          touchAt(chip, 60, 100),
+          new Touch({
+            identifier: 2,
+            target: chip,
+            clientX: 160,
+            clientY: 100,
+          }),
+        ],
+      }),
+    );
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('judges a gesture ONCE — a sideways pan that turns vertical afterwards is still the strip’s, and keeps the pin', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+    const move = (x: number, y: number): boolean =>
+      chip.dispatchEvent(
+        new TouchEvent('touchmove', {
+          bubbles: true,
+          touches: [touchAt(chip, x, y)],
+        }),
+      );
+    chip.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [touchAt(chip, 100, 100)],
+      }),
+    );
+
+    move(70, 101); // 30px sideways: judged sideways
+    move(70, 220); // then far down — cumulatively vertical, never re-judged
+
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('…and a VERTICAL pan that turns sideways afterwards stays the page’s: it drops even a pin made after its judgment', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+    const move = (x: number, y: number): boolean =>
+      chip.dispatchEvent(
+        new TouchEvent('touchmove', {
+          bubbles: true,
+          touches: [touchAt(chip, x, y)],
+        }),
+      );
+    chip.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [touchAt(chip, 100, 100)],
+      }),
+    );
+    move(101, 70); // judged vertical: the page — the pin goes
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+
+    // A new pin in the middle of that same gesture, which then sweeps far
+    // sideways: were the gesture re-judged, the sweep would keep it.
+    spy.select(IDS[3]);
+    move(-200, 80);
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('a gesture that STARTS with two fingers is never the strip’s pan — it drops the pin, sideways or not', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+    chip.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [
+          touchAt(chip, 100, 100),
+          new Touch({
+            identifier: 2,
+            target: chip,
+            clientX: 160,
+            clientY: 100,
+          }),
+        ],
+      }),
+    );
+
+    chip.dispatchEvent(
+      new TouchEvent('touchmove', {
+        bubbles: true,
+        touches: [touchAt(chip, 40, 100)],
+      }),
+    );
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  /** A 60px pan at `degrees` off vertical — downwards and to the right. */
+  const offVertical = (degrees: number): { dx: number; dy: number } => ({
+    dx: 60 * Math.sin((degrees * Math.PI) / 180),
+    dy: 60 * Math.cos((degrees * Math.PI) / 180),
+  });
+
+  it('only a CLEARLY vertical pan is the page’s: a gesture 40° off vertical — which Chromium hands to the strip from ~37–40° — keeps the pin (VERTICAL_PAN_RATIO)', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    swipe(chip, offVertical(40));
+
+    expect(spy.getSnapshot().current).toBe(IDS[3]);
+  });
+
+  it('…and a gesture 30° off vertical is clearly the page’s: it drops the pin', async () => {
+    buildPage();
+    const chip = addStrip();
+    const spy = await pinnedMidGlide();
+
+    swipe(chip, offVertical(30));
+
+    expect(spy.getSnapshot().current).toBe(IDS[1]);
+  });
+
+  it('refuses a repeated scroller id, like a repeated target id', () => {
+    expect(() =>
+      createScrollSpy({ ids: IDS, horizontalScrollers: ['strip', 'strip'] }),
+    ).toThrow(
+      /horizontalScrollers ids must be unique \(received "strip" twice\)/,
+    );
+  });
+
+  it('refuses a blank scroller id — one that could never be found', () => {
+    expect(() =>
+      createScrollSpy({ ids: IDS, horizontalScrollers: [''] }),
+    ).toThrow(/an empty one/);
+    expect(() =>
+      createScrollSpy({ ids: IDS, horizontalScrollers: ['  '] }),
+    ).toThrow(/a blank one/);
+  });
+});
+
 describe('createScrollSpy — start and dispose', () => {
   it('attaches exactly one set of listeners, however often start() is called', () => {
     buildPage();
@@ -1826,11 +3083,13 @@ describe('createScrollSpy — start and dispose', () => {
         .map(([type]) => type)
         .sort((a, b) => a.localeCompare(b)),
     ).toEqual([
+      'focusin',
       'hashchange',
       'keydown',
       'resize',
       'scroll',
       'touchmove',
+      'touchstart',
       'wheel',
     ]);
   });

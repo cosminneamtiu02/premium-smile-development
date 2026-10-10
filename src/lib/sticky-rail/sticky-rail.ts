@@ -163,7 +163,7 @@ import {
 //
 // ── THE STATIC OFFSET IS READ, NEVER PASSED. The 8.5rem line is already the
 // FIFTH coupled spelling of the header pill's reach (sections/Header.tsx's
-// "THE MOUNT CONTRACT", sections/PriceList's `@3xl:top-[8.5rem]` paragraph);
+// "THE MOUNT CONTRACT", sections/PriceList's THE 8.5rem LINE paragraph);
 // an option carrying it would be the sixth. So the rail reads its own computed
 // `top` — which is the static value exactly while no override is in effect,
 // i.e. in 'fits' and 'top' — and keeps that reading through 'bottom' and

@@ -2,8 +2,10 @@ import type { ReactElement } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it } from 'vitest';
+import { localeHref } from '@/i18n/href';
 import type { Locale } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic/clinic';
+import { LEGAL_ROUTES, PRIVACY_PATH } from '@/lib/routes/routes';
 import { formatHoursRows } from '@/lib/hours/hours';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
@@ -692,5 +694,52 @@ describe('Footer — row 3, the legal strip', () => {
     );
     const strip = (socials as Element).parentElement as HTMLElement;
     expect(classesOf(strip)).toContain('justify-items-center');
+  });
+});
+
+describe('Footer — row 3, the legal links (LEGAL_ROUTES, CLAUDE.md §15.38)', () => {
+  it('links the privacy and cookie policy, locale-prefixed, as a plain <a>', () => {
+    const { footer, messages } = mount();
+    const link = within(footer()).getByRole('link', {
+      name: messages.footer.privacy,
+    });
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', localeHref('ro', PRIVACY_PATH));
+    // A site link: same tab, no opener games.
+    expect(link).not.toHaveAttribute('target');
+  });
+
+  it('renders one link per LEGAL_ROUTES row — the strip reads the list, nothing else', () => {
+    const { footer, messages } = mount();
+    expect(LEGAL_ROUTES).toHaveLength(1);
+    expect(
+      within(footer()).getAllByRole('link', { name: messages.footer.privacy }),
+    ).toHaveLength(LEGAL_ROUTES.length);
+  });
+
+  it('sits in the copyright’s cell, so the strip keeps its three columns', () => {
+    const { footer, messages } = mount();
+    const link = within(footer()).getByRole('link', {
+      name: messages.footer.privacy,
+    });
+    const cell = link.parentElement as HTMLElement;
+    expect(cell.textContent).toContain(String(new Date().getFullYear()));
+    // The cell is a direct child of the strip's grid, beside back-to-top.
+    const top = within(footer()).getByRole('link', {
+      name: messages.footer.backToTop,
+    });
+    expect(top.parentElement).toBe(cell.parentElement);
+    expect(classesOf(cell)).toEqual(
+      expect.arrayContaining(['@3xl:justify-self-start', '@3xl:items-start']),
+    );
+  });
+
+  it('speaks the page’s language — German label, German path', () => {
+    const { footer, messages } = mount('de');
+    const link = within(footer()).getByRole('link', {
+      name: messages.footer.privacy,
+    });
+    expect(messages.footer.privacy).toBe('Datenschutz und Cookies');
+    expect(link).toHaveAttribute('href', localeHref('de', PRIVACY_PATH));
   });
 });

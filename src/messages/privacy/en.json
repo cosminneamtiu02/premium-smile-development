@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "description": "What data reaches us or Google when you visit the {name} website, the only cookie we use and your rights."
+  },
+  "title": "Privacy and cookies",
+  "updated": "Last updated: {date}",
+  "intro": "This page explains, in plain words, what happens to your data when you visit the {name} website and what rights you have. When we write GDPR, we mean Regulation (EU) 2016/679 on data protection.",
+  "missing": "[to be added]",
+  "summary": {
+    "title": "In short",
+    "noTracking": "We do not use analytics, advertising or tracking cookies.",
+    "oneCookie": "The site saves a single cookie, and only if you choose a language or close the message that suggests one: to remember the language on your next visit.",
+    "map": "The map in the “{band}” section comes from Google, which receives your device's IP address when the map loads.",
+    "noForms": "The site has no forms and does not ask you for personal data."
+  },
+  "controller": {
+    "title": "Who we are",
+    "company": "Your data is processed by {company}, which runs the {name} clinic at {address}.",
+    "identity": "Registration code (CUI): {cui}. Registration number: {tradeRegister}. Registered office: {registeredOffice}.",
+    "contact": "You can write to us at <email>{emailAddress}</email> or call us at <phone>{phoneNumber}</phone>.",
+    "profession": "The clinic's doctors hold the professional title of dentist (medic dentist), granted in Romania, and are members of the Romanian College of Dentists (Colegiul Medicilor Stomatologi din România). The rules of the profession are published on <cmsr>the College's website</cmsr>."
+  },
+  "visit": {
+    "title": "When you visit the site",
+    "logs": "The site's pages are hosted by {host}. As with any website, the servers that deliver them automatically receive some technical data with every visit: the IP address, the date and time, the page requested and the type of browser.",
+    "purpose": "The provider uses this data to deliver the pages to you and to protect the site from abuse. The legal basis is the legitimate interest in a safe, working website (Art. 6(1)(f) GDPR).",
+    "provider": "The provider receives and keeps this data for the security of its service, for as long as it decides, and may transfer it to the USA under the EU-US Data Privacy Framework. We do not receive it. Details are in <policy>the provider's privacy policy</policy>."
+  },
+  "cookies": {
+    "title": "Cookies",
+    "what": "A cookie is a small text file that a website saves in your browser to remember something from one visit to the next.",
+    "ours": "Our site saves just one cookie, and only after you choose a language or close the message that suggests one:",
+    "nameLabel": "Name",
+    "purposeLabel": "What it does",
+    "purpose": "Remembers the language you chose, so your next visit opens straight in it. It holds only the language code, for example \"ro\".",
+    "whenLabel": "When it is saved",
+    "when": "Only when you pick a language with the language button, or accept or close the message that suggests your language; if you close it, it remembers the language of the page you are on.",
+    "durationLabel": "How long",
+    "duration": "{months, plural, one {# month} other {# months}}. Some browsers, Safari for example, delete it sooner, after at most 7 days.",
+    "typeLabel": "Type",
+    "type": "A first-party cookie, strictly necessary for a feature you asked for, so we do not ask for your consent to it.",
+    "none": "We do not use analytics, advertising or tracking cookies, or any other form of storage in your browser.",
+    "delete": "You can delete the cookie at any time in your browser settings. The site works the same, except that it will no longer remember the language."
+  },
+  "map": {
+    "title": "The Google map",
+    "what": "In the “{band}” section we show a Google Maps map so you can see where the clinic is. The map usually loads when you scroll close to it.",
+    "data": "At that point, your browser connects directly to Google's servers, which receive your device's IP address and technical information about your browser. We do not send Google the address of the page you are reading, and in current browsers the map loads without the Google cookies you already have saved.",
+    "basis": "For loading the map and sending your IP address to Google, we are responsible together with Google Ireland Limited; for what Google does with the data afterwards, Google is responsible. Our legal basis is the legitimate interest in helping you find the clinic (Art. 6(1)(f) GDPR). Google may transfer the data to the USA, to Google LLC, under the EU-US Data Privacy Framework. Details are in <google>Google's privacy policy</google>.",
+    "without": "The clinic's address and phone number are written next to the map and at the bottom of every page, so you can use them even without the map."
+  },
+  "contact": {
+    "title": "When you contact us",
+    "phone": "If you call us or write to us on WhatsApp, we receive your phone number, the name and photo of your WhatsApp profile if they are visible, and what you tell us, so that we can answer and book an appointment. The legal basis is the steps you ask us to take before treatment, and the treatment itself (Art. 6(1)(b) GDPR). We keep these messages only for as long as we need them for your appointment and your care.",
+    "health": "We use the health information you choose to tell us only for your care (Art. 9(2)(h) GDPR).",
+    "whatsapp": "WhatsApp is a service of WhatsApp Ireland Limited, part of Meta. Messages are end-to-end encrypted, but WhatsApp sees who writes to us and when, and Meta may transfer this data to the USA under the EU-US Data Privacy Framework. Details are in <whatsapp>WhatsApp's privacy policy</whatsapp>.",
+    "patient": "The data in your patient file is processed at the clinic, separately from this website."
+  },
+  "reviews": {
+    "title": "Patient reviews",
+    "text": "On the home page we show some reviews our patients have published on Google, with their names and, for some, the photo from their profile. If you wrote one of these reviews and want it taken off the site, tell us and we will remove it."
+  },
+  "links": {
+    "title": "Links to other websites",
+    "text": "The links to Instagram, TikTok, WhatsApp or Google Maps take you to those companies' websites. There, their privacy and cookie rules apply, not ours."
+  },
+  "rights": {
+    "title": "Your rights",
+    "intro": "You have the right:",
+    "access": "to find out what data we have about you and to receive a copy of it;",
+    "rectify": "to correct it;",
+    "erase": "to ask for it to be deleted;",
+    "restrict": "to ask us to use it only in a limited way;",
+    "port": "to receive it in a format you can take elsewhere.",
+    "object": "You can object at any time, on grounds relating to your particular situation, to processing based on our legitimate interest, such as loading the Google map: tell us and we will look into your request.",
+    "automated": "We do not make automated decisions about you.",
+    "ask": "To use any of these rights, write to us at <email>{emailAddress}</email>, call us on <phone>{phoneNumber}</phone> or tell us at the clinic. We reply without undue delay and within one month; if the request is complex, this can be extended by two more months and we will tell you why.",
+    "complain": "If you believe we have not respected your rights, you can complain to the Romanian data protection authority, the Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP), Bd. G-ral Gheorghe Magheru nr. 28-30, sector 1, 010336 Bucharest, Romania, <anspdcp>www.dataprotection.ro</anspdcp>, or to the data protection authority of the EU country where you live, where you work or where you believe the breach happened."
+  },
+  "changes": {
+    "title": "Changes",
+    "text": "If anything changes, for example the company that hosts the site, we will update this page and the date at the top."
+  }
+}

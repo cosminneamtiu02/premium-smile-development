@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "description": "Quali dati arrivano a noi o a Google quando visiti il sito di {name}, qual è l’unico cookie che usiamo e quali sono i tuoi diritti."
+  },
+  "title": "Privacy e cookie",
+  "updated": "Ultimo aggiornamento: {date}",
+  "intro": "In questa pagina ti spieghiamo, con parole semplici, cosa succede ai tuoi dati quando visiti il sito di {name} e quali diritti hai. Quando scriviamo GDPR, intendiamo il Regolamento (UE) 2016/679 sulla protezione dei dati.",
+  "missing": "[da completare]",
+  "summary": {
+    "title": "In breve",
+    "noTracking": "Non usiamo cookie analitici, pubblicitari o di tracciamento.",
+    "oneCookie": "Il sito salva un unico cookie, e soltanto se scegli una lingua o chiudi il messaggio che te ne propone una: serve a ricordare la lingua alla prossima visita.",
+    "map": "La mappa nella sezione «{band}» è di Google, che riceve l’indirizzo IP del tuo dispositivo quando la mappa si carica.",
+    "noForms": "Il sito non ha moduli e non ti chiede dati personali."
+  },
+  "controller": {
+    "title": "Chi siamo",
+    "company": "I dati sono trattati da {company}, che gestisce la clinica {name} all’indirizzo {address}.",
+    "identity": "Codice unico di registrazione (CUI): {cui}. Numero di registrazione: {tradeRegister}. Sede legale: {registeredOffice}.",
+    "contact": "Puoi scriverci all’indirizzo <email>{emailAddress}</email> o chiamarci al numero <phone>{phoneNumber}</phone>.",
+    "profession": "Chi esercita l’odontoiatria nella clinica ha il titolo professionale di «medic dentist» (odontoiatra), rilasciato in Romania, e fa parte dell’Ordine dei medici dentisti della Romania (Colegiul Medicilor Stomatologi din România). Le regole della professione sono pubblicate sul <cmsr>sito dell’Ordine</cmsr>."
+  },
+  "visit": {
+    "title": "Quando visiti il sito",
+    "logs": "Le pagine del sito sono ospitate da {host}. Come per qualsiasi sito, i server che le inviano ricevono automaticamente, a ogni visita, alcuni dati tecnici: l’indirizzo IP, la data e l’ora, la pagina richiesta e il tipo di browser.",
+    "purpose": "Il fornitore usa questi dati per farti arrivare le pagine e per proteggere il sito dagli abusi. La base giuridica è il legittimo interesse ad avere un sito sicuro e funzionante (art. 6, par. 1, lett. f) del GDPR).",
+    "provider": "Questi dati li riceve e li conserva il fornitore, per la sicurezza del suo servizio, per il tempo che stabilisce lui, e può trasferirli negli Stati Uniti, sulla base del quadro UE-USA per la protezione dei dati personali. Noi non li riceviamo. Trovi i dettagli nell’<policy>informativa sulla privacy del fornitore</policy>."
+  },
+  "cookies": {
+    "title": "Cookie",
+    "what": "Un cookie è un piccolo file di testo che un sito salva nel tuo browser, per ricordare qualcosa da una visita all’altra.",
+    "ours": "Il nostro sito salva un unico cookie, e soltanto dopo che hai scelto una lingua o chiuso il messaggio che te ne propone una:",
+    "nameLabel": "Nome",
+    "purposeLabel": "A cosa serve",
+    "purpose": "Ricorda la lingua che hai scelto, così alla prossima visita la ritrovi subito. Contiene solo il codice della lingua, per esempio «ro».",
+    "whenLabel": "Quando viene salvato",
+    "when": "Solo quando scegli una lingua dal pulsante delle lingue oppure quando accetti o chiudi il messaggio che ti propone la tua lingua; se lo chiudi, ricorda la lingua della pagina in cui ti trovi.",
+    "durationLabel": "Per quanto tempo",
+    "duration": "{months, plural, one {# mese} many {# mesi} other {# mesi}}. Alcuni browser, per esempio Safari, lo cancellano prima, dopo 7 giorni al massimo.",
+    "typeLabel": "Tipo",
+    "type": "Cookie di prima parte, strettamente necessario per una funzione che hai richiesto, quindi non ti chiediamo il consenso per usarlo.",
+    "none": "Non usiamo cookie analitici, pubblicitari o di tracciamento, né altre forme di memorizzazione nel browser.",
+    "delete": "Puoi cancellare il cookie in qualsiasi momento dalle impostazioni del browser. Il sito funziona allo stesso modo, solo che non ricorderà più la lingua."
+  },
+  "map": {
+    "title": "La mappa di Google",
+    "what": "Nella sezione «{band}» mostriamo una mappa di Google Maps, così vedi dove si trova la clinica. Di solito la mappa si carica quando, scorrendo la pagina, ci arrivi vicino.",
+    "data": "In quel momento il tuo browser si collega direttamente ai server di Google, che ricevono l’indirizzo IP del tuo dispositivo e informazioni tecniche sul browser. Non inviamo a Google l’indirizzo della pagina che stai leggendo e, nei browser attuali, la mappa si carica senza i cookie di Google già presenti nel tuo browser.",
+    "basis": "Del caricamento della mappa e dell’invio del tuo indirizzo IP a Google rispondiamo insieme a Google Ireland Limited, come contitolari del trattamento; di quello che Google fa poi con i dati risponde Google. La nostra base giuridica è il legittimo interesse ad aiutarti a trovare la clinica (art. 6, par. 1, lett. f) del GDPR). Google può trasferire i dati negli Stati Uniti, a Google LLC, sulla base del quadro UE-USA per la protezione dei dati personali. Trovi i dettagli nell’<google>informativa sulla privacy di Google</google>.",
+    "without": "L’indirizzo e il numero di telefono della clinica sono scritti accanto alla mappa e in fondo a ogni pagina, quindi puoi usarli anche senza la mappa."
+  },
+  "contact": {
+    "title": "Quando ci contatti",
+    "phone": "Se ci chiami o ci scrivi su WhatsApp, riceviamo il tuo numero di telefono, il nome e la foto del tuo profilo WhatsApp, se sono visibili, e quello che ci dici, per risponderti e fissare un appuntamento. La base giuridica sono i passi che ci chiedi di fare prima della cura e la cura stessa (art. 6, par. 1, lett. b) del GDPR). Conserviamo questi messaggi solo finché ci servono per l’appuntamento e per prenderci cura di te.",
+    "health": "Le informazioni sulla tua salute che scegli di dirci le usiamo solo per prenderci cura di te (art. 9, par. 2, lett. h) del GDPR).",
+    "whatsapp": "WhatsApp è un servizio di WhatsApp Ireland Limited, del gruppo Meta. I messaggi sono protetti dalla crittografia end-to-end, ma WhatsApp vede chi ci scrive e quando, e Meta può trasferire questi dati negli Stati Uniti, sulla base del quadro UE-USA per la protezione dei dati personali. Trovi i dettagli nell’<whatsapp>informativa sulla privacy di WhatsApp</whatsapp>.",
+    "patient": "I dati della tua cartella clinica li trattiamo in clinica, separatamente da questo sito."
+  },
+  "reviews": {
+    "title": "Recensioni dei pazienti",
+    "text": "Nella pagina principale mostriamo alcune recensioni che i nostri pazienti hanno pubblicato su Google, con il loro nome e, per alcune, la foto del loro profilo. Se hai scritto una di queste recensioni e vuoi che la togliamo dal sito, diccelo e la togliamo."
+  },
+  "links": {
+    "title": "Link ad altri siti",
+    "text": "I link a Instagram, TikTok, WhatsApp o Google Maps ti portano sui siti di quelle aziende. Lì valgono le loro regole sulla privacy e sui cookie, non le nostre."
+  },
+  "rights": {
+    "title": "I tuoi diritti",
+    "intro": "Hai il diritto di:",
+    "access": "sapere quali dati abbiamo su di te e riceverne una copia;",
+    "rectify": "correggerli;",
+    "erase": "chiederne la cancellazione;",
+    "restrict": "chiederci di usarli solo in modo limitato;",
+    "port": "riceverli in un formato che puoi portare altrove.",
+    "object": "Puoi opporti in qualsiasi momento, per motivi connessi alla tua situazione particolare, ai trattamenti basati sul nostro legittimo interesse, come il caricamento della mappa di Google: diccelo e valutiamo la tua richiesta.",
+    "automated": "Non prendiamo decisioni automatizzate su di te.",
+    "ask": "Per esercitare uno qualsiasi di questi diritti, scrivici all’indirizzo <email>{emailAddress}</email>, chiamaci al numero <phone>{phoneNumber}</phone> oppure diccelo in clinica. Ti rispondiamo senza ingiustificato ritardo, entro un mese al massimo; se la richiesta è complessa, il termine può essere prorogato di altri due mesi e ti diciamo perché.",
+    "complain": "Se pensi che non abbiamo rispettato i tuoi diritti, puoi presentare un reclamo all’autorità romena per la protezione dei dati (Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal, ANSPDCP), bd. G-ral Gheorghe Magheru nr. 28-30, sector 1, 010336 Bucarest, Romania, <anspdcp>www.dataprotection.ro</anspdcp>, oppure all’autorità per la protezione dei dati dello Stato membro dell’UE in cui vivi, lavori o in cui ritieni sia avvenuta la violazione."
+  },
+  "changes": {
+    "title": "Modifiche",
+    "text": "Se cambia qualcosa, per esempio l’azienda che ospita il sito, aggiorniamo questa pagina e la data indicata in alto."
+  }
+}

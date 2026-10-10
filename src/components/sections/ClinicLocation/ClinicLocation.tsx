@@ -9,9 +9,11 @@ import {
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Phone } from '@/assets/glyphs/Phone';
 import { Pin } from '@/assets/glyphs/Pin';
+import { localeHref } from '@/i18n/href';
 import { isLocale } from '@/i18n/locales';
 import { clinic, mapEmbedUrlFor } from '@/lib/clinic/clinic';
 import { cx } from '@/lib/cx/cx';
+import { PRIVACY_MAP_ANCHOR, PRIVACY_PATH } from '@/lib/routes/routes';
 
 // sections/ClinicLocation — the „Ne găsești" band: the opener, the live Google
 // map, and the two contact rows beside it. Built to the owner-approved N2
@@ -339,6 +341,22 @@ function ContactRow({
 }
 
 /**
+ * THE NOTE'S LINK, under the map (CLAUDE.md §15.38) — the inline link of the
+ * privacy page, worn here: underlined at rest (SC 1.4.1), lavender under the
+ * pointer, ui/TextButton's focus ring and colour clock. It sits on this
+ * band's page ground, where `--accent` reads 4.81:1 (the accent census counts
+ * this file's third spelling). KEEP-IN-SYNC with sections/PrivacyPolicy's
+ * POLICY_LINK — the page this note links to, in the same dress;
+ * PrivacyPolicy.test.tsx holds the two strings equal (a section never imports
+ * another's internals, §4, so the pair is two spellings and one test).
+ */
+export const NOTE_LINK =
+  'rounded-xs underline decoration-1 underline-offset-2 outline-offset-2 ' +
+  'focus-visible:outline-2 focus-visible:outline-focus ' +
+  'transition-[color] duration-200 ease-out hover:text-accent ' +
+  'motion-reduce:transition-none';
+
+/**
  * The band's props — ONE, since 2026-10-02 (§15.32). Until that day the band
  * took nothing: it translates itself and reads its facts from lib/clinic, and
  * it still does. The prop is additive with the old behaviour as its default
@@ -409,15 +427,20 @@ export function ClinicLocation({
           />
           {/* Map and rows: one column until @3xl, then the map takes the free
               track and the rows hug their content beside it (`1fr auto`,
-              vertically centred). gap-6 is the section owning ALL child
-              spacing (§6.4); the old `lg:gap-6` was a no-op restatement of the
-              base value and is dropped. */}
-          <div className="mt-8 grid gap-6 @lg:mt-10 @3xl:mt-12 @3xl:grid-cols-[1fr_auto] @3xl:items-center">
+              vertically centred ON THE MAP). gap-6 is the section owning ALL
+              child spacing (§6.4); the old `lg:gap-6` was a no-op restatement
+              of the base value and is dropped. Since 2026-10-10 (§15.38) the
+              note under the map takes a SECOND ROW of the first track at @3xl
+              (`@3xl:gap-y-3` its 12px), so the rows still centre on the map
+              and never on the map and its note together — measured 15–28px
+              low before the placement (the React review). */}
+          <div className="mt-8 grid gap-6 @lg:mt-10 @3xl:mt-12 @3xl:grid-cols-[1fr_auto] @3xl:items-center @3xl:gap-y-3">
             {/* ── CONSENT SEAM (board D1, owner option A 2026-09-09) ─────────
                 The live Google embed renders UNGATED, at page load, exactly as
                 the old site — an accepted, deferred risk on the owner's word
                 (CLAUDE.md §12 rider; COOKIES.md §7). When the cookie-strategy
-                lane ships a consent record, THIS element is what it wraps:
+                lane ships a consent record, the TRAY below (the <iframe>'s
+                own parent) is what it wraps:
                 render the <iframe> only when the record grants, and design the
                 no-consent branch THERE (a picture is reopened as an option,
                 fb-387). ClinicLocation.test.tsx pins the iframe's attributes so
@@ -430,23 +453,64 @@ export function ClinicLocation({
                 token (D3), not a new one. The tray's SHAPE is the header's OLD
                 → NEW, item 4: 4:3 on a phone's column, half again as tall as
                 the 2:1 it keeps from `@lg` up (the owner, 2026-10-09). */}
-            <div className="aspect-[4/3] @lg:aspect-[2/1] overflow-hidden rounded-md border border-line-subtle bg-line-subtle shadow-aura">
-              {/* `title` is the frame's accessible name — without it a screen
-                  reader announces an unnavigable "frame" and axe fails the
-                  story. `referrerPolicy="no-referrer"` sends Google no page
-                  address at all: stricter than the old site's value AND than
-                  the browser default, with the embed measured to render
-                  identically (board D2). `allow=""` is an explicit EMPTY
-                  permission list — no fullscreen, no microphone, no payment —
-                  which is a different thing from omitting the attribute. */}
-              <iframe
-                src={mapSrc}
-                title={t('location.mapAlt', { name: clinic.name })}
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                allow=""
-                className="h-full w-full border-0"
-              />
+            {/* THE MAP AND ITS NOTE (CLAUDE.md §15.38). Below @3xl one stacked
+                block, the note 12px under the frame; at @3xl the wrapper
+                dissolves (`contents`) and the tray and the note take rows 1
+                and 2 of the first track, so the rows beside them centre on the
+                map alone. The note says, where the data leaves, that Google
+                receives the visitor's IP address, and links to the privacy
+                page's map part: GDPR art. 13's information where it applies,
+                at the 16px of the contact rows beside it (the a11y review:
+                14px drew at ~11px inside the band scale on a laptop). */}
+            <div className="flex flex-col gap-3 @3xl:contents">
+              <div className="aspect-[4/3] @lg:aspect-[2/1] overflow-hidden rounded-md border border-line-subtle bg-line-subtle shadow-aura @3xl:col-start-1 @3xl:row-start-1">
+                {/* `title` is the frame's accessible name — without it a
+                    screen reader announces an unnavigable "frame" and axe
+                    fails the story. `referrerPolicy="no-referrer"` sends Google
+                    no page address at all: stricter than the old site's value
+                    AND than the browser default, with the embed measured to
+                    render identically (board D2). `allow=""` is an explicit
+                    EMPTY permission list — no fullscreen, no microphone, no
+                    payment — which is a different thing from omitting the
+                    attribute. `credentialless` (§15.38, BACKLOG.md entry 1's
+                    first step) gives the frame an empty cookie jar of its own:
+                    Google's page can neither send nor read the Google cookies a
+                    signed-in visitor already has — measured 19 of 46 requests
+                    carrying one in Chromium before, 0 with it, the map and its
+                    card buttons unchanged (COOKIES.md §3). SPELLED AS ITS OWN
+                    NAME, the one value both Reacts write: Next's bundled
+                    canary (the export and Storybook) knows the attribute as
+                    BOOLEAN and drops an empty string, npm's 19.2 (the unit
+                    and components tests) does not know it and drops `true` —
+                    ./credentialless.ts has the
+                    measurement, tests/unit/credentialless-render.test.ts holds
+                    both. The visitor's IP still reaches Google on load: the
+                    deferred risk of §12's rider, which no attribute closes. */}
+                <iframe
+                  src={mapSrc}
+                  title={t('location.mapAlt', { name: clinic.name })}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  allow=""
+                  credentialless="credentialless"
+                  className="h-full w-full border-0"
+                />
+              </div>
+              <p className="text-base text-ink-muted @3xl:col-start-1 @3xl:row-start-2">
+                {t.rich('location.mapNote', {
+                  link: (chunks) => (
+                    <a
+                      href={localeHref(
+                        locale,
+                        `${PRIVACY_PATH}#${PRIVACY_MAP_ANCHOR}`,
+                      )}
+                      className={NOTE_LINK}
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                })}
+              </p>
             </div>
             {/* The rows stack under the map below @3xl and sit beside it above
                 — the owner's fb-393 rule, met at every sampled width. Stacked
@@ -469,7 +533,7 @@ export function ClinicLocation({
                 `group`, this column carries none, and on one line the two
                 `-m-3` hit areas do not even touch — the test pins both facts
                 (owner: "if I hover on one … not both of them light up"). */}
-            <div className="flex flex-col gap-4 @lg:flex-row @lg:justify-between @lg:gap-5 @3xl:flex-col @3xl:justify-start">
+            <div className="flex flex-col gap-4 @lg:flex-row @lg:justify-between @lg:gap-5 @3xl:col-start-2 @3xl:row-start-1 @3xl:flex-col @3xl:justify-start">
               <ContactRow
                 href={clinic.directionsUrl}
                 label={t('location.directionsLabel', { address })}

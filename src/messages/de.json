@@ -41,6 +41,7 @@
       "salLabel": "Alternative Streitbeilegung",
       "backToTop": "Nach oben",
       "copyright": "© {year} {name}. Alle Rechte vorbehalten.",
+      "privacy": "Datenschutz und Cookies",
       "socialInstagram": "{name} auf Instagram",
       "socialTiktok": "{name} auf TikTok",
       "contactWhatsapp": "{name} auf WhatsApp",
@@ -64,6 +65,7 @@
       "eyebrow": "So finden Sie uns",
       "title": "Besuchen Sie unsere Klinik",
       "mapAlt": "Karte mit dem Standort der Klinik {name}",
+      "mapNote": "Die Karte wird von Google angezeigt, das dabei die IP-Adresse Ihres Geräts erhält. <link>Details in der Datenschutzerklärung</link>",
       "directionsLabel": "Route zu {address} anzeigen",
       "callLabel": "Rufen Sie {phone} an"
     },
@@ -81,7 +83,8 @@
     "title": "Unsere Leistungen",
     "prices": {
       "menu": "Kategorien",
-      "amount": "{amount, number} RON"
+      "amount": "{amount, number} RON",
+      "taxNote": "Alle Preise in RON, einschließlich aller Steuern und Gebühren."
     }
   },
   "team": {

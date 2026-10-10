@@ -21,7 +21,13 @@ import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
 import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
-import { ClinicLocation, type ClinicLocationProps } from './ClinicLocation';
+import { localeHref } from '@/i18n/href';
+import { PRIVACY_MAP_ANCHOR, PRIVACY_PATH } from '@/lib/routes/routes';
+import {
+  ClinicLocation,
+  NOTE_LINK,
+  type ClinicLocationProps,
+} from './ClinicLocation';
 import source from './ClinicLocation.tsx?raw';
 
 // sections/ClinicLocation — the interaction suite. Role-based queries on
@@ -87,6 +93,17 @@ const mount = (locale: Locale = 'ro', props: ClinicLocationProps = {}) => {
 
 const classesOf = (el: Element): string[] =>
   (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/**
+ * The two CONTACT ROWS — every link in the band except the note's under the
+ * map (CLAUDE.md §15.38), which sits inside its sentence's <p>; a row never
+ * does. The row suites below ask about ROWS, so they read this, never the
+ * band's raw link list.
+ */
+const rowsOf = (root: HTMLElement): HTMLElement[] =>
+  within(root)
+    .getAllByRole('link')
+    .filter((link) => link.closest('p') === null);
 
 /** ICU interpolation, done the way the message file declares it. */
 const fill = (message: string, values: Record<string, string>): string =>
@@ -218,6 +235,24 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
     expect(frame.getAttribute('allow')).toBe('');
   });
 
+  it('gives the frame an EMPTY cookie jar of its own — `credentialless` (§15.38)', () => {
+    // BACKLOG.md entry 1's first step: with the attribute, Google's page can
+    // neither send nor read the Google cookies a signed-in visitor already
+    // has (19 of 46 requests carried one in Chromium before, 0 after —
+    // COOKIES.md §3). Spelled `credentialless="credentialless"`, the one value
+    // both Reacts write (./credentialless.ts).
+    const { band } = mount();
+    const frame = band().querySelector('iframe') as HTMLIFrameElement;
+
+    // A BOOLEAN attribute: presence is what the browser reads. This runner's
+    // React writes the value as given; the export's writes it empty — both
+    // are on (tests/unit/credentialless-render.test.ts renders it in each).
+    expect(frame.hasAttribute('credentialless')).toBe(true);
+    expect(['', 'credentialless']).toContain(
+      frame.getAttribute('credentialless'),
+    );
+  });
+
   it('sits in a bordered, clipped tray so Google never paints past the corners', () => {
     // The tray is the on-brand loading state (and, with the visual net's
     // network fence, the thing the baselines actually photograph). `rounded-md`
@@ -324,7 +359,7 @@ describe('ClinicLocation — the two contact rows', () => {
     // eyeballing the message file.
     const { band } = mount();
 
-    for (const link of within(band()).getAllByRole('link')) {
+    for (const link of rowsOf(band())) {
       const name = link.getAttribute('aria-label') ?? '';
       const visible = (link.textContent ?? '').trim();
 
@@ -334,9 +369,11 @@ describe('ClinicLocation — the two contact rows', () => {
     }
   });
 
-  it('renders TWO rows and nothing else clickable', () => {
+  it('renders TWO rows, the map note’s one link, and nothing else clickable', () => {
     const { band } = mount();
-    expect(within(band()).getAllByRole('link')).toHaveLength(2);
+    expect(rowsOf(band())).toHaveLength(2);
+    // The third is the note under the map (§15.38), and only it.
+    expect(within(band()).getAllByRole('link')).toHaveLength(3);
   });
 
   it('never syllable-splits its label — the §15.14 button rule, on a link row', () => {
@@ -346,7 +383,7 @@ describe('ClinicLocation — the two contact rows', () => {
     // 2026-09-09). `hyphens` inherits, so the anchor carries the opt-out once.
     const { band } = mount();
 
-    for (const link of within(band()).getAllByRole('link')) {
+    for (const link of rowsOf(band())) {
       expect(classesOf(link)).toContain('hyphens-none');
     }
   });
@@ -357,7 +394,7 @@ describe('ClinicLocation — the discs are DECORATION, painted by ui/GlyphButton
     // The row's aria-label is the name AT hears; the disc must add nothing to
     // it, or every row announces its icon twice.
     const { band } = mount();
-    const links = within(band()).getAllByRole('link');
+    const links = rowsOf(band());
 
     for (const link of links) {
       const discs = link.querySelectorAll(':scope > span[aria-hidden="true"]');
@@ -373,7 +410,7 @@ describe('ClinicLocation — the discs are DECORATION, painted by ui/GlyphButton
     // `asChild` is the atom's own door for "paint your face on my element".
     const { band } = mount();
 
-    for (const link of within(band()).getAllByRole('link')) {
+    for (const link of rowsOf(band())) {
       expect(link.querySelector('a, button')).toBeNull();
     }
     expect(within(band()).queryAllByRole('button')).toHaveLength(0);
@@ -417,7 +454,7 @@ describe('ClinicLocation — the discs are DECORATION, painted by ui/GlyphButton
     // GlyphButton's solid bundle fails HERE until the section's ROW_HOVER
     // moves with it (GlyphButton.tsx carries the pointer back).
     const { band } = mount();
-    const link = within(band()).getAllByRole('link')[0];
+    const link = rowsOf(band())[0];
     const disc = link.querySelector('span[aria-hidden="true"]') as HTMLElement;
 
     render(
@@ -517,8 +554,7 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
     // its end edge — and go back to a column beside the map. Phone (below the
     // step) stays a stacked, flush-start column: no `justify-*` at the base.
     const { band } = mount();
-    const column = within(band()).getAllByRole('link')[0]
-      .parentElement as HTMLElement;
+    const column = rowsOf(band())[0].parentElement as HTMLElement;
     const tokens = classesOf(column);
 
     expect(tokens).toEqual(
@@ -541,7 +577,7 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
     // row anchor wears it; the column that holds both rows must NOT, and no
     // ancestor above it may either, or one pointer would flip both discs.
     const { band } = mount();
-    const links = within(band()).getAllByRole('link');
+    const links = rowsOf(band());
     const column = links[0].parentElement as HTMLElement;
 
     for (const link of links) expect(classesOf(link)).toContain('group');
@@ -932,4 +968,72 @@ describe('ClinicLocation — the phone’s map, computed (§15.34 — the real s
       expect(tray.height).toBeCloseTo(width / 2, 1);
     },
   );
+});
+
+describe('ClinicLocation — the note under the map (CLAUDE.md §15.38)', () => {
+  it.each(locales)(
+    '%s: says Google receives the IP, and links to the policy’s #map part',
+    (locale) => {
+      const { band } = mount(locale);
+      const link = within(band()).getByRole('link', {
+        name: MESSAGES[locale].home.location.mapNote.replace(
+          /^.*<link>(.*)<\/link>.*$/,
+          '$1',
+        ),
+      });
+      expect(link).toHaveAttribute(
+        'href',
+        localeHref(locale, `${PRIVACY_PATH}#${PRIVACY_MAP_ANCHOR}`),
+      );
+      // A site link: same tab.
+      expect(link).not.toHaveAttribute('target');
+      expect(link.className).toBe(NOTE_LINK);
+    },
+  );
+
+  it('sits right under the map’s tray, in the map’s own grid cell', () => {
+    const { band } = mount();
+    const tray = (band().querySelector('iframe') as HTMLElement)
+      .parentElement as HTMLElement;
+    const note = tray.nextElementSibling as HTMLElement;
+    expect(note.tagName).toBe('P');
+    expect(note.querySelector('a')).not.toBeNull();
+    // The rows still sit beside the cell (or under it, below @3xl).
+    expect(
+      tray.parentElement?.nextElementSibling?.querySelectorAll('a').length,
+    ).toBe(2);
+  });
+});
+
+describe('ClinicLocation — the note under the map keeps the rows on the MAP (§15.38)', () => {
+  const parts = (band: HTMLElement) => {
+    const tray = (band.querySelector('iframe') as HTMLElement)
+      .parentElement as HTMLElement;
+    const note = tray.nextElementSibling as HTMLElement;
+    const rows = rowsOf(band)[0].parentElement as HTMLElement;
+    return {
+      tray: tray.getBoundingClientRect(),
+      note: note.getBoundingClientRect(),
+      rows: rows.getBoundingClientRect(),
+    };
+  };
+  const middle = (r: DOMRect): number => r.top + r.height / 2;
+
+  it('at @3xl: the rows centre on the MAP, and the note sits under the map, 12px down', () => {
+    const { band } = renderColumn(1000, false);
+    const { tray, note, rows } = parts(band);
+    // The React review measured 15–28px low when the note shared the map's
+    // cell; on its own row the rows centre on the map alone.
+    expect(Math.abs(middle(rows) - middle(tray))).toBeLessThanOrEqual(1);
+    expect(note.left).toBeCloseTo(tray.left, 1);
+    expect(note.top - tray.bottom).toBeCloseTo(12, 0);
+    expect(rows.left).toBeGreaterThan(tray.right);
+  });
+
+  it('below @3xl: map, note, rows — one stacked column, the note 12px under the map', () => {
+    const { band } = renderColumn(400, false);
+    const { tray, note, rows } = parts(band);
+    expect(note.top - tray.bottom).toBeCloseTo(12, 0);
+    expect(rows.top).toBeGreaterThan(note.bottom);
+  });
 });

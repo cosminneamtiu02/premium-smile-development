@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "description": "Les données reçues par nous ou par Google lorsque vous visitez le site {name}, le seul cookie que nous utilisons et vos droits."
+  },
+  "title": "Confidentialité et cookies",
+  "updated": "Dernière mise à jour : {date}",
+  "intro": "Sur cette page, nous vous expliquons avec des mots simples ce que deviennent vos données lorsque vous visitez le site {name} et quels sont vos droits. Quand nous écrivons RGPD, nous faisons référence au règlement (UE) 2016/679 relatif à la protection des données.",
+  "missing": "[à compléter]",
+  "summary": {
+    "title": "En bref",
+    "noTracking": "Nous n'utilisons aucun cookie d'analyse, de publicité ou de suivi.",
+    "oneCookie": "Le site n'enregistre qu'un seul cookie, et uniquement si vous choisissez une langue ou fermez le message qui vous en propose une : pour retenir la langue lors de votre prochaine visite.",
+    "map": "La carte de la section « {band} » est fournie par Google, qui reçoit l'adresse IP de votre appareil lorsque la carte se charge.",
+    "noForms": "Le site ne comporte aucun formulaire et ne vous demande aucune donnée personnelle."
+  },
+  "controller": {
+    "title": "Qui sommes-nous",
+    "company": "Les données sont traitées par {company}, qui gère la clinique {name} à l'adresse {address}.",
+    "identity": "Code unique d'enregistrement (CUI) : {cui}. Numéro d'enregistrement : {tradeRegister}. Siège social : {registeredOffice}.",
+    "contact": "Vous pouvez nous écrire à <email>{emailAddress}</email> ou nous appeler au <phone>{phoneNumber}</phone>.",
+    "profession": "Les dentistes de la clinique portent le titre professionnel de « medic dentist », octroyé en Roumanie, et sont membres de l'Ordre des dentistes de Roumanie (Colegiul Medicilor Stomatologi din România). Les règles de la profession sont publiées sur le <cmsr>site de l'Ordre</cmsr>."
+  },
+  "visit": {
+    "title": "Lorsque vous visitez le site",
+    "logs": "Les pages du site sont hébergées par {host}. Comme pour tout site, les serveurs qui les transmettent reçoivent automatiquement, à chaque visite, quelques données techniques : l'adresse IP, la date et l'heure, la page demandée et le type de navigateur.",
+    "purpose": "L'hébergeur utilise ces données pour vous faire parvenir les pages et pour protéger le site contre les abus. La base légale est l'intérêt légitime à disposer d'un site sûr et fonctionnel (article 6, paragraphe 1, point f), du RGPD).",
+    "provider": "C'est l'hébergeur qui reçoit et conserve ces données, pour la sécurité de son service, aussi longtemps qu'il le décide. Il peut les transférer aux États-Unis, sur la base du cadre de protection des données UE-États-Unis. Nous ne les recevons pas. Vous trouverez plus de détails dans la <policy>politique de confidentialité de l'hébergeur</policy>."
+  },
+  "cookies": {
+    "title": "Cookies",
+    "what": "Un cookie est un petit fichier texte qu'un site enregistre dans votre navigateur pour se souvenir de quelque chose d'une visite à l'autre.",
+    "ours": "Notre site n'enregistre qu'un seul cookie, et uniquement après que vous avez choisi une langue ou fermé le message qui vous en propose une :",
+    "nameLabel": "Nom",
+    "purposeLabel": "À quoi il sert",
+    "purpose": "Il retient la langue choisie, pour que vous la retrouviez directement lors de votre prochaine visite. Il ne contient que le code de la langue, par exemple « ro ».",
+    "whenLabel": "Quand il est enregistré",
+    "when": "Seulement lorsque vous choisissez une langue avec le bouton de langue, ou lorsque vous acceptez ou fermez le message qui vous propose votre langue ; si vous le fermez, le cookie retient la langue de la page où vous vous trouvez.",
+    "durationLabel": "Combien de temps",
+    "duration": "{months, plural, one {# mois} many {# mois} other {# mois}}. Certains navigateurs, Safari par exemple, le suppriment plus tôt, au bout de 7 jours au maximum.",
+    "typeLabel": "Type",
+    "type": "Cookie propre au site, strictement nécessaire à une fonction que vous avez demandée, c'est pourquoi nous ne vous demandons pas votre consentement pour ce cookie.",
+    "none": "Nous n'utilisons aucun cookie d'analyse, de publicité ou de suivi, ni aucune autre forme de stockage dans le navigateur.",
+    "delete": "Vous pouvez supprimer ce cookie à tout moment dans les paramètres de votre navigateur. Le site fonctionne de la même façon, sauf qu'il ne retiendra plus la langue."
+  },
+  "map": {
+    "title": "La carte Google",
+    "what": "Dans la section « {band} », nous affichons une carte Google Maps pour vous montrer où se trouve la clinique. La carte se charge en général au moment où vous arrivez près d'elle sur la page.",
+    "data": "Votre navigateur se connecte alors directement aux serveurs de Google, qui reçoivent l'adresse IP de votre appareil et des informations techniques sur votre navigateur. Nous n'envoyons pas à Google l'adresse de la page que vous lisez, et dans les navigateurs actuels, la carte se charge sans les cookies Google que votre navigateur a déjà enregistrés.",
+    "basis": "Pour le chargement de la carte et l'envoi de votre adresse IP à Google, nous sommes, avec Google Ireland Limited, responsables conjoints du traitement ; Google est responsable de ce qu'il fait ensuite des données. Notre base légale est l'intérêt légitime à vous aider à trouver la clinique (article 6, paragraphe 1, point f), du RGPD). Google peut transférer les données aux États-Unis, à Google LLC, sur la base du cadre de protection des données UE-États-Unis. Vous trouverez plus de détails dans la <google>politique de confidentialité de Google</google>.",
+    "without": "L'adresse et le numéro de téléphone de la clinique figurent à côté de la carte et en bas de chaque page, si bien que vous pouvez les utiliser même sans la carte."
+  },
+  "contact": {
+    "title": "Lorsque vous nous contactez",
+    "phone": "Si vous nous appelez ou nous écrivez sur WhatsApp, nous recevons votre numéro de téléphone, le nom et la photo de votre profil WhatsApp s'ils sont visibles, et ce que vous nous dites, afin de vous répondre et de fixer un rendez-vous. La base légale, ce sont les démarches que vous nous demandez avant un traitement dentaire, et ce traitement lui-même (article 6, paragraphe 1, point b), du RGPD). Nous ne conservons ces messages que le temps nécessaire à votre rendez-vous et à vos soins.",
+    "health": "Nous utilisons les informations sur votre santé que vous choisissez de nous communiquer uniquement pour vos soins (article 9, paragraphe 2, point h), du RGPD).",
+    "whatsapp": "WhatsApp est un service de WhatsApp Ireland Limited, du groupe Meta. Les messages sont chiffrés de bout en bout, mais WhatsApp voit qui nous écrit et quand, et Meta peut transférer ces données aux États-Unis, sur la base du cadre de protection des données UE-États-Unis. Vous trouverez plus de détails dans la <whatsapp>politique de confidentialité de WhatsApp</whatsapp>.",
+    "patient": "Nous traitons les données de votre dossier patient à la clinique, séparément de ce site."
+  },
+  "reviews": {
+    "title": "Avis des patients",
+    "text": "Sur la page d'accueil, nous affichons quelques avis que nos patients ont publiés sur Google, avec leur nom et, pour certains, la photo de leur profil. Si vous avez écrit l'un de ces avis et souhaitez que nous le retirions du site, dites-le-nous et nous le retirerons."
+  },
+  "links": {
+    "title": "Liens vers d'autres sites",
+    "text": "Les liens vers Instagram, TikTok, WhatsApp ou Google Maps vous mènent sur les sites de ces entreprises. Sur ces sites, ce sont leurs règles de confidentialité et de cookies qui s'appliquent, et non les nôtres."
+  },
+  "rights": {
+    "title": "Vos droits",
+    "intro": "Vous avez le droit :",
+    "access": "de savoir quelles données nous avons sur vous et d'en recevoir une copie ;",
+    "rectify": "de les faire corriger ;",
+    "erase": "de demander leur effacement ;",
+    "restrict": "de nous demander de ne les utiliser que de manière limitée ;",
+    "port": "de les recevoir dans un format que vous pouvez transmettre ailleurs.",
+    "object": "Vous pouvez vous opposer à tout moment, pour des raisons tenant à votre situation particulière, aux traitements fondés sur notre intérêt légitime, comme le chargement de la carte Google : dites-le-nous et nous examinerons votre demande.",
+    "automated": "Nous ne prenons aucune décision automatisée vous concernant.",
+    "ask": "Pour exercer l'un de ces droits, écrivez-nous à <email>{emailAddress}</email>, appelez-nous au <phone>{phoneNumber}</phone> ou faites votre demande à la clinique. Nous vous répondons dans les meilleurs délais, et au plus tard dans un délai d'un mois ; si la demande est complexe, ce délai peut être prolongé de deux mois et nous vous expliquerons pourquoi.",
+    "complain": "Si vous pensez que nous n'avons pas respecté vos droits, vous pouvez déposer une réclamation auprès de l'autorité roumaine de protection des données, l'Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP), bd. G-ral Gheorghe Magheru nr. 28-30, sector 1, 010336 Bucarest, Roumanie, <anspdcp>www.dataprotection.ro</anspdcp>, ou auprès de l'autorité de protection des données de l'État membre de l'UE où vous vivez, où vous travaillez ou où vous pensez que la violation a eu lieu."
+  },
+  "changes": {
+    "title": "Modifications",
+    "text": "Si quelque chose change, par exemple l'entreprise qui héberge le site, nous mettons à jour cette page et la date indiquée en haut."
+  }
+}

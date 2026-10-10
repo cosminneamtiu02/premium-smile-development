@@ -1887,3 +1887,37 @@ describe('PriceList — every card of the page keeps the HOUSE corner (owner 202
     }
   });
 });
+
+describe('PriceList — the note under the cards (CLAUDE.md §15.38)', () => {
+  const NOTE = 'Prețurile sunt exprimate în RON și includ toate taxele.';
+
+  it('prints the note LAST in the cards column, after every card', () => {
+    render(
+      <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} note={NOTE} />,
+    );
+    const note = screen.getByText(NOTE);
+    expect(note.tagName).toBe('P');
+    expect(note.parentElement?.lastElementChild).toBe(note);
+    expect(note.previousElementSibling?.tagName).toBe('SECTION');
+  });
+
+  it('adds NOTHING without a note — the column still ends on its last card (§6.6)', () => {
+    // Structure, not a comparison of two spellings of "absent" (which JS
+    // treats alike — the React review): with no note the cards column ends on
+    // its last card, and an EMPTY note adds nothing either.
+    for (const note of [undefined, '']) {
+      const { container, unmount } = render(
+        <PriceList
+          menuTitle={MENU_TITLE}
+          categories={CATEGORIES}
+          note={note}
+        />,
+      );
+      const cards = container.querySelectorAll('section section');
+      const column = cards[cards.length - 1]?.parentElement;
+      expect(column?.lastElementChild?.tagName, String(note)).toBe('SECTION');
+      expect(container.textContent).not.toContain(NOTE);
+      unmount();
+    }
+  });
+});

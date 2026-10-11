@@ -304,3 +304,55 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     the interim host only and will not be the launch host (§15.2);
   - the purple — whether `accent-decorative` #7A6D9C moves to the logo's own lilac #8576B1, which
     re-tints the lilac tints, the auras and the ribbon with it (§15.1's one open sub-item, §15.28).
+
+## 9 · Re-check the privacy policy against the website
+
+- **Why it waits:** the owner, 2026-10-11: "also add in the backlog to recheck policy if it is
+  compliant with my website". The policy page (entry 3, CLAUDE.md §15.38) was written on
+  2026-10-10 from what the site did that day, and the site keeps changing. Entry 3 holds what only
+  the owner and a lawyer can settle; this entry is the check that every sentence of the policy is
+  true of the site as it ships, and that the site does nothing the policy leaves out.
+- **When:** before launch, on the launch host and the real domain; and again after any change to
+  something the policy describes — the host, the map, the language cookie, a new link to another
+  site, a page that shows people's names or photos, anything loaded from another site (a script,
+  a font, a picture, a video), or a form.
+- **What to check — each claim, on the built export served the way the host serves it (never
+  `next dev`), in a fresh browser profile:**
+  - "a single cookie, only after a language choice" — browse every page type, scroll, open the
+    contact dialog, move the map: no cookie at all; then pick a language, and accept and close the
+    language suggestion: exactly one cookie, `NEXT_LOCALE`, holding only the language code, for
+    12 months (`LOCALE_COOKIE_MAX_AGE_S` in `src/i18n/cookie.ts`; Safari keeps it 7 days at
+    most). The page prints the name and the lifetime from the code, so those two cannot drift;
+    what it says about WHEN the cookie is written can;
+  - "no other form of storage in your browser" — localStorage, sessionStorage and IndexedDB empty
+    for the site, and no service worker;
+  - "no analytics, advertising or tracking cookies", and Google's map as the only other company —
+    a network capture on every page type: every request goes to the site's own address, except
+    Google's map frame on the pages that show the map;
+  - "no forms" — no `<form>` and no text field on any page;
+  - the map — "loads when you scroll close to it", does not tell Google which page you are
+    reading, and in current browsers carries none of your Google cookies: the `<iframe>` wears
+    `loading="lazy"`, `referrerPolicy="no-referrer"` and `credentialless`; re-run the cookie probe
+    of COOKIES.md §3; the section name the policy quotes („Ne găsești") is still the band's heading
+    in each language, and the address and the phone stay beside the map and in every footer;
+  - "reviews on the home page, with names and, for some, a photo" — still on Home only, and the
+    reviewers' consents in hand (entry 7);
+  - "the links to Instagram, TikTok, WhatsApp or Google Maps" — list every link to another site on
+    the built pages and compare (today's list is below);
+  - "hosted by" — the host the page names, and the privacy policy it links, are the host that
+    actually serves the site (entry 3's launch switch);
+  - the clinic's details — the legal facts once the owner supplies them (entries 3 and 7); the
+    phone and the address come from `src/lib/clinic` and follow by themselves;
+  - the five languages still say the same thing — `tests/unit/privacy-parity.test.ts` checks the
+    keys and the placeholders, not the meaning;
+  - every change to the words moves `POLICY_UPDATED` in `PrivacyPolicy.tsx`, the date at the top.
+- **Today — a quick look at develop `823bce1`'s build, 2026-10-11, not the full check:** the map
+  frame wears all three attributes; no page has a form; no code in `src/` uses any other browser
+  storage; the only thing loaded from another site is Google's map frame, on the 40 pages that
+  show the map; the links to other sites go to WhatsApp, Instagram, TikTok, Google Maps and ANPC's
+  complaint site `reclamatiisal.anpc.ro` (in every footer), and, from the policy page itself, to
+  the College of Dentists, ANSPDCP, GitHub, Google and WhatsApp. The one gap found: the policy's
+  links part does not name the ANPC link — whether it should is the lawyer's call (entry 3).
+- **A lever, not built:** the mechanical half of this list — no form, nothing from another site
+  but the map, the frame's three attributes, no storage in the code — could become a test over the
+  built export, so that CI fails the day the site and the policy part ways.

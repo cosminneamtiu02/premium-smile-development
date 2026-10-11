@@ -356,3 +356,38 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **A lever, not built:** the mechanical half of this list — no form, nothing from another site
   but the map, the frame's three attributes, no storage in the code — could become a test over the
   built export, so that CI fails the day the site and the policy part ways.
+
+## 10 · Getting found on Google — the search-engine work (SEO)
+
+- **Why it waits:** the owner, 2026-10-11: "now that i think about it add to backlog optimisation
+  of the website" — and, asked whether he meant speed or Google search, "both i think?". Speed
+  is entry 6; this entry is the other half. CLAUDE.md §2 makes "SEO-ready by construction" a
+  non-negotiable and §10 is its checklist, but the work was planned inside the content run the
+  owner halted on 2026-09-06 (§15.17), and none of it reached develop. The plan is
+  PHASE4_SEO_PLAN.md §3, §4 and §7 — its §6 and §7 predate the clinic's photos, the map, the
+  real reviews and the favicon, so read them as the plan for the machinery, not as today's state.
+- **Today (develop `823bce1`'s build, 2026-10-11):** no page carries the clinic's structured
+  data (the `Dentist` JSON-LD), a canonical link, links to its other languages (hreflang) or
+  Open Graph tags; there is no `sitemap.xml` and no `robots.txt`; Home and Services are titled
+  „Premium Smile" alone (Team „Echipa noastră — Premium Smile", a doctor's page „Dr. {name} —
+  Premium Smile"), and only the privacy page has a meta description. The interim host is built
+  with `NOINDEX=1` (`src/app/[locale]/layout.tsx`), so none of this costs anything until the
+  domain is attached — and all of it is due before launch.
+- **The work, in §10's order:**
+  - the `Dentist` JSON-LD on every page, fed only by `src/lib/clinic` (§10.1–2), with zero
+    errors in Google's Rich Results Test — the archived S1 commit `cc749de` (closed PR #81,
+    PHASE4_SEO_PLAN.md §2) still applied cleanly on 2026-10-10 and is the recorded first
+    candidate;
+  - a title and a meta description for every page in every language, "Service — Clinic — City"
+    (§10.3) — the words are the owner's (§15.17), drafted by Claude only on his word; the doctor
+    pages' pattern is in PHASE4_SEO_PLAN.md §4;
+  - Open Graph tags and the share image (entry 8);
+  - `sitemap.xml` with hreflang alternates and `x-default`, hreflang links in every page's head,
+    a self-referencing canonical, and `robots.txt` pointing at the sitemap (§10.4);
+  - optionally, `Service` markup on the Services page (§10.2; the archived `servicesJsonLd`);
+  - at launch: the sitemap submitted in Google Search Console, and the owner claims the Google
+    Business Profile (§10.7).
+- **Depends on:** the production domain (entry 7 — every canonical, hreflang link, sitemap row
+  and the JSON-LD's `url` is built from it); translated URLs (entry 8 — once Google has indexed
+  a URL, changing it needs a redirect); the share image (entry 8). Already done: the Footer's
+  address and phone on every page (§10.5). Core Web Vitals (§10.6) are entry 6.

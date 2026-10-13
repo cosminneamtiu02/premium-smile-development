@@ -33,12 +33,31 @@ import { DoctorCourses, type CourseGroup } from './DoctorCourses';
 //     PersonnelCard precedent);
 //   · the viewport pin, because the rail's measure depends on the column it
 //     is handed: as wide as the column on a phone, capped at 56rem
-//     (`max-w-4xl`, D34) from a ~1120px viewport. The Vitest runner applies
-//     the pin (addon-vitest sets the page to the story's `globals.viewport`
-//     before the play runs); Playwright ignores it and sets its own page size
-//     per project — which is why the arrangement assertion DERIVES the
-//     expected rail width from the measured column instead of assuming the
-//     pinned one.
+//     (`max-w-4xl`, D34) from a ~1120px viewport — 896 design pixels inside
+//     THE BAND SCALE (next paragraph). The Vitest runner applies the pin
+//     (addon-vitest sets the page to the story's `globals.viewport` before
+//     the play runs); Playwright ignores it and sets its own page size per
+//     project — which is why every assertion DERIVES what it expects from the
+//     measured column instead of assuming the pinned one.
+//
+// ── THE BAND SCALE (2026-10-13, CLAUDE.md §15.32 round 4 — DoctorCourses.tsx's
+// paragraph of that name). On a laptop or desktop — a mouse, a column of
+// max(56rem, 896px) — the band is ONE design, the owner's 1401 window, drawn
+// in ui/Container's design pixel: s = min(column, 96rem) / 1106. The three
+// laptop-pinned stories (`Default`, `Current`, `Rest`) run INSIDE it in the
+// Vitest runner — a 1214px column at the 1536 × 864 pin, s ≈ 1.0975 — and so
+// does every story's 1536 frame in the pixel net; the phone pins, and every
+// 390 and 320 frame, stand outside it. So every play reads the band's own
+// lengths in `bandScaleOf(band).unit` — the design pixel inside the regime, a
+// sixteenth of the root outside it — and `expectBandScale` opens every play:
+// the design pixel declared (or nothing at all), the box capped and centred,
+// and the <h2>, the eyebrow, the years, the course lines, the dots, the line
+// and the indent at their design sizes × that unit. On the phone pins the
+// unit is the root's, so every number those plays expect is the one they
+// expected before the scale: the proof nothing moved there. The page's own
+// lengths — its scroll padding, the spacers below — stay `stepPx`. The
+// columns no pin reaches — a laptop's under the step, the reference, past
+// the cap — are DoctorCourses.scale.test.tsx's, on the real stylesheet.
 //
 // ── THE OWNER'S TIMELINE, round 2g ("now that i think about it, the line
 // should be on the left side, not centered" — D34), round 2j (D44 — the
@@ -210,6 +229,9 @@ const expectNoSidewaysScroll = async (band: HTMLElement): Promise<void> => {
  * A length in CSS pixels, read against the document's own font size rather
  * than a baked-in 16 — a visitor who has enlarged the browser's base font
  * moves every rem on the page (the DoctorProfile / PersonnelCard reasoning).
+ * Since 2026-10-13 the BAND's own lengths are read in `bandScaleOf(band).unit`
+ * instead (THE BAND SCALE, below): this stays for what is the page's — its
+ * scroll padding, the spacers, the container steps.
  */
 const stepPx = (rem: number): number =>
   rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -217,12 +239,95 @@ const stepPx = (rem: number): number =>
 /**
  * The box every `@`-variant in this band is read against: ui/Container's own
  * column, the band's first child, with no border or padding, so its
- * border-box IS the content box a container query asks about. The
- * FRACTIONAL box, never `clientWidth` — that integer would disagree with the
- * engine inside a sub-pixel window.
+ * border-box IS the content box a container query asks about — and the box
+ * THE BAND SCALE's step and cap read (`bandScaleOf`, below). The FRACTIONAL
+ * box, never `clientWidth` — that integer would disagree with the engine
+ * inside a sub-pixel window.
  */
 const columnOf = (band: HTMLElement): DOMRect =>
   (band.firstElementChild as HTMLElement).getBoundingClientRect();
+
+/** THE BAND SCALE's numbers, written out (ui/Container's THE BAND SCALE —
+ *  their census is tests/unit/design-scale.test.ts): the REFERENCE column,
+ *  where a design pixel is a CSS pixel; the CAP, in rem of the root (1536px
+ *  at the default 16px, a 1920 window's column); THE STEP's two halves,
+ *  `@4xl`'s 56rem and the floor's 896px. Spelled again on purpose, as
+ *  ClinicLocation's stories spell them: the census holds the source, these
+ *  hold what the engine does. */
+const REFERENCE = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/**
+ * THE BAND SCALE where the play finds itself (2026-10-13, CLAUDE.md §15.32
+ * round 4 — DoctorCourses.tsx's THE BAND SCALE): the column read off
+ * ui/Container, the band's first box, and the two GATES read off the browser
+ * — a fine primary pointer, and the relative colour syntax that rides with
+ * registered custom properties — never the pinned window, because Playwright
+ * shoots every story at 390 and 1536 whatever its pin (ClinicLocation's
+ * `expectBandScale`, the same derivation). Inside the regime — a column of
+ * max(56rem, 896px) under a mouse — `unit` is the band's design pixel,
+ * min(column, 96rem) / 1106, and the rhythm box is min(column, 96rem) wide,
+ * centred in the column; outside it `unit` is a sixteenth of the root (rem —
+ * §7) and the rhythm box is the column. Every length the band spells in a
+ * theme step is that many design pixels times `unit`.
+ */
+type BandScale = Readonly<{
+  regime: boolean;
+  unit: number;
+  column: DOMRect;
+  /** The rhythm box — ui/Container's first child, the box that wears the
+   *  band-scale strings. */
+  rhythm: HTMLElement;
+  /** Where the rhythm box must stand: its width and its left edge. */
+  boxWidth: number;
+  boxLeft: number;
+}>;
+
+const bandScaleOf = (band: HTMLElement): BandScale => {
+  const rhythm = band.firstElementChild?.firstElementChild;
+  if (!(rhythm instanceof HTMLElement)) {
+    throw new Error('DoctorCourses story: the band lost its rhythm box');
+  }
+  const column = columnOf(band);
+  const regime =
+    window.matchMedia('(pointer: fine)').matches &&
+    CSS.supports('color', 'rgb(from red r g b)') &&
+    column.width >= Math.max(stepPx(STEP_REM), STEP_FLOOR);
+  const boxWidth = regime
+    ? Math.min(column.width, stepPx(CAP_REM))
+    : column.width;
+  return {
+    regime,
+    unit: regime ? boxWidth / REFERENCE : stepPx(1) / 16,
+    column,
+    rhythm,
+    boxWidth,
+    boxLeft: column.left + (column.width - boxWidth) / 2,
+  };
+};
+
+/** `actual` within `tolerance` of `expected`, the label and both numbers in
+ *  the failure (a twentieth of a pixel by default: layout rounds to 1/64px
+ *  and a design pixel keeps its fraction) — ClinicLocation's stories' `near`. */
+const near = async (
+  actual: number,
+  expected: number,
+  label: string,
+  tolerance = 0.05,
+): Promise<void> => {
+  await expect(
+    Math.abs(actual - expected),
+    `${label}: ${actual} against ${expected}`,
+  ).toBeLessThanOrEqual(tolerance);
+};
+
+/** An element's computed length — the used value, before any transform, so
+ *  a lit dot's `scale-125` or a current group's 1.04 never reads into it —
+ *  and never `offsetWidth`, whose integer would round a design pixel away. */
+const usedPx = (element: Element, property: 'width' | 'height'): number =>
+  parseFloat(getComputedStyle(element)[property]);
 
 /** The year headings in DOM order — reached by their role. */
 const yearsOf = (band: HTMLElement): HTMLElement[] =>
@@ -259,12 +364,14 @@ const centreY = (box: DOMRect): number => box.top + box.height / 2;
  * Where every stretch's centre sits, measured from the rail's left edge:
  * `start-1.25` (1.25 spacing units) plus half of the 2px `w-0.5` —
  * CourseTimeline's arithmetic behind "on the line by construction".
- * 1.5 spacing units: 6px at the 16px root, and the same ratio at any other.
+ * 1.5 spacing units: 6px at the 16px root, the same ratio at any other, and
+ * 6 design pixels inside THE BAND SCALE — `unit` is `bandScaleOf`'s.
  */
-const LINE_X = (): number => stepPx(0.375);
+const LINE_X = (unit: number): number => 6 * unit;
 
-/** The ring every dot wears (`ring-4`): a 4px box-shadow at every root size,
- *  never rem — the one pixel length in the dot's geometry. */
+/** The ring every dot wears (`ring-4`): a 4px box-shadow at every root size
+ *  and inside THE BAND SCALE too, never rem — the one pixel length in the
+ *  dot's geometry, the one the design pixel does not redraw. */
 const RING = 4;
 
 /**
@@ -314,18 +421,24 @@ const laidOut = (box: DOMRect, group: HTMLElement): DOMRect => {
  * derived rather than assumed, and read AS LAID OUT (`laidOut`) — so it holds
  * at rest and with a year current alike, which since D49 is what every
  * top-of-canvas story opens on (the header's CURRENT YEAR); the current
- * year's DRAWN geometry is `Current`'s to read:
- *   · the rail starts on the column's left edge and is as wide as the column
- *     up to the 56rem cap (`max-w-4xl`);
- *   · one year per row — each group's top 5rem under the previous group's
- *     bottom (the doubled `gap-20`, D44b) — every group on the rail's left
- *     edge and as wide as the rail: the D21 rider, one above the other;
+ * year's DRAWN geometry is `Current`'s to read. Every length is the band's,
+ * so it is read in `bandScaleOf(band).unit` — the theme's px outside THE BAND
+ * SCALE, the design pixel inside it (2026-10-13):
+ *   · the rail starts on the band's own box's left edge — the column's,
+ *     except past THE BAND SCALE's cap, where the box centres — and is as
+ *     wide as that box up to the `max-w-4xl` cap: 896 units, 56rem outside
+ *     the scale;
+ *   · one year per row — each group's top 80 units (5rem) under the previous
+ *     group's bottom (the doubled `gap-20`, D44b) — every group on the
+ *     rail's left edge and as wide as the rail: the D21 rider, one above the
+ *     other;
  *   · every STRETCH's centre 1.5 spacing units in from the rail's left edge;
  *     it begins at its dot's centre (nothing of the line above the first
- *     dot) and ends 0.25rem ABOVE the next group's top (D50), with at least
- *     8px of bare ground between its end and the next dot's ring — 12px at
- *     the 16px root: the break above every dot — the last one at its own
- *     group's bottom;
+ *     dot) and ends one spacing unit (0.25rem) ABOVE the next group's top
+ *     (D50), with at least 8px of bare ground between its end and the next
+ *     dot's ring — 12px at the 16px root, 16 units less the 4px ring in the
+ *     scale: the break above every dot — the last one at its own group's
+ *     bottom;
  *   · EVERY dot's centre is ON its stretch — x within 1px of the stretch's
  *     centre — and inside its year's <h3> box vertically, so it marks the
  *     year.
@@ -334,6 +447,7 @@ const laidOut = (box: DOMRect, group: HTMLElement): DOMRect => {
  * because boxes land on fractional pixels.
  */
 const expectArrangement = async (band: HTMLElement): Promise<void> => {
+  const { unit, boxWidth, boxLeft } = bandScaleOf(band);
   const years = yearsOf(band);
   const groups = groupsOf(band);
   const rail = railOf(groups[0]).getBoundingClientRect();
@@ -349,9 +463,11 @@ const expectArrangement = async (band: HTMLElement): Promise<void> => {
   const yearBoxes = groups.map((group, index) =>
     laidOut(years[index].getBoundingClientRect(), group),
   );
-  /** A dot's laid-out half height — `size-3`, before any scale of its own. */
+  /** A dot's laid-out half height — `size-3`, before any scale of its own:
+   *  the used height, never `offsetHeight`, whose integer would round a
+   *  design pixel away. */
   const dotHalf = (index: number): number =>
-    dotOf(groups[index]).offsetHeight / 2;
+    usedPx(dotOf(groups[index]), 'height') / 2;
 
   // A collapsed box would satisfy the comparisons below by accident — every
   // group, every stretch and every dot must occupy real space first.
@@ -360,11 +476,11 @@ const expectArrangement = async (band: HTMLElement): Promise<void> => {
     await expect(box.width).toBeGreaterThan(0);
   }
 
-  // The rail: the column's left edge, the column's width up to the cap.
-  const column = columnOf(band);
-  await expect(Math.abs(rail.left - column.left)).toBeLessThanOrEqual(1);
+  // The rail: the band's own box's left edge (the column's, below THE BAND
+  // SCALE's cap), that box's width up to the `max-w-4xl` cap — 896 units.
+  await expect(Math.abs(rail.left - boxLeft)).toBeLessThanOrEqual(1);
   await expect(
-    Math.abs(rail.width - Math.min(column.width, stepPx(56))),
+    Math.abs(rail.width - Math.min(boxWidth, 896 * unit)),
   ).toBeLessThanOrEqual(1);
 
   // The line starts at the FIRST dot's centre — nothing above it.
@@ -376,9 +492,9 @@ const expectArrangement = async (band: HTMLElement): Promise<void> => {
     const stretch = stretches[index];
     const dot = dots[index];
     if (index > 0) {
-      // One year per row, 5rem apart — the doubled gap (D44b).
+      // One year per row, 80 units apart — the doubled gap (D44b).
       await expect(
-        Math.abs(box.top - boxes[index - 1].bottom - stepPx(5)),
+        Math.abs(box.top - boxes[index - 1].bottom - 80 * unit),
       ).toBeLessThanOrEqual(1);
     }
     await expect(Math.abs(box.left - rail.left)).toBeLessThanOrEqual(1);
@@ -386,18 +502,20 @@ const expectArrangement = async (band: HTMLElement): Promise<void> => {
 
     // The stretch: down the left, from its dot's centre…
     const stretchX = centreX(stretch);
-    await expect(Math.abs(stretchX - rail.left - LINE_X())).toBeLessThanOrEqual(
-      1,
-    );
+    await expect(
+      Math.abs(stretchX - rail.left - LINE_X(unit)),
+    ).toBeLessThanOrEqual(1);
     await expect(Math.abs(stretch.top - centreY(dot))).toBeLessThanOrEqual(1);
     const next = boxes[index + 1];
     if (next) {
-      // …to 0.25rem above the next group's top (D50)…
+      // …to one spacing unit — 4 units, 0.25rem — above the next group's top
+      // (D50)…
       await expect(
-        Math.abs(stretch.bottom - (next.top - stepPx(0.25))),
+        Math.abs(stretch.bottom - (next.top - 4 * unit)),
       ).toBeLessThanOrEqual(1);
       // …so bare ground separates it from the next dot's ring: 0.25rem + the
-      // dot's `top-3` − its 4px ring, 12px at the 16px root, never under 8.
+      // dot's `top-3` − its 4px ring, 12px at the 16px root, 16 units less
+      // the ring in the scale, never under 8.
       const ringTop = centreY(dots[index + 1]) - dotHalf(index + 1) - RING;
       await expect(ringTop - stretch.bottom).toBeGreaterThanOrEqual(8);
     } else {
@@ -417,9 +535,10 @@ const expectArrangement = async (band: HTMLElement): Promise<void> => {
 
 /** The facts a picture cannot show: a named region, its one <h2>, one <h3>
  *  per year in order, one list per year — each year's computed size the
- *  `section` step's 1.875rem (D44a: "at least the size of what is now
- *  current heading", 30px, large text by size alone) and its computed weight
- *  at 700 or more, current or not, because the bold is the `accent` tone's
+ *  `section` step's 30 units (D44a: "at least the size of what is now
+ *  current heading", 1.875rem — 30px at the 16px root, 30 design pixels in
+ *  THE BAND SCALE — large text by size alone) and its computed weight at 700
+ *  or more, current or not, because the bold is the `accent` tone's
  *  construction (ui/Heading, D16) and what keeps its grey twin from
  *  reflowing when it lights (`accent-idle`, D35). */
 const expectOutline = async (
@@ -427,6 +546,7 @@ const expectOutline = async (
   title: string,
   years: readonly string[],
 ): Promise<void> => {
+  const { unit } = bandScaleOf(band);
   await expect(
     within(band).getByRole('heading', { level: 2, name: title }),
   ).toBeInTheDocument();
@@ -436,13 +556,100 @@ const expectOutline = async (
   ]);
   for (const heading of headings) {
     await expect(
-      Math.abs(parseFloat(getComputedStyle(heading).fontSize) - stepPx(1.875)),
+      Math.abs(parseFloat(getComputedStyle(heading).fontSize) - 30 * unit),
     ).toBeLessThanOrEqual(0.5);
     await expect(
       Number(getComputedStyle(heading).fontWeight),
     ).toBeGreaterThanOrEqual(700);
   }
   await expect(within(band).getAllByRole('list')).toHaveLength(years.length);
+};
+
+/**
+ * The band's faces loaded before a box is read — the display face of the
+ * <h2> and the years, the body face of the course lines, the mono face of the
+ * eyebrow. The plays read boxes whose height follows how the words wrap, and
+ * the preview's faces are `font-display: block`: until a face arrives its
+ * text is laid out in the fallback. `load()` asks for the exact face each
+ * element wears (DoctorStats' `loadFace`, three times); `ready` settles the
+ * relayout.
+ */
+const loadFaces = async (band: HTMLElement): Promise<void> => {
+  const title = within(band).getByRole('heading', { level: 2 });
+  const wearers = [
+    title,
+    title.previousElementSibling,
+    yearsOf(band)[0],
+    within(band).getAllByRole('listitem')[0],
+  ];
+  for (const element of wearers) {
+    if (!(element instanceof HTMLElement)) {
+      throw new Error('DoctorCourses story: a face’s wearer is missing');
+    }
+    const style = getComputedStyle(element);
+    await document.fonts.load(
+      `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+      element.textContent ?? '',
+    );
+  }
+  await document.fonts.ready;
+};
+
+/**
+ * THE BAND SCALE, asserted where the play finds itself (2026-10-13, CLAUDE.md
+ * §15.32 round 4 — DoctorCourses.tsx's paragraph of that name), its real faces
+ * loaded first (`loadFaces`). The rhythm box declares the design pixel — the
+ * registered `--scale-px`, whose computed value is a plain length — inside the
+ * regime, and nothing at all outside it (the registration's initial 1px); it
+ * stands min(column, 96rem) wide and centred; and every size under the
+ * owner's two headings is its design length × `unit`: the <h2> on `band`'s 36
+ * (30 under a 28rem column — ui/Heading reads the column against its `@md`),
+ * the eyebrow's 14, every year's 30, every course line's 18, every dot's 12,
+ * every stretch's 2 and every group's 40 of indent. Outside the regime — a
+ * phone, a touch device, a column under the step — `unit` is the root's
+ * sixteenth, so the same lines assert the theme's own sizes: the proof that
+ * nothing moved there. The 80 between years and the rail's 896 cap are
+ * `expectArrangement`'s, in the same unit.
+ */
+const expectBandScale = async (band: HTMLElement): Promise<void> => {
+  await loadFaces(band);
+  const { regime, unit, column, rhythm, boxWidth, boxLeft } = bandScaleOf(band);
+
+  const declared = getComputedStyle(rhythm).getPropertyValue('--scale-px');
+  if (regime) {
+    await near(parseFloat(declared), unit, 'the design pixel', 0.0001);
+  } else {
+    await expect(declared).toBe('1px');
+  }
+  const box = rhythm.getBoundingClientRect();
+  await near(box.width, boxWidth, 'the band’s width');
+  await near(box.left, boxLeft, 'the band’s left edge');
+
+  const fontSize = (element: Element): number =>
+    parseFloat(getComputedStyle(element).fontSize);
+  const title = within(band).getByRole('heading', { level: 2 });
+  const eyebrow = title.previousElementSibling;
+  await expect(eyebrow?.tagName).toBe('P');
+  const titleStep = column.width >= stepPx(28) ? 36 : 30;
+  await near(fontSize(title), titleStep * unit, 'the h2');
+  await near(fontSize(eyebrow as Element), 14 * unit, 'the eyebrow');
+  for (const year of yearsOf(band)) {
+    await near(fontSize(year), 30 * unit, `the year ${year.textContent}`);
+  }
+  const lines = within(band).getAllByRole('listitem');
+  await expect(lines.length).toBeGreaterThan(0);
+  for (const line of lines) {
+    await near(fontSize(line), 18 * unit, 'a course line');
+  }
+  for (const group of groupsOf(band)) {
+    await near(usedPx(dotOf(group), 'width'), 12 * unit, 'a dot');
+    await near(usedPx(stretchOf(group), 'width'), 2 * unit, 'a stretch');
+    await near(
+      parseFloat(getComputedStyle(group).paddingInlineStart),
+      40 * unit,
+      'a group’s indent',
+    );
+  }
 };
 
 /** The page's `scroll-padding-top` in pixels — the LANDING line's height
@@ -505,9 +712,12 @@ const animationsOn = (element: Element, name: string): Animation[] =>
 /** The fade a resting subsection wears (D44c), as the engine serializes it. */
 const REST_OPACITY = '0.65';
 
-/** How far a group is scaled: its drawn width over its laid-out width. */
+/** How far a group is scaled: its drawn width over its laid-out width — the
+ *  USED width (`usedPx`), never `offsetWidth`: inside THE BAND SCALE a dot is
+ *  12 design pixels, 13.16px at the 1536 laptop, which `offsetWidth` rounds
+ *  to 13, and the pop's first frame, 0.875, then read 0.8855. */
 const scaleOf = (element: HTMLElement): number =>
-  element.getBoundingClientRect().width / element.offsetWidth;
+  element.getBoundingClientRect().width / usedPx(element, 'width');
 
 /** The times, in ms after the swap, the hand-over's clocks are SEEKED to. */
 const HAND_OVER_MS = [0, 40, 150, 300] as const;
@@ -732,11 +942,18 @@ const YEARS = GROUPS.map((group) => group.year);
  * HTML, `Current` the hand-over on scroll). Between the years the line breaks
  * a quarter rem above each dot (D50).
  *
+ * Since 2026-10-13 that laptop width draws the band in THE BAND SCALE (the
+ * header's paragraph of that name): every number above is a design length,
+ * drawn × s — at this pin a 1214px column, s ≈ 1.0975, so the <h2> reads
+ * 39.5px, the eyebrow 15.4, the years 32.9, the course lines 19.8, the dots
+ * 13.2, 87.8px between years, and the rail stops at 896 design pixels, 983px
+ * (measured) — the 1401 window's measure, in characters, at every width.
+ *
  * **1536 · 320 (`stress-320`):** the same markup at every width — at the
  * stress width a 288px column of 18px course lines wrapping 40px in from the
- * line, nothing scrolling sideways. The play reads back what a picture
- * cannot: the outline, the computed bold, and the geometry against the
- * measured column.
+ * line, nothing scrolling sideways, nothing declared. The play reads back
+ * what a picture cannot: the band scale, the outline, the computed bold, and
+ * the geometry against the measured column.
  */
 export const Default: Story = {
   tags: ['stress-320'],
@@ -744,6 +961,7 @@ export const Default: Story = {
   play: async ({ canvas }) => {
     const band = canvas.getByRole('region', { name: TITLE });
 
+    await expectBandScale(band);
     await expect(canvas.getByText(EYEBROW)).toBeVisible();
     await expectOutline(band, TITLE, YEARS);
     await expectArrangement(band);
@@ -763,6 +981,7 @@ export const Stacked: Story = {
   play: async ({ canvas }) => {
     const band = canvas.getByRole('region', { name: TITLE });
 
+    await expectBandScale(band);
     await expectOutline(band, TITLE, YEARS);
     await expectArrangement(band);
     await expectNoSidewaysScroll(band);
@@ -799,6 +1018,7 @@ export const GermanLongest: Story = {
       name: 'Kurse und Spezialisierungen',
     });
 
+    await expectBandScale(band);
     await expect(band).toHaveAttribute('lang', 'de');
     await expect(canvas.getByText('Fortbildung')).toBeVisible();
     await expectOutline(
@@ -843,6 +1063,7 @@ export const PseudoLocale: Story = {
       name: 'Çúršúrí șí špéçíálížărí ··········',
     });
 
+    await expectBandScale(band);
     await expect(canvas.getByText('Fórmáré çóñťíñúă ·······')).toBeVisible();
     // The data half stayed itself — that is the point of the frame.
     await expect(canvas.getByText(GROUPS[0].courses[0])).toBeVisible();
@@ -874,6 +1095,15 @@ export const PseudoLocale: Story = {
  * DRAWN end against the next dot (D50): the 1.04 carries it a few pixels on,
  * never under the ring.
  *
+ * Since 2026-10-13 this pin draws the band in THE BAND SCALE (s ≈ 1.0975 —
+ * the header's paragraph of that name), so every length the play reads is
+ * the band's design length × s, and it pins one fact more: the forward
+ * motion never leaves the band's own box. The rail is capped at 896 of the
+ * box's 1106 design pixels, so the box leaves the entering group room to
+ * grow 1.234 ×, against the ~1.064 it is drawn at through the seeked
+ * hand-over — measured: 1.2344 against 1.0644; and the lit stretch, carried
+ * 5.0px on, still stops 8.5px clear of the next ring.
+ *
  * 'no-visual': the frame depends on a scroll the play makes, and the pixel
  * net photographs the page without waiting for a play to finish — a picture
  * of this story would be a race between the two (and the forward motion,
@@ -892,6 +1122,11 @@ export const Current: Story = {
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
+
+    // THE BAND SCALE where the play finds itself — at this pin, inside it —
+    // and its unit, in which every length of the band below is read.
+    await expectBandScale(band);
+    const { unit, rhythm } = bandScaleOf(band);
 
     // The premise, asserted rather than assumed: the rail starts below the
     // middle of the window, and nothing is current.
@@ -1007,6 +1242,21 @@ export const Current: Story = {
       await expect(drawn[300].recedingDot).toBeCloseTo(1, 2);
     }
 
+    // THE FORWARD MOTION STAYS IN THE BAND'S OWN BOX (DoctorCourses.tsx's THE
+    // BAND SCALE). A group grows rightward from its left edge (`origin-left`,
+    // which keeps that edge where it is), and the rail is capped at 896 units
+    // inside a box 1106 wide in the scale — so the room the box leaves the
+    // entering group, as a scale, stands far above the largest size it was
+    // drawn at through the seeked hand-over (~1.06, the overshoot), and the
+    // belt on the band's outer has nothing to trim here.
+    const peak = Math.max(...HAND_OVER_MS.map((ms) => drawn[ms].entering));
+    const room =
+      (rhythm.getBoundingClientRect().right -
+        entering.getBoundingClientRect().left) /
+      usedPx(entering, 'width');
+    await expect(peak).toBeGreaterThanOrEqual(1.04 - 0.001);
+    await expect(room).toBeGreaterThan(peak);
+
     const current = groups[1];
     const others = groups.filter((group) => group !== current);
 
@@ -1069,22 +1319,23 @@ export const Current: Story = {
     // millimetres of the line end, wipe them so that they do not cross the
     // next subsection"). DRAWN, once the forward motion has settled: it starts
     // at its own dot's centre (the group's one transform moves both alike),
-    // and its end — laid out 0.25rem above the next group — is carried a few
-    // pixels further by the 1.04 about the group's middle, yet stays clear of
-    // the next year's resting dot AND its ring. The resting stretch below it
-    // keeps the laid-out break (neither of its groups is scaled).
+    // and its end — laid out one spacing unit (4 units, 0.25rem) above the
+    // next group — is carried a few pixels further by the 1.04 about the
+    // group's middle, yet stays clear of the next year's resting dot AND its
+    // ring. The resting stretch below it keeps the laid-out break (neither of
+    // its groups is scaled).
     await Promise.all(current.getAnimations().map(async (a) => a.finished));
     const own = stretchOf(current).getBoundingClientRect();
     const ownDot = dotOf(current).getBoundingClientRect();
     const nextTop = groups[2].getBoundingClientRect().top;
     const nextRingTop = dotOf(groups[2]).getBoundingClientRect().top - RING;
     await expect(Math.abs(own.top - centreY(ownDot))).toBeLessThanOrEqual(1);
-    await expect(own.bottom).toBeGreaterThanOrEqual(nextTop - stepPx(0.25) - 1);
+    await expect(own.bottom).toBeGreaterThanOrEqual(nextTop - 4 * unit - 1);
     await expect(own.bottom).toBeLessThan(nextRingTop);
     await expect(
       Math.abs(
         stretchOf(groups[2]).getBoundingClientRect().bottom -
-          (groups[3].getBoundingClientRect().top - stepPx(0.25)),
+          (groups[3].getBoundingClientRect().top - 4 * unit),
       ),
     ).toBeLessThanOrEqual(1);
 
@@ -1119,6 +1370,7 @@ export const Rest: Story = {
     const band = canvas.getByRole('region', { name: TITLE });
     const groups = groupsOf(band);
 
+    await expectBandScale(band);
     await expect(window.scrollY).toBe(0);
     await expect(groups[0].getBoundingClientRect().top).toBeGreaterThan(
       middleY() + 1,

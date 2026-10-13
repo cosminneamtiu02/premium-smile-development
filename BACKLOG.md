@@ -136,8 +136,9 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     scroll indicator (iOS 18.2 and later), a link straight to a category on a slow connection (the
     load wait) and VoiceOver's reading order through the chips; on a laptop window under 60rem with
     a mouse only: whether the row stays discoverable with its scrollbar hidden (the owner's call);
-  - SC 1.4.4 Resize Text on Home, Team and Services, and on every doctor page's map band since
-    2026-10-13 — the band scale (CLAUDE.md §15.25 round 2, §15.32 and its rounds 2 and 3): on a laptop
+  - SC 1.4.4 Resize Text on Home, Team and Services, and on every doctor page since 2026-10-13 —
+    its map band first, then the whole page the same day — the band scale (CLAUDE.md §15.25 round
+    2, §15.32 and its rounds 2, 3 and 4; a doctor's biography is the page's longest reading): on a laptop
     or desktop every band there — the Services page's price list since
     the same evening, which a floor holds at the theme's own size under the reference, so there it
     follows a zoom as rem does — draws in a design pixel that follows its column, so a browser
@@ -148,7 +149,10 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     22.5, on a 1920 screen 22px up to 150 %, CLAUDE.md §15.32 round 3), and a
     larger default font size is not followed (a 20px setting on a 1440 laptop reads the address at
     16.45px) — so the 200 % zoom check above must test that text GROWS, not only that nothing
-    scrolls sideways. The owner's levers are in §15.25 round 2 (a cap at the reference). The
+    scrolls sideways. The owner's levers are in §15.25 round 2 (a cap at the reference) and §15.32
+    round 2 (THE FLOOR — on every scaled page at once, so the pages keep matching); he accepted the
+    trade for the whole doctor page on 2026-10-13 ("Accept, like Home"), leaving the floor to this
+    pass. The
     price list's OWN numbers (§15.32 round 2, the a11y review's arithmetic, Chromium page zoom):
     under the reference a floor keeps it never smaller than develop and growing with a zoom as rem
     does; past it a 200 % zoom grows the price rows ×1.45 on a 1920 screen and ×1.44 on 2560

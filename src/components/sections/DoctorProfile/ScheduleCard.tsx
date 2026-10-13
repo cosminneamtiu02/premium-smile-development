@@ -75,7 +75,11 @@ import type { HoursRow } from '@/lib/hours/hours';
 // găsiți la clinică", „Wann Sie mich in der Praxis finden"), and it WRAPS
 // between words in the card's content box — the card's ONE width, 20rem (the
 // band's D53), less 2 × 25px of frame and inset, 270px — to two lines at the
-// `band` step (30px in this card), and narrower only on a phone whose column
+// `band` step (30px in this card; on a laptop or desktop since 2026-10-13 the
+// band's THE BAND SCALE draws the card, its title and its rows in one design
+// pixel — 320 and 30 of them — so the card keeps its proportions at every
+// width, the 3px frame staying px by ui/Card's THE SUM RULE), and narrower
+// only on a phone whose column
 // is under 20rem — under a ~356px window since 2026-10-09's phone gutter
 // (ui/Container, §15.35): 238px of content at 320, where no title breaks at a
 // syllable any more. With the old gutter the content was 206px there and the
@@ -150,8 +154,9 @@ import type { HoursRow } from '@/lib/hours/hours';
 // vertical middle on the band's; one row since the G2-R2 review's a11y F2
 // made the biography beside it a region, DoctorProfile's D37 paragraph) —
 // and, since round 2k, its ONE width (D53:
-// `w-full max-w-80 mx-auto`, 20rem centred wherever the column allows, inside
-// an exact 20rem track at the step) arrive as the band's className, merged
+// `w-full max-w-80 mx-auto`, eighty spacing steps — 20rem, or 320 design
+// pixels in the band's scale — centred wherever the column allows, inside an
+// exact eighty-step track at the step) arrive as the band's className, merged
 // caller-last by ui/slot.ts: a width is a placement decision, so the band that
 // owns the grid owns it, and this card stays mountable at any width on its
 // own. The card's height stays its own: centring is the band's decision about

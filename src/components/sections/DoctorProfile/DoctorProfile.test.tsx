@@ -3,6 +3,10 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
 import { formatHoursRows, type HoursRow } from '@/lib/hours/hours';
 import {
   DoctorProfile,
@@ -42,9 +46,14 @@ import { ScheduleCard } from './ScheduleCard';
 // the prose and centred under it (D53), the card's vertical middle on the
 // band's (D37), the card never
 // stretched to the prose's height, the one-column stack below the step — is
-// asserted one tier up, in DoctorProfile.stories' play functions. The
-// GROUND's real CSS (the tint's measured alpha, the fades reaching the middle
-// box's colour) is TintedBand.stories' to measure now (run D29).
+// asserted one tier up, in DoctorProfile.stories' play functions; THE BAND
+// SCALE's lengths (2026-10-13, CLAUDE.md §15.32 round 4 — every length × the
+// design pixel on a laptop or desktop, nothing moved elsewhere) are computed
+// on the real stylesheet in DoctorProfile.scale.test.tsx, one premise per
+// file (the PriceList.scale precedent). This file pins the scale's CLASS
+// contract — which box wears it, and that its classes are ui/Container's.
+// The GROUND's real CSS (the tint's measured alpha, the fades reaching the
+// middle box's colour) is TintedBand.stories' to measure now (run D29).
 //
 // ── THE ONE OTHER SECTION IN THIS FILE IS THE GROUND, RENDERED WHOLE:
 // sections/TintedBand is this band's composed public component (§4's section
@@ -99,14 +108,30 @@ const SCHEDULE = { title: SCHEDULE_TITLE, rows: ROWS };
 // ui/Eyebrow RECIPE convention, and PersonnelCard's reading of it). These are
 // the band's OWN markup — the grid and what sits in it; the ground's classes
 // are read off a bare TintedBand (`bareGround`) and every atom's off a render.
-/** D53's two tracks — the prose takes the rest, the card EXACTLY 20rem: no
- *  share, no floor, nothing that grows with the window. */
-const TWO_TRACKS = '@3xl:grid-cols-[minmax(0,1fr)_20rem]';
+// THE ONE EXCEPTION IS THE SCALE BOX (`SCALE_BOX` below): its classes are
+// ui/Container's two exported strings, compared against the IMPORTS — they
+// are not the band's to spell, tests/unit/design-scale.test.ts holds them to
+// ONE spelling, and a retyped copy of the design pixel's arbitrary class here
+// would ship a CSS rule only this file needed (that census's D-LIT rule).
+/** D53's two tracks — the prose takes the rest, the card EXACTLY eighty
+ *  spacing steps (20rem; 320 design pixels in THE BAND SCALE): no share, no
+ *  floor, nothing that grows with the window but the design's own pixel. */
+const TWO_TRACKS = '@3xl:grid-cols-[minmax(0,1fr)_calc(var(--spacing)*80)]';
 /** The grid: two tracks and ONE row at the step, the outdent and the column
  *  gap (the header's D53 · ONE WIDTH, D37 and PROSE OUTDENT paragraphs). No
  *  row gap is re-stated at the step: one row has no gap between rows. */
 const GRID =
-  'grid gap-10 py-6 @lg:py-8 @3xl:-ms-8 @3xl:grid-cols-[minmax(0,1fr)_20rem] @3xl:gap-x-12 @3xl:py-10';
+  'grid gap-10 py-6 @lg:py-8 @3xl:-ms-8 @3xl:grid-cols-[minmax(0,1fr)_calc(var(--spacing)*80)] @3xl:gap-x-12 @3xl:py-10';
+/** THE BAND SCALE's box (the header's paragraph of that name): ui/Container's
+ *  `bandColumnClasses` then `bandScaleClasses`, in the order cx() joins them —
+ *  READ OFF THE IMPORTS, never retyped (the exception above). */
+const SCALE_BOX = [
+  ...bandColumnClasses.split(' '),
+  ...bandScaleClasses.split(' '),
+];
+/** A class behind globals.css's `scalable:` gate — every class of the scale
+ *  wears it outermost (tests/unit/design-scale.test.ts). */
+const GATED = /^scalable:/;
 /** The biography: a named region (G2-R2 a11y F2), so a flex column at EVERY
  *  width — the opener over the paragraphs' block, 24px apart — and never
  *  `contents`, which would cost the region its role. */
@@ -183,10 +208,15 @@ const bandOf = (container: HTMLElement): HTMLElement =>
 const boxesOf = (container: HTMLElement): HTMLElement[] =>
   [...bandOf(container).children] as HTMLElement[];
 
-/** The grid inside the middle box's Container, and its two direct children —
- *  layout boxes, so structure again. */
+/** The middle box's ui/Container — the column every `@`-step asks — then
+ *  THE BAND SCALE's box inside it, then the grid inside that, and the grid's
+ *  two direct children: layout boxes, so structure again. */
+const columnOf = (container: HTMLElement): HTMLElement =>
+  boxesOf(container)[1].firstElementChild as HTMLElement;
+const scaleBoxOf = (container: HTMLElement): HTMLElement =>
+  columnOf(container).firstElementChild as HTMLElement;
 const gridOf = (container: HTMLElement): HTMLElement =>
-  boxesOf(container)[1].firstElementChild?.firstElementChild as HTMLElement;
+  scaleBoxOf(container).firstElementChild as HTMLElement;
 const halvesOf = (container: HTMLElement): HTMLElement[] =>
   [...gridOf(container).children] as HTMLElement[];
 
@@ -527,29 +557,49 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     );
   });
 
-  it('gives the card ONE width, 20rem — the track and the cap are one length (D53)', () => {
+  it('gives the card ONE width, eighty spacing steps — the track and the cap are one length (D53; in the step since §15.32 round 4)', () => {
     // "should not be widening as you widen the screen or tighten when you
-    // tighten it" (owner, round 2k). Two spellings of the same 20rem, a
+    // tighten it" (owner, round 2k). Two spellings of the same length, a
     // KEEP-IN-SYNC pair inside this band: the step's second track, and the
-    // stacked card's cap. Read off the RENDER and compared, so retuning one
-    // without the other fails here, naming the pair.
+    // stacked card's cap. Since 2026-10-13 BOTH are counts of the spacing
+    // step — the length THE BAND SCALE redraws — so the pair is 20rem outside
+    // the scale and 320 design pixels inside it, the one width held in the
+    // design's pixel (the header's THE BAND SCALE paragraph). Read off the
+    // RENDER and compared, so retuning one without the other fails here,
+    // naming the pair — and a track that slips back to a rem or px literal,
+    // which the scale would leave at 320px while the prose, the gap and the
+    // headings round it grew, fails the pattern.
     const { container } = renderBand();
 
     const grid = tokensOf(gridOf(container));
     const tracks = grid
       .map((token) =>
-        /^@3xl:grid-cols-\[minmax\(0,1fr\)_(\d+(?:\.\d+)?)rem\]$/.exec(token),
+        /^@3xl:grid-cols-\[minmax\(0,1fr\)_calc\(var\(--spacing\)\*(\d+)\)\]$/.exec(
+          token,
+        ),
       )
       .find(Boolean);
-    expect(tracks, 'the prose track, then ONE fixed rem length').toBeTruthy();
+    expect(
+      tracks,
+      'the prose track, then ONE length counted in spacing steps',
+    ).toBeTruthy();
     const card = tokensOf(halvesOf(container)[1]);
     const cap = card
       .map((token) => /^max-w-(\d+(?:\.\d+)?)$/.exec(token))
       .find(Boolean);
     expect(cap, 'the stacked card is capped on the spacing scale').toBeTruthy();
-    // `max-w-N` is N × 0.25rem on Tailwind's untouched spacing scale (§3).
-    expect(Number(cap?.[1]) * 0.25).toBe(Number(tracks?.[1]));
-    expect(Number(tracks?.[1])).toBe(20);
+    // `max-w-N` is N spacing steps on Tailwind's untouched scale (§3) — the
+    // same step the track counts — so equal counts are one length at ANY
+    // design pixel: eighty, round 2k's 20rem.
+    expect(Number(cap?.[1])).toBe(Number(tracks?.[1]));
+    expect(Number(tracks?.[1])).toBe(80);
+    // No fixed literal anywhere in the track list: a rem or a px there is
+    // exactly what the scale cannot redraw.
+    expect(
+      grid.filter(
+        (token) => token.includes('grid-cols-') && /\d(rem|px)\b/.test(token),
+      ),
+    ).toEqual([]);
 
     // Round 2e's share and floor are gone, not stacked under the new track:
     // ONE track list on the grid, so nothing can still hand the card a slice
@@ -560,7 +610,8 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     expect(grid.filter((token) => /minmax\(20rem|3fr/.test(token))).toEqual([]);
     // Stacked, the card fills the column UP TO the cap and sits centred: the
     // three utilities ride the card UNGATED (at the step they are inert —
-    // `w-full` of a 20rem track is 20rem, the auto margins find no room), and
+    // `w-full` of the eighty-step track is its width, the auto margins find
+    // no room), and
     // no width, min-width or inline margin is re-stated under a container
     // variant, where it could fight the track.
     for (const token of ['w-full', 'max-w-80', 'mx-auto']) {
@@ -624,16 +675,81 @@ describe('DoctorProfile — composes sections/TintedBand (run D29)', () => {
     );
   });
 
-  it('puts ONE thing on the ground: the D14 grid, straight inside the column', () => {
-    // What this band adds is its content, never a second wrapper between the
-    // ground's column and the grid (the `py` rides the grid — TintedBand adds
-    // no padding, its NO VERTICAL PADDING paragraph).
+  it('puts ONE thing on the ground: THE BAND SCALE’s box, holding the D14 grid and nothing else', () => {
+    // What this band adds is its content, and since 2026-10-13 exactly ONE
+    // box between the ground's column and the grid — the scale's (the next
+    // block). The `py` still rides the grid: TintedBand adds no padding (its
+    // NO VERTICAL PADDING paragraph), and neither does the scale box.
     const { container } = renderBand();
 
-    const column = boxesOf(container)[1].firstElementChild as HTMLElement;
+    const column = columnOf(container);
     expect(column.children).toHaveLength(1);
-    expect(column.firstElementChild).toBe(gridOf(container));
+    expect(column.firstElementChild).toBe(scaleBoxOf(container));
+    expect(scaleBoxOf(container).children).toHaveLength(1);
+    expect(scaleBoxOf(container).firstElementChild).toBe(gridOf(container));
     expect(gridOf(container).className).toBe(GRID);
+  });
+});
+
+describe('DoctorProfile — THE BAND SCALE, the class contract (§15.32 round 4)', () => {
+  it('wears ui/Container’s two strings on ONE box between the column and the grid — imported, whole, in cx() order', () => {
+    // The owner, 2026-10-13: "make the exact same thing with the heading and
+    // eyebrow from the individual dr page" — "Whole page, like Home". The
+    // rule is ui/Container's (THE BAND SCALE, recipe rule 5); this band wears
+    // it unconditionally — it lives on the doctor page alone, and that page
+    // scales whole — so there is no prop, and the box's classes are the two
+    // exports, nothing added, nothing dropped.
+    const { container } = renderBand();
+
+    const box = scaleBoxOf(container);
+    expect(box.tagName).toBe('DIV');
+    expect(tokensOf(box)).toEqual(SCALE_BOX);
+    // Never vacuous: the imported strings really carry the gate — the pin
+    // above could not tell an emptied export from the scale.
+    expect(
+      SCALE_BOX.filter((token) => GATED.test(token)).length,
+    ).toBeGreaterThan(0);
+    // A plain layout box: its class and nothing else — no role, no name, no
+    // id, nothing a screen reader or a jump could find.
+    expect(box.getAttributeNames()).toEqual(['class']);
+  });
+
+  it('keeps the scale off every other element — and the OUTDENT off the scale box (the header’s THE BAND SCALE, first bullet)', () => {
+    const { container } = renderBand();
+
+    const box = scaleBoxOf(container);
+    const grid = gridOf(container);
+    // ONE box declares the design pixel and redraws the theme: the gated
+    // classes ride it alone, never the ground, the column, the grid or
+    // anything inside (the whole band follows through the remapped theme).
+    for (const element of [
+      bandOf(container),
+      ...container.querySelectorAll('*'),
+    ]) {
+      if (element === box) continue;
+      expect(
+        tokensOf(element).filter((token) => GATED.test(token)),
+        `${element.tagName}.${element.className}`,
+      ).toEqual([]);
+    }
+    // THE WHY OF THE EXTRA BOX: `mx-auto` (the cap's centring) and the
+    // prose's negative start margin may never share an element — on one, the
+    // outdent would cancel the centring past the cap and `w-full` would pull
+    // the card's edge 2rem in. So the centring and the width are the scale
+    // box's, the outdent and the rhythm the grid's.
+    expect(tokensOf(box)).toContain('mx-auto');
+    expect(tokensOf(box)).toContain('w-full');
+    // Every margin and padding utility on the scale box, at any variant: the
+    // centring alone — no outdent, no rhythm.
+    expect(
+      tokensOf(box).filter((token) => /(^|:)-?[mp][xytrblse]?-/.test(token)),
+    ).toEqual(['mx-auto']);
+    expect(tokensOf(grid)).toContain('@3xl:-ms-8');
+    expect(
+      tokensOf(grid).filter((token) =>
+        /(^|:)(m[xse]?-auto|w-full)$/.test(token),
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -689,10 +805,13 @@ describe('DoctorProfile — the native surface (§6.8)', () => {
 });
 
 describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', () => {
-  it('carries no media queries anywhere — those are the page’s', () => {
-    // Container variants (@lg:, @3xl:) are the allowed shape: they measure the
-    // gutter COLUMN, which is what makes the same band right inside a page and
-    // inside a story canvas the sidebar narrowed.
+  it('carries no WIDTH media query anywhere — those are the page’s; its one media condition is THE BAND SCALE’s pointer gate, imported', () => {
+    // Container variants (@lg:, @3xl:, the scale's @4xl: and @min-[…]:) are
+    // the allowed shape: they measure the gutter COLUMN, which is what makes
+    // the same band right inside a page and inside a story canvas the sidebar
+    // narrowed. An arbitrary MEDIA variant is a `min-[…]:` or `max-[…]:` at
+    // the start of a chain or after a colon; the container's own form carries
+    // an `@` in front, and stays allowed.
     const { container } = renderBand();
 
     for (const element of [
@@ -701,9 +820,18 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
     ]) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
-        expect(token).not.toMatch(/(min|max)-\[/);
+        expect(token).not.toMatch(/(^|:)(min|max)-\[/);
       }
     }
+    // The ONE media condition in the band — globals.css's `scalable:` gate, a
+    // fine pointer in an engine that registers custom properties, never a
+    // width — rides the scale box alone, and only through ui/Container's
+    // strings (the class-contract block above).
+    const gatedElements = [
+      bandOf(container),
+      ...container.querySelectorAll('*'),
+    ].filter((element) => tokensOf(element).some((token) => GATED.test(token)));
+    expect(gatedElements).toEqual([scaleBoxOf(container)]);
   });
 
   it('ships NO client directive — the band is inert HTML (§16)', () => {
@@ -733,8 +861,11 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
     // one lib specifier and it must arrive `import type`: the band never
     // formats a row (the page does), and a type import erases to nothing at
     // build time. sections/TintedBand joined in run D29 — and ui/Container and
-    // lib/cx LEFT with the markup they served: the Container is rendered
-    // inside TintedBand now, and `className` passes through to it unjoined.
+    // lib/cx LEFT with the markup they served (the Container is rendered
+    // inside TintedBand, and `className` passes through to it unjoined). Both
+    // came BACK on 2026-10-13 for THE BAND SCALE's box: ui/Container for its
+    // two band-scale strings — this file renders no Container of its own —
+    // and lib/cx to join them, the way every scaled band does.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -745,9 +876,16 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
       './ScheduleCard',
       '@/components/sections/SectionHeading/SectionHeading',
       '@/components/sections/TintedBand/TintedBand',
+      '@/components/ui/Container/Container',
+      '@/lib/cx/cx',
       '@/lib/hours/hours',
       'react',
     ]);
+    // From ui/Container, the two strings and nothing else: the band never
+    // renders a second Container inside TintedBand's.
+    expect(CODE).toMatch(
+      /^import \{\s*bandColumnClasses,\s*bandScaleClasses,?\s*\} from '@\/components\/ui\/Container\/Container';$/m,
+    );
     expect(CODE).toMatch(
       /^import type \{[^}]*\bHoursRow\b[^}]*\} from '@\/lib\/hours\/hours';$/m,
     );

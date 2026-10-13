@@ -39,11 +39,13 @@ import teamPage from './team/page.tsx?raw';
 //   · THE BAND SCALE (2026-10-02, CLAUDE.md §15.32) — `scaled` on the numbers
 //     band and on the map, by NAME: Home and the Team page say it on both
 //     (every band on both pages draws in ui/Container's THE BAND SCALE, one
-//     heading size and one offset), the doctor page says it on the MAP alone
-//     since 2026-10-13 (round 3 — the owner: "as the current map on home page
-//     is now, i need it updated reactivity wise on absoultey every page") and
-//     not on the numbers band (its other bands do not scale yet), and each
-//     twin says what its page says. A page that lost the word would ship one
+//     heading size and one offset), and so does the doctor page since
+//     2026-10-13 — first on the MAP alone (round 3 — the owner: "as the
+//     current map on home page is now, i need it updated reactivity wise on
+//     absoultey every page"), then on the numbers band too, the same day, when
+//     the whole page joined the scale (round 4 — "make the exact same thing
+//     with the heading and eyebrow from the individual dr page", "Whole page,
+//     like Home") — and each twin says what its page says. A page that lost the word would ship one
 //     band out of step with its neighbours on every laptop — in pixels the net
 //     does see, but only on the TWIN, which would still say it;
 //   · THE MAP ON EVERY PAGE (round 3) — every file under this folder that
@@ -354,15 +356,17 @@ describe('a doctor’s page and its story twin — read off their source', () =>
     expect(bandsOf(DOCTOR.twin)).toEqual(bandsOf(DOCTOR.page));
   });
 
-  it('keeps the numbers band on its DEFAULTS — the tint, the centre, its lead — page and twin alike (§6.6)', () => {
+  it('keeps the numbers band on its DEFAULTS — the tint, the centre, its lead — and in the band scale, page and twin alike (§6.6, §15.32 round 4)', () => {
     // The second page's two settings stay off this one: the doctor page's
     // call did not change by a character when Home's band arrived, and a
     // `ground` or an `align` written here would be a change it never asked for.
+    // `scaled` joined on 2026-10-13 — the whole page in the band scale.
     expect(propsOf(DOCTOR.page, 'DoctorStats')).toEqual([
       'atLeast',
       'eyebrow',
       'format',
       'lead',
+      'scaled',
       'tiles',
       'title',
     ]);
@@ -388,9 +392,15 @@ describe('a doctor’s page and its story twin — read off their source', () =>
     }
   });
 
-  it('leaves the numbers band UNSCALED — its page’s other bands do not scale yet — page and twin alike (§15.32)', () => {
+  it('draws the numbers band in the band scale — `scaled`, BARE — page and twin alike (§15.32 round 4: the whole page, like Home)', () => {
+    // Since 2026-10-13 every band of this page draws in ui/Container's band
+    // scale: the three that live only here wear it themselves (their own
+    // suites and tests/unit/design-scale.test.ts's census hold them), the two
+    // shared with Home and Team take the word from here. `flagsOf` sees only
+    // the bare spelling, so `scaled={false}` cannot pass for it.
     for (const jsx of [DOCTOR.page, DOCTOR.twin]) {
-      expect(propsOf(jsx, 'DoctorStats')).not.toContain('scaled');
+      expect(flagsOf(jsx, 'DoctorStats')).toContain('scaled');
+      expect(jsx).not.toMatch(/\bscaled=/);
     }
   });
 });

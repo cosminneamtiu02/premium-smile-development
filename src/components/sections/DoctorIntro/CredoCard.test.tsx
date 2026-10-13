@@ -118,7 +118,10 @@ const framedAuraCard = (): string =>
  * DoctorIntro's D63 (a 36rem track beside the picture) that is 30px at 1024
  * and 1280 and 36px from 1366 up, and 36px stacked full-width on a tablet as
  * before (ui/Heading's `'band' JOINED` paragraph; owner decision 1 of G2
- * tier 1, fold-tier1.md). The never-vacuous guard in the test
+ * tier 1, fold-tier1.md) — and since DoctorIntro's THE BAND SCALE
+ * (2026-10-13), on a laptop or a desktop, the same two steps in the design
+ * pixel, the switch a CSS-pixel one still: 27.4px at 1280, 39.5 at 1536,
+ * 49.5 at 1920 (DoctorIntro.scale.test.tsx pins it). The never-vacuous guard in the test
  * pins that what is read back really IS one of ui/Heading's rows, not an
  * empty or foreign string.
  */

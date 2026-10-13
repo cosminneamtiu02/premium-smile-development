@@ -51,7 +51,9 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — DoctorStats.tsx's
 // paragraph of that name). The three `PageGround*` stories model Home and the
 // Team page, so they pass `scaled` (`HOME_ARGS`); the four tint stories and
-// `Counting` model the doctor page and do not. `expectBandScale` reads — like
+// `Counting` draw the band's own unscaled self on its lilac ground and do not
+// (the doctor page passes `scaled` too since 2026-10-13, §15.32 round 4 —
+// Pages/Doctor draws that page's band in the scale). `expectBandScale` reads — like
 // the doctors band's own `expectScale` — the column, the pointer and the
 // engine the play runs in, never the pinned window, and asserts whichever side
 // it is on: inside the scale (a `scaled` band, a fine pointer, an engine that
@@ -60,7 +62,7 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // tile at 9/8 of it; anywhere else every size the theme's, in rem. In the
 // Vitest storybook project the pointer is Chromium's fine one, so
 // `PageGround`'s laptop pin asserts the scale (and `expectScaled` that it was
-// not skipped), `Default`'s the doctor page's unscaled band at the same width,
+// not skipped), `Default`'s the unscaled band at the same width,
 // and the phone and tablet pins that `scaled` changes nothing there. In the
 // pixel net the `PageGround*` frames at 1536 are drawn in the scale; every 390
 // and 320 frame, and every tint frame, is as it was.
@@ -845,8 +847,8 @@ const scaleStepPx = (): number => Math.max(stepPx(STEP_REM), STEP_FLOOR);
  * the column capped at 96rem and centred in it, and every tile draws at 9/8
  * of s: its sentence 18 × s, HALF the <h2> (a doctor card's quote — the
  * owner's "1 to 1"), its label 22.5 × s, its number 40.5 × s, its disc
- * 126 × s with the glyph 54 × s; each within 0.05px. Anywhere else — the
- * doctor page's band, never `scaled`; every phone and tablet; a coarse
+ * 126 × s with the glyph 54 × s; each within 0.05px. Anywhere else — a band
+ * not asked to scale (the tint stories); every phone and tablet; a coarse
  * pointer — nothing is declared: both boxes' design pixel is the registered
  * 1px, the rhythm box is the column, and every size is the theme's, in rem of
  * the root (the <h2> 30 or 36 by the column's `@md`, the eyebrow 14, the
@@ -1028,7 +1030,7 @@ const meta = {
     scaled: {
       control: 'boolean',
       description:
-        'Draws the band in THE BAND SCALE (ui/Container’s paragraph of that name; §15.32): on a laptop or desktop column of max(56rem, 896px) the doctors band’s own design pixel, the column ÷ 1106, capped at a 96rem column and centred past it — so the eyebrow and the title are the doctors band’s size and stand on its left edge — and the tiles at 9/8 of it, so a tile’s sentence reads a doctor card’s quote size. Home and the Team page pass it; the doctor page does not (default false). Below the step, on a touch device and in an engine that cannot register custom properties it changes nothing',
+        'Draws the band in THE BAND SCALE (ui/Container’s paragraph of that name; §15.32): on a laptop or desktop column of max(56rem, 896px) the doctors band’s own design pixel, the column ÷ 1106, capped at a 96rem column and centred past it — so the eyebrow and the title are the doctors band’s size and stand on its left edge — and the tiles at 9/8 of it, so a tile’s sentence reads a doctor card’s quote size. Home, the Team page and (since 2026-10-13) the doctor page pass it; default false, the band’s own unscaled self. Below the step, on a touch device and in an engine that cannot register custom properties it changes nothing',
     },
     tiles: {
       control: false,
@@ -1078,8 +1080,8 @@ const LABELS = TILES.map((tile) => tile.label);
  * budget, the painted order (the number above its <h3>, which follows it in
  * the DOM), the glyphs' lilac against the decorative role's own token and the
  * arrangement derived from the measured column — and, at the laptop width
- * where `PageGround` draws in THE BAND SCALE, that the doctor page's band does
- * NOT: never `scaled`, its sizes the theme's rem (`expectBandScale`). The
+ * where `PageGround` draws in THE BAND SCALE, that this band, not asked to,
+ * does NOT: its sizes the theme's rem (`expectBandScale`). The
  * count itself is watched in `Counting` (the header says why).
  */
 export const Default: Story = {

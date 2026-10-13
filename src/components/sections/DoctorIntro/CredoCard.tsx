@@ -56,15 +56,20 @@ import { Card } from '@/components/ui/Card/Card';
 //   below it.
 //   BESIDE THE PICTURE (`@3xl`, DoctorIntro's D62–D64): the pair above the
 //   card stands across the bottom container's top padding, `py-6` = 24px
-//   (clears the 16px); the picture's track ends a whole gap away —
-//   `clamp(3rem, a sixth of the column, 10.5rem)`, 128–168px — plus the
-//   words' 1.5rem inset, and even the cutout grown to its cap stays ~100px
-//   clear of the card at the step (clears the 24px); and the band's bottom
-//   edge lies 64px under the card wherever the words set the row (the bottom
+//   (clears the 16px); the picture's track ends a whole gap away — a sixth
+//   of the column clamped to 3rem–10.5rem, 128–168px — plus the words'
+//   1.5rem inset, and even the cutout grown to its cap stays ~100px clear of
+//   the card at the step (clears the 24px); and the band's bottom edge lies
+//   64px under the card wherever the words set the row (the bottom
 //   container's 24px + `@3xl:py-10`'s 40px — 1280, the Notebook story),
-//   more wherever the picture does (82.5px at 1920). The one neighbour INSIDE
-//   the glow is a FILLED slot, 24px under the card across the bottom
-//   container's `gap-6` — the WithActions story; the page passes none.
+//   more wherever the picture does (82.5px at 1920 before the band scale).
+//   The one neighbour INSIDE the glow is a FILLED slot, 24px under the card
+//   across the bottom container's `gap-6` — the WithActions story; the page
+//   passes none. Since DoctorIntro's THE BAND SCALE (2026-10-13) those
+//   spaces are DESIGN pixels on a laptop or a desktop — × s, never under
+//   0.81 — while the glow is a px shadow the scale leaves alone, so the
+//   tightest of them still clear it: 19.4px over the card at the scale's
+//   step (16), the gap 136px and more, 52px under it (32).
 //   STACKED: the picture above crosses the grid's `gap-8` = 32px and a filled
 //   slot below would cross the same 32px (both clear); the gutter beside the
 //   card is ui/Container's — and since 2026-10-09 (THE PHONE GUTTER, CLAUDE.md
@@ -142,7 +147,16 @@ import { Card } from '@/components/ui/Card/Card';
 //                    lines at 1280 and three at 1536 and 1920 — the card 462
 //                    / 576 / 576px wide and 238 / 214 / 214px tall — since
 //                    DoctorIntro's D63 widened its track to 36rem (the
-//                    owner's "like 30% wider", 2026-10-01). Under D51b's
+//                    owner's "like 30% wider", 2026-10-01); since its THE
+//                    BAND SCALE (2026-10-13) the card and these words are
+//                    the 1401 design × s on a laptop or a desktop, so they
+//                    keep the design's lines at every such width to within
+//                    ONE line — the typeface's optical sizing sets larger
+//                    words a little narrower per em, so a quote can gain or
+//                    lose a line across the scale (DoctorIntro's THE BAND
+//                    SCALE, measured on 11 of 30 doctor pages) (the demo
+//                    doctor's: 479 / 576 / 722px wide, 217 / 265 / 332
+//                    tall, four lines each, at 1280 / 1536 / 1920). Under D51b's
 //                    28rem column it was five lines, 266px tall and 448px
 //                    wide at all three (the demo doctor's words); under
 //                    D43b's ⅔ track three, three, two lines, 214 / 214 /
@@ -204,8 +218,9 @@ import { Card } from '@/components/ui/Card/Card';
 //
 // ── THE CARD OWNS NO WIDTH AND NO OUTER MARGIN (§6.4). It fills whatever
 // the band places it in — beside the picture a grid item of the band's bottom
-// container, whose ONE explicit track is `minmax(0,36rem)` (DoctorIntro.tsx's
-// D62 and D63), in the stack a grid item of the one-column grid (D51c); both
+// container, whose ONE explicit track is at most 36rem (DoctorIntro.tsx's D62
+// and D63; 144 spacing steps since its THE BAND SCALE, 576 design pixels on a
+// laptop or a desktop), in the stack a grid item of the one-column grid (D51c); both
 // stretch (ui/Card D3), and there is no flex ROW here, so none of the atom's
 // collapse cases applies — and the band owns the space above it (the bottom
 // container's 1.5rem beside the picture, `gap-8` in the stack). Its OWN
@@ -230,7 +245,12 @@ import { Card } from '@/components/ui/Card/Card';
 // 30% wider", 2026-10-01) took it back to 36px beside the picture wherever the
 // card is ~498px or wider: MEASURED on the built page, 30px at 1024 and 1280
 // (363 / 462px cards) and 36px from 1366 up (506 / 545 / 576px) — the "wider
-// words column" road of that open call. The card's INNER ROOM — `framed`'s 3px + 22px per side —
+// words column" road of that open call. Since DoctorIntro's THE BAND SCALE
+// (2026-10-13) a laptop or a desktop draws the title in the design pixel, but
+// the step it answers to stays a CSS-pixel one: 30 × s while the card's
+// content box is under 28rem — from the scale's step to a ~1324px window,
+// 27.4px at 1280 — and 36 × s from there, 39.5px at 1536 and 49.5 at 1920
+// (that file's WHAT DOES NOT SCALE). The card's INNER ROOM — `framed`'s 3px + 22px per side —
 // does NOT move, because ui/Card offers no padding axis: its header rejects
 // per-side padding outright (D5) and names the one way in, a `density` axis
 // of its own that joins when a SECOND proven card kind measures a different

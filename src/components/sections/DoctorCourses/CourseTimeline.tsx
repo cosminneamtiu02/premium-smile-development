@@ -129,7 +129,8 @@ import type { CourseGroup } from './DoctorCourses';
 //         group lets go only when its DRAWN top drops below the line, i.e.
 //         once its laid-out top is ~0.02h (plus the spy's one pixel) under
 //         it: a HYSTERESIS of 0.02 × the group's height on the way up, none
-//         on the way down (~1.5px for a one-line year at the laptop width,
+//         on the way down (~1.5px for a one-line year at the theme's size,
+//         ~1.7 at the 1536 laptop inside DoctorCourses.tsx's THE BAND SCALE,
 //         ~5px for the tallest group the stories sample; the G2-R2 tier-2
 //         typescript review's note). The recede then eases that drawn top
 //         further DOWN, away from the line; only the visitor's own scroll
@@ -263,7 +264,11 @@ import type { CourseGroup } from './DoctorCourses';
 //     so 1.04 pushes its right edge 4 % past the column, into the gutter:
 //     ~14px at 390 against a 19.5px gutter, ~11.5px at 320 against 16px (the
 //     gutter is ui/Container's, 5vw a side on a phone since THE PHONE GUTTER,
-//     CLAUDE.md §15.35 — 39 and 32px before). The ~1.065 peak (measured
+//     CLAUDE.md §15.35 — 39 and 32px before). (On a laptop or desktop it
+//     never reaches the gutter at all: inside DoctorCourses.tsx's THE BAND
+//     SCALE the rail is capped at 896 of the band's 1106 design pixels, so a
+//     group has room to grow 1.234 × before it meets the band's own edge —
+//     the `Current` story pins it.) The ~1.065 peak (measured
 //     1.0647) pushes it ~6.5 % for a few frames, ~19px at 320 and ~23px at
 //     390 — PAST the screen: MEASURED on the built doctor page (ro + de,
 //     emulated phones, every frame of a walk through the rail), 2.6 / 3.0 /
@@ -294,7 +299,9 @@ import type { CourseGroup } from './DoctorCourses';
 //   · the rail is the column of groups itself — a flex column capped at
 //     `max-w-4xl` (56rem, DoctorProfile's prose measure: in one column at the
 //     laptop width a course line would otherwise run ~1200px, far past a
-//     reading measure for §1's older reader). Round 2g's continuous line
+//     reading measure for §1's older reader; 896 design pixels inside
+//     DoctorCourses.tsx's THE BAND SCALE, the same measure in characters at
+//     every laptop and desktop width). Round 2g's continuous line
 //     under the column is GONE, and with it the separate box that held the
 //     two;
 //   · the line is drawn in STRETCHES, one per group, so each subsection
@@ -308,9 +315,11 @@ import type { CourseGroup } from './DoctorCourses';
 //   · a stretch BEGINS AT ITS DOT'S CENTRE, `top-4.5` = the dot's `top-3`
 //     plus half its `size-3` (0.75rem + 0.375rem = 1.125rem). Hidden under
 //     the dot itself, not merely under its ring: `ring-4` is a 4px box-shadow
-//     at every root size while `top-*` is rem, so a stretch that began at the
-//     ring's edge would peek out above it under an enlarged browser font. So
-//     the line begins at the first dot — nothing above it;
+//     at every root size — and in every design pixel of DoctorCourses.tsx's
+//     THE BAND SCALE — while `top-*` is a spacing step, rem or design pixels,
+//     so a stretch that began at the ring's edge would peek out above it
+//     under an enlarged browser font or a scaled band. So the line begins at
+//     the first dot — nothing above it;
 //   · a stretch ENDS 0.25rem ABOVE THE NEXT GROUP (D50 — "keep some space
 //     empty until start of next subsection, so the line for current does
 //     not highlight below the start dot of the next subsection … the last few
@@ -319,7 +328,9 @@ import type { CourseGroup } from './DoctorCourses';
 //     unit short of the next group's top. The next dot's ring begins `top-3`
 //     less its 4px `ring-4` = 8px under that top, so 12px of bare ground
 //     (0.25rem + 0.75rem − 4px at the 16px root; more under an enlarged
-//     browser font, the ring being the one px length in the sum) separate
+//     browser font, the ring being the one px length in the sum — and in
+//     DoctorCourses.tsx's THE BAND SCALE 16 design pixels less the ring: 9px
+//     at the scale's step, 13.6 at the 1536 laptop, 18.2 past the cap) separate
 //     every stretch's end from the next dot's ring — 16px from the dot's
 //     grey disc, since the ring is the ground's own colour. So the rail reads
 //     as a line DOTTED AT THE YEARS: each stretch hangs from its own dot and
@@ -333,17 +344,24 @@ import type { CourseGroup } from './DoctorCourses';
 //   · A LIT STRETCH STILL STOPS SHORT OF THE NEXT DOT. The forward motion
 //     scales the current group about its vertical middle, which carries the
 //     stretch's end on by (scale − 1) × its distance from that middle (half
-//     the group's height plus the 4.75rem reach). MEASURED at the laptop
-//     width (the `Current` story, 1536×864, a one-line year 76px tall,
-//     settled at 1.04): 4.56px on — the end 0.56px past the next group's top,
-//     7.44px clear of the next dot's ring. Worked from the heights the
+//     the group's height plus the 4.75rem reach). At the theme's own size —
+//     a one-line year 76px tall, settled at 1.04 — that is 4.56px on: the end
+//     0.56px past the next group's top, 7.44px clear of the next dot's ring
+//     (measured in the `Current` story at 1536×864 until 2026-10-13). That
+//     pin now draws the band in DoctorCourses.tsx's THE BAND SCALE, where
+//     every length but the ring is × s, so the clearance is 11.44 × s − 4px:
+//     MEASURED there (s = 1.0975, the year 83.4px tall) 5.0px on, 0.6 past
+//     the next group's top, 8.5 clear of the ring; 5.3 clear at the scale's
+//     step (s ≈ 0.81), 11.9 past its cap. Worked from the heights the
 //     stories measure: the tallest group sampled, German 2024 at 390, is
 //     200px since 2026-10-09's phone gutter widened the column to 351px
 //     (336 beside the visual net's scrollbar) — it was 256px in the old 312px
 //     column — and settles 7.04px on, 4.96px clear; in a 320 phone's 288px
 //     column the same group is 256px, 8.16px on, 3.84px clear (measured in
 //     Storybook, 2026-10-09). The end reaches the next ring only for
-//     a group taller than ~448px at 1.04 (~13 wrapped course lines) — ~217px
+//     a group taller than ~448px at 1.04 (~13 wrapped course lines; in THE
+//     BAND SCALE 648 × s − 200px, the ring the one length that does not
+//     scale — 511px at the 1536 laptop) — ~217px
 //     at the overshoot's drawn peak of ~1.065 (THE FORWARD MOTION), where
 //     that German group runs about a pixel into the ring for a few frames at
 //     320 (at 390 too until the phone gutter; at 390 it now stays ~0.6px

@@ -91,7 +91,9 @@ import { toStatTiles } from '../stat-tiles';
 // ── TWO STORIES, RO + DE — the §13 page tier, and German earns its baseline
 // here: „Fachrichtung Prothetik und Parodontologie" sits over the site's
 // longest name, „Dr. Malea (Sabău) Oana Bianca", on Heading's fluid `hero`
-// step (32px on the phone this story is pinned to, 72px on a desktop);
+// step (32px on the phone this story is pinned to; on a laptop or a desktop,
+// since §15.32 round 4, the 1401 window's 65px scaled with the page — ~89px at
+// 1920, where the step alone stopped at 72);
 // „Über Dr. Malea (Sabău) Oana Bianca" is the h2 that must not break inside
 // the NAME — sections/DoctorProfile opts that one title out of the site-wide
 // `hyphens: auto` (2026-09-30; the other band titles inherit it and may break
@@ -195,8 +197,11 @@ function DoctorPageBands(): ReactElement {
           numbers — the island counts up to them — and are printed by
           `Intl.NumberFormat` in the visitor's language (§8.3), never by the
           band; the icon ids become glyphs in ../stat-tiles.tsx, the one
-          mapping this twin and the page share (G2-R2 tier 3). */}
+          mapping this twin and the page share (G2-R2 tier 3). `scaled`, as
+          on the page (CLAUDE.md §15.32 round 4; ./page.tsx's THE WHOLE PAGE
+          IN THE BAND SCALE). */}
       <DoctorStats
+        scaled
         eyebrow={t('doctor.stats.eyebrow')}
         title={t('doctor.stats.title')}
         lead={t('doctor.stats.lead')}
@@ -238,6 +243,28 @@ const precedes = (first: Element, second: Element): boolean =>
  *  who enlarged the browser's base font moves every container step with it. */
 const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/**
+ * THE DESIGN PIXEL AN ELEMENT IS DRAWN IN (CLAUDE.md §15.32 round 4: the
+ * whole page in ui/Container's band scale on a laptop or desktop). Read off
+ * the element itself, never off a class name: a band in the scale redefines
+ * `--spacing` (globals.css's `design-scale`), so an element's `--spacing`
+ * differs from the root's exactly when it stands inside a scaled band — the
+ * price-list twin's "remap reading" — and its inherited `--scale-px` is then
+ * the band's pixel. Outside the scale a design pixel is the theme's own, a
+ * sixteenth of the root (§7). Every length below that the bands spell in the
+ * theme's steps is that many design pixels times this.
+ */
+const remapped = (element: Element): boolean =>
+  getComputedStyle(element).getPropertyValue('--spacing').trim() !==
+  getComputedStyle(document.documentElement)
+    .getPropertyValue('--spacing')
+    .trim();
+
+const unitAt = (element: Element): number =>
+  remapped(element)
+    ? parseFloat(getComputedStyle(element).getPropertyValue('--scale-px'))
+    : rem() / 16;
 
 /**
  * Fonts and pictures loaded before a single box is read. `decode()` rejects
@@ -426,13 +453,18 @@ const expectOpener = async (
     const pair = parentOf(heading).getBoundingClientRect();
     const words = parentOf(parentOf(heading)).getBoundingClientRect();
     const box = parentOf(cutout).getBoundingClientRect();
-    const edge = words.left + 1.5 * rem();
+    // The band's lengths in its own design pixel (`unitAt`): the 1.5rem inset
+    // of the words is 24 of them, the inset's cap 30, the card's track 576 —
+    // the theme's own rem outside the scale, the same numbers × s inside it.
+    // `column` is the band's own box since §15.32 round 4 (`columnOf` stops at
+    // DoctorIntro's `@container` wrapper): ui/Container's column below the
+    // cap, the capped box past it — what every share of the opener reads.
+    const unit = unitAt(heading);
+    const edge = words.left + 24 * unit;
     // D63: the inset, the picture's third, the words to the column's edge.
     await expect(
       Math.abs(
-        box.left -
-          column.left -
-          Math.min(0.01875 * column.width, 1.875 * rem()),
+        box.left - column.left - Math.min(0.01875 * column.width, 30 * unit),
       ),
     ).toBeLessThanOrEqual(1);
     // The picture's third — or less, where the words' `auto` floor (a name's
@@ -486,7 +518,7 @@ const expectOpener = async (
     ).toBeLessThanOrEqual(1);
     await expect(card.top).toBeGreaterThanOrEqual(name.bottom);
     await expect(
-      Math.abs(card.width - Math.min(36 * rem(), words.right - edge)),
+      Math.abs(card.width - Math.min(576 * unit, words.right - edge)),
     ).toBeLessThanOrEqual(1);
     await expect(
       Math.abs(card.top - pair.bottom - (words.bottom - card.bottom)),
@@ -544,11 +576,17 @@ const expectProfile = async (
     }
     // The block the card centres on runs from the OPENER's top (the
     // SectionHeading root — the eyebrow's top, not the h2's) to the last
-    // paragraph's bottom; the tinted box is the grid's grandparent through
-    // the Container, and its middle is the same line (symmetric `py`).
+    // paragraph's bottom; the tinted box is TintedBand's middle box — the
+    // band's root <section> (the nearest one around the biography's own
+    // <section>), second child after the fade in — and its middle is the same
+    // line (symmetric `py`). Found from the band's root, never by counting
+    // parents up from the card: §15.32 round 4 put a wrapper between the
+    // Container and the grid.
     const opener = aboutHeading.parentElement?.getBoundingClientRect();
-    const tinted =
-      schedule.parentElement?.parentElement?.parentElement?.getBoundingClientRect();
+    const band = aboutHeading
+      .closest('section')
+      ?.parentElement?.closest('section');
+    const tinted = band?.children[1]?.getBoundingClientRect();
     if (!opener || !tinted)
       throw new Error('doctor story: the about band lost its boxes');
     const cardMiddle = (card.top + card.bottom) / 2;
@@ -561,8 +599,12 @@ const expectProfile = async (
     // Not vacuous: the card sits INSIDE the block at both ends.
     await expect(card.top).toBeGreaterThan(opener.top + 1);
     await expect(last.bottom).toBeGreaterThan(card.bottom + 1);
-    // ONE WIDTH, 20rem (round 2k, D53: "fixed and remain fixed").
-    await expect(Math.abs(card.width - 20 * rem())).toBeLessThanOrEqual(1);
+    // ONE WIDTH, 20rem (round 2k, D53: "fixed and remain fixed") — 320
+    // design pixels, so the theme's 20rem outside the scale and 320 × s
+    // inside it (§15.32 round 4: the one width holds in the design's pixel).
+    await expect(
+      Math.abs(card.width - 320 * unitAt(schedule)),
+    ).toBeLessThanOrEqual(1);
     return 'beside';
   }
   await expect(card.top).toBeGreaterThanOrEqual(last.bottom);
@@ -570,10 +612,13 @@ const expectProfile = async (
   // prose; only a column narrower than 20rem shrinks it — since 2026-10-09's
   // phone gutter only the narrowest phones' is (288px at 320; at 390 the
   // column is 351px, so the card keeps its 20rem, centred), where every phone
-  // column was before (312px at 390, 256 at 320).
+  // column was before (312px at 390, 256 at 320). Never in the scale: a
+  // stacked band is under the step (`unitAt` is then the theme's own pixel).
   const stackedColumn = columnOf(schedule).getBoundingClientRect();
   await expect(
-    Math.abs(card.width - Math.min(20 * rem(), stackedColumn.width)),
+    Math.abs(
+      card.width - Math.min(320 * unitAt(schedule), stackedColumn.width),
+    ),
   ).toBeLessThanOrEqual(1);
   await expect(
     Math.abs(
@@ -603,8 +648,13 @@ const expectCourses = async (
   // group → the rail (the column of groups itself since D44)
   const railEl = parentOf(groups[0]);
   const rail = railEl.getBoundingClientRect();
-  const lineX = rail.left + 0.375 * rem();
-  const GAP = 5 * rem();
+  // The timeline's lengths in its band's design pixel (`unitAt`, §15.32
+  // round 4): the line 6 in, the groups 80 apart, a stretch stopping 4 short
+  // of the next group, the years 30 tall — the theme's own rem outside the
+  // scale, the same numbers × s inside it.
+  const unit = unitAt(railEl);
+  const lineX = rail.left + 6 * unit;
+  const GAP = 80 * unit;
   const GREY = 'rgb(216, 212, 207)';
 
   const boxes = groups.map((group) => group.getBoundingClientRect());
@@ -646,7 +696,7 @@ const expectCourses = async (
     const nextBox = boxes[index + 1];
     await expect(
       Math.abs(
-        stretch.bottom - (nextBox ? nextBox.top - 0.25 * rem() : box.bottom),
+        stretch.bottom - (nextBox ? nextBox.top - 4 * unit : box.bottom),
       ),
     ).toBeLessThanOrEqual(1);
     if (nextBox) {
@@ -657,10 +707,11 @@ const expectCourses = async (
     }
     await expect(dotY).toBeGreaterThanOrEqual(year.top);
     await expect(dotY).toBeLessThanOrEqual(year.bottom);
-    // The year on the `section` step, bold in either tone (D44a, D16).
-    await expect(getComputedStyle(years[index]).fontSize).toBe(
-      `${1.875 * rem()}px`,
-    );
+    // The year on the `section` step, bold in either tone (D44a, D16): 30
+    // design pixels (`unit` above).
+    await expect(
+      Math.abs(parseFloat(getComputedStyle(years[index]).fontSize) - 30 * unit),
+    ).toBeLessThanOrEqual(0.05);
     await expect(
       Number(getComputedStyle(years[index]).fontWeight),
     ).toBeGreaterThanOrEqual(700);
@@ -724,6 +775,128 @@ const expectStats = async (tiles: readonly HTMLElement[]): Promise<Branch> => {
     }
   }
   return perRow === 4 ? 'beside' : 'stacked';
+};
+
+/** A band's opener, as SectionHeading draws it: the eyebrow is the <p> right
+ *  before the heading, inside the same root. */
+const eyebrowOf = (title: HTMLElement): HTMLElement => {
+  const eyebrow = title.previousElementSibling;
+  if (!(eyebrow instanceof HTMLElement) || eyebrow.tagName !== 'P')
+    throw new Error('doctor story: a band title lost its eyebrow');
+  return eyebrow;
+};
+
+const fontSizeOf = (element: Element): number =>
+  parseFloat(getComputedStyle(element).fontSize);
+
+/**
+ * THE WHOLE PAGE IN THE BAND SCALE (CLAUDE.md §15.32 round 4; the owner,
+ * 2026-10-13: "take current heading and eyebrow from main page. look how
+ * reactive and nice it is. make the exact same thing with the heading and
+ * eyebrow from the individual dr page" — then "Whole page, like Home"). On a
+ * laptop or a desktop — a fine pointer, an engine that registers custom
+ * properties, ui/Container's column at least max(56rem, 896px) — EVERY band
+ * of this page stands in the scale and draws in ONE design pixel, min(column,
+ * 96rem) / 1106, Home's; on a phone or a touch tablet none does and every
+ * size is the theme's (§7). So, in both cases, every band opener is Home's:
+ * its eyebrow 14 design pixels and its <h2> on the `band` step (36, or 30 in
+ * a column under 28rem — only ever outside the scale), and the two card
+ * openers the same steps against their own card. Inside the scale the band
+ * openers also stand on ONE left edge — the column's — but for the tinted
+ * band's prose, 32 design pixels outdented (D14), and the tiles' opener,
+ * centred (D30); and the name, the page's <h1>, is the `hero` step's value at
+ * the owner's 1401 window, 16.26 spacing steps (DoctorIntro's THE BAND
+ * SCALE). Outside it the name is the `hero` clamp itself. Returns whether the
+ * page was in the scale, so a story can say which it expects.
+ */
+const expectScale = async (parts: {
+  name: HTMLElement;
+  position: HTMLElement;
+  credo: HTMLElement;
+  about: HTMLElement;
+  schedule: HTMLElement;
+  courses: HTMLElement;
+  stats: HTMLElement;
+  map: HTMLElement;
+}): Promise<boolean> => {
+  // ui/Container's column — the about title's nearest size container: nothing
+  // between the two is one (DoctorProfile's wrapper carries no `@container`).
+  const column = columnOf(parts.about).getBoundingClientRect().width;
+  const regime =
+    window.matchMedia('(pointer: fine)').matches &&
+    CSS.supports('color', 'rgb(from red r g b)') &&
+    column >= Math.max(56 * rem(), 896);
+  const unit = regime ? Math.min(column, 96 * rem()) / 1106 : rem() / 16;
+  const near = async (
+    actual: number,
+    expected: number,
+    what: string,
+    tolerance = 0.05,
+  ): Promise<void> => {
+    // Written as NOT within, never as beyond: a NaN — a lost element, an
+    // unregistered `--scale-px` — is within nothing, so it fails here instead
+    // of passing every comparison silently (G2 typescript, LOW-2).
+    if (!(Math.abs(actual - expected) <= tolerance))
+      throw new Error(
+        `doctor story: ${what} — ${actual.toFixed(3)} where ${expected.toFixed(3)} is due (the design pixel ${unit.toFixed(5)})`,
+      );
+  };
+
+  const titleOf = (region: HTMLElement): HTMLElement =>
+    within(region).getAllByRole('heading', { level: 2 })[0];
+  const openers = [
+    ['the credo card', titleOf(parts.credo)],
+    ['the biography', parts.about],
+    ['the week', titleOf(parts.schedule)],
+    ['the courses', titleOf(parts.courses)],
+    ['the tiles', titleOf(parts.stats)],
+    ['the map', titleOf(parts.map)],
+  ] as const;
+
+  // EVERY BAND IN, OR EVERY BAND OUT — and in, all on the page's ONE pixel.
+  for (const element of [parts.name, ...openers.map(([, title]) => title)]) {
+    await expect(remapped(element)).toBe(regime);
+    await near(unitAt(element), unit, 'a band’s design pixel', 0.0001);
+  }
+
+  // The band openers, and the two cards': the eyebrow 14, the title on the
+  // `band` step against its own nearest container (a card's for the two
+  // cards — ui/Card is one).
+  for (const [what, title] of openers) {
+    const step = contentWidthOf(columnOf(title)) >= 28 * rem() ? 36 : 30;
+    await near(fontSizeOf(title), step * unit, `${what}’s title`);
+    // The week's card has no eyebrow row (D37).
+    if (what !== 'the week')
+      await near(fontSizeOf(eyebrowOf(title)), 14 * unit, `${what}’s eyebrow`);
+  }
+  await near(fontSizeOf(parts.position), 14 * unit, 'the specialty');
+
+  // The name: the design's 65.04 inside the scale, the `hero` clamp outside.
+  const hero = Math.min(
+    4.5 * rem(),
+    Math.max(2 * rem(), rem() + 0.035 * window.innerWidth),
+  );
+  await near(
+    fontSizeOf(parts.name),
+    regime ? 16.26 * 4 * unit : hero,
+    'the name',
+  );
+
+  if (regime) {
+    // ONE LEFT EDGE: the courses' and the map's titles on the band's own edge
+    // — the column's, and past the cap the capped box's — the biography's 32
+    // design pixels before it (D14's outdent).
+    const courses = titleOf(parts.courses).getBoundingClientRect().left;
+    const map = titleOf(parts.map).getBoundingClientRect().left;
+    await near(courses, map, 'the courses’ and the map’s left edge', 1);
+    await near(
+      parts.about.getBoundingClientRect().left + 32 * unit,
+      courses,
+      'the biography’s outdent',
+      1,
+    );
+  }
+  return regime;
 };
 
 /**
@@ -954,6 +1127,27 @@ const playPage =
     if (pinned === 'beside' && window.innerWidth >= 64 * rem())
       await expect(branches[0]).toBe('beside');
 
+    // THE WHOLE PAGE IN THE BAND SCALE (§15.32 round 4): every band in or
+    // every band out, and either way every opener Home's. NOT VACUOUS: from a
+    // 75rem window under a mouse the column is past max(56rem, 896px) by any
+    // gutter, so the page MUST be in the scale; under 48rem it cannot be.
+    const inScale = await expectScale({
+      name: heading,
+      position: canvas.getByText(doctor.position),
+      credo,
+      about,
+      schedule,
+      courses,
+      stats,
+      map,
+    });
+    if (
+      window.matchMedia('(pointer: fine)').matches &&
+      window.innerWidth >= 75 * rem()
+    )
+      await expect(inScale).toBe(true);
+    if (window.innerWidth < 48 * rem()) await expect(inScale).toBe(false);
+
     // §7: nothing on this page may make the DOCUMENT scroll sideways, at any
     // width — the 320px stress is a page-tier baseline, and a single unbroken
     // German compound pushing a band past the gutter would show up here first.
@@ -980,7 +1174,9 @@ const playPage =
  * one column down the timeline on the left (D34), newest first, all at rest
  * here — one year lights as it crosses the middle of the screen on scroll
  * (D35, D49); the four „în cifre" tiles on one row on the second tint; the
- * map last.
+ * map last. All of it drawn in the band scale (§15.32 round 4): this width's
+ * look is the owner's 1401 window magnified about 1.1×, every eyebrow and
+ * title the size Home's are here.
  */
 export const Romanian: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },

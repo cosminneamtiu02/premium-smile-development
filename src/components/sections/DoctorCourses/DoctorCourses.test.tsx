@@ -9,7 +9,11 @@ import {
   expectTypeOf,
   it,
 } from 'vitest';
-import { containerClasses } from '@/components/ui/Container/Container';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from '@/components/ui/Container/Container';
 import { Heading } from '@/components/ui/Heading/Heading';
 import {
   DoctorCourses,
@@ -39,8 +43,15 @@ import source from './DoctorCourses.tsx?raw';
 // this repo follows. What needs real CSS — the stretches of line down the
 // left at every width, each stopping 0.25rem above the next group (D50),
 // every dot's centre ON its stretch, the rail's 56rem cap, the <h3>'s computed bold, the fade, the
-// current year's colours and its forward motion — is asserted one tier up,
-// in DoctorCourses.stories.tsx's play functions.
+// current year's colours and its forward motion, and THE BAND SCALE's
+// computed sizes (2026-10-13 — every length in the design pixel on a laptop
+// or desktop, the theme's own on a phone) — is asserted one tier up, in
+// DoctorCourses.stories.tsx's play functions, and the scale's sizes at the
+// columns no story pin reaches (a laptop's under the step, the reference,
+// past the cap) in DoctorCourses.scale.test.tsx, which loads the stylesheet
+// (one premise per file). What a class can show of the scale — which box
+// wears ui/Container's two strings, and that every length here is a theme
+// step the design pixel can reach — is pinned below.
 //
 // ── THE BAND HAS ONE ISLAND SINCE ROUND 2g (D35): ./CourseTimeline, the rail
 // and the year groups with the year being read lit. Its own suite
@@ -103,7 +114,12 @@ const GROUPS = [
 // deliberately NOT among them:
 // it is imported from ui/Container, because
 // tests/unit/gutter-single-spelling.test.ts fences src/ against a second
-// spelling of the clamp. The <h3>'s ATOM classes are not among them either:
+// spelling of the clamp — and neither are THE BAND SCALE's two strings the
+// rhythm box wears after its `py` since 2026-10-13: imported from the same
+// module and compared as imported, because tests/unit/design-scale.test.ts
+// holds them to ONE spelling, ui/Container's (and a bracketed design-pixel
+// declaration spelled anywhere else would ship a CSS rule nobody wears). The
+// <h3>'s ATOM classes are not among them either:
 // they are ui/Heading's, derived below from a rendered atom
 // (`restTitleClasses`), so a retuned tone row moves this suite with it
 // instead of against it.
@@ -112,7 +128,12 @@ const GROUPS = [
  *  the `@supports not` gate, the reviews band's spelling. */
 const BAND =
   'overflow-x-clip supports-[not_(overflow:clip)]:overflow-x-hidden wrap-anywhere bg-page';
-const RHYTHM_BOX = 'py-12 @lg:py-16 @3xl:py-20';
+/** The rhythm box's own rhythm — the band-owned `py` on container steps. */
+const RHYTHM_PY = 'py-12 @lg:py-16 @3xl:py-20';
+/** The rhythm box as it renders: its `py`, then ui/Container's band-scale
+ *  column and pixel, in the order cx() writes them (DoctorCourses.tsx's THE
+ *  BAND SCALE; ui/Container's recipe rule 5). */
+const RHYTHM_BOX = `${RHYTHM_PY} ${bandColumnClasses} ${bandScaleClasses}`;
 const RAIL = 'mt-8 flex max-w-4xl flex-col gap-20 @lg:mt-10 @3xl:mt-12';
 const GROUP_REST =
   'relative origin-left ps-10 duration-300 motion-reduce:transition-none transition-[opacity,scale] opacity-65';
@@ -132,6 +153,25 @@ const ITEM = 'text-lg';
  *  every-element walks further down — reads every element of the band. */
 const tokensOf = (element: Element): string[] =>
   (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/** A class token's variants — every `:`-separated part before its utility,
+ *  read OUTSIDE brackets and parentheses, so the colon inside an arbitrary
+ *  property (THE BAND SCALE's design pixel) or an `@supports` condition
+ *  (THE BELT's `not_(overflow:clip)`) never reads as a variant of its own. */
+const variantsOf = (token: string): string[] => {
+  const variants: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (const [index, char] of [...token].entries()) {
+    if (char === '[' || char === '(') depth += 1;
+    else if (char === ']' || char === ')') depth -= 1;
+    else if (char === ':' && depth === 0) {
+      variants.push(token.slice(start, index));
+      start = index + 1;
+    }
+  }
+  return variants;
+};
 
 /**
  * The class string ui/Heading emits for a RESTING year label, read off a
@@ -307,7 +347,7 @@ describe('DoctorCourses — the region landmark (§9)', () => {
     }
   });
 
-  it('takes its gutter from ui/Container, never a second spelling', () => {
+  it('takes its gutter and its band scale from ui/Container, never a second spelling', () => {
     const { container } = renderBand();
 
     expect(columnOf(container).className).toBe(containerClasses);
@@ -605,8 +645,18 @@ describe('DoctorCourses — the lit year is decided after mount (D35, §16 rule 
 });
 
 describe('DoctorCourses — container steps only, ONE island (§6.5, §16)', () => {
-  it('carries no media queries anywhere — those are the page’s (§6.5)', () => {
+  it('carries no width media query anywhere — a width is a container step, and the one media feature it reads, the band scale’s pointer gate, rides in ui/Container’s strings alone (§6.5)', () => {
+    // Since 2026-10-13 (THE BAND SCALE) the rhythm box wears `scalable:` —
+    // globals.css's variant, `@media (pointer: fine)` inside an `@supports`:
+    // it asks WHICH INPUT the visitor has, never how wide the window is, and
+    // after it a class names container steps (`@4xl`, the `@min-[896px]`
+    // floor — the `@` is the container's) or nothing at all (the cap). The
+    // viewport forms stay banned: a named breakpoint, and Tailwind's
+    // arbitrary `min-[…]:` / `max-[…]:` — anchored at a variant's start, so
+    // the container's own `@min-[…]:` is never mistaken for one (the
+    // DoctorStats and TeamRoster spelling).
     const { container } = renderBand();
+    let gated = 0;
 
     for (const element of [
       bandOf(container),
@@ -614,9 +664,23 @@ describe('DoctorCourses — container steps only, ONE island (§6.5, §16)', () 
     ]) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
-        expect(token).not.toMatch(/(min|max)-\[/);
+        expect(token).not.toMatch(/(^|:)(min|max)-\[/);
+        const variants = variantsOf(token);
+        if (!variants.includes('scalable')) continue;
+        gated += 1;
+        expect(variants[0], token).toBe('scalable');
+        for (const variant of variants.slice(1)) {
+          expect(variant, token).toMatch(/^@/);
+        }
       }
     }
+    // Never vacuous: the gate is worn exactly as often as ui/Container's two
+    // strings carry it — the cap, the design pixel, the remap.
+    const worn = `${bandColumnClasses} ${bandScaleClasses}`
+      .split(/\s+/)
+      .filter((token) => token.startsWith('scalable:')).length;
+    expect(worn).toBeGreaterThan(0);
+    expect(gated).toBe(worn);
   });
 
   it('keeps prose start-aligned everywhere in the band (§15.15 b)', () => {
@@ -699,6 +763,107 @@ describe('DoctorCourses — container steps only, ONE island (§6.5, §16)', () 
   });
 });
 
+describe('DoctorCourses — THE BAND SCALE, the class contract (2026-10-13, §15.32 round 4)', () => {
+  /** An element's classes behind globals.css's `scalable:` gate — the cap,
+   *  the design pixel and the remap all wear it outermost
+   *  (tests/unit/design-scale.test.ts). */
+  const gatedOf = (element: Element): string[] =>
+    tokensOf(element).filter((token) => variantsOf(token).includes('scalable'));
+
+  it('wears BOTH of ui/Container’s strings on the rhythm box — after its `py`, in the order cx() writes them — and the gate on no other element', () => {
+    // ui/Container's recipe rule 5: the RHYTHM box, the first inside the
+    // Container — never the Container itself (an element cannot query its
+    // own size, and the regime's `@4xl` reads the Container), never the
+    // <section> (outside the container context the step would never match),
+    // never a box inside (the remap is inherited: one declaration redraws the
+    // opener, the rail and every group under it).
+    const { container } = renderBand();
+    const rhythm = rhythmOf(container);
+
+    expect(tokensOf(rhythm)).toEqual([
+      ...RHYTHM_PY.split(' '),
+      ...bandColumnClasses.split(' '),
+      ...bandScaleClasses.split(' '),
+    ]);
+    expect(gatedOf(rhythm).length).toBeGreaterThan(0);
+    const everyElement = [
+      bandOf(container),
+      ...bandOf(container).querySelectorAll('*'),
+    ];
+    expect(everyElement).toContain(rhythm);
+    for (const element of everyElement) {
+      if (element !== rhythm) expect(gatedOf(element)).toEqual([]);
+    }
+  });
+
+  it('takes THE BAND SCALE from ui/Container by import — the atom and its two strings — and spells nothing of the scale itself', () => {
+    // The band names exactly three things from the Container module. Its own
+    // code spells no gated class, no design pixel, no remap and neither of
+    // the two variables a band may set: those live in ui/Container and
+    // globals.css alone (tests/unit/design-scale.test.ts holds the whole
+    // repository to that; DoctorStats.test.tsx pins its band the same way).
+    const names =
+      /^import\s*\{([^}]*)\}\s*from\s*'@\/components\/ui\/Container\/Container';/m
+        .exec(CODE)?.[1]
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .toSorted();
+    expect(names).toEqual([
+      'Container',
+      'bandColumnClasses',
+      'bandScaleClasses',
+    ]);
+    expect(CODE).not.toMatch(/scalable:|design-scale|--scale-px/);
+    expect(CODE).not.toMatch(/--band-zoom|--band-floor/);
+  });
+
+  it('spells every length of the band in a theme step — no arbitrary length anywhere, and the dots’ 4px ring the one px utility (the audit, 2026-10-13)', () => {
+    // The design pixel redraws the THEME's variables (globals.css, THE DESIGN
+    // SCALE), so a length spelled as a literal — a dot seated at 1.125rem in
+    // brackets instead of on the spacing step, say — would keep its rem while
+    // everything round it scales: the
+    // "disproportioned" the owner named, in one box, with no class diff to
+    // show it. So, outside ui/Container's own three strings, the only
+    // bracketed classes in the band at rest are the belt's `@supports`
+    // condition and two transition LISTS — none a length — and the only
+    // utility that draws a fixed px is the dots' `ring-4`, which stays 4px
+    // inside the scale by design (DoctorCourses.tsx's THE BAND SCALE). The
+    // lit state's classes are CourseTimeline.test.tsx's to audit.
+    const { container } = renderBand();
+    const own = new Set(
+      [containerClasses, bandColumnClasses, bandScaleClasses].flatMap((s) =>
+        s.split(' '),
+      ),
+    );
+    const tokens = [
+      bandOf(container),
+      ...bandOf(container).querySelectorAll('*'),
+    ]
+      .flatMap(tokensOf)
+      .filter((token) => !own.has(token));
+    const distinct = (list: string[]): string[] =>
+      [...new Set(list)].toSorted();
+
+    // Never vacuous: the band's own classes are really read.
+    expect(tokens).toEqual(expect.arrayContaining(['gap-20', 'top-3']));
+    expect(distinct(tokens.filter((token) => token.includes('[')))).toEqual([
+      'supports-[not_(overflow:clip)]:overflow-x-hidden',
+      'transition-[background-color,scale]',
+      'transition-[opacity,scale]',
+    ]);
+    expect(
+      distinct(
+        tokens.filter((token) =>
+          /(^|:)-?(border|ring|outline|divide|ring-offset|outline-offset|underline-offset|decoration)(-[xytrblse])?(-\d+)?$|-px$/.test(
+            token,
+          ),
+        ),
+      ),
+    ).toEqual(['ring-4']);
+  });
+});
+
 describe('DoctorCourses — type-level pins', () => {
   it('pins the surface those negatives are read against', () => {
     // Never-vacuous guard (the ui/Card precedent): if the props type ever
@@ -745,9 +910,17 @@ describe('DoctorCourses — type-level pins', () => {
     const fragments: CourseGroup = { year: '2024', courses: PIECES };
     // @ts-expect-error — the groups are REQUIRED; "no courses" is an empty list
     const bare: DoctorCoursesProps = { eyebrow: EYEBROW, title: TITLE };
+    // @ts-expect-error — THE BAND SCALE is unconditional: no prop switches it off
+    const switched: DoctorCoursesProps = { ...BAND, scaled: false };
 
-    expect([nested, renamed, repaired, numeric, fragments, bare]).toHaveLength(
-      6,
-    );
+    expect([
+      nested,
+      renamed,
+      repaired,
+      numeric,
+      fragments,
+      bare,
+      switched,
+    ]).toHaveLength(7);
   });
 });

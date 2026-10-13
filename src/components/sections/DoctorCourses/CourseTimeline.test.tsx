@@ -691,6 +691,62 @@ describe('CourseTimeline — source pins (§16)', () => {
     expect(CODE).not.toMatch(/next-intl|\buseTranslations\b|\bt\(/);
     expect(CODE).not.toMatch(/@\/lib\/(clinic|prices|reviews|team|routes)/);
   });
+
+  it('names nothing of THE BAND SCALE — the band’s rhythm box wears it, and the remapped theme reaches every class here (2026-10-13)', () => {
+    // The island is drawn in the design pixel on a laptop or desktop because
+    // it stands inside the rhythm box that wears ui/Container's two strings
+    // (DoctorCourses.tsx's THE BAND SCALE): the remap is inherited through
+    // the theme's variables. Naming the scale here would be a second
+    // spelling (tests/unit/design-scale.test.ts holds every product file to
+    // one), and wearing it again would compute a second, unzoomed pixel.
+    expect(CODE).not.toMatch(/scalable:|design-scale|--scale-px/);
+    expect(CODE).not.toMatch(
+      /bandScaleClasses|bandColumnClasses|--band-zoom|--band-floor/,
+    );
+  });
+});
+
+describe('CourseTimeline — every length a theme step, at rest and lit (the band-scale audit, 2026-10-13)', () => {
+  it('spells no arbitrary length in either state, and the dots’ 4px ring is the one px utility — so the design pixel reaches the whole rail', async () => {
+    // Inside THE BAND SCALE (DoctorCourses.tsx's paragraph of that name) the
+    // design pixel redraws the theme's variables — the spacing step, the
+    // text, container and radius steps — so every length this island spells
+    // on a step grows and shrinks with the band, and a length spelled as a
+    // bracketed literal would not. Read in BOTH states at once: a group lit
+    // (its `scale-104`, its dot's `scale-125`, the two animations — unitless,
+    // so they follow) beside the resting ones. The only bracketed classes are
+    // the two per-state transition LISTS (THE CLOCKS), none a length; the
+    // only fixed-px utility is the dots' `ring-4`, which stays 4px by design.
+    const { container } = mountOnPage();
+    const rail = railOf(container);
+    const middleOf = stretch(rail);
+    await scrollToY(middleOf(groupsOf(rail)[0]));
+    expect(lit(rail)).toEqual([groupsOf(rail)[0]]);
+
+    const tokens = [rail, ...rail.querySelectorAll('*')].flatMap((element) =>
+      (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean),
+    );
+    const distinct = (list: string[]): string[] =>
+      [...new Set(list)].toSorted();
+
+    // Never vacuous: both states' classes are really read.
+    expect(tokens).toEqual(
+      expect.arrayContaining(['scale-104', 'opacity-65', 'top-3', 'gap-20']),
+    );
+    expect(distinct(tokens.filter((token) => token.includes('[')))).toEqual([
+      'transition-[background-color,scale]',
+      'transition-[opacity,scale]',
+    ]);
+    expect(
+      distinct(
+        tokens.filter((token) =>
+          /(^|:)-?(border|ring|outline|divide|ring-offset|outline-offset|underline-offset|decoration)(-[xytrblse])?(-\d+)?$|-px$/.test(
+            token,
+          ),
+        ),
+      ),
+    ).toEqual(['ring-4']);
+  });
 });
 
 describe('CourseTimeline — the tokens its animations are minted from (globals.css @theme)', () => {

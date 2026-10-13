@@ -1,6 +1,13 @@
 import { createRef, StrictMode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import {
@@ -8,6 +15,7 @@ import {
   bandScaleClasses,
   containerClasses,
 } from '@/components/ui/Container/Container';
+import { PillButton } from '@/components/ui/PillButton/PillButton';
 import { TextButton } from '@/components/ui/TextButton/TextButton';
 import arrivalSource from './arrival.ts?raw';
 import cardSource from './CategoryCard.tsx?raw';
@@ -226,6 +234,39 @@ const variantsOf = (token: string): string[] => {
   return variants;
 };
 
+/** THE CONTAINER GUARD (the 'measures the CONTAINER' test below): does a
+ *  variant ask the WINDOW's size — a breakpoint, an arbitrary `min-`/`max-`
+ *  width, an arbitrary `[@media…]`, or the window's orientation? Read on its
+ *  form with every leading `not-` STRIPPED, so a negated breakpoint is one
+ *  too (G2 typescript, 2026-10-10: `not-md`, `not-max-sm` and
+ *  `not-[@media(…)]` slipped past the first reading, and `landscape` /
+ *  `portrait` were not counted at all). `pointer-fine` and its negation ask
+ *  the device, not the window. */
+const VIEWPORT_VARIANT =
+  /^(?:(?:max-|min-)?(?:sm|md|lg|xl|2xl)|(?:min|max)-\[.*|\[@media.*|landscape|portrait)$/;
+const asksTheWindow = (variant: string): boolean =>
+  VIEWPORT_VARIANT.test(variant.replace(/^(?:not-)+/, ''));
+
+/** The page-level media chains the menu documents (PriceList.tsx's THE GATE,
+ *  PriceMenu.tsx's THE STRIP'S CLEARANCE) — compared in their RAW spelling,
+ *  so a negation can never pose as one (`not-min-[60rem]` is not
+ *  `min-[60rem]`). */
+const ALLOWED_MEDIA = new Set([
+  'min-[60rem]',
+  '[@media(min-height:30rem)]',
+  '[@media(min-height:30rem)] max-[60rem]',
+]);
+
+/** THE CONTAINER GUARD on one class's variant chain: true when it passes — no
+ *  window variant at all, or exactly one documented media chain, the rail's
+ *  `min-[60rem]` always under `pointer-fine`. */
+const passesTheContainerGuard = (chain: readonly string[]): boolean => {
+  const media = chain.filter(asksTheWindow);
+  if (media.length === 0) return true;
+  if (!ALLOWED_MEDIA.has(media.join(' '))) return false;
+  return !media.includes('min-[60rem]') || chain.includes('pointer-fine');
+};
+
 /** A class's UTILITY — what is left after its last top-level colon. */
 const utilityOf = (token: string): string => {
   const variants = variantsOf(token);
@@ -234,10 +275,39 @@ const utilityOf = (token: string): string => {
     : token.slice(variants.join(':').length + 1);
 };
 
-const menuLinks = (): HTMLElement[] =>
-  within(screen.getByRole('navigation', { name: MENU_TITLE })).getAllByRole(
-    'link',
-  );
+/** THE TWO PRESENTATIONS (owner 2026-10-09 — PriceMenu.tsx's paragraph of
+ *  that name): ONE <nav>, the RAIL's card with its list, and the STRIP's list
+ *  of chips. This project loads no stylesheet, so BOTH lists render and both
+ *  are in the tab order here; the suites below drive the rail's list — the
+ *  presentation the band has always tested, and the one the island's watcher
+ *  answers when both have a box — and the strip's by its own id. */
+const STRIP_ID = `${PRICE_MENU_ID}-strip`;
+
+/** The rail's card — the box the <h2> sits in (ui/Card, no longer `asChild`
+ *  onto the <nav>). Found through the title's id, not its role: in the
+ *  strip's state the rail is `display: none` and its heading leaves the
+ *  accessibility tree, and the helpers must still reach it. */
+const railCard = (): HTMLElement =>
+  document.getElementById(`${PRICE_MENU_ID}-title`)
+    ?.parentElement as HTMLElement;
+
+/** The rail's box — the card's parent, the element the rail's gate shows. */
+const railBox = (): HTMLElement => railCard().parentElement as HTMLElement;
+
+/** The rail's list of links. */
+const railList = (): HTMLElement => within(railCard()).getByRole('list');
+
+/** The strip's list of chips. */
+const stripList = (): HTMLElement =>
+  document.getElementById(STRIP_ID) as HTMLElement;
+
+/** The rail's links, in order — what every suite here that says "the menu"
+ *  means. */
+const menuLinks = (): HTMLElement[] => within(railList()).getAllByRole('link');
+
+/** The strip's chips, in order. */
+const stripLinks = (): HTMLElement[] =>
+  within(stripList()).getAllByRole('link');
 
 const nextFrame = (): Promise<void> =>
   new Promise((resolve) => requestAnimationFrame(() => resolve()));
@@ -321,6 +391,10 @@ const ARRIVAL_CODE = stripComments(arrivalSource);
 // scroll position and the inline styles back, or the next test file inherits
 // a hash, an offset and a 4500px-tall document that have nothing to do with it.
 afterEach(() => {
+  // The island FIRST: its watcher restores the root's own inline
+  // scroll-padding when it leaves (THE STRIP'S CLEARANCE), so it must leave
+  // before the root is put back below — or a test's 96px would outlive it.
+  cleanup();
   if (window.location.hash !== '') {
     window.history.replaceState(
       null,
@@ -335,17 +409,22 @@ afterEach(() => {
 });
 
 describe('PriceList — the band', () => {
-  it('is a full-bleed <section> that paints the page ground and names nothing', () => {
+  it('is a full-bleed <section> that paints the page ground, clips its x overflow, and names nothing', () => {
     // The band deliberately carries no aria-labelledby of its own: the PAGE
     // owns the intro heading above it and names it from there (board §3.1).
     // Spelling a role would be redundant ARIA (§9, semantic HTML first).
+    // `overflow-x-clip` is the strip's belt (2026-10-09, PriceList.tsx's band
+    // root comment): a 100vw strip overshoots by a classic scrollbar — and
+    // NEVER `overflow-x-hidden`, the ReviewsCarousel's fallback, which would
+    // make the band a scroll container and kill both sticky menus.
     const { container } = mount();
     const band = bandOf(container);
 
     expect(band.tagName).toBe('SECTION');
     expect(band).not.toHaveAttribute('role');
     expect(band).not.toHaveAttribute('aria-labelledby');
-    expect(band.className).toBe('bg-page');
+    expect(band.className).toBe('overflow-x-clip bg-page');
+    expect(band.className).not.toMatch(/overflow-x-hidden|overflow-hidden/);
   });
 
   it('merges the caller className LAST, keeping the band’s own class first', () => {
@@ -360,7 +439,9 @@ describe('PriceList — the band', () => {
       />,
     );
 
-    expect(bandOf(container).className).toBe('bg-page col-span-2');
+    expect(bandOf(container).className).toBe(
+      'overflow-x-clip bg-page col-span-2',
+    );
   });
 
   it('spreads remaining native props onto the root <section>', () => {
@@ -421,16 +502,18 @@ describe('PriceList — the band', () => {
         '@3xl:py-20',
         // The menu's floor in the SPACING STEP — sixty of them, 15rem outside
         // the band scale and 240 design pixels inside it (PriceList.tsx's THE
-        // TWO TRACKS): a literal rem floor would not follow the scale.
-        '@3xl:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr]',
+        // TWO TRACKS): a literal rem floor would not follow the scale. Behind
+        // the RAIL's gate since 2026-10-09 — a fine pointer AND the column's
+        // `@3xl` — because a touch screen keeps one column and the strip.
+        'pointer-fine:min-[60rem]:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr]',
         // Without it a grid item is stretched to the row's height and the
         // sticky menu has nothing left to stick against (board §3.3).
-        '@3xl:items-start',
+        'pointer-fine:min-[60rem]:items-start',
       ]),
     );
   });
 
-  it('measures the CONTAINER, never the viewport (§6.5), in NAMED steps only — bar the band scale’s own chain, which arrives whole from ui/Container', () => {
+  it('measures the CONTAINER, never the viewport (§6.5), in NAMED steps only — bar the band scale’s own chain, and bar the menu’s one documented page-level MEDIA gate', () => {
     // A media query here would react to the window instead of the boxes the
     // band actually occupies. Read VARIANT BY VARIANT along every class's
     // chain, never as a substring — `@3xl:` legitimately contains "xl:", and a
@@ -442,7 +525,6 @@ describe('PriceList — the band', () => {
     // spelling by tests/unit/design-scale.test.ts, not by this band.
     const { container } = mount();
     const band = bandOf(container);
-    const viewportVariant = /^(max-|min-)?(sm|md|lg|xl|2xl)$|^(min|max)-\[/;
     const named = /^@(3xs|2xs|xs|sm|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl)$/;
     const fromTheScale = new Set([
       ...bandColumnClasses.split(' '),
@@ -454,14 +536,46 @@ describe('PriceList — the band', () => {
       .flatMap((el) => tokensOf(el))
       .filter((c) => !fromTheScale.has(c))
       .map(variantsOf);
+    // THE ONE MEDIA GATE (G2, 2026-10-09 — PriceList.tsx's THE GATE,
+    // PriceMenu.tsx's THE STRIP'S CLEARANCE): the menu's two presentations,
+    // its stick and the root's clearance must flip on ONE boundary, and the
+    // clearance is a rule on the ROOT, which can ask the window but never a
+    // container — so exactly these page-level media chains may appear, each a
+    // WINDOW property and documented: the rail's `min-[60rem]` (always under
+    // `pointer-fine`), the stick's `[@media(min-height:30rem)]`, and the
+    // clearance's `[@media(min-height:30rem)]` + `max-[60rem]`. No other
+    // window width may enter the band (passesTheContainerGuard, above).
     for (const chain of chains) {
-      expect(chain.filter((v) => viewportVariant.test(v))).toEqual([]);
+      expect(passesTheContainerGuard(chain), chain.join(':')).toBe(true);
     }
 
     const steps = chains.flat().filter((v) => v.startsWith('@'));
     expect(steps.length).toBeGreaterThan(0);
     // No custom container step may enter the untouched default scale (§3).
     for (const step of steps) expect(step).toMatch(named);
+  });
+
+  it('…and the guard has TEETH: a negated breakpoint, a negated arbitrary width or media query, the window’s orientation, and a negation posing as the rail’s own step all FAIL it', () => {
+    // Fed through the guard's own functions — so a guard that stops seeing
+    // any one of these fails here, not in a review.
+    const offenders: readonly (readonly string[])[] = [
+      ['not-md'],
+      ['not-max-sm'],
+      ['not-[@media(min-width:40rem)]'],
+      ['landscape'],
+      ['portrait'],
+      ['pointer-fine', 'not-min-[60rem]'],
+    ];
+    for (const chain of offenders) {
+      expect(passesTheContainerGuard(chain), chain.join(':')).toBe(false);
+    }
+    // …while what the band documents still passes — the device's pointer,
+    // negated or not, included.
+    expect(passesTheContainerGuard(['pointer-fine', 'min-[60rem]'])).toBe(true);
+    expect(passesTheContainerGuard(['not-pointer-fine'])).toBe(true);
+    expect(
+      passesTheContainerGuard(['[@media(min-height:30rem)]', 'max-[60rem]']),
+    ).toBe(true);
   });
 
   it('renders NOTHING at all for an empty tariff', () => {
@@ -554,59 +668,95 @@ describe('PriceList — the jump menu', () => {
     expect(tokensOf(title)).not.toContain('text-4xl');
   });
 
-  it('wears ui/Card’s surface AND its aura on the nav itself (asChild, no wrapper)', () => {
+  it('holds ui/Card’s surface AND its aura on the RAIL’s own card inside the <nav> — no longer asChild onto it (2026-10-09)', () => {
     mount();
     const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    const card = railCard();
 
     // The card's own marks, derived from the atom rather than retyped: the
     // container context (Card D10), the surface row, and the glow the band
-    // asks for with ui/Card's `aura` prop (owner 2026-09-14).
-    expect(tokensOf(menu)).toEqual(
+    // asks for with ui/Card's `aura` prop (owner 2026-09-14) — on the rail's
+    // card, the box the <h2> and the list sit in.
+    expect(tokensOf(card)).toEqual(
       expect.arrayContaining(['@container', 'bg-surface', 'p-6', AURA]),
     );
-    // The menu card is NOT armed: no token of the nav starts with `before:` —
-    // its glow is WORN, for good, where every category card's is armed and
-    // shown only while the island marks it (owner 2026-09-29).
-    expect(tokensOf(menu).filter((t) => t.startsWith('before:'))).toEqual([]);
-    // …and the placement className is merged after them (ui/slot.ts). 8.5rem
-    // of offset = the pill's 6rem reach + 2.5rem that clears its glow, both
-    // rem LITERALS the band scale cannot remap (THE BAND SCALE block below),
-    // and the ONE rule lib/sticky-rail's 'travel' mode asks for, under the
-    // same container gate.
-    expect(tokensOf(menu)).toEqual(
-      expect.arrayContaining([
-        'scroll-mt-[2.5rem]',
-        '@3xl:sticky',
-        '@3xl:top-[8.5rem]',
-        '@3xl:data-[rail=travel]:relative',
-      ]),
-    );
-    expect(menu.className.indexOf('@container')).toBeLessThan(
-      menu.className.indexOf('@3xl:sticky'),
-    );
-  });
-
-  it('is NEVER a scroll container — no height belt, no overflow (owner 2026-09-18)', () => {
-    // The belt (`max-h-[calc(100dvh-9.5rem)] overflow-y-auto`) made the card
-    // its own scroller on every laptop: the wheel scrolled the menu, not the
-    // page. Reversed for lib/sticky-rail's pinning; nothing on the nav may
-    // cap its height or clip its overflow again.
-    mount();
-    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
-
+    // The menu card is NOT armed: no token of it starts with `before:` — its
+    // glow is WORN, for good, where every category card's is armed and shown
+    // only while the island marks it (owner 2026-09-29).
+    expect(tokensOf(card).filter((t) => t.startsWith('before:'))).toEqual([]);
+    // The card sits in the rail's box, which only the rail's gate shows…
+    expect(card.parentElement).toBe(railBox());
+    expect(tokensOf(railBox())).toEqual([
+      'hidden',
+      'pointer-fine:min-[60rem]:block',
+    ]);
+    // …inside the <nav>, which now paints nothing of its own: no surface, no
+    // glow, no padding — the card is its child, not its clothes.
+    expect(railBox().parentElement).toBe(menu);
     expect(
-      tokensOf(menu).filter((c) => /overflow|max-h|dvh|h-\[/.test(c)),
+      tokensOf(menu).filter((t) =>
+        /^(bg-|p-|shadow-|border|@container)/.test(t),
+      ),
     ).toEqual([]);
   });
 
-  it('separates the title from the list with a rule, and nothing else', () => {
-    // The <ul>'s whole class list, exactly: the rule and its two paddings are
-    // the separation the owner asked for, `items-start` keeps each link
-    // hugging its own label, and there is no third idea in there.
+  it('makes the <nav> STICKY in both presentations — the strip’s line under the header pill by default, the rail’s 8.5rem behind its gate', () => {
+    // PriceMenu.tsx's THE TWO PRESENTATIONS and THE STRIP'S GEOMETRY, as the
+    // <nav>'s whole class list, exactly: the strip's base — stuck on the z-20
+    // seat ONLY FROM 30rem OF WINDOW HEIGHT (G2 a11y, 2026-10-09), at the
+    // header pill's flow box (the SEVENTH coupled spelling — THE STRIP FLOATS
+    // UNDER THE BAR, owner 2026-10-10: nothing of the strip behind the bar),
+    // its negative top margin cancelling the strip's 0.75rem of air at rest,
+    // and drawn back over the glow room under the chips — then the rail
+    // branch under `pointer-fine:min-[60rem]:`, restoring the side menu
+    // exactly: sticky at every height, the 8.5rem line (the FIFTH spelling),
+    // no z-index, no margins,
+    // the card's 6px corner for the focus ring, and the one rule lib/sticky-
+    // rail's 'travel' asks for. `min-w-0` keeps the nowrap row from blowing
+    // the band's single grid track out.
     mount();
-    const list = within(
-      screen.getByRole('navigation', { name: MENU_TITLE }),
-    ).getByRole('list');
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+
+    expect(tokensOf(menu)).toEqual([
+      'min-w-0',
+      'scroll-mt-[2.5rem]',
+      '[@media(min-height:30rem)]:supports-[selector(:has(*))]:sticky',
+      'top-[calc(6rem+2px)]',
+      'z-20',
+      '-mt-[0.75rem]',
+      '-mb-8',
+      'pointer-fine:min-[60rem]:sticky',
+      'pointer-fine:min-[60rem]:top-[8.5rem]',
+      'pointer-fine:min-[60rem]:z-auto',
+      'pointer-fine:min-[60rem]:mt-0',
+      'pointer-fine:min-[60rem]:mb-0',
+      'pointer-fine:min-[60rem]:rounded-md',
+      'pointer-fine:min-[60rem]:data-[rail=travel]:relative',
+    ]);
+  });
+
+  it('is NEVER a scroll container in the rail — no height belt, no overflow on the <nav> or its card (owner 2026-09-18)', () => {
+    // The belt (`max-h-[calc(100dvh-9.5rem)] overflow-y-auto`) made the card
+    // its own scroller on every laptop: the wheel scrolled the menu, not the
+    // page. Reversed for lib/sticky-rail's pinning; nothing on the nav or its
+    // card may cap its height or clip its overflow again. (The STRIP is a
+    // sideways scroller by design — its own box, never the rail's.)
+    mount();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+
+    for (const element of [menu, railBox(), railCard()]) {
+      expect(
+        tokensOf(element).filter((c) => /overflow|max-h|dvh|h-\[/.test(c)),
+      ).toEqual([]);
+    }
+  });
+
+  it('separates the title from the list with a rule, and nothing else', () => {
+    // The rail <ul>'s whole class list, exactly: the rule and its two
+    // paddings are the separation the owner asked for, `items-start` keeps
+    // each link hugging its own label, and there is no third idea in there.
+    mount();
+    const list = railList();
 
     expect(list.tagName).toBe('UL');
     expect(tokensOf(list)).toEqual([
@@ -621,36 +771,66 @@ describe('PriceList — the jump menu', () => {
     ]);
   });
 
-  it('prints ONE link per category, in the categories’ own order', () => {
+  it('prints ONE link per category in EACH list, in the categories’ own order — two lists in the one <nav>', () => {
     mount();
     const menu = screen.getByRole('navigation', { name: MENU_TITLE });
-    const links = within(menu).getAllByRole('link');
 
-    expect(links).toHaveLength(CATEGORIES.length);
-    expect(links.map((link) => link.textContent)).toEqual(
-      CATEGORIES.map((category) => category.name),
-    );
+    // Exactly two lists inside the landmark: the rail's and the strip's.
+    const lists = within(menu).getAllByRole('list');
+    expect(lists).toEqual([railList(), stripList()]);
+    for (const links of [menuLinks(), stripLinks()]) {
+      expect(links).toHaveLength(CATEGORIES.length);
+      expect(links.map((link) => link.textContent)).toEqual(
+        CATEGORIES.map((category) => category.name),
+      );
+    }
     // A list, because it IS one — "list, N items" is what a screen reader
     // announces. No role="list": WebKit only drops the semantics outside a
     // <nav> (eslint.config.mjs, jsx-a11y/list-role-for-webkit).
-    const list = within(menu).getByRole('list');
-    expect(within(list).getAllByRole('listitem')).toHaveLength(
-      CATEGORIES.length,
-    );
+    for (const list of lists) {
+      expect(within(list).getAllByRole('listitem')).toHaveLength(
+        CATEGORIES.length,
+      );
+    }
   });
 
-  it('points every link at a card that really exists on the page', () => {
-    // The menu and the cards are the same array printed twice, so this can
-    // only fail if the href spelling breaks — which is exactly what it guards.
+  it('points every link of BOTH lists at a card that really exists on the page', () => {
+    // The menu and the cards are the same array printed three times, so this
+    // can only fail if the href spelling breaks — which is exactly what it
+    // guards.
     const { container } = mount();
 
-    for (const [index, link] of menuLinks().entries()) {
-      const category = CATEGORIES[index];
-      expect(link).toHaveAttribute('href', `#${category.id}`);
-      const target = container.ownerDocument.getElementById(category.id);
-      expect(target).not.toBeNull();
-      expect(target?.tagName).toBe('SECTION');
+    for (const links of [menuLinks(), stripLinks()]) {
+      for (const [index, link] of links.entries()) {
+        const category = CATEGORIES[index];
+        expect(link).toHaveAttribute('href', `#${category.id}`);
+        const target = container.ownerDocument.getElementById(category.id);
+        expect(target).not.toBeNull();
+        expect(target?.tagName).toBe('SECTION');
+      }
     }
+  });
+
+  it('keeps the <nav>’s name „Categorii” while the rail — and its visible <h2> — is display: none (the strip’s state)', () => {
+    // THE TWO PRESENTATIONS: where the strip shows, the rail's box is
+    // `display: none`, the <h2> with it — and an accessible name READS a
+    // hidden referent of `aria-labelledby`, so the landmark keeps its name.
+    // No stylesheet here: the rail's gate is emulated on its box.
+    mount();
+    railBox().style.display = 'none';
+
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    expect(menu).toHaveAttribute('aria-labelledby', `${PRICE_MENU_ID}-title`);
+    // …and the title is out of the accessibility tree — no visible heading in
+    // the strip's state — while the strip's links are in it.
+    expect(
+      within(menu).queryByRole('heading', { name: MENU_TITLE }),
+    ).toBeNull();
+    expect(
+      within(menu)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(CATEGORIES.map((category) => category.name));
   });
 
   it('dresses each link as ui/TextButton — the Footer’s quiet-link look', () => {
@@ -687,6 +867,402 @@ describe('PriceList — the jump menu', () => {
     expect(
       bandOf(container).querySelectorAll(`a[href="#${PRICE_MENU_ID}"]`),
     ).toHaveLength(0);
+  });
+});
+
+describe('PriceList — the strip (owner 2026-10-09: “a horizontal list of buttons which you can scroll from left to right”)', () => {
+  it('is a <ul> of its own, named by id, hidden at the rail’s gate — every class of THE STRIP’S GEOMETRY, exactly', () => {
+    // PriceMenu.tsx's THE STRIP'S GEOMETRY, as the list's whole class list:
+    // the row, hidden where the rail shows; the 0.75rem of air between the
+    // header pill and the chips as its top padding and `pb-8` (the chips'
+    // glow room); the ReviewsDeck stage's full-bleed margins with the same
+    // expression back as START padding; the trailing gutter as a real
+    // `::after` box, the gutter less `gap-3`'s own step (THE TRAILING GUTTER
+    // IS A REAL BOX — WebKit drops a flex scroller's end padding); the scroll
+    // padding in `cqw` (a scroll-padding percentage reads the scrollport, and
+    // would be 0); the scrollbar HIDDEN (owner 2026-10-10: "there is a scroll
+    // bar, a horizontal one on that scrollable menu. remove it"); and the
+    // root's clearance, two rules.
+    mount();
+    const list = stripList();
+
+    expect(list.tagName).toBe('UL');
+    expect(list.parentElement).toBe(
+      screen.getByRole('navigation', { name: MENU_TITLE }),
+    );
+    expect(tokensOf(list)).toEqual([
+      'flex',
+      'items-center',
+      'gap-3',
+      'overflow-x-auto',
+      'overscroll-x-contain',
+      'pointer-fine:min-[60rem]:hidden',
+      'pt-[0.75rem]',
+      'pb-8',
+      'mx-[calc(50%_-_50vw)]',
+      'ps-[calc(50vw_-_50%)]',
+      'scroll-px-[calc(50vw_-_50cqw)]',
+      'after:flex-none',
+      'after:w-[calc(100vw_-_100%_-_var(--spacing)*3)]',
+      "after:content-['']",
+      '[scrollbar-width:none]',
+      '[&::-webkit-scrollbar]:hidden',
+      '[@media(min-height:30rem)]:not-pointer-fine:[:root:has(&)]:[scroll-padding-top:calc(6rem+2px+0.75rem+2.75rem)]',
+      '[@media(min-height:30rem)]:max-[60rem]:[:root:has(&)]:[scroll-padding-top:calc(6rem+2px+0.75rem+2.75rem)]',
+    ]);
+    // THE SCROLLBAR IS HIDDEN, for every pointer and every engine: the
+    // standard property (WebKit's iOS bug 277167, Safari 18.2) and the
+    // `::-webkit-scrollbar` fallback for older WebKit and Chromium, both
+    // UNGATED — and no scrollbar colour left behind for a thumb nobody sees.
+    expect(tokensOf(list).filter((t) => t.includes('scrollbar'))).toEqual([
+      '[scrollbar-width:none]',
+      '[&::-webkit-scrollbar]:hidden',
+    ]);
+    expect(variantsOf('[scrollbar-width:none]')).toEqual([]);
+    expect(variantsOf('[&::-webkit-scrollbar]:hidden')).toEqual([
+      '[&::-webkit-scrollbar]',
+    ]);
+    expect(tokensOf(list).filter((t) => t.includes('scrollbar-color'))).toEqual(
+      [],
+    );
+    // THE STRIP FLOATS UNDER THE BAR (owner 2026-10-10: "i do not want it to
+    // transition into some kid of fog anymore"): the list paints NO
+    // background — no colour, no image, no gradient stop, behind any variant.
+    expect(
+      tokensOf(list).filter((t) =>
+        /^(bg-|from-|via-|to-|\[background)/.test(utilityOf(t)),
+      ),
+    ).toEqual([]);
+    // The trailing box's gap is the row's own: `gap-3` and `* 3`, one step.
+    expect(tokensOf(list)).toContain('gap-3');
+    // No end PADDING — the box replaces it — and no scroll snap (it would
+    // re-snap after the follower's glide).
+    expect(
+      tokensOf(list).filter(
+        (t) => /^(px|pe|pr)-/.test(t) || t.includes('snap'),
+      ),
+    ).toEqual([]);
+  });
+
+  it('gives the stick and the chips’ focus margin the CLEARANCE’s own condition — 30rem of window AND `:has()` — so no engine sticks the strip over jumps that would land under it (G2 a11y N1)', () => {
+    // The clearance is a `:root:has(&)` rule: an engine without `:has()`
+    // (Safari before 15.4, Firefox before 121) drops it. Were the stick not
+    // gated the same way, such an engine would keep the strip stuck while every
+    // fragment jump landed under it.
+    mount();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    const gated = (token: string): boolean => {
+      const chain = variantsOf(token);
+      return (
+        chain.includes('[@media(min-height:30rem)]') &&
+        chain.includes('supports-[selector(:has(*))]')
+      );
+    };
+    const stick = tokensOf(menu).filter((t) => utilityOf(t) === 'sticky');
+    // The strip's stick is gated; the rail's (behind its own gate) is not —
+    // the rail sticks at every height, in every engine, as before.
+    expect(stick.filter(gated)).toHaveLength(1);
+    expect(stick.filter((t) => !gated(t))).toEqual([
+      'pointer-fine:min-[60rem]:sticky',
+    ]);
+    for (const chip of stripLinks()) {
+      const margin = tokensOf(chip).filter((t) =>
+        utilityOf(t).startsWith('scroll-mt-'),
+      );
+      expect(margin).toHaveLength(1);
+      expect(gated(margin[0])).toBe(true);
+    }
+    // …and the clearance itself needs no such gate: an engine without
+    // `:has()` drops it on its own.
+    expect(
+      tokensOf(stripList()).filter((t) => t.includes('[:root:has(&)]')),
+    ).toHaveLength(2);
+  });
+
+  it('spells the pill’s flow box ONCE as the <nav>’s sticky line, and the 0.75rem of air once each as the strip’s top padding and the <nav>’s negative margin — rem literals the band scale cannot remap', () => {
+    // THE STRIP FLOATS UNDER THE BAR (PriceMenu.tsx, owner 2026-10-10): the
+    // <nav> sticks at the header pill's FLOW BOX — the SEVENTH coupled
+    // spelling of its reach (Header.tsx's THE MOUNT CONTRACT) — so nothing of
+    // the strip lies behind the bar; the air between the pill and the chips is
+    // the strip's top padding, which the <nav>'s negative top margin cancels
+    // at rest. The two must be the SAME length, or the chips would not sit on
+    // the grid's first row at rest. Each expression held in a const and
+    // spliced, never a whole class beside the ones the elements wear.
+    const flowBox = 'calc(6rem+2px)';
+    const air = '0.75rem';
+    const tokens = classTokensOf(MENU_CODE);
+    expect(tokens.filter((t) => t.includes(`[${flowBox}]`))).toEqual([
+      `top-[${flowBox}]`,
+    ]);
+    expect(tokens.filter((t) => t.endsWith(`-[${air}]`))).toEqual([
+      `-mt-[${air}]`,
+      `pt-[${air}]`,
+    ]);
+    // THE STRIP'S CLEARANCE spells both once more in each of its two rules —
+    // the flow box + the air + the chips' 2.75rem, the chips' bottom edge
+    // when stuck — so the seventh spelling stands three times in this one
+    // file, and nowhere else.
+    const clearance = 'calc(6rem+2px+0.75rem+2.75rem)';
+    expect(tokens.filter((t) => t.includes(clearance))).toHaveLength(2);
+    // The lift the strip had until 2026-10-10 — the flow box AND the air in
+    // one length, worn as the <nav>'s negative margin and the strip's top
+    // padding over its ground — is gone (the clearance's longer sum shares
+    // its first terms, never its closing bracket). Assembled from parts,
+    // never one literal.
+    const lift = ['calc(6rem+2px+', air, ')'].join('');
+    expect(tokens.filter((t) => t.includes(lift))).toEqual([]);
+    // …and none of the three in the band's other modules.
+    for (const code of [CODE, CARD_CODE, ARRIVAL_CODE]) {
+      expect(code).not.toContain(flowBox);
+      expect(code).not.toContain(clearance);
+      expect(code).not.toContain(lift);
+    }
+  });
+
+  it('dresses each chip as ui/PillButton through asChild — the atom’s whole bundle — with the focus margin of minus its own height', () => {
+    // The atom's real bundle, rendered right here: the expectation is
+    // DERIVED, never typed, so an edit to PillButton lands in this assertion
+    // instead of drifting away from the strip. The one token past the bundle
+    // is THE CHIPS' FOCUS MARGIN (PriceMenu.tsx): minus the chip's
+    // `min-h-11`, so a keyboard focus on the stuck strip never scrolls the
+    // page. (Spelled only WHOLE in this file: Tailwind scans tests too, and a
+    // bare fragment of it would ship a rule no element wears.)
+    mount();
+    const chip = stripLinks()[1];
+
+    render(
+      <PillButton asChild>
+        <a href="#x">x</a>
+      </PillButton>,
+    );
+    const reference = tokensOf(screen.getByRole('link', { name: 'x' }));
+
+    expect(reference).toContain('rounded-full');
+    expect(reference).toContain('min-h-11');
+    // The focus margin rides the STICK's own threshold: where the strip does
+    // not stick, a chip half under the pill must be revealed whole.
+    expect(tokensOf(chip)).toEqual([
+      ...reference,
+      '[@media(min-height:30rem)]:supports-[selector(:has(*))]:scroll-mt-[-2.75rem]',
+    ]);
+    expect(chip.tagName).toBe('A');
+    expect(chip.parentElement?.tagName).toBe('LI');
+  });
+
+  it('marks the SAME category on both lists — one store, `aria-current="location"` and the chip’s lavender face', () => {
+    mount();
+    expect(menuLinks()[0]).toHaveAttribute('aria-current', 'location');
+    expect(stripLinks()[0]).toHaveAttribute('aria-current', 'location');
+    expect(tokensOf(stripLinks()[0])).toEqual(
+      expect.arrayContaining(['bg-accent', 'text-ink-inverse']),
+    );
+    for (const chip of stripLinks().slice(1)) {
+      expect(chip).not.toHaveAttribute('aria-current');
+      expect(tokensOf(chip)).toEqual(
+        expect.arrayContaining(['bg-surface', 'text-ink']),
+      );
+    }
+  });
+
+  it('a click on a chip PINS its category at once — on both lists and on its card — and lands the jump', async () => {
+    mount();
+    const last = CATEGORIES[CATEGORIES.length - 1];
+
+    await userEvent.click(
+      within(stripList()).getByRole('link', { name: last.name }),
+    );
+
+    expect(window.location.hash).toBe(`#${last.id}`);
+    expect(stripLinks()[CATEGORIES.length - 1]).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+    expect(menuLinks()[CATEGORIES.length - 1]).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: last.name }),
+    ]);
+    // A pointer's click stamps nothing (THE RING IS THE KEYBOARD'S) — the same
+    // logic as the rail's links, one function for both.
+    expect(stampedElements()).toEqual([]);
+  });
+
+  it('a KEYBOARD click on a chip stamps the card it jumped to, as the rail’s links do', async () => {
+    mount();
+    const chip = stripLinks()[1];
+    const card = screen.getByRole('region', { name: CATEGORIES[1].name });
+
+    chip.focus();
+    await userEvent.keyboard('{Enter}');
+
+    expect(window.location.hash).toBe(`#${CATEGORIES[1].id}`);
+    expect(card).toHaveAttribute(ARRIVAL, KEYBOARD);
+    expect(stampedElements()).toEqual([card]);
+  });
+
+  it('a MODIFIED click on a chip neither pins nor stamps', () => {
+    mount();
+    const chip = stripLinks()[2];
+    const cancel = (event: Event): void => event.preventDefault();
+    chip.addEventListener('click', cancel, { capture: true });
+
+    fireEvent.click(chip, { detail: 0, metaKey: true });
+
+    expect(chip).not.toHaveAttribute('aria-current');
+    expect(stripLinks()[0]).toHaveAttribute('aria-current', 'location');
+    expect(stampedElements()).toEqual([]);
+    chip.removeEventListener('click', cancel, { capture: true });
+  });
+});
+
+describe('PriceList — THE STRIP’S CLEARANCE is the stylesheet’s: the island writes nothing on the root (G2, 2026-10-09)', () => {
+  // PriceMenu.tsx's paragraph of that name. Since the G2 round the root's
+  // `scroll-padding-top` under the strip is TWO CSS RULES spelled on the
+  // strip itself — in place before the first paint, without JavaScript, and
+  // reading nothing (the deep-link, stale-top and no-JS findings) — and the
+  // island's watcher only tells the spy to RE-PLAN after a presentation flip
+  // or a size change. No stylesheet is loaded here, so BOTH lists have a box
+  // and the watcher answers "the rail"; each test below emulates the STRIP's
+  // state the way the rail's gate makes it — the rail's box `display: none` —
+  // and, where it needs the padding the CSS would give, sets it inline itself:
+  // the harness standing in for the stylesheet, as stretchCards() does for the
+  // shell's 6rem.
+
+  /** Three frames: the watcher's observer delivers after the next layout
+   *  and re-syncs one frame later, never inside the delivery (PriceMenu.tsx's
+   *  ONE FRAME LATER). */
+  const settleWatcher = async (): Promise<void> => {
+    await nextFrame();
+    await nextFrame();
+    await nextFrame();
+  };
+
+  /** Show the strip's state and let the watcher re-sync. */
+  const asStrip = async (): Promise<void> => {
+    await act(async () => {
+      railBox().style.display = 'none';
+      await settleWatcher();
+    });
+  };
+
+  /** Back to the rail's state. */
+  const asRail = async (): Promise<void> => {
+    await act(async () => {
+      railBox().style.display = '';
+      await settleWatcher();
+    });
+  };
+
+  it('writes NOTHING on the root — in either presentation, and when it leaves: whatever stood there stands', async () => {
+    document.documentElement.style.scrollPaddingTop = '77px';
+    const { unmount } = mount();
+    expect(document.documentElement.style.scrollPaddingTop).toBe('77px');
+    await asStrip();
+    expect(document.documentElement.style.scrollPaddingTop).toBe('77px');
+    await asRail();
+    expect(document.documentElement.style.scrollPaddingTop).toBe('77px');
+    unmount();
+    expect(document.documentElement.style.scrollPaddingTop).toBe('77px');
+  });
+
+  it('spells the clearance ON THE STRIP — two `:root:has(&)` rules: the pill’s flow box + the 0.75rem of air + the chips’ 2.75rem, exactly where the strip is shown AND sticky', () => {
+    mount();
+    const rules = tokensOf(stripList()).filter((token) =>
+      token.includes('[:root:has(&)]'),
+    );
+    // The strip is shown where the rail's gate is NOT met — no fine pointer,
+    // or a window under 60rem — and sticks from 30rem of window height: the
+    // two halves of that complement, each gated by the stick's threshold.
+    // Each spelled WHOLE (Tailwind scans tests too: a bare
+    // scroll-padding value held in a const would ship a rule nothing wears).
+    expect(rules).toEqual([
+      '[@media(min-height:30rem)]:not-pointer-fine:[:root:has(&)]:[scroll-padding-top:calc(6rem+2px+0.75rem+2.75rem)]',
+      '[@media(min-height:30rem)]:max-[60rem]:[:root:has(&)]:[scroll-padding-top:calc(6rem+2px+0.75rem+2.75rem)]',
+    ]);
+    // That nothing WRITES the root is held by behaviour, not by source: the
+    // test above watches the root's inline value through both presentations
+    // and the island's unmount (a source pattern could be dodged by aliasing).
+  });
+
+  it('makes the spy RE-PLAN after a presentation flip — the reading line follows the padding the stylesheet now gives, with no scroll to tell it', async () => {
+    // THE READING LINE is the middle of the CLEAR area, (scroll-padding-top +
+    // innerHeight) / 2. A flip to the strip turns the CSS clearance on with no
+    // event the spy hears — so the watcher calls `refresh()`. Here the
+    // harness sets the root's padding the way the CSS would (a tall 300px,
+    // standing in for 154), BEFORE the flip: until the flip nothing re-plans;
+    // after it, a card whose top sat 50px under the old line is well above the
+    // new one — and current at once.
+    mount();
+    const crossingOf = stretchCards();
+    await scrollToY(crossingOf(CATEGORIES[1].id) - 50);
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[0].name }),
+    ]);
+
+    document.documentElement.style.scrollPaddingTop = '300px';
+    await nextFrame();
+    // The premise: nothing re-planned on its own.
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[0].name }),
+    ]);
+
+    await asStrip();
+
+    expect(window.scrollY).toBe(crossingOf(CATEGORIES[1].id) - 50);
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[1].name }),
+    ]);
+  });
+
+  it('makes the spy RE-PLAN after a SIZE change of the strip too — the observer, not only the window, says so', async () => {
+    mount();
+    const crossingOf = stretchCards();
+    await asStrip();
+    await scrollToY(crossingOf(CATEGORIES[1].id) - 50);
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[0].name }),
+    ]);
+
+    document.documentElement.style.scrollPaddingTop = '300px';
+    await act(async () => {
+      stripList().style.paddingTop = '40px';
+      await settleWatcher();
+    });
+
+    expect(markedCards()).toEqual([
+      screen.getByRole('region', { name: CATEGORIES[1].name }),
+    ]);
+  });
+
+  it('stops the rail’s store while the strip shows — no `data-rail`, no inline `top` on the sticky strip — and starts it again with the rail', async () => {
+    // THE RAIL RUNS WHERE IT SHOWS: both presentations are sticky, and the
+    // store's 'bottom' and 'travel' would write a `top` that moves the strip.
+    // The <nav> is lent the rail's sticky rule inline and made taller than the
+    // window, which in the rail's state leaves 'fits' at the next resize.
+    mount();
+    stretchCards();
+    const menu = screen.getByRole('navigation', { name: MENU_TITLE });
+    menu.style.position = 'sticky';
+    menu.style.top = `${SCROLL_PADDING + 40}px`;
+    menu.style.minHeight = `${window.innerHeight}px`;
+
+    await asStrip();
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+      await nextFrame();
+      await nextFrame();
+    });
+    expect(menu).not.toHaveAttribute('data-rail');
+
+    await asRail();
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+      await nextFrame();
+      await nextFrame();
+    });
+    expect(menu).toHaveAttribute('data-rail', 'top');
   });
 });
 
@@ -743,8 +1319,8 @@ describe('PriceList — THE BAND SCALE, the class contract (§15.32)', () => {
       'py-12',
       '@lg:py-16',
       '@3xl:py-20',
-      '@3xl:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr]',
-      '@3xl:items-start',
+      'pointer-fine:min-[60rem]:grid-cols-[minmax(calc(var(--spacing)*60),1fr)_4fr]',
+      'pointer-fine:min-[60rem]:items-start',
       ...bandColumnClasses.split(' '),
       ...bandScaleClasses.split(' '),
       FLOOR_CLASS,
@@ -804,13 +1380,13 @@ describe('PriceList — THE BAND SCALE, the class contract (§15.32)', () => {
 
   it('keeps the pill’s pair out of its reach — the menu’s 8.5rem line and every card’s 2.5rem of air are rem LITERALS, and no class string in the folder spells either as a spacing step', () => {
     // The header pill these two clear is not a band and does not scale
-    // (PriceList.tsx's `@3xl:top-[8.5rem]` paragraph): as spacing steps they
+    // (PriceList.tsx's THE 8.5rem LINE paragraph): as spacing steps they
     // would follow the band's design pixel past the reference — the menu
     // floating further and further under the bar, the card's line off the
     // menu's — so they are arbitrary rem values no theme variable carries.
     mount();
     const menu = screen.getByRole('navigation', { name: MENU_TITLE });
-    expect(tokensOf(menu)).toContain('@3xl:top-[8.5rem]');
+    expect(tokensOf(menu)).toContain('pointer-fine:min-[60rem]:top-[8.5rem]');
     expect(tokensOf(menu)).toContain('scroll-mt-[2.5rem]');
     for (const card of screen.getAllByRole('region')) {
       expect(tokensOf(card)).toContain('scroll-mt-[2.5rem]');
@@ -818,6 +1394,9 @@ describe('PriceList — THE BAND SCALE, the class contract (§15.32)', () => {
 
     // The folder's own class strings, prose stripped: every `top` and
     // `scroll-mt` utility in them is a bracketed literal — none is a step.
+    // The strip's sticky line is one of them since 2026-10-10: the header
+    // pill's flow box, a rem literal (PriceMenu.tsx's THE STRIP FLOATS UNDER
+    // THE BAR).
     const stepForm = /^-?(top|scroll-mt)-\d+(\.\d+)?$/;
     for (const [name, code] of [
       ['PriceList.tsx', CODE],
@@ -833,7 +1412,8 @@ describe('PriceList — THE BAND SCALE, the class contract (§15.32)', () => {
     // …and each literal is spelled exactly once, where it is worn.
     const count = (code: string, token: string): number =>
       classTokensOf(code).filter((t) => t === token).length;
-    expect(count(MENU_CODE, '@3xl:top-[8.5rem]')).toBe(1);
+    expect(count(MENU_CODE, 'pointer-fine:min-[60rem]:top-[8.5rem]')).toBe(1);
+    expect(count(MENU_CODE, 'top-[calc(6rem+2px)]')).toBe(1);
     expect(count(MENU_CODE, 'scroll-mt-[2.5rem]')).toBe(1);
     expect(count(CARD_CODE, 'scroll-mt-[2.5rem]')).toBe(1);
   });
@@ -846,7 +1426,7 @@ describe('PriceList — THE BAND SCALE, the class contract (§15.32)', () => {
     const probe = [
       `const A = '@3xl:${step} block';`,
       `const B = \`${air}\`;`,
-      `const C = "scroll-mt-[2.5rem] @3xl:top-[8.5rem]";`,
+      `const C = "scroll-mt-[2.5rem] pointer-fine:min-[60rem]:top-[8.5rem]";`,
     ].join('\n');
     const stepForm = /^-?(top|scroll-mt)-\d+(\.\d+)?$/;
     expect(
@@ -992,8 +1572,10 @@ describe('PriceList — the price rows', () => {
     // make only one" — so the <dl> carries no class at all, and no row needs
     // `break-inside-avoid` any more. What survives is the one step that reads
     // ui/Card's own @container: `@sm` (24rem of INNER width) is where a row
-    // stops stacking — at 390 the card's inside is ~262px and an 80-character
-    // treatment name needs the whole line (board §5.3).
+    // stops stacking — at 390 the card's inside is ~301px (~262 until
+    // ui/Container's THE PHONE GUTTER, 2026-10-09; 346 at 440, so every phone
+    // held upright still stacks) and an 80-character treatment name needs the
+    // whole line (board §5.3).
     mount();
     const card = screen.getByRole('region', { name: CATEGORIES[0].name });
     const list = card.querySelector('dl') as HTMLElement;
@@ -1026,9 +1608,7 @@ describe('PriceList — the jump itself', () => {
     // because of its tabindex="-1" (board §4.2).
     mount();
     const category = CATEGORIES[1];
-    const link = within(
-      screen.getByRole('navigation', { name: MENU_TITLE }),
-    ).getByRole('link', { name: category.name });
+    const link = within(railList()).getByRole('link', { name: category.name });
 
     await userEvent.click(link);
 
@@ -1193,10 +1773,7 @@ describe('PriceList — the current category (the island)', () => {
     });
 
     await userEvent.click(
-      within(screen.getByRole('navigation', { name: MENU_TITLE })).getByRole(
-        'link',
-        { name: last.name },
-      ),
+      within(railList()).getByRole('link', { name: last.name }),
     );
 
     const links = menuLinks();
@@ -1258,10 +1835,7 @@ describe('PriceList — the current category (the island)', () => {
     expectOneAnswer(CATEGORIES[1].id);
 
     await userEvent.click(
-      within(screen.getByRole('navigation', { name: MENU_TITLE })).getByRole(
-        'link',
-        { name: last.name },
-      ),
+      within(railList()).getByRole('link', { name: last.name }),
     );
     expectOneAnswer(last.id);
   });
@@ -1297,9 +1871,9 @@ describe('PriceList — the current category (the island)', () => {
     for (const category of CATEGORIES) {
       expect(document.getElementById(category.id)).toBeNull();
     }
-    const link = within(
-      screen.getByRole('navigation', { name: MENU_TITLE }),
-    ).getByRole('link', { name: CATEGORIES[1].name });
+    const link = within(railList()).getByRole('link', {
+      name: CATEGORIES[1].name,
+    });
 
     await expect(userEvent.click(link)).resolves.toBeUndefined();
 
@@ -1611,6 +2185,10 @@ describe('PriceList — where a click lands, and whose ring it is (owner 2026-09
     // record with no old value is the stamp arriving, one with an old value
     // is it leaving. Replayed, the set of stamped cards must never hold two.
     const { container } = mount();
+    // The RAIL's state, as its gate makes it (no stylesheet here): the strip
+    // `display: none`, so the Tab order is the rail's links and the cards —
+    // Shift+Tab from a card lands on the rail's last link, as on a laptop.
+    stripList().style.display = 'none';
     const records: MutationRecord[] = [];
     const observer = new MutationObserver((batch) => records.push(...batch));
     observer.observe(bandOf(container), {
@@ -1783,9 +2361,9 @@ describe('PriceList — dumb by construction', () => {
 
   it('imports no data and no translation machinery', () => {
     // The page is the one populator (board §2c.1): these three files may reach
-    // for lib/cx and — the island's two React-free mechanics — for
-    // lib/scroll-spy (the pack round) and lib/sticky-rail (2026-09-18), and
-    // for nothing else under lib/. None of them may know what a locale is.
+    // for lib/cx and — the island's three React-free mechanics — for
+    // lib/scroll-spy (the pack round), lib/sticky-rail (2026-09-18) and
+    // lib/strip-follow (2026-10-09), and for nothing else under lib/. None of them may know what a locale is.
     // All three are checked, prose stripped.
     for (const code of [CODE, CARD_CODE, MENU_CODE]) {
       const libImports = [...code.matchAll(/from '(@\/lib\/[^']+)'/g)].map(
@@ -1797,6 +2375,7 @@ describe('PriceList — dumb by construction', () => {
             '@/lib/cx/cx',
             '@/lib/scroll-spy/scroll-spy',
             '@/lib/sticky-rail/sticky-rail',
+            '@/lib/strip-follow/strip-follow',
           ].includes(path),
         ),
       ).toBe(true);
@@ -1871,10 +2450,15 @@ describe('PriceList — every card of the page keeps the HOUSE corner (owner 202
   const rounded = (element: Element): string[] =>
     tokensOf(element).filter((t) => /^rounded-/.test(t));
 
-  it('on the jump menu’s card', () => {
+  it('on the jump menu’s card — the rail’s, and the <nav>’s focus ring the same 6px behind the rail’s gate', () => {
     mount();
+    expect(rounded(railCard())).toEqual(['rounded-md']);
+    // The <nav> paints nothing; its corner exists for the focus ring a jump
+    // to `#price-categories` draws round it, so it follows the card's.
     const menu = screen.getByRole('navigation', { name: MENU_TITLE });
-    expect(rounded(menu)).toEqual(['rounded-md']);
+    expect(tokensOf(menu).filter((t) => t.includes('rounded-'))).toEqual([
+      'pointer-fine:min-[60rem]:rounded-md',
+    ]);
   });
 
   it('on every category card', () => {
@@ -1882,6 +2466,40 @@ describe('PriceList — every card of the page keeps the HOUSE corner (owner 202
     for (const category of CATEGORIES) {
       const card = screen.getByRole('region', { name: category.name });
       expect(rounded(card), category.name).toEqual(['rounded-md']);
+    }
+  });
+});
+
+describe('PriceList — the note under the cards (CLAUDE.md §15.38)', () => {
+  const NOTE = 'Prețurile sunt exprimate în RON și includ toate taxele.';
+
+  it('prints the note LAST in the cards column, after every card', () => {
+    render(
+      <PriceList menuTitle={MENU_TITLE} categories={CATEGORIES} note={NOTE} />,
+    );
+    const note = screen.getByText(NOTE);
+    expect(note.tagName).toBe('P');
+    expect(note.parentElement?.lastElementChild).toBe(note);
+    expect(note.previousElementSibling?.tagName).toBe('SECTION');
+  });
+
+  it('adds NOTHING without a note — the column still ends on its last card (§6.6)', () => {
+    // Structure, not a comparison of two spellings of "absent" (which JS
+    // treats alike — the React review): with no note the cards column ends on
+    // its last card, and an EMPTY note adds nothing either.
+    for (const note of [undefined, '']) {
+      const { container, unmount } = render(
+        <PriceList
+          menuTitle={MENU_TITLE}
+          categories={CATEGORIES}
+          note={note}
+        />,
+      );
+      const cards = container.querySelectorAll('section section');
+      const column = cards[cards.length - 1]?.parentElement;
+      expect(column?.lastElementChild?.tagName, String(note)).toBe('SECTION');
+      expect(container.textContent).not.toContain(NOTE);
+      unmount();
     }
   });
 });

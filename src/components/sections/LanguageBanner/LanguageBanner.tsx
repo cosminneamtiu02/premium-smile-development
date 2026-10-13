@@ -123,17 +123,18 @@ export interface LanguageBannerProps {
 }
 
 // ── THE ANCHOR (board §2 · Q-A, owner-approved; re-derived 2026-09-05 for
-// fb-353): a centred toast LIFTED ABOVE the corner row, never a card in a
-// corner.
+// fb-353, and on 2026-10-09 for the corner's 2rem edge): a centred toast
+// LIFTED ABOVE the corner row, never a card in a corner.
 //
-// `bottom-[calc(11.5rem+env(safe-area-inset-bottom))]` — ONE value, no steps,
+// `bottom-[calc(12.5rem+env(safe-area-inset-bottom))]` — ONE value, no steps,
 // and the number is a CLEARANCE, not a mirror. The tall corner is the RIGHT one
 // since fb-353 (owner, 2026-09-04) stacked the WhatsApp disc above the phone:
-// 1rem offset + disc + 0.5rem gap + disc (discs 3.5 → 4 → 4.5rem by
-// breakpoint) = 8.5 / 9.5 / 10.5rem of reach; globals.css'
-// `scroll-padding-bottom` steps (9.5 / 10.5 / 11.5rem — their authoritative
-// home is FloatingActions.tsx' mount-contract obligation (a)) add the same
-// breathing room for focus. Taking the TALLEST of those steps once clears the
+// 2rem offset (FloatingActions' THE GLOW'S ROOM — 1rem until 2026-10-09, when
+// the corner rose so its glow ends above Safari's bottom bar) + disc + 0.5rem
+// gap + disc (discs 3.5 → 4 → 4.5rem by breakpoint) = 9.5 / 10.5 / 11.5rem of
+// reach; globals.css' `scroll-padding-bottom` steps (10.5 / 11.5 / 12.5rem —
+// their authoritative home is FloatingActions.tsx' mount-contract obligation
+// (a)) add the same breathing room for focus. Taking the TALLEST of those steps once clears the
 // 2xl stack by 1rem and the phone stack by 3rem. The bond is "at least the
 // stack's reach" — an inequality, not an equality — so this is deliberately
 // NOT an fb-44 KEEP-IN-SYNC pair: the values need not agree, only exceed, and a
@@ -144,6 +145,42 @@ export interface LanguageBannerProps {
 // because the stack itself is lifted by the safe-area inset; like every other
 // spelling of it on the site it resolves to 0 until the shell opts into
 // `viewport-fit: cover`.
+// THE ONE OVERRIDE — A SHORT, WIDE WINDOW (G2 a11y MEDIUM, 2026-10-09):
+// `[@media(height<30rem)]:min-[40rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))]`.
+// Under 30rem of window height the lift puts the card's 110px-plus over the
+// top of the page — at 640×400 (a laptop at 200% zoom) and at 844×390 (a
+// phone held sideways) squarely over the price strip's resting chips, around
+// 146–206px, where „Urgențe" and „Profilaxie" ended up wholly hidden inside
+// the browser's focus area and the header pill blocked scrolling them free
+// (SC 2.4.11). So on such a window the card is anchored LOW, 1rem above the
+// bottom edge — beside the corner discs, not above them: from 40rem of window
+// width a centred card of at most 28rem leaves both corner columns clear.
+// MEASURED on the built page (Chromium and WebKit, 640×400 and 844×390, held
+// by tests/e2e/price-strip.spec.ts's banner block): the card's top then stands
+// 127px above the bottom edge — INSIDE the 168px band globals'
+// `scroll-padding-bottom` keeps a Tab-scrolled target out of (10.5rem since
+// the corner rose on 2026-10-09; 152px when this was measured), so the sliver
+// argument below holds there with room — 57–83px under the resting chips and
+// 86–196px clear of either corner column. Under 40rem the corners would meet
+// a card that wide, so a narrow short window keeps the lift — and there the
+// card can still cover the resting chips (MEASURED at 600×400, Chromium and
+// WebKit, 2026-10-10: the card's 89–200px over the chips' 146–190px; 105–216
+// with the 11.5rem lift), the residual this override leaves:
+// the smallest phone held sideways (568×320), a laptop zoomed past 200%.
+// AND FROM 30rem OF HEIGHT, where no override applies, a narrow window's card
+// still reaches the strip (G2 a11y LOW-5, 2026-10-10 — MEASURED on the built
+// page, Chromium and WebKit alike to the decimal, 390 wide, the Italian card
+// on a Romanian page, two lines, the longest): AT REST, at the page's top, it
+// covers the first two chips WHOLLY up to a ~481px-tall window and partly up
+// to 525px (24.8 of their 44px at 500, none from 526); STUCK, once the page
+// has scrolled, it covers at most the bottom 8.8px of the centred current
+// chip (at 480px; 4.8 at 484, 0.8 at 488, none from 490) — never all of it,
+// held by tests/e2e/price-strip.spec.ts's narrow-window banner case. The
+// resting half is this paragraph's residual reaching a pixel past its 30rem,
+// not built: a narrow window has no corner column to drop the card into.
+// ADDITIVE ON PURPOSE: one class beside the lift, so a change to the lift's
+// own number merges without touching it (the corner's rise took the lift from
+// 11.5rem to 12.5rem the same day, and this class did not move).
 //
 // `fixed inset-x-4 mx-auto w-fit max-w-md` — the card hugs its sentence on wide
 // screens and fills the 288px available at 320 (1rem margins a side, §7: nothing
@@ -159,7 +196,12 @@ export interface LanguageBannerProps {
 // manner); the corner discs and the open stem (40) beat a passive suggestion,
 // because user-invoked chrome must always paint over it — a z-40 tie would
 // invert exactly that, since this card mounts LATER in the DOM and would win on
-// order. Below it: page content, over which the card floats.
+// order. Below it: page content, over which the card floats — and, since
+// 2026-10-09, ONE MORE RECORDED SEAT under this one, `z-20`: the price page's
+// sticky strip of category chips (sections/PriceList/PriceMenu's THE STRIP'S
+// GEOMETRY), which must paint over the category cards scrolling beneath it
+// and under every piece of chrome, this card included. The map is 20 / 30 /
+// 40 / 45 / 50 + the top layer.
 //
 // THE CARD IS FROZEN WITH EVERYTHING ELSE WHILE THE MENU IS OPEN, deliberately
 // (board §4). NavMenu's freeze inerts <body>'s other children but exempts live
@@ -191,7 +233,10 @@ export interface LanguageBannerProps {
 // (0,2,0) specificity silently outranked the reduced-motion opt-out.
 const cardClasses =
   'fixed inset-x-4 z-30 mx-auto w-fit max-w-md ' +
-  'bottom-[calc(11.5rem+env(safe-area-inset-bottom))] ' +
+  'bottom-[calc(12.5rem+env(safe-area-inset-bottom))] ' +
+  // THE SHORT, WIDE WINDOW (the anchor paragraph's override, G2 a11y
+  // 2026-10-09): anchored low, beside the corner discs rather than above them.
+  '[@media(height<30rem)]:min-[40rem]:bottom-[calc(1rem+env(safe-area-inset-bottom))] ' +
   'flex flex-col gap-2 rounded-lg border border-line-subtle bg-surface ' +
   'p-4 text-ink shadow-xl ' +
   'transition-[opacity,translate] duration-200 ease-out ' +
@@ -410,18 +455,42 @@ export interface LanguageBannerCardProps {
  * user-dismissible with a keyboard-reachable control (asserted), it is
  * transient by purpose, and the §9 page-tier keyboard walkthrough already tabs
  * at several scroll positions. THE LOAD-BEARING HALF IS GEOMETRIC AND NAMED
- * (G2 a11y review, 2026-09-04; numbers re-derived 2026-09-05 for fb-353):
+ * (G2 a11y review, 2026-09-04; numbers re-derived 2026-09-05 for fb-353, and
+ * 2026-10-09 when the corner rose 1rem and every number with it):
  * globals' `scroll-padding-bottom` rests a Tab-scrolled target's bottom edge
- * 9.5/10.5rem above the viewport bottom below 1536px while this card's lift is
- * 11.5rem, so a 2rem/1rem sliver of the focused element stays visible under
+ * 10.5/11.5rem above the viewport bottom below 1536px while this card's lift is
+ * 12.5rem, so a 2rem/1rem sliver of the focused element stays visible under
  * the card — "not entirely hidden", the AA minimum. At ≥1536px the step EQUALS
  * the lift and a Tab-scrolled target rests flush against the card's bottom
- * edge. The bond is therefore an
- * inequality — the lift must EXCEED every scroll-padding-bottom step it
- * overlaps — and the first centered bottom-band focusable narrower than this
- * card (§14's CTABanner, by design) is the named re-open trigger; the
- * walkthrough owns the entirely-hidden check, and globals' C43 block records
- * the same bond from the shell's side.
+ * edge. The bond is therefore an inequality — the lift must EXCEED every
+ * scroll-padding-bottom step it overlaps (LanguageBanner.test.tsx asserts it
+ * against globals' real rule at 1536px since 2026-10-09) — and the first
+ * centered bottom-band focusable narrower than this card (§14's CTABanner, by
+ * design) is the named re-open trigger; the walkthrough owns the
+ * entirely-hidden check, and globals' C43 block records the same bond from the
+ * shell's side.
+ * THE BOND HAS A SECOND SIDE — the card's TOP must stay under the sticky pill
+ * (its bottom edge 98px down), and on a SHORT viewport it cannot: the pill
+ * (z-50) paints over the card (z-30), and no scroll moves a fixed card. By
+ * the G2 a11y review's arithmetic (2026-10-09, computed, not measured on a
+ * device): a one-line card (~110px) needs a viewport at least 12.5rem + 110 +
+ * 98 = 408px tall (432 for two lines; 392 before the corner rose 1rem the
+ * same day), and between about 277 and 315px both of its controls sit
+ * entirely behind the pill (261–299 before) — high zoom (1366 × 768 at 200 %
+ * is about 317px) and phones held sideways. THE ONE OVERRIDE (the anchor
+ * paragraph) takes the lever that review named, for the price strip's sake —
+ * under 30rem of height the lifted card hid the strip's resting chips whole:
+ * from 40rem of width a short window drops the card to the corner row, 1rem
+ * above the bottom edge, beside the corner discs, inside the band
+ * `scroll-padding-bottom` keeps a Tab-scrolled target out of (so the sliver
+ * above holds there with room) and far under the pill; held by
+ * tests/e2e/price-strip.spec.ts's banner block. A short window NARROWER than
+ * 40rem keeps the lift, and this second side with it — the smallest phone
+ * held sideways (568 × 320), a laptop zoomed past 200 % — the residual
+ * BACKLOG.md entry 2 lists. A narrow window keeps the lift at EVERY height,
+ * and from 30rem it still reaches the price strip — its resting chips whole up
+ * to ~481px of height at 390 wide, at most the bottom 8.8px of its stuck,
+ * centred chip (the anchor paragraph's G2 a11y LOW-5 numbers, 2026-10-10).
  * THE TRIGGER FIRED on 2026-10-03 (CLAUDE.md §15.33): the Footer's logo became
  * a link — centred, 278px with its ring, narrower than this card (291–309px).
  * MEASURED on the built export (Chromium, Firefox, WebKit, 390–1920px): the
@@ -434,6 +503,10 @@ export interface LanguageBannerCardProps {
  * can reveal what the page's end holds under the card, so the cure is this
  * component's: keep the card's reach free at the page's end while it shows.
  * ACCEPTED by the owner the same day, not built — BACKLOG.md entry 2.
+ * Those numbers were measured with the card at an 11.5rem lift; on 2026-10-09
+ * it rose to 12.5rem with the corner, while the Footer's centred logo rose
+ * only half as far, so the set of hidden Footer stops may differ — the §9
+ * walkthrough re-measures it at 1024–1280px.
  */
 export function LanguageBannerCard({
   suggested,

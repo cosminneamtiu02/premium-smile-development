@@ -4,8 +4,10 @@ import { type Locale, locales } from '@/i18n/locales';
 import ro from '@/messages/ro.json';
 import {
   equivalentPath,
+  LEGAL_ROUTES,
   matchesRoute,
   PRIMARY_ROUTES,
+  PRIVACY_PATH,
   primaryRoutes,
 } from './routes';
 
@@ -222,5 +224,30 @@ describe('lib/routes — equivalentPath: the same page over there, else home (§
 
   it('is pure — the same question twice gives the same answer', () => {
     expect(equivalentPath('/team/', 'fr')).toBe(equivalentPath('/team/', 'fr'));
+  });
+});
+
+describe('lib/routes — LEGAL_ROUTES, the legal strip’s own list (nav board R1, fb-181)', () => {
+  it('offers the privacy and cookie policy, at PRIVACY_PATH, under a key that resolves', () => {
+    expect(LEGAL_ROUTES.map((route) => route.path)).toEqual([PRIVACY_PATH]);
+    for (const route of LEGAL_ROUTES) {
+      expect(typeof resolve(route.key), route.key).toBe('string');
+    }
+  });
+
+  it('shares no row with PRIMARY_ROUTES — a legal link never joins the nav', () => {
+    const primary = new Set(PRIMARY_ROUTES.map((route) => route.path));
+    for (const route of LEGAL_ROUTES)
+      expect(primary.has(route.path)).toBe(false);
+  });
+
+  it('writes every row WITHOUT a trailing slash — the PrimaryRoute contract', () => {
+    for (const route of LEGAL_ROUTES) expect(route.path).not.toMatch(/.\/$/);
+  });
+
+  it('keeps the policy page under the switcher’s rule: the same path in every language', () => {
+    for (const locale of locales) {
+      expect(equivalentPath('/privacy/', locale)).toBe('/privacy/');
+    }
   });
 });

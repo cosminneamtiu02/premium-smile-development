@@ -84,6 +84,30 @@ export interface ClinicInfo {
   };
   /** Social/profile URLs for JSON-LD sameAs — DERIVED from `social` below */
   sameAs: readonly string[];
+  /**
+   * The COMPANY behind the clinic, as its registration certificate prints it —
+   * what the privacy page must show: who processes a visitor's data (GDPR
+   * art. 13) and who runs the site (Law 365/2002 art. 5). It is not NAP: the
+   * company's name and registered office may differ from the brand `name` and
+   * the clinic's `address` above.
+   *
+   * EVERY FIELD IS `null` UNTIL THE OWNER SUPPLIES IT (BACKLOG.md entry 3): a
+   * null prints a visible „[de completat]" on the privacy page — never an
+   * invented value, because a made-up tax code on a legal page is worse than a
+   * gap anyone can see. Fill a field and the page shows it, nothing else moves.
+   */
+  legal: {
+    /** The registered company name, e.g. „… SRL". */
+    companyName: string | null;
+    /** The fiscal code (CUI / CIF), as printed. */
+    cui: string | null;
+    /** The Trade Register number, in the certificate's own format. */
+    tradeRegister: string | null;
+    /** The registered office (sediul social), as one line. */
+    registeredOffice: string | null;
+    /** Where privacy requests go — the site shows no e-mail anywhere else. */
+    email: string | null;
+  };
 }
 
 // Declared before `clinic` so `sameAs` can be DERIVED from it: the Footer's
@@ -219,4 +243,14 @@ export const clinic: ClinicInfo = {
   sameAs: [social.instagram, social.tiktok].filter((url): url is string =>
     Boolean(url),
   ),
+  // TODO(owner): the five facts on the company's registration certificate
+  // (Certificat de înregistrare), or from the accountant — BACKLOG.md entry 3.
+  // Until then the privacy page shows „[de completat]" in their place.
+  legal: {
+    companyName: null,
+    cui: null,
+    tradeRegister: null,
+    registeredOffice: null,
+    email: null,
+  },
 };

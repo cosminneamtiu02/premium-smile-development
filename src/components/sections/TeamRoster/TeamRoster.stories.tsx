@@ -11,8 +11,9 @@ import { TeamRoster, type TeamRosterMember } from './TeamRoster';
 // export re-records pictures; this list IS the section's contribution to the
 // visual manifest. The `Sections/*` title prefix routes the two to 390 + 1536
 // (tests/visual/stories.spec.ts, §13), and the 'stress-320' tag adds the
-// accessibility width to both (a phone's 256px column — 241px under the
-// classic scrollbar the baselines are recorded with — around a 192px
+// accessibility width to both (a phone's 288px column since 2026-10-09 — THE
+// PHONE GUTTER, ui/Container, CLAUDE.md §15.35; 256 until then — and 273px
+// under the classic scrollbar the baselines are recorded with, around a 192px
 // portrait, a German compound in a mono eyebrow that never hyphenates).
 // `Tablet` and `Narrowest` are 'no-visual' (DoctorShowcase's `Notebook` /
 // `Desktop` precedent): the net sets its own window and ignores their pins, so
@@ -50,8 +51,10 @@ import { TeamRoster, type TeamRosterMember } from './TeamRoster';
 // 96rem cap the cap's band, centred in its column, the eyebrow and the title
 // on the band's own left edge. Wherever one gate fails — every phone, every
 // touch tablet held either way, a column under the step, an engine that
-// cannot register — nothing is declared: the tile is 18rem, or the column if
-// that is narrower, the title the theme's `band` step and the eyebrow 0.875rem.
+// cannot register — nothing is declared: the tile is the column's own on a
+// phone (a column under the named `md` step, 28rem — the doctor cards' width,
+// since 2026-10-09) and 18rem off one, its portrait 12rem either way, the
+// title the theme's `band` step and the eyebrow 0.875rem.
 // Every play reads its column, its pointer and its engine and asserts
 // whichever of the two it is in (`regimeOf`), never the pinned width; in the
 // Vitest storybook project the pointer is Chromium's fine one, so `Default`'s
@@ -147,17 +150,20 @@ const CAP_REM = 96;
 const STEP_REM = 56;
 const STEP_FLOOR = 896;
 
-/** D9's two tile widths — 18rem outside the band scale, 352 design pixels
- *  inside it — the gap between two tiles of a row (`gap-x-5` = 1.25rem
- *  outside, the gated `gap-x-6` = 24 design pixels inside), the gap between
- *  rows (`gap-y-6`) in each, and the portrait's cell inside the scale
- *  (PersonnelCard's `w-48`, 192 design pixels). */
+/** D9's tile widths — the column's own on a phone (a column under PHONE_REM,
+ *  Tailwind's named `md` step), 18rem off one outside the band scale, 352
+ *  design pixels inside it — the gap between two tiles of a row (`gap-x-5` =
+ *  1.25rem outside, the gated `gap-x-6` = 24 design pixels inside), the gap
+ *  between rows (`gap-y-6`) in each, and the portrait's cell (PersonnelCard's
+ *  `w-48`: 12rem outside the scale, 192 design pixels inside it). */
+const PHONE_REM = 28;
 const TILE_REM = 18;
 const TILE_DESIGN = 352;
 const GAP_X_REM = 1.25;
 const GAP_X_DESIGN = 24;
 const GAP_Y_REM = 1.5;
 const GAP_Y_DESIGN = 24;
+const PORTRAIT_REM = 12;
 const PORTRAIT_DESIGN = 192;
 
 /** A length in CSS px per rem, read off the document — a visitor who has
@@ -356,8 +362,11 @@ const expectOpener = async (
  * pinned window, so the one helper holds at every width the net or the
  * workbench samples:
  *   · every tile has THE width of its regime — 352 × s inside the scale, with
- *     a 192 × s portrait; outside it 18rem, or the row itself under a
- *     narrower column (`max-w-full`: 256px at 320) — whatever its words;
+ *     a 192 × s portrait; on a phone (a column under 28rem) the column's own,
+ *     like the doctor cards above it on the page (the owner, 2026-10-09: "as
+ *     the doctor cards are"), and 18rem off one, with a 12rem portrait either
+ *     way — so a phone's tile grows sideways, never in height — whatever its
+ *     words;
  *   · the row holds as many as fit, one gap apart — 20px outside the scale,
  *     24 design pixels inside it: three inside the scale at every width
  *     (3 × 352 + 2 × 24 = 1104 of 1106 design pixels), two on any 768 window,
@@ -372,15 +381,21 @@ const expectTiles = async (
   band: HTMLElement,
   regime: Regime,
 ): Promise<void> => {
-  const { scalable, s } = regime;
+  const { scalable, s, column } = regime;
   const list = within(band).getByRole('list');
   const tiles = [...list.children] as HTMLElement[];
   for (const text of list.querySelectorAll('h3, p')) await loadFace(text);
 
   const row = list.getBoundingClientRect();
+  // The phone's line is the container query's own: ui/Container's width
+  // against the named `md` step (TeamRoster's TILE).
+  const phone = column.width < PHONE_REM * rem();
   const tileWidth = scalable
     ? TILE_DESIGN * s
-    : Math.min(TILE_REM * rem(), row.width);
+    : phone
+      ? row.width
+      : TILE_REM * rem();
+  const portraitWidth = scalable ? PORTRAIT_DESIGN * s : PORTRAIT_REM * rem();
   const gap = scalable ? GAP_X_DESIGN * s : GAP_X_REM * rem();
   const rowGap = scalable ? GAP_Y_DESIGN * s : GAP_Y_REM * rem();
 
@@ -397,18 +412,16 @@ const expectTiles = async (
       0.5,
       `tile ${index + 1}’s card fills it`,
     );
-    if (scalable) {
-      const portrait = tile.querySelector('img');
-      if (portrait === null) {
-        throw new Error(`TeamRoster story: tile ${index + 1} has no portrait`);
-      }
-      await near(
-        portrait.getBoundingClientRect().width,
-        PORTRAIT_DESIGN * s,
-        0.5,
-        `tile ${index + 1}’s portrait`,
-      );
+    const portrait = tile.querySelector('img');
+    if (portrait === null) {
+      throw new Error(`TeamRoster story: tile ${index + 1} has no portrait`);
     }
+    await near(
+      portrait.getBoundingClientRect().width,
+      portraitWidth,
+      0.5,
+      `tile ${index + 1}’s portrait`,
+    );
   }
 
   const perRow = Math.max(
@@ -424,6 +437,8 @@ const expectTiles = async (
     await expect(
       Math.max(...heights) - Math.min(...heights),
     ).toBeLessThanOrEqual(1);
+    // Every row starts at the column (D9) — and a phone's one tile, the
+    // column's width, ends at its end too.
     await near(line[0].left, row.left, 0.5, 'a row starts at the column');
     // Start-aligned, one fixed gap — never spread (D9): no hole can open
     // between two tiles, the row's slack stays at its end.
@@ -467,7 +482,8 @@ const expectBand = async (
  * desktop browser's classic one takes 15px, which the shell's
  * `scrollbar-gutter: stable` (globals.css) reserves — and the workbench with a
  * mouse connected and the Vitest storybook project both run with the classic
- * one (measured there: a 599.4px column at 768, 241px at 320). At 768 it was,
+ * one (measured there: a 599.4px column at 768, 273px at 320 — 241 before THE
+ * PHONE GUTTER, 2026-10-09). At 768 it was,
  * until the same day's fold, the whole difference between the two faces of
  * D9: 599.4px is 0.6px short of two 288px tiles and a 24px gap (600), so a
  * DESKTOP window held at 768 stood its tiles one a row while the TABLET, with
@@ -530,7 +546,7 @@ const meta = {
     members: {
       control: false,
       description:
-        'The auxiliary personnel, in reading order, as FIXED tiles in a wrapping row (run D9, since 2026-10-02): 18rem (288px) on every phone, tablet and touch screen and under the band scale’s step — one a row on a phone, two on a 768 tablet, three on an iPad held sideways — and 352 design pixels on a laptop or a desktop from a max(56rem, 896px) column, three to a row at every width, growing with the band (§15.32). Each tile’s name is an <h3> under the band’s own <h2>. EMPTY renders nothing at all. Not a live control: a text knob over portraits and their intrinsic sizes would only ever produce a broken tile',
+        'The auxiliary personnel, in reading order, as tiles of ONE width per regime in a wrapping row (run D9, since 2026-10-02): on a phone the column’s own width, one a row, like the doctor cards (since 2026-10-09); 18rem (288px) on every tablet and touch screen and under the band scale’s step — two on a 768 tablet, three on an iPad held sideways — and 352 design pixels on a laptop or a desktop from a max(56rem, 896px) column, three to a row at every width, growing with the band (§15.32). Each tile’s name is an <h3> under the band’s own <h2>. EMPTY renders nothing at all. Not a live control: a text knob over portraits and their intrinsic sizes would only ever produce a broken tile',
     },
     className: {
       control: false,
@@ -557,9 +573,10 @@ type Story = StoryObj<typeof meta>;
  * neighbours short.
  *
  * **1536 · 390 · 320 (`stress-320`):** one row of three at 1536; at the phone
- * widths one 288px tile a row (in the photographed frame's 297px column — a
- * phone's own is 312), then the column's own width at 320 (241px in the frame,
- * 256 on a phone), and nothing scrolling sideways. The play reads back what a
+ * widths one tile a row, the column's own width like the doctor cards' —
+ * 336px in the photographed frame at 390 and 273 at 320 (a phone's own column
+ * is 351 and 288 since THE PHONE GUTTER, ui/Container) — its 192px portrait
+ * centred in it, and nothing scrolling sideways. The play reads back what a
  * picture cannot — the region named by its <h2>, no <h1>, ONE list, the tiles
  * in DOM order each named by its own <h3>, no link — and every size DERIVED
  * from the measured column, so the one assertion holds at every width.
@@ -579,11 +596,11 @@ export const Default: Story = {
  * under names that wear `hyphens-none` one tier down too, and the opener's
  * German drafts — every line here may only wrap between words.
  *
- * **390 · 1536 · 320 (`stress-320`):** one 288px tile a row at the phone
- * widths — the column's own width at 320 (241px in the frame, 256 on a phone)
- * — the position wrapping inside it without protruding; at 1536 the two tiles
- * share one row from its start, two-thirds of it, the tile the size it is in
- * `Default` (start-aligned, D9: no hole between them).
+ * **390 · 1536 · 320 (`stress-320`):** one tile a row at the phone widths,
+ * the column's own width (336px at 390 and 273 at 320 in the frame) — the
+ * position wrapping inside it without protruding;
+ * at 1536 the two tiles share one row from its start, two-thirds of it, the
+ * tile the size it is in `Default` (start-aligned, D9: no hole between them).
  */
 export const GermanLongest: Story = {
   tags: ['stress-320'],
@@ -615,8 +632,9 @@ export const GermanLongest: Story = {
  * THE TABLET — §7's 768 sampling point, held upright, with the tablet's own
  * scrollbar, which takes no width (`deviceScrollbar`): two tiles a row, 288px
  * each and 20px apart from the start of a 614px column, and the third under
- * the first, the size a phone shows, never stretched to fill its row (D9; the
- * owner: "important for phone and tablet make them a fixed size or smth"). A
+ * the first, never stretched to fill its row (D9; the owner: "important for
+ * phone and tablet make them a fixed size or smth" — on a phone the tile is
+ * the column's own since 2026-10-09, on a tablet still 288). A
  * desktop window held at 768 has 15px less column and shows the same two a
  * row (the helper says why). For the workbench and its play: 'no-visual' (the
  * header says why).
@@ -632,13 +650,15 @@ export const Tablet: Story = {
 
 /**
  * THE NARROWEST WINDOW — 320px, the accessibility stress width (§7), with a
- * phone's own scrollbar, which takes no width (`deviceScrollbar`): a 256px
- * column, every tile the column's own width (`max-w-full` under the 18rem),
- * one a row, and nothing — no tile, no word of the opener — scrolling the page
- * sideways. The pixel net photographs `Default` and `GermanLongest` at 320
- * already ('stress-320', under the classic scrollbar its baselines are
- * recorded with — a 241px column); this story holds the play at the phone's
- * own width in the Vitest storybook project: 'no-visual' (the header).
+ * phone's own scrollbar, which takes no width (`deviceScrollbar`): a 288px
+ * column since 2026-10-09 (THE PHONE GUTTER, ui/Container; 256 until then),
+ * every tile the column's own width like the doctor cards' on the page (D9's
+ * phone rule, the same day) — one a row, its 192px portrait centred, and
+ * nothing — no tile, no word of the opener — scrolling the page sideways. The
+ * pixel net photographs `Default` and `GermanLongest` at 320 already
+ * ('stress-320', under the classic scrollbar its baselines are recorded with —
+ * a 273px column); this story holds the play at the phone's own width in the
+ * Vitest storybook project: 'no-visual' (the header).
  */
 export const Narrowest: Story = {
   tags: ['no-visual'],

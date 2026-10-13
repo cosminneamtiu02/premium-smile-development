@@ -666,6 +666,44 @@ describe('suspension is CAUSE-KEYED — hover and focus are separate flags', () 
     clock.setEnabled(true);
     expect(clock.getSnapshot().status).toBe('running');
   });
+
+  it('keeps OFFSCREEN a third flag beside hover and focus (the course timeline, 2026-10-13)', () => {
+    const { clock, ticks } = createTestClock();
+
+    clock.start();
+    // The widget scrolls out of view, and a pointer happens to rest over it
+    // as it goes: two causes, so neither alone may restart the beat.
+    clock.suspend('offscreen');
+    clock.suspend('pointer');
+    clock.resume('pointer');
+    expect(clock.getSnapshot().status).toBe('suspended');
+    vi.advanceTimersByTime(10 * INTERVAL);
+    expect(ticks()).toBe(0);
+
+    // Back in view: running again, and the next move is a FULL interval
+    // away — the visitor is seeing this item for the first time.
+    clock.resume('offscreen');
+    expect(clock.getSnapshot().status).toBe('running');
+    vi.advanceTimersByTime(INTERVAL - 1);
+    expect(ticks()).toBe(0);
+    vi.advanceTimersByTime(1);
+    expect(ticks()).toBe(1);
+  });
+
+  it('never lets OFFSCREEN start a clock reduced motion declined', () => {
+    const { clock, ticks } = createTestClock({ reduced: true });
+
+    clock.start();
+    clock.suspend('offscreen');
+    clock.resume('offscreen');
+
+    expect(clock.getSnapshot()).toEqual({
+      status: 'idle',
+      idleReason: 'reduced-motion',
+    });
+    vi.advanceTimersByTime(10 * INTERVAL);
+    expect(ticks()).toBe(0);
+  });
 });
 
 describe('restart() — the full-interval courtesy after user navigation', () => {

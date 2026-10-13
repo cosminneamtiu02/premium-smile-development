@@ -617,7 +617,8 @@ for (const locale of ['ro', 'de'] as const) {
 // quote re-wraps across the regime — the typeface's optical size — and a
 // taller one would move the card by a line of text (D10, THE WORDS' LIMIT),
 // which is the text's doing, never the scale's. Below the step (390 · 768 ·
-// 1024) nothing is declared and the stacked or unscaled card is today's;
+// 1024) nothing is declared and the stacked or unscaled card is the theme's
+// own — at 390 under the phone's header since 2026-10-10 (PersonnelCard D20);
 // on a TOUCH tablet, upright or sideways, nothing is declared at any width
 // (TOUCH_TABLETS); and the user's default font size moves the gates without
 // breaking them — a 12px root starts nothing under the 896px floor, a 28px
@@ -673,8 +674,20 @@ const STRUCTURE = 0.003;
 interface CardShape {
   readonly width: number;
   readonly height: number;
-  /** The cutout as drawn: width, height. */
+  /** The cutout as drawn: width, height — on a phone 165 % of its circle,
+   *  clipped by it (PersonnelCard D20). */
   readonly picture: readonly [number, number];
+  /** The picture's CELL: width, height — the 18rem cutout cell, and on a
+   *  phone the round photo (PersonnelCard D20). */
+  readonly cell: readonly [number, number];
+  /** Where the cell's left edge and the name's stand, px from the LEFT edge
+   *  of the inset's content box — and how the name and the specialty align.
+   *  Read for THE PHONE HEADER's one side (PersonnelCard D20's ONE SIDE ON A
+   *  PHONE): the photo at 0, the name right of it, both `start`, on every
+   *  card whatever its `side`. */
+  readonly cellAt: number;
+  readonly nameAt: number;
+  readonly align: readonly [string, string];
   /** The cutout's own height over its width, from its attributes (§11). */
   readonly aspect: number;
   /** Font sizes, px: the quote, the name, the specialty under it. */
@@ -688,7 +701,10 @@ interface CardShape {
   readonly link: number;
   /** The card's grid: `grid` (two columns) or `flex` (stacked). */
   readonly grid: string;
-  /** The inset's content width — what the card's `@3xl` and `@md` read. */
+  /** The inset's content width — what every container step of the card
+   *  reads: its `@3xl` and `@md`, the two atom steps' 24rem, the phone
+   *  header's 12.5rem FLOOR and 24rem step, and the circle's `cqi`
+   *  (PersonnelCard D17, D20). */
   readonly room: number;
 }
 
@@ -738,20 +754,33 @@ const readShape = (page: Page, locale: Locale): Promise<BandShape> =>
           const own = card.getBoundingClientRect();
           const image = card.querySelector('img');
           const picture = image?.getBoundingClientRect();
+          const cell = image?.parentElement?.getBoundingClientRect();
           const quote = card.querySelector('blockquote');
           const style = getComputedStyle(inset);
+          // The specialty is the eyebrow beside the name (PersonnelCard D17's
+          // PAIR): the name first in the DOM, the specialty after it.
+          const heading = card.querySelector('h3');
+          const specialty = card.querySelector('h3 + p');
+          const contentLeft =
+            inset.getBoundingClientRect().left + parseFloat(style.paddingLeft);
           return {
             width: own.width,
             height: own.height,
             picture: [picture?.width ?? NaN, picture?.height ?? NaN] as const,
+            cell: [cell?.width ?? NaN, cell?.height ?? NaN] as const,
+            cellAt: (cell?.left ?? NaN) - contentLeft,
+            nameAt:
+              (heading?.getBoundingClientRect().left ?? NaN) - contentLeft,
+            align: [
+              heading === null ? '' : getComputedStyle(heading).textAlign,
+              specialty === null ? '' : getComputedStyle(specialty).textAlign,
+            ] as const,
             aspect:
               Number(image?.getAttribute('height')) /
               Number(image?.getAttribute('width')),
             quote: size(quote),
-            name: size(card.querySelector('h3')),
-            // The specialty is the eyebrow beside the name (PersonnelCard
-            // D17's PAIR): the name first in the DOM, the specialty after it.
-            specialty: size(card.querySelector('h3 + p')),
+            name: size(heading),
+            specialty: size(specialty),
             words: quote?.getBoundingClientRect().height ?? NaN,
             link: card.querySelector('a')?.getBoundingClientRect().width ?? NaN,
             grid: getComputedStyle(grid).display,
@@ -905,12 +934,25 @@ const expectRegime = (shape: BandShape, at: string, capped: boolean): void => {
   });
 };
 
+/** The doctor card's PHONE HEADER (PersonnelCard D20): from its inset's
+ *  12.5rem FLOOR to its 24rem step, in px at the default root — and under
+ *  the step, header or not, the two atom steps' phone sizes. */
+const PHONE_FLOOR = 12.5 * 16;
+const PHONE_HEADER = 24 * 16;
+
 /**
  * TODAY'S BAND at one window — no design pixel, no remap, no cap: the box
  * its whole column, and every card at the theme's own sizes, in the layout
- * its own flip gives it at that column (two columns from an inset of 48rem,
- * stacked below), the cutout in its 18rem cell — the inset's whole width
- * where that is less — at its own ratio.
+ * its own flips give it at that column (two columns from an inset of 48rem,
+ * stacked below; and from 12.5rem to 24rem — every phone at 100 % zoom — THE
+ * PHONE HEADER of PersonnelCard D20): outside the header, the cutout in its
+ * 18rem cell — the inset's whole width where that is less — at its own
+ * ratio; in it, a round photo of clamp(72px, inset − 160px, 112px) a side
+ * with the cutout drawn 165 % of it inside, at the inset's left edge on EVERY
+ * card and the name 18px right of it (D20's ONE SIDE ON A PHONE — the sides
+ * alternate from the two-column flip alone); and under 24rem, header or not,
+ * the name at 24px and the specialty at 13.2px — from there up the name on
+ * `band`'s 30 or 36px and the specialty at 14px.
  */
 const expectUnscaled = (shape: BandShape, at: string): void => {
   expect(shape.remapped, at).toBe(false);
@@ -923,13 +965,37 @@ const expectUnscaled = (shape: BandShape, at: string): void => {
     const where = `${at}, card ${i + 1}`;
     expect(card.grid, where).toBe(card.room >= CARD_FLIP ? 'grid' : 'flex');
     expect(card.quote, where).toBe(18);
-    expect(card.specialty, where).toBe(14);
-    expect(card.name, where).toBe(card.room >= 448 ? 36 : 30);
+    const small = card.room < PHONE_HEADER;
+    expect(card.specialty, where).toBe(small ? 13.2 : 14);
+    expect(card.name, where).toBe(small ? 24 : card.room >= 448 ? 36 : 30);
+    if (small && card.room >= PHONE_FLOOR) {
+      const circle = Math.min(Math.max(72, card.room - 160), 112);
+      expect(Math.abs(card.cell[0] - circle), where).toBeLessThan(0.5);
+      expect(Math.abs(card.cell[1] - circle), where).toBeLessThan(0.5);
+      expect(Math.abs(card.picture[0] - 1.65 * circle), where).toBeLessThan(
+        0.5,
+      );
+      // ONE SIDE ON A PHONE (D20 — the owner, 2026-10-10: "i prefer only left
+      // on phone"): the photo at the inset's left edge, the name 18px right of
+      // it, every line at the start — on EVERY card, the odd, mirrored ones
+      // too.
+      expect(
+        Math.abs(card.cellAt),
+        `${where}: the photo at the left edge`,
+      ).toBeLessThan(0.5);
+      expect(
+        Math.abs(card.nameAt - circle - 18),
+        `${where}: the name right of the photo`,
+      ).toBeLessThan(0.5);
+      expect(card.align, where).toEqual(['start', 'start']);
+      return;
+    }
     const cell = Math.min(288, card.room);
     expect(Math.abs(card.picture[0] - cell), where).toBeLessThan(0.5);
     expect(Math.abs(card.picture[1] - cell * card.aspect), where).toBeLessThan(
       0.5,
     );
+    expect(Math.abs(card.cell[0] - cell), where).toBeLessThan(0.5);
   });
 };
 
@@ -1134,5 +1200,154 @@ for (const [locale, path] of [
         });
       });
     }
+  });
+}
+
+// ── G · EVERY NAME WHOLE, A ZOOMED PHONE INCLUDED (PersonnelCard D20) ───────
+// A phone with page zoom lays out NARROWER — a 390 phone at 150 % is a 260px
+// layout, at 200 % a 195px one. Before D20's FLOOR the phone header held its
+// 72px photo there and left the name a column of a few px: measured on the
+// built export, four of the six real names broke inside a word at 260
+// („(Sab|ău)", „Căt|ălina", „Mirc|ea", „Bozd|og") and at 195 one name took
+// twenty-five one-letter lines. Since the floor, under a 12.5rem INSET the
+// card is the stacked one, the name centred across the whole column and no
+// `overflow-wrap: anywhere` on it; over it, the header's narrowest name
+// column is 110px, wider than every real name word. So at every window here
+// no word of any doctor's name may occupy more than one line — a break AFTER
+// a hyphen („Ivașcu-|Zugravu") is a line break between two words, and is
+// allowed. Read with a Range per word, the way a line count is read: the
+// distinct tops of the word's own rectangles. The windows run from the 195px
+// layout to a 390 phone at 100 % — header and stacked both — on ONE page,
+// resized in a loop, with the real faces loaded first.
+
+/** The windows: a 390 phone at 200 % (195), a 320 window at ~143 % (223), a
+ *  390 phone at ~162 % and 150 % (240, 260), the Galaxy Fold's cover screen
+ *  (280), and the two phones at 100 % (320, 390). */
+const NAME_WINDOWS = [195, 223, 240, 260, 280, 320, 390] as const;
+
+interface NameReading {
+  readonly name: string;
+  /** The inset's content width (CardShape.room). */
+  readonly room: number;
+  /** `header` where the card draws D20's phone header, `stacked` else. */
+  readonly layout: 'header' | 'stacked';
+  /** How many lines the whole name takes. */
+  readonly lines: number;
+  /** Every word that occupies more than one line, with its line count. */
+  readonly broken: readonly string[];
+}
+
+/** Every doctor card's name on the page, read as it is laid out now. */
+const readNames = (page: Page): Promise<readonly NameReading[]> =>
+  page.evaluate((station) => {
+    /** Distinct line tops among a range's rectangles — two rectangles whose
+     *  tops are within 4px share a line. */
+    const linesOf = (rects: Iterable<DOMRect>): number => {
+      const tops = [...rects]
+        .filter((rect) => rect.width > 0 && rect.height > 0)
+        .map((rect) => rect.top)
+        .sort((a, b) => a - b);
+      let lines = 0;
+      let last = -Infinity;
+      for (const top of tops) {
+        if (top - last > 4) lines += 1;
+        last = top;
+      }
+      return lines;
+    };
+    return Array.from(
+      document.querySelectorAll(`${station} > article`),
+      (card) => {
+        const inset = card.firstElementChild as HTMLElement;
+        const block = inset.firstElementChild?.firstElementChild as HTMLElement;
+        const style = getComputedStyle(inset);
+        const heading = card.querySelector('h2, h3') as HTMLElement;
+        const text = heading.firstChild as Text;
+        const range = document.createRange();
+        const broken: string[] = [];
+        let at = 0;
+        // A unit ends at whitespace or right after a hyphen: the two places a
+        // line may break between words in a name.
+        for (const unit of text.data.split(/(?<=[\s-])/)) {
+          const word = unit.trimEnd();
+          if (word.length > 0) {
+            range.setStart(text, at);
+            range.setEnd(text, at + word.length);
+            const lines = linesOf(range.getClientRects());
+            if (lines > 1) broken.push(`${word} (${lines} lines)`);
+          }
+          at += unit.length;
+        }
+        range.selectNodeContents(heading);
+        return {
+          name: text.data,
+          room:
+            inset.getBoundingClientRect().width -
+            parseFloat(style.paddingLeft) -
+            parseFloat(style.paddingRight),
+          layout:
+            getComputedStyle(block).display === 'grid' ? 'header' : 'stacked',
+          lines: linesOf(range.getClientRects()),
+          broken,
+        } as const;
+      },
+    );
+  }, STATION);
+
+for (const locale of ['ro', 'de'] as const) {
+  test.describe(`/${locale}/team/ — every doctor's name whole, a zoomed phone's layout included (PersonnelCard D20's THE FLOOR)`, () => {
+    test.use({ locale: BROWSER_LOCALE[locale] });
+    onLaptopOnly();
+
+    test(`no word of any doctor’s name takes more than one line at ${NAME_WINDOWS.join(' · ')} — a break after a hyphen excepted`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize({ width: NAME_WINDOWS[0], height: 844 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await open(page, `/${locale}/team/`);
+      // The real faces first: a word's lines are the face's.
+      await page.evaluate(async (station) => {
+        for (const heading of document.querySelectorAll<HTMLElement>(
+          `${station} > article :is(h2, h3)`,
+        )) {
+          const style = getComputedStyle(heading);
+          await document.fonts.load(
+            `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+            heading.textContent ?? '',
+          );
+        }
+        await document.fonts.ready;
+      }, STATION);
+
+      const seen: string[] = [];
+      for (const width of NAME_WINDOWS) {
+        await page.setViewportSize({ width, height: 844 });
+        const names = await readNames(page);
+        expect(names.length, `${width}px: the doctors`).toBeGreaterThan(0);
+        for (const name of names) {
+          const where = `${width}px, ${name.name}`;
+          // The premise, so a header that never turned on (or never off)
+          // fails as itself: THE FLOOR's 12.5rem and the step's 24rem.
+          expect(
+            name.layout,
+            `${where}: a ${name.room.toFixed(1)}px inset`,
+          ).toBe(
+            name.room >= 12.5 * 16 && name.room < 24 * 16
+              ? 'header'
+              : 'stacked',
+          );
+          expect(name.broken, where).toEqual([]);
+        }
+        const first = names[0];
+        seen.push(
+          `${width}: ${first?.layout} at ${first?.room.toFixed(1)}px, the longest name ${Math.max(...names.map((n) => n.lines))} lines`,
+        );
+      }
+      // What each window drew, said out loud for the record.
+      testInfo.annotations.push({
+        type: 'layout and name lines (window: first card)',
+        description: seen.join(' · '),
+      });
+    });
   });
 }

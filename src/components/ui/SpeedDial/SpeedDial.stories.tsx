@@ -493,8 +493,11 @@ export const CornerFit: Story = {
   args: {
     size: 'lg',
     direction: 'up',
-    className:
-      'fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 z-40',
+    // A stand-in corner, not the site's: 1rem off the bottom edge, which the
+    // real corner left for 2rem on 2026-10-09 (sections/FloatingActions' THE
+    // GLOW'S ROOM) — this story's questions do not depend on the offset. Plain
+    // `bottom-4`, so the site's stylesheet keeps no rule only a story spells.
+    className: 'fixed bottom-4 left-4 z-40',
   },
   render: (args) => (
     <div className="min-h-[24rem] w-full">
@@ -502,7 +505,7 @@ export const CornerFit: Story = {
       <GlyphButton
         size="lg"
         aria-label="Sună clinica"
-        className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40"
+        className="fixed right-4 bottom-4 z-40"
       >
         <Phone />
       </GlyphButton>

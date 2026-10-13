@@ -103,7 +103,14 @@ export default async function ServicesPage() {
       <h1 id={SERVICES_TITLE_ID} className="sr-only">
         {t('title')}
       </h1>
-      <PriceList menuTitle={t('prices.menu')} categories={categories} />
+      {/* `note` — what the prices include, one line under the last card
+          (CLAUDE.md §15.38; the wording TODO(owner) to confirm, BACKLOG.md
+          entry 3). */}
+      <PriceList
+        menuTitle={t('prices.menu')}
+        categories={categories}
+        note={t('prices.taxNote')}
+      />
     </>
   );
 }

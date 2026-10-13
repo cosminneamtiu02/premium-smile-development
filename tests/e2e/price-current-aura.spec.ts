@@ -32,8 +32,10 @@ import { expect, type Page, test } from '@playwright/test';
 // and only it; a scroll moves the glow with the menu's mark; a click moves it
 // at once, the old card losing the mark before the new one gains it; the fade
 // is a real 400ms transition in BOTH directions; under reduced motion the
-// glow still moves, at once; and on a phone, where the menu is stacked above
-// the cards, a scroll marks one card and only it. Romanian throughout; the
+// glow still moves, at once; and on a phone, where the strip of chips stands
+// above the cards (since 2026-10-09), a scroll marks one card and only it.
+// The menu's links are its SHOWN list's — the <nav> holds the rail's and the
+// strip's, the one not shown `display: none`. Romanian throughout; the
 // load and the scroll in German too (§8.4 — the longest language: other
 // words, other card heights).
 //
@@ -53,6 +55,12 @@ import { expect, type Page, test } from '@playwright/test';
 // the price-menu spec's idiom.
 
 const MENU = '#price-categories';
+
+/** The menu's SHOWN links: the rail's on a laptop, the strip's chips on a
+ *  phone (2026-10-09 — PriceMenu.tsx's THE TWO PRESENTATIONS: the <nav> holds
+ *  both lists, the one not shown `display: none`). Playwright's `:visible` in
+ *  locators; a box filter in page code. */
+const LINKS = `${MENU} a[href^="#"]:visible`;
 
 /** The mark the island stamps, and the armed token that answers it — spelled
  *  here, never imported, so a silent rename in the atom fails somewhere
@@ -153,7 +161,9 @@ type State = Readonly<{
   marked: readonly string[];
   /** Every category card, in order, with its glow layer's opacity. */
   cards: readonly Readonly<{ id: string; glow: string }>[];
-  /** The menu card's own box-shadow — the glow it wears for good. */
+  /** The menu's own box-shadow — the glow it wears for good: the rail's
+   *  card's, or the strip's chips' (the <nav> paints nothing since
+   *  2026-10-09). */
   menuShadow: string;
 }>;
 
@@ -164,7 +174,12 @@ const readState = (page: Page): Promise<State> =>
       const band = nav.closest('section') as HTMLElement;
       const links = Array.from(
         nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-      );
+      ).filter((link) => link.getClientRects().length > 0);
+      const title = nav.querySelector('h2') as HTMLElement;
+      const glowing =
+        title.getClientRects().length > 0
+          ? (title.parentElement as HTMLElement)
+          : links[0];
       return {
         fragments: links.map((link) => link.hash.slice(1)),
         linked: links
@@ -181,7 +196,7 @@ const readState = (page: Page): Promise<State> =>
             glow: getComputedStyle(card, '::before').opacity,
           }),
         ),
-        menuShadow: getComputedStyle(nav).boxShadow,
+        menuShadow: getComputedStyle(glowing).boxShadow,
       };
     },
     { selector: MENU, current: CURRENT },
@@ -210,9 +225,11 @@ function expectGlowOn(state: State, id: string): void {
 const crossingOf = (page: Page, index: number): Promise<number> =>
   page.evaluate(
     ({ selector, index }) => {
-      const link = document.querySelectorAll<HTMLAnchorElement>(
-        `${selector} a[href^="#"]`,
-      )[index];
+      const link = Array.from(
+        document.querySelectorAll<HTMLAnchorElement>(
+          `${selector} a[href^="#"]`,
+        ),
+      ).filter((shown) => shown.getClientRects().length > 0)[index];
       const card = document.getElementById(link.hash.slice(1)) as HTMLElement;
       const padding =
         parseFloat(
@@ -361,7 +378,7 @@ test.describe('ro/services — the glow moves smoothly, or at once', () => {
           const band = nav.closest('section') as HTMLElement;
           const links = Array.from(
             nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-          );
+          ).filter((link) => link.getClientRects().length > 0);
           const first = links[0].hash.slice(1);
           const last = links[links.length - 1].hash.slice(1);
           const order: string[] = [];
@@ -445,7 +462,7 @@ test.describe('ro/services — the glow moves smoothly, or at once', () => {
           const band = nav.closest('section') as HTMLElement;
           const links = Array.from(
             nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-          );
+          ).filter((link) => link.getClientRects().length > 0);
           const leaving = document.getElementById(
             links[0].hash.slice(1),
           ) as HTMLElement;
@@ -568,7 +585,7 @@ test.describe('ro/services — the glow moves smoothly, or at once', () => {
           const nav = document.querySelector(selector) as HTMLElement;
           const links = Array.from(
             nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-          );
+          ).filter((link) => link.getClientRects().length > 0);
           const first = document.getElementById(
             links[0].hash.slice(1),
           ) as HTMLElement;
@@ -678,10 +695,7 @@ async function linkCentre(
   page: Page,
   index: number,
 ): Promise<{ x: number; y: number }> {
-  const box = await page
-    .locator(`${MENU} a[href^="#"]`)
-    .nth(index)
-    .boundingBox();
+  const box = await page.locator(LINKS).nth(index).boundingBox();
   if (box === null) throw new Error(`menu link ${index} has no box to press`);
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
@@ -705,10 +719,7 @@ test.describe('ro/services — the ring is the keyboard’s (owner 2026-09-29)',
   }, testInfo) => {
     await open(page, 'ro');
     const target = (
-      (await page
-        .locator(`${MENU} a[href^="#"]`)
-        .nth(JUMP_TARGET)
-        .getAttribute('href')) ?? ''
+      (await page.locator(LINKS).nth(JUMP_TARGET).getAttribute('href')) ?? ''
     ).slice(1);
 
     // A real mouse press and release on the link — the click the owner made.
@@ -756,7 +767,7 @@ test.describe('ro/services — the ring is the keyboard’s (owner 2026-09-29)',
     page,
   }) => {
     await open(page, 'ro');
-    const link = page.locator(`${MENU} a[href^="#"]`).nth(JUMP_TARGET);
+    const link = page.locator(LINKS).nth(JUMP_TARGET);
     const target = ((await link.getAttribute('href')) ?? '').slice(1);
 
     // The keyboard path: the link takes focus and Enter follows it — a click
@@ -797,10 +808,7 @@ test.describe('ro/services — the ring is the keyboard’s (owner 2026-09-29)',
   }) => {
     await open(page, 'ro');
     const target = (
-      (await page
-        .locator(`${MENU} a[href^="#"]`)
-        .nth(JUMP_TARGET)
-        .getAttribute('href')) ?? ''
+      (await page.locator(LINKS).nth(JUMP_TARGET).getAttribute('href')) ?? ''
     ).slice(1);
 
     // WEBKIT'S POINTER STATE, STAGED: the card focused, `:focus-visible`, and
@@ -847,7 +855,7 @@ test.describe('ro/services — the ring is the keyboard’s (owner 2026-09-29)',
   });
 });
 
-test.describe('ro/services on a phone — the menu stacked above the cards', () => {
+test.describe('ro/services on a phone — the strip of chips above the cards', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test.beforeEach(async ({ page }, testInfo) => {
@@ -861,11 +869,14 @@ test.describe('ro/services on a phone — the menu stacked above the cards', () 
   test('a scroll to the third card marks the third card, and only it', async ({
     page,
   }) => {
-    // Stacked: below the band's split the menu is a plain static table of
-    // contents, and its box ends before the first card begins.
+    // Below the band's split the menu is the STRIP since 2026-10-09 (PriceMenu.tsx's
+    // THE TWO PRESENTATIONS): sticky under the header pill, and at rest its box —
+    // the glow room under its chips included — ends where the first card begins.
     const layout = await page.evaluate((selector) => {
       const nav = document.querySelector(selector) as HTMLElement;
-      const link = nav.querySelector<HTMLAnchorElement>('a[href^="#"]');
+      const link = Array.from(
+        nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
+      ).find((shown) => shown.getClientRects().length > 0);
       const first = document.getElementById(
         (link as HTMLAnchorElement).hash.slice(1),
       ) as HTMLElement;
@@ -875,8 +886,8 @@ test.describe('ro/services on a phone — the menu stacked above the cards', () 
         firstTop: first.getBoundingClientRect().top,
       };
     }, MENU);
-    expect(layout.position).toBe('static');
-    expect(layout.menuBottom).toBeLessThanOrEqual(layout.firstTop);
+    expect(layout.position).toBe('sticky');
+    expect(layout.menuBottom).toBeLessThanOrEqual(layout.firstTop + 0.5);
 
     // Down to where the third card's top reaches the middle of the window's
     // clear area — the reading line, on a phone too.

@@ -56,7 +56,9 @@ import { populateHero } from './populate';
 // its own design pixel and the three bands around it in rem; now all four
 // draw in ui/Container's THE BAND SCALE — the doctors band always, the numbers
 // and the map because this page passes `scaled` (the doctor page mounts both
-// bands too and leaves it off until its own bands scale), the reviews deck's
+// bands too: since 2026-10-13 it passes the flag to the map — this page's map
+// on every page, §15.32 round 3 — and leaves it off the numbers band until its
+// own bands scale), the reviews deck's
 // opener alone because the deck itself is not to be touched (the owner: "you
 // will not touch under any circumstance"). Phones and tablets: unchanged.
 //

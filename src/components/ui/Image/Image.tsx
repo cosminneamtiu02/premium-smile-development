@@ -92,7 +92,13 @@ export type ImageProps = ImageOwnProps &
 // already gives every <img>, deliberately: a variant's promise must hold as
 // its own utilities, never by borrowing a global reset that a future base
 // layer could change under it (§6.1 closed system). Its placeholder half lives
-// in the map below.
+// in the map below. KEEP IN SYNC (§4) with its two HAND-SPELLED copies, each a
+// consumer whose geometry differs and so takes `plain` and spells this row
+// itself, `placeholder="empty"` beside it (Image.tsx's merge-order note):
+// sections/PersonnelCard's FIGURE (its D20 — the row, then the phone's crop)
+// and sections/DoctorIntro's cutout (its THE CUTOUT paragraph — the row, then
+// the opener's out-of-flow geometry). Both suites derive their stacked half
+// from this row, so a change here turns them red until they follow.
 // D5 — plain contributes NOTHING, pinned forever as the default: the future
 // Hero section owns 100% of its geometry (fill + sibling overlays), and union
 // growth must never restyle an existing call site (§6.6 silent-break guard).

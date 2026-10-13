@@ -7,8 +7,10 @@ import { ClinicLocation } from './ClinicLocation';
 
 // The „Ne găsești" band's FOUR stories — the two widths §13 samples for this
 // tier, the language that stresses them, and (since 2026-10-02, §15.32) the
-// band as Home and Team render it, `Scaled`. The first three are the doctor
-// page's band, which passes no prop. Conventions are the Footer's, and the
+// band as every page renders it, `Scaled` (Home and Team from that day, the
+// doctor pages from 2026-10-13 — round 3). The first three draw the band's
+// unscaled default, which no page passes any more: they are its workbench
+// self. Conventions are the Footer's, and the
 // two mechanics that would otherwise fail SILENTLY are spelled out again
 // because they are exactly as invisible here:
 //
@@ -51,8 +53,9 @@ import { ClinicLocation } from './ClinicLocation';
 // ── `Scaled` IS IN THE VISUAL NET, and its play reads where it is. The net
 // shoots it at 390, where nothing scales (the same pixels as `Smartphone`, a
 // harmless duplicate), and at 1536, where the whole band is drawn in the
-// design pixel — the one frame of this tier that shows Home's and Team's
-// band. Playwright ignores the viewport pin, so the play derives its branch
+// design pixel — the one frame of this tier that shows the band every page
+// draws (Home's and Team's, and the doctor pages' since 2026-10-13 — §15.32
+// round 3). Playwright ignores the viewport pin, so the play derives its branch
 // from the measured column, the pointer and the engine (`expectBandScale`),
 // never from the pin — DoctorShowcase's stories' rule.
 //
@@ -117,6 +120,30 @@ const near = async (
 };
 
 /**
+ * The map tray's SHAPE (the component header's OLD → NEW, item 4; the owner,
+ * 2026-10-09: "i need map on phone to be like 50% taller"), asserted where
+ * the play finds itself: under the band's `@lg` step — 32rem of ui/Container's
+ * box, a phone's column — the tray is 4:3, three quarters of its width tall;
+ * from the step up it is 2:1, half its width. The column is MEASURED, never
+ * read off the pin: the visual net shoots every story at 390 and at 1536,
+ * whatever the story's pin says.
+ */
+const expectMapShape = async (band: HTMLElement): Promise<void> => {
+  const column = band.firstElementChild;
+  const tray = band.querySelector('iframe')?.parentElement;
+  if (!(column instanceof HTMLElement) || !(tray instanceof HTMLElement)) {
+    throw new Error('ClinicLocation story: the band lost its structure');
+  }
+  const phone = column.getBoundingClientRect().width < 32 * rem();
+  const map = tray.getBoundingClientRect();
+  await near(
+    map.height,
+    map.width * (phone ? 3 / 4 : 1 / 2),
+    phone ? 'the map on a phone, 4:3' : 'the map, 2:1',
+  );
+};
+
+/**
  * THE BAND SCALE (§15.32), asserted where the play finds itself — the column
  * read off ui/Container, the band's first box, and the two GATES read off the
  * browser (a fine primary pointer; the relative colour syntax that rides with
@@ -126,7 +153,8 @@ const near = async (
  * band capped and centred at the cap. Outside it — a phone, a column under
  * the step, or a band that was not asked to scale — the band declares nothing
  * and every length is the theme's rem: the h2 on `band`'s 30 or 36, the rest
- * as above at s = 1. The map's tray is 2:1 in both.
+ * as above at s = 1. The map's tray is `expectMapShape`'s in both: a ratio
+ * reads the column alone, never the design pixel.
  */
 const expectBandScale = async (
   band: HTMLElement,
@@ -136,12 +164,10 @@ const expectBandScale = async (
   const column = band.firstElementChild;
   const rhythm = column?.firstElementChild;
   const disc = band.querySelector('span[aria-hidden="true"]');
-  const tray = band.querySelector('iframe')?.parentElement;
   if (
     !(column instanceof HTMLElement) ||
     !(rhythm instanceof HTMLElement) ||
-    disc === null ||
-    !(tray instanceof HTMLElement)
+    disc === null
   ) {
     throw new Error('ClinicLocation story: the band lost its structure');
   }
@@ -205,8 +231,7 @@ const expectBandScale = async (
   const discBox = disc.getBoundingClientRect();
   await near(discBox.width, 44 * unit, 'the disc’s width');
   await near(discBox.height, 44 * unit, 'the disc’s height');
-  const map = tray.getBoundingClientRect();
-  await near(map.height, map.width / 2, 'the map, 2:1');
+  await expectMapShape(band);
 };
 
 /**
@@ -259,7 +284,14 @@ export const Default: Story = {
  * (owner fb-422 — the old site centred each row on its own line; the owner
  * asked for one shared start on phone and tablet). That is the owner's fb-393
  * rule — desktop beside, tablet and phone below — and at 390 the gutter box is
- * 312px, well under the 768px step.
+ * 351px, well under the 768px step.
+ *
+ * And the map is TALLER here than anywhere else (the owner, 2026-10-09: "i
+ * need map on phone to be like 50% taller. it is too small."): under the
+ * `@lg` step the tray is 4:3, three quarters of its width tall, where the
+ * tablet and the laptop keep the 2:1 box — so a phone's map is half again as
+ * tall as it was at the same width. The play checks the shape the measured
+ * column calls for (`expectMapShape`).
  *
  * 320px is not pinned here: the visual matrix gives `Sections/*` 390 + 1536,
  * and the no-horizontal-scroll assertion below is width-agnostic — it holds
@@ -279,6 +311,7 @@ export const Smartphone: Story = {
     ).toBeInTheDocument();
     await expect(canvas.getAllByRole('link')).toHaveLength(2);
     await expect(band).toHaveTextContent(clinic.phoneDisplay);
+    await expectMapShape(band);
     await expectNoSidewaysScroll(band);
   },
 };
@@ -314,18 +347,20 @@ export const GermanStress: Story = {
 };
 
 /**
- * The band as HOME and TEAM render it — `scaled` (2026-10-02, §15.32),
+ * The band as EVERY page renders it — `scaled`: Home and Team since
+ * 2026-10-02 (§15.32), the doctor pages since 2026-10-13 (round 3) —
  * Romanian, at the laptop width.
  *
  * On a laptop or desktop the WHOLE band is drawn in THE BAND SCALE's design
- * pixel, s = min(column, 96rem) / 1106, like every band around it on those two
- * pages (the component header's THE BAND SCALE): the eyebrow and the h2 at
+ * pixel, s = min(column, 96rem) / 1106, like every band around it on Home and
+ * Team (the component header's THE BAND SCALE): the eyebrow and the h2 at
  * the other bands' size and on their left edge, the address 16 × s — a review
  * card's body size, the owner's 1-to-1 reference — the discs 44 × s, and the
  * map still 2:1, so the map's share of the row stops growing with the window.
  * At this pin the column is about 1214px (1229 without a scrollbar gutter),
- * s ≈ 1.1: compare it with `Default`, the doctor page's band at the same
- * width, whose words stay 16px and discs 44px beside a wider map.
+ * s ≈ 1.1: compare it with `Default`, the band's unscaled default at the same
+ * width (the doctor page's band until 2026-10-13), whose words stay 16px and
+ * discs 44px beside a wider map.
  *
  * The play is `expectBandScale` with the band's own answer, `true`: in the
  * Vitest storybook project the pin holds and the pointer is fine, so it

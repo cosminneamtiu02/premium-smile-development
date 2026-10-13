@@ -6,11 +6,11 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   auxiliaries,
   clinicStats,
-  coursesByYear,
   doctors,
   splitKeywords,
   type AuxiliaryMember,
   type AuxiliaryWords,
+  type Course,
   type Doctor,
   type Stat,
   type StatWords,
@@ -18,7 +18,6 @@ import {
   type StatIcon,
   type TeamPicture,
 } from '../../src/lib/team/team';
-import { clinic, type SchemaDay } from '../../src/lib/clinic/clinic';
 import type { ImagePath } from '../../src/lib/image-path/image-path';
 import { locales, type Locale } from '../../src/i18n/locales';
 
@@ -26,8 +25,8 @@ import { locales, type Locale } from '../../src/i18n/locales';
 // reviews and prices precedents). `tsc` proves every row HAS five languages
 // and every field each of them needs; only a test can see that one of them is
 // an empty string, that two people share an id, that a picture points at
-// nothing on disk, that a language is one `about` paragraph short, or that a
-// course row is dated outside any plausible career or filed out of order.
+// nothing on disk, that a language is one `about` paragraph short, or that
+// one course idea is listed twice for one doctor.
 // (Until 2026-09-30 a doctor also carried a `servicesCategory`, held here to
 // the categories lib/prices really has; the field left with the card's
 // services link — lib/team's NO PORTRAIT AND NO SERVICES CATEGORY — and the
@@ -38,22 +37,35 @@ import { locales, type Locale } from '../../src/i18n/locales';
 // yet: the 320px ceilings on the unbreakable part of a name and of a position
 // — a doctor's position has a tighter one of its own since the ribbon's mount,
 // 2026-09-30 — (both lines opt out of hyphenation), the `<k>` marks staying inside
-// `philosophy` where `splitKeywords` is the only thing that cuts them, and the
-// lines a band keys its rows by being distinct — sections/DoctorProfile keys
-// each `about` paragraph by its text (run ledger D14) and sections/
-// DoctorCourses each course line by its text (D15).
+// the fields `splitKeywords` cuts — `philosophy`, and since 2026-10-13 the
+// `about` paragraphs (below) — and the lines a band keys its rows by being
+// distinct: sections/DoctorCourses keys each course idea by its text (one
+// idea per dot since 2026-10-13, CLAUDE.md §15.23 round 7). The `about`
+// paragraphs stay distinct too, judged by what a reader sees of them: sections/
+// DoctorProfile keyed each one by its text (run ledger D14) until they became
+// rendered nodes on 2026-10-13, and a paragraph said twice in one biography is
+// a paste nobody meant either way.
+//
+// SINCE 2026-10-13 (CLAUDE.md §15.23 round 7, the owner: "i also wan thte
+// text of biografie to be like the text at [Dr. Malea's philosophy] … so
+// gary-ish er and with tighlighted keywords") an `about` paragraph carries
+// `<k>…</k>` marks the way the philosophy does, and the rule that REFUSED a
+// mark there became the rule that SHAPES one (lib/team's THE BIOGRAPHY'S KEY
+// WORDS): every paragraph balanced — `splitKeywords` is the check, as for the
+// philosophy — with one or two marks, each one to four words, no digit, no
+// word of the doctor's own name, never cutting into a word, and as many marks
+// in every language as in the Romanian paragraph of the same index.
 //
 // SINCE ROUND 2 (2026-09-25, run ledger D17) the words have a new shape —
 // `philosophy` is the quote, `about` a list of third-person paragraphs, and a
-// course a row with its year beside five finished lines — and the checks
-// follow it: every `about` paragraph non-empty, trimmed, newline-free, unique
-// within its language and as many in every language as in the Romanian;
-// every doctor with at least one course row, each dated with a whole year in
-// 1990 … 2026, each line finished and unique within its language, the rows
-// written newest → oldest (the design order, like the doctors'); and
-// `coursesByYear` over every doctor and language returning descending years
-// with every line in it exactly once. The assistant pair and its two checks
-// left with the „Echipa mea" band (D13).
+// course a row of five finished lines — and the checks follow it: every
+// `about` paragraph non-empty, trimmed, newline-free, unique within its
+// language and as many in every language as in the Romanian; every doctor
+// with at least one course row, each line finished and unique within its
+// language. The assistant pair and its two checks left with the „Echipa mea"
+// band (D13), and on 2026-10-13 the course YEARS left lib/team (lib/team's A
+// COURSE IS ONE IDEA), taking with them their three checks here — a whole
+// year in 1990 … 2026, the rows newest → oldest, `coursesByYear`'s groups.
 //
 // SINCE ROUND 2f (2026-09-26, run ledger D32) every doctor carries `stats`,
 // the tiles of the doctor page's „în cifre" band (D30), and they get the
@@ -85,60 +97,85 @@ import { locales, type Locale } from '../../src/i18n/locales';
 // (proposed in the build, removed in review, 2026-10-01).
 //
 // SINCE 2026-09-30 (the clinic's six real doctors, review folds): every
-// doctor's week lies INSIDE the clinic's own (`clinic.hours`, lib/clinic —
-// never a week typed here, so the check follows the real week when it lands
-// and re-judges every doctor the day it changes), and every number an `about`
-// paragraph carries is the same in all five languages, as the stat sentences'
-// numbers already are.
+// number an `about` paragraph carries is the same in all five languages, as
+// the stat sentences' numbers already are. (Every doctor's week was held
+// inside the clinic's own here too, until the weeks left lib/team with the
+// doctor page's schedule card on 2026-10-13 — lib/team's NO WEEK ON A DOCTOR.)
 //
 // In the node `unit` project rather than beside the module: pure data, no DOM,
 // and the existence checks read the file system. The FUNCTIONS
-// (`splitKeywords`, `coursesByYear`, `findDoctor`, `findAuxiliary`) are pinned
-// beside the module in src/lib/team/team.test.ts; this file only calls
-// `splitKeywords` as the balanced-tag check it doubles as, and `coursesByYear`
-// over the shipped rows.
+// (`splitKeywords`, `findDoctor`, `findAuxiliary`) are pinned beside the
+// module in src/lib/team/team.test.ts; this file calls `splitKeywords` only
+// as the balanced-tag check it doubles as and as the reader of a marked
+// text — its key words, and what a visitor sees of it with the marks gone.
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const PUBLIC = join(ROOT, 'public');
 
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const CLOCK = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 /** A line break of either kind — a paragraph or a course line is ONE line of
  *  source; the band decides where it wraps (lib/hero-slides' own rule). */
 const LINE_BREAK = /[\r\n]/;
 
-/** schema.org's seven, spelled once here — lib/clinic exports the union as a
- *  TYPE only, and `satisfies` makes this list fail to compile the day the
- *  union changes rather than pass a stale week. */
-const WEEK = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-] as const satisfies readonly SchemaDay[];
-
 /** The doctor's single-string fields — `about` is a LIST and has its own test. */
 const DOCTOR_WORD_KEYS = ['name', 'position', 'philosophy'] as const;
 
-/** A `<k>` or `</k>` in a field that is not a `philosophy` — case-insensitive,
- *  because a stray `<K>` is just as visible to a patient (F10). */
+/** A `<k>` or `</k>` in a field `splitKeywords` never cuts — every field but
+ *  `philosophy` and the `about` paragraphs — and a mark LEFT OVER in a piece
+ *  of one it does cut. Case-insensitive, because a stray `<K>` is just as
+ *  visible to a patient (F10). */
 const KEYWORD_MARK = /<\/?k>/i;
 
 /**
- * THE WINDOW A COURSE YEAR MUST FALL IN (run ledger D17). The floor is older
- * than any course a practising doctor would still list; the ceiling is the
- * year this check was written in, because a course dated in the future is not
- * a qualification anybody holds yet (CMSR: the page may describe, never
- * anticipate). Raise the ceiling with the calendar the day a real row needs
- * it — deliberately a constant, never `new Date()`, so the suite gives the
- * same answer on every day it runs.
+ * THE BIOGRAPHY'S KEY WORDS (lib/team's paragraph of that name; CLAUDE.md
+ * §15.23 round 7): the philosophy's manner — "sănătatea gingiei", „explic" —
+ * one or two marks per paragraph, each a phrase of one to four words.
  */
-const FIRST_COURSE_YEAR = 1990;
-const LAST_COURSE_YEAR = 2026;
+const ABOUT_MARKS = { min: 1, max: 2 } as const;
+const MARK_WORDS_MAX = 4;
+
+/** What a reader sees of a marked text: its pieces joined, the marks gone. */
+const readingOf = (text: string): string =>
+  splitKeywords(text)
+    .map((segment) => segment.text)
+    .join('');
+
+/** The key words of a marked text, in order — the pieces ui/Keyword dresses. */
+const keywordsOf = (text: string): readonly string[] =>
+  splitKeywords(text)
+    .filter((segment) => segment.keyword)
+    .map((segment) => segment.text);
+
+/**
+ * A mark that CUTS INTO A WORD: a letter or a digit right before `<k>` or
+ * right after `</k>` — „gingi<k>ei</k>" would set half a word apart — and so
+ * is a hyphen between a letter and the pair, „Cluj-<k>Napoca</k>" (since
+ * 2026-10-13, G2 typescript NIT). An elision's apostrophe is a word's edge,
+ * so French and Italian mark the article with its noun („l’ordre des
+ * étapes", „l’ordine delle fasi").
+ */
+const MARK_CUTS_A_WORD = /[\p{L}\p{N}]-?<k>|<\/k>-?[\p{L}\p{N}]/u;
+
+/** A word as the name rule compares it: its punctuation gone and lower-cased,
+ *  so „Malea," and „(Sabău)" inside a mark are still the doctor's name (G2
+ *  typescript NIT; a hyphen between two letters is INSIDE a word for the cut
+ *  rule above — „Cluj-<k>Napoca</k>" sets half a name apart). */
+const bareWord = (word: string): string =>
+  word.replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+
+/**
+ * The words of a person's name a mark must never carry — the honorific
+ * („Dr.", „Dr") and the parentheses and hyphens of „Dr. Malea (Sabău) Oana
+ * Bianca" or „Ivașcu-Zugravu" dropped, lower-cased for the comparison.
+ */
+const nameWordsOf = (name: string): ReadonlySet<string> =>
+  new Set(
+    name
+      .split(/[\s()-]+/)
+      .filter((word) => word !== '' && !/^dr\.?$/i.test(word))
+      .map((word) => word.toLowerCase()),
+  );
 
 /**
  * The longest run of characters that CANNOT break. Whitespace is a break
@@ -166,6 +203,11 @@ const longestUnbreakable = (value: string): string =>
  *     wider than it looks: PersonnelCard D5 records 21 characters as the
  *     ceiling inside the card's own 206px box, and it opts out of hyphenation
  *     for the same reason.
+ * RE-MEASURED 2026-10-09, after ui/Container's THE PHONE GUTTER (§15.35): at
+ * 320 the column is 288px on a phone (273 under the runner's scrollbar), a
+ * tile 288px with a 238px content box (273 / 223), so ~18 name characters
+ * fill the column (15.35px a character at 32px) and 24 position characters
+ * fit the box (22 in 223px). Both ceilings stand, with room.
  * A row over either is a DATA fix — a shorter word — never a letter-level
  * emergency break through a person's name or title (D5's own rule).
  */
@@ -196,8 +238,48 @@ const POSITION_CEILING = 21;
  * one („Constantinescu", 202px) withholds it under a ~345px window and draws
  * from 360. The lever for a longer real surname is the card's — the name's
  * step on a narrow card (PersonnelCard's NAME_STEP) — never this file's.
+ *
+ * RE-MEASURED 2026-10-09 by the same method on the built Team page, after
+ * ui/Container's THE PHONE GUTTER (§15.35) widened a phone's column: at the
+ * 320px stress window the column is 273px under the runner's scrollbar and
+ * the name block's line 204.2px, so 20 characters fit (196px; 21 are
+ * 205.8px) — on a phone, with no scrollbar, 288px and 218.1px, where 22 fit
+ * (215.6px; 23 are 225.4px). The ceiling stayed 17, with room. A 22-character
+ * word withheld the ribbon only at the runner's 320 — it was drawn from a
+ * 324px window, and on a real 320 phone; „Constantinescu" (202.3px) at every
+ * window from 320 (withheld under ~345 before), „Alexandrescu" (178.4px) as
+ * before.
+ *
+ * RE-DERIVED 2026-10-10 FOR THE PHONE HEADER (PersonnelCard D20), where the
+ * ceiling now comes from: on a phone the specialty is a line of its own
+ * across the whole INSET, on ui/Eyebrow's `card` step — 13.2px, where JetBrains
+ * Mono advances 0.6em (7.92px) and the `tracking-widest` adds 0.1em (1.32px),
+ * 9.24px a character (MEASURED on the Team page's story twin at 320:
+ * „Kieferorthopädie", 16 characters, 147.8px). AND IT IS TAKEN WITH SC
+ * 1.4.12'S LETTER-SPACING OVERRIDE ON (the G2 fold of the same day): a reader
+ * who sets letter spacing to 0.12em REPLACES the 0.1em tracking, so a
+ * character advances 0.6em + 0.12em = 0.72em, 9.504px at 13.2px. The narrowest
+ * line a 100 %-zoom phone frame gives the specialty is the runner's 320 frame
+ * behind a classic scrollbar — a desktop zoomed to 400 %, the pixel net's 320
+ * cell — 204.2px, where floor(204.2 / 9.504) = 21 characters fit (199.6px; 22
+ * are 209.1px): THE CEILING IS 21. A real 320 phone's 218.1px holds 22, and
+ * without the override 22 and 23 (9.24px a character) — the 21 holds in every
+ * frame with the spacing on. From the INSET's 24rem up (every tablet) the
+ * specialty is 14px again in a line of at least 384px — 38 characters with
+ * the override on (10.08px each) — so a phone binds. Today's longest is German
+ * „Kieferorthopädie" (16); the other four languages' longest are 14.
+ *
+ * A NAME is still not given a ceiling here, and D20 moved where it binds: on
+ * a phone the name stands BESIDE the round photo at 24px, in a column of
+ * 128px on a 320 phone and 146.6 on a 390 one (inside the ribbon), and never
+ * under 110px — D20's FLOOR: under a 200px INSET (a zoomed phone, the Galaxy
+ * Fold's 280px cover screen) the card stacks and the name has the INSET's
+ * whole line. Measured 2026-10-10, the six real doctors' widest word is
+ * „Cătălina", 87.6px — 110.6 with SC 1.4.12's letter spacing on. The lever
+ * for a longer real surname is the card's (PersonnelCard D20's RECORDED
+ * list), never this file's.
  */
-const DOCTOR_POSITION_CEILING = 17;
+const DOCTOR_POSITION_CEILING = 21;
 
 /**
  * A STAT LABEL'S CEILING — the position's 21, as run ledger D32's contract
@@ -223,9 +305,9 @@ const CLINIC_STAT_LABEL_CEILING = 16;
 
 /**
  * The four drawings, spelled once here — lib/team exports `StatIcon` as a
- * TYPE only (the page owns the glyphs, lib is React-free), so, like WEEK
- * above, `satisfies` makes every entry a real icon and the type pin in the
- * last block makes the union no wider than this list.
+ * TYPE only (the page owns the glyphs, lib is React-free), so `satisfies`
+ * makes every entry a real icon and the type pin in the last block makes the
+ * union no wider than this list.
  */
 const STAT_ICONS = [
   'experience',
@@ -470,13 +552,15 @@ describe('lib/team — the words, in all five languages', () => {
   );
 
   it.each(locales)(
-    'leaves the `<k>` marks to `philosophy` alone — no other field carries one for "%s"',
+    'leaves the `<k>` marks to `philosophy` and `about` — no other field carries one for "%s"',
     (locale: Locale) => {
-      // The marks are a `philosophy` convention (run ledger D2, D17) and
+      // The marks are a convention of the two texts `splitKeywords` cuts —
+      // the `philosophy` (run ledger D2, D17) and, since 2026-10-13, the
+      // `about` paragraphs (lib/team's THE BIOGRAPHY'S KEY WORDS) — and
       // nothing else splits them: a `<k>` that wandered into a name, a
-      // position, an `about` paragraph, a course line or a stat's label or
-      // sentence would reach the page as visible text, because only
-      // `splitKeywords` ever cuts one out (F10).
+      // position, a course line or a stat's label or sentence would reach the
+      // page as visible text, because only `splitKeywords` ever cuts one out
+      // (F10).
       for (const doctor of doctors) {
         const words = doctor.words[locale];
         expect(words.name, `${doctor.id}.${locale}.name`).not.toMatch(
@@ -485,12 +569,6 @@ describe('lib/team — the words, in all five languages', () => {
         expect(words.position, `${doctor.id}.${locale}.position`).not.toMatch(
           KEYWORD_MARK,
         );
-        for (const [index, paragraph] of words.about.entries()) {
-          expect(
-            paragraph,
-            `${doctor.id}.${locale}.about[${index}]`,
-          ).not.toMatch(KEYWORD_MARK);
-        }
         for (const [index, course] of doctor.courses.entries()) {
           expect(
             course.words[locale],
@@ -542,9 +620,106 @@ describe('lib/team — the words, in all five languages', () => {
             KEYWORD_MARK,
           );
         }
+        // …and nothing a MANGLED tag left: `<k >` or `<k/>` is no pair to
+        // splitKeywords and would print as written (G2 typescript L1).
+        expect(
+          readingOf(philosophy),
+          `${doctor.id}.${locale}.philosophy`,
+        ).not.toMatch(/[<>]/);
       }
     },
   );
+
+  it.each(locales)(
+    'marks one or two key ideas in every `about` paragraph for "%s" — balanced, short, digit-free, nameless, whole words, as many as the Romanian',
+    (locale: Locale) => {
+      // lib/team's THE BIOGRAPHY'S KEY WORDS (CLAUDE.md §15.23 round 7): the
+      // marks the owner asked for — "with tighlighted keywords", like the
+      // philosophy's — held to what a machine can read of the philosophy's
+      // manner. Which idea a mark sets apart is the author's; that the SAME
+      // idea is marked in all five languages is held by its proxy, the count.
+      for (const doctor of doctors) {
+        const words = doctor.words[locale];
+        const name = nameWordsOf(words.name);
+        expect(words.about.length, `${doctor.id}.${locale}.about`).toBe(
+          doctor.words.ro.about.length,
+        );
+        for (const [index, paragraph] of words.about.entries()) {
+          const where = `${doctor.id}.${locale}.about[${index}]`;
+          // splitKeywords throws on a half-open or nested tag, naming the
+          // text — so this single call is the balanced-tag check as well.
+          const segments = splitKeywords(paragraph);
+          const marks = segments
+            .filter((segment) => segment.keyword)
+            .map((segment) => segment.text);
+          expect(marks.length, where).toBeGreaterThanOrEqual(ABOUT_MARKS.min);
+          expect(marks.length, where).toBeLessThanOrEqual(ABOUT_MARKS.max);
+          // Every pair a reader sees: an empty `<k></k>` vanishes from the
+          // page (splitKeywords drops it) and would still count as a mark in
+          // the source.
+          expect(paragraph.match(/<k>/g)?.length ?? 0, where).toBe(
+            marks.length,
+          );
+          // A mark that survived the split would reach the page as visible
+          // text — the philosophy's rule, the same pattern.
+          for (const segment of segments) {
+            expect(segment.text, where).not.toMatch(KEYWORD_MARK);
+          }
+          // …and nothing a MANGLED tag left (G2 typescript L1).
+          expect(readingOf(paragraph), where).not.toMatch(/[<>]/);
+          // A mark never cuts into a word: the edges of every pair are a
+          // word's edges.
+          expect(paragraph, where).not.toMatch(MARK_CUTS_A_WORD);
+          for (const mark of marks) {
+            const at = `${where}: „${mark}"`;
+            // A phrase, trimmed: whitespace inside the pair would bold a gap.
+            expect(mark, at).toBe(mark.trim());
+            const markWords = mark.split(/\s+/);
+            expect(markWords.length, at).toBeLessThanOrEqual(MARK_WORDS_MAX);
+            // Never a number…
+            expect(mark, at).not.toMatch(/\d/);
+            // …and never the doctor's own name, its punctuation no disguise.
+            for (const word of markWords.flatMap((part) => part.split('-'))) {
+              expect(name.has(bareWord(word)), at).toBe(false);
+            }
+          }
+          // The same idea(s) in every language: as many marks as the
+          // Romanian paragraph of the same index carries.
+          expect(marks.length, `${where}: marks vs ro`).toBe(
+            keywordsOf(doctor.words.ro.about[index]).length,
+          );
+        }
+      }
+    },
+  );
+
+  it('reads a cut-into word and a name as the key-word rule above means them', () => {
+    // The two readers the rule leans on, on their own: both must refuse
+    // what they exist for and let the shipped shapes through.
+    expect('verific <k>sănătatea gingiei</k>, pentru').not.toMatch(
+      MARK_CUTS_A_WORD,
+    );
+    expect('et <k>l’ordre des étapes</k> est').not.toMatch(MARK_CUTS_A_WORD);
+    expect('gingi<k>ei</k>').toMatch(MARK_CUTS_A_WORD);
+    expect('<k>gingi</k>ei').toMatch(MARK_CUTS_A_WORD);
+    // A hyphen between two letters is inside the word…
+    expect('Cluj-<k>Napoca</k>').toMatch(MARK_CUTS_A_WORD);
+    expect('<k>Cluj</k>-Napoca').toMatch(MARK_CUTS_A_WORD);
+    // …and a name's punctuation hides nothing from the name rule.
+    expect(bareWord('Malea,')).toBe('malea');
+    expect(bareWord('(Sabău)')).toBe('sabău');
+    expect([...nameWordsOf('Dr. Malea (Sabău) Oana Bianca')]).toEqual([
+      'malea',
+      'sabău',
+      'oana',
+      'bianca',
+    ]);
+    expect([...nameWordsOf('Dr Ivașcu-Zugravu Cătălina')]).toEqual([
+      'ivașcu',
+      'zugravu',
+      'cătălina',
+    ]);
+  });
 
   it.each(locales)(
     'every doctor has `about` paragraphs, one finished paragraph each, as many as the Romanian, for "%s"',
@@ -560,10 +735,15 @@ describe('lib/team — the words, in all five languages', () => {
           // wrap where the string says rather than where the column does.
           expect(paragraph, where).not.toMatch(LINE_BREAK);
         }
-        // sections/DoctorProfile keys its paragraphs by their text, so two
-        // equal ones would collapse into one React key — a paragraph silently
-        // missing from the page.
-        expect(new Set(about).size, `${doctor.id}.${locale}.about`).toBe(
+        // No paragraph said twice in one biography — judged by what a READER
+        // sees, the marks gone, so two paragraphs that differ only in where
+        // their key words sit still count as one paragraph twice. (Until
+        // 2026-10-13 sections/DoctorProfile keyed each paragraph by its text,
+        // and two equal ones would have collapsed into one React key; since
+        // the paragraphs became rendered nodes the rule is the copy's own: a
+        // paste nobody meant.)
+        const readings = about.map(readingOf);
+        expect(new Set(readings).size, `${doctor.id}.${locale}.about`).toBe(
           about.length,
         );
         // A language one paragraph short is a translation nobody finished.
@@ -578,10 +758,11 @@ describe('lib/team — the words, in all five languages', () => {
     'carries the same numbers in every `about` paragraph as the Romanian, for "%s"',
     (locale: Locale) => {
       // A number inside a paragraph — a year, a count — is written once per
-      // language: five copies, free to disagree, which is the very thing
-      // storing a course's year ONCE stopped (lib/team's COURSES paragraph).
-      // The placeholders carry none today; the owner's real biographies will
-      // („din 2016"), and that is exactly when one language can drift.
+      // language: five copies, free to disagree, which is the very thing a
+      // stat's `value`, stored once, cannot do (lib/team's A DOCTOR'S NUMBERS
+      // ARE ROWS TOO). The placeholders carry none today; the owner's real
+      // biographies will („din 2016"), and that is exactly when one language
+      // can drift.
       for (const doctor of doctors) {
         for (const [index, paragraph] of doctor.words[locale].about.entries()) {
           expect(
@@ -594,26 +775,10 @@ describe('lib/team — the words, in all five languages', () => {
   );
 });
 
-describe('lib/team — the course rows (run ledger D17)', () => {
-  it('gives every doctor at least one row, each dated with a whole year in 1990 … 2026', () => {
+describe('lib/team — the course rows (run ledger D17; one idea each since 2026-10-13)', () => {
+  it('gives every doctor at least one row — the courses column never stands empty', () => {
     for (const doctor of doctors) {
       expect(doctor.courses.length, doctor.id).toBeGreaterThan(0);
-      for (const [index, course] of doctor.courses.entries()) {
-        const where = `${doctor.id}.courses[${index}]: ${course.year}`;
-        expect(Number.isInteger(course.year), where).toBe(true);
-        expect(course.year, where).toBeGreaterThanOrEqual(FIRST_COURSE_YEAR);
-        expect(course.year, where).toBeLessThanOrEqual(LAST_COURSE_YEAR);
-      }
-    }
-  });
-
-  it('writes every doctor’s rows newest → oldest — the design order, like the doctors’', () => {
-    // `coursesByYear` does not need this (its own suite feeds it shuffled
-    // rows); the FILE does — read top to bottom it is the page's order, and
-    // the owner edits the file, not the page.
-    for (const doctor of doctors) {
-      const years = doctor.courses.map((course) => course.year);
-      expect(years, doctor.id).toEqual(years.toSorted((a, b) => b - a));
     }
   });
 
@@ -629,33 +794,17 @@ describe('lib/team — the course rows (run ledger D17)', () => {
           // One line each: the band prints them as list items (lib/hero-
           // slides' own rule).
           expect(line, where).not.toMatch(LINE_BREAK);
+          // NO YEAR — the owner's "there wont be any more years on the
+          // courses … this must stand" (2026-10-13): the field left the
+          // type, and a year typed into the words is the way back this
+          // refuses (G2 typescript M2).
+          expect(line, where).not.toMatch(/\b(?:19|20)\d{2}\b/);
         }
         // sections/DoctorCourses keys its <li>s by the line itself, so a
         // duplicate would collapse two courses into one React key — one row
         // silently missing from a doctor's page (F10).
         expect(new Set(lines).size, `${doctor.id}.courses.${locale}`).toBe(
           lines.length,
-        );
-      }
-    },
-  );
-
-  it.each(locales)(
-    'groups every doctor’s rows through coursesByYear in descending years, every line once, for "%s"',
-    (locale: Locale) => {
-      for (const doctor of doctors) {
-        const groups = coursesByYear(doctor, locale);
-        const where = `${doctor.id}.${locale}`;
-        // STRICTLY descending: one heading per year, never the same year twice.
-        for (let index = 1; index < groups.length; index += 1) {
-          expect(groups[index - 1].year, where).toBeGreaterThan(
-            groups[index].year,
-          );
-        }
-        const printed = groups.flatMap((group) => group.courses);
-        expect(printed.length, where).toBe(doctor.courses.length);
-        expect(printed.toSorted(), where).toEqual(
-          doctor.courses.map((course) => course.words[locale]).toSorted(),
         );
       }
     },
@@ -794,78 +943,22 @@ describe('lib/team — the „în cifre" tiles (run ledger D32; the clinic’s s
   });
 });
 
-describe('lib/team — the weeks lib/hours prints', () => {
-  it('names only schema.org days, never the same day twice', () => {
-    for (const doctor of doctors) {
-      const seen: string[] = [];
-      for (const entry of doctor.hours) {
-        expect(entry.days.length, doctor.id).toBeGreaterThan(0);
-        for (const day of entry.days) {
-          expect(WEEK, `${doctor.id}: ${day}`).toContain(day);
-          // lib/hours lets a later entry overwrite an earlier one ("the last
-          // one wins"), so a repeat would silently drop a whole shift.
-          expect(seen, `${doctor.id}: ${day} twice`).not.toContain(day);
-          seen.push(day);
-        }
-      }
-    }
-  });
-
-  it('opens before it closes, on a 24h clock', () => {
-    for (const doctor of doctors) {
-      for (const entry of doctor.hours) {
-        const where = `${doctor.id}: ${entry.opens}–${entry.closes}`;
-        expect(entry.opens, where).toMatch(CLOCK);
-        expect(entry.closes, where).toMatch(CLOCK);
-        // Zero-padded "HH:MM" compares correctly as text.
-        expect(entry.opens < entry.closes, where).toBe(true);
-      }
-    }
-  });
-
-  it('keeps every doctor’s week inside the clinic’s own (lib/clinic) — never a patient at a closed door', () => {
-    // A doctor's week is the doctor's own (lib/team's HOURS paragraph), but it
-    // can only be a PART of the clinic's: a day the clinic is closed, or an
-    // hour before it opens or after it closes, would send a patient to a
-    // locked door. Judged against `clinic.hours` rather than a week typed
-    // here, so the check follows the clinic's real week the day it lands and
-    // re-judges every doctor whenever it changes. Like lib/hours, a later
-    // clinic entry for the same day wins.
-    const open = new Map<SchemaDay, { opens: string; closes: string }>();
-    for (const entry of clinic.hours) {
-      for (const day of entry.days) {
-        open.set(day, { opens: entry.opens, closes: entry.closes });
-      }
-    }
-    for (const doctor of doctors) {
-      for (const entry of doctor.hours) {
-        for (const day of entry.days) {
-          const clinicDay = open.get(day);
-          expect(
-            clinicDay,
-            `${doctor.id}: ${day}, the clinic is closed`,
-          ).toBeDefined();
-          if (!clinicDay) continue;
-          expect(
-            entry.opens >= clinicDay.opens,
-            `${doctor.id}: ${day} opens ${entry.opens}, the clinic at ${clinicDay.opens}`,
-          ).toBe(true);
-          expect(
-            entry.closes <= clinicDay.closes,
-            `${doctor.id}: ${day} closes ${entry.closes}, the clinic at ${clinicDay.closes}`,
-          ).toBe(true);
-        }
-      }
-    }
-  });
-});
-
 describe('lib/team — what the types guarantee (run ledger D2)', () => {
   it('types every picture path through lib/image-path, the promoted spelling', () => {
     expectTypeOf<TeamPicture['src']>().toEqualTypeOf<ImagePath>();
     expectTypeOf<Doctor['words']>().toEqualTypeOf<
       Readonly<Record<Locale, DoctorWords>>
     >();
+  });
+
+  it('keeps a course its words alone — no year comes back through the type (2026-10-13)', () => {
+    // The owner: "there wont be any more years on the courses … this must
+    // stand". A `year` written back into `Course` would type-check, pass
+    // every check on the words, and print nowhere (G2 typescript M2).
+    expectTypeOf<Course>().toEqualTypeOf<
+      Readonly<{ words: Readonly<Record<Locale, string>> }>
+    >();
+    expectTypeOf<Doctor['courses']>().toEqualTypeOf<readonly Course[]>();
   });
 
   it('refuses a doctor with a missing language', () => {
@@ -878,7 +971,6 @@ describe('lib/team — what the types guarantee (run ledger D2)', () => {
     const fourLanguages: Doctor = {
       id: 'proba',
       cutout: { src: '/images/demo/cutout-1.png', width: 900, height: 1200 },
-      hours: [],
       courses: [],
       stats: [],
       // @ts-expect-error — `de` is missing: a four-language doctor is not a Doctor
@@ -955,10 +1047,12 @@ describe('lib/team — what the types guarantee (run ledger D2)', () => {
 
 describe('lib/team — the numbers agree with the page they sit on (round 2f)', () => {
   it('never claims fewer courses than the doctor’s own rows list', () => {
-    // The stats band sits UNDER the courses band on the same page: a tile that
-    // says „5 cursuri" over a timeline of six rows would contradict itself in
-    // the visitor's face. The tile may say MORE (a doctor lists a selection),
-    // never less — and a bare count (no `+`) must equal the rows exactly.
+    // The stats band and the courses stand on the same page — since 2026-10-13
+    // the tiles right under the opener, the courses below them beside the
+    // biography: a tile that says „5 cursuri" over a column of six ideas would
+    // contradict itself in the visitor's face. The tile may say MORE (a doctor
+    // lists a selection), never less — and a bare count (no `+`) must equal
+    // the rows exactly.
     for (const doctor of doctors) {
       const tile = doctor.stats.find((stat) => stat.icon === 'courses');
       if (!tile) continue;

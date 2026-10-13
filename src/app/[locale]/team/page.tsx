@@ -61,10 +61,12 @@ import { toStatTiles } from './stat-tiles';
 // On a laptop or desktop all four bands draw in ui/Container's THE BAND SCALE,
 // so every eyebrow and <h2> on the page is one size and one offset: the
 // doctors band always, the staff band always (its one page), the numbers and
-// the map because this page passes `scaled` (the doctor page mounts both and
-// leaves it off until its own bands scale). The staff band's eyebrow and
-// title are `team.roster.*` — Claude's drafts in all five languages, flagged
-// for the owner (§15.17) — and its tiles keep one width: 18rem on phones and
+// the map because this page passes `scaled` (the doctor page mounts both:
+// since 2026-10-13 it passes the flag to the map — one map on every page,
+// §15.32 round 3 — and leaves it off the numbers band until its own bands
+// scale). The staff band's eyebrow and title are `team.roster.*` — Claude's
+// drafts in all five languages, flagged for the owner (§15.17) — and its
+// tiles keep one width: the column's own on a phone (§15.35), 18rem on
 // tablets, a third of the scaled column on a laptop or desktop
 // (sections/TeamRoster's D9).
 //

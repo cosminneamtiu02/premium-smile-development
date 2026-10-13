@@ -73,8 +73,11 @@ const Cell = ({
   children: ReactNode;
   /**
    * Replace the fluid gutter clamp with the pill's MEASURED outer width at the
-   * 320 stress viewport: 305px of Chromium body (the runner reserves ~15px for
-   * the scrollbar) − 2 × 10vw margins = 241px.
+   * 320 stress viewport until 2026-10-09: 305px of Chromium body (the runner
+   * reserves ~15px for the scrollbar) − 2 × 10vw margins = 241px. Since THE
+   * PHONE GUTTER (ui/Container, §15.35) the 320 pill is 273px; the fixture
+   * keeps 241 as the narrower bar the wrap needs (the Stress320 story says
+   * why).
    *
    * Pinned rather than derived, because the derived version is only as tight
    * as the runner's scrollbar policy: in a body that measures the full 320 the
@@ -111,8 +114,9 @@ const Cell = ({
         and hugging what it draws (Wordmark.tsx, D9 — the focus ring round the
         lockup, inside the row). px-4 is the pill's own number, and it is
         load-bearing in the pinned case: 241 − 2 border − 32 padding = 207 of
-        row, minus the 44px control = the 163px cell the Header really offers
-        at 320 (no gap — the file header says why). */}
+        row, minus the 44px control = the 163px cell the Header offered at 320
+        until 2026-10-09 (195 in the runner since THE PHONE GUTTER; no gap —
+        the file header says why). */}
     <div className="flex h-20 items-center px-4">{children}</div>
   </header>
 );
@@ -314,16 +318,24 @@ export const Default: Story = {
  * is pinned to its measured 241px and the extra child is the Header's 2.75rem
  * burger, so the row arithmetic here IS the Header's: 241 − 2 border − 32
  * `px-4` = 207, minus 44 = a 163px cell, which is what the built export
- * measures at 320. The fixture offered 147px until 2026-10-01: it kept the
- * 16px `gap-4` the Header's row wore until the shell mount took it off on
- * 2026-09-04 (#69) — right when written, stale for four weeks.
+ * measured at 320 until 2026-10-09. The fixture offered 147px until
+ * 2026-10-01: it kept the 16px `gap-4` the Header's row wore until the shell
+ * mount took it off on 2026-09-04 (#69) — right when written, stale for four
+ * weeks. SINCE 2026-10-09 (THE PHONE GUTTER, ui/Container, §15.35) the 320
+ * Header offers a 195px cell in the runner and 210 on a phone, and the name
+ * keeps ONE line there; this fixture KEEPS its 241px on purpose, as the
+ * narrower bar a ~281px window hands the lockup — a Galaxy Fold's 280px cover
+ * screen, a phone at a large zoom — because it is the one frame that proves
+ * the wrap.
  *
  * What the step does, and why the numbers are what they are (the full
- * derivation is in Wordmark.tsx): below the `@max-sm` step (a 24rem container)
- * the gap drops to 0.5rem, the mark to 1.53rem — 24.47px tall, 24.19 wide,
- * 30.6% of the row — and the name to the old 20px (the owner's 30px name
- * stands from the tablet up: the phone fitting, 2026-10-01). One line needs 24.19 + 8 + 138.75 = 170.94px,
- * more than this 163px cell (a real 320 phone's is 178px and keeps one line),
+ * derivation is in Wordmark.tsx): below the `@max-md` step (a 28rem container;
+ * `@max-sm` until 2026-10-09) the gap drops to 0.5rem, the mark to 1.53rem —
+ * 24.47px tall, 24.19 wide, 30.6% of the row — and the name to the old 20px
+ * (the owner's 30px name stands from the tablet up: the phone fitting,
+ * 2026-10-01). One line needs 24.19 + 8 + 138.75 = 170.94px, more than this
+ * 163px cell (a real 320 phone's is 210px since the phone gutter, 178 until
+ * then, and keeps one line),
  * so the name reflows onto two 28px lines inside the 5rem row, „Premium" over
  * „Smile", and what has to fit is the min-content sum: 24.19 + 8 + 83.70 =
  * 115.89, i.e. 47.11px of real slack. Reflow, not removal: D10's rule is that

@@ -95,8 +95,10 @@ import {
 // ── ONE DELIBERATE BREACH OF THAT RECIPE, AND ITS BELT (owner 2026-09-12,
 // pack round 2). The deck's STAGE — the slides' clipping box, nothing else —
 // runs under the gutters, edge to edge, the way the old deck did: on a phone
-// the gutter box is 312px and a card that must let its neighbours peek needs
-// the whole 390. ReviewsDeck.tsx does it with the full-bleed margin idiom
+// the gutter box is 351px at 390 (312 before ui/Container's THE PHONE GUTTER,
+// 2026-10-09, §15.35 — the stage reads no gutter, so the deck kept its every
+// pixel) and a card that must let its neighbours peek needs the whole 390.
+// ReviewsDeck.tsx does it with the full-bleed margin idiom
 // (`calc(50% − 50vw)`, its STAGE paragraph), which copies no gutter
 // expression here — ui/Container stays the ONE definition. The heading above
 // and the buttons below keep the gutter. The BELT is this band's own

@@ -33,12 +33,13 @@ const meta = {
         'title',
         'section',
         'band',
+        'name',
         'page',
         'hero',
         'slogan',
       ] satisfies HeadingSize[],
       description:
-        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's one container-responsive row, joined 2026-09-26 (D48, see Band) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's first container-responsive row, joined 2026-09-26 (D48, see Band) · 'name' = a doctor card's name (2026-10-10, PersonnelCard D20): band, and 24px on a 30px line in a container under 24rem, where the name shares its row with the round photo — band itself on an engine without container queries (see NameStep) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     tone: {
       control: 'select',
@@ -48,11 +49,9 @@ const meta = {
         'inverse-stroked',
         'inverse-outlined',
         'inverse-aura',
-        'accent',
-        'accent-idle',
       ] satisfies HeadingTone[],
       description:
-        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'inverse-aura' = the outlined face (the plain weight) plus a lilac HALO — two centred em-scaled text-shadows mixed from the display lilac — the old page's slogan as the owner sees it and the Hero's default face since 2026-10-01 · 'accent' = the lilac accent-decorative ink, ALWAYS bold — the year labels over a doctor's courses (sections/DoctorCourses, 2026-09-25): 4.44:1 on the page ground is large-text contrast only, and bold is what makes the 20px title step large · 'accent-idle' = the same bold in ink-muted, accent's REST twin — the course timeline's grey years at rest (2026-09-26): the pair differs in the ink alone, so a year switching between them never reflows. Joined with sections/Hero; the default stays 'default' forever",
+        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'inverse-aura' = the outlined face (the plain weight) plus a lilac HALO — two centred em-scaled text-shadows mixed from the display lilac — the old page's slogan as the owner sees it and the Hero's default face since 2026-10-01. Joined with sections/Hero; the default stays 'default' forever",
     },
     asChild: {
       control: false,
@@ -137,15 +136,18 @@ export const SectionStep: Story = {
  * the card's content box, 25px inside its border-box on every side
  * (Heading.tsx's `'band' JOINED` paragraph). The same words in two
  * `@container` frames: a `w-xs` one — a 320px CONTAINER, the narrow case:
- * the 20rem schedule card (270px of content) and a 390px phone's column
- * (312px) both land under it, and every container under 448px reads 30px —
+ * a 20rem card (270px of content — the doctor page's schedule card until
+ * 2026-10-13) lands under it and a 390px
+ * phone's column (351px since ui/Container's phone gutter of 2026-10-09, 312
+ * before) just over it, and every container under 448px reads 30px —
  * where the step rests on section's 30px, and a `w-md` one (28rem = 448px —
  * the container's `@md` threshold itself, which is inclusive) where it
  * reaches page's 36px. That is how a band title stays under the `hero` h1's
  * 32px floor on a phone and still reads as the "next order" below it wherever
  * its container can carry it. In each frame the
- * Romanian line follows the controls and the German one (the schedule card's
- * DE title — the longest language, §8.4) is pinned to 'band'. Real <h2>s
+ * Romanian line follows the controls and the German one (the German title of
+ * the doctor page's former schedule card, kept as the stress line — the
+ * longest language, §8.4) is pinned to 'band'. Real <h2>s
  * through asChild, the shape every consumer passes; four consecutive h2s give
  * axe's heading-order no increment to score. The frames — their widths, their
  * gap, their dashed OUTLINE (not a border: a border would eat into the content
@@ -192,6 +194,87 @@ export const Band: Story = {
 };
 
 /**
+ * A doctor card's name (2026-10-10, sections/PersonnelCard D20 — the owner's
+ * phone header: "i'd go with bigger face but i also want eyebrow like 10%
+ * bigger"): `band`, plus ONE override — Tailwind's 24px size on a `/tight`
+ * 30px line in a container under 24rem, where the name shares its row with
+ * the round photo; `band` itself on an engine without container queries.
+ * Three `@container` frames, read by the step the way a card's INSET is: a
+ * `w-xs` one — 20rem, a phone's card, every phone's INSET being under 24rem —
+ * at 24px; a 24rem one — the override's edge, no longer under it, a 7″
+ * tablet's card — at band's 30px; and a `w-md` one — 28rem, `@md` — at
+ * band's 36px. The 24rem frame's width is an inline style,
+ * never a class: a width spelled only here would ship in the site's sheet as
+ * a rule nothing on the site wears (Tailwind reads class names from every
+ * source file, a story's too). In each frame the Romanian line follows the
+ * controls and the German one — a double-barrelled name, the longest
+ * language (§8.4) — is pinned to 'name'. Real <h3>s through asChild, the
+ * card's own level; six consecutive h3s give axe's heading-order no
+ * increment to score. The frames' dashed OUTLINE is not a border — a border
+ * would eat into the content box the container query measures — and the
+ * frames, their gap and their outline are the story's, never the atom's
+ * (§6.4). No 'stress-320' tag: a 448px frame cannot fit a 320px viewport, and
+ * the narrow frame already stands for the phone. The play reads the three
+ * sizes and line heights off the engine.
+ */
+export const NameStep: Story = {
+  args: { size: 'name', children: 'Dr. Elena Marin' },
+  render: (args) => (
+    <div className="flex flex-col gap-6">
+      <div className="@container flex w-xs flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h3>{args.children}</h3>
+        </Heading>
+        <Heading size="name" asChild>
+          <h3 lang="de">Dr. Friederike Schwarzenbeck-Hoffmann</h3>
+        </Heading>
+      </div>
+      <div
+        className="@container flex flex-col gap-4 outline outline-dashed outline-line"
+        style={{ width: '24rem' }}
+      >
+        <Heading {...args} asChild>
+          <h3>{args.children}</h3>
+        </Heading>
+        <Heading size="name" asChild>
+          <h3 lang="de">Dr. Friederike Schwarzenbeck-Hoffmann</h3>
+        </Heading>
+      </div>
+      <div className="@container flex w-md flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h3>{args.children}</h3>
+        </Heading>
+        <Heading size="name" asChild>
+          <h3 lang="de">Dr. Friederike Schwarzenbeck-Hoffmann</h3>
+        </Heading>
+      </div>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // In DOM order — the narrow frame's two lines, the 24rem frame's, the
+    // wide frame's. The frames are measured first, so a width that failed to
+    // apply cannot let the sizes pass for the wrong reason.
+    const names = canvas.getAllByRole('heading', { level: 3 });
+    await expect(
+      names.map(
+        (name) => name.parentElement?.getBoundingClientRect().width ?? 0,
+      ),
+    ).toEqual([320, 320, 384, 384, 448, 448]);
+    await expect(names.map((name) => getComputedStyle(name).fontSize)).toEqual([
+      '24px',
+      '24px',
+      '30px',
+      '30px',
+      '36px',
+      '36px',
+    ]);
+    await expect(
+      names.map((name) => getComputedStyle(name).lineHeight),
+    ).toEqual(['30px', '30px', '36px', '36px', '40px', '40px']);
+  },
+};
+
+/**
  * The page-hero step, measured in by the 404 band (owner, 2026-09-07): 36px,
  * one additive step over 'section', same face and ink. Same dual-line shape as
  * SectionStep — the Romanian line follows the `size` control, the German line
@@ -221,8 +304,10 @@ export const PageStep: Story = {
  * atom scales with the PAGE (the gutter's own licence) and never with a
  * container it cannot see. Same dual-line shape as its elders: the Romanian
  * line follows the controls, the German line is pinned to 'hero'. The fixtures
- * are the old site's own slogans. 'stress-320': a 32px serif line in a 256px
- * column is the wrap case, and the step's floor is what this width proves.
+ * are the old site's own slogans. 'stress-320': a 32px serif line in a 288px
+ * column (the 320 window's since ui/Container's phone gutter of 2026-10-09;
+ * 256 before) is the wrap case, and the step's floor is what this width
+ * proves.
  * THE h1 STEP of §15.24 since 2026-09-26 (the doctor page's name, the 404
  * title); the opener's own reshape is SloganStep, beside it.
  */
@@ -438,93 +523,6 @@ export const AuraTone: Story = {
     await expect(blurs[0]).toBeCloseTo(0.28 * fontSize, 0);
     await expect(blurs[1]).toBeCloseTo(0.08 * fontSize, 0);
     for (const layer of layers) await expect(layer).toMatch(/ 0px 0px /);
-  },
-};
-
-/**
- * The accent ink (2026-09-25, the doctor-pages run's round 2, D16): the lilac
- * year label sections/DoctorCourses opens each group of courses with — a real
- * <h3> through asChild on the page ground it ships on, photographed at the
- * `title` step ON PURPOSE: the consumer has worn `section` (30px, large by
- * size alone) since round 2j (D44a), and 20px is the harder case — the one
- * where the weight is what makes the label large, so a frame that passes here
- * passes at every step above it.
- * The owner asked for "bold and lilac"; the arithmetic is why the two travel
- * together. `--color-accent-decorative` #7a6d9c on `--page` #faf9f7 measures
- * 4.44:1 — UNDER the 4.5:1 normal text needs, which is why §15.1 licenses the
- * role for large display text and graphics only. WCAG's "large" is ≥ 24px, or
- * ≥ 18.67px BOLD: the title step is 20px, so the tone's own `font-bold` is
- * what lifts this label into the 3:1 bracket, where 4.44:1 clears with room.
- * That is why the weight is in the TONE row and not the caller's className —
- * the pair cannot be split at a call site.
- * axe runs with every rule ON here, color-contrast included: it reads the
- * computed weight (700) and size (20px), classifies the text as large and
- * scores it against 3:1 — the story is the arithmetic, checked by the engine.
- * The lone <h3> passes heading-order for AsHeadingElement's reason: the rule
- * scores the INCREMENT between consecutive headings, and the first has none.
- * The wrapper paints the ground and owns the padding, never the atom (§6.4).
- */
-export const AccentTone: Story = {
-  args: { size: 'title', tone: 'accent', children: '2024' },
-  render: (args) => (
-    <div className="bg-page p-6">
-      <Heading {...args} asChild>
-        <h3>{args.children}</h3>
-      </Heading>
-    </div>
-  ),
-  play: async ({ canvas }) => {
-    // The "large" claim, read off the engine rather than asserted in prose:
-    // the weight the tone row ships and the size the title step resolves to.
-    // 18.66 rather than 18.67 is float slack on WCAG's 14pt (= 18.666…px).
-    const label = canvas.getByRole('heading', { level: 3 });
-    const style = getComputedStyle(label);
-    await expect(Number(style.fontWeight)).toBeGreaterThanOrEqual(700);
-    await expect(parseFloat(style.fontSize)).toBeGreaterThanOrEqual(18.66);
-  },
-};
-
-/**
- * The accent ink's REST twin (2026-09-26, the doctor-pages run's round 2g,
- * D35): the grey year a course timeline shows while that year is not the one
- * being read — "all are grayed out at rest", in the owner's words. The SAME
- * `font-bold` as AccentTone, in `ink-muted`: the two are a lit/unlit pair that
- * sections/DoctorCourses switches as the visitor scrolls, and a pair that
- * differed in weight would reflow the line — and every course under it — on
- * every switch. Only the ink moves (the test file pins exactly one token of
- * difference). `--ink-muted` #5b554f on `--page` #faf9f7 measures 6.99:1 at
- * full opacity, so unlike the accent this ink clears body-text contrast at any
- * weight; at full opacity the bold is here for the pair, not for the
- * arithmetic.
- * KEEP-IN-SYNC with sections/DoctorCourses/CourseTimeline.tsx (its CONTRAST,
- * MEASURED paragraph and `groupIdle`): the one consumer fades the whole
- * resting group to 0.65, where this ink blends to rgb(147 142 138) and reads
- * 3.07:1 on `--page` — the large-text bar, which every step of this atom
- * meets by construction (the smallest, `title`, is 20px, and this row is
- * bold: ≥ 18.67px bold is large) — so no consumer may fade it below 0.65
- * without re-measuring (at 0.50 it would read 2.27:1, a failure). This frame
- * shows the ink at full opacity.
- * Same shape as AccentTone — a real <h3> through asChild on the page ground,
- * at the same `title` step for AccentTone's reason (the consumer is at
- * `section`, D44a) — so the two frames sit side by side in the pack as the
- * two states of one label. axe runs with every rule on, color-contrast
- * included.
- */
-export const AccentIdleTone: Story = {
-  args: { size: 'title', tone: 'accent-idle', children: '2024' },
-  render: (args) => (
-    <div className="bg-page p-6">
-      <Heading {...args} asChild>
-        <h3>{args.children}</h3>
-      </Heading>
-    </div>
-  ),
-  play: async ({ canvas }) => {
-    // The weight the pair shares, read off the engine: bold at rest too.
-    const label = canvas.getByRole('heading', { level: 3 });
-    await expect(
-      Number(getComputedStyle(label).fontWeight),
-    ).toBeGreaterThanOrEqual(700);
   },
 };
 

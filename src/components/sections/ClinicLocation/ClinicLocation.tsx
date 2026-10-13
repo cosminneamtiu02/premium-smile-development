@@ -52,18 +52,20 @@ import { cx } from '@/lib/cx/cx';
 // pair on `--fade` (fb-44): the two spellings are deliberately independent, so
 // changing the system's feel is a two-file edit and never a drift.
 //
-// ── OLD → NEW: three deviations from "exactly the same", listed so no reviewer
+// ── OLD → NEW: four deviations from "exactly the same", listed so no reviewer
 // reads them as drift — the first two STANDING SITE LAW rather than this
 // band's taste, the third a size this file got wrong for three weeks and now
-// keeps on purpose.
+// keeps on purpose, the fourth the owner's word on the phone's map.
 //   1. The gutter. The old band spelled its own `pl/pr-[clamp(48px,10vw,200px)]`;
 //      this one composes ui/Container, whose `containerClasses` is the ONE
 //      gutter definition on the site (§15.15 a, fb-343). The number is NOT
 //      restated here on purpose — tests/unit/gutter-single-spelling.test.ts
 //      fences src/ against a second spelling, and that fence is the whole
 //      product of the promotion. Geometry: identical to the old band from
-//      480px up; below that the floor is 16px instead of 48px, which is the
-//      margin every other band on the site already wears.
+//      600px up; up to a 480px window it is HALF the old band's 10vw since
+//      2026-10-09 (ui/Container's THE PHONE GUTTER, CLAUDE.md §15.35 — 19.5px
+//      a side at 390), a ramp between, and the floor is 16px instead of 48px —
+//      the margin every other band on the site wears.
 //   2. The disc's colours. The old disc was the old palette's accent; from
 //      2026-09-09 to 2026-10-01 every disc on this site was the green CTA
 //      family, and since 2026-10-01 these two wear ui/GlyphButton's LAVENDER
@@ -91,21 +93,38 @@ import { cx } from '@/lib/cx/cx';
 //      card's body is ui/Text's `text-base` too, and the owner's base
 //      reference is the two read 1 to 1 (THE BAND SCALE, below, which also
 //      names the step up as a lever).
-// Everything else is ported: the 2:1 map box, the `-m-3 p-3` hit-area trick,
-// the single-anchor row, the whole-row hover, the 44px disc with its 20px
-// glyph (44 and 20 DESIGN px inside the band scale — DISC_SIZE below),
-// `loading="lazy"` and `allow=""`. The radius (D4) and the shadow (D3) take
-// the house values — `rounded-md`, `shadow-aura` — and the aura happens to be
-// numerically the old site's `shadow-cta`.
+//   4. The phone's map — TALLER (2026-10-09, CLAUDE.md §15.34; the owner,
+//      verbatim: "i need map on phone to be like 50% taller. it is too
+//      small."). The old box was 2:1 at every width, and so was this one
+//      until that day: a map half as tall as it is wide, which on a phone's
+//      column is a strip about a fifth of the screen's height. Below the
+//      band's `@lg` step — D7's phone layout, where the two rows stack — the
+//      tray is 4:3 now: three quarters of its width tall instead of half,
+//      which is exactly half again as tall at the same width. From `@lg` up
+//      (every tablet, a phone held sideways past the step, every laptop) it
+//      is the 2:1 box as before. ONE step, the one the rows already turn at,
+//      so the band changes shape in one place; the price is a jump there —
+//      across the step the map loses a third of its height, beside the rows'
+//      own rearrangement. The lever is the phone's ratio, one token.
+// Everything else is ported: the 2:1 map box (from `@lg` up — item 4), the
+// `-m-3 p-3` hit-area trick, the single-anchor row, the whole-row hover, the
+// 44px disc with its 20px glyph (44 and 20 DESIGN px inside the band scale —
+// DISC_SIZE below), `loading="lazy"` and `allow=""`. The radius (D4) and the
+// shadow (D3) take the house values — `rounded-md`, `shadow-aura` — and the
+// aura happens to be numerically the old site's `shadow-cta`.
 //
 // ── D7 · THE CONTAINER-STEP MAPPING, and why there is a rhythm box. §6.5
 // forbids a component from measuring the window, so the old media queries
-// become steps on ui/Container's gutter box (viewport − 2×10vw):
-//   · old `sm:` (640) → `@lg` (container 512px) — EXACT, because 640−128 = 512;
+// become steps on ui/Container's gutter box (viewport − 2×10vw from a 600px
+// window; − 2×5vw up to a 480px one since 2026-10-09, THE PHONE GUTTER):
+//   · old `sm:` (640) → `@lg` (container 512px) — EXACT, because 640−128 =
+//     512 (the phone gutter narrows the gutter only under 600, so this step is
+//     untouched);
 //   · old `lg:` (1024) → `@3xl` (container 768px) — fires around a 960px
-//     viewport, i.e. identical at every §7 sampling point: 390 → box 312 and
-//     768 → box 614 stack the rows BELOW the map, 1280 → box 1024, 1536 and
-//     1920 put them beside it (the owner's fb-393 rule, checked with numbers).
+//     viewport, i.e. identical at every §7 sampling point: 390 → box 351 (312
+//     until 2026-10-09) and 768 → box 614 stack the rows BELOW the map, 1280 →
+//     box 1024, 1536 and 1920 put them beside it (the owner's fb-393 rule,
+//     checked with numbers).
 // An element cannot query its OWN size, and Container IS the container — so
 // the stepped `py` cannot ride on Container itself. It sits on the rhythm box
 // one level in. The band still owns its vertical rhythm (Container's PAGE-BAND
@@ -129,8 +148,12 @@ import { cx } from '@/lib/cx/cx';
 // requirements, but the idea is the following, i do not want the map to be
 // too large, the space the buttons take up too small or disproportioned and
 // text just as readable as this always: [a doctor's quote]".
-// THE DECISION (the planner's, the same day): `scaled` — the prop Home and
-// Team pass — puts the rhythm box in ui/Container's two band-scale strings,
+// THE DECISION (the planner's, the same day): `scaled` — the prop every page
+// passes: Home and Team from that day, the doctor pages from 2026-10-13 (the
+// owner: "as the current map on home page is now, i need it updated
+// reactivity wise on absoultey every page … with this i am refering to
+// individual doctor page"; §15.32 round 3) — puts the rhythm box in
+// ui/Container's two band-scale strings,
 // `bandColumnClasses` and `bandScaleClasses`, so on a laptop or desktop, from
 // a max(56rem, 896px) column, the WHOLE band — opener, map tray, rows, discs,
 // words, rhythm — is ONE design drawn at the owner's 1401 window and scaled
@@ -235,8 +258,9 @@ const ROW_HOVER =
 // reads both back from the real stylesheet) — and inside a scaled band it is
 // 44 design px with a 20-design-px glyph, because the variable is resolved on
 // the disc, against the `--spacing` the band hands down. One rule for every
-// mount, so the doctor page's band and Home's can never disagree about what a
-// disc is made of — only about the pixel it is measured in.
+// mount, so the band's unscaled default and every scaled page can never
+// disagree about what a disc is made of — only about the pixel it is measured
+// in.
 const DISC_SIZE = '[--disc-size:calc(var(--spacing)*11)]';
 
 /**
@@ -331,12 +355,20 @@ export type ClinicLocationProps = Readonly<{
    * (the header's THE BAND SCALE; ui/Container's): the rhythm box wears
    * `bandColumnClasses` + `bandScaleClasses`, so opener, map, rows, discs and
    * words scale with the column like every band around them and cap and
-   * centre at the same width. Home and Team pass it — every band below the
-   * Home hero and every band of the Team page wears the scale. Default
-   * `false`, because the doctor page mounts this band too and its other bands
-   * do not scale yet: there the band stays its rem self, every pixel as
-   * before. Below the step, on every touch device and in an engine that
-   * cannot register custom properties, `true` declares nothing either.
+   * centre at the same width. EVERY page that mounts the band passes it:
+   * Home and Team since 2026-10-02 (every band below the Home hero and every
+   * band of the Team page wears the scale) and the doctor pages since
+   * 2026-10-13 — the owner's "as the current map on home page is now … on
+   * absoultey every page" (§15.32 round 3), so the map is one band wherever
+   * it stands — and, since round 4 the same day, every other band of the
+   * doctor page scales with it.
+   * app/[locale]/page-twins.test.ts holds every page and twin to the bare
+   * flag. Default `false`, the band's plain rem self — what its own stories
+   * draw — because the prop arrived additive (§6.6); wearing the scale
+   * unconditionally and deleting the prop (ui/Container's recipe, a band
+   * living only on scaled pages) is the recorded lever. Below the step, on
+   * every touch device and in an engine that cannot register custom
+   * properties, `true` declares nothing either.
    */
   scaled?: boolean;
 }>;
@@ -390,15 +422,20 @@ export function ClinicLocation({
           />
           {/* Map and rows: one column until @3xl, then the map takes the free
               track and the rows hug their content beside it (`1fr auto`,
-              vertically centred). gap-6 is the section owning ALL child
-              spacing (§6.4); the old `lg:gap-6` was a no-op restatement of the
-              base value and is dropped. */}
+              vertically centred ON THE MAP — the tray is alone in its track,
+              so `items-center` centres the rows on the map itself). gap-6 is
+              the section owning ALL child spacing (§6.4); the old `lg:gap-6`
+              was a no-op restatement of the base value and is dropped. From
+              2026-10-10 to 2026-10-13 a note under the map took a second row
+              of that track; it left on the owner's word (§15.38 round 3) and
+              the one-row grid is back. */}
           <div className="mt-8 grid gap-6 @lg:mt-10 @3xl:mt-12 @3xl:grid-cols-[1fr_auto] @3xl:items-center">
             {/* ── CONSENT SEAM (board D1, owner option A 2026-09-09) ─────────
                 The live Google embed renders UNGATED, at page load, exactly as
                 the old site — an accepted, deferred risk on the owner's word
                 (CLAUDE.md §12 rider; COOKIES.md §7). When the cookie-strategy
-                lane ships a consent record, THIS element is what it wraps:
+                lane ships a consent record, the TRAY below (the <iframe>'s
+                own parent) is what it wraps:
                 render the <iframe> only when the record grants, and design the
                 no-consent branch THERE (a picture is reopened as an option,
                 fb-387). ClinicLocation.test.tsx pins the iframe's attributes so
@@ -408,8 +445,10 @@ export function ClinicLocation({
                 baselines photograph: `overflow-hidden` is what makes the frame
                 respect the house `rounded-md` corners (D4), `bg-line-subtle` is
                 the on-brand ground behind it, and `shadow-aura` is the EXISTING
-                token (D3), not a new one. */}
-            <div className="aspect-[2/1] overflow-hidden rounded-md border border-line-subtle bg-line-subtle shadow-aura">
+                token (D3), not a new one. The tray's SHAPE is the header's OLD
+                → NEW, item 4: 4:3 on a phone's column, half again as tall as
+                the 2:1 it keeps from `@lg` up (the owner, 2026-10-09). */}
+            <div className="aspect-[4/3] @lg:aspect-[2/1] overflow-hidden rounded-md border border-line-subtle bg-line-subtle shadow-aura">
               {/* `title` is the frame's accessible name — without it a screen
                   reader announces an unnavigable "frame" and axe fails the
                   story. `referrerPolicy="no-referrer"` sends Google no page
@@ -417,13 +456,30 @@ export function ClinicLocation({
                   the browser default, with the embed measured to render
                   identically (board D2). `allow=""` is an explicit EMPTY
                   permission list — no fullscreen, no microphone, no payment —
-                  which is a different thing from omitting the attribute. */}
+                  which is a different thing from omitting the attribute.
+                  `credentialless` (§15.38, BACKLOG.md entry 1's first step)
+                  gives the frame an empty cookie jar of its own: Google's page
+                  can neither send nor read the Google cookies a signed-in
+                  visitor already has — measured 19 of 46 requests carrying one
+                  in Chromium before, 0 with it, the map and its card buttons
+                  unchanged (COOKIES.md §3). SPELLED AS ITS OWN NAME, the one
+                  value both Reacts write: Next's bundled canary (the export
+                  and Storybook) knows the attribute as BOOLEAN and drops an
+                  empty string, npm's 19.2 (the unit and components tests) does
+                  not know it and drops `true` — ./credentialless.ts has the
+                  measurement, tests/unit/credentialless-render.test.ts holds
+                  both. The visitor's IP still reaches Google on load: the
+                  deferred risk of §12's rider, which no attribute closes; the
+                  privacy page's map part, linked from every footer, is where a
+                  visitor reads it (GDPR art. 13 — the note that also said it
+                  under the map left on 2026-10-13, §15.38 round 3). */}
               <iframe
                 src={mapSrc}
                 title={t('location.mapAlt', { name: clinic.name })}
                 loading="lazy"
                 referrerPolicy="no-referrer"
                 allow=""
+                credentialless="credentialless"
                 className="h-full w-full border-0"
               />
             </div>

@@ -20,7 +20,7 @@ import source from './CredoCard.tsx?raw';
 // words inside them are still <b> elements after the whole chain.
 //
 // ── NO NextIntlClientProvider, AND THE ABSENCE IS THE ASSERTION (the
-// ScheduleCard / SectionHeading precedent). next-intl's hooks throw without
+// SectionHeading precedent). next-intl's hooks throw without
 // one, so a green render proves run D1: this card owns no message key and
 // calls no t(). Every string below is a FIXTURE the doctor page would have
 // translated — Romanian with diacritics (§15.7), factual, no superlatives
@@ -118,7 +118,10 @@ const framedAuraCard = (): string =>
  * DoctorIntro's D63 (a 36rem track beside the picture) that is 30px at 1024
  * and 1280 and 36px from 1366 up, and 36px stacked full-width on a tablet as
  * before (ui/Heading's `'band' JOINED` paragraph; owner decision 1 of G2
- * tier 1, fold-tier1.md). The never-vacuous guard in the test
+ * tier 1, fold-tier1.md) — and since DoctorIntro's THE BAND SCALE
+ * (2026-10-13), on a laptop or a desktop, the same two steps in the design
+ * pixel, the switch a CSS-pixel one still: 27.4px at 1280, 39.5 at 1536,
+ * 49.5 at 1920 (DoctorIntro.scale.test.tsx pins it). The never-vacuous guard in the test
  * pins that what is read back really IS one of ui/Heading's rows, not an
  * empty or foreign string.
  */
@@ -131,8 +134,9 @@ const sectionHeadingStep = (): string => {
 
 /**
  * The card's source with its PROSE removed, which is what the zero-island
- * guards at the bottom run against (mechanism copied verbatim from
- * ScheduleCard.test.tsx, where its reasoning is written out in full). Without
+ * guards at the bottom run against (mechanism copied from the doctor page's
+ * schedule-card suite, dropped with that card on 2026-10-13 — one of the
+ * `stripComments` copies §15.19's helper-promotion census counts). Without
  * it those guards police the file's own documentation: this component is
  * deliberately comment-heavy and its header discusses `'use client'` and
  * `t()` by name.
@@ -199,7 +203,8 @@ describe('CredoCard — a named region under the name (D12)', () => {
 
   it('lets a caller id land on the section without touching the name pair', () => {
     // A page may anchor the card (#filozofie); that id is the SECTION's, and
-    // the heading keeps its own generated one (the ScheduleCard precedent).
+    // the heading keeps its own generated one — a caller's anchor and the
+    // region's name are two different ids.
     const { container } = render(<CredoCard {...CREDO} id="filozofie" />);
 
     const card = cardOf(container);

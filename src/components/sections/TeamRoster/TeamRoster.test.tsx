@@ -105,7 +105,7 @@ const MEMBERS = [
 const RHYTHM_OWN = 'flex flex-col gap-10 py-12 @lg:py-16 @3xl:py-20';
 const TILES =
   'flex flex-wrap gap-x-5 gap-y-6 scalable:@4xl:@min-[896px]:gap-x-6';
-const TILE = 'w-72 max-w-full scalable:@4xl:@min-[896px]:w-88';
+const TILE = 'w-72 @max-md:w-full scalable:@4xl:@min-[896px]:w-88';
 
 const tokensOf = (element: Element): string[] =>
   element.className.split(/\s+/).filter(Boolean);
@@ -337,11 +337,11 @@ describe('TeamRoster — the staff tiles, fixed (D9)', () => {
   it('lays the tiles in a wrapping row of FIXED widths — the stretching tracks are gone', () => {
     // D9: the <ul> a wrapping flex row that starts at the column — 20px
     // between two tiles of a row outside the band scale, 24 design pixels
-    // inside it, 24 (design) px between rows — and every <li> 18rem outside the
-    // band scale (`max-w-full` under a narrower column) and 352 design pixels
-    // inside it. The auto-fit grid that made every tile a third of the row —
-    // the owner's "always adjusting in width" — must not come back in any
-    // spelling.
+    // inside it, 24 (design) px between rows — and every <li> the column's own
+    // width on a phone, 18rem off a phone outside the band scale and 352
+    // design pixels inside it. The auto-fit grid that made every tile a third
+    // of the row — the owner's "always adjusting in width" — must not come
+    // back in any spelling.
     const { container } = renderRoster();
 
     const list = screen.getByRole('list');
@@ -364,16 +364,25 @@ describe('TeamRoster — the staff tiles, fixed (D9)', () => {
     const [bandChain] = [...chains];
     expect(bandChain).toBe('scalable:@4xl:@min-[896px]:');
 
-    const regime = TILE.split(' ').filter((token) => chainOf(token) !== '');
-    expect(regime).toEqual([`${bandChain}w-88`]);
-    // …and outside it the tile is plain 18rem, capped by the row.
-    expect(TILE.split(' ').filter((token) => chainOf(token) === '')).toEqual([
-      'w-72',
-      'max-w-full',
-    ]);
+    // THREE regimes and no fourth: the plain 18rem, the phone's column and
+    // the band scale's width — each one token, each on its own chain.
+    const byChain = (chain: string): string[] =>
+      TILE.split(' ').filter((token) => chainOf(token) === chain);
+    expect(new Set(TILE.split(' ').map(chainOf))).toEqual(
+      new Set(['', '@max-md:', bandChain]),
+    );
+    expect(byChain(bandChain)).toEqual([`${bandChain}w-88`]);
+    // …outside it a plain 18rem, which a column off a phone (28rem or more)
+    // always holds — no `max-w-full` belt is owed any more…
+    expect(byChain('')).toEqual(['w-72']);
+    // …and on a phone — a column under the named `md` step — the column's
+    // own width, the doctor cards' (the owner, 2026-10-09: "as the doctor
+    // cards are"; THE PHONE GUTTER, §15.35).
+    expect(byChain('@max-md:')).toEqual(['@max-md:w-full']);
     // The row's gap re-spells the same chain (D9: 20px outside the scale so a
     // 768 desktop window fits two, 24 design pixels inside it), and the row
-    // starts at the column — never spread.
+    // starts at the column — never spread, and on a phone nothing to centre,
+    // its one tile being the row.
     expect(TILES.split(' ').filter((token) => chainOf(token) !== '')).toEqual([
       `${bandChain}gap-x-6`,
     ]);
@@ -444,7 +453,7 @@ describe('TeamRoster — container steps only, zero islands (§6.5, §16)', () =
   it('carries no width media query anywhere — those are the page’s (§6.5)', () => {
     // Container variants (@lg:/@3xl:/@4xl:/@min-[…]) are the allowed shape:
     // they measure ui/Container's COLUMN, which is what makes the same band
-    // right inside a 312px phone gutter and a 1228px laptop one. `scalable:`
+    // right inside a 351px phone column and a 1228px laptop one. `scalable:`
     // is globals.css's CAPABILITY gate — a mouse or trackpad, an engine that
     // registers custom properties — never a width: after it a class may only
     // name container steps (the band scale's chain) or none at all (its cap,

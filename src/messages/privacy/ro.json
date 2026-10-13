@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "description": "Ce date ajung la noi sau la Google când vizitezi site-ul {name}, singurul cookie pe care îl folosim și drepturile tale."
+  },
+  "title": "Confidențialitate și cookie-uri",
+  "updated": "Ultima actualizare: {date}",
+  "intro": "Pe această pagină îți explicăm, în cuvinte simple, ce se întâmplă cu datele tale când vizitezi site-ul {name} și ce drepturi ai. Când scriem GDPR, ne referim la Regulamentul (UE) 2016/679 privind protecția datelor.",
+  "missing": "[de completat]",
+  "summary": {
+    "title": "Pe scurt",
+    "noTracking": "Nu folosim cookie-uri de analiză, de publicitate sau de urmărire.",
+    "oneCookie": "Site-ul salvează un singur cookie, și doar dacă alegi o limbă sau închizi mesajul care îți propune una: ca să țină minte limba la următoarea vizită.",
+    "map": "Harta din secțiunea „{band}” este a Google, care primește adresa IP a dispozitivului tău atunci când harta se încarcă.",
+    "noForms": "Site-ul nu are formulare și nu îți cere date personale."
+  },
+  "controller": {
+    "title": "Cine suntem",
+    "company": "Datele sunt prelucrate de {company}, care administrează clinica {name} de la adresa {address}.",
+    "identity": "Cod unic de înregistrare (CUI): {cui}. Număr de înregistrare: {tradeRegister}. Sediul social: {registeredOffice}.",
+    "contact": "Ne poți scrie la <email>{emailAddress}</email> sau ne poți suna la <phone>{phoneNumber}</phone>.",
+    "profession": "Medicii clinicii au titlul profesional de medic dentist, acordat în România, și sunt membri ai Colegiului Medicilor Stomatologi din România. Regulile profesiei sunt publicate pe <cmsr>site-ul Colegiului</cmsr>."
+  },
+  "visit": {
+    "title": "Când vizitezi site-ul",
+    "logs": "Paginile site-ului sunt găzduite de {host}. Ca la orice site, serverele care le livrează primesc automat, la fiecare vizită, câteva date tehnice: adresa IP, data și ora, pagina cerută și tipul de browser.",
+    "purpose": "Furnizorul folosește aceste date ca paginile să ajungă la tine și ca site-ul să fie apărat de abuzuri. Temeiul legal este interesul legitim de a avea un site sigur, care funcționează (art. 6 alin. (1) lit. f) din GDPR).",
+    "provider": "Aceste date le primește și le păstrează furnizorul, pentru securitatea serviciului, cât timp stabilește el, și le poate transfera în SUA, în baza cadrului UE-SUA privind protecția datelor. Noi nu le primim. Detalii găsești în <policy>politica de confidențialitate a furnizorului</policy>."
+  },
+  "cookies": {
+    "title": "Cookie-uri",
+    "what": "Un cookie este un mic fișier text pe care un site îl salvează în browserul tău, ca să țină minte ceva de la o vizită la alta.",
+    "ours": "Site-ul nostru salvează un singur cookie, și numai după ce alegi o limbă sau închizi mesajul care îți propune una:",
+    "nameLabel": "Nume",
+    "purposeLabel": "Ce face",
+    "purpose": "Ține minte limba aleasă, ca la următoarea vizită să ajungi direct la ea. Păstrează doar codul limbii, de exemplu „ro”.",
+    "whenLabel": "Când se salvează",
+    "when": "Doar când alegi o limbă din butonul de limbă sau când accepți ori închizi mesajul care îți propune limba ta; dacă îl închizi, ține minte limba paginii pe care ești.",
+    "durationLabel": "Cât timp",
+    "duration": "{months, plural, one {# lună} few {# luni} other {# de luni}}. Unele browsere, de exemplu Safari, îl șterg mai devreme, după cel mult 7 zile.",
+    "typeLabel": "Tip",
+    "type": "Cookie propriu, strict necesar pentru o funcție pe care ai cerut-o, așa că nu îți cerem acordul pentru el.",
+    "none": "Nu folosim cookie-uri de analiză, de publicitate sau de urmărire și nicio altă formă de stocare în browser.",
+    "delete": "Poți șterge cookie-ul oricând din setările browserului. Site-ul funcționează la fel, doar că nu va mai ține minte limba."
+  },
+  "map": {
+    "title": "Harta Google",
+    "what": "În secțiunea „{band}” afișăm o hartă Google Maps, ca să vezi unde se află clinica. Harta se încarcă, de obicei, atunci când ajungi aproape de ea pe pagină.",
+    "data": "Atunci browserul tău se conectează direct la serverele Google, care primesc adresa IP a dispozitivului tău și informații tehnice despre browser. Nu îi trimitem lui Google adresa paginii pe care o citești, iar în browserele actuale harta se încarcă fără cookie-urile Google pe care le ai deja salvate.",
+    "basis": "Pentru încărcarea hărții și trimiterea adresei tale IP către Google răspundem împreună cu Google Ireland Limited; de ce face Google apoi cu datele răspunde Google. Temeiul nostru legal este interesul legitim de a te ajuta să găsești clinica (art. 6 alin. (1) lit. f) din GDPR). Google poate transfera datele în SUA, către Google LLC, în baza cadrului UE-SUA privind protecția datelor. Detalii găsești în <google>politica de confidențialitate Google</google>.",
+    "without": "Adresa și telefonul clinicii sunt scrise lângă hartă și în subsolul fiecărei pagini, așa că le poți folosi și fără hartă."
+  },
+  "contact": {
+    "title": "Când ne contactezi",
+    "phone": "Dacă ne suni sau ne scrii pe WhatsApp, primim numărul tău de telefon, numele și fotografia din profilul tău WhatsApp, dacă sunt vizibile, și ce ne spui, ca să îți răspundem și să stabilim o programare. Temeiul legal îl reprezintă pașii pe care ni-i ceri înainte de tratament și tratamentul însuși (art. 6 alin. (1) lit. b) din GDPR). Păstrăm aceste mesaje doar cât timp ne trebuie pentru programare și pentru îngrijirea ta.",
+    "health": "Informațiile despre sănătatea ta pe care alegi să ni le spui le folosim doar pentru îngrijirea ta (art. 9 alin. (2) lit. h) din GDPR).",
+    "whatsapp": "WhatsApp este un serviciu al WhatsApp Ireland Limited, din grupul Meta. Mesajele sunt criptate integral, dar WhatsApp vede cine ne scrie și când, iar Meta poate transfera aceste date în SUA, în baza cadrului UE-SUA privind protecția datelor. Detalii găsești în <whatsapp>politica de confidențialitate WhatsApp</whatsapp>.",
+    "patient": "Datele din fișa ta de pacient le prelucrăm la clinică, separat de acest site."
+  },
+  "reviews": {
+    "title": "Recenziile pacienților",
+    "text": "Pe pagina principală arătăm câteva recenzii pe care pacienții noștri le-au publicat pe Google, cu numele și, la unele, fotografia din profilul lor. Dacă ești autorul unei recenzii și vrei să o scoatem de pe site, spune-ne și o scoatem."
+  },
+  "links": {
+    "title": "Linkuri către alte site-uri",
+    "text": "Linkurile către Instagram, TikTok, WhatsApp sau Google Maps te duc pe site-urile acelor companii. Acolo se aplică regulile lor de confidențialitate și de cookie-uri, nu ale noastre."
+  },
+  "rights": {
+    "title": "Drepturile tale",
+    "intro": "Ai dreptul:",
+    "access": "să afli ce date avem despre tine și să primești o copie a lor;",
+    "rectify": "să le corectezi;",
+    "erase": "să ceri ștergerea lor;",
+    "restrict": "să ne ceri să le folosim doar în mod limitat;",
+    "port": "să le primești într-un format pe care îl poți duce în altă parte.",
+    "object": "Te poți opune oricând, din motive legate de situația ta, prelucrărilor bazate pe interesul nostru legitim, cum este încărcarea hărții Google: spune-ne și îți analizăm cererea.",
+    "automated": "Nu luăm despre tine decizii automate.",
+    "ask": "Pentru oricare dintre aceste drepturi, scrie-ne la <email>{emailAddress}</email>, sună-ne la <phone>{phoneNumber}</phone> sau spune-ne la clinică. Îți răspundem fără întârzieri nejustificate, în cel mult o lună; dacă cererea e complicată, termenul se poate prelungi cu încă două luni și îți spunem de ce.",
+    "complain": "Dacă crezi că nu ți-am respectat drepturile, poți depune o plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP), bd. G-ral Gheorghe Magheru nr. 28-30, sector 1, 010336 București, România, <anspdcp>www.dataprotection.ro</anspdcp>, sau la autoritatea de protecție a datelor din statul membru al UE în care locuiești, în care lucrezi sau în care crezi că s-a produs încălcarea."
+  },
+  "changes": {
+    "title": "Modificări",
+    "text": "Dacă se schimbă ceva, de exemplu firma care găzduiește site-ul, actualizăm această pagină și data de la început."
+  }
+}

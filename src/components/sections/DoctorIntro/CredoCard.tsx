@@ -22,8 +22,9 @@ import { Card } from '@/components/ui/Card/Card';
 //
 // It lives inside the band's folder rather than beside it because it has
 // exactly one consumer, DoctorIntro, and nothing about it is shared (the
-// CategoryCard-in-PriceList and ScheduleCard-in-DoctorProfile precedent: a band's
-// own piece stays in the band's folder until a second consumer exists).
+// CategoryCard-in-PriceList precedent — and ScheduleCard-in-DoctorProfile's,
+// until the owner dropped that card on 2026-10-13: a band's own piece stays
+// in the band's folder until a second consumer exists).
 // Exported all the same, so the suites can mount it alone. It has NO story of
 // its own, on purpose: it is photographed inside every DoctorIntro story, and
 // a second frame would only duplicate those pixels.
@@ -56,20 +57,39 @@ import { Card } from '@/components/ui/Card/Card';
 //   below it.
 //   BESIDE THE PICTURE (`@3xl`, DoctorIntro's D62–D64): the pair above the
 //   card stands across the bottom container's top padding, `py-6` = 24px
-//   (clears the 16px); the picture's track ends a whole gap away —
-//   `clamp(3rem, a sixth of the column, 10.5rem)`, 128–168px — plus the
-//   words' 1.5rem inset, and even the cutout grown to its cap stays ~100px
-//   clear of the card at the step (clears the 24px); and the band's bottom
-//   edge lies 64px under the card wherever the words set the row (the bottom
+//   (clears the 16px); the picture's track ends a whole gap away — a sixth
+//   of the column clamped to 3rem–10.5rem, 128–168px — plus the words'
+//   1.5rem inset, and even the cutout grown to its cap stays ~100px clear of
+//   the card at the step (clears the 24px); and the band's bottom edge lies
+//   64px under the card wherever the words set the row (the bottom
 //   container's 24px + `@3xl:py-10`'s 40px — 1280, the Notebook story),
-//   more wherever the picture does (82.5px at 1920). The one neighbour INSIDE
-//   the glow is a FILLED slot, 24px under the card across the bottom
-//   container's `gap-6` — the WithActions story; the page passes none.
+//   more wherever the picture does (82.5px at 1920 before the band scale).
+//   The one neighbour INSIDE the glow is a FILLED slot, 24px under the card
+//   across the bottom container's `gap-6` — the WithActions story; the page
+//   passes none. Since DoctorIntro's THE BAND SCALE (2026-10-13) those
+//   spaces are DESIGN pixels on a laptop or a desktop — × s, never under
+//   0.81 — while the glow is a px shadow the scale leaves alone, so the
+//   tightest of them still clear it: 19.4px over the card at the scale's
+//   step (16), the gap 136px and more, 52px under it (32).
 //   STACKED: the picture above crosses the grid's `gap-8` = 32px and a filled
 //   slot below would cross the same 32px (both clear); the gutter beside the
-//   card is ui/Container's `clamp(1rem, 10vw, 12.5rem)`, 32px at 320 (clears
-//   the 24px). But on the page the card is the band's LAST item, standing on
-//   the band's bottom padding, with the next band — sections/TintedBand,
+//   card is ui/Container's — and since 2026-10-09 (THE PHONE GUTTER, CLAUDE.md
+//   §15.35) it is 5vw a side on a phone: 16px at 320, 18 at 360, 19.5 at 390,
+//   21.5 at 430, where it was 32–43px. It no longer clears the 24px: the
+//   screen's edge now cuts the glow's faint outer tail. MEASURED on the built
+//   doctor page (ro, emulated phones, the card's middle row, a pixel counted
+//   while it differs from the ground): the glow still reaches 25px out of
+//   the card's side, and the pixel AT the screen's edge reads 4/255 off the
+//   ground at 320, 3 at 360, 2–3 at 390, 1 at 430 — the outer ~9px of the
+//   glow off screen at 320, ~5.5px at 390 — where the old gutter showed all
+//   of it and ended on the bare ground. A box-shadow is ink overflow, never
+//   scrollable overflow, so nothing scrolls (the document's scroll width
+//   stays its client width, measured); what changes is that the lightest
+//   steps of the tail run off the screen instead of fading out on it — the
+//   same order as the ~5/255 step D61 removed at the band's floor, but at
+//   the screen's edge, where nothing lies beyond it. And on the page the
+//   card is the band's LAST item, standing on the band's bottom padding,
+//   with the next band — sections/TintedBand,
 //   whose `relative` outer paints over an earlier sibling's shadow — right
 //   under it: `@lg:py-8` = 32px on a tablet (clears — the last glow pixel
 //   before the edge is 1/255 off the ground), and on the phone the floor is
@@ -79,7 +99,8 @@ import { Card } from '@/components/ui/Card/Card';
 //   from the last glow pixel to the ground; with `pb-8` the tail ends on the
 //   same 1/255 as the tablet's (re-measured at 320 and 390).
 //
-// ── D12 · THE CARD IS A NAMED REGION, the ScheduleCard idiom exactly:
+// ── D12 · THE CARD IS A NAMED REGION (the idiom the doctor page's schedule
+// card shared until it was dropped on 2026-10-13):
 // `ui/Card asChild` puts the surface, the inset and the `@container` context
 // ON the <section> this file chose, so nothing sits between the words column
 // and the element being named. `aria-labelledby` → the heading's id is what
@@ -88,7 +109,8 @@ import { Card } from '@/components/ui/Card/Card';
 // The band that holds it stays GENERIC (DoctorIntro's THE BAND NAMES NOTHING,
 // ITSELF INCLUDED): its only heading is the page's <h1>, while this card's
 // heading is its own.
-// NO `tabIndex={-1}`: nobody's jump target (the ScheduleCard reasoning).
+// NO `tabIndex={-1}`: nobody's jump target — that attribute is for a box a
+// link or a script moves focus to, and nothing on the site names this card.
 //
 // ── THE HEADING IS AN <h2>, THROUGH sections/SectionHeading. The page's
 // outline is h1 (the doctor's name, the band's pair) → h2 (this card) — the
@@ -128,7 +150,16 @@ import { Card } from '@/components/ui/Card/Card';
 //                    lines at 1280 and three at 1536 and 1920 — the card 462
 //                    / 576 / 576px wide and 238 / 214 / 214px tall — since
 //                    DoctorIntro's D63 widened its track to 36rem (the
-//                    owner's "like 30% wider", 2026-10-01). Under D51b's
+//                    owner's "like 30% wider", 2026-10-01); since its THE
+//                    BAND SCALE (2026-10-13) the card and these words are
+//                    the 1401 design × s on a laptop or a desktop, so they
+//                    keep the design's lines at every such width to within
+//                    ONE line — the typeface's optical sizing sets larger
+//                    words a little narrower per em, so a quote can gain or
+//                    lose a line across the scale (DoctorIntro's THE BAND
+//                    SCALE, measured on 11 of 30 doctor pages) (the demo
+//                    doctor's: 479 / 576 / 722px wide, 217 / 265 / 332
+//                    tall, four lines each, at 1280 / 1536 / 1920). Under D51b's
 //                    28rem column it was five lines, 266px tall and 448px
 //                    wide at all three (the demo doctor's words); under
 //                    D43b's ⅔ track three, three, two lines, 214 / 214 /
@@ -190,8 +221,9 @@ import { Card } from '@/components/ui/Card/Card';
 //
 // ── THE CARD OWNS NO WIDTH AND NO OUTER MARGIN (§6.4). It fills whatever
 // the band places it in — beside the picture a grid item of the band's bottom
-// container, whose ONE explicit track is `minmax(0,36rem)` (DoctorIntro.tsx's
-// D62 and D63), in the stack a grid item of the one-column grid (D51c); both
+// container, whose ONE explicit track is at most 36rem (DoctorIntro.tsx's D62
+// and D63; 144 spacing steps since its THE BAND SCALE, 576 design pixels on a
+// laptop or a desktop), in the stack a grid item of the one-column grid (D51c); both
 // stretch (ui/Card D3), and there is no flex ROW here, so none of the atom's
 // collapse cases applies — and the band owns the space above it (the bottom
 // container's 1.5rem beside the picture, `gap-8` in the stack). Its OWN
@@ -216,7 +248,12 @@ import { Card } from '@/components/ui/Card/Card';
 // 30% wider", 2026-10-01) took it back to 36px beside the picture wherever the
 // card is ~498px or wider: MEASURED on the built page, 30px at 1024 and 1280
 // (363 / 462px cards) and 36px from 1366 up (506 / 545 / 576px) — the "wider
-// words column" road of that open call. The card's INNER ROOM — `framed`'s 3px + 22px per side —
+// words column" road of that open call. Since DoctorIntro's THE BAND SCALE
+// (2026-10-13) a laptop or a desktop draws the title in the design pixel, but
+// the step it answers to stays a CSS-pixel one: 30 × s while the card's
+// content box is under 28rem — from the scale's step to a ~1324px window,
+// 27.4px at 1280 — and 36 × s from there, 39.5px at 1536 and 49.5 at 1920
+// (that file's WHAT DOES NOT SCALE). The card's INNER ROOM — `framed`'s 3px + 22px per side —
 // does NOT move, because ui/Card offers no padding axis: its header rejects
 // per-side padding outright (D5) and names the one way in, a `density` axis
 // of its own that joins when a SECOND proven card kind measures a different
@@ -254,7 +291,7 @@ export type DoctorIntroCredo = Readonly<{
 
 export type CredoCardProps = DoctorIntroCredo &
   // The native <section> surface minus what this component owns (§6.8
-  // fidelity, the ScheduleCard Omit idiom). `children` goes because content
+  // fidelity, the ReviewCard / PersonnelCard Omit idiom). `children` goes because content
   // arrives as `body` — without the Omit a caller could nest something,
   // type-check, and watch it vanish. `title` leaves the native side with the
   // own keys: here it means the heading's text, not HTML's tooltip. The two

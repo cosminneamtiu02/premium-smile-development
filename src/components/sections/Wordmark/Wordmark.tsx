@@ -204,29 +204,45 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // right cell, around a Contact box that is display:none below the bar's step —
 // so this paragraph's 203 / 147, right when written, went stale that day, and
 // the story harness with it. MEASURED on the built export (Chromium, Firefox,
-// WebKit): on a phone (overlay scrollbars, no gutter) the cell is 0.8 ×
+// WebKit): on a phone (overlay scrollbars, no gutter) the cell was 0.8 ×
 // viewport − 78px — 234 at 390, 178 at 320; in a runner with Chromium's 15px
-// classic gutter, 219 and 163. The mark is 0.99:1, so it costs almost exactly
-// its height in width. SUB-PIXEL arithmetic, because that is the scale this
-// fits in (F11):
+// classic gutter, 219 and 163. Since THE PHONE GUTTER (2026-10-09,
+// ui/Container, CLAUDE.md §15.35) halved the pill's side margins on a phone
+// it is 0.9 × viewport − 78 — 273 at 390, 210 at 320, and 258 and 195 in the
+// runner (the pill measured 351 and 288px on the built export). The mark is
+// 0.99:1, so it costs almost exactly its height in width. SUB-PIXEL
+// arithmetic, because that is the scale this fits in (F11):
 //   · FULL SIZE — a 3.4425rem mark (55.08px, 54.44 wide), `gap-3` and the
 //     name at Heading's `section` step (30px; 203.7px on one line, not 1.5 ×
 //     the 20px name's 138.75: the face has an optical-size axis) make a
 //     270.1px lockup (72px and ~222 with the 20px name until 2026-10-01; the
 //     demo cat's 1.49:1 made it 258.5 — Header.tsx records each beside its
 //     step arithmetic);
-//   · BELOW `@max-sm` (a 24rem container — the bar's pill on a phone up to
-//     ~482px wide, the Footer's gutter box up to ~480px) — `gap-2`, a 1.53rem
+//   · BELOW `@max-md` (a 28rem container — the bar's pill on a phone up to
+//     ~525px wide, the Footer's gutter box up to ~520px) — `gap-2`, a 1.53rem
 //     mark (24.47px, 24.19 wide) and the name back at the 20px `title` size
-//     (`@max-sm:text-xl`) make a 170.9px one-line lockup, which a phone's bar
-//     holds on ONE line from a ~311px viewport — fb-207's one line at 390, with
-//     room — and the Footer always. The step was `@max-xs` (20rem) until
+//     (`@max-md:text-xl`) make a 170.9px one-line lockup, which a phone's bar
+//     holds on ONE line on every phone from 320 — fb-207's one line at 390,
+//     with room — and the Footer always. The step was `@max-xs` (20rem) until
 //     2026-10-01: with the 30px name that threshold left the large iPhones
-//     (403–435px) a 55px mark beside a wrapped two-line name;
+//     (403–435px) a 55px mark beside a wrapped two-line name. It was `@max-sm`
+//     (24rem, a pill up to ~482px) from then until 2026-10-09, when THE PHONE
+//     GUTTER widened the pill by a tenth of the window: 24rem then arrived at a
+//     ~429px window, and the 430 and 440 iPhones drew the 55px desktop mark
+//     (measured on the lane's first build). `@max-md` — the next of
+//     Tailwind's own names (fb-202) — keeps every phone on the phone lockup,
+//     the step's recorded intent, and moves the switch from a ~482 to a ~525px
+//     window (the Footer's from ~480 to ~520), widths no phone held upright and
+//     no tablet has;
 //   · AT 320 — the floor that has to fit is the MIN-CONTENT sum: 24.19 mark +
-//     8 gap + 83.70 for „Premium" = 115.89 against the runner's 163px cell (a
-//     phone's 178 keeps one line), so in the runner the two 28px lines,
-//     „Premium" over „Smile", each in its colour, stand inside the 5rem row.
+//     8 gap + 83.70 for „Premium" = 115.89. Until 2026-10-09 the runner's 320
+//     cell was 163px (a phone's 178 kept one line), so in the runner the two
+//     28px lines, „Premium" over „Smile", each in its colour, stood inside the
+//     5rem row; with the halved phone gutter the runner's cell is 195px and
+//     the name keeps ONE line there too. The wrap now belongs to a narrower
+//     bar — under a ~281px window (a Galaxy Fold's 280px cover screen, a phone
+//     at a large zoom) — and the Stress320 story keeps proving it in its
+//     pinned 241px pill.
 //     THIS WRAP WAS A PROMISE THE HEADER BROKE until
 //     2026-10-01: its brand cell wore `whitespace-nowrap` at every width, so
 //     the one-line name overflowed its cell and „Smile" was painted 32px under
@@ -263,7 +279,7 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // never matches: it renders full-size at every width, including 320, where the
 // lockup then does not fit. Nothing throws and nothing logs. If a third
 // consumer ever needs to be independent of its ancestors, the recorded option
-// is a NAMED container (`@container/pill` on the consumer, `@max-sm/pill:`
+// is a NAMED container (`@container/pill` on the consumer, `@max-md/pill:`
 // here) — deliberate, greppable, and still zero JavaScript. Not done today:
 // two consumers, both already containers, and an unused name is a lie about
 // what the code needs.
@@ -369,7 +385,7 @@ export function Wordmark({
     <a
       href={href}
       aria-label={ariaLabel}
-      className="flex min-h-11 items-center gap-3 rounded-md outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus @max-sm:gap-2"
+      className="flex min-h-11 items-center gap-3 rounded-md outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus @max-md:gap-2"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -377,7 +393,7 @@ export function Wordmark({
         alt=""
         width={artwork.width}
         height={artwork.height}
-        className="h-[3.4425rem] w-auto max-w-none @max-sm:h-[1.53rem]"
+        className="h-[3.4425rem] w-auto max-w-none @max-md:h-[1.53rem]"
       />
       {/* The name through ui/Heading's `section` step — `font-display
           text-3xl text-ink-strong`, 30px, half again the `title` step (20px)
@@ -394,7 +410,7 @@ export function Wordmark({
           so a rename is one edit there — and a build failure here until this
           file is revisited (`brandWords`). */}
       <Heading asChild size="section">
-        <span className="hyphens-none @max-sm:text-xl">
+        <span className="hyphens-none @max-md:text-xl">
           <span data-logotype="" className="text-brand-grey">
             {FIRST_WORD}
           </span>{' '}

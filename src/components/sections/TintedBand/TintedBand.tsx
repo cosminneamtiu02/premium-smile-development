@@ -24,9 +24,15 @@ import { cx } from '@/lib/cx/cx';
 // MAY compose another section's PUBLIC COMPONENT, never import its internals.
 // So the ground did not become a set of exported constants on DoctorProfile
 // (DoctorStats would then be reaching into a sibling's internals); it climbed
-// out whole, as a component both bands render. Its consumers:
-//   · sections/DoctorProfile — the „Despre" prose beside the schedule card;
-//   · sections/DoctorStats — the „în cifre" tiles under the courses (D30).
+// out whole, as a component both bands rendered. Since 2026-10-13 it has ONE
+// consumer, sections/DoctorStats — the „în cifre" tiles (D30), second on a
+// doctor's page since that day (CLAUDE.md §15.23 round 7). sections/DoctorProfile
+// left it for the plain page ground, its biography now beside the courses,
+// whose resting ideas are faded to 0.65 — a blend that passes 4.5:1 on the
+// page and fails it here (DoctorCourses/CourseTimeline's CONTRAST). One
+// consumer does not fold the ground back: §4 extracts at the second consumer
+// and asks nothing of a component left with one, and a second lilac band on
+// any page is one `<TintedBand>` away again.
 //
 // ── TIER: SECTION, and a SHARED COMPOSITION rather than a band. It composes
 // ui/Container, so /classify-component's rule 3 and §4's dependency direction
@@ -74,8 +80,9 @@ import { cx } from '@/lib/cx/cx';
 // eyebrow keeps its muted ink. Darker still means a darker eyebrow ink first.
 // The line tokens barely register on it — `line-subtle` 1.23:1, `line` 1.03:1
 // — and the white `--surface` 1.53:1, so a white shape laid on this ground is
-// edged by its own white far more than by any border it wears (DoctorProfile's
-// ScheduleCard has the measurements for its framed card). A consumer choosing
+// edged by its own white far more than by any border it wears (the framed
+// schedule card that stood here until 2026-10-13 read its 3px frame at 1.1:1:
+// its white was its edge). A consumer choosing
 // an ink for this ground reads it off this table; a consumer wanting a new one
 // measures it first.
 //
@@ -128,10 +135,11 @@ import { cx } from '@/lib/cx/cx';
 //   NO VERTICAL PADDING OF ITS OWN — the band's `py` rhythm is the
 //   CONSUMER's, and it has to be: the padding cannot ride on the Container,
 //   because an element cannot query its OWN size, so each consumer puts it on
-//   the grid or column it renders one level in (the ClinicLocation precedent,
-//   DoctorProfile's grid, DoctorStats' column). Two consumers with different
-//   content want different rhythm, and a padding here would be one they both
-//   had to undo. The fades are not that padding (next paragraph).
+//   the grid or column it renders inside the Container (the ClinicLocation
+//   precedent, DoctorStats' column). Different content wants a different
+//   rhythm — the two consumers this band had until 2026-10-13 each drew their
+//   own — and a padding here would be one every consumer had to undo. The
+//   fades are not that padding (next paragraph).
 //
 // ── NO OUTER MARGIN (§6.4): the page owns the rhythm between its bands. The
 // two 6rem fade boxes are IN FLOW and belong to this band — they are its
@@ -139,16 +147,27 @@ import { cx } from '@/lib/cx/cx';
 // are ordinary children rather than absolute overlays: an absolute fade would
 // have to overlap whatever band sits above, and its last pixel would then be
 // over a colour this file does not control.
+//   UNDER THE BAND SCALE THE FADES KEEP THEIR 6rem (2026-10-13, CLAUDE.md
+//   §15.32 round 4 — the band's consumer draws in ui/Container's band scale
+//   on a laptop or desktop). The scale is worn INSIDE the Container, by the
+//   consumer's own box, and the fades stand outside it, full-bleed, where no
+//   box knows the column's design pixel: so on a laptop the tint fades in
+//   over 96px while the content it carries is drawn at its design size × s —
+//   a fade a little short past the 1401 window (132 design-scaled pixels at
+//   1920) and a little long under it. Recorded, not cured: a fade is a soft
+//   gradient, and giving it the pixel would mean reading the column from
+//   outside the column.
 //
 // ── NAMES PASS THROUGH. The native <section> surface is spread whole —
 // `aria-label` and `aria-labelledby` INCLUDED — because whether the band is a
 // region is a question about its CONTENT, and only the consumer has content:
 // DoctorStats points `aria-labelledby` at its own h2 and becomes a named region;
-// DoctorProfile refuses both attributes in ITS props (two equal halves, no one
-// noun for both) and renders an unnamed <section>, which maps to a generic box.
-// A ground that Omitted the names would force the first shape out; one that
-// required them would force the second one out. It renders no heading of its
-// own for the same reason — headings start at the consumer's h2.
+// DoctorProfile, its other consumer until 2026-10-13, refused both attributes
+// in ITS props (two equal halves, no one noun for both) and rendered an
+// unnamed <section>, which maps to a generic box. A ground that Omitted the
+// names would force the first shape out; one that required them would force
+// the second one out. It renders no heading of its own for the same reason —
+// headings start at the consumer's h2.
 
 type TintedBandOwnProps = Readonly<{
   /**

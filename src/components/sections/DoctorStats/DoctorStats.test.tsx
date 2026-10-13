@@ -117,7 +117,7 @@ const TILES = [
     icon: <Trophy />,
     value: 10,
     label: 'Cursuri',
-    description: 'Formare continuă în tehnici și tehnologii moderne.',
+    description: 'Fiecare curs este un reper pe drumul spre specializare.',
   },
   {
     id: 'interventions',
@@ -1212,7 +1212,7 @@ describe('DoctorStats — THE BAND SCALE, Home’s and the Team page’s (2026-1
     },
   );
 
-  it('renders `scaled={false}` byte for byte as no `scaled` at all — on Home’s shape too, so the default is the doctor page’s answer whatever else is set', () => {
+  it('renders `scaled={false}` byte for byte as no `scaled` at all — on Home’s shape too, so the default is the band’s unscaled self whatever else is set', () => {
     const home = {
       eyebrow: EYEBROW,
       title: TITLE,
@@ -1608,8 +1608,9 @@ describe('DoctorStats — type-level pins', () => {
     expectTypeOf<DoctorStatsProps>().toHaveProperty('ground');
     expectTypeOf<DoctorStatsProps>().toHaveProperty('align');
     expectTypeOf<DoctorStatsProps>().toHaveProperty('scaled');
-    // `scaled` is an OPTIONAL flag since 2026-10-02 — the doctor page passes
-    // none, and false is its answer.
+    // `scaled` is an OPTIONAL flag since 2026-10-02 — every page passes it
+    // since 2026-10-13 (the doctor page last, §15.32 round 4); false is the
+    // band's own unscaled self, its stories' workbench.
     expectTypeOf<DoctorStatsProps['scaled']>().toEqualTypeOf<
       boolean | undefined
     >();

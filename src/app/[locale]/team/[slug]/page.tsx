@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
-import { DoctorCourses } from '@/components/sections/DoctorCourses/DoctorCourses';
 import {
   DoctorIntro,
   type DoctorIntroCredo,
@@ -17,49 +16,77 @@ import { toStatTiles } from '../stat-tiles';
 
 // THE DOCTOR PAGE — one per person, at `/{locale}/team/{id}/` (run ledger D3),
 // built to the owner's 2026-09-21 dispatch: „Each doctor will have his own
-// page … this page as structure will be reused for more doctors", and
-// reworked on his pack feedback of 2026-09-25 (round 2, whose ledger —
-// round2/ledger-round2.md in the run workspace — carries D12 onward). FIVE
-// BANDS, in the order round 2's D18 fixed and D33 extended:
+// page … this page as structure will be reused for more doctors", reworked on
+// his pack feedback of 2026-09-25 (round 2, whose ledger —
+// round2/ledger-round2.md in the run workspace — carries D12 onward) and
+// RESHAPED on 2026-10-13 (CLAUDE.md §15.23 round 7 — the owner, verbatim:
+// "hero section, then Experience confirmed over time and below on the left
+// biography and on the right the thing with the "Courses and
+// specialisations" but hugely rectified. no year anymore"). FOUR BANDS:
 //   1. the opener — the cutout beside the specialty and the <h1>, and under
 //      the name, in the empty space beside the photograph, the framed CREDO
 //      card: „Filozofia mea" over the doctor's own quoted words, key words set
 //      apart by ui/Keyword (DoctorIntro, D12);
-//   2. the soft-lilac band with its two fades — „Despre {name}", a few
-//      paragraphs about the doctor, beside the card with the hours he is at
-//      the clinic (DoctorProfile, D14);
-//   3. his courses as a CV timeline down the left, one year over the bullets
-//      of that year, newest year first, one year lit as it crosses the middle
-//      of the screen (DoctorCourses, D15, D34, D35);
-//   4. the „în cifre" tiles on a second lilac band — a glyph, a number that
-//      counts up once, a label and a sentence each (DoctorStats, D30, D33);
-//   5. the „Ne găsești" map, which every page of this run closes with.
-// Round 1's „Echipa mea" band (two assistants beside the week) is GONE — the
-// owner dropped it outright (D13); the week moved into band 2's card.
+//   2. the „în cifre" tiles on the lilac band — a glyph, a number that counts
+//      up once, a label and a sentence each (DoctorStats, D30) — SECOND since
+//      2026-10-13, on the owner's word: "so "IN NUMBERS" would be the second
+//      element in the page";
+//   3. one band on the page ground, the biography on the left — „Despre
+//      {name}", a few paragraphs about the doctor, their key words set apart
+//      by ui/Keyword like the credo's (since 2026-10-13) — and his courses on
+//      the right, ONE IDEA PER DOT with no year, the ideas lit one by one by
+//      themselves (DoctorProfile, which composes DoctorCourses);
+//   4. the „Ne găsești" map, which every page of this run closes with — since
+//      2026-10-13 in THE BAND SCALE, the very band Home and Team draw (the
+//      JSX's own note; CLAUDE.md §15.32 round 3).
+// Round 1's „Echipa mea" band (two assistants beside the week) went in round 2
+// (D13); the week itself — the schedule card beside the biography — went on
+// 2026-10-13: "no more schedul box at all, drop it and remove anything related
+// to it". The courses' YEARS left the same day ("there wont be any more years
+// … this must stand"), and with them the timeline's scroll-driven light.
+//
+// ── THE WHOLE PAGE IN THE BAND SCALE (2026-10-13, CLAUDE.md §15.32 round 4).
+// The owner, verbatim: "take current heading and eyebrow from main page. look
+// how reactive and nice it is. make the exact same thing with the heading and
+// eyebrow from the individual dr page" — and, asked whether the content under
+// the titles should grow with them, "Whole page, like Home". So on a laptop
+// or a desktop every band here draws in ui/Container's ONE design pixel, the
+// owner's 1401 window scaled to the column, as every band of Home and Team
+// does: one heading size across the four bands at every width — the
+// biography's and the map's openers on the column's left edge, the tiles'
+// centred (D30), the courses' at the second column's start — and everything
+// under each heading — the biography, the courses, the tiles, the credo card,
+// the name itself — growing and shrinking with it. The two bands that live
+// only on this page wear the scale themselves (DoctorIntro and DoctorProfile —
+// each header's THE BAND SCALE — the courses inside the latter's rhythm box
+// drawn in its pixel); the two this page shares with Home and Team take their
+// `scaled` from here, one word each (the JSX's notes). Phones, touch tablets
+// and every window under the step keep the theme's own sizes.
 //
 // ── THIS FILE IS THE ONE POPULATOR (run ledger D1, the services page's
-// precedent). The four content bands are DUMB: DoctorIntro, DoctorProfile,
-// DoctorCourses and DoctorStats hold no message key, import no data and do
-// not know what a `Locale` is, and ClinicLocation reads only the clinic's own
-// NAP. So everything that has to KNOW happens here — the language, the words,
-// the person — and the bands receive finished strings. The mapping itself
-// lives in ../populate.ts, beside the Team page's (its header argues why it is
-// neither in lib/team nor inline here), and its one JSX step — a stat id
-// becoming its glyph — in ../stat-tiles.tsx (whose header argues why that is
-// not populate.ts); this file is the wiring. Every eyebrow and
-// title is a `team.doctor.*` key (D20); the one that needs the person — the
-// about band's „Despre {name}" — takes him as an ICU ARGUMENT, the name the
-// opener prints as the <h1>, so the h2 is unique per page and no key is ever
-// minted per doctor.
+// precedent). The three content bands are DUMB: DoctorIntro, DoctorStats and
+// DoctorProfile — with the DoctorCourses block it composes — hold no message
+// key, import no data and do not know what a `Locale` is, and ClinicLocation
+// reads only the clinic's own NAP. So everything that has to KNOW happens
+// here — the language, the words, the person — and the bands receive finished
+// strings. The mapping itself lives in ../populate.ts, beside the Team page's
+// (its header argues why it is neither in lib/team nor inline here), and its
+// one JSX step — a stat id becoming its glyph — in ../stat-tiles.tsx (whose
+// header argues why that is not populate.ts); this file is the wiring. Every
+// eyebrow and title is a `team.doctor.*` key (D20); the one that needs the
+// person — the biography's „Despre {name}" — takes him as an ICU ARGUMENT,
+// the name the opener prints as the <h1>, so the h2 is unique per page and no
+// key is ever minted per doctor.
 //
 // ── THE FUTURE SEAM — THE DOCTOR'S BLOG ARTICLES (run ledger D19; the owner,
-// 2026-09-25: "very important … note it somewhere"). A band linking THIS
-// doctor's blog posts will stand between the „în cifre" tiles and the map
-// (D33's order). It is NOT built, because the blog it would link to is not
-// built (§5's blog routes are Romanian-only and still a stub). The JSX below
-// carries a comment at the exact spot; when the band lands it is a DUMB band
-// populated from here like the four above, and ./Doctor.stories.tsx gains it
-// in the same change.
+// 2026-09-25: "very important … note it somewhere" · "it will sit above map
+// section"). A band linking THIS doctor's blog posts will stand above the map
+// — since 2026-10-13 between the biography-and-courses band and the map. It
+// is NOT built, because the blog it would link to is not built (§5's blog
+// routes are Romanian-only and still a stub). The JSX below carries a comment
+// at the exact spot; when the band lands it is a DUMB band populated from
+// here like the three above, and ./Doctor.stories.tsx gains it in the same
+// change.
 //
 // ── THE ROUTE IS A DATA LIST, AND THE GRID IS BUILT BY MULTIPLICATION. Next
 // runs a CHILD segment's `generateStaticParams` once per combination its
@@ -195,12 +222,16 @@ export default async function DoctorPage({
     throw new Error(`doctor page: unknown locale "${locale}"`);
 
   const page = populateDoctorPage(locale, slug, {
-    // ui/Keyword's `Keywords` turns lib/team's cut-up philosophy into text and
-    // <b> fragments — the credo card's quote (D12). The populator does the
-    // cutting and never builds an element; the page does the rendering and
-    // never sees a `<k>` (run D1/D2).
-    renderQuote: (segments) => <Keywords segments={segments} />,
-    closedLabel: t('doctor.schedule.closed'),
+    // ui/Keyword's `Keywords` turns lib/team's cut-up texts into text and <b>
+    // fragments — the credo card's quote (D12) AND, since 2026-10-13, every
+    // paragraph of the biography, which carries key words of its own
+    // (CLAUDE.md §15.23 round 7, the owner: "i also wan thte text of
+    // biografie to be like the text at [the credo's quote] … so gary-ish er
+    // and with tighlighted keywords"; lib/team's THE BIOGRAPHY'S KEY WORDS).
+    // The populator does the cutting and never builds an element; the page
+    // does the rendering and never sees a `<k>` (run D1/D2). The walk's one
+    // option since the doctor's week left the page, the same day.
+    renderKeywords: (segments) => <Keywords segments={segments} />,
   });
   if (!page) notFound();
 
@@ -232,34 +263,19 @@ export default async function DoctorPage({
           } satisfies DoctorIntroCredo
         }
       />
-      {/* THE TINTED BAND (D14): „Despre {name}" ‖ the schedule card.
-          The name is the ICU argument (see the header), the same string the
-          opener's <h1> prints. */}
-      <DoctorProfile
-        about={{
-          eyebrow: t('doctor.about.eyebrow'),
-          title: t('doctor.about.title', { name: page.intro.name }),
-          paragraphs: page.profile.paragraphs,
-        }}
-        schedule={{
-          title: t('doctor.schedule.title'),
-          rows: page.profile.rows,
-        }}
-      />
-      {/* THE COURSES BY YEAR (D15). A doctor without a course gets an empty
-          `groups`, and the band then renders nothing at all. */}
-      <DoctorCourses
-        eyebrow={t('doctor.courses.eyebrow')}
-        title={t('doctor.courses.title')}
-        groups={page.courses}
-      />
-      {/* THE „ÎN CIFRE" TILES (D30, D33): the second lilac band, on the same
-          TintedBand ground as the profile. The numbers come through as
-          numbers — the island counts up to them — and are printed by
-          `Intl.NumberFormat` in the visitor's language (§8.3), never by the
-          band; the icon ids become glyphs in ../stat-tiles.tsx, the one
-          mapping this page and its twin share (G2-R2 tier 3). */}
+      {/* THE „ÎN CIFRE" TILES (D30), SECOND since 2026-10-13 — the owner: "so
+          "IN NUMBERS" would be the second element in the page" — on the lilac
+          TintedBand ground, the page's one lilac band since the biography left
+          it that day. The numbers come through as numbers — the island counts
+          up to them — and are printed by `Intl.NumberFormat` in the visitor's
+          language (§8.3), never by the band; the icon ids become glyphs in
+          ../stat-tiles.tsx, the one mapping this page and its twin share
+          (G2-R2 tier 3). `scaled` since 2026-10-13: THE BAND SCALE on a laptop
+          or desktop, the tiles at 9/8 of the band's pixel, exactly the numbers
+          band Home and Team draw — here on its lilac ground, centred, with its
+          lead (the header's THE WHOLE PAGE IN THE BAND SCALE). */}
       <DoctorStats
+        scaled
         eyebrow={t('doctor.stats.eyebrow')}
         title={t('doctor.stats.title')}
         lead={t('doctor.stats.lead')}
@@ -267,16 +283,50 @@ export default async function DoctorPage({
         tiles={toStatTiles(page.stats)}
         format={new Intl.NumberFormat(locale).format}
       />
+      {/* THE BIOGRAPHY AND THE COURSES, one band on the page ground (CLAUDE.md
+          §15.23 round 7 — the owner: "on the left biography and on the right
+          the thing with the "Courses and specialisations" but hugely
+          rectified. no year anymore. jsut dot ideas"). „Despre {name}" on the
+          left — the name the ICU argument (see the header), the same string
+          the opener's <h1> prints — over the paragraphs, each the node
+          `renderKeywords` built above, its key words in <b> (since
+          2026-10-13); and on the right the doctor's courses, ONE IDEA PER DOT
+          in lib/team's order, lit one by one by themselves:
+          sections/DoctorCourses, which the band composes and hands these
+          three strings as given. A doctor without a course gets an empty
+          `items`; the courses then render nothing and the biography stands
+          alone. */}
+      <DoctorProfile
+        about={{
+          eyebrow: t('doctor.about.eyebrow'),
+          title: t('doctor.about.title', { name: page.intro.name }),
+          paragraphs: page.profile.paragraphs,
+        }}
+        courses={{
+          eyebrow: t('doctor.courses.eyebrow'),
+          title: t('doctor.courses.title'),
+          items: page.profile.courses,
+        }}
+      />
       {/* ── FUTURE SEAM (owner, 2026-09-25, "very important … note it
-          somewhere", run ledger D19): a band linking THIS doctor's blog
-          articles goes HERE — between the „în cifre" tiles and the map
-          (D33's order), above ClinicLocation. Not built: the blog (§5) is
-          not built. When it lands it is a DUMB band populated from here,
-          like the four above, and ./Doctor.stories.tsx follows in the same
-          change. */}
+          somewhere" · "it will sit above map section", run ledger D19): a band
+          linking THIS doctor's blog articles goes HERE — above ClinicLocation,
+          and since 2026-10-13 under the biography and the courses. Not built:
+          the blog (§5) is not built. When it lands it is a DUMB band populated
+          from here, like the three above, and ./Doctor.stories.tsx follows in
+          the same change. */}
       {/* The map closes every page of this run — the owner's „add at the end
-          the map". It reads lib/clinic itself and takes nothing from here. */}
-      <ClinicLocation />
+          the map". It reads lib/clinic itself and takes only `scaled` from
+          here: THE BAND SCALE on a laptop or desktop, the map band Home and
+          Team draw to the pixel (CLAUDE.md §15.32 round 3 — the owner,
+          2026-10-13: "as the current map on home page is now, i need it
+          updated reactivity wise on absoultey every page … with this i am
+          refering to individual doctor page"). Since round 4 the same day
+          every other band of this page scales too (the header's THE WHOLE
+          PAGE IN THE BAND SCALE), so the map's eyebrow and <h2> are one size
+          with theirs at every width, on the column's left edge like the
+          biography's. */}
+      <ClinicLocation scaled />
     </>
   );
 }

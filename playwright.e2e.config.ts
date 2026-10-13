@@ -8,8 +8,11 @@ import { defineConfig } from '@playwright/test';
 // playwright.config.ts, for one reason: that file's `webServer` serves
 // storybook-static, and a second server there would make `npm run visual`
 // refuse to start whenever `out/` is not built — a new precondition on the
-// commit ritual that no pixel test needs. Nothing here takes screenshots and
-// nothing here writes a baseline; the assertions are geometry and DOM.
+// commit ritual that no pixel test needs. Nothing here writes a baseline, and
+// the assertions are geometry and DOM — with ONE exception: tests/e2e/
+// hero-seam.spec.ts reads the rows of an in-memory screenshot, because the
+// defect it guards (a hairline at the hero's bottom edge, §15.21 round 13)
+// was rasterisation, invisible to geometry.
 //
 // The two geometries are the two ends of the price menu's story: 1366×633 is
 // a 1366×768 laptop with its browser chrome subtracted, the smallest usable

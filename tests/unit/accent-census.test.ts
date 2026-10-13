@@ -48,8 +48,11 @@ import { describe, expect, it } from 'vitest';
 // They reach the page through the three PAGES that turn lib/team's quotes
 // into <Keywords> (the sections take the finished node and import nothing),
 // and the one walk those pages share calls that callback on a doctor's
-// philosophy only: the doctor card's quote and the credo card, both white.
-// KEYWORD_RENDERERS and KEYWORD_WALK below hold both halves.
+// philosophy — the doctor card's quote and the credo card, both white — and,
+// since 2026-10-13, on each paragraph of the doctor page's biography, on the
+// band's PAGE ground: 4.81:1 there (the owner: "the text of biografie … like
+// the text at [the credo quote] … with tighlighted keywords" — CLAUDE.md
+// §15.23 round 7). KEYWORD_RENDERERS and KEYWORD_WALK below hold both halves.
 //
 // THE LANGUAGE BANNER (owner, 2026-10-02: "drop that green and replace with
 // the casual lilla from the app, the one that the "mai multe despre mine"
@@ -82,7 +85,7 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 const WEARS_ACCENT =
   /\b(?:text|bg|border(?:-[trblxyse])?|outline|decoration|fill|stroke|ring|shadow|from|via|to|caret|divide|placeholder)-accent(?:\/\d+)?(?![\w-])|var\(--(?:color-)?accent\)/g;
 
-/** The wearers — five atoms and two sections — and how many spellings each carries. */
+/** The wearers — six atoms and three sections — and how many spellings each carries. */
 const WEARERS: Readonly<Record<string, number>> = {
   // The hover label, the underline and the active label — TextButton.tsx's
   // COLOR INVARIANT: one colour for all three.
@@ -97,8 +100,15 @@ const WEARERS: Readonly<Record<string, number>> = {
   'components/ui/GlyphButton/GlyphButton.tsx': 6,
   // The map band's whole-row hover: GlyphButton's solid.accent hover face
   // re-spelled with the `group-` prefix (ClinicLocation's ROW_HOVER, its
-  // KEEP-IN-SYNC with the atom) — the glyph and the hairline.
+  // KEEP-IN-SYNC with the atom) — the glyph and the hairline. (A third, the
+  // hover label of the note's link under the map, stood from 2026-10-10 to
+  // 2026-10-13 — CLAUDE.md §15.38 round 3.)
   'components/sections/ClinicLocation/ClinicLocation.tsx': 2,
+  // The privacy page's inline links (POLICY_LINK), lavender under the
+  // pointer only — underlined ink at rest. Every one sits in the page's
+  // prose on the page ground, 4.81:1; none inside its two cards
+  // (2026-10-10, CLAUDE.md §15.38).
+  'components/sections/PrivacyPolicy/PrivacyPolicy.tsx': 1,
   // The reviewer's initials disc — its letters' ground (owner 2026-10-01: "the
   // circle of persons initials to be in lilla, not in current green"; the
   // avatar board's D3 green until then). White on it 5.06:1, measured below.
@@ -116,6 +126,12 @@ const WEARERS: Readonly<Record<string, number>> = {
   // has"; `text-cta` until then). Its hover label is `accent-strong`, which the
   // lookahead refuses — so one spelling. Both pairs are measured below.
   'components/sections/LanguageBanner/LanguageBanner.tsx': 1,
+  // The price strip's chip (owner 2026-10-09: "the currently selected one with
+  // current selected mecanism should be lilla"): ui/PillButton's ACTIVE face —
+  // the ground and the edge, white label on it (5.06:1, ui/Button's lavender
+  // face at rest) — and its resting HOVER, the label and the edge on the white
+  // face (5.06:1). Its renderers are named in PILL_RENDERERS.
+  'components/ui/PillButton/PillButton.tsx': 4,
 };
 
 /**
@@ -133,8 +149,8 @@ const AVATAR_RENDERERS: Readonly<Record<string, string>> = {
  * cut-up quotes into <Keywords> and hand the finished node to a card (the
  * sections take it as a prop and import nothing) — each with the card its
  * quotes land on. The key words are body text, so their bar is 4.5:1: 5.06:1
- * on white, measured below; never the tint (3.32:1). A fourth renderer names
- * itself and its ground here first.
+ * on white and 4.81:1 on the page ground, measured below; never the tint
+ * (3.32:1). A fourth renderer names itself and its ground here first.
  */
 const KEYWORD_RENDERERS: Readonly<Record<string, string>> = {
   'app/[locale]/(home)/page.tsx':
@@ -142,17 +158,22 @@ const KEYWORD_RENDERERS: Readonly<Record<string, string>> = {
   'app/[locale]/team/page.tsx':
     'the doctors band — every doctor card’s quote, ui/Card framed (bg-surface)',
   'app/[locale]/team/[slug]/page.tsx':
-    'the opener’s „Filozofia mea” card — CredoCard, ui/Card framed (bg-surface)',
+    'the opener’s „Filozofia mea” card — CredoCard, ui/Card framed (bg-surface) — and, since 2026-10-13, the biography’s paragraphs on the band’s page ground (bg-page)',
 };
 
 /**
  * The ONE walk all three pages hand their <Keywords> callback to: it calls the
- * callback on a doctor's PHILOSOPHY and nowhere else — the doctor card's quote
- * and the credo card, both white. A call on any other field would seat key
- * words on a ground nobody measured. The two tinted bands already refuse a
- * node BY TYPE (sections/DoctorProfile's paragraphs and sections/DoctorStats'
- * lead, labels and descriptions are plain strings); a new ReactNode slot
- * would not, so the walk is counted here.
+ * callback on a doctor's PHILOSOPHY — the doctor card's quote (the showcase's
+ * `renderQuote`) and the credo card (the doctor page's `renderKeywords`), both
+ * white — and, since 2026-10-13, on each paragraph of the doctor page's
+ * BIOGRAPHY (`renderKeywords` again), on the band's page ground, 4.81:1
+ * (CLAUDE.md §15.23 round 7), and nowhere else. A call on any other field
+ * would seat key words on a ground nobody measured. The tinted band already
+ * refuses a node BY TYPE (sections/DoctorStats' lead, labels and descriptions
+ * are plain strings); sections/DoctorProfile's paragraphs take nodes since
+ * 2026-10-13 — on the page ground, which is why the biography's walk is one
+ * of the shapes counted below — and a new ReactNode slot anywhere else would
+ * not announce itself, so the walk is counted here.
  */
 const KEYWORD_WALK = 'app/[locale]/team/populate.ts';
 
@@ -171,6 +192,23 @@ const RENDERERS: Readonly<Record<string, string>> = {
   // The price menu's categories.
   'components/sections/PriceList/PriceMenu.tsx':
     'bg-surface — the menu card, ui/Card',
+};
+
+/**
+ * Every file that RENDERS ui/PillButton, with the ground its chips sit on. A
+ * chip paints its OWN face — white at rest, the lavender when current — so
+ * its label never meets the band's ground; what does is the chip's edge and
+ * the lavender fill (4.81:1 on --page, SC 1.4.11's 3:1 for the state). Never
+ * on the tint. A second renderer names itself and its ground here first.
+ */
+const PILL_RENDERERS: Readonly<Record<string, string>> = {
+  // The strip paints no ground of its own since 2026-10-10 (PriceMenu.tsx's
+  // THE STRIP FLOATS UNDER THE BAR): at rest its chips stand on the page,
+  // stuck they float over the category cards scrolling under them — white
+  // `--surface` — and the page between those cards; the lavender fill reads
+  // 4.81:1 on the one and 5.06:1 on the other.
+  'components/sections/PriceList/PriceMenu.tsx':
+    '--page at rest, and the category cards’ white --surface scrolling under the stuck strip — each chip paints its white or lavender face',
 };
 
 /**
@@ -219,15 +257,17 @@ const ACCENT_TONE_CALLERS: Readonly<Record<string, string>> = {
     'bg-surface — the dialog’s white box, ui/Modal; the two controls on their own lavender face',
 };
 
-/** The lilac band and every band that composes it — where the role fails. */
+/** The lilac band and every band that composes it — where the role fails.
+ *  sections/DoctorProfile left the tint on 2026-10-13 (its biography beside the
+ *  courses on the page ground — CLAUDE.md §15.23 round 7), its schedule card
+ *  with it; DoctorStats is the one band left on it. */
 const TINTED = [
   'components/sections/TintedBand/TintedBand.tsx',
-  'components/sections/DoctorProfile/DoctorProfile.tsx',
-  'components/sections/DoctorProfile/ScheduleCard.tsx',
   'components/sections/DoctorStats/DoctorStats.tsx',
 ];
 
 const IMPORTS_TEXT_BUTTON = /ui\/TextButton\/TextButton['"]/;
+const IMPORTS_PILL_BUTTON = /ui\/PillButton\/PillButton['"]/;
 const IMPORTS_AVATAR = /ui\/Avatar\/Avatar['"]/;
 const IMPORTS_KEYWORD = /ui\/Keyword\/Keyword['"]/;
 const PASSES_ACCENT_TONE = /\btone=["']accent["']/;
@@ -302,7 +342,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2026-10-01)', () => {
-  it('is worn by the five atoms, the map band and the language banner, each exactly as many times as named', () => {
+  it('is worn by the six atoms, the map band, the language banner and the privacy page, each exactly as many times as named', () => {
     for (const [file, count] of Object.entries(WEARERS)) {
       expect(wearings(stripComments(read(file))), file).toBe(count);
     }
@@ -349,6 +389,18 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     // it. The closed list above is the whole pin now.)
   });
 
+  it('reaches the page as chips through the named renderer only — each chip on its own face, never the tint', () => {
+    const renderers = sourceFiles.filter((file) =>
+      IMPORTS_PILL_BUTTON.test(read(file)),
+    );
+    expect(renderers.sort()).toEqual(Object.keys(PILL_RENDERERS).sort());
+    for (const [file, ground] of Object.entries(PILL_RENDERERS)) {
+      const source = stripComments(read(file));
+      expect(source, `${file} — ${ground}`).not.toContain('--tint');
+      expect(source, `${file} — ${ground}`).not.toMatch(/TintedBand/);
+    }
+  });
+
   it('grounds the initials disc through the named renderer only', () => {
     const renderers = sourceFiles.filter((file) =>
       IMPORTS_AVATAR.test(read(file)),
@@ -360,7 +412,7 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
     }
   });
 
-  it('reaches the page as key words through the named renderers only — the doctors’ quotes, on white cards', () => {
+  it('reaches the page as key words through the named renderers only — the doctors’ quotes on white cards, the biography on the page ground', () => {
     const renderers = sourceFiles.filter((file) =>
       IMPORTS_KEYWORD.test(read(file)),
     );
@@ -373,14 +425,35 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
         `${file} — ${ground}`,
       ).toHaveLength(1);
     }
-    // …and the walk calls that callback on a doctor's philosophy and nowhere
-    // else — every call, counted, is the philosophy call.
+    // …and the walk calls those callbacks on a doctor's philosophy (the
+    // showcase's `renderQuote`, the credo's `renderKeywords`) and on the
+    // biography's paragraphs (`renderKeywords`, since 2026-10-13) and nowhere
+    // else — every call, counted, is one of those three shapes.
     const walk = stripComments(read(KEYWORD_WALK));
-    const calls = walk.match(/\brenderQuote\(/g) ?? [];
+    const calls = walk.match(/\brender(?:Quote|Keywords)\(/g) ?? [];
     const onPhilosophy =
-      walk.match(/\brenderQuote\(splitKeywords\(words\.philosophy\)\)/g) ?? [];
-    expect(calls.length, KEYWORD_WALK).toBeGreaterThan(0);
-    expect(onPhilosophy.length, KEYWORD_WALK).toBe(calls.length);
+      walk.match(
+        /\brender(?:Quote|Keywords)\(splitKeywords\(words\.philosophy\)\)/g,
+      ) ?? [];
+    const onBiography =
+      walk.match(
+        /\bwords\.about\.map\(\(paragraph\) =>\s*options\.renderKeywords\(splitKeywords\(paragraph\)\),?\s*\)/g,
+      ) ?? [];
+    expect(onPhilosophy.length, `${KEYWORD_WALK} — the philosophy`).toBe(2);
+    expect(onBiography.length, `${KEYWORD_WALK} — the biography`).toBe(1);
+    expect(calls.length, KEYWORD_WALK).toBe(
+      onPhilosophy.length + onBiography.length,
+    );
+    // …and no call the count above cannot see: a point-free
+    // `.map(options.renderKeywords)` or a `.call(…)` names a renderer
+    // without a `(` after it. The walk names the two exactly five times —
+    // the two declarations (`renderQuote`'s parameter, `renderKeywords`'
+    // option) and the three calls — so a sixth mention is a new use to
+    // census (G2 typescript L3, 2026-10-13).
+    expect(
+      walk.match(/\brender(?:Quote|Keywords)\b/g) ?? [],
+      `${KEYWORD_WALK} — every mention of a renderer`,
+    ).toHaveLength(5);
   });
 
   it('never appears inside sections/TintedBand or the bands that compose it', () => {
@@ -388,6 +461,7 @@ describe('the `--accent` lavender has exactly its named wearers in src/ (owner 2
       const source = stripComments(read(file));
       expect(wearings(source), file).toBe(0);
       expect(IMPORTS_TEXT_BUTTON.test(source), file).toBe(false);
+      expect(IMPORTS_PILL_BUTTON.test(source), file).toBe(false);
       expect(IMPORTS_AVATAR.test(source), file).toBe(false);
       expect(IMPORTS_KEYWORD.test(source), file).toBe(false);
       expect(PASSES_ACCENT_TONE.test(source), file).toBe(false);

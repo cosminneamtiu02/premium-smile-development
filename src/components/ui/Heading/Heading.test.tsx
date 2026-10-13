@@ -1,6 +1,13 @@
-import { createRef, type Ref } from 'react';
+import { createRef, type CSSProperties, type Ref } from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+// The REAL stylesheet, since 2026-10-10, for ONE block of this suite: the
+// `name` step's container rows MEASURED against `band`'s (a class string
+// cannot say what two rows come to in a box of a given width). The per-file
+// import is the house pattern (PersonnelCard, Card, Modal …); every other
+// assertion here reads class strings, so each holds with the sheet or without
+// it. The atom owns no transition, so nothing here needs stilling.
+import '@/styles/globals.css';
 import { Heading, type HeadingSize, type HeadingTone } from './Heading';
 
 // Role-based queries wherever a role exists (§3, §9): the asChild cases are
@@ -54,10 +61,19 @@ const SLOGAN_CLASSES =
 
 // I1-band · the h2 step (the doctor-pages run's D48, 2026-09-26 — §15.24's
 // "next order of heading height" under the h1): 30px on a column narrower than
-// the container's `@md` step (28rem), 36px from it. The ONE container-
-// responsive row on the axis, pinned byte-exactly like its elders so a viewport
-// prefix, a bold or a third size can never slip into it unnoticed.
+// the container's `@md` step (28rem), 36px from it. The axis's FIRST
+// container-responsive row (`name`, below, is the second), pinned
+// byte-exactly like its elders so a viewport prefix, a bold or a third size
+// can never slip into it unnoticed.
 const BAND_CLASSES = 'font-display text-3xl @md:text-4xl text-ink-strong';
+
+// I1-name · a doctor card's name (sections/PersonnelCard D20, 2026-10-10 —
+// the owner's phone header): `band`, plus ONE override — Tailwind's 24px size
+// on a `/tight` 30px line in a container under 24rem. Today's look as the
+// base, so an engine without container queries draws `band` (the G2 fold of
+// 2026-10-10). Pinned byte-exactly, and pinned AGAINST `band` below.
+const NAME_CLASSES =
+  'font-display text-3xl @md:text-4xl @max-sm:text-2xl/tight text-ink-strong';
 
 // Record<HeadingSize, …> on purpose: this union is BUILT to grow, so a new
 // step must not be able to ship with zero
@@ -71,7 +87,24 @@ const expectedClasses: Record<HeadingSize, string> = {
   hero: HERO_CLASSES,
   slogan: SLOGAN_CLASSES,
   band: BAND_CLASSES,
+  name: NAME_CLASSES,
 };
+
+/** The container-responsive tokens each step carries, in order — `band`'s
+ *  one, and `name`'s two, `band`'s and its own override; every other step
+ *  answers the page with a clamp, or nothing at all. */
+const CONTAINER_TOKENS: Record<HeadingSize, readonly string[]> = {
+  title: [],
+  section: [],
+  page: [],
+  hero: [],
+  slogan: [],
+  band: ['@md:text-4xl'],
+  name: ['@md:text-4xl', '@max-sm:text-2xl/tight'],
+};
+
+/** The name step's ONE token beyond `band` (I1-name). */
+const NAME_OVERRIDE = '@max-sm:text-2xl/tight';
 
 describe('Heading — the title step (I1 zero-diff-rewire, I2 element neutrality)', () => {
   it('renders a plain <p> wearing exactly the title classes and no heading role', () => {
@@ -251,8 +284,9 @@ describe('Heading — the band step (the h2 step, D48, 2026-09-26)', () => {
     classes.split(' ').filter((token) => /^@?[a-z0-9-]+:/.test(token));
 
   it('renders size="band" wearing exactly the band classes on a plain <p>', () => {
-    // The narrow consumer's own words: the schedule card's title, the 320px
-    // column where the step rests at 30px (§15.7: Romanian, diacritics).
+    // The narrow case's words: the title of the doctor page's former schedule
+    // card (a 20rem card until 2026-10-13), the 320px column where the step
+    // rests at 30px (§15.7: Romanian, diacritics).
     render(<Heading size="band">Când mă găsiți la clinică</Heading>);
     const title = screen.getByText('Când mă găsiți la clinică');
     expect(title.tagName).toBe('P');
@@ -277,29 +311,41 @@ describe('Heading — the band step (the h2 step, D48, 2026-09-26)', () => {
   });
 
   it.each(Object.keys(expectedClasses) as HeadingSize[])(
-    'size "%s" carries a responsive token only if it is the band step',
+    'size "%s" carries a responsive token only if it is a container row — band or name',
     (size) => {
-      // The axis stays static everywhere else: `hero` answers the page with a
-      // clamp, never a variant; the three fixed steps answer nothing at all.
-      // `band` is the ONE row that reads its surroundings, and it reads them
-      // through exactly one container step.
+      // The axis stays static everywhere else: `hero` and `slogan` answer
+      // the page with a clamp, never a variant; the three fixed steps answer
+      // nothing at all. `band` reads its surroundings through exactly one
+      // container step, and `name` (2026-10-10) through two: `band`'s own and
+      // its one override under 24rem.
       expect(variantTokens(expectedClasses[size])).toEqual(
-        size === 'band' ? ['@md:text-4xl'] : [],
+        CONTAINER_TOKENS[size],
       );
     },
   );
 
-  it('responds to its CONTAINER, never to the viewport (§6.5)', () => {
-    // `@md:` queries the nearest ancestor container — the band's
-    // ui/Container column, a ui/Card — which is the component-responsiveness
-    // §6.5 prescribes. A bare `md:`/`sm:` would be the viewport self-scaling
-    // `title` refused on day one (the old site's `sm:text-4xl`).
-    const tokens = variantTokens(BAND_CLASSES);
-    expect(tokens.every((token) => token.startsWith('@'))).toBe(true);
-    expect(tokens.some((token) => /^(sm|md|lg|xl|2xl):/.test(token))).toBe(
-      false,
-    );
-  });
+  it.each(
+    (Object.keys(CONTAINER_TOKENS) as HeadingSize[]).filter(
+      (size) => CONTAINER_TOKENS[size].length > 0,
+    ),
+  )(
+    'size "%s" responds to its CONTAINER, never to the viewport (§6.5)',
+    (size) => {
+      // Every container row the table above lists — built from it, so a
+      // third container-responsive step is checked the day it joins. An
+      // `@`-prefixed variant queries the nearest ancestor container — the
+      // band's ui/Container column, a ui/Card, a doctor card's INSET — which
+      // is the component-responsiveness §6.5 prescribes; a bare viewport
+      // prefix would be the self-scaling `title` refused on day one (the old
+      // site's section title scaled itself by the screen).
+      const tokens = CONTAINER_TOKENS[size];
+      expect(variantTokens(expectedClasses[size])).toEqual(tokens);
+      expect(tokens.every((token) => token.startsWith('@'))).toBe(true);
+      expect(tokens.some((token) => /^(sm|md|lg|xl|2xl):/.test(token))).toBe(
+        false,
+      );
+    },
+  );
 
   it('invents no size: it rests on the section step and steps up to the page step', () => {
     // §6.6 — one step per measured consumer, never an invented number. The
@@ -316,8 +362,138 @@ describe('Heading — the band step (the h2 step, D48, 2026-09-26)', () => {
   });
 });
 
+describe('Heading — the name step (a doctor card’s name, PersonnelCard D20, 2026-10-10)', () => {
+  // The measuring consumer's own fixture and shape: a doctor's name on a real
+  // <h3> through asChild, the card's default level (§15.7: Romanian,
+  // diacritics).
+  const NAME = 'Dr. Ivașcu-Zugravu Cătălina';
+
+  it('wears exactly the name classes on an asChild <h3> — the doctor card’s shape', () => {
+    render(
+      <Heading size="name" asChild>
+        <h3 className="hyphens-none">{NAME}</h3>
+      </Heading>,
+    );
+    const heading = screen.getByRole('heading', { level: 3, name: NAME });
+    expect(heading.className).toBe(`${NAME_CLASSES} hyphens-none`);
+  });
+
+  it('IS the band step plus ONE override — the default scale’s 24px on a /tight line, under 24rem', () => {
+    // §6.6 — no invented size: drop the one override and `band` is left byte
+    // for byte, today's look as the base (what an engine without container
+    // queries draws). The override is the default scale's 2xl size with the
+    // line-height `hero` spells the same way (`/tight`), under the
+    // container's 24rem — a MAX query, so it never reaches `@md`'s rows.
+    const tokens = NAME_CLASSES.split(' ');
+    const band = BAND_CLASSES.split(' ');
+    expect(tokens.filter((token) => !band.includes(token))).toEqual([
+      NAME_OVERRIDE,
+    ]);
+    expect(tokens.filter((token) => token !== NAME_OVERRIDE).join(' ')).toBe(
+      BAND_CLASSES,
+    );
+    expect(NAME_OVERRIDE.startsWith('@max-sm:')).toBe(true);
+  });
+
+  it('leaves `band` byte-identical — the name step joined BESIDE it', () => {
+    render(<Heading size="band">{NAME}</Heading>);
+    expect(screen.getByText(NAME).className).toBe(BAND_CLASSES);
+  });
+});
+
+/** `n` rem in px, at whatever the root is. */
+const remPx = (n: number): number =>
+  n * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/** A name on an <h3> in a `@container` box `width` rem wide, at one step —
+ *  the box's width an inline style, never an arbitrary class (Tailwind reads
+ *  class names from every source file, a test's too: a width spelled as a
+ *  class here would ship as a rule nobody wears). */
+const measuredTitle = (size: HeadingSize, width: number) => {
+  const style: CSSProperties = { width: `${width}rem` };
+  const { unmount } = render(
+    <div className="@container" style={style}>
+      <Heading size={size} asChild>
+        <h3>Dr. Elena Marin</h3>
+      </Heading>
+    </div>,
+  );
+  const heading = screen.getByRole('heading', { level: 3 });
+  const computed = getComputedStyle(heading);
+  const measured = {
+    box: (heading.parentElement as HTMLElement).getBoundingClientRect().width,
+    fontSize: computed.fontSize,
+    lineHeight: computed.lineHeight,
+  };
+  unmount();
+  return measured;
+};
+
+describe('Heading — the name step, MEASURED (real stylesheet)', () => {
+  it.each([
+    { width: 12.5, at: 'PersonnelCard D20’s FLOOR' },
+    { width: 20, at: 'a phone’s doctor card' },
+    { width: 23.9, at: 'just under the 24rem override’s edge' },
+  ])(
+    'is 24px on a 30px line in a container narrower than 24rem — $at ($width rem)',
+    ({ width }) => {
+      // Every phone's INSET is under 24rem (PersonnelCard D20 — 218px on a
+      // 320 phone, 277 on a 390 one). The box first, so a width that failed
+      // to apply cannot let the size pass for the wrong reason.
+      const name = measuredTitle('name', width);
+      expect(name.box).toBeCloseTo(remPx(width), 1);
+      expect(name.fontSize).toBe('24px');
+      expect(name.lineHeight).toBe('30px');
+    },
+  );
+
+  it.each([
+    {
+      width: 24,
+      at: 'the override’s edge — 24rem, no longer under it',
+      px: 30,
+    },
+    { width: 27.9, at: 'just under `@md`', px: 30 },
+    { width: 28, at: 'the `@md` step itself (inclusive)', px: 36 },
+    { width: 40, at: 'a tablet’s INSET', px: 36 },
+  ])(
+    'EQUALS `band` — font size AND line height — at $at ($width rem)',
+    ({ width, px }) => {
+      // The owner's "On tablet and desktop it's fine and should remain as
+      // is", read off the engine: from 24rem up the two rows compute the same
+      // pair, `section`'s 30/36 and then `page`'s 36/40 — the `/tight` of the
+      // override never leaks past it (a `/` modifier sets no `--tw-leading`).
+      // The box first, as above.
+      const name = measuredTitle('name', width);
+      const band = measuredTitle('band', width);
+      expect(name.box).toBeCloseTo(remPx(width), 1);
+      expect(band.box).toBe(name.box);
+      expect(name.fontSize).toBe(`${px}px`);
+      expect(name.fontSize).toBe(band.fontSize);
+      expect(name.lineHeight).toBe(band.lineHeight);
+    },
+  );
+
+  it('IS band’s 30px with no container above it — what an engine without container queries draws, too', () => {
+    // The safe failure, band's own, to the pixel: with no container to ask,
+    // no container row matches and the base is `band`'s — as on Safari and
+    // every iPadOS 15 browser, which understand no container rule at all.
+    const { unmount } = render(
+      <Heading size="name" asChild>
+        <h3>Dr. Elena Marin</h3>
+      </Heading>,
+    );
+    const computed = getComputedStyle(
+      screen.getByRole('heading', { level: 3 }),
+    );
+    expect(computed.fontSize).toBe('30px');
+    expect(computed.lineHeight).toBe('36px');
+    unmount();
+  });
+});
+
 describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', () => {
-  // Record<HeadingTone, …> on purpose, the size table's twin: a third ink
+  // Record<HeadingTone, …> on purpose, the size table's twin: a new ink
   // cannot ship with zero coverage — this file stops typechecking until it
   // is classified here.
   const expectedInk: Record<HeadingTone, string> = {
@@ -336,13 +512,6 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     // lilac. The Hero's default face.
     'inverse-aura':
       'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill] [text-shadow:0_0_0.28em_color-mix(in_srgb,var(--color-accent-decorative)_60%,transparent),0_0_0.08em_color-mix(in_srgb,var(--color-accent-decorative)_40%,transparent)]',
-    // The lilac year labels (2026-09-25, the doctor-pages run's D16): the
-    // accent ink with its weight — 4.44:1 on the page ground is large-text
-    // contrast only, and bold is what makes the 20px title step large.
-    accent: 'font-bold text-accent-decorative',
-    // Their REST twin (2026-09-26, the run's D35): the same weight in the
-    // muted ink, so a year switching between the two never reflows.
-    'accent-idle': 'font-bold text-ink-muted',
   };
 
   // Pin the union itself, exactly as the size axis does: widening it to
@@ -353,8 +522,6 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     | 'inverse-stroked'
     | 'inverse-outlined'
     | 'inverse-aura'
-    | 'accent'
-    | 'accent-idle'
   >();
 
   it.each(Object.keys(expectedInk) as HeadingTone[])(
@@ -423,74 +590,6 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     );
   });
 
-  it('is orthogonal to size for the accent ink too — the DoctorCourses <h3>', () => {
-    // The measuring consumer's own shape (D16): a real <h3> handed in through
-    // asChild at the title step, a year as its whole text. Size row first,
-    // the tone row after it, the child's own classes (none here) last — so
-    // the title step's `font-display text-xl` is untouched and the ink swaps
-    // in whole, weight included.
-    render(
-      <Heading size="title" tone="accent" asChild>
-        <h3>2024</h3>
-      </Heading>,
-    );
-    expect(
-      screen.getByRole('heading', { level: 3, name: '2024' }).className,
-    ).toBe('font-display text-xl font-bold text-accent-decorative');
-  });
-
-  it.each(Object.keys(expectedClasses) as HeadingSize[])(
-    'tone "accent" is bold at the "%s" step — the weight never leaves the ink (D16)',
-    (size) => {
-      // §15.1 licenses the accent for LARGE display text only; at the 20px
-      // title step the bold IS what makes it large (≥ 18.67px bold), and at
-      // every larger step it keeps the look one face. A future edit that moved
-      // `font-bold` out of the tone row (onto one caller's className, say)
-      // would leave the other call sites under 4.5:1 at body weight.
-      render(
-        <Heading size={size} tone="accent">
-          Formare continuă
-        </Heading>,
-      );
-      const tokens = screen.getByText('Formare continuă').className.split(' ');
-      expect(tokens).toContain('font-bold');
-      expect(tokens).toContain('text-accent-decorative');
-      expect(tokens).not.toContain('text-ink-strong');
-    },
-  );
-
-  it.each(Object.keys(expectedClasses) as HeadingSize[])(
-    'tones "accent" and "accent-idle" differ in the INK alone at the "%s" step — a lit/unlit pair never reflows (D35)',
-    (size) => {
-      // The course timeline switches ONE year between the two as the visitor
-      // scrolls. Anything but the colour changing — the weight above all —
-      // would re-measure the line and nudge every course under it. So the
-      // two class strings must be the same tokens with exactly one swapped.
-      const { unmount } = render(
-        <Heading size={size} tone="accent">
-          2024
-        </Heading>,
-      );
-      const lit = screen.getByText('2024').className.split(' ');
-      unmount();
-      render(
-        <Heading size={size} tone="accent-idle">
-          2024
-        </Heading>,
-      );
-      const rest = screen.getByText('2024').className.split(' ');
-
-      expect(rest).toContain('font-bold');
-      expect(rest).toContain('text-ink-muted');
-      expect(lit.filter((token) => !rest.includes(token))).toEqual([
-        'text-accent-decorative',
-      ]);
-      expect(rest.filter((token) => !lit.includes(token))).toEqual([
-        'text-ink-muted',
-      ]);
-    },
-  );
-
   it('keeps the caller className LAST, after the ink', () => {
     render(
       <Heading size="hero" tone="inverse" className="text-center">
@@ -514,7 +613,7 @@ describe('Heading — the size axis, exhaustively (§6.6 growth guard)', () => {
   // Record row (the Eyebrow pin's growth-direction twin; runs at typecheck,
   // costs nothing at runtime).
   expectTypeOf<HeadingSize>().toEqualTypeOf<
-    'title' | 'section' | 'band' | 'page' | 'hero' | 'slogan'
+    'title' | 'section' | 'band' | 'name' | 'page' | 'hero' | 'slogan'
   >();
 
   it.each(Object.keys(expectedClasses) as HeadingSize[])(

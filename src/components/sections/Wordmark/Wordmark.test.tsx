@@ -292,7 +292,7 @@ describe('Wordmark — the name', () => {
     // in unnoticed.
     const { text } = mount();
     expect(text.getAttribute('class')).toBe(
-      'font-display text-3xl text-ink-strong hyphens-none @max-sm:text-xl',
+      'font-display text-3xl text-ink-strong hyphens-none @max-md:text-xl',
     );
   });
 
@@ -420,9 +420,9 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
     // prefix, the `max-md:` and compound `dark:max-lg:` forms, and the
     // arbitrary `min-[600px]:` / `max-[600px]:` variants. The first pattern
     // therefore anchors on start-OR-colon, which is what keeps a legitimate
-    // CONTAINER token out of it: in `@max-sm:gap-2` the character before
+    // CONTAINER token out of it: in `@max-md:gap-2` the character before
     // `max-` is `@`, not a colon, and that leading `@` is the whole
-    // protection — `sm` IS a viewport name, so without it the token would
+    // protection — `md` IS a viewport name, so without it the token would
     // read as the media query it is not.
     // The second never matches `max-h-[…]` / `max-w-[…]`, which are sizing
     // utilities rather than variants.
@@ -454,10 +454,13 @@ describe('Wordmark — zero islands, and a box it does not own', () => {
     const tokens = [anchor, ...anchor.querySelectorAll('*')].flatMap(classesOf);
     const stepped = tokens.filter((t) => t.startsWith('@'));
 
+    // The step is `@max-md` since 2026-10-09 (`@max-sm` until then): THE
+    // PHONE GUTTER widened the pill by a tenth of the window, and 28rem keeps
+    // every phone on the phone lockup (Wordmark.tsx, BELOW `@max-md`).
     expect(stepped.toSorted()).toEqual([
-      '@max-sm:gap-2',
-      '@max-sm:h-[1.53rem]',
-      '@max-sm:text-xl',
+      '@max-md:gap-2',
+      '@max-md:h-[1.53rem]',
+      '@max-md:text-xl',
     ]);
     // Nothing may HIDE at the step — that is the rule the old site broke.
     expect(tokens.filter((t) => t.includes('hidden'))).toEqual([]);

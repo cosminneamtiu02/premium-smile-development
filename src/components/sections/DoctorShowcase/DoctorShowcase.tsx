@@ -83,7 +83,7 @@ import { cx } from '@/lib/cx/cx';
 // word: "remove that space") — and that room IS this band's air. The usual
 // `pb` on top of it would double it, and so would a `gap`. The stepped `pt`
 // sits on the rhythm box one level in, because an element cannot query its
-// own size (the DoctorCourses / ClinicLocation spelling, ui/Container's recipe
+// own size (the DoctorProfile / ClinicLocation spelling, ui/Container's recipe
 // rule 3) — and inside the regime it is drawn in the band's design pixel like
 // every other length (D10): the box that remaps the step is the box it sits on.
 //
@@ -92,15 +92,20 @@ import { cx } from '@/lib/cx/cx';
 // of the picture's column (ui/Ribbon's stand-in column, Ribbon.fixtures.tsx,
 // alternates exactly so, and the owner approved the ribbon over it). The
 // mirror is PersonnelCard's visual-only one (its D7): the DOM order of every
-// card is unchanged, so reading and focus order never move. Which way a card
+// card is unchanged, so reading and focus order never move. It acts from the
+// card's wide step alone — on a phone every card's photo is on the left
+// (PersonnelCard D20's ONE SIDE ON A PHONE), while the ribbon, which mirrors
+// by INDEX itself (lib/ribbon-layout), keeps alternating. Which way a card
 // faces is the band's decision, never the data's: `DoctorShowcaseDoctor` has
 // no `side`.
 //
 // ── D6 · HEADING LEVELS. The band's title is an <h2> (SectionHeading's
 // default level, at its `band` step), each doctor's name an <h3>
 // (`headingLevel={3}`) — the outline reads page <h1> → this band's <h2> → one
-// <h3> per doctor, one level at a time on both pages (§9). The card keeps the
-// name's `band` size at both levels (PersonnelCard D17), so the level is the
+// <h3> per doctor, one level at a time on both pages (§9). The card keeps one
+// size for the name at both levels — ui/Heading's `name` step since
+// 2026-10-10, `band` from the card's 24rem up and 24px beside the phone
+// header's round photo (PersonnelCard D4, D20) — so the level is the
 // outline's and never the look's.
 //
 // ── D7 · EMPTY RENDERS NOTHING — `null`: no landmark, no heading, no ribbon.
@@ -124,10 +129,20 @@ import { cx } from '@/lib/cx/cx';
 // (2026-09-30, MEASURED by the planner on this lane's built export with
 // Chromium's largest-contentful-paint entries). On the Team page, which this
 // band opens, the FIRST doctor's cutout is the page's LCP element (§10.6) —
-// 226 × 302 on a 390 phone, 288 × 384 at 1280 and 1920, still the LCP at
-// 1366 × 633 — and it shipped lazy, with no `fetchpriority` and no preload
-// link. On Home the band sits under the Hero and, since 2026-10-01, under the
-// clinic's numbers too (the owner's order), the first cutout at y ≈ 1655 at a
+// 226 × 302 on a 390 phone (since ui/Container's PHONE GUTTER of 2026-10-09:
+// 276.6 × 368.8 on a 390 phone, 262.7 × 350.2 at a 390 window behind a
+// classic scrollbar — the geometry the 226 × 302 was — still the LCP,
+// re-measured), 288 × 384 at 1280 and 1920, still the LCP at 1366 × 633 —
+// and it shipped lazy, with no `fetchpriority` and no preload link. (Since
+// PersonnelCard's D20 of 2026-10-10 a PHONE draws that cutout in a 112px
+// circle, and there the page's largest paint is the first card's quote —
+// measured at 390: 45,870px² of quote against 12,544 of photo; every tablet,
+// laptop and desktop keeps the cutout as the LCP. The preload stays: the
+// circle is on the phone's first screen too, and the page cannot know the
+// card's width before it is laid out — a phone `sizes` entry is D20's
+// recorded lever.) On Home
+// the band sits under the Hero and, since 2026-10-01, under the clinic's
+// numbers too (the owner's order), the first cutout at y ≈ 1655 at a
 // 1280 × 800 window (≈ 1103 right under the Hero, before the band scaled),
 // and the hero's picture is the LCP: lazy is RIGHT there (§11 — "lazy-loading
 // below the fold, eager + high-priority for the hero"). The band cannot tell
@@ -345,15 +360,17 @@ import { cx } from '@/lib/cx/cx';
 // RECORDED FOR THE OWNER — what the regime trades, derived from the numbers
 // above and checked on the built page (a zoom z: the CSS viewport is the
 // screen ÷ z and a classic scrollbar 15 ÷ z CSS px; the column is the
-// viewport less the scrollbar and 2 × clamp(1rem, 10vw, 12.5rem); s =
-// min(column, 96rem) / 1106 from a max(56rem, 896px) column; on screen a CSS
-// px is z device px). Inside the regime the band's lengths follow its
-// column, not the root font, so — and since 2026-10-02 the same holds for
+// viewport less the scrollbar and 2 × clamp(1rem, 10vw, 12.5rem) — the
+// gutter from a 600px viewport up, all the regime ever meets (ui/Container's
+// PHONE GUTTER narrows it below since 2026-10-09); s = min(column, 96rem) /
+// 1106 from a max(56rem, 896px) column; on screen a CSS px is z device px).
+// Inside the regime the band's lengths follow its column, not the root font,
+// so — and since 2026-10-02 the same holds for
 // every band that wears ui/Container's THE BAND SCALE, each at its own sizes;
 // the figures below are this band's quote and name (THE PROMOTION):
 // (1) A BROWSER ZOOM narrows the column, in CSS px, by the very factor it
-// enlarges a CSS px (the gutter is 10vw wherever its 12.5rem cap does not
-// bind), so between the step and the cap the band's text stays the SAME size
+// enlarges a CSS px (the regime's gutter is 10vw, its 12.5rem cap aside), so
+// between the step and the cap the band's text stays the SAME size
 // on screen — WCAG's F94 pattern under SC 1.4.4. It grows only where the cap
 // binds (a fixed design pixel there, like rem text) and once the column
 // falls under the step (the theme's rem again — at a 16px root a jump of

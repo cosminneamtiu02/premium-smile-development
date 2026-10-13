@@ -41,6 +41,7 @@
       "salLabel": "Alternative Streitbeilegung",
       "backToTop": "Nach oben",
       "copyright": "© {year} {name}. Alle Rechte vorbehalten.",
+      "privacy": "Datenschutz und Cookies",
       "socialInstagram": "{name} auf Instagram",
       "socialTiktok": "{name} auf TikTok",
       "contactWhatsapp": "{name} auf WhatsApp",
@@ -81,7 +82,8 @@
     "title": "Unsere Leistungen",
     "prices": {
       "menu": "Kategorien",
-      "amount": "{amount, number} RON"
+      "amount": "{amount, number} RON",
+      "taxNote": "Alle Preise in RON, einschließlich aller Steuern und Gebühren."
     }
   },
   "team": {
@@ -105,7 +107,7 @@
         "title": "Über {name}"
       },
       "courses": {
-        "eyebrow": "Fortbildung",
+        "eyebrow": "Stationen meines Weges zur Spezialisierung",
         "title": "Kurse und Spezialisierungen"
       },
       "stats": {
@@ -113,10 +115,6 @@
         "title": "Über die Jahre bestätigte Erfahrung",
         "lead": "Die Zahlen unten sagen in Kürze, wie wir arbeiten: sorgfältig, mit moderner Technik und mit echter Aufmerksamkeit für jeden Patienten.",
         "atLeast": "über"
-      },
-      "schedule": {
-        "title": "Wann Sie mich in der Praxis finden",
-        "closed": "Geschlossen"
       }
     }
   },

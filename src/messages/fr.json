@@ -41,6 +41,7 @@
       "salLabel": "Règlement alternatif des litiges",
       "backToTop": "Retour en haut",
       "copyright": "© {year} {name}. Tous droits réservés.",
+      "privacy": "Confidentialité et cookies",
       "socialInstagram": "{name} sur Instagram",
       "socialTiktok": "{name} sur TikTok",
       "contactWhatsapp": "{name} sur WhatsApp",
@@ -81,7 +82,8 @@
     "title": "Nos soins",
     "prices": {
       "menu": "Catégories",
-      "amount": "{amount, number} RON"
+      "amount": "{amount, number} RON",
+      "taxNote": "Prix en RON, toutes taxes comprises."
     }
   },
   "team": {
@@ -105,7 +107,7 @@
         "title": "{name} en quelques mots"
       },
       "courses": {
-        "eyebrow": "Formation continue",
+        "eyebrow": "Jalons de mon parcours de spécialisation",
         "title": "Cours et spécialisations"
       },
       "stats": {
@@ -113,10 +115,6 @@
         "title": "Une expérience confirmée dans le temps",
         "lead": "Les chiffres ci-dessous résument notre façon de travailler : avec soin, avec des technologies modernes et une attention sincère pour chaque patient.",
         "atLeast": "plus de"
-      },
-      "schedule": {
-        "title": "Quand me trouver à la clinique",
-        "closed": "Fermé"
       }
     }
   },

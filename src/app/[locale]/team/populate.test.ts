@@ -1,11 +1,10 @@
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import type { CourseGroup } from '@/components/sections/DoctorCourses/DoctorCourses';
+import type { DoctorProfileProps } from '@/components/sections/DoctorProfile/DoctorProfile';
 import type { KeywordSegment } from '@/components/ui/Keyword/Keyword';
 import { locales } from '@/i18n/locales';
 import {
   auxiliaries,
   clinicStats,
-  coursesByYear,
   doctors,
   splitKeywords,
   type AboutSegment,
@@ -28,27 +27,34 @@ import {
 // Home and the Team page show), tested without rendering anything. The module is
 // pure, JSX-free and next-intl-free by design, and names no `react` specifier
 // (see its header), so this suite needs no provider, no DOM and no mock beyond
-// a spy standing in for the page's quote callback.
+// two spies standing in for the pages' render callbacks — the doctors band's
+// quote (`renderQuote`) and the doctor page's key words (`renderKeywords`).
 //
 // TWO HALVES per walk, the services populator's shape
 // (../services/populate.test.ts) for the same two reasons:
 //   · against a FIXTURE — does the mapping do what it says? The right
-//     language, the profile href, the philosophy's segments handed over, the
-//     paragraphs untouched, the week printed, and the course rows grouped by
-//     year with the year turned into a LABEL — including the shapes the real
-//     data may never happen to hold: rows written out of year order, a doctor
-//     with no course at all, and the two malformed rows whose LIBRARY errors
-//     must reach the caller unchanged (an unbalanced `<k>`, an unknown day —
-//     the module header's "NO THROW OF ITS OWN", G2-R2 tier 3).
+//     language, the profile href, the SEGMENTS handed over — the
+//     philosophy's for the card and the credo, and since 2026-10-13 every
+//     biography paragraph's too (CLAUDE.md §15.23 round 7) — the caller's
+//     nodes passed on untouched, and the course ideas handed over as this
+//     language's lines in the data's own order — including the shapes the
+//     real data may never happen to hold: a doctor with no course at all, a
+//     paragraph with no mark, and the malformed rows whose LIBRARY error must
+//     reach the caller unchanged (an unbalanced `<k>` in a philosophy or in a
+//     paragraph — the module header's "NO THROW OF ITS OWN", G2-R2 tier 3).
 //   · against the REAL lists — does the page really print all the people and
-//     all of each doctor's words? Counts, ids, paragraphs and years come from
-//     lib/team itself rather than being retyped, so what is pinned here is
-//     that nothing is filtered, sliced or reordered on the way to a band; the
-//     data's own shape is tests/unit/team-data.test.ts' business.
+//     all of each doctor's words? Counts, ids, paragraphs and course lines
+//     come from lib/team itself rather than being retyped, so what is pinned
+//     here is that nothing is filtered, sliced or reordered on the way to a
+//     band; the data's own shape is tests/unit/team-data.test.ts' business.
 //
 // Round 2 (run ledger D13) deleted the four assistant tests with the thing
 // they tested: the pair left lib/team, and the populator's two belts — a
-// dangling id, one person named twice — left with it.
+// dangling id, one person named twice — left with it. On 2026-10-13 the
+// doctor's week and the course years left the page (lib/team's NO WEEK ON A
+// DOCTOR and A COURSE IS ONE IDEA), and their tests — the seven rows, the
+// day names, lib/hours' unknown-day error, the year groups and their plain
+// digits — left with them.
 //
 // Beside the module it tests, like every other test in src/ (the lib-foldering
 // convention, and src/app/[locale]/shell.test.tsx for the app tier). It runs in
@@ -64,20 +70,20 @@ import {
  * missing locale, and are deliberately distinct so a walk that picked the
  * wrong record cannot pass by accident.
  *
- * The SHAPES that matter: the first doctor's course rows are
- * written OUT of year order, with two rows in one year — so "newest first" and
- * "the file's order inside a year" are real assertions rather than a
- * coincidence of the fixture; the second doctor has NO course (D15: no group,
- * so the band renders nothing).
+ * The SHAPES that matter: the first doctor has THREE course ideas, each a
+ * different line in every language — so "in the data's own order" and "in
+ * the asked language" are real assertions rather than a coincidence of the
+ * fixture; the second doctor has NO course at all. The first doctor's two
+ * paragraphs carry key words — one, then two (lib/team's THE BIOGRAPHY'S KEY
+ * WORDS) — and the second doctor's one paragraph carries NONE: the shape
+ * tests/unit/team-data.test.ts refuses in shipped data, which the walk must
+ * still pass through as one plain segment.
  */
 const FIXTURE = {
   doctors: [
     {
       id: 'ana-ardelean',
       cutout: { src: '/images/demo/cutout-1.png', width: 900, height: 1200 },
-      hours: [
-        { days: ['Monday', 'Wednesday'], opens: '09:00', closes: '17:00' },
-      ],
       // Two tiles, one with a suffix and one without (round 2f, D32).
       stats: [
         {
@@ -109,7 +115,6 @@ const FIXTURE = {
       ],
       courses: [
         {
-          year: 2021,
           words: {
             ro: 'Curs de ortodonție la copii, Iași',
             en: 'Orthodontics in children course, Iași',
@@ -119,7 +124,6 @@ const FIXTURE = {
           },
         },
         {
-          year: 2024,
           words: {
             ro: 'Curs de aliniere, Cluj-Napoca',
             en: 'Aligner course, Cluj-Napoca',
@@ -129,7 +133,6 @@ const FIXTURE = {
           },
         },
         {
-          year: 2024,
           words: {
             ro: 'Curs de fotografie dentară, București',
             en: 'Dental photography course, Bucharest',
@@ -145,8 +148,8 @@ const FIXTURE = {
           position: 'Medic ortodont',
           philosophy: 'Lucrez în <k>ortodonție</k> de zece ani.',
           about: [
-            'Dr. Ana Ardelean lucrează în clinică din 2015.',
-            'Își continuă formarea prin cursuri de specialitate.',
+            'Dr. Ana Ardelean lucrează în <k>clinică</k> din 2015.',
+            'Își continuă <k>formarea</k> prin <k>cursuri de specialitate</k>.',
           ],
         },
         en: {
@@ -154,8 +157,8 @@ const FIXTURE = {
           position: 'Orthodontist',
           philosophy: 'I have worked in <k>orthodontics</k> for ten years.',
           about: [
-            'Dr. Ana Ardelean has worked at the clinic since 2015.',
-            'She continues her training through specialist courses.',
+            'Dr. Ana Ardelean has worked at the <k>clinic</k> since 2015.',
+            'She continues her <k>training</k> through <k>specialist courses</k>.',
           ],
         },
         de: {
@@ -164,8 +167,8 @@ const FIXTURE = {
           philosophy:
             'Ich arbeite seit zehn Jahren in der <k>Kieferorthopädie</k>.',
           about: [
-            'Dr. Ana Ardelean arbeitet seit 2015 in der Klinik.',
-            'Sie bildet sich in Fachkursen weiter.',
+            'Dr. Ana Ardelean arbeitet seit 2015 in der <k>Klinik</k>.',
+            'Sie bildet sich in <k>Fachkursen</k> weiter.',
           ],
         },
         fr: {
@@ -173,8 +176,8 @@ const FIXTURE = {
           position: 'Orthodontiste',
           philosophy: 'Je travaille en <k>orthodontie</k> depuis dix ans.',
           about: [
-            'Dr Ana Ardelean exerce à la clinique depuis 2015.',
-            'Elle poursuit sa formation par des cours spécialisés.',
+            'Dr Ana Ardelean exerce à la <k>clinique</k> depuis 2015.',
+            'Elle poursuit sa <k>formation</k> par des <k>cours spécialisés</k>.',
           ],
         },
         it: {
@@ -182,8 +185,8 @@ const FIXTURE = {
           position: 'Ortodontista',
           philosophy: 'Lavoro in <k>ortodonzia</k> da dieci anni.',
           about: [
-            'La Dott.ssa Ana Ardelean lavora nella clinica dal 2015.',
-            'Continua la sua formazione con corsi specialistici.',
+            'La Dott.ssa Ana Ardelean lavora nella <k>clinica</k> dal 2015.',
+            'Continua la sua <k>formazione</k> con <k>corsi specialistici</k>.',
           ],
         },
       },
@@ -191,8 +194,8 @@ const FIXTURE = {
     {
       id: 'vlad-oprea',
       cutout: { src: '/images/demo/cutout-2.png', width: 900, height: 1200 },
-      hours: [{ days: ['Saturday'], opens: '09:00', closes: '13:00' }],
-      // NO course: the empty-band branch (D15).
+      // NO course and NO tile: the empty lists the walk must still answer —
+      // and a paragraph with NO key word, which must pass as plain text.
       stats: [],
       courses: [],
       words: {
@@ -284,9 +287,17 @@ const withPhilosophy = (philosophy: string): TeamList => {
   });
 };
 
-/** Ana with her week replaced — the unknown-day belt. */
-const withHours = (hours: Doctor['hours']): TeamList =>
-  withAna({ ...FIXTURE.doctors[0], hours });
+/** Ana with her SECOND Romanian biography paragraph replaced — the same belt,
+ *  one field over: since 2026-10-13 the doctor walk cuts every paragraph too
+ *  (lib/team's THE BIOGRAPHY'S KEY WORDS). */
+const withParagraph = (paragraph: string): TeamList => {
+  const [ana] = FIXTURE.doctors;
+  const [first] = ana.words.ro.about;
+  return withAna({
+    ...ana,
+    words: { ...ana.words, ro: { ...ana.words.ro, about: [first, paragraph] } },
+  });
+};
 
 /** An opening `<k>` that never closes — lib/team's `splitKeywords` refuses it
  *  (its "ANY MARK THAT IS NOT PART OF A FLAT, BALANCED PAIR THROWS"). */
@@ -298,24 +309,28 @@ const UNBALANCED = 'Lucrez în <k>ortodonție de zece ani.';
 const UNBALANCED_ERROR = /^lib\/team: unbalanced <k> in "Lucrez în <k>/;
 
 /**
- * The page hands over `<Keywords segments={…} />`; a spy returning a marked-up
- * STRING is the honest stand-in. It proves two things no rendered node could:
- * that the populator cut the philosophy itself (the spy sees SEGMENTS, never a
- * `<k>`), and that whatever the caller builds is what travels to the band.
+ * The pages hand over `<Keywords segments={…} />`; a marked-up STRING is the
+ * honest stand-in, and this is it — key words in brackets. It proves two
+ * things no rendered node could: that the populator cut the text itself (the
+ * callback sees SEGMENTS, never a `<k>`), and that whatever the caller builds
+ * is what travels to the band. Pure, so a test can also compute what the walk
+ * should hand over for a text it never cut itself.
  */
-const spyRenderQuote = () =>
-  vi.fn((segments: readonly AboutSegment[]) =>
-    segments
-      .map((segment) => (segment.keyword ? `[${segment.text}]` : segment.text))
-      .join(''),
-  );
+const markUp = (segments: readonly AboutSegment[]): string =>
+  segments
+    .map((segment) => (segment.keyword ? `[${segment.text}]` : segment.text))
+    .join('');
+
+/** The doctors band's `renderQuote` (one doctor's philosophy → his card's
+ *  quote), as a spy over {@link markUp}. */
+const spyRenderQuote = () => vi.fn(markUp);
+
+/** The doctor page's `renderKeywords` (the credo's quote AND every biography
+ *  paragraph, CLAUDE.md §15.23 round 7), as a spy over {@link markUp}. */
+const spyRenderKeywords = () => vi.fn(markUp);
 
 /** The card's one button — finished text, as the page reads it from `team.showcase.profile`. */
 const PROFILE_LABEL = 'Mai multe despre mine';
-
-/** A year label is the plain digits of a calendar year — never „2.024", which
- *  is what `Intl.NumberFormat` would print for ro and de. */
-const YEAR_LABEL = /^\d{4}$/;
 
 describe('populate — the shapes pinned where both sides are importable', () => {
   it('keeps lib/team’s AboutSegment and ui/Keyword’s KeywordSegment identical', () => {
@@ -331,13 +346,34 @@ describe('populate — the shapes pinned where both sides are importable', () =>
     expectTypeOf<AboutSegment>().toEqualTypeOf<KeywordSegment>();
   });
 
-  it('hands the doctor page’s courses over in sections/DoctorCourses’ OWN shape', () => {
-    // The band's `CourseGroup` (year: string) and not lib/team's namesake
-    // (year: number): the populator is where the year becomes a label (D15,
-    // D17), and a DoctorPageContent that ever carried lib/team's groups
-    // through would fail here before it failed on a page.
-    expectTypeOf<DoctorPageContent['courses']>().toEqualTypeOf<
-      readonly CourseGroup[]
+  it('hands the doctor page’s profile over in sections/DoctorProfile’s OWN shapes', () => {
+    // The page passes `page.profile.paragraphs` to the biography and
+    // `page.profile.courses` to the courses column as they are, so the two
+    // must BE the band's prop types — the paragraphs the caller's rendered
+    // nodes since 2026-10-13 (their key words), the courses plain lines — and
+    // a populator that ever handed over a course ROW (its five languages) or a
+    // grouped list again would fail here, naming the field, before it failed
+    // on a page.
+    expectTypeOf<DoctorPageContent['profile']['paragraphs']>().toEqualTypeOf<
+      DoctorProfileProps['about']['paragraphs']
+    >();
+    expectTypeOf<DoctorPageContent['profile']['courses']>().toEqualTypeOf<
+      DoctorProfileProps['courses']['items']
+    >();
+  });
+
+  it('takes ONE option, the key-word renderer — `renderQuote` until its second text, the biography, arrived; the closed-day word left with the doctor’s week (2026-10-13)', () => {
+    expectTypeOf<
+      keyof Parameters<typeof populateDoctorPage>[2]
+    >().toEqualTypeOf<'renderKeywords'>();
+    // What it hands back lands in BOTH bands — the credo card's quote and a
+    // biography paragraph — so it must fit both their props.
+    type Rendered = ReturnType<
+      Parameters<typeof populateDoctorPage>[2]['renderKeywords']
+    >;
+    expectTypeOf<Rendered>().toExtend<DoctorPageContent['intro']['credo']>();
+    expectTypeOf<Rendered>().toExtend<
+      DoctorProfileProps['about']['paragraphs'][number]
     >();
   });
 });
@@ -546,7 +582,7 @@ describe('populateTeamRoster — the auxiliary tiles', () => {
 });
 
 describe('populateDoctorPage — the mapping, against a fixture', () => {
-  const OPTIONS = { renderQuote: spyRenderQuote(), closedLabel: 'Închis' };
+  const OPTIONS = { renderKeywords: spyRenderKeywords() };
 
   it('returns undefined for a slug no doctor wears — the page’s notFound() branch', () => {
     expect(
@@ -567,21 +603,35 @@ describe('populateDoctorPage — the mapping, against a fixture', () => {
     });
   });
 
-  it('quotes the PHILOSOPHY on the credo card, cut here and rendered by the caller (D12)', () => {
-    const renderQuote = spyRenderQuote();
+  it('cuts the PHILOSOPHY for the credo card and EVERY biography paragraph after it, handing the caller SEGMENTS in page order (D12, D14; 2026-10-13)', () => {
+    const renderKeywords = spyRenderKeywords();
     const page = populateDoctorPage(
       'de',
       'ana-ardelean',
-      { renderQuote, closedLabel: 'Geschlossen' },
+      { renderKeywords },
       FIXTURE,
     );
 
-    // Once per page — the credo is the one place a doctor page quotes him.
-    expect(renderQuote).toHaveBeenCalledTimes(1);
-    expect(renderQuote.mock.calls[0][0]).toEqual([
-      { text: 'Ich arbeite seit zehn Jahren in der ', keyword: false },
-      { text: 'Kieferorthopädie', keyword: true },
-      { text: '.', keyword: false },
+    // Once for the credo — the one place a doctor page quotes him — then once
+    // per paragraph of his biography, which carries key words of its own
+    // since 2026-10-13 (CLAUDE.md §15.23 round 7): the order the page prints
+    // them in. The callback sees SEGMENTS, never a `<k>`.
+    expect(renderKeywords.mock.calls.map(([segments]) => segments)).toEqual([
+      [
+        { text: 'Ich arbeite seit zehn Jahren in der ', keyword: false },
+        { text: 'Kieferorthopädie', keyword: true },
+        { text: '.', keyword: false },
+      ],
+      [
+        { text: 'Dr. Ana Ardelean arbeitet seit 2015 in der ', keyword: false },
+        { text: 'Klinik', keyword: true },
+        { text: '.', keyword: false },
+      ],
+      [
+        { text: 'Sie bildet sich in ', keyword: false },
+        { text: 'Fachkursen', keyword: true },
+        { text: ' weiter.', keyword: false },
+      ],
     ]);
     // What the caller built is what the opener receives — nothing re-wrapped,
     // and no `<k>` left for a patient to read.
@@ -591,98 +641,85 @@ describe('populateDoctorPage — the mapping, against a fixture', () => {
     expect(String(page?.intro.credo)).not.toContain('<k>');
   });
 
-  it('passes the „Despre" paragraphs through untouched, in the data’s own order (D14)', () => {
+  it('hands the band the caller’s node for every „Despre" paragraph, in the data’s own order (D14; key words since 2026-10-13)', () => {
     const ro = populateDoctorPage('ro', 'ana-ardelean', OPTIONS, FIXTURE);
     const de = populateDoctorPage('de', 'ana-ardelean', OPTIONS, FIXTURE);
 
+    // One node per paragraph, the key words where the data marks them — two
+    // in the second Romanian paragraph, side by side with plain text.
     expect(ro?.profile.paragraphs).toEqual([
-      'Dr. Ana Ardelean lucrează în clinică din 2015.',
-      'Își continuă formarea prin cursuri de specialitate.',
+      'Dr. Ana Ardelean lucrează în [clinică] din 2015.',
+      'Își continuă [formarea] prin [cursuri de specialitate].',
     ]);
-    expect(de?.profile.paragraphs).toEqual(FIXTURE.doctors[0].words.de.about);
-    // Plain prose passes as prose: nothing cut, joined, split or trimmed.
+    expect(de?.profile.paragraphs).toEqual(
+      FIXTURE.doctors[0].words.de.about.map((paragraph) =>
+        markUp(splitKeywords(paragraph)),
+      ),
+    );
+    // Nothing joined, split or dropped on the way — and no `<k>` left in any.
     expect(ro?.profile.paragraphs).toHaveLength(2);
+    for (const paragraph of ro?.profile.paragraphs ?? [])
+      expect(String(paragraph)).not.toContain('<k>');
   });
 
-  it('groups the courses by YEAR, newest first, the file’s order inside a year (D15, D17)', () => {
-    const page = populateDoctorPage('ro', 'ana-ardelean', OPTIONS, FIXTURE);
+  it('passes a paragraph with NO key word through the caller as one plain segment', () => {
+    // Shipped data always marks one (tests/unit/team-data.test.ts); the walk
+    // does not depend on it — a plain paragraph is a sentence with nothing
+    // set apart, and the caller still renders it.
+    const renderKeywords = spyRenderKeywords();
+    const page = populateDoctorPage(
+      'ro',
+      'vlad-oprea',
+      { renderKeywords },
+      FIXTURE,
+    );
 
-    // The rows were written 2021 · 2024 · 2024; the band receives 2024 then
-    // 2021, the two 2024 lines in the order they were written, and ONE
-    // heading per year.
-    expect(page?.courses).toEqual([
-      {
-        year: '2024',
-        courses: [
-          'Curs de aliniere, Cluj-Napoca',
-          'Curs de fotografie dentară, București',
-        ],
-      },
-      { year: '2021', courses: ['Curs de ortodonție la copii, Iași'] },
+    expect(renderKeywords).toHaveBeenLastCalledWith([
+      { text: 'Dr. Vlad Oprea lucrează în clinică din 2020.', keyword: false },
+    ]);
+    expect(page?.profile.paragraphs).toEqual([
+      'Dr. Vlad Oprea lucrează în clinică din 2020.',
     ]);
   });
 
-  it('STRINGIFIES the year as plain digits — „2024", never „2.024" (D17)', () => {
-    // German is the case that would show it: `Intl.NumberFormat('de')` groups
-    // thousands with a point, and so does Romanian.
-    const page = populateDoctorPage('de', 'ana-ardelean', OPTIONS, FIXTURE);
+  it('hands the course IDEAS over as this language’s lines, in the data’s own order — no year, no grouping (the owner, 2026-10-13)', () => {
+    const ro = populateDoctorPage('ro', 'ana-ardelean', OPTIONS, FIXTURE);
+    const de = populateDoctorPage('de', 'ana-ardelean', OPTIONS, FIXTURE);
 
-    for (const group of page?.courses ?? []) {
-      expect(typeof group.year).toBe('string');
-      expect(group.year).toMatch(YEAR_LABEL);
-    }
-    expect(page?.courses.map((group) => group.year)).toEqual(['2024', '2021']);
-    expect(page?.courses[0].courses).toEqual([
+    // One finished line per idea, in the order the rows were written — the
+    // order the courses column prints them and highlights them one by one.
+    expect(ro?.profile.courses).toEqual([
+      'Curs de ortodonție la copii, Iași',
+      'Curs de aliniere, Cluj-Napoca',
+      'Curs de fotografie dentară, București',
+    ]);
+    // The asked language and no other: every fixture line differs by language.
+    expect(de?.profile.courses).toEqual([
+      'Kurs für Kieferorthopädie bei Kindern, Iași',
       'Schienenkurs, Cluj-Napoca',
       'Kurs für Dentalfotografie, Bukarest',
     ]);
   });
 
-  it('gives a doctor with no course NO group — the band then renders nothing (D15)', () => {
+  it('gives a doctor with no course an EMPTY list of ideas', () => {
     const page = populateDoctorPage('ro', 'vlad-oprea', OPTIONS, FIXTURE);
 
     expect(page).toBeDefined();
-    expect(page?.courses).toEqual([]);
+    expect(page?.profile.courses).toEqual([]);
   });
 
-  it('prints the doctor’s OWN week: seven rows, Monday → Sunday, closed days in place', () => {
-    const rows = populateDoctorPage('ro', 'ana-ardelean', OPTIONS, FIXTURE)
-      ?.profile.rows;
+  it('hands over the three bands’ content and nothing else — the profile the paragraphs and the ideas alone (no week, no year groups since 2026-10-13)', () => {
+    const page = populateDoctorPage('ro', 'ana-ardelean', OPTIONS, FIXTURE);
+    if (!page) throw new Error('fixture doctor missing');
 
-    expect(rows).toHaveLength(7);
-    expect(rows?.map((row) => row.value)).toEqual([
-      '09:00 – 17:00',
-      'Închis',
-      '09:00 – 17:00',
-      'Închis',
-      'Închis',
-      'Închis',
-      'Închis',
+    expect(Object.keys(page).toSorted()).toEqual(['intro', 'profile', 'stats']);
+    expect(Object.keys(page.profile).toSorted()).toEqual([
+      'courses',
+      'paragraphs',
     ]);
-    expect(rows?.map((row) => row.closed)).toEqual([
-      false,
-      true,
-      false,
-      true,
-      true,
-      true,
-      true,
-    ]);
-    // The page's own word, never one lib/hours invented (§8.1).
-    expect(rows?.[1].value).toBe(OPTIONS.closedLabel);
   });
 
-  it('names the days in the visitor’s language, from lib/hours’ fixed week', () => {
-    const ro = populateDoctorPage('ro', 'ana-ardelean', OPTIONS, FIXTURE);
-    const de = populateDoctorPage('de', 'ana-ardelean', OPTIONS, FIXTURE);
-
-    expect(ro?.profile.rows[0].label).toBe('Luni');
-    expect(ro?.profile.rows[6].label).toBe('Duminică');
-    expect(de?.profile.rows[0].label).toBe('Montag');
-    expect(de?.profile.rows[6].label).toBe('Sonntag');
-  });
-
-  it('lets lib/team’s unbalanced-<k> error surface unchanged — the doctor walk', () => {
+  it('lets lib/team’s unbalanced-<k> error surface unchanged — the doctor walk’s philosophy', () => {
     // The credo card quotes the same philosophy (D12), so the page walk meets
     // the same stray mark and must stop in the same words.
     expect(() =>
@@ -695,21 +732,18 @@ describe('populateDoctorPage — the mapping, against a fixture', () => {
     ).toThrow(UNBALANCED_ERROR);
   });
 
-  it('lets lib/hours’ unknown-day error surface unchanged', () => {
-    // The day-name union refuses a typo at compile time — which the directive
-    // below asserts, since it is itself an error the day the line compiles.
-    // What the walk must still do is let the formatter's RUNTIME belt, the one
-    // for data that dodged the union (lib/hours' comment at its throw: "a
-    // deliberate cast, future JSON-sourced hours"), reach the caller in
-    // lib/hours' own words.
-    const hours: Doctor['hours'] = [
-      // @ts-expect-error — 'Funday' is no schema.org day; the union refuses it
-      { days: ['Funday'], opens: '09:00', closes: '17:00' },
-    ];
-
+  it('lets lib/team’s unbalanced-<k> error surface unchanged — the doctor walk’s paragraph (2026-10-13)', () => {
+    // Every biography paragraph is cut since its key words arrived (lib/team's
+    // THE BIOGRAPHY'S KEY WORDS), so a stray mark in one stops the page walk
+    // in lib/team's own words too — never printed as a visible `<k>`.
     expect(() =>
-      populateDoctorPage('ro', 'ana-ardelean', OPTIONS, withHours(hours)),
-    ).toThrow(/^lib\/hours: "Funday" is not a schema\.org day name\./);
+      populateDoctorPage(
+        'ro',
+        'ana-ardelean',
+        { renderKeywords: spyRenderKeywords() },
+        withParagraph(UNBALANCED),
+      ),
+    ).toThrow(UNBALANCED_ERROR);
   });
 });
 
@@ -721,53 +755,34 @@ describe('populateDoctorPage — the real doctors', () => {
     // reached it.
     for (const locale of locales) {
       for (const doctor of doctors) {
-        const renderQuote = spyRenderQuote();
-        const page = populateDoctorPage(locale, doctor.id, {
-          renderQuote,
-          closedLabel: 'x',
-        });
+        const renderKeywords = spyRenderKeywords();
+        const page = populateDoctorPage(locale, doctor.id, { renderKeywords });
         const where = `${locale}/${doctor.id}`;
+        const { philosophy, about } = doctor.words[locale];
 
         expect(page, where).toBeDefined();
         expect(page?.intro.name, where).toBe(doctor.words[locale].name);
-        expect(page?.profile.rows, where).toHaveLength(7);
 
-        // THE CREDO is the philosophy's segments through the callback, once.
-        expect(renderQuote, where).toHaveBeenCalledTimes(1);
-        expect(renderQuote, where).toHaveBeenCalledWith(
-          splitKeywords(doctor.words[locale].philosophy),
-        );
+        // THE CREDO AND THE PARAGRAPHS through the one callback: the
+        // philosophy's segments first, then every paragraph's, in order.
+        expect(
+          renderKeywords.mock.calls.map(([segments]) => segments),
+          where,
+        ).toEqual([philosophy, ...about].map((text) => splitKeywords(text)));
 
-        // THE PARAGRAPHS are the data's, every one, in order.
+        // THE PARAGRAPHS are the data's, every one, in order — each the
+        // caller's node over its cut-up text, and no `<k>` left in any.
         expect(page?.profile.paragraphs, where).toEqual(
-          doctor.words[locale].about,
+          about.map((paragraph) => markUp(splitKeywords(paragraph))),
         );
+        for (const paragraph of page?.profile.paragraphs ?? [])
+          expect(String(paragraph), where).not.toContain('<k>');
 
-        // THE COURSES are lib/team's groups with each year made a label —
-        // descending, plain digits — and not one line lost on the way.
-        const years = page?.courses.map((group) => group.year) ?? [];
-        expect(years, where).toEqual(
-          coursesByYear(doctor, locale).map((group) => String(group.year)),
+        // THE COURSE IDEAS are the data's lines in this language, every one,
+        // in lib/team's order — not one lost, merged or moved on the way.
+        expect(page?.profile.courses, where).toEqual(
+          doctor.courses.map((course) => course.words[locale]),
         );
-        for (const year of years) expect(year, where).toMatch(YEAR_LABEL);
-        expect(
-          years
-            .map(Number)
-            .every((year, index, all) =>
-              index === 0 ? true : all[index - 1] > year,
-            ),
-          where,
-        ).toBe(true);
-        expect(
-          page?.courses.flatMap((group) => group.courses),
-          where,
-        ).toEqual(
-          coursesByYear(doctor, locale).flatMap((group) => group.courses),
-        );
-        expect(
-          page?.courses.flatMap((group) => group.courses).length,
-          where,
-        ).toBe(doctor.courses.length);
       }
     }
   });
@@ -775,8 +790,7 @@ describe('populateDoctorPage — the real doctors', () => {
   it('returns undefined for a slug lib/team does not have', () => {
     expect(
       populateDoctorPage('ro', 'dr-nobody', {
-        renderQuote: spyRenderQuote(),
-        closedLabel: 'x',
+        renderKeywords: spyRenderKeywords(),
       }),
     ).toBeUndefined();
   });
@@ -784,9 +798,8 @@ describe('populateDoctorPage — the real doctors', () => {
 
 describe('populateDoctorPage — the stats tiles (round 2f, D32)', () => {
   const STATS_OPTIONS = {
-    renderQuote: (segments: readonly AboutSegment[]) =>
+    renderKeywords: (segments: readonly AboutSegment[]) =>
       segments.map((segment) => segment.text).join(''),
-    closedLabel: 'Închis',
   };
   it('hands over one row per tile with THIS language’s words, the icon as an id, the number as a number', () => {
     const page = populateDoctorPage(
@@ -904,7 +917,7 @@ describe('populateStats — one walk for a doctor’s rows and the clinic’s (o
         populateDoctorPage(
           locale,
           FIXTURE.doctors[0].id,
-          { renderQuote: spyRenderQuote(), closedLabel: 'x' },
+          { renderKeywords: spyRenderKeywords() },
           FIXTURE,
         )?.stats,
       ).toEqual(populateStats(locale, ROWS));
@@ -916,8 +929,7 @@ describe('populateStats — one walk for a doctor’s rows and the clinic’s (o
       for (const locale of locales) {
         expect(
           populateDoctorPage(locale, doctor.id, {
-            renderQuote: spyRenderQuote(),
-            closedLabel: 'x',
+            renderKeywords: spyRenderKeywords(),
           })?.stats,
           `${locale}/${doctor.id}`,
         ).toEqual(populateStats(locale, doctor.stats));

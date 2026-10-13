@@ -450,7 +450,7 @@ const PINNED: readonly PinnedCard[] = [
   },
   {
     name: 'phone',
-    why: 'a 390 phone: every block is as wide as the card, so the side wave is held back all the way down',
+    why: 'a 390 phone as laid out until 2026-10-09 (a 297px column, 336 since the phone gutter): every block is as wide as the card, so the side wave is held back all the way down',
     input: {
       W: 2.97,
       H: 7.130156,
@@ -672,8 +672,10 @@ describe('lib/ribbon-model — smooth on layouts nobody measured (a seeded sweep
 });
 
 describe('lib/ribbon-model — three waves at every width (the owner, 2026-10-01: "on widening still just 3 waves … not more but wider")', () => {
-  // Every column width ui/Container gives, 241 to 2 145px, every 8px (the
-  // stand-in sweep of Ribbon.test.tsx), at three card heights: a valley, a
+  // Every column width ui/Container gives and narrower, 241 to 2 145px, every
+  // 8px (the stand-in sweep of Ribbon.test.tsx — 241 was the 320 window's
+  // column under the runner's scrollbar until 2026-10-09, 273 since: THE
+  // PHONE GUTTER, §15.35), at three card heights: a valley, a
   // crest and a valley on each one, at the SAME share of the run — the bumps
   // are shares of the run (RIPPLE), so a wider card gets wider waves, never
   // more of them. The shares are the levelled sum's own extremes, a hair off
@@ -818,10 +820,12 @@ describe('lib/ribbon-model — the last card tucks the ribbon under it (THE TUCK
   // the WHOLE content box — inside both lanes, and down to the card's bottom
   // padding (0.24 units, the seeded sweep's own; a real card keeps 25 px,
   // ui/Card's 1.5rem and its border) — is entered by no part of the ribbon,
-  // at every 8px of column from the 320 window's to the 2 560 window's, on a
-  // card of two heights. The hook's circle passes it by about a quarter of a
-  // px at the widest of these columns (measured): the lead's 0.9 k would
-  // sweep some 13 px into it there — why the tuck turns on the hook's circle.
+  // at every 8px of column from 241px (the 320 window's under the runner's
+  // scrollbar until 2026-10-09, 273 since — THE PHONE GUTTER, §15.35) to the
+  // 2 560 window's, on a card of two heights. The hook's circle passes it by
+  // about a quarter of a px at the widest of these columns (measured): the
+  // lead's 0.9 k would sweep some 13 px into it there — why the tuck turns on
+  // the hook's circle.
   // Wider columns are THE TUCK'S LIMIT (below). Four bands, each its own 60 s
   // budget (PR #113's lesson: a slower runner is not a covered card).
   it.each([

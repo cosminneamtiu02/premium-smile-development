@@ -86,7 +86,8 @@ vi.mock('@/i18n/navigation', () => ({ usePathname: () => '/services/' }));
  * focus:block` puts it back into NORMAL FLOW at the top of the document while
  * focused, pushing the page down — the sticky pill simply rides lower for that
  * moment, which IS the visible feedback. Zero additions to the z-map (§2 of the
- * layers board: 40/45/50 + top layer, closed), zero overlap cases.
+ * layers board, closed: 20 (the price page's chip strip, 2026-10-09) / 30 (the
+ * language banner) / 40 / 45 / 50 + the top layer), zero overlap cases.
  *
  * The padding is deliberately plain `focus:px-4` and NOT the gutter pair
  * ui/Container now owns (§15.15 a DECIDED, board fb-343): the skip link is
@@ -790,22 +791,43 @@ describe('Shell — the scroll-padding pair on <html> (E5/E12, boxes 1 + 3)', ()
     expect(paddings().top).toBe('96px');
   });
 
-  it('mirrors the corner stack at the bottom, in three steps', async () => {
-    // The steps are the RIGHT CORNER's full reach, and they exist because the
-    // discs grow with the screen (--disc-size 56 → 64 → 72px). Since fb-353
-    // (owner, 2026-09-04) that corner is a stacked PAIR — the WhatsApp disc
-    // above the phone — so each step is 1rem offset + disc + 0.5rem gap + disc
-    // + 1rem headroom: 9.5rem, 10.5rem, 11.5rem at Tailwind's untouched
-    // 1280/1536 breakpoints (§3, §7). KEEP-IN-SYNC: FloatingActions.test.tsx's
-    // "keeps every control INSIDE the scroll clearance" case derives the same
-    // three numbers from the controls' own classes, from the other side.
-    await page.viewport(390, 844);
-    expect(paddings().bottom).toMatch(/(^|\D)152px/);
-
-    await page.viewport(1280, 800);
-    expect(paddings().bottom).toMatch(/(^|\D)168px/);
-
-    await page.viewport(1536, 864);
-    expect(paddings().bottom).toMatch(/(^|\D)184px/);
+  it('clears the corner stack at the bottom, in three steps DERIVED from the stack it mounts', async () => {
+    // The steps are the RIGHT CORNER's full reach plus 1rem of headroom, and
+    // they step because the discs grow with the screen (--disc-size 56 → 64 →
+    // 72px). Since fb-353 (owner, 2026-09-04) that corner is a stacked PAIR —
+    // the WhatsApp disc above the phone — and since 2026-10-09 it stands on a
+    // 2rem edge (FloatingActions.tsx' THE GLOW'S ROOM; 1rem until then): 2rem +
+    // disc + 0.5rem gap + disc + 1rem = 10.5 / 11.5 / 12.5rem = 168 / 184 /
+    // 200px at Tailwind's untouched xl / 2xl (§3, §7).
+    // DERIVED, not typed out (G2 typescript, 2026-10-09): the expected step is
+    // read off the MOUNTED WhatsApp disc — the viewport's bottom minus its top,
+    // plus 16px — so a corner that rises, or a disc that grows, without the
+    // shell following fails HERE. The three numbers are still asserted beside
+    // it, so a change of both sides together shows in this file's diff.
+    // KEEP-IN-SYNC: FloatingActions.test.tsx's "keeps every control INSIDE the
+    // scroll clearance" case derives the same three numbers from the controls'
+    // own classes, from the other side.
+    // Every step also carries THE CAP ON SHORT SCREENS (globals.css): its
+    // `100% - 9.5rem` term stays unresolved in the computed value, the
+    // percentage being the viewport's height.
+    mount();
+    for (const [width, height, documented] of [
+      [390, 844, 168],
+      [1280, 800, 184],
+      [1536, 864, 200],
+    ] as const) {
+      await page.viewport(width, height);
+      const stack = document.querySelector('a.fixed[href^="https://wa.me/"]');
+      if (!stack) {
+        throw new Error('shell.test: the corner WhatsApp disc is not mounted');
+      }
+      const reach =
+        document.documentElement.clientHeight -
+        stack.getBoundingClientRect().top;
+      const step = Math.round(reach + 16);
+      expect(step).toBe(documented);
+      expect(paddings().bottom).toMatch(new RegExp(`(^|\\D)${step}px`));
+      expect(paddings().bottom).toMatch(/100%\s*-\s*152px/);
+    }
   });
 });

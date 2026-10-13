@@ -1,6 +1,14 @@
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from 'vitest';
+import { page } from 'vitest/browser';
 import {
   Container,
   bandColumnClasses,
@@ -8,10 +16,11 @@ import {
   containerClasses,
 } from './Container';
 import source from './Container.tsx?raw';
-// The project loads no stylesheet (tests/setup/components.ts); THE BAND SCALE
-// block below measures COMPUTED lengths, so this file loads the site's sheet
-// — the DoctorShowcase.test.tsx precedent. Every other assertion here reads
-// class names and holds with the sheet or without it.
+// The project loads no stylesheet (tests/setup/components.ts); THE PHONE
+// GUTTER and THE BAND SCALE blocks below measure COMPUTED lengths, so this
+// file loads the site's sheet — the DoctorShowcase.test.tsx precedent. Every
+// other assertion here reads class names and holds with the sheet or without
+// it.
 import '@/styles/globals.css';
 
 // A <div> has no role, and that is the contract (this atom measures a column,
@@ -31,7 +40,10 @@ const RO_COPY = 'Stomatologie modernă. Îngrijire onestă.';
 // the component, so a silent edit to the constant fails HERE instead of
 // quietly re-defining what the test compares against (the ui/Eyebrow RECIPE
 // precedent). Every page band and both shipped sections share these bytes.
-const GUTTER = '@container mx-[clamp(1rem,10vw,12.5rem)]';
+// Since 2026-10-09 the middle term is a clamp of its own — half on a phone,
+// today's from the tablet, a ramp between (THE PHONE GUTTER, measured below).
+const GUTTER =
+  '@container mx-[clamp(1rem,clamp(5vw,30vw_-_7.5rem,10vw),12.5rem)]';
 
 const tokensOf = (element: Element) =>
   element.className.split(/\s+/).filter(Boolean);
@@ -80,7 +92,9 @@ describe('Container — THE gutter definition', () => {
     render(<Container>{RO_ALL}</Container>);
     const tokens = tokensOf(screen.getByText(RO_ALL));
     expect(tokens).toContain('@container');
-    expect(tokens).toContain('mx-[clamp(1rem,10vw,12.5rem)]');
+    expect(tokens).toContain(
+      'mx-[clamp(1rem,clamp(5vw,30vw_-_7.5rem,10vw),12.5rem)]',
+    );
   });
 
   it('owns no vertical padding, no background, no width preset', () => {
@@ -103,6 +117,90 @@ describe('Container — THE gutter definition', () => {
     render(<Container>{RO_COPY}</Container>);
     const tokens = tokensOf(screen.getByText(RO_COPY));
     expect(tokens.filter((t) => /^(sm|md|lg|xl|2xl):/.test(t))).toEqual([]);
+  });
+});
+
+// THE PHONE GUTTER (2026-10-09, CLAUDE.md §15.35) — what the engine COMPUTES
+// at real window widths, so the arithmetic in Container.tsx's header is
+// checked rather than restated. `vw` reads the WINDOW (here the test page), so
+// every case sizes the PAGE, never the box; the computed `margin-inline-start`
+// is the gutter in px, whatever a scrollbar takes from the column.
+describe('Container — THE PHONE GUTTER (§15.35)', () => {
+  let initial = { width: 0, height: 0 };
+  beforeAll(() => {
+    initial = { width: window.innerWidth, height: window.innerHeight };
+  });
+  afterAll(async () => {
+    await page.viewport(initial.width, initial.height);
+  });
+
+  /** The gutter a side, in px, with the test page `width` px wide. */
+  const gutterAt = async (width: number): Promise<number> => {
+    await page.viewport(width, 800);
+    const { unmount } = render(<Container>{RO_COPY}</Container>);
+    const gutter = parseFloat(
+      getComputedStyle(screen.getByText(RO_COPY)).marginInlineStart,
+    );
+    unmount();
+    return gutter;
+  };
+
+  it('halves the gutter on a phone — 5vw where the tablet-and-up gutter is 10vw', async () => {
+    // The owner's "50% thinner": every phone held upright (the largest is
+    // 440px wide), and §7's two phone widths — 320, the stress width, where
+    // 5vw meets the 1rem floor exactly (16px), and 390, the Smartphone
+    // (19.5px) — up to the ramp's start at 480.
+    for (const width of [320, 360, 375, 390, 412, 430, 440, 480]) {
+      expect(await gutterAt(width), `a ${width}px window`).toBeCloseTo(
+        width * 0.05,
+        2,
+      );
+    }
+  });
+
+  it('leaves every tablet and everything wider exactly as it was — 10vw, capped at 12.5rem', async () => {
+    // "only on phones": 600 is the narrowest tablet held upright (a 7″
+    // Android), 744 the iPad mini, 768 §7's Tablet — from 600 the gutter is
+    // the one every committed tablet, laptop and desktop picture was drawn
+    // with.
+    for (const width of [600, 744, 768, 820, 1024, 1280, 1536, 1920]) {
+      expect(await gutterAt(width), `a ${width}px window`).toBeCloseTo(
+        width * 0.1,
+        2,
+      );
+    }
+    for (const width of [2000, 2560]) {
+      expect(await gutterAt(width), `a ${width}px window`).toBeCloseTo(200, 2);
+    }
+  });
+
+  it('climbs from half to whole on a straight line between 480 and 600', async () => {
+    // 30vw − 7.5rem meets 5vw at 30rem and 10vw at 37.5rem — the gap between
+    // the largest phone and the narrowest tablet held upright.
+    for (const width of [500, 520, 540, 568, 580]) {
+      expect(await gutterAt(width), `a ${width}px window`).toBeCloseTo(
+        0.3 * width - 120,
+        2,
+      );
+    }
+  });
+
+  it('never narrows the column as the window widens — no jump anywhere', async () => {
+    // A step (half below 600, whole from it) would shrink the column by 59px
+    // in one pixel of window; the ramp keeps it growing at every width.
+    let previous = 0;
+    for (let width = 304; width <= 1040; width += 16) {
+      const column = width - 2 * (await gutterAt(width));
+      expect(column, `the column at a ${width}px window`).toBeGreaterThan(
+        previous,
+      );
+      previous = column;
+    }
+  });
+
+  it('keeps the 1rem floor under a 320px window', async () => {
+    // 5vw of 280 is 14px; the floor holds 16 (the old gutter read 28 there).
+    expect(await gutterAt(280)).toBeCloseTo(16, 2);
   });
 });
 
@@ -258,7 +356,7 @@ describe('Container — THE BAND SCALE (§15.32)', () => {
 describe('Container — §6.8 native-element fidelity', () => {
   it('merges the caller className LAST — the Footer byte-identity in miniature', () => {
     // THIS is the assertion the retrofit rests on: the Footer's gutter box
-    // used to spell `@container mx-[clamp(1rem,10vw,12.5rem)] py-10` inline,
+    // used to spell the container mark, the gutter clamp and `py-10` inline,
     // and `<Container className="py-10">` reproduces that attribute
     // byte-for-byte because the atom's own classes come first and the
     // caller's are appended. Order is a deterministic convention, NOT a

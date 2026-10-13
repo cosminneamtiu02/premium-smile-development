@@ -1073,7 +1073,10 @@ describe('ui/Ribbon — text is never covered', () => {
     ['de', 'short quotes', DOCTORS_DE.slice(0, 2)],
     ['de', 'long quotes', withQuote(DOCTORS_DE.slice(0, 2), LONG_QUOTE_DE)],
   ];
-  /** From the 320px window's column to the widest ui/Container gives — about 2 145px at a 2 560px window. */
+  /** From 241px — the 320px window's column under the runner's scrollbar
+   *  until 2026-10-09 (273 since: ui/Container's THE PHONE GUTTER, §15.35),
+   *  kept as the narrowest case — to the widest ui/Container gives, about
+   *  2 145px at a 2 560px window. */
   const NARROWEST = 241;
   const WIDEST = 2_145;
   /** The 239 widths in FOUR BANDS of about sixty, each its own test: the

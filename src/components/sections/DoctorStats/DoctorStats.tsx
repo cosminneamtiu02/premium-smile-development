@@ -16,8 +16,11 @@ import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
 import { StatNumber, type CountFrames } from './StatNumber';
 
-// sections/DoctorStats — the doctor page's „în cifre" band: a second lilac
-// ground under the courses, an eyebrow over a centred <h2> and a lead
+// sections/DoctorStats — the doctor page's „în cifre" band: a lilac ground
+// right under the opener (the page's SECOND band since 2026-10-13, the
+// owner: "so "IN NUMBERS" would be the second element in the page" — CLAUDE.md
+// §15.23 round 7; it stood under the courses until then, the second of two
+// lilac bands), an eyebrow over a centred <h2> and a lead
 // sentence, then a row of tiles — a line icon in a white disc, a big number
 // that counts up once, a serif label and one sentence. Built to the round-2f
 // composition contract of the doctor-pages run
@@ -43,7 +46,8 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // component as on main page with the stats on the team page between map and
 // helping staff"). The same band, three props apart — four since 2026-10-02,
 // `scaled` below — each with the doctor page's answer as its default, so that
-// page's call did not change by a character (§6.6); Home and Team pass the
+// page's call did not change by a character (§6.6) — `scaled` excepted since
+// 2026-10-13, when the doctor page passed it too; Home and Team pass the
 // same answers:
 //   · `ground` — 'tint' (TintedBand, the GROUND paragraph) or 'page': the
 //     shape of every other band on those two pages (DoctorShowcase,
@@ -55,8 +59,11 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     answers, so the eyebrow and the title stand where every neighbouring
 //     band's do;
 //   · `lead` — optional; Home and Team pass none, and then no <p> renders;
-//   · `scaled` — false (the doctor page) or true: Home and Team draw the band
-//     in THE BAND SCALE, the next paragraph.
+//   · `scaled` — false or true: THE BAND SCALE, the next paragraph. Home and
+//     Team pass it since 2026-10-02 and the doctor page since 2026-10-13
+//     (§15.32 round 4, the whole page in the scale), so no page relies on its
+//     default any more — `false` is the band's own unscaled self, the
+//     stories' workbench (the WHAT STAYS UNSCALED bullet).
 // Everything else — the rhythm box, the tiles, the island, the way every
 // string arrives — is one code path on all three pages (`scaled` adds classes
 // to two of its boxes and nothing else). There the three tiles are the
@@ -117,9 +124,17 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     alike — every ratio INSIDE a tile is today's, the ones the owner called
 //     perfect. The opener keeps the band's own pixel, so its <h2> and its
 //     eyebrow stay the doctors band's.
-//   · WHAT STAYS UNSCALED. The doctor page: `scaled` is false by default
-//     (§6.6), because that page's other bands do not scale yet and its
-//     headings must stay one size with theirs. Every phone and every tablet:
+//   · WHAT STAYS UNSCALED. No page, since 2026-10-13: the doctor page kept
+//     the default until then — its other bands did not scale and its
+//     headings had to stay one size with theirs — and passes `scaled` since
+//     its whole page joined the scale (§15.32 round 4: "make the exact same
+//     thing with the heading and eyebrow from the individual dr page" —
+//     "Whole page, like Home"), where on its lilac ground, centred and with
+//     its lead, the band is Home's numbers band to the design pixel. The
+//     default stays `false` (§6.6 — the prop arrived additive) and is the
+//     band's own stories' unscaled self; wearing the scale unconditionally
+//     and deleting the prop is the recorded cleanup lever, ClinicLocation's
+//     too. Every phone and every tablet:
 //     below the step, on every touch device and in an engine that cannot
 //     register custom properties nothing is declared and nothing remapped,
 //     every pixel as before — the owner's "on phone and tablet it looks
@@ -196,14 +211,16 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // consumer (§4's sharing table, first row). This band names itself through
 // it — `aria-labelledby` → the <h2>'s generated id, a named `region` — which
 // is exactly why TintedBand passes the naming attributes through while
-// DoctorProfile refuses them in its own props. (On the PAGE ground, the
+// DoctorProfile, its other consumer until 2026-10-13, refused them in its own
+// props. (On the PAGE ground, the
 // SECOND AND THIRD PAGES paragraph, the band's own <section> carries the same
 // name pair and the same ui/Container sits inside it.) Everything below sits
 // inside that ui/Container on either ground; the vertical rhythm is OURS, on
 // the first box inside it, because an element cannot query its own size (the
 // Container cannot carry its own container-stepped `py`): `py-12 @lg:py-16
-// @3xl:py-20`, DoctorCourses' rhythm — and the Home and Team bands' — so the
-// bands around it breathe alike. On Home and Team the same box is where THE
+// @3xl:py-20`, DoctorProfile's rhythm (the courses band's until 2026-10-13,
+// when the courses joined the biography's band) — and the Home and Team
+// bands' — so the bands around it breathe alike. On Home and Team the same box is where THE
 // BAND SCALE rides (ui/Container's recipe rule 5), so on a laptop or desktop
 // its `py` is drawn in the band's design pixel, as its neighbours' is. NO
 // OUTER MARGIN (§6.4): the page owns the space between bands.
@@ -235,16 +252,20 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // `hyphens-none` through its className merge (§6.8: it lands on the root and
 // inherits to the <h2> and the eyebrow); DoctorProfile's „Despre {name}" is
 // the precedent. Safe by measure: the longest word of any title in the five
-// languages is ~180px at the phone step against a 241px column at 320. Its
-// cost, measured: at 320 the Romanian and the German titles take one line
-// more (+36px, „Experiență / confirmată în / timp"). Its BELT, `wrap-anywhere`
-// beside it (the Opus re-review the same day): a larger default text size eats
-// that margin — ~268px at 150 % by the reviewer's arithmetic — and from about
-// 175 % a word too long for a line by itself would push the page sideways
-// where hyphenation used to break it. `overflow-wrap: anywhere` breaks ONLY
-// such a word — it engages when a line holds no other break — so at every
-// ordinary size not one line moves; the band's own idiom on its lead and its
-// descriptions.
+// languages is ~180px at the phone step against a 273px column at 320 (beside
+// a classic scrollbar; 288 on a phone — 241 before 2026-10-09's phone gutter,
+// ui/Container's THE PHONE GUTTER). Its cost, measured then: at 320 the
+// Romanian and the German titles took one line more (+36px, „Experiență /
+// confirmată în / timp"); in the wider column neither does — both take two
+// lines at 320 with hyphenation on or off (re-measured 2026-10-09 on the built
+// doctor page, beside a classic scrollbar and on a phone). Its BELT,
+// `wrap-anywhere` beside it (the Opus re-review the same day): a larger
+// default text size eats that margin — ~268px at 150 % by the reviewer's
+// arithmetic — and from about 175 % a word too long for a line by itself
+// would push the page sideways where hyphenation used to break it.
+// `overflow-wrap: anywhere` breaks ONLY such a word — it engages when a line
+// holds no other break — so at every ordinary size not one line moves; the
+// band's own idiom on its lead and its descriptions.
 //
 // ── THE TILES — ORDER, THEN DRESS. Inside the <li>, the reference's order ON
 // SCREEN: disc → number → label → description. In the DOM the label comes
@@ -280,7 +301,7 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     glyph's own size class by specificity) in `text-accent-decorative` —
 //     LILAC since 2026-10-01 (the owner: "paint it's svgs lilla"; the green
 //     CTA family until then). The role is §15.1's for "graphics ONLY", the
-//     hue the courses timeline lights its dots with one band above — and NOT
+//     hue the courses timeline lights its dots with one band below — and NOT
 //     `--accent`, the menu buttons' lavender, which
 //     tests/unit/accent-census.test.ts bars from every band that composes
 //     TintedBand (as text it fails on the tint, 3.32:1); a drawing is a
@@ -326,8 +347,9 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     11.7:1 (TintedBand's D23 paragraph), both over §9's 4.5:1.
 //
 // ── THE STEPS, MEASURED ON ui/Container's COLUMN (§6.5 — no media query in
-// this file). At §7's sampling points the column is 256 (320) · 312 (390) ·
-// 614 (768) · 1024 (1280) · 1229 (1536) · 1536 (1920):
+// this file). At §7's sampling points the column is 288 (320) · 351 (390) —
+// since 2026-10-09's phone gutter, 256 and 312 before — · 614 (768) · 1024
+// (1280) · 1229 (1536) · 1536 (1920):
 //   · below `@md` (28rem = 448px) — ONE column, one tile above the other (the
 //     D21 rider: what stands side by side on the wide step stacks below it);
 //   · `@md` to `@3xl` — TWO per row (the tablet: two tiles of ~287px);
@@ -447,9 +469,11 @@ type DoctorStatsOwnProps = Readonly<{
    * centred past it — so its eyebrow and <h2> are the doctors band's size and
    * stand on the doctors band's left edge at every width; and the tiles draw
    * at 9/8 of that pixel (`TILE_ZOOM`), so a tile's sentence reads a doctor
-   * card's quote size. Home and Team pass it. FALSE by default (§6.6): the
-   * doctor page's other bands do not scale yet and its headings must stay one
-   * size with theirs, so that page's call did not change by a character.
+   * card's quote size. Home, Team and — since 2026-10-13, its whole page in
+   * the scale (§15.32 round 4) — the doctor page pass it. FALSE by default
+   * (§6.6: the prop arrived additive, so the doctor page's call did not
+   * change by a character until that page joined the scale); no page relies
+   * on the default now — it is the band's own stories' unscaled self.
    * Below the step, on every touch device and in an engine that cannot
    * register custom properties it changes no pixel.
    */

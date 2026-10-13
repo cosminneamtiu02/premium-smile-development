@@ -107,3 +107,34 @@ describe('clinic — the phone, one number in two spellings', () => {
     );
   });
 });
+
+describe('clinic — the company behind it (`legal`, the privacy page’s facts)', () => {
+  it('holds each fact as text or as null — never an empty string standing in for one', () => {
+    for (const [field, value] of Object.entries(clinic.legal)) {
+      if (value !== null) expect(value.trim(), field).not.toBe('');
+    }
+  });
+
+  // Skipped, and reported as skipped, until the address exists — never a
+  // green test with nothing inside it (the TypeScript review).
+  it.skipIf(clinic.legal.email === null)(
+    'holds a real address once the e-mail is supplied',
+    () => {
+      expect(clinic.legal.email).toMatch(/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i);
+    },
+  );
+
+  // THE LAUNCH GUARD (the a11y review, 2026-10-10: a privacy page whose only
+  // channel is a placeholder must not reach the public). While `url` is the
+  // placeholder the site lives on the noindex interim host and the facts may
+  // wait (BACKLOG.md entries 3 and 7); the day the production domain is set,
+  // every legal fact must be set with it, or CI stops the launch here.
+  it.skipIf(clinic.url === 'https://example.com')(
+    'arrives with the launch domain — no placeholder legal identity goes live',
+    () => {
+      for (const [field, value] of Object.entries(clinic.legal)) {
+        expect(value, field).not.toBeNull();
+      }
+    },
+  );
+});

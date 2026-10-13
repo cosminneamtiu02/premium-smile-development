@@ -29,10 +29,12 @@ import { Container } from './Container';
 //
 // ── HOW TO READ THE TWO FRAMES (`UI/*` routes to 1280 §13, the 'stress-320'
 // tag adds the accessibility width the atom exists for). Gutter per side, from
-// the clamp: 320→32px · 390→39px · 768→77px · 1280→128px · 1536→154px ·
-// 1920→192px, capped at 200px above a 2000px viewport. The 1rem floor only
-// engages below a 160px viewport — at 320 the 10vw term still governs. Content
-// column: 256px at 320, 1024px at 1280.
+// the clamp: 320→16px · 390→19.5px — HALF on a phone since 2026-10-09 (THE
+// PHONE GUTTER, Container.tsx; 32 and 39 until then) — · 768→77px ·
+// 1280→128px · 1536→154px · 1920→192px, capped at 200px above a 2000px
+// viewport. The 1rem floor only engages below a 320px viewport — at 320 it
+// meets the 5vw term exactly. Content column: 288px at 320 (273 under the
+// visual net's 15px scrollbar), 1024px at 1280.
 //
 // Demo copy is Romanian with diacritics (§15.7) and factual — no superlatives,
 // no promotions, no result guarantees (CMSR advertising rules for dental
@@ -92,10 +94,11 @@ type Story = StoryObj<typeof meta>;
  * the margins: take the gutter without the mark and the step would silently
  * never match.
  *
- * **320 (the `stress-320` tag, §7/§9):** 32px per side — the 10vw term, not
- * the 1rem floor, which only engages below a 160px viewport — leaving a 256px
- * column that holds its content with no horizontal scrolling, and a single
- * cell because 16rem is far below `@3xl`.
+ * **320 (the `stress-320` tag, §7/§9):** 16px per side — the phone's 5vw
+ * term, which the 1rem floor meets exactly there (THE PHONE GUTTER) — leaving
+ * a 288px column (273px under the visual net's 15px scrollbar) that holds its
+ * content with no horizontal scrolling, and a single cell because 18rem is
+ * far below `@3xl`.
  *
  * What the picture does NOT show is as decided as what it does: the paint and
  * the vertical rhythm are the band's (the `<section>` and the `py-10` in this

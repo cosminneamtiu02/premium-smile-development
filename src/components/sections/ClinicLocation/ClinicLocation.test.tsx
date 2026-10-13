@@ -61,8 +61,9 @@ const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
  *  the whole tree) and in Storybook (.storybook/preview.tsx decorator), so the
  *  tests mount it the same way. ClinicLocation is NOT a client component;
  *  useTranslations is isomorphic and reads this context. The band's one prop
- *  passes straight through — absent unless a case names it, which is the
- *  doctor page's call (§15.32). */
+ *  passes straight through — absent unless a case names it: the band's
+ *  unscaled default, which only its own stories and these tests draw since
+ *  every page passes `scaled` (§15.32 round 3). */
 const Mounted = ({
   locale,
   ...props
@@ -218,6 +219,24 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
     expect(frame.getAttribute('allow')).toBe('');
   });
 
+  it('gives the frame an EMPTY cookie jar of its own — `credentialless` (§15.38)', () => {
+    // BACKLOG.md entry 1's first step: with the attribute, Google's page can
+    // neither send nor read the Google cookies a signed-in visitor already
+    // has (19 of 46 requests carried one in Chromium before, 0 after —
+    // COOKIES.md §3). Spelled `credentialless="credentialless"`, the one value
+    // both Reacts write (./credentialless.ts).
+    const { band } = mount();
+    const frame = band().querySelector('iframe') as HTMLIFrameElement;
+
+    // A BOOLEAN attribute: presence is what the browser reads. This runner's
+    // React writes the value as given; the export's writes it empty — both
+    // are on (tests/unit/credentialless-render.test.ts renders it in each).
+    expect(frame.hasAttribute('credentialless')).toBe(true);
+    expect(['', 'credentialless']).toContain(
+      frame.getAttribute('credentialless'),
+    );
+  });
+
   it('sits in a bordered, clipped tray so Google never paints past the corners', () => {
     // The tray is the on-brand loading state (and, with the visual net's
     // network fence, the thing the baselines actually photograph). `rounded-md`
@@ -229,7 +248,6 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
 
     expect(classesOf(tray)).toEqual(
       expect.arrayContaining([
-        'aspect-[2/1]',
         'overflow-hidden',
         'rounded-md',
         'border',
@@ -238,6 +256,25 @@ describe('ClinicLocation — the map, i.e. the CONSENT SEAM contract', () => {
         'shadow-aura',
       ]),
     );
+  });
+
+  it('shapes the tray 4:3 on a phone and 2:1 from the `@lg` step — two ratio tokens, nothing else', () => {
+    // The owner, 2026-10-09: "i need map on phone to be like 50% taller. it is
+    // too small." (the component header's OLD → NEW, item 4; §15.34). Under
+    // `@lg` — the phone layout, D7 — the tray is three quarters of its width
+    // tall instead of half; from the step up it keeps the 2:1 it always had.
+    // EXACTLY these two: a third ratio token (a `@3xl:` one, say) would move
+    // the tablet or the laptop, which the owner did not ask for; the computed
+    // block at the bottom shows what the two draw.
+    const { band } = mount();
+    const tray = (band().querySelector('iframe') as HTMLElement)
+      .parentElement as HTMLElement;
+
+    expect(
+      classesOf(tray)
+        .filter((c) => c.includes('aspect-'))
+        .sort(),
+    ).toEqual(['@lg:aspect-[2/1]', 'aspect-[4/3]']);
   });
 });
 
@@ -466,9 +503,10 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
   });
 
   it('flips the map/rows grid on NAMED container steps only (board D7)', () => {
-    // @lg ≡ the old `sm:` (640 − 128 = 512) and @3xl ≡ the old `lg:` at every
-    // §7 sampled width: phone 390 → box 312 and tablet 768 → box 614 stack the
-    // rows BELOW the map; notebook 1280 → box 1024 puts them beside it.
+    // @lg ≡ the old `sm:` (640 − 128 = 512; the phone gutter, §15.35, narrows
+    // only under 600) and @3xl ≡ the old `lg:` at every §7 sampled width:
+    // phone 390 → box 351 and tablet 768 → box 614 stack the rows BELOW the
+    // map; notebook 1280 → box 1024 puts them beside it.
     const { band } = mount();
     const grid = band().querySelector('[class*="grid-cols"]') as HTMLElement;
     const tokens = classesOf(grid);
@@ -538,8 +576,10 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
     // An element cannot query its OWN size: the Container IS the container, so
     // stepped `py` has to sit on a child of it. The recipe's "band owns its py"
     // holds; only the element wearing it moves down one level (Footer, with a
-    // single un-stepped py-10, never needed this). The band as the doctor page
-    // mounts it — no `scaled`; THE BAND SCALE block below holds the other.
+    // single un-stepped py-10, never needed this). The band's DEFAULT — no
+    // `scaled`, the band its own stories draw (every page passes the flag
+    // since 2026-10-13, §15.32 round 3); THE BAND SCALE block below holds
+    // the other.
     const { band } = mount();
     const rhythm = (band().firstElementChild as HTMLElement)
       .firstElementChild as HTMLElement;
@@ -618,10 +658,12 @@ const gatedClassesOf = (el: Element): string[] =>
 const DISC_SIZE = '[--disc-size:calc(var(--spacing)*11)]';
 
 describe('ClinicLocation — THE BAND SCALE, the class contract (§15.32)', () => {
-  it('is OFF by default — the doctor page’s band: three `py` tokens on the rhythm box, no gated class anywhere, and `scaled={false}` the same markup to the byte', () => {
-    // The doctor page mounts the band with no prop, and its other bands do not
-    // scale yet (§15.32) — so the default must be today's band exactly. The
-    // markup comparison is safe: nothing in the band generates an id.
+  it('is OFF by default — the band’s plain, unscaled self: three `py` tokens on the rhythm box, no gated class anywhere, and `scaled={false}` the same markup to the byte', () => {
+    // Every page passes `scaled` since 2026-10-13 (§15.32 round 3 — the
+    // doctor page last), but the default is still the band's plain self, the
+    // one its own stories draw (§6.6: the prop arrived additive) — so the
+    // default must be that band exactly. The markup comparison is safe:
+    // nothing in the band generates an id.
     const implicit = render(<Mounted locale="ro" />);
     const markup = implicit.container.innerHTML;
     const band = screen.getByRole('region', { name: ro.home.location.title });
@@ -685,8 +727,9 @@ describe('ClinicLocation — THE BAND SCALE, the class contract (§15.32)', () =
 
   it('sizes each disc in the band’s own spacing step, in BOTH modes — eleven steps, the atom’s 2.75rem drawn in the band’s pixel', () => {
     // ui/disc.ts's D16 door ("a HOST may set per screen type through
-    // className"), worn ALWAYS, so the doctor page's band and Home's can never
-    // disagree about what a disc is made of (the component's DISC_SIZE). The
+    // className"), worn ALWAYS, so the band's unscaled default and every scaled
+    // mount can never disagree about what a disc is made of (the component's
+    // DISC_SIZE). The
     // computed block below shows what the class buys in each mode.
     for (const scaled of [false, true]) {
       const { band, unmount } = mount('ro', { scaled });
@@ -788,7 +831,7 @@ describe('ClinicLocation — THE BAND SCALE, computed (§15.32 — the real styl
 
   it.each([
     {
-      where: 'the doctor page’s band (no `scaled`) at a laptop’s column',
+      where: 'the unscaled default (no `scaled`) at a laptop’s column',
       width: 1382.5,
       scaled: false,
     },
@@ -852,4 +895,112 @@ describe('ClinicLocation — THE BAND SCALE, computed (§15.32 — the real styl
       expect(sizes.tray.height).toBeCloseTo(sizes.tray.width / 2, 1);
     },
   );
+});
+
+// ── THE PHONE'S MAP, COMPUTED (2026-10-09, §15.34) ──────────────────────────
+// The owner: "i need map on phone to be like 50% taller. it is too small."
+// Under the band's `@lg` step — 32rem of ui/Container's box, D7's phone
+// layout — the tray is 4:3, and from the step up it is the 2:1 it always was
+// (the component header's OLD → NEW, item 4). Measured on the real
+// stylesheet through `renderColumn` above, at columns a phone hands the band
+// — on develop a6b072f, measured 2026-10-09, a 320 phone's was 256px, a
+// 390's 312 and a 430's 344 (288, 351 and 387 since ui/Container's PHONE
+// GUTTER the same day, CLAUDE.md §15.35, the map 4:3 on each), and a 768
+// tablet's 614.4; a phone's column moves with ui/Container's gutter, the
+// ratio does not — and on both sides of the
+// step itself. The band asked to scale (Home's and Team's) is the same band
+// here: the regime starts far above a phone's column.
+
+/** The `@lg` step in px at this runner's root — a container query's rem is
+ *  the root's, so the step follows the user's font size like any rem. */
+const lgStep = (): number =>
+  32 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/** The map tray's box — the iframe's parent, the element that wears the
+ *  ratio. */
+const trayOf = (band: HTMLElement): DOMRect =>
+  (
+    (band.querySelector('iframe') as HTMLElement).parentElement as HTMLElement
+  ).getBoundingClientRect();
+
+describe('ClinicLocation — the phone’s map, computed (§15.34 — the real stylesheet)', () => {
+  it.each([
+    { where: 'a 256px column', width: 256, scaled: false },
+    { where: 'a 312px column', width: 312, scaled: false },
+    { where: 'a 312px column, Home’s band', width: 312, scaled: true },
+    { where: 'a 344px column', width: 344, scaled: false },
+    { where: 'the last whole pixel under the step', width: 511, scaled: false },
+  ])(
+    'draws the map 4:3 on $where — the column’s full width, three quarters of it tall',
+    ({ width, scaled }) => {
+      expect(width).toBeLessThan(lgStep());
+      const tray = trayOf(renderColumn(width, scaled).band);
+
+      expect(tray.width).toBeCloseTo(width, 1);
+      expect(tray.height).toBeCloseTo((width * 3) / 4, 1);
+      // The owner's "50% taller": half again the 2:1 box this width had.
+      expect(tray.height / (width / 2)).toBeCloseTo(1.5, 2);
+    },
+  );
+
+  it.each([
+    { where: 'the step itself', width: 512 },
+    { where: 'a 768 tablet’s column', width: 614.4 },
+  ])(
+    'keeps the 2:1 map from the `@lg` step up — $where, untouched',
+    ({ width }) => {
+      expect(width).toBeGreaterThanOrEqual(lgStep());
+      const tray = trayOf(renderColumn(width, false).band);
+
+      expect(tray.width).toBeCloseTo(width, 1);
+      expect(tray.height).toBeCloseTo(width / 2, 1);
+    },
+  );
+});
+
+describe('ClinicLocation — nothing under the map, the rows on the MAP (§15.38 round 3)', () => {
+  // The note that stood under the map from 2026-10-10 left on the owner's word
+  // on 2026-10-13: the privacy page's map part, linked from every footer,
+  // carries what it said (GDPR art. 13). These cases hold the band to the
+  // shape it went back to — the tray alone in its grid track, so the rows
+  // centre on the map itself — measured on the real stylesheet.
+  const elements = (band: HTMLElement) => ({
+    tray: (band.querySelector('iframe') as HTMLElement)
+      .parentElement as HTMLElement,
+    rows: within(band).getAllByRole('link')[0].parentElement as HTMLElement,
+  });
+  const parts = (band: HTMLElement) => {
+    const { tray, rows } = elements(band);
+    return {
+      tray: tray.getBoundingClientRect(),
+      rows: rows.getBoundingClientRect(),
+    };
+  };
+  const middle = (r: DOMRect): number => r.top + r.height / 2;
+
+  it.each(locales)(
+    '%s: carries no note — the map and the rows are the grid’s only two children, and no word names Google',
+    (locale) => {
+      const { band } = mount(locale);
+      const { tray, rows } = elements(band());
+      expect(tray.nextElementSibling).toBe(rows);
+      expect(tray.parentElement?.childElementCount).toBe(2);
+      // The note was the band's one visible sentence about Google; the map's
+      // own name (its `title`) is an attribute, not text.
+      expect(band().textContent).not.toMatch(/google/i);
+    },
+  );
+
+  it('at @3xl: the rows centre on the MAP, beside it', () => {
+    const { band } = renderColumn(1000, false);
+    const { tray, rows } = parts(band);
+    expect(Math.abs(middle(rows) - middle(tray))).toBeLessThanOrEqual(1);
+    expect(rows.left).toBeGreaterThan(tray.right);
+  });
+
+  it('below @3xl: map, then rows — one stacked column', () => {
+    const { band } = renderColumn(400, false);
+    const { tray, rows } = parts(band);
+    expect(rows.top).toBeGreaterThan(tray.bottom);
+  });
 });

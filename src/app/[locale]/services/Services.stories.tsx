@@ -80,7 +80,11 @@ function ServicesPageBand(): ReactElement {
       <h1 id={SERVICES_TITLE_ID} className="sr-only">
         {t('title')}
       </h1>
-      <PriceList menuTitle={t('prices.menu')} categories={categories} />
+      <PriceList
+        menuTitle={t('prices.menu')}
+        categories={categories}
+        note={t('prices.taxNote')}
+      />
     </>
   );
 }
@@ -163,7 +167,12 @@ const playPage =
     // band's own contract, re-checked from the page's side because the page is
     // what supplies the title string).
     const menu = canvas.getByRole('navigation', { name: words.menu });
-    const links = Array.from(menu.querySelectorAll('a'));
+    // The SHOWN list's links: since 2026-10-09 the <nav> holds the rail's list
+    // AND the phone-and-tablet strip's chips, the one not shown `display: none`
+    // (sections/PriceList/PriceMenu's THE TWO PRESENTATIONS).
+    const links = Array.from(menu.querySelectorAll('a')).filter(
+      (link) => link.getClientRects().length > 0,
+    );
 
     // One card per category: <section id … tabindex="-1">, the fragment target
     // shape (board §3.5/§4.2). Queried from the DOM and not by role because

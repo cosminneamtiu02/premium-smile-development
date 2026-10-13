@@ -2,9 +2,10 @@ import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import {
   afterAll,
+  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -429,17 +430,95 @@ describe('LanguageBanner — it never takes focus, and it never leaves the page'
     // DOM. Nothing else in the repo can catch a change to this number.
     expect(style.position).toBe('fixed');
     expect(style.zIndex).toBe('30');
-    // 11.5rem = 184px above the bottom edge — the tallest of globals'
+    // 12.5rem = 200px above the bottom edge — the tallest of globals'
     // scroll-padding-bottom steps since fb-353 stacked the right corner
-    // (re-derived 2026-09-05; the first instantiation, 6.5rem/104px, predates
-    // the WhatsApp disc — the derivation is in LanguageBanner.tsx' anchor
-    // comment, and THIS pin is what went red when the corner moved under the
-    // rule, exactly as intended). Matched by PATTERN because the value carries
-    // an `env(safe-area-inset-bottom)` term and engines differ on whether they
-    // collapse `calc(184px + 0px)` — shell.test.tsx matches the same family
+    // (re-derived 2026-09-05, and again 2026-10-09, when the corner rose from
+    // 1rem to 2rem so its glow ends above Safari's bottom bar and every step
+    // rose with it; the first instantiation, 6.5rem/104px, predates the
+    // WhatsApp disc — the derivation is in LanguageBanner.tsx' anchor
+    // comment). This pin follows the card's OWN class only; the bond with the
+    // steps is asserted by the next case, against the shell's real rule.
+    // Matched by PATTERN because the value carries an
+    // `env(safe-area-inset-bottom)` term and engines differ on whether they
+    // collapse `calc(200px + 0px)` — shell.test.tsx matches the same family
     // the same way. `(^|\D)` closes the left boundary a plain substring would
-    // leave open ('1184px').
-    expect(style.bottom).toMatch(/(^|\D)184px/);
+    // leave open ('1200px').
+    expect(style.bottom).toMatch(/(^|\D)200px/);
+  });
+
+  it('lifts the card at least as high as the TALLEST scroll-padding-bottom step (the SC 2.4.11 bond)', async () => {
+    // The bond is an inequality (THE ANCHOR and the SC 2.4.11 note): a
+    // Tab-scrolled target rests one step above the viewport's bottom, and the
+    // card must not rest above it, or the target could sit wholly under the
+    // card. Checked against globals.css' REAL rule at 1536px, where the step is
+    // tallest — so a corner that rises and takes the steps with it fails HERE
+    // until the card follows (G2 typescript, 2026-10-09).
+    const before = { width: window.innerWidth, height: window.innerHeight };
+    await page.viewport(1536, 864);
+    try {
+      mount('ro');
+      const firstPx = (value: string): number =>
+        Number(/(-?[\d.]+)px/.exec(value)?.[1] ?? NaN);
+      const lift = firstPx(getComputedStyle(card() as HTMLElement).bottom);
+      // `min(<step>, 100% - 9.5rem)`: the step is the first length — the
+      // cap's term keeps its percentage, the viewport's height, unresolved.
+      const step = firstPx(
+        getComputedStyle(document.documentElement).scrollPaddingBottom,
+      );
+      expect(step).toBeGreaterThan(0);
+      expect(lift).toBeGreaterThanOrEqual(step);
+    } finally {
+      await page.viewport(before.width, before.height);
+    }
+  });
+
+  describe('THE ONE OVERRIDE — a short, wide window anchors the card low (G2 a11y, 2026-10-09)', () => {
+    // Under 30rem of window height the lift would put the card over the top
+    // of the page — the price strip's resting chips, ~146–206px (SC 2.4.11) —
+    // so from 40rem of width the card sits 1rem above the bottom edge, beside
+    // the corner discs. Measured in real windows: the runner's own viewport,
+    // set per case and given back after. Where the lift stays it is the
+    // card's own 12.5rem, 200px (11.5rem until the corner rose 1rem on
+    // 2026-10-09, CLAUDE.md §15.36).
+    afterEach(async () => {
+      await page.viewport(414, 896);
+    });
+
+    it.each([
+      {
+        window: '640 × 400 — a laptop at 200%',
+        width: 640,
+        height: 400,
+        bottom: 16,
+      },
+      {
+        window: '844 × 390 — a phone held sideways',
+        width: 844,
+        height: 390,
+        bottom: 16,
+      },
+      {
+        window: '600 × 400 — short but narrow: the lift stays',
+        width: 600,
+        height: 400,
+        bottom: 200,
+      },
+      {
+        window: '640 × 480 — wide but 30rem tall: the lift stays',
+        width: 640,
+        height: 480,
+        bottom: 200,
+      },
+    ])(
+      '$window: $bottom px above the bottom edge',
+      async ({ width, height, bottom }) => {
+        await page.viewport(width, height);
+        mount('ro');
+        const style = getComputedStyle(card() as HTMLElement);
+        // Matched by pattern, the env() term's reason above.
+        expect(style.bottom).toMatch(new RegExp(`(^|\\D)${bottom}px`));
+      },
+    );
   });
 });
 

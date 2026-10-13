@@ -53,6 +53,14 @@
 import { LOCALE_COOKIE } from './locales';
 
 /**
+ * How long the language cookie lives, in SECONDS — the `max-age` below: twelve
+ * months (§8.7's 6–12). Named so the privacy page (sections/PrivacyPolicy)
+ * prints the lifetime the cookie really has, read from here rather than typed
+ * twice; change it and the policy's "12 luni" follows.
+ */
+export const LOCALE_COOKIE_MAX_AGE_S = 31_536_000;
+
+/**
  * Store the visitor's explicit language choice — and ONLY ever on an explicit
  * choice (§8.7): a click on a switcher disc, on the banner's accept link, or on
  * the banner's dismiss button, which stores the page's OWN locale because "I am
@@ -91,5 +99,5 @@ export function setLocaleCookie(locale: string): void {
  */
 export function localeCookieString(locale: string, protocol: string): string {
   const secure = protocol === 'https:' ? '; Secure' : '';
-  return `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; SameSite=Lax${secure}`;
+  return `${LOCALE_COOKIE}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE_S}; SameSite=Lax${secure}`;
 }

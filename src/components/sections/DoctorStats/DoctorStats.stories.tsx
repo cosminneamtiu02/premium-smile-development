@@ -22,8 +22,9 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // prefix routes every photographed one to 390 + 1536
 // (tests/visual/stories.spec.ts, §13); the 'stress-320' tag adds the
 // accessibility width to the four whose layout has something to say there (a
-// 256px column of 18px prose, German labels in it, a 40%-expanded lead, the
-// Home shape's three tiles one above the other).
+// 288px column of 18px prose — 256 before 2026-10-09's phone gutter — German
+// labels in it, a 40%-expanded lead, the Home shape's three tiles one above
+// the other).
 //
 // ── THE SECOND PAGE — HOME AND THE TEAM PAGE (owner, 2026-10-01, verbatim:
 // "i want it on home page too with just 3 components. experience, patients
@@ -50,7 +51,9 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // ── THE BAND SCALE (2026-10-02, CLAUDE.md §15.32 — DoctorStats.tsx's
 // paragraph of that name). The three `PageGround*` stories model Home and the
 // Team page, so they pass `scaled` (`HOME_ARGS`); the four tint stories and
-// `Counting` model the doctor page and do not. `expectBandScale` reads — like
+// `Counting` draw the band's own unscaled self on its lilac ground and do not
+// (the doctor page passes `scaled` too since 2026-10-13, §15.32 round 4 —
+// Pages/Doctor draws that page's band in the scale). `expectBandScale` reads — like
 // the doctors band's own `expectScale` — the column, the pointer and the
 // engine the play runs in, never the pinned window, and asserts whichever side
 // it is on: inside the scale (a `scaled` band, a fine pointer, an engine that
@@ -59,7 +62,7 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 // tile at 9/8 of it; anywhere else every size the theme's, in rem. In the
 // Vitest storybook project the pointer is Chromium's fine one, so
 // `PageGround`'s laptop pin asserts the scale (and `expectScaled` that it was
-// not skipped), `Default`'s the doctor page's unscaled band at the same width,
+// not skipped), `Default`'s the unscaled band at the same width,
 // and the phone and tablet pins that `scaled` changes nothing there. In the
 // pixel net the `PageGround*` frames at 1536 are drawn in the scale; every 390
 // and 320 frame, and every tint frame, is as it was.
@@ -96,7 +99,8 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 //     CONTAINER width. The Vitest runner applies the pin; Playwright ignores it
 //     and sets its own page size per project — which is exactly why the
 //     arrangement assertion DERIVES its branch from the measured column
-//     instead of assuming the pinned width (the DoctorCourses recipe).
+//     instead of assuming the pinned width (a recipe this file shared with
+//     the doctor page's year-timeline stories until 2026-10-13).
 //
 // ── THE OWNER'S ADAPTABILITY RULE (2026-09-25, D21): anything side by side on
 // the desktop MUST stack one above the other on phones. The one-column branch
@@ -161,7 +165,7 @@ const TILES = [
     icon: <Trophy />,
     value: 10,
     label: 'Cursuri',
-    description: 'Formare continuă în tehnici și tehnologii moderne.',
+    description: 'Fiecare curs este un reper pe drumul spre specializare.',
   },
   {
     id: 'interventions',
@@ -175,7 +179,7 @@ const TILES = [
 ] as const satisfies readonly DoctorStatTile[];
 
 /** The same four in German (DRAFTED, §15.17 — lib/team's drafts): the
- *  longest locale's words in a 256px column are the case this frame exists
+ *  longest locale's words in a 288px column are the case this frame exists
  *  for: „Jahre Erfahrung" the longest label since round 2s shortened
  *  „Erfolgreiche Eingriffe" to „Eingriffe", and the interventions sentence
  *  the longest of the four. */
@@ -194,7 +198,7 @@ const GERMAN_TILES = [
   {
     ...TILES[2],
     label: 'Kurse',
-    description: 'Laufende Fortbildung in modernen Techniken und Technologien.',
+    description: 'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
   },
   {
     ...TILES[3],
@@ -260,7 +264,7 @@ const PSEUDO = {
       ...TILES[2],
       label: 'Çúršúrí ···',
       description:
-        'Fórmáré çóñťíñúă îñ ťéhñíçí șí ťéhñólógíí módérñé. ····················',
+        'Fíéçáré çúrš éšťé úñ répér pé drúmúl špré špéçíálížáré. ······················',
     },
     {
       ...TILES[3],
@@ -505,13 +509,14 @@ const expectPaintOrder = async (
 };
 
 /**
- * THE INTRO (`Counting`'s decorator, the DoctorCourses `withIntro` recipe):
+ * THE INTRO (`Counting`'s decorator — a recipe first written for the doctor
+ * page's year-timeline stories, retired 2026-10-13):
  * 81rem of page above the band, ~150 % of the laptop's 864px, standing in for
  * the doctor's opener, profile and courses. The tiles therefore sit below the
  * fold at mount, and the first intersection the island can see is the one the
  * play's scroll causes. REM, not `vh`: a full-page capture may lay the page
  * out against a viewport as tall as itself, and a `vh` intro would grow with
- * it (DoctorCourses' header).
+ * it.
  */
 const withIntro: Decorator = (Story) => (
   <>
@@ -520,7 +525,7 @@ const withIntro: Decorator = (Story) => (
   </>
 );
 
-/** Instant, so no smooth-scroll setting stretches a play (DoctorCourses). */
+/** Instant, so no smooth-scroll setting stretches a play. */
 const jumpTo = (top: number): void => {
   window.scrollTo({ top, behavior: 'instant' });
 };
@@ -582,7 +587,7 @@ const expectArrangement = async (band: HTMLElement): Promise<Branch> => {
 };
 
 /**
- * THE PIN IS NOT VACUOUS (the DoctorCourses guard): below 28rem of WINDOW the
+ * THE PIN IS NOT VACUOUS: below 28rem of WINDOW the
  * column is narrower still, so one column is the only possibility; from 64rem
  * of window the column (the window less two gutters of at most 10vw) is past
  * 48rem, so four is the only possibility; and for THREE tiles, from 48rem of
@@ -844,8 +849,8 @@ const scaleStepPx = (): number => Math.max(stepPx(STEP_REM), STEP_FLOOR);
  * the column capped at 96rem and centred in it, and every tile draws at 9/8
  * of s: its sentence 18 × s, HALF the <h2> (a doctor card's quote — the
  * owner's "1 to 1"), its label 22.5 × s, its number 40.5 × s, its disc
- * 126 × s with the glyph 54 × s; each within 0.05px. Anywhere else — the
- * doctor page's band, never `scaled`; every phone and tablet; a coarse
+ * 126 × s with the glyph 54 × s; each within 0.05px. Anywhere else — a band
+ * not asked to scale (the tint stories); every phone and tablet; a coarse
  * pointer — nothing is declared: both boxes' design pixel is the registered
  * 1px, the rhythm box is the column, and every size is the theme's, in rem of
  * the root (the <h2> 30 or 36 by the column's `@md`, the eyebrow 14, the
@@ -971,8 +976,10 @@ const expectBandScale = async (
  * THE SCALE IS NOT VACUOUS where the story is pinned to see it (the
  * `expectBranch` guard's reasoning, for THE BAND SCALE): under open gates, a
  * window whose column MUST be past the step — 80 % of it less 17px of classic
- * scrollbar at most, the gutter's 10vw governing every window up to its
- * 2000px cap and the column only wider beyond — must have drawn the scale.
+ * scrollbar at most, the gutter's 10vw governing every window from 600px up
+ * to its 2000px cap (5vw on a phone since 2026-10-09's phone gutter, far
+ * below any window this guard reads) and the column only wider beyond — must
+ * have drawn the scale.
  * Conditioned on the live window and browser, so a Playwright project
  * photographing the story at a phone's width runs it without a false failure.
  */
@@ -1025,7 +1032,7 @@ const meta = {
     scaled: {
       control: 'boolean',
       description:
-        'Draws the band in THE BAND SCALE (ui/Container’s paragraph of that name; §15.32): on a laptop or desktop column of max(56rem, 896px) the doctors band’s own design pixel, the column ÷ 1106, capped at a 96rem column and centred past it — so the eyebrow and the title are the doctors band’s size and stand on its left edge — and the tiles at 9/8 of it, so a tile’s sentence reads a doctor card’s quote size. Home and the Team page pass it; the doctor page does not (default false). Below the step, on a touch device and in an engine that cannot register custom properties it changes nothing',
+        'Draws the band in THE BAND SCALE (ui/Container’s paragraph of that name; §15.32): on a laptop or desktop column of max(56rem, 896px) the doctors band’s own design pixel, the column ÷ 1106, capped at a 96rem column and centred past it — so the eyebrow and the title are the doctors band’s size and stand on its left edge — and the tiles at 9/8 of it, so a tile’s sentence reads a doctor card’s quote size. Home, the Team page and (since 2026-10-13) the doctor page pass it; default false, the band’s own unscaled self. Below the step, on a touch device and in an engine that cannot register custom properties it changes nothing',
     },
     tiles: {
       control: false,
@@ -1067,7 +1074,7 @@ const LABELS = TILES.map((tile) => tile.label);
  * under reduced motion).
  *
  * **1536 · 320 (`stress-320`):** at the stress width the same markup is ONE
- * column, one tile above the other, 18px prose wrapping in a 256px column and
+ * column, one tile above the other, 18px prose wrapping in a 288px column and
  * nothing scrolling sideways. The play reads back what a picture cannot: the
  * outline, the SPOKEN finals in the screen reader's twins („peste 3.000", the
  * page's word and never the sign, round 2s), the still branch
@@ -1075,8 +1082,8 @@ const LABELS = TILES.map((tile) => tile.label);
  * budget, the painted order (the number above its <h3>, which follows it in
  * the DOM), the glyphs' lilac against the decorative role's own token and the
  * arrangement derived from the measured column — and, at the laptop width
- * where `PageGround` draws in THE BAND SCALE, that the doctor page's band does
- * NOT: never `scaled`, its sizes the theme's rem (`expectBandScale`). The
+ * where `PageGround` draws in THE BAND SCALE, that this band, not asked to,
+ * does NOT: its sizes the theme's rem (`expectBandScale`). The
  * count itself is watched in `Counting` (the header says why).
  */
 export const Default: Story = {
@@ -1110,7 +1117,7 @@ export const Default: Story = {
 
 /**
  * THE PHONE — the owner's adaptability rule made visible (D21): at 390 the
- * column is 312px, far short of `@md`, so the four tiles stand one above the
+ * column is 351px, far short of `@md`, so the four tiles stand one above the
  * other, each centred in the column. The play pins the one-column geometry
  * and the painted order inside each tile (the number above its <h3>); the
  * tiles below the fold keep their final values until they scroll in.
@@ -1175,7 +1182,7 @@ export const GermanLongest: Story = {
  * PSEUDO-LOCALE (§8.9) — accented and ~40% expanded, TYPED OUT as a fixture
  * because the toolbar transforms message files and this band reads none.
  * EVERY string is transformed (the PSEUDO fixture's note): the expanded h2
- * and the long lead absorb the growth by WRAPPING in a 312px — then 256px —
+ * and the long lead absorb the growth by WRAPPING in a 351px — then 288px —
  * column, and the padding runs are the stress: a row of `·` is one
  * unbreakable token, the longest here the lead's 49 (70 before round 2s
  * shortened the lead — DoctorStats.tsx's NO TOKEN paragraph).
@@ -1210,7 +1217,7 @@ export const PseudoLocale: Story = {
 
 /**
  * THE COUNT, WATCHED FROM ITS FIRST FRAME — a play-only twin of `Default`
- * (G2-R2 tier 2, react F3; the DoctorCourses `Current` idiom). In `Default`
+ * (G2-R2 tier 2, react F3). In `Default`
  * the first tile is on screen at mount, so its count starts before any play
  * can watch it; here an 81rem intro stands above the band (`withIntro`), the
  * tiles sit below the fold at mount, and the island's first intersection can
@@ -1231,7 +1238,7 @@ export const PseudoLocale: Story = {
  * its play and its per-story axe run in the Vitest storybook project. It
  * starts at the top of the page and puts the scroll back afterwards
  * (`beforeEach`), because the runner renders stories one after another in one
- * document (DoctorCourses' header).
+ * document.
  */
 export const Counting: Story = {
   tags: ['no-visual'],
@@ -1337,7 +1344,7 @@ export const PageGround: Story = {
 
 /**
  * THE SECOND PAGE ON A PHONE — the owner's adaptability rule (D21): at 390
- * the column is 312px, far short of the container's `@xl` (36rem), so the
+ * the column is 351px, far short of the container's `@xl` (36rem), so the
  * three tiles stand one above the other — every top strictly under the one
  * before, every tile as wide as the column, never two and one. The opener
  * stays at the start (a wrapping title fills the column; its lines still read

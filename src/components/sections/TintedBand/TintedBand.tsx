@@ -128,8 +128,9 @@ import { cx } from '@/lib/cx/cx';
 //   NO VERTICAL PADDING OF ITS OWN — the band's `py` rhythm is the
 //   CONSUMER's, and it has to be: the padding cannot ride on the Container,
 //   because an element cannot query its OWN size, so each consumer puts it on
-//   the grid or column it renders one level in (the ClinicLocation precedent,
-//   DoctorProfile's grid, DoctorStats' column). Two consumers with different
+//   the grid or column it renders inside the Container (the ClinicLocation
+//   precedent, DoctorStats' column — and DoctorProfile's grid, one box further
+//   in since 2026-10-13, under the band scale's wrapper). Two consumers with different
 //   content want different rhythm, and a padding here would be one they both
 //   had to undo. The fades are not that padding (next paragraph).
 //
@@ -139,6 +140,16 @@ import { cx } from '@/lib/cx/cx';
 // are ordinary children rather than absolute overlays: an absolute fade would
 // have to overlap whatever band sits above, and its last pixel would then be
 // over a colour this file does not control.
+//   UNDER THE BAND SCALE THE FADES KEEP THEIR 6rem (2026-10-13, CLAUDE.md
+//   §15.32 round 4 — both consumers draw in ui/Container's band scale on a
+//   laptop or desktop). The scale is worn INSIDE the Container, by the
+//   consumer's own box, and the fades stand outside it, full-bleed, where no
+//   box knows the column's design pixel: so on a laptop the tint fades in
+//   over 96px while the content it carries is drawn at its design size × s —
+//   a fade a little short past the 1401 window (132 design-scaled pixels at
+//   1920) and a little long under it. Recorded, not cured: a fade is a soft
+//   gradient, and giving it the pixel would mean reading the column from
+//   outside the column.
 //
 // ── NAMES PASS THROUGH. The native <section> surface is spread whole —
 // `aria-label` and `aria-labelledby` INCLUDED — because whether the band is a

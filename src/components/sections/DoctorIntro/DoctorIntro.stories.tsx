@@ -13,11 +13,13 @@ import {
 // looks like with something after the credo card, the two expansion stresses,
 // and three frames for their PLAYS alone, tagged `no-visual` so the pixel net
 // never photographs them: the everyday opener at 1280 (`Notebook`, where the
-// words set the row and the cutout GROWS to their floor) and at 1920
-// (`Desktop`, where the picture at its third sets it and nothing grows) — the
-// two branches of D64's one floor, each pinned once — and the German stress
-// in a column just past the step (`AtTheStep`), where the words' room is
-// tightest and the picture's track must give way to the name.
+// words set the row and the cutout GROWS to their floor) and the opener at
+// 1920 with a one-sentence credo (`Desktop`, where the picture at its third
+// sets it and nothing grows — inside the band scale the branch follows the
+// words, no longer the width) — the two branches of D64's one floor, each
+// pinned once, at the two ends of the scale the runner samples — and the
+// German stress in a column just past the step (`AtTheStep`), where the
+// words' room is tightest and the picture's track must give way to the name.
 // The three frames that answered the owner's "top, center or bottom" question
 // — Centered, Lowered and Bottom — left with the `align` axis itself (D62,
 // 2026-10-01: the name tops the words' container and the card centres in the
@@ -76,6 +78,16 @@ import {
 //     `sitsBeside` and PriceList `splitHasFired` precedent). The vitest
 //     runner DOES honour the pin, so the two smartphone stories are the ones
 //     that walk the stacked branch there.
+//   · and, since 2026-10-13, THE BAND SCALE (DoctorIntro.tsx's paragraph of
+//     that name, CLAUDE.md §15.32 round 4): both runners have a mouse, so
+//     every frame beside the picture from a ~1140px window up — the laptop,
+//     notebook and desktop pins here, every frame the net shoots at 1536 —
+//     is the owner's 1401 design drawn in the design pixel s. Every play
+//     therefore asks first where it stands (`scaleOf`: the two gates off the
+//     browser, the column off ui/Container) and writes each length in DESIGN
+//     PIXELS × the unit it measured — the theme's own rem wherever the scale
+//     does not apply, so the stacked frames and `AtTheStep` (a column under
+//     the scale's step) assert exactly the rem arithmetic they always did.
 //
 // ── NO BAND DECORATOR, unlike PersonnelCard's: that card needs a width-giving
 // parent because ui/Card contains its own inline size, while THIS component IS
@@ -132,6 +144,20 @@ const ELENA_SEGMENTS: readonly KeywordSegment[] = [
   },
 ];
 
+/** Elena's words CUT TO THEIR FIRST SENTENCE — the `Desktop` frame's alone.
+ *  Inside the band scale which container sets the row no longer depends on
+ *  the width (DoctorIntro.tsx's THE BAND SCALE): the everyday credo's words
+ *  stand 521.6 design pixels tall against the picture's 491.6 at its third,
+ *  so they set it on every laptop and desktop, and D64's OTHER branch — the
+ *  picture taller, nothing grown — is reached by a shorter credo, as a real
+ *  doctor's shorter words reach it on the page. One line of the card's quote,
+ *  the key word kept, so the Default play runs on it unchanged. */
+const ELENA_SHORT_SEGMENTS: readonly KeywordSegment[] = [
+  { text: 'Lucrez în ', keyword: false },
+  { text: 'ortodonție', keyword: true },
+  { text: ' de peste zece ani.', keyword: false },
+];
+
 const FRIEDERIKE_SEGMENTS: readonly KeywordSegment[] = [
   { text: 'Meine ', keyword: false },
   { text: 'Behandlungsschwerpunkte', keyword: true },
@@ -172,6 +198,11 @@ const CREDOS = {
     eyebrow: 'În cuvintele mele',
     title: 'Filozofia mea',
     body: <Keywords segments={ELENA_SEGMENTS} />,
+  },
+  roShort: {
+    eyebrow: 'În cuvintele mele',
+    title: 'Filozofia mea',
+    body: <Keywords segments={ELENA_SHORT_SEGMENTS} />,
   },
   de: {
     eyebrow: 'In meinen Worten',
@@ -284,6 +315,50 @@ const picturesSettled = async (canvasElement: HTMLElement): Promise<void> => {
 const rem = (): number =>
   parseFloat(getComputedStyle(document.documentElement).fontSize);
 
+/** THE BAND SCALE's numbers, written out (ui/Container's THE BAND SCALE —
+ *  their census is tests/unit/design-scale.test.ts): the REFERENCE column,
+ *  where a design pixel is a CSS pixel; the CAP and THE STEP in rem of the
+ *  root, the step floored at 896px. Spelled again on purpose: the census holds
+ *  the source, these hold what the engine does (ClinicLocation.stories.tsx's
+ *  idiom). */
+const REFERENCE = 1106;
+const CAP_REM = 96;
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
+/** `actual` within `tolerance` of `expected`, the label and both numbers in
+ *  the failure (a twentieth of a pixel by default: layout rounds to 1/64px
+ *  and a design pixel keeps its fraction — ClinicLocation.stories.tsx's). */
+const near = async (
+  actual: number,
+  expected: number,
+  label: string,
+  tolerance = 0.05,
+): Promise<void> => {
+  await expect(
+    Math.abs(actual - expected),
+    `${label}: ${actual} against ${expected}`,
+  ).toBeLessThanOrEqual(tolerance);
+};
+
+/** An element's computed font size, in px. */
+const fontSizeOf = (element: Element): number =>
+  parseFloat(getComputedStyle(element).fontSize);
+
+/** One `vw` of THIS window, in px, read off a probe rather than inferred
+ *  from `innerWidth` — what ui/Heading's `hero` clamp reads, whatever an
+ *  engine counts into a viewport unit beside a classic scrollbar. */
+const vwOf = (): number => {
+  const probe = document.createElement('div');
+  probe.style.width = '100vw';
+  document.body.append(probe);
+  try {
+    return probe.getBoundingClientRect().width / 100;
+  } finally {
+    probe.remove();
+  }
+};
+
 /** The REAL face, before a play measures anything a line of text sizes: a
  *  play can start before Source Serif 4 has arrived (`font-display: block`
  *  lays the words out in the fallback serif, which wraps differently), and
@@ -299,9 +374,11 @@ const realFace = async (element: HTMLElement): Promise<void> => {
   await document.fonts.ready;
 };
 
-/** The band root, and the two boxes inside it — reached by structure because
- *  neither the grid nor its two children carries a role of its own. Below the
- *  step the words box is `display: contents` (D51c) and HAS no box: its
+/** The band root, and the boxes inside it — reached by structure because none
+ *  of them carries a role of its own: the <section> → ui/Container's column →
+ *  THE BAND SCALE's box, the opener's own size container (DoctorIntro.tsx's
+ *  `SCALE_BOX`) → the grid → the picture's container and the words'. Below
+ *  the step the words box is `display: contents` (D51c) and HAS no box: its
  *  rectangle is all zeros there, so the stacked branch measures the pair and
  *  the card themselves. */
 const bandOf = (heading: HTMLElement): HTMLElement =>
@@ -309,13 +386,89 @@ const bandOf = (heading: HTMLElement): HTMLElement =>
 
 const boxesOf = (
   band: HTMLElement,
-): { picture: HTMLElement; words: HTMLElement } => {
-  const grid = (band.firstElementChild as HTMLElement)
-    .firstElementChild as HTMLElement;
+): {
+  column: HTMLElement;
+  frame: HTMLElement;
+  grid: HTMLElement;
+  picture: HTMLElement;
+  words: HTMLElement;
+} => {
+  const column = band.firstElementChild as HTMLElement;
+  const frame = column.firstElementChild as HTMLElement;
+  const grid = frame.firstElementChild as HTMLElement;
   return {
+    column,
+    frame,
+    grid,
     picture: grid.children[0] as HTMLElement,
     words: grid.children[1] as HTMLElement,
   };
+};
+
+/**
+ * THE BAND SCALE, asserted where the play finds itself (DoctorIntro.tsx's THE
+ * BAND SCALE; CLAUDE.md §15.32 round 4): the column read off ui/Container,
+ * the two GATES read off the browser — a fine primary pointer, and the
+ * relative colour syntax that rides with registered custom properties —
+ * never the pinned window. Inside the regime the opener is ONE design, the
+ * owner's 1401 window's, drawn in the design pixel s = min(column, 96rem) /
+ * 1106 and capped and centred at the cap; outside it — a phone, a touch
+ * tablet, a column under the step — nothing is declared, and a design pixel
+ * is the theme's own, a sixteenth of the root (§7). Returns whether the
+ * regime is on and the UNIT every length below is drawn in.
+ */
+const scaleOf = async (
+  band: HTMLElement,
+): Promise<{ regime: boolean; unit: number }> => {
+  const { column, frame } = boxesOf(band);
+  const outer = column.getBoundingClientRect();
+  const regime =
+    window.matchMedia('(pointer: fine)').matches &&
+    CSS.supports('color', 'rgb(from red r g b)') &&
+    outer.width >= Math.max(STEP_REM * rem(), STEP_FLOOR);
+  const unit = regime
+    ? Math.min(outer.width, CAP_REM * rem()) / REFERENCE
+    : rem() / 16;
+  const declared = getComputedStyle(frame).getPropertyValue('--scale-px');
+  if (regime) {
+    await near(parseFloat(declared), unit, 'the design pixel', 0.0001);
+  } else {
+    // The registered property's initial value: nothing declared it.
+    await expect(declared).toBe('1px');
+  }
+  // bandColumnClasses: as wide as the column up to the cap, centred past it.
+  const box = frame.getBoundingClientRect();
+  await near(
+    box.width,
+    regime ? Math.min(outer.width, CAP_REM * rem()) : outer.width,
+    'the band-scale box’s width',
+  );
+  await near(
+    box.left - outer.left,
+    (outer.width - box.width) / 2,
+    'the band-scale box’s centring',
+  );
+  return { regime, unit };
+};
+
+/**
+ * THE NAME'S SIZE (DoctorIntro.tsx's THE BAND SCALE, THE NAME): inside the
+ * regime the `hero` step's value at the owner's 1401 window — 16 + 3.5 ×
+ * 14.01 = 65.035px, spelled as 16.26 spacing steps, 65.04 design pixels —
+ * times s; outside it ui/Heading's `hero` clamp itself, clamp(2rem, 1rem +
+ * 3.5vw, 4.5rem) of THIS window, exactly as before the scale.
+ */
+const expectNameSize = async (
+  name: HTMLElement,
+  regime: boolean,
+  unit: number,
+): Promise<void> => {
+  const hero = Math.min(4.5 * rem(), Math.max(2 * rem(), rem() + 3.5 * vwOf()));
+  await near(
+    fontSizeOf(name),
+    regime ? 16.26 * 4 * unit : hero,
+    regime ? 'the name, in the design pixel' : 'the name, the hero clamp',
+  );
 };
 
 /**
@@ -347,9 +500,12 @@ const credoOf = async (
  * a 20px line, JetBrains Mono, uppercase, rgb(91 85 79), a 20px box each —
  * the only differences are the words' length (264.6 vs 166.6px of ink) and
  * what surrounds them (DoctorIntro.tsx's D43c paragraph says why the eye
- * disagrees). The step itself is DERIVED from the root size — ui/Eyebrow's
- * `text-sm` (0.875rem) and `tracking-widest` (0.1em) — so a visitor's larger
- * root font moves the expectation with it (§7).
+ * disagrees). The step itself is DERIVED — ui/Eyebrow's `text-sm`, 14 design
+ * pixels, and `tracking-widest` (0.1em) — in the UNIT the play measured
+ * (`scaleOf`): a sixteenth of the root outside the band scale, so a visitor's
+ * larger root font moves the expectation with it (§7), and the design pixel
+ * inside it, where both labels are 14 × s since 2026-10-13 (DoctorIntro.tsx's
+ * THE BAND SCALE) — still ONE size, which is the point.
  */
 const EYEBROW_TYPE = [
   'fontSize',
@@ -364,6 +520,7 @@ const EYEBROW_TYPE = [
 const expectEyebrowsMatch = async (
   specialty: HTMLElement,
   label: HTMLElement,
+  unit: number,
 ): Promise<void> => {
   // Never-vacuous: two DIFFERENT rendered paragraphs, each at least one line
   // tall — a collapsed or duplicated query would agree with itself.
@@ -375,7 +532,7 @@ const expectEyebrowsMatch = async (
   for (const property of EYEBROW_TYPE) {
     await expect(b[property]).toBe(a[property]);
   }
-  await expect(parseFloat(a.fontSize)).toBeCloseTo(0.875 * rem(), 2);
+  await expect(parseFloat(a.fontSize)).toBeCloseTo(14 * unit, 2);
   await expect(parseFloat(a.letterSpacing)).toBeCloseTo(
     0.1 * parseFloat(a.fontSize),
     2,
@@ -398,18 +555,18 @@ const expectEyebrowsMatch = async (
 };
 
 /**
- * WHERE THE BAND SPLITS, derived rather than assumed. `@3xl` is 48rem of
- * ui/Container's column, and a container query asks that box's CONTENT width —
- * Container has neither padding nor border, so its border-box width IS the
- * queried number, taken FRACTIONALLY (`clientWidth` is an integer and would
- * disagree with the engine inside a sub-pixel window around the step). The
- * visual runner renders every `Sections/*` story at 390 AND 1536 regardless of
- * the story's own viewport pin, so a play that assumed the pinned width would
- * be green in the workbench and wrong in the net.
+ * WHERE THE BAND SPLITS, derived rather than assumed. `@3xl` is 48rem of the
+ * grid's nearest size container — THE BAND SCALE's box since 2026-10-13,
+ * ui/Container's column itself below the cap — and a container query asks
+ * that box's CONTENT width: the box has neither padding nor border, so its
+ * border-box width IS the queried number, taken FRACTIONALLY (`clientWidth`
+ * is an integer and would disagree with the engine inside a sub-pixel window
+ * around the step). The visual runner renders every `Sections/*` story at 390
+ * AND 1536 regardless of the story's own viewport pin, so a play that assumed
+ * the pinned width would be green in the workbench and wrong in the net.
  */
 const sitsBeside = (band: HTMLElement): boolean =>
-  (band.firstElementChild as HTMLElement).getBoundingClientRect().width >=
-  48 * rem();
+  boxesOf(band).frame.getBoundingClientRect().width >= 48 * rem();
 
 /** The width of every line box a text element is laid out in — a Range over
  *  its contents yields one client rect per line. */
@@ -449,16 +606,14 @@ const thirdOf = (column: number, cutout: HTMLImageElement): number =>
  * `expectArrangement` below goes unwalked.
  */
 const pictureSetsTheRow = (band: HTMLElement): boolean => {
-  const { picture } = boxesOf(band);
+  const { frame, picture } = boxesOf(band);
   const cutout = picture.querySelector('img');
   if (!cutout) throw new Error('DoctorIntro story: the cutout is missing');
-  const column = (
-    band.firstElementChild as HTMLElement
-  ).getBoundingClientRect();
   return (
     Math.abs(
       picture.getBoundingClientRect().height -
-        thirdOf(column.width, cutout) / proportionOf(cutout),
+        thirdOf(frame.getBoundingClientRect().width, cutout) /
+          proportionOf(cutout),
     ) <= 1
   );
 };
@@ -466,11 +621,13 @@ const pictureSetsTheRow = (band: HTMLElement): boolean => {
 /**
  * THE DEMO DOCTOR'S NAME ON ONE LINE beside the picture — D51's pin, kept
  * through D62–D64: in the pair's room (the words' track less D64's 1.5rem)
- * „Dr. Elena Marin" fills ~388 / 445 / 460px of ~462 / 594 / 793px at 1280 /
- * 1536 / 1920 (the `hero` step's 60.8 / 69.76 / 72px; the classic
- * scrollbar's column), so her name reads on
- * ONE line at every laptop and desktop width, and a drift that wrapped it
- * fails a play instead of slipping into a baseline. Both readings, so
+ * „Dr. Elena Marin" fills 379 / 456 / 571px of 479 / 576 / 722px at 1280 /
+ * 1536 / 1920 — 79 % of it at every width since THE BAND SCALE (2026-10-13),
+ * the design's 415 of 524.6 pixels × s, at 59.3 / 71.4 / 89.4px type (until
+ * then ~388 / 445 / 460 of ~462 / 594 / 793 at the `hero` clamp's 60.8 /
+ * 69.76 / 72px; both measured beside a classic scrollbar) — so her name
+ * reads on ONE line at every laptop and desktop width, and a drift that
+ * wrapped it fails a play instead of slipping into a baseline. Both readings, so
  * neither can be vacuous: the text's own line fragments (a Range's client
  * rects, one per line) and the element's height against ONE line box. (Until
  * D62 the pin stopped at 1536: in the old shared 28rem column the 72px step
@@ -508,12 +665,25 @@ const expectNameOnOneLine = async (
  * left under it, and the cutout drawn as tall as the row, centred on its
  * third and standing where the words end. In BOTH branches the card follows
  * the name in the DOM and on screen, inside the words' markup (D12).
+ *
+ * EVERY LENGTH IN DESIGN PIXELS (DoctorIntro.tsx's THE BAND SCALE, since
+ * 2026-10-13): each number the band spells in the theme's steps is written
+ * here as that many design pixels — the 1.5rem inset as 24, the gap's bounds
+ * as 48 and 168, the card's track as 576 — times the UNIT `scaleOf` measured:
+ * a sixteenth of the root outside the band scale, so every assertion there is
+ * the rem arithmetic it always was (the stacked branch is never inside the
+ * scale), and the design pixel inside it, so on a laptop or a desktop the
+ * opener is checked against the owner's 1401 design × s. The shares of the
+ * column — the inset's 1.875 %, the third, the sixth, the ninth — read THE
+ * BAND SCALE's box, which every `cqi` of the opener reads: ui/Container's
+ * column below the cap, the capped box past it.
  */
 const expectArrangement = async (
   band: HTMLElement,
   credo: HTMLElement,
 ): Promise<void> => {
-  const { picture, words } = boxesOf(band);
+  const { frame, grid, picture, words } = boxesOf(band);
+  const { regime, unit } = await scaleOf(band);
   const name = band.querySelector('h1') as HTMLElement;
   const specialty = name.nextElementSibling as HTMLElement;
   const pair = name.parentElement as HTMLElement;
@@ -538,29 +708,57 @@ const expectArrangement = async (
   await expect(philosophy.firstElementChild).toBe(credo);
   await expect(credoBox.top).toBeGreaterThanOrEqual(nameBox.bottom);
 
-  const column = (
-    band.firstElementChild as HTMLElement
-  ).getBoundingClientRect();
-  const grid = (band.firstElementChild as HTMLElement)
-    .firstElementChild as HTMLElement;
+  // THE NAME'S SIZE — the design's inside the scale, the `hero` clamp
+  // outside it (DoctorIntro.tsx's THE BAND SCALE, THE NAME).
+  await expectNameSize(name, regime, unit);
+  // THE CARD'S WORDS AND TITLE, in the same unit: the quote on `text-xl`, 20
+  // design pixels (CredoCard's D43b), and the title on the `band` step,
+  // which answers to the CARD's own container (ui/Card is one) and in CSS
+  // pixels, as every container step does — never in the design's: 36 design
+  // pixels once the card's content box reaches 28rem, 30 under it (§15.24's
+  // card rule). So inside the scale the title is the 1401 design × s only
+  // where the card's content box clears 28rem; under that, the step's 30.
+  const cardStyle = getComputedStyle(credo);
+  const cardContent =
+    credoBox.width -
+    parseFloat(cardStyle.paddingLeft) -
+    parseFloat(cardStyle.paddingRight) -
+    parseFloat(cardStyle.borderLeftWidth) -
+    parseFloat(cardStyle.borderRightWidth);
+  await near(
+    fontSizeOf(within(credo).getByRole('heading', { level: 2 })),
+    (cardContent >= 28 * rem() ? 36 : 30) * unit,
+    'the credo card’s title',
+  );
+  await near(
+    fontSizeOf(
+      within(credo).getByRole('blockquote').firstElementChild as HTMLElement,
+    ),
+    20 * unit,
+    'the credo card’s words',
+  );
+
+  // THE BOX EVERY SHARE OF THE OPENER READS: THE BAND SCALE's box — the
+  // grid's nearest size container, so its `cqi` and its container steps.
+  const column = frame.getBoundingClientRect();
   const gridStyle = getComputedStyle(grid);
 
   // D43a · THE RHYTHM (round 2j, halved: "push it higher … the whole thing"),
-  // derived from the measured column like the split itself: 1.5rem below
-  // `@lg` (32rem of column), 2rem from it, 2.5rem from `@3xl` — top and
+  // derived from the measured column like the split itself: 24 design pixels
+  // below `@lg` (32rem of column), 32 from it, 40 from `@3xl` — top and
   // bottom alike from `@lg` up, the band's own `py` (the PAGE-BAND RECIPE's
   // rule 3). D51 and D62 left it alone.
-  // D61's ONE RIDER: below `@lg` the BOTTOM is 2rem, not 1.5 (`pb-8`) — the
+  // D61's ONE RIDER: below `@lg` the BOTTOM is 32, not 24 (`pb-8`) — the
   // credo card is the stack's last item and its aura reaches ~32px below it,
   // which the next band would otherwise cut (CredoCard.tsx's D61 paragraph);
-  // the top keeps D43a's 1.5rem there.
-  const py = sitsBeside(band) ? 2.5 : column.width >= 32 * rem() ? 2 : 1.5;
-  const pb = sitsBeside(band) ? py : 2;
+  // the top keeps D43a's 24 there.
+  const py = sitsBeside(band) ? 40 : column.width >= 32 * rem() ? 32 : 24;
+  const pb = sitsBeside(band) ? py : 32;
   await expect(
-    Math.abs(parseFloat(gridStyle.paddingTop) - py * rem()),
+    Math.abs(parseFloat(gridStyle.paddingTop) - py * unit),
   ).toBeLessThanOrEqual(0.5);
   await expect(
-    Math.abs(parseFloat(gridStyle.paddingBottom) - pb * rem()),
+    Math.abs(parseFloat(gridStyle.paddingBottom) - pb * unit),
   ).toBeLessThanOrEqual(0.5);
 
   if (!sitsBeside(band)) {
@@ -568,7 +766,9 @@ const expectArrangement = async (
     // 2026-09-26: "name and speciality of doctor to appear above the photo
     // and to be centered … filozofia mea sits well below photo"): the words
     // column is no box at all, the pair climbs above the figure, the card
-    // stays under it.
+    // stays under it. Never inside the band scale: its step is wider than
+    // this one.
+    await expect(regime).toBe(false);
     await expect(getComputedStyle(words).display).toBe('contents');
     // D62 gave the card a box of its own beside the picture — and below the
     // step it dissolves as well, so the card (and a slot) are still the
@@ -579,8 +779,8 @@ const expectArrangement = async (
     // THE ONE TRACK NEVER OUTGROWS THE COLUMN (2026-09-27, CI on PR #110 —
     // DoctorIntro.tsx's THE STACKED TRACK paragraph): the grid's single
     // column is `minmax(0,1fr)`, so the picture box's min-content cannot
-    // widen it past ui/Container's box. Read three ways, because the band's
-    // own `expectNoSidewaysScroll` cannot see this overflow — it lands in the
+    // widen it past the column. Read three ways, because the band's own
+    // `expectNoSidewaysScroll` cannot see this overflow — it lands in the
     // gutter, still inside the full-bleed band: the resolved track against the
     // column, the grid's own scrollable width against its box, and every
     // stacked item — the picture first — inside the column's edges.
@@ -633,22 +833,23 @@ const expectArrangement = async (
   const wordsBox = words.getBoundingClientRect();
   await expect(getComputedStyle(words).display).toBe('flex');
   await expect(getComputedStyle(words).flexDirection).toBe('column');
-  // D63 · THE SPACING, read off the column — `cqi` resolves against
-  // ui/Container, whose border box IS the column: the inset before the
-  // picture (15 % of the gutter, capped at 1.875rem), the picture's ONE
-  // width (a third), the gap (a sixth, clamped to 3rem–10.5rem), and the
-  // words in the rest, to the column's right edge. Never assumed from the
-  // pinned width.
+  // D63 · THE SPACING, read off the column — the inset before the picture (15
+  // % of the gutter, its cap 30 design pixels), the picture's ONE width (a
+  // third), the gap (a sixth, clamped to 48–168 design pixels), and the words
+  // in the rest, to the column's right edge. Never assumed from the pinned
+  // width.
   const cutout = picture.querySelector('img');
   if (!cutout) throw new Error('DoctorIntro story: the cutout is missing');
-  const inset = Math.min(0.01875 * column.width, 1.875 * rem());
+  const inset = Math.min(0.01875 * column.width, 30 * unit);
   // A third of the column, never wider than the cutout's own file (D63).
   const third = thirdOf(column.width, cutout);
-  // The clamp's 3rem floor never binds from the step up (a sixth of a 48rem
-  // column is 8rem) and the inset's 1.875rem cap only past a ~2030px window,
-  // which no sampled width reaches — both spelled as the class spells them,
-  // and the class itself is pinned token for token by the unit suite.
-  const gap = Math.min(Math.max(3 * rem(), column.width / 6), 10.5 * rem());
+  // The clamp's floor never binds from the step up (a sixth of a 48rem
+  // column is 8rem; inside the scale a sixth of the design is 184 of its
+  // pixels against the floor's 48), and the inset's cap binds only outside
+  // the scale, past a ~2030px window, which no sampled width reaches — both
+  // spelled as the class spells them, and the class itself is pinned token
+  // for token by the unit suite.
+  const gap = Math.min(Math.max(48 * unit, column.width / 6), 168 * unit);
   await expect(
     Math.abs(parseFloat(gridStyle.paddingLeft) - inset),
   ).toBeLessThanOrEqual(0.5);
@@ -704,12 +905,13 @@ const expectArrangement = async (
     ),
   ).toBeLessThanOrEqual(1);
   await expect(drawn.right).toBeLessThan(wordsBox.left);
-  // THE TOP CONTAINER: the pair on the words' left edge 1.5rem in — the ONE
-  // left edge it shares with the card (D64) — as wide as what that leaves
-  // ("way wider"), a ninth of the column under the row's top (D64's spelling
-  // of D63's quarter of the picture); both lines start-aligned ("sticky to
-  // left side"), never past the right edge, and balanced when they wrap.
-  const edge = wordsBox.left + 1.5 * rem();
+  // THE TOP CONTAINER: the pair on the words' left edge 24 design pixels in —
+  // the ONE left edge it shares with the card (D64) — as wide as what that
+  // leaves ("way wider"), a ninth of the column under the row's top (D64's
+  // spelling of D63's quarter of the picture); both lines start-aligned
+  // ("sticky to left side"), never past the right edge, and balanced when
+  // they wrap.
+  const edge = wordsBox.left + 24 * unit;
   await expect(Math.abs(pairBox.left - edge)).toBeLessThanOrEqual(1);
   if (pictureBox.width < third - 1) {
     // THE GIVE: the picture's track yielded, which only the words' floor —
@@ -730,12 +932,13 @@ const expectArrangement = async (
     await expect(box.right).toBeLessThanOrEqual(wordsBox.right + 1);
   }
   // THE BOTTOM CONTAINER: everything under the pair, down to the row's
-  // floor; the card on the same left edge, 36rem wide where the words leave
-  // that much and their whole width where they do not (D63); and the card —
-  // with a slot under it, if any — CENTRED in that height: the same space
-  // above as below ("same space between it and headings and eyebrow
-  // contianer as to bottom of container it is within"), never under 1.5rem,
-  // and exactly 1.5rem wherever the words, not the picture, set the row.
+  // floor; the card on the same left edge, 576 design pixels wide where the
+  // words leave that much and their whole width where they do not (D63); and
+  // the card — with a slot under it, if any — CENTRED in that height: the
+  // same space above as below ("same space between it and headings and
+  // eyebrow contianer as to bottom of container it is within"), never under
+  // 24 design pixels, and exactly 24 wherever the words, not the picture,
+  // set the row.
   const philosophyBox = philosophy.getBoundingClientRect();
   await expect(getComputedStyle(philosophy).display).toBe('grid');
   await expect(
@@ -745,7 +948,7 @@ const expectArrangement = async (
     Math.abs(philosophyBox.bottom - wordsBox.bottom),
   ).toBeLessThanOrEqual(1);
   await expect(
-    Math.abs(credoBox.width - Math.min(36 * rem(), wordsBox.right - edge)),
+    Math.abs(credoBox.width - Math.min(576 * unit, wordsBox.right - edge)),
   ).toBeLessThanOrEqual(1);
   await expect(Math.abs(credoBox.left - edge)).toBeLessThanOrEqual(1);
   const last = (
@@ -754,9 +957,9 @@ const expectArrangement = async (
   const above = credoBox.top - pairBox.bottom;
   const below = rowBottom - last.bottom;
   await expect(Math.abs(above - below)).toBeLessThanOrEqual(1);
-  await expect(above).toBeGreaterThanOrEqual(1.5 * rem() - 0.5);
+  await expect(above).toBeGreaterThanOrEqual(24 * unit - 0.5);
   if (!pictureSetsTheRow(band))
-    await expect(Math.abs(above - 1.5 * rem())).toBeLessThanOrEqual(1);
+    await expect(Math.abs(above - 24 * unit)).toBeLessThanOrEqual(1);
 };
 
 /**
@@ -782,8 +985,14 @@ const expectArrangement = async (
  * `text-xl`) — narrower and taller since round 2k (D51b's 28rem), and since
  * D63 up to 36rem again, the owner's "like 30% wider", its title on the
  * `band` step's 36px wherever the card is ~498px or wider (§15.24). The
- * band's rhythm is round 2j's (D43a: 40px above the row at this width),
- * untouched by D51 and D62–D64.
+ * band's rhythm is round 2j's (D43a: 40px above the row), untouched by D51
+ * and D62–D64.
+ * **And since 2026-10-13, at this width, the 1401 design × s** (THE BAND
+ * SCALE, CLAUDE.md §15.32 round 4 — the owner's "make the exact same thing
+ * with the heading and eyebrow from the individual dr page"): s ≈ 1.10 here,
+ * so the name reads ~71px where the `hero` clamp gave it ~70, the specialty
+ * ~15.4px, the card ~576px wide and its title ~39.5px — every length the
+ * design's × s, the play's every number written so.
  *
  * **1536 · 390 · 320 (`stress-320`):** the split, the stack, and the stack at
  * the accessibility width, where 288px of column has to hold a 900×1200 figure,
@@ -847,7 +1056,7 @@ export const Default: Story = {
     await expect(label).toBeVisible();
     // D43c: the card's label and the specialty are ONE size, by the engine's
     // own numbers.
-    await expectEyebrowsMatch(eyebrow, label);
+    await expectEyebrowsMatch(eyebrow, label, (await scaleOf(band)).unit);
     // What only a stylesheet can prove: the marks are GENERATED around the
     // words (ReviewCard's recipe — the language's own glyphs from
     // `quotes: auto`), the words are JUSTIFIED (the owner's word, 2026-09-25 —
@@ -882,13 +1091,18 @@ export const Default: Story = {
  * tagged `no-visual` so the pixel net never photographs it (the Sections/*
  * matrix samples 390 + 1536; tests/visual/stories.spec.ts skips the tag): it
  * exists because the Vitest storybook project honours the viewport pin, and
- * 1280 is the narrowest laptop the §7 matrix samples: the picture's third is
- * at its smallest there and the words are the TALLER container (the demo
- * doctor's pair over a card the 36rem track cannot reach), so it is the width
- * where the WORDS set the row and the cutout GROWS to their floor (D64) — the
- * branch the play asserts outright, so `expectArrangement`'s growth formula
- * is walked at a sampled width. The whole Default play runs here — the
- * arrangement, the eyebrows, the generated quote marks and the one-line pin.
+ * 1280 is the narrowest laptop the §7 matrix samples — the LOW END of the
+ * band scale (s ≈ 0.91 under a classic scrollbar), where its design pixel is
+ * smaller than a CSS pixel. The play asserts that it really is inside the
+ * scale, and that the WORDS set the row there and the cutout GROWS to their
+ * floor (D64), so `expectArrangement`'s growth formula is walked at a sampled
+ * width. Inside the scale that branch no longer depends on the width — the
+ * picture's third and the words grow together — so it is the DESIGN's: the
+ * demo doctor's pair over the everyday card stands 521.6 design pixels tall
+ * against the picture's 491.6 (DoctorIntro.tsx's THE BAND SCALE). Until
+ * 2026-10-13 it was this width's own fact: the third at its smallest, beside
+ * words in rem. The whole Default play runs here — the arrangement, the
+ * eyebrows, the generated quote marks and the one-line pin.
  *
  * PLUS ONE BELT (2026-09-27, DoctorIntro.tsx's THE STACKED TRACK paragraph):
  * the row never holds the grid wider than its box, and the two containers'
@@ -916,13 +1130,13 @@ export const Notebook: Story = {
         name: 'Dr. Elena Marin',
       }),
     );
-    const containerBox = band.firstElementChild as HTMLElement;
-    const grid = containerBox.firstElementChild as HTMLElement;
-    const column = containerBox.getBoundingClientRect();
-    const { picture, words } = boxesOf(band);
-    // Never vacuous: the belt is about the ROW, so the row must be on — and
-    // at this width the WORDS set it, so the cutout has grown (D64).
+    const { frame, grid, picture, words } = boxesOf(band);
+    const column = frame.getBoundingClientRect();
+    // Never vacuous: the belt is about the ROW, so the row must be on — drawn
+    // in the band scale, the runner having a mouse — and the WORDS set it, so
+    // the cutout has grown (D64).
     await expect(sitsBeside(band)).toBe(true);
+    await expect((await scaleOf(band)).regime).toBe(true);
     await expect(pictureSetsTheRow(band)).toBe(false);
     await expect(grid.scrollWidth).toBeLessThanOrEqual(grid.clientWidth);
     await expect(picture.getBoundingClientRect().left).toBeGreaterThanOrEqual(
@@ -935,23 +1149,32 @@ export const Notebook: Story = {
 };
 
 /**
- * THE EVERYDAY OPENER AT 1920 — PLAY ONLY, `no-visual` like `Notebook`, at
- * §7's Desktop width: the OTHER branch of D64's one floor. Here the picture
- * at its third (507 × 676px on a 1920 window's column under a classic
- * scrollbar) is taller than the words — the demo doctor's one-line name over
- * a card the 36rem track holds in three lines — so the PICTURE sets the row: the cutout keeps exactly its third and
- * nothing grows, the words' container stretches to the picture's floor, and
- * the card stands centred in the height the name leaves with MORE than the
- * minimum 1.5rem above and below. The whole Default play runs first (the
- * arrangement's own formula covers both branches); this one asserts the
- * branch, so a change that made the words outgrow the picture on a desktop —
+ * THE OPENER AT 1920, WITH A ONE-SENTENCE CREDO — PLAY ONLY, `no-visual`
+ * like `Notebook`, at §7's Desktop width: the OTHER branch of D64's one
+ * floor, and the HIGH END of the band scale the runner samples (s ≈ 1.38
+ * under a classic scrollbar). Here the picture at its third is taller than
+ * the words, so the PICTURE sets the row: the cutout keeps exactly its third
+ * and nothing grows, the words' container stretches to the picture's floor,
+ * and the card stands centred in the height the name leaves with MORE than
+ * the minimum 24 design pixels above and below. The whole Default play runs
+ * first (the arrangement's own formula covers both branches); this one
+ * asserts the branch, so a change that made the words outgrow the picture —
  * a taller name step, a narrower track — fails a play instead of moving a
  * frame nobody samples.
+ * THE ONE ARG OF ITS OWN, since 2026-10-13: the credo cut to its first
+ * sentence (`CREDOS.roShort`). Until the band scale this frame wore the
+ * everyday card, and the WIDTH chose the branch — at 1920 the picture's third
+ * (507 × 676px) outgrew the words in rem. Inside the scale both grow together
+ * and the branch is the design's at every width: the everyday words are the
+ * taller (521.6 against 491.6 design pixels — the `Notebook` frame's branch),
+ * so the picture's branch is reached by shorter words, as on a doctor's page
+ * whose credo is short (DoctorIntro.tsx's THE BAND SCALE).
  */
 export const Desktop: Story = {
   ...Default,
   tags: ['no-visual'],
   globals: { locale: 'ro', viewport: { value: 'desktop' } },
+  args: { credo: CREDOS.roShort },
   play: async (context) => {
     await Default.play?.(context);
 
@@ -962,6 +1185,7 @@ export const Desktop: Story = {
       }),
     );
     await expect(sitsBeside(band)).toBe(true);
+    await expect((await scaleOf(band)).regime).toBe(true);
     await expect(pictureSetsTheRow(band)).toBe(true);
     const { picture } = boxesOf(band);
     const cutout = picture.querySelector('img');
@@ -980,7 +1204,7 @@ export const Desktop: Story = {
     if (!pair) throw new Error('DoctorIntro story: the name lost its pair');
     await expect(
       credo.getBoundingClientRect().top - pair.getBoundingClientRect().bottom,
-    ).toBeGreaterThan(1.5 * rem() + 1);
+    ).toBeGreaterThan(24 * (await scaleOf(band)).unit + 1);
   },
 };
 
@@ -998,6 +1222,10 @@ export const Desktop: Story = {
  * arrangement: every line of the pair inside the words' right edge, which
  * is the column's, and nothing scrolling sideways. Without the floor the
  * name would cross into the gutter; the play turns red on `minmax(0,1fr)`.
+ * And it is the one beside-the-picture frame OUTSIDE the band scale — a
+ * 772px column, under the scale's own step — so the theme's rem arithmetic
+ * of D62–D64 is walked here exactly as before 2026-10-13, which the play
+ * asserts as well (DoctorIntro.tsx's THE BAND SCALE).
  */
 export const AtTheStep: Story = {
   tags: ['no-visual'],
@@ -1028,12 +1256,13 @@ export const AtTheStep: Story = {
       'Meine Philosophie',
       'Behandlungsschwerpunkte',
     );
-    // Never vacuous: the row is on, just past the step…
-    const column = (
-      band.firstElementChild as HTMLElement
-    ).getBoundingClientRect();
+    // Never vacuous: the row is on, just past the step — and OUTSIDE the band
+    // scale, whose step (a 56rem column, floored at 896px) lies above this
+    // one, so every length below is the theme's rem, as before 2026-10-13…
+    const column = boxesOf(band).frame.getBoundingClientRect();
     await expect(sitsBeside(band)).toBe(true);
     await expect(column.width).toBeLessThan(49 * rem());
+    await expect((await scaleOf(band)).regime).toBe(false);
     // …and the picture's track really gave way to the name.
     const { picture } = boxesOf(band);
     await expect(picture.getBoundingClientRect().width).toBeLessThan(
@@ -1057,9 +1286,13 @@ export const AtTheStep: Story = {
  * doctor page should not invent a third button look. Beside the picture the
  * row shares D62's bottom container with the card — in its track of up to
  * 36rem (D63), where the two 16rem bases sit side by side once the track
- * passes ~33rem (a window of ~1400px and up, this story's 1536 among them)
- * and stack below that — and the card and the row are centred TOGETHER in
- * the height the name leaves.
+ * passes ~33rem and stack below that — and the card and the row are centred
+ * TOGETHER in the height the name leaves. Inside THE BAND SCALE (a laptop
+ * or a desktop, this story's 1536 among them) the track, the bases and their
+ * gap are the design's × s, and the design's track — 524.6 of its pixels —
+ * holds the two 256-pixel bases and their 12-pixel gap side by side by 0.6 of
+ * a pixel: one row at every such width, on a margin the owner would see go
+ * the day either number moves.
  *
  * Both are plain `<a href>` wearing ui/Button through `asChild` — every
  * internal navigation on this site is a full document load (§15.13). The
@@ -1180,7 +1413,7 @@ export const GermanLongest: Story = {
     await expect(specialty).toBeVisible();
     const label = within(credo).getByText('In meinen Worten');
     await expect(label).toBeVisible();
-    await expectEyebrowsMatch(specialty, label);
+    await expectEyebrowsMatch(specialty, label, (await scaleOf(band)).unit);
     await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },
@@ -1232,7 +1465,7 @@ export const PseudoLocale: Story = {
     await expect(specialty).toBeVisible();
     const label = within(credo).getByText('Îñ çúvíñťélé mélé ·······');
     await expect(label).toBeVisible();
-    await expectEyebrowsMatch(specialty, label);
+    await expectEyebrowsMatch(specialty, label, (await scaleOf(band)).unit);
     await expectArrangement(band, credo);
     await expectNoSidewaysScroll(band);
   },

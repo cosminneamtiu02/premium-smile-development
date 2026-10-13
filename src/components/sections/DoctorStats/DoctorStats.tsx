@@ -43,7 +43,8 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // component as on main page with the stats on the team page between map and
 // helping staff"). The same band, three props apart — four since 2026-10-02,
 // `scaled` below — each with the doctor page's answer as its default, so that
-// page's call did not change by a character (§6.6); Home and Team pass the
+// page's call did not change by a character (§6.6) — `scaled` excepted since
+// 2026-10-13, when the doctor page passed it too; Home and Team pass the
 // same answers:
 //   · `ground` — 'tint' (TintedBand, the GROUND paragraph) or 'page': the
 //     shape of every other band on those two pages (DoctorShowcase,
@@ -55,8 +56,11 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     answers, so the eyebrow and the title stand where every neighbouring
 //     band's do;
 //   · `lead` — optional; Home and Team pass none, and then no <p> renders;
-//   · `scaled` — false (the doctor page) or true: Home and Team draw the band
-//     in THE BAND SCALE, the next paragraph.
+//   · `scaled` — false or true: THE BAND SCALE, the next paragraph. Home and
+//     Team pass it since 2026-10-02 and the doctor page since 2026-10-13
+//     (§15.32 round 4, the whole page in the scale), so no page relies on its
+//     default any more — `false` is the band's own unscaled self, the
+//     stories' workbench (the WHAT STAYS UNSCALED bullet).
 // Everything else — the rhythm box, the tiles, the island, the way every
 // string arrives — is one code path on all three pages (`scaled` adds classes
 // to two of its boxes and nothing else). There the three tiles are the
@@ -117,9 +121,17 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     alike — every ratio INSIDE a tile is today's, the ones the owner called
 //     perfect. The opener keeps the band's own pixel, so its <h2> and its
 //     eyebrow stay the doctors band's.
-//   · WHAT STAYS UNSCALED. The doctor page: `scaled` is false by default
-//     (§6.6), because that page's other bands do not scale yet and its
-//     headings must stay one size with theirs. Every phone and every tablet:
+//   · WHAT STAYS UNSCALED. No page, since 2026-10-13: the doctor page kept
+//     the default until then — its other bands did not scale and its
+//     headings had to stay one size with theirs — and passes `scaled` since
+//     its whole page joined the scale (§15.32 round 4: "make the exact same
+//     thing with the heading and eyebrow from the individual dr page" —
+//     "Whole page, like Home"), where on its lilac ground, centred and with
+//     its lead, the band is Home's numbers band to the design pixel. The
+//     default stays `false` (§6.6 — the prop arrived additive) and is the
+//     band's own stories' unscaled self; wearing the scale unconditionally
+//     and deleting the prop is the recorded cleanup lever, ClinicLocation's
+//     too. Every phone and every tablet:
 //     below the step, on every touch device and in an engine that cannot
 //     register custom properties nothing is declared and nothing remapped,
 //     every pixel as before — the owner's "on phone and tablet it looks
@@ -452,9 +464,11 @@ type DoctorStatsOwnProps = Readonly<{
    * centred past it — so its eyebrow and <h2> are the doctors band's size and
    * stand on the doctors band's left edge at every width; and the tiles draw
    * at 9/8 of that pixel (`TILE_ZOOM`), so a tile's sentence reads a doctor
-   * card's quote size. Home and Team pass it. FALSE by default (§6.6): the
-   * doctor page's other bands do not scale yet and its headings must stay one
-   * size with theirs, so that page's call did not change by a character.
+   * card's quote size. Home, Team and — since 2026-10-13, its whole page in
+   * the scale (§15.32 round 4) — the doctor page pass it. FALSE by default
+   * (§6.6: the prop arrived additive, so the doctor page's call did not
+   * change by a character until that page joined the scale); no page relies
+   * on the default now — it is the band's own stories' unscaled self.
    * Below the step, on every touch device and in an engine that cannot
    * register custom properties it changes no pixel.
    */

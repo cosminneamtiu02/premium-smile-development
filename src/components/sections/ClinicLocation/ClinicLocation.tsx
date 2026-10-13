@@ -360,7 +360,8 @@ export type ClinicLocationProps = Readonly<{
    * band of the Team page wears the scale) and the doctor pages since
    * 2026-10-13 — the owner's "as the current map on home page is now … on
    * absoultey every page" (§15.32 round 3), so the map is one band wherever
-   * it stands, though the doctor page's other bands do not scale yet.
+   * it stands — and, since round 4 the same day, every other band of the
+   * doctor page scales with it.
    * app/[locale]/page-twins.test.ts holds every page and twin to the bare
    * flag. Default `false`, the band's plain rem self — what its own stories
    * draw — because the prop arrived additive (§6.6); wearing the scale

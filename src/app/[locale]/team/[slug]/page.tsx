@@ -39,6 +39,22 @@ import { toStatTiles } from '../stat-tiles';
 // Round 1's „Echipa mea" band (two assistants beside the week) is GONE — the
 // owner dropped it outright (D13); the week moved into band 2's card.
 //
+// ── THE WHOLE PAGE IN THE BAND SCALE (2026-10-13, CLAUDE.md §15.32 round 4).
+// The owner, verbatim: "take current heading and eyebrow from main page. look
+// how reactive and nice it is. make the exact same thing with the heading and
+// eyebrow from the individual dr page" — and, asked whether the content under
+// the titles should grow with them, "Whole page, like Home". So on a laptop
+// or a desktop every band here draws in ui/Container's ONE design pixel, the
+// owner's 1401 window scaled to the column, as every band of Home and Team
+// does: one heading size and one left edge across the five bands at every
+// width, and everything under each heading — the biography, the timeline,
+// the tiles, the credo card, the name itself — growing and shrinking with it.
+// The three bands that live only on this page wear the scale themselves
+// (DoctorIntro, DoctorProfile, DoctorCourses — each header's THE BAND SCALE);
+// the two this page shares with Home and Team take their `scaled` from here,
+// one word each (the JSX's notes). Phones, touch tablets and every window
+// under the step are what they were, to the pixel.
+//
 // ── THIS FILE IS THE ONE POPULATOR (run ledger D1, the services page's
 // precedent). The four content bands are DUMB: DoctorIntro, DoctorProfile,
 // DoctorCourses and DoctorStats hold no message key, import no data and do
@@ -260,8 +276,13 @@ export default async function DoctorPage({
           numbers — the island counts up to them — and are printed by
           `Intl.NumberFormat` in the visitor's language (§8.3), never by the
           band; the icon ids become glyphs in ../stat-tiles.tsx, the one
-          mapping this page and its twin share (G2-R2 tier 3). */}
+          mapping this page and its twin share (G2-R2 tier 3). `scaled` since
+          2026-10-13: THE BAND SCALE on a laptop or desktop, the tiles at 9/8
+          of the band's pixel, exactly the numbers band Home and Team draw —
+          here on its lilac ground, centred, with its lead (the header's THE
+          WHOLE PAGE IN THE BAND SCALE). */}
       <DoctorStats
+        scaled
         eyebrow={t('doctor.stats.eyebrow')}
         title={t('doctor.stats.title')}
         lead={t('doctor.stats.lead')}
@@ -282,15 +303,10 @@ export default async function DoctorPage({
           Team draw to the pixel (CLAUDE.md §15.32 round 3 — the owner,
           2026-10-13: "as the current map on home page is now, i need it
           updated reactivity wise on absoultey every page … with this i am
-          refering to individual doctor page"). The page's OTHER bands do
-          not scale yet, so on a laptop or desktop the map band parts from
-          them at every window but the 1401 reference: its eyebrow and <h2>,
-          its own padding (the gap from the numbers band to its eyebrow
-          65px at a 1140 window and 110 at 1920, where it was 80), past a
-          ≈ 1939px window its left edge — the band centres in its cap — and,
-          under a browser zoom, it alone keeps its size until the column
-          drops under the step. The recorded price (§15.32 round 3); the
-          numbers band right above keeps its default. */}
+          refering to individual doctor page"). Since round 4 the same day
+          every other band of this page scales too (the header's THE WHOLE
+          PAGE IN THE BAND SCALE), so the map's eyebrow and <h2> are one
+          size and one left edge with theirs at every width. */}
       <ClinicLocation scaled />
     </>
   );

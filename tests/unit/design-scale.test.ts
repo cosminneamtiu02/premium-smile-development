@@ -16,7 +16,8 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 // `bandColumnClasses` (the cap and the centring) — which every band under the
 // Home hero and every band of the Team page wears, so all of their headings
 // are one size and one offset (sections/DoctorShowcase's D10 invented it,
-// alone, on 2026-10-01). Four things can rot silently there, and this file is
+// alone, on 2026-10-01), and with them the Services page's price list (round
+// 2) and every band of a doctor's page (round 4, 2026-10-13). Four things can rot silently there, and this file is
 // the machine for all four:
 //   · A STEP LEFT BEHIND. A theme length with no remap line stays in rem
 //     inside the band: the one utility that reads it keeps its size while
@@ -42,9 +43,11 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 //     the chain one spelling worn twice (KEEP IN SYNC); the zoom one variable
 //     with ONE setter (DoctorStats' tiles, at 9/8); and the gate ONE custom
 //     variant in globals.css with exactly its two conditions. No other
-//     product file in src/ declares the pixel or spells the remap — the five
-//     wearers IMPORT both strings — and the one class that must re-spell the
-//     chain as a literal (the staff tile's width) spells the same chain.
+//     product file in src/ declares the pixel or spells the remap — every
+//     wearer (WEARERS below) IMPORTS both strings — and the few classes that
+//     must re-spell the chain as a literal (the staff tile's width and gap,
+//     the doctors band's ribbon share, the doctor page's name) spell the
+//     same chain.
 //   · A PICTURE ASKED FOR AT THE WRONG SIZE (G2, T5/R7). PersonnelCard's
 //     CUTOUT_SIZES tells the browser how wide the doctor's cutout is drawn,
 //     and each number in it is derived from the band's: the vw share from
@@ -449,9 +452,15 @@ const productFiles = readdirSync(new URL('src/', REPO), {
 /** The bands that wear THE BAND SCALE (§15.32): every band under the Home
  *  hero and every band of the Team page — the doctors, the numbers, the map,
  *  the reviews' opener and the staff — and, since round 2 the same evening,
- *  the Services page's one band, the price list (its menu and its cards). */
+ *  the Services page's one band, the price list (its menu and its cards);
+ *  and, since round 4 (2026-10-13), every band of a doctor's page — the three
+ *  that live only there wear it themselves (the opener, the biography and the
+ *  courses), the numbers and the map take `scaled` from the page. */
 const WEARERS = [
   'components/sections/ClinicLocation/ClinicLocation.tsx',
+  'components/sections/DoctorCourses/DoctorCourses.tsx',
+  'components/sections/DoctorIntro/DoctorIntro.tsx',
+  'components/sections/DoctorProfile/DoctorProfile.tsx',
   'components/sections/DoctorShowcase/DoctorShowcase.tsx',
   'components/sections/DoctorStats/DoctorStats.tsx',
   'components/sections/PriceList/PriceList.tsx',
@@ -600,7 +609,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(arbitrary(samples[3]?.utility ?? '')?.name).toBe('--ribbon-unit');
   });
 
-  it('is the ONLY product file in src/ that declares a design pixel or spells the remap — and every band of Home and Team and the price list wears it by IMPORTING both strings', () => {
+  it('is the ONLY product file in src/ that declares a design pixel or spells the remap — and every band of Home, Team, the price list and a doctor’s page wears it by IMPORTING both strings', () => {
     const spellers = productFiles
       .filter((name) =>
         /design-scale|--scale-px/.test(tsCode(read(`src/${name}`))),
@@ -623,11 +632,16 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
 
   it('lets the GATE CHAIN be re-spelled only where Tailwind needs a literal of its own — and only as the regime’s chain', () => {
     // A class that must follow the regime but is none of its strings — the
-    // staff tile's width and its row's gap, and the doctors band's ribbon
-    // drawn 30 % thinner (DoctorShowcase D11, §15.26 round 6) — spells the
+    // staff tile's width and its row's gap, the doctors band's ribbon drawn
+    // 30 % thinner (DoctorShowcase D11, §15.26 round 6), and the doctor
+    // page's name, whose `hero` step reads the viewport and so is the one
+    // size the remap cannot redraw (DoctorIntro's THE BAND SCALE, §15.32
+    // round 4) — spells the
     // chain itself, because Tailwind reads class names from source text. Every such token must carry
     // the SAME chain, gate first, so a tile can never switch at another width
-    // than the band. The gate is looked for ANYWHERE in a chain (a reordered
+    // than the band (the doctor page's name reads a box capped at 96rem, so
+    // for it that holds at any root of 9⅓px or more — DoctorIntro's THE NAME
+    // records the bound). The gate is looked for ANYWHERE in a chain (a reordered
     // `@4xl:scalable:` is caught as itself) and in backtick literals too (the
     // Opus review's census probe).
     const chain = regime[0]?.variants ?? [];
@@ -644,6 +658,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(
       [...new Set(gatedTokens.map(({ name }) => name))].toSorted(),
     ).toEqual([
+      'components/sections/DoctorIntro/DoctorIntro.tsx',
       'components/sections/DoctorShowcase/DoctorShowcase.tsx',
       'components/sections/TeamRoster/TeamRoster.tsx',
       'components/ui/Container/Container.tsx',
@@ -678,6 +693,18 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       name: '--ribbon-width-share',
       value: '0.7',
     });
+    // The doctor page's one: the name — the `hero` step's value at the
+    // owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26 spacing
+    // steps, so inside the scale it is that design size × s like everything
+    // round it (DoctorIntro's THE BAND SCALE). In the SPACING step, never in
+    // `--scale-px`, which only ui/Container may name (the test above).
+    expect(
+      gatedTokens
+        .filter(({ name }) => name.endsWith('DoctorIntro.tsx'))
+        .map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual([
+      'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
+    ]);
   });
 
   it('has a gate-chain reader with teeth — a backtick class and a reordered chain are both seen', () => {

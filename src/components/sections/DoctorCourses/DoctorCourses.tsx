@@ -1,6 +1,10 @@
 import { useId, type ComponentPropsWithRef, type ReactElement } from 'react';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
-import { Container } from '@/components/ui/Container/Container';
+import {
+  Container,
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
 import { cx } from '@/lib/cx/cx';
 import { CourseTimeline } from './CourseTimeline';
 
@@ -14,9 +18,11 @@ import { CourseTimeline } from './CourseTimeline';
 // round2, unit R4), reshaped into the timeline by that round's contract R6
 // (round 2e), given its line on the left and its lit year by contract R10
 // (round 2g), and its larger years, doubled gaps and forward-coming current
-// subsection by builder A5 (round 2j, D44); the D-numbers cited below are
-// that run's ledger decisions and are the anchors other files quote (§17.7 —
-// never a line number).
+// subsection by builder A5 (round 2j, D44) — and, since 2026-10-13, drawn in
+// ui/Container's band scale on a laptop or desktop with the rest of the
+// doctor page (THE BAND SCALE, below; CLAUDE.md §15.32 round 4); the
+// D-numbers cited below are that run's ledger decisions and are the anchors
+// other files quote (§17.7 — never a line number).
 //
 // Owner's brief, verbatim: "organised in a form of sub-sections, each
 // sub-section having just the heading without eyebrow with the year and then
@@ -135,7 +141,13 @@ import { CourseTimeline } from './CourseTimeline';
 //     reaches its 56rem cap soon after (the column is 80 % of the viewport
 //     between the gutters, so at a ~1120px one), and from there on a course
 //     line wraps at ~836px of text (56rem less the group's 40px and the
-//     list's 20px) instead of the laptop column's full ~1230.
+//     list's 20px) instead of the laptop column's full ~1230 — on a touch
+//     tablet, that is, and in any window outside THE BAND SCALE (below).
+//     Under a mouse, from a column of max(56rem, 896px), the cap and every
+//     other length are design pixels: the rail stops at 896 of them, 836
+//     of text, so a course line keeps the 1401 window's measure IN
+//     CHARACTERS at every laptop and desktop width — 726px of rail at the
+//     scale's step, 983 at a 1536 laptop, 1244 past the cap.
 //
 // ── THE LIST IS DoctorProfile's ROUND-1 RECIPE — `list-disc ps-5`, the
 // owner's "with dot as they are now" — its lines in `ink` in both states
@@ -169,6 +181,74 @@ import { CourseTimeline } from './CourseTimeline';
 // container-query context; the stepped `py` sits on the rhythm box one level
 // in, because an element cannot query its own size (ClinicLocation's
 // spelling, and DoctorIntro's).
+//
+// ── THE BAND SCALE (2026-10-13, CLAUDE.md §15.32 round 4 — ui/Container's THE
+// BAND SCALE). The owner, verbatim: "take current heading and eyebrow from
+// main page. look how reactive and nice it is. make the exact same thing with
+// the heading and eyebrow from the individual dr page" — and, asked whether
+// what stands under the headings should grow with them, "Whole page, like
+// Home". So the rhythm box wears BOTH of ui/Container's band-scale strings
+// after its `py`, `bandColumnClasses` then `bandScaleClasses` (that file's
+// recipe rule 5; DoctorStats' order): on a laptop or a desktop — a mouse or
+// trackpad, a column of max(56rem, 896px), from a ~1120–1140px window — the
+// band is ONE design, the owner's 1401 window, drawn in the design pixel
+// every band of Home and Team draws in, s = min(column, 96rem) / 1106, and it
+// caps and centres at the same 96rem column: its eyebrow (14 × s px) and its
+// <h2> (36 × s px) are one size and one left edge with every other opener on
+// the page, and everything under them grows and shrinks with them.
+// UNCONDITIONAL — no `scaled` prop: this band's only page is the doctor page,
+// and every band there scales (TeamRoster's THE BAND SCALE, the same
+// argument; DoctorCourses.test.tsx refuses the prop by type).
+//   · WHAT SCALES FOR FREE — every length, because every length is a theme
+//     step: the audit of 2026-10-13 found no rem or px literal in this file
+//     or in ./CourseTimeline that is part of the design, and the remap
+//     (globals.css, THE DESIGN SCALE) redraws the theme's variables, so the
+//     rhythm box's `py`, the opener, the rail's top margin, its `gap-20` and
+//     its `max-w-4xl` cap, each group's 40px indent, every stretch's inset,
+//     seat, 2px width and reach, every dot's seat and 12px size, the years'
+//     30px `section` step and the lines' 18px `text-lg` are all design
+//     lengths. Line heights are unitless, and so is the motion — the 1.04,
+//     the forward overshoot, the lit dot's 1.25 and its pop — so every ratio
+//     holds. DoctorCourses.test.tsx and CourseTimeline.test.tsx pin the
+//     audit: no bracketed length anywhere in the band, at rest or lit, and
+//     the dots' `ring-4` the one px utility.
+//   · WHAT DOES NOT. The dots' ring: `ring-4` is a 4px box-shadow at every
+//     root size and every scale (globals.css keeps borders and rings as
+//     drawn), so the bare ground above a dot — the 0.25rem break plus the
+//     dot's `top-3`, less the ring — is 16 design pixels less 4px: 9px at
+//     the scale's smallest pixel (s ≈ 0.81, at its step), 13.6 at the 1536
+//     laptop, 18.2 past the cap; a lit stretch, carried on by its group's
+//     1.04, still stops short of the next ring at every s (the island's RAIL
+//     paragraph). And the container steps (`@lg`, `@3xl`, the opener's
+//     `@md`) still read ui/Container's column in plain rem — Tailwind writes
+//     a container query's size into the sheet as a number — but the regime
+//     starts past the widest of them, so inside it every step holds.
+//   · THE FORWARD MOTION STAYS IN THE BAND'S BOX. The rail is capped at 896
+//     of the box's 1106 design pixels, so a group growing rightward from
+//     its left edge has room to reach 1.234 × before it meets the box's edge,
+//     against the ~1.065 of its overshoot: the current year never reaches
+//     the gutter on a laptop or desktop, and THE BELT (next) trims nothing
+//     there. The `Current` story pins it.
+//   · MEASURED in this band's stories (Vitest's storybook project, Chromium,
+//     a mouse, the 1536 × 864 laptop pin — a 1213.8px column, s = 1.0975):
+//     the <h2> 39.51px, the eyebrow 15.36, every year 32.92, every course
+//     line 19.75, every dot 13.16 wide, the line 2.19, the indent 43.90, 87.80
+//     between years, the rail 983.3 on the column's edge, the box the
+//     column's own 1213.8 (the cap binds only past a 1536px column, ≈ a
+//     1939px window, where the box stands 1536 wide and centred); a one-line
+//     year 83.4 tall; in `Current` the lit stretch carried 5.0px on, 8.5
+//     clear of the next ring, and the room 1.2344 against a drawn peak of
+//     1.0644. On the phone pins (390 × 844) nothing is declared and every
+//     size is the theme's own — 30, 14, 30, 18, 12, 2, 40 and 80px. And
+//     DoctorCourses.scale.test.tsx reads the same sizes on the real
+//     stylesheet at the columns no story pin reaches: nothing declared at a
+//     288, 351, 614.4 and a laptop's 880px column, every length × s at 900,
+//     the reference 1106 (s = 1, to the pixel), 1213.8, 1521 and 2000 — at
+//     2000 the box stands 1536 wide, centred — and the ring 4px at all nine.
+//   · Below the step, on every touch device and in an engine that cannot
+//     register custom properties, the strings declare nothing and remap
+//     nothing: the band is its rem self, every pixel as before — the phone
+//     and the tablet the owner left alone. The smartphone stories pin it.
 //
 // ── THE BELT (2026-10-09, THE PHONE GUTTER — ui/Container, CLAUDE.md §15.35).
 // The current year COMES FORWARD from its left edge (./CourseTimeline's THE
@@ -285,8 +365,17 @@ export function DoctorCourses({
     >
       <Container>
         {/* The rhythm box — band-owned `py` on container steps (see the
-            header for why it cannot sit on Container itself). */}
-        <div className="py-12 @lg:py-16 @3xl:py-20">
+            header for why it cannot sit on Container itself), and
+            ui/Container's band-scale column and pixel after them, in that
+            order (the header's THE BAND SCALE; ui/Container's recipe rule
+            5). */}
+        <div
+          className={cx(
+            'py-12 @lg:py-16 @3xl:py-20',
+            bandColumnClasses,
+            bandScaleClasses,
+          )}
+        >
           <SectionHeading
             level={2}
             id={headingId}

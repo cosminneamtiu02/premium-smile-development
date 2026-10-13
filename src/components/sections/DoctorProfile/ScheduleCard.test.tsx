@@ -289,7 +289,8 @@ describe('ScheduleCard — ui/Card wears the framed white card (D14, round 2e)',
     // Order is the contract, not an accident: ui/slot.ts merges atom classes,
     // then Card's className, then the child element's — a deterministic
     // convention, NOT a cascade mechanism, and §6.8 limits caller utilities to
-    // placement. The band hands over exactly that: D53's one width (20rem,
+    // placement. The band hands over exactly that: D53's one width (eighty
+    // spacing steps — 20rem, or 320 design pixels in the band's scale —
     // centred when stacked) and D37's vertical centring in the band's ONE row
     // (one row since the G2-R2 review's a11y F2 — no row or column named).
     const placement = 'w-full max-w-80 mx-auto @3xl:self-center';

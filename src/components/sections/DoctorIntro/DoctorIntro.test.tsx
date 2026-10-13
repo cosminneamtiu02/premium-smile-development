@@ -1,7 +1,11 @@
 import { createRef, type ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { containerClasses } from '@/components/ui/Container/Container';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+  containerClasses,
+} from '@/components/ui/Container/Container';
 import { Image } from '@/components/ui/Image/Image';
 import { Keywords, type KeywordSegment } from '@/components/ui/Keyword/Keyword';
 import {
@@ -37,7 +41,12 @@ import source from './DoctorIntro.tsx?raw';
 // stack, and that beside it the picture really takes its third of the column
 // and grows down to the words' floor while the card centres under the name on
 // the name's own left edge (D62–D64) — is asserted one tier up, in
-// DoctorIntro.stories.tsx's play functions, which measure the rendered boxes.
+// DoctorIntro.stories.tsx's play functions, which measure the rendered boxes;
+// and what THE BAND SCALE draws (2026-10-13, DoctorIntro.tsx's paragraph of
+// that name) — every length of the opener the owner's 1401 design × s on a
+// laptop or a desktop, the theme's own everywhere else — is measured on the
+// real stylesheet in DoctorIntro.scale.test.tsx, a file of its own so that
+// this suite keeps its one premise.
 //
 // ── HARNESS NOTE — why a `process` shim, copied verbatim from
 // PersonnelCard.test.tsx with its reason (which took it from Image.test.tsx).
@@ -117,12 +126,27 @@ const EYEBROW_RECIPE =
  *  third of the column, as the first track with a zero floor for the same
  *  reason, the words in the rest with an `auto` one — never narrower than
  *  their longest unbreakable run (the Opus a11y review) — a sixth of the
- *  column for the gap
- *  clamped to 3rem–10.5rem, and an inset of 15 % of the page gutter before
- *  the picture. Every token before the first `@3xl:` is the one it was before
- *  D62 — the phone and the tablet byte-identical. */
+ *  column for the gap clamped to 12–42 spacing steps (3rem to 10.5rem
+ *  outside the band scale), and an inset of 15 % of the page gutter before
+ *  the picture, capped at 7.5 steps (1.875rem). The bounds were rem literals
+ *  until THE BAND SCALE (2026-10-13): spelled in the step, they are the
+ *  same lengths outside the scale and the 1401 design × s inside it. Every
+ *  token before the first `@3xl:` is the one it was before D62 — the phone
+ *  and the tablet byte-identical. */
 const GRID =
-  'grid grid-cols-[minmax(0,1fr)] gap-8 pt-6 pb-8 @lg:py-8 @3xl:[--picture:min(calc(100cqi/3),var(--cutout-width))] @3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)] @3xl:gap-x-[clamp(3rem,calc(100cqi/6),10.5rem)] @3xl:py-10 @3xl:ps-[min(1.875cqi,1.875rem)]';
+  'grid grid-cols-[minmax(0,1fr)] gap-8 pt-6 pb-8 @lg:py-8 @3xl:[--picture:min(calc(100cqi/3),var(--cutout-width))] @3xl:grid-cols-[minmax(0,var(--picture))_minmax(auto,1fr)] @3xl:gap-x-[clamp(calc(var(--spacing)*12),calc(100cqi/6),calc(var(--spacing)*42))] @3xl:py-10 @3xl:ps-[min(1.875cqi,calc(var(--spacing)*7.5))]';
+/** THE BAND SCALE's box (DoctorIntro.tsx's `SCALE_BOX`): the container mark,
+ *  then ui/Container's two band-scale strings — IMPORTED here as there,
+ *  never retyped, because Container.tsx is the one place they are spelled
+ *  (tests/unit/design-scale.test.ts's census). */
+const SCALE_BOX = ['@container', bandColumnClasses, bandScaleClasses].join(' ');
+/** The name's one regime class (DoctorIntro.tsx's THE BAND SCALE, THE NAME):
+ *  inside the scale, the `hero` step's value at the owner's 1401 window in
+ *  the design pixel — 16.26 spacing steps, 65.04 design pixels — behind THE
+ *  BAND SCALE's own gate chain, re-spelled because Tailwind reads a class
+ *  only whole. A byte pin of a WORN class, so it ships no rule of its own. */
+const NAME_SCALE =
+  'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]';
 /** The picture's container: below the step capped at 20rem and centred in the
  *  column, exactly as before D62; at the step the whole first track — the cap
  *  lifted — the positioned box the cutout is drawn into (D64): stretched to the
@@ -147,11 +171,12 @@ const WORDS =
   'contents @3xl:relative @3xl:flex @3xl:flex-col @3xl:ps-6 @3xl:pt-[calc(100cqi/9)]';
 /** D62's BOTTOM container — the philosophy's: `display: contents` below the
  *  step, so the card and the slot are still the stack's own grid items; from
- *  it, the rest of the row's height (`flex-1`), one 36rem track on its left
- *  edge (D63), the content centred in its height over 1.5rem above and
- *  below. */
+ *  it, the rest of the row's height (`flex-1`), one track of 144 spacing
+ *  steps on its left edge — 36rem outside the band scale (D63), 576 design
+ *  pixels inside it — the content centred in its height over 1.5rem above
+ *  and below. */
 const BOTTOM =
-  'contents @3xl:grid @3xl:flex-1 @3xl:grid-cols-[minmax(0,36rem)] @3xl:content-center @3xl:gap-6 @3xl:py-6';
+  'contents @3xl:grid @3xl:flex-1 @3xl:grid-cols-[minmax(0,calc(var(--spacing)*144))] @3xl:content-center @3xl:gap-6 @3xl:py-6';
 /** The title pair reads BACKWARDS on purpose: the <h1> is first in the DOM and
  *  the eyebrow paints above it (the band's THE HEADING IS THE PAGE'S <h1>
  *  paragraph, G2 a11y 2026-09-21). Below the step it climbs above the picture
@@ -167,6 +192,29 @@ const LINE = 'text-center hyphens-none @3xl:text-start @3xl:text-balance';
 
 const tokensOf = (element: Element) =>
   element.className.split(/\s+/).filter(Boolean);
+
+/** A class's variant chain — everything up to its last colon OUTSIDE square
+ *  brackets, so an arbitrary value's own colons (`text-[length:…]`) never
+ *  cut it (TeamRoster.test.tsx's reader). */
+const chainOf = (token: string): string => {
+  let depth = 0;
+  let cut = 0;
+  for (const [index, character] of [...token].entries()) {
+    if (character === '[') depth += 1;
+    if (character === ']') depth -= 1;
+    if (character === ':' && depth === 0) cut = index + 1;
+  }
+  return token.slice(0, cut);
+};
+
+/** THE BAND SCALE's gate chain, read off ui/Container's own string — the
+ *  chain every class of the regime wears, gate first. */
+const BAND_CHAIN = (() => {
+  const chains = new Set(bandScaleClasses.split(' ').map(chainOf));
+  if (chains.size !== 1)
+    throw new Error('DoctorIntro test: THE BAND SCALE wears two chains');
+  return [...chains][0];
+})();
 
 /**
  * The band's source with its PROSE removed, which is what the zero-island
@@ -185,14 +233,16 @@ const stripComments = (code: string): string =>
 const CODE = stripComments(source);
 
 /** The boxes, reached by structure because none of them carries a role:
- *  section → Container → the grid → the picture's box and the words'
- *  container → the pair and D62's bottom container. */
+ *  section → Container → THE BAND SCALE's box → the grid → the picture's box
+ *  and the words' container → the pair and D62's bottom container. */
 const bandOf = (container: HTMLElement): HTMLElement =>
   container.firstElementChild as HTMLElement;
 const containerOf = (container: HTMLElement): HTMLElement =>
   bandOf(container).firstElementChild as HTMLElement;
-const gridOf = (container: HTMLElement): HTMLElement =>
+const scaleBoxOf = (container: HTMLElement): HTMLElement =>
   containerOf(container).firstElementChild as HTMLElement;
+const gridOf = (container: HTMLElement): HTMLElement =>
+  scaleBoxOf(container).firstElementChild as HTMLElement;
 const photoBoxOf = (container: HTMLElement): HTMLElement =>
   gridOf(container).children[0] as HTMLElement;
 const wordsOf = (container: HTMLElement): HTMLElement =>
@@ -257,10 +307,12 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
     const heading = screen.getByRole('heading', { level: 1, name: NAME });
     expect(heading.tagName).toBe('H1');
     expect(container.querySelectorAll('h1')).toHaveLength(1);
-    // The atom's two rows first, this band's one placement utility last: a
-    // person's name never breaks at a syllable (§15.14's rider), it wraps
-    // between words.
-    expect(heading.className).toBe(`${HERO_STEP} ${LINE}`);
+    // The atom's two rows first, then this band's placement row — a person's
+    // name never breaks at a syllable (§15.14's rider), it wraps between
+    // words — and LAST the name's one regime class (THE BAND SCALE): the
+    // design's size on a laptop or a desktop, where `hero`'s viewport clamp
+    // is one no remap can reach.
+    expect(heading.className).toBe(`${HERO_STEP} ${LINE} ${NAME_SCALE}`);
     // Ș ș Ț ț ă â î survive the whole chain — queried by TEXT, because a role
     // query would still match a mangled name.
     expect(screen.getByText(NAME).textContent).toBe(NAME);
@@ -328,8 +380,9 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
 
   it('composes ui/Container for the gutter — never a second spelling', () => {
     // The band outer paints and owns the rhythm; the Container owns the width
-    // and the @container context every step below measures against (the
-    // PAGE-BAND RECIPE, rules 1–2).
+    // (the PAGE-BAND RECIPE, rules 1–2), and THE BAND SCALE's box inside it
+    // owns the @container context every step and every `cqi` below measures
+    // against (DoctorIntro.tsx's THE BAND SCALE).
     const { container } = mount();
 
     expect(bandOf(container).className).toBe('bg-page');
@@ -337,7 +390,79 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
     // IMPORTED rather than spelled: tests/unit/gutter-single-spelling.test.ts
     // fences every file under src/, this suite included (the DoctorCourses way).
     expect(containerOf(container).className).toBe(containerClasses);
+    expect(containerOf(container).children).toHaveLength(1);
+    expect(scaleBoxOf(container).className).toBe(SCALE_BOX);
+    expect(scaleBoxOf(container).children).toHaveLength(1);
     expect(gridOf(container).className).toBe(GRID);
+  });
+
+  it('wears THE BAND SCALE on ONE box of its own, between the Container and the grid — the container mark, then ui/Container’s two strings (CLAUDE.md §15.32 round 4)', () => {
+    // The opener's whole design, its pixel and its cap, ride ONE box, the
+    // rhythm box's parent: the scale's recipe (Container.tsx's rule 5) on a
+    // band whose shares are read in `cqi` — so the box is a size container of
+    // its own, and past the cap every share reads the capped box, never the
+    // column. No other element of the band wears a gated class but the
+    // name's one (the test below), and the grid wears no `@container` of its
+    // own (an element never queries itself: its `@3xl` and its `cqi` read the
+    // box above).
+    const { container } = mount();
+
+    const box = scaleBoxOf(container);
+    expect(tokensOf(box)).toEqual([
+      '@container',
+      ...bandColumnClasses.split(' '),
+      ...bandScaleClasses.split(' '),
+    ]);
+    // Never vacuous: the box wears the gate on the cap, the pixel and the
+    // remap — three classes, counted off ui/Container's own strings.
+    const gated = (element: Element): string[] =>
+      tokensOf(element).filter((token) => token.startsWith('scalable:'));
+    expect(gated(box)).toHaveLength(3);
+    const name = screen.getByRole('heading', { level: 1, name: NAME });
+    for (const element of bandOf(container).querySelectorAll('*')) {
+      if (element === box) continue;
+      expect(gated(element)).toEqual(element === name ? [NAME_SCALE] : []);
+    }
+    expect(tokensOf(gridOf(container))).not.toContain('@container');
+    expect(tokensOf(containerOf(container))).toContain('@container');
+  });
+
+  it('draws the NAME in the design inside the scale — the `hero` step’s 1401-window value in spacing steps, behind THE BAND SCALE’s own chain (CLAUDE.md §15.32 round 4)', () => {
+    // `hero` is a VIEWPORT clamp, clamp(2rem, 1rem + 3.5vw, 4.5rem), and the
+    // band scale redraws theme VARIABLES only — so inside the scale the name
+    // takes the design's size by one class of its own: the clamp's value at
+    // the owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26 spacing
+    // steps (65.04 design pixels). Its chain is THE BAND SCALE's, to the
+    // byte, so it opens where the band's pixel does — for every root of
+    // 9⅓px or more: its queries read the band's capped box, which a smaller
+    // root caps under the 896px floor (DoctorIntro.tsx's THE NAME, G2 LOW-1);
+    // and it sets the font SIZE alone (the `length:` hint) — the atom's
+    // `/tight` line height, a ratio, follows by itself.
+    mount();
+
+    const heading = screen.getByRole('heading', { level: 1, name: NAME });
+    const regime = tokensOf(heading).filter((token) =>
+      token.startsWith('scalable:'),
+    );
+    expect(regime).toEqual([NAME_SCALE]);
+    expect(chainOf(NAME_SCALE)).toBe(BAND_CHAIN);
+    expect(BAND_CHAIN).toBe('scalable:@4xl:@min-[896px]:');
+    const steps = /^text-\[length:calc\(var\(--spacing\)\*([\d.]+)\)\]$/.exec(
+      NAME_SCALE.slice(BAND_CHAIN.length),
+    );
+    if (!steps) throw new Error('DoctorIntro test: the name’s class moved');
+    // Four design pixels a step, against the `hero` clamp at a 1401px window
+    // (its 2rem floor and 4.5rem cap do not bind there): within a hundredth
+    // of a pixel.
+    const hero =
+      /clamp\(([\d.]+)rem,([\d.]+)rem\+([\d.]+)vw,([\d.]+)rem\)/.exec(
+        HERO_STEP,
+      );
+    if (!hero) throw new Error('DoctorIntro test: the hero step moved');
+    const at1401 = Number(hero[2]) * 16 + (Number(hero[3]) * 1401) / 100;
+    expect(at1401).toBeGreaterThan(Number(hero[1]) * 16);
+    expect(at1401).toBeLessThan(Number(hero[4]) * 16);
+    expect(Math.abs(Number(steps[1]) * 4 - at1401)).toBeLessThan(0.01);
   });
 
   it('merges the caller className LAST onto the section', () => {
@@ -718,16 +843,70 @@ describe('DoctorIntro — the laptop and desktop opener as two containers (D62�
   it('spaces the two containers by the column — the inset before the picture, the gap after it (D63)', () => {
     // "15% extra space on ledft side of picture and 250% more space between
     // photo and right container": the inset is 15 % of the page gutter the
-    // column stands in (10vw ≈ 12.5cqi, capped at 12.5rem), the gap D62's
-    // 3rem three and a half times over — 10.5rem — reached by a sixth of the
-    // column and never below 3rem. Column-relative, so both shrink with a
-    // narrow laptop instead of crowding it.
+    // column stands in (10vw ≈ 12.5cqi, capped at 7.5 spacing steps), the
+    // gap D62's 12 steps three and a half times over — 42 — reached by a
+    // sixth of the column and never below 12. Column-relative, so both
+    // shrink with a narrow laptop instead of crowding it; in the spacing step
+    // since THE BAND SCALE (2026-10-13), so the bounds are the design's
+    // inside the scale (the test below holds them to the old rem outside).
     const { container } = mount();
 
     const tokens = tokensOf(gridOf(container));
-    expect(tokens).toContain('@3xl:ps-[min(1.875cqi,1.875rem)]');
-    expect(tokens).toContain('@3xl:gap-x-[clamp(3rem,calc(100cqi/6),10.5rem)]');
+    expect(tokens).toContain(
+      '@3xl:ps-[min(1.875cqi,calc(var(--spacing)*7.5))]',
+    );
+    expect(tokens).toContain(
+      '@3xl:gap-x-[clamp(calc(var(--spacing)*12),calc(100cqi/6),calc(var(--spacing)*42))]',
+    );
     expect(tokens).not.toContain('@3xl:gap-12');
+  });
+
+  it('spells every length of its own design in the spacing step — the same rem outside THE BAND SCALE, the design × s inside it (CLAUDE.md §15.32 round 4)', () => {
+    // THE BAND SCALE redraws the theme's VARIABLES and never a literal: a rem
+    // written into an arbitrary value would hold still on a laptop while
+    // every step round it scaled — the "disproportioned" the owner named.
+    // So the opener's three design lengths that were rem literals until
+    // 2026-10-13 are spelled in `--spacing` steps, and each step count × the
+    // theme's 0.25rem is exactly the rem it replaced: the gap's 3rem floor and
+    // 10.5rem cap, the inset's 1.875rem cap, the card's 36rem track.
+    const { container } = mount();
+
+    const steps = (token: string): number[] =>
+      [...token.matchAll(/calc\(var\(--spacing\)\*([\d.]+)\)/g)].map((match) =>
+        Number(match[1]),
+      );
+    const grid = tokensOf(gridOf(container));
+    const gap = grid.find((token) => token.startsWith('@3xl:gap-x-'));
+    const inset = grid.find((token) => token.startsWith('@3xl:ps-'));
+    const track = tokensOf(bottomOf(container)).find((token) =>
+      token.startsWith('@3xl:grid-cols-'),
+    );
+    if (!gap || !inset || !track)
+      throw new Error('DoctorIntro test: a design length moved');
+    expect(steps(gap).map((n) => n * 0.25)).toEqual([3, 10.5]);
+    expect(steps(inset).map((n) => n * 0.25)).toEqual([1.875]);
+    expect(steps(track).map((n) => n * 0.25)).toEqual([36]);
+    // And NO length literal is left in an arbitrary value the band spells on
+    // its own six boxes — a share of the column (`cqi`), a percentage and
+    // the cutout's own width (an inline variable) are the only other units.
+    // The gated classes are the scale's own (the name's step, the cap and the
+    // step floored at 896px) and are pinned above; the atoms' rows (the
+    // `hero` clamp, ui/Eyebrow's recipe) are theirs.
+    const own = [
+      gridOf(container),
+      photoBoxOf(container),
+      within(container).getByRole('presentation'),
+      wordsOf(container),
+      pairOf(container),
+      bottomOf(container),
+    ];
+    for (const element of own) {
+      for (const token of tokensOf(element)) {
+        if (token.startsWith('scalable:')) continue;
+        for (const [, value] of token.matchAll(/\[([^\]]*)\]/g))
+          expect(value, token).not.toMatch(/\d(rem|px|em)\b/);
+      }
+    }
   });
 
   it('stretches the picture’s container to the row, never shorter than the cutout at its third (D64)', () => {
@@ -820,17 +999,18 @@ describe('DoctorIntro — the laptop and desktop opener as two containers (D62�
     // "philosophy has to have same space between it and headings and eyebrow
     // contianer as to bottom of container it is within": the bottom container
     // grows into what the pair leaves (`flex-1`), is a grid with ONE explicit
-    // track — 36rem since D63's "like 30% wider" (28rem × 1.3 ≈ 36.4), on the
-    // left edge, because an explicit track is never stretched — and centres
-    // its content in its height over 1.5rem above and below (`content-center`
-    // + `py-6`), so the space over the card always equals the space under it.
+    // track — 36rem since D63's "like 30% wider" (28rem × 1.3 ≈ 36.4), spelled
+    // as 144 spacing steps since THE BAND SCALE, on the left edge, because an
+    // explicit track is never stretched — and centres its content in its
+    // height over 1.5rem above and below (`content-center` + `py-6`), so the
+    // space over the card always equals the space under it.
     const { container } = mount();
 
     const bottom = tokensOf(bottomOf(container));
     for (const token of [
       '@3xl:grid',
       '@3xl:flex-1',
-      '@3xl:grid-cols-[minmax(0,36rem)]',
+      '@3xl:grid-cols-[minmax(0,calc(var(--spacing)*144))]',
       '@3xl:content-center',
       '@3xl:py-6',
     ]) {
@@ -880,20 +1060,33 @@ describe('DoctorIntro — the laptop and desktop opener as two containers (D62�
 
   it('keeps every class BELOW the step what it was — the phone and the tablet byte-identical', () => {
     // "on phone and tablet it's perfect how they behave and look now, so i
-    // want to mentain that": D62–D64 are spelled in `@3xl:` tokens only. Every
-    // token WITHOUT that prefix, element by element, is the pre-D62 string —
-    // written out here so a stray base utility fails by name, the cutout's
-    // included: since D64 the band spells it, and below the step it is still
-    // `artwork`'s three utilities. The one new element, the bottom container,
-    // is `contents` and nothing else below the step, so the card and the slot
-    // are still the stack's own grid items. The grid's one inline style is
-    // `--cutout-ratio`, a custom property that no rule below the step reads.
+    // want to mentain that": D62–D64 are spelled in `@3xl:` tokens only, and
+    // THE BAND SCALE (2026-10-13) behind its `scalable:` gate — a mouse or a
+    // trackpad, which no phone and no touch tablet has. Every token WITHOUT
+    // either prefix, element by element, is the pre-D62 string — written out
+    // here so a stray base utility fails by name, the cutout's included:
+    // since D64 the band spells it, and below the step it is still
+    // `artwork`'s three utilities. The one new element of D62, the bottom
+    // container, is `contents` and nothing else below the step, so the card
+    // and the slot are still the stack's own grid items; and THE BAND
+    // SCALE's box is a full-width block whose auto margins have nothing to
+    // centre, around a grid whose every query and share it hands through
+    // unchanged — the column's own width below the cap. The grid's one inline
+    // style is `--cutout-ratio`, a custom property that no rule below the step
+    // reads.
     const { container } = mount();
 
     const base = (element: Element): string[] =>
-      tokensOf(element).filter((token) => !token.startsWith('@3xl:'));
+      tokensOf(element).filter(
+        (token) => !token.startsWith('@3xl:') && !token.startsWith('scalable:'),
+      );
     const heading = screen.getByRole('heading', { level: 1, name: NAME });
     const position = screen.getByText(POSITION);
+    expect(base(scaleBoxOf(container))).toEqual([
+      '@container',
+      'mx-auto',
+      'w-full',
+    ]);
     expect(base(gridOf(container))).toEqual([
       'grid',
       'grid-cols-[minmax(0,1fr)]',
@@ -1010,11 +1203,17 @@ describe('DoctorIntro — the laptop and desktop opener as two containers (D62�
 });
 
 describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () => {
-  it('carries no media queries anywhere — those are the page’s (§6.5)', () => {
-    // Container variants (@lg:, @3xl:) are the allowed shape: they measure the
-    // COLUMN, which is what makes the same band right on a phone and on a
-    // 1920 desktop without the band ever seeing the window.
+  it('carries no WIDTH media query anywhere — those are the page’s (§6.5) — and its one media condition is THE BAND SCALE’s input gate', () => {
+    // Container variants (@lg:, @3xl:, @4xl:, @min-[…]:) are the allowed
+    // shape: they measure the COLUMN, which is what makes the same band right
+    // on a phone and on a 1920 desktop without the band ever seeing the
+    // window. Tailwind's arbitrary VIEWPORT variants (`min-[…]:`, `max-[…]:`)
+    // are barred — never the container's own `@min-[…]:`. `scalable:` is
+    // globals.css's CAPABILITY gate — a mouse or trackpad, an engine that
+    // registers custom properties — never a width: after it a class may only
+    // name container steps (THE BAND SCALE's chain) or none at all (its cap).
     const { container } = mount();
+    let gated = 0;
 
     for (const element of [
       bandOf(container),
@@ -1022,9 +1221,50 @@ describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () 
     ]) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
-        expect(token).not.toMatch(/(min|max)-\[/);
+        expect(token).not.toMatch(/(^|:)(min|max)-\[/);
+        if (!token.startsWith('scalable:')) continue;
+        gated += 1;
+        for (const variant of chainOf(token)
+          .slice('scalable:'.length)
+          .split(':')
+          .filter(Boolean))
+          expect(variant, token).toMatch(/^@/);
       }
     }
+    // Never vacuous: the gate rides THE BAND SCALE's box three times (the
+    // cap, the pixel, the remap — counted off ui/Container's own strings) and
+    // the name once.
+    const fromContainer = `${bandColumnClasses} ${bandScaleClasses}`
+      .split(' ')
+      .filter((token) => token.startsWith('scalable:')).length;
+    expect(fromContainer).toBe(3);
+    expect(gated).toBe(fromContainer + 1);
+  });
+
+  it('takes THE BAND SCALE from ui/Container by import — its two strings named there, the scale spelled nowhere here but the name’s one chain', () => {
+    // The band names exactly three things from the Container module: the
+    // atom and its two band-scale strings. Its own code declares no design
+    // pixel, spells no remap and sets no zoom and no floor — those live in
+    // ui/Container and globals.css alone (tests/unit/design-scale.test.ts
+    // holds the whole repository to that); its ONE gated class is the name's,
+    // on THE BAND SCALE's own chain.
+    const names =
+      /^import\s*\{([^}]*)\}\s*from\s*'@\/components\/ui\/Container\/Container';/m
+        .exec(CODE)?.[1]
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .toSorted();
+    expect(names).toEqual([
+      'Container',
+      'bandColumnClasses',
+      'bandScaleClasses',
+    ]);
+    expect(CODE).not.toMatch(
+      /design-scale|--scale-px|--band-zoom|--band-floor/,
+    );
+    expect(CODE.match(/scalable:/g)).toHaveLength(1);
+    expect(CODE).toContain(NAME_SCALE);
   });
 
   it('ships NO client directive — the band is inert HTML (§16)', () => {

@@ -14,8 +14,11 @@ import { expect, type Page, test } from '@playwright/test';
 // tiles hold one width. On every phone, every touch tablet and every window
 // under the step, nothing changes. Since 2026-10-13 a doctor's page draws its
 // map band in the scale too (§15.32 round 3, the owner: "as the current map
-// on home page is now … on absoultey every page"), and the last block below
-// reads that band beside Home's at every window — phone and tablet included.
+// on home page is now … on absoultey every page"), and — the same day — every
+// other band of it (round 4: "make the exact same thing with the heading and
+// eyebrow from the individual dr page", "Whole page, like Home"); the last
+// two blocks below read that page beside Home at every window — phone and
+// tablet included.
 //
 // WHY THE BUILT EXPORT: the scale is real CSS — a registered custom property,
 // container queries, `@supports` and `(pointer: fine)` — resolved by the
@@ -501,8 +504,8 @@ for (const locale of ['ro', 'de'] as const) {
     // anything — and every number of it must agree: the eyebrow and the <h2>,
     // their left edge and the gap between them, the band's column, the map's
     // box, the band's width, the address and the discs. The doctor page's
-    // OTHER bands do not scale yet (the recorded price), so only the map band
-    // is read.
+    // OTHER bands joined the scale the same day (round 4); the block after
+    // this one reads them.
     test.use({ locale: BROWSER_LOCALE[locale] });
     onLaptopOnly();
 
@@ -617,6 +620,305 @@ for (const locale of ['ro', 'de'] as const) {
           // 44px disc, on both pages.
           expect(doctor.map.address).toBe(16);
           expect(doctor.map.disc).toBe(44);
+        });
+      });
+    }
+  });
+
+  test.describe(`${DOCTOR_PATH(locale)} — THE WHOLE PAGE in the band scale, like Home (§15.32 round 4)`, () => {
+    // The owner, 2026-10-13: "take current heading and eyebrow from main
+    // page. look how reactive and nice it is. make the exact same thing with
+    // the heading and eyebrow from the individual dr page" — and, asked
+    // whether the content under the titles should follow, "Whole page, like
+    // Home". So a doctor's page is read beside Home at the same window. On a
+    // laptop or desktop every band opener — the biography, the courses, the
+    // tiles, the map — has Home's eyebrow and <h2>, to a twentieth of a pixel,
+    // and Home's left edge (the biography 32 design pixels outdented, D14; the
+    // tiles' opener centred, D30, so not compared); and everything under the
+    // openers is its design size × s: the name (the `hero` step's 1401 value,
+    // 65.04), the specialty, the credo card, a biography paragraph, a year, a
+    // course line, the tiles at 9/8, the week's card. On a phone and a touch
+    // tablet nothing is declared: every size is the theme's, Home's too.
+    test.use({ locale: BROWSER_LOCALE[locale] });
+    onLaptopOnly();
+
+    /** The three band titles this block finds the bands by — `team.doctor.*`,
+     *  the about one carrying the first doctor's name. */
+    const TITLES: Record<
+      Locale,
+      {
+        readonly about: string;
+        readonly courses: string;
+        readonly stats: string;
+      }
+    > = {
+      ro: {
+        about: 'Despre Dr. Malea (Sabău) Oana Bianca',
+        courses: 'Cursuri și specializări',
+        stats: 'Experiență confirmată în timp',
+      },
+      de: {
+        about: 'Über Dr. Malea (Sabău) Oana Bianca',
+        courses: 'Kurse und Spezialisierungen',
+        stats: 'Über die Jahre bestätigte Erfahrung',
+      },
+    };
+
+    /** The name's design size: the `hero` step at the owner's 1401 window,
+     *  16 + 3.5 × 14.01 = 65.035, as 16.26 spacing steps (DoctorIntro's THE
+     *  BAND SCALE). */
+    const NAME = 16.26 * 4;
+
+    interface OpenerSize {
+      readonly size: number;
+      readonly eyebrow: number;
+      readonly left: number;
+    }
+
+    interface DoctorShape {
+      readonly pointerFine: boolean;
+      readonly sideways: number;
+      /** ui/Container's width — the map band's first box (every band's is
+       *  the same, §15.15 a). */
+      readonly column: number;
+      readonly openers: Readonly<
+        Record<'about' | 'courses' | 'stats' | 'map', OpenerSize>
+      >;
+      readonly credo: {
+        readonly title: number;
+        readonly eyebrow: number;
+        /** The card's content width — its title's `band` step reads it. */
+        readonly content: number;
+      };
+      readonly name: number;
+      readonly specialty: number;
+      readonly paragraph: number;
+      readonly year: number;
+      readonly line: number;
+      readonly tiles: PageShape['tiles'];
+      readonly week: number;
+    }
+
+    /** The doctor page at one window, read off the built page. */
+    const doctorAt = async (
+      page: Page,
+      viewport: { width: number; height: number },
+    ): Promise<DoctorShape> => {
+      await openAt(page, DOCTOR_PATH(locale), viewport);
+      return page.evaluate(
+        (titles) => {
+          const size = (element: Element | null | undefined): number =>
+            element ? parseFloat(getComputedStyle(element).fontSize) : NaN;
+          const heading = (text: string): HTMLElement | undefined =>
+            Array.from(document.querySelectorAll<HTMLElement>('main h2')).find(
+              (candidate) => candidate.textContent?.trim() === text,
+            );
+          const opener = (text: string) => {
+            const title = heading(text);
+            return {
+              size: size(title),
+              eyebrow: size(title?.parentElement?.querySelector(':scope > p')),
+              left: title?.getBoundingClientRect().left ?? NaN,
+            };
+          };
+          const contentOf = (element: Element | null | undefined): number => {
+            if (!element) return NaN;
+            const style = getComputedStyle(element);
+            return (
+              element.getBoundingClientRect().width -
+              parseFloat(style.paddingLeft) -
+              parseFloat(style.paddingRight) -
+              parseFloat(style.borderLeftWidth) -
+              parseFloat(style.borderRightWidth)
+            );
+          };
+          const name = document.querySelector('main h1');
+          const credo = document
+            .querySelector('main blockquote')
+            ?.closest('section');
+          const credoTitle = credo?.querySelector('h2');
+          const about = heading(titles.about)?.closest('section');
+          const courses = heading(titles.courses)?.closest('section');
+          const mapBand = document
+            .querySelector('main iframe')
+            ?.closest('section');
+          const tiles = Array.from(
+            document.querySelectorAll('main section ul[role="list"] > li'),
+          )
+            .filter((li) => li.querySelector(':scope > h3'))
+            .map((li) => {
+              const paragraphs = li.querySelectorAll(':scope > p');
+              return {
+                sentence: size(paragraphs[paragraphs.length - 1]),
+                label: size(li.querySelector(':scope > h3')),
+                number: size(paragraphs[0]),
+                disc:
+                  li
+                    .querySelector(':scope > span[aria-hidden="true"]')
+                    ?.getBoundingClientRect().width ?? NaN,
+              };
+            });
+          return {
+            pointerFine: matchMedia('(pointer: fine)').matches,
+            sideways:
+              document.documentElement.scrollWidth -
+              document.documentElement.clientWidth,
+            column:
+              mapBand?.firstElementChild?.getBoundingClientRect().width ?? NaN,
+            openers: {
+              about: opener(titles.about),
+              courses: opener(titles.courses),
+              stats: opener(titles.stats),
+              map: opener(titles.location),
+            },
+            credo: {
+              title: size(credoTitle),
+              eyebrow: size(
+                credoTitle?.parentElement?.querySelector(':scope > p'),
+              ),
+              content: contentOf(credo),
+            },
+            name: size(name),
+            // The pair is `flex-col-reverse`: the <h1> first in the DOM, the
+            // specialty right after it (DoctorIntro's THE HEADING paragraph).
+            specialty: size(name?.nextElementSibling),
+            // The biography region: its opener, then the paragraphs' block.
+            paragraph: size(about?.lastElementChild?.querySelector('p')),
+            year: size(courses?.querySelector('h3')),
+            line: size(courses?.querySelector('li')),
+            tiles,
+            week:
+              document
+                .querySelector('main dl')
+                ?.closest('section')
+                ?.getBoundingClientRect().width ?? NaN,
+          };
+        },
+        { ...TITLES[locale], location: LOCATION_TITLE[locale] },
+      );
+    };
+
+    /** Home's first band opener at one window — the reference every doctor
+     *  opener must equal. */
+    const homeOpenerAt = async (
+      page: Page,
+      viewport: { width: number; height: number },
+    ): Promise<Opener> => {
+      await openAt(page, `/${locale}/`, viewport);
+      const [first] = (await readPage(page, STAFF_TITLE[locale])).openers;
+      if (first === undefined) throw new Error('no band opener on Home');
+      return first;
+    };
+
+    for (const viewport of LAPTOPS) {
+      test(`at ${viewport.width} × ${viewport.height}: every opener Home’s, every size the design × s`, async ({
+        page,
+      }) => {
+        const home = await homeOpenerAt(page, viewport);
+        const doctor = await doctorAt(page, viewport);
+        expect(doctor.pointerFine, 'a mouse device').toBe(true);
+        expect(doctor.sideways, 'sideways scroll').toBeLessThanOrEqual(0);
+        const s = Math.min(doctor.column, 1536) / 1106;
+        const near = (actual: number, design: number, what: string): void =>
+          expect(actual, `${what} at ${viewport.width}`).toBeCloseTo(
+            design * s,
+            1,
+          );
+
+        // EVERY OPENER HOME'S — the owner's ask, word for word.
+        for (const [band, opener] of Object.entries(doctor.openers)) {
+          near(opener.size, DESIGN.title, `the ${band} title`);
+          near(opener.eyebrow, DESIGN.eyebrow, `the ${band} eyebrow`);
+          expect(opener.size, `the ${band} title = Home’s`).toBeCloseTo(
+            home.titleSize,
+            1,
+          );
+          expect(opener.eyebrow, `the ${band} eyebrow = Home’s`).toBeCloseTo(
+            home.eyebrowSize,
+            1,
+          );
+        }
+        // …on Home's left edge, the biography outdented 32 design pixels.
+        expect(doctor.openers.courses.left, 'courses left').toBeCloseTo(
+          home.titleLeft,
+          1,
+        );
+        expect(doctor.openers.map.left, 'map left').toBeCloseTo(
+          home.titleLeft,
+          1,
+        );
+        expect(
+          doctor.openers.about.left + 32 * s,
+          'the biography’s outdent',
+        ).toBeCloseTo(home.titleLeft, 1);
+
+        // THE OPENER: the name, the specialty, the credo card's two steps
+        // (its title on `band` against the card's own content box).
+        near(doctor.name, NAME, 'the name');
+        near(doctor.specialty, DESIGN.eyebrow, 'the specialty');
+        near(doctor.credo.eyebrow, DESIGN.eyebrow, 'the credo eyebrow');
+        near(
+          doctor.credo.title,
+          doctor.credo.content >= 448 ? 36 : 30,
+          'the credo title',
+        );
+
+        // UNDER THE OPENERS: a biography paragraph, a year, a course line,
+        // the week's one width, and the tiles at 9/8 — Home's tiles exactly.
+        near(doctor.paragraph, 18, 'a biography paragraph');
+        near(doctor.year, 30, 'a year');
+        near(doctor.line, 18, 'a course line');
+        near(doctor.week, 320, 'the week’s card');
+        expect(doctor.tiles).toHaveLength(4);
+        for (const tile of doctor.tiles) {
+          near(tile.sentence, DESIGN.tileSentence, 'the tile sentence');
+          near(tile.label, DESIGN.tileLabel, 'the tile label');
+          near(tile.number, DESIGN.tileNumber, 'the tile number');
+          near(tile.disc, DESIGN.tileDisc, 'the tile disc');
+        }
+      });
+    }
+
+    for (const device of [
+      { name: 'a 390 × 844 phone', viewport: { width: 390, height: 844 } },
+      {
+        name: 'a 1180 × 820 touch tablet',
+        viewport: { width: 1180, height: 820 },
+      },
+    ] as const) {
+      test.describe(device.name, () => {
+        test.use({ viewport: device.viewport, hasTouch: true, isMobile: true });
+
+        test('declares nothing — every size the theme’s, every opener Home’s', async ({
+          page,
+        }) => {
+          const home = await homeOpenerAt(page, device.viewport);
+          const doctor = await doctorAt(page, device.viewport);
+          expect(doctor.pointerFine, 'a touch device').toBe(false);
+          expect(doctor.sideways, 'sideways scroll').toBeLessThanOrEqual(0);
+          for (const [band, opener] of Object.entries(doctor.openers)) {
+            // `band`: 30px under a 28rem column, 36 from it.
+            expect(opener.size, `the ${band} title`).toBe(
+              doctor.column < 448 ? 30 : 36,
+            );
+            expect(opener.eyebrow, `the ${band} eyebrow`).toBe(14);
+            expect(opener.size, `the ${band} title = Home’s`).toBe(
+              home.titleSize,
+            );
+          }
+          // The name on the `hero` clamp itself: 2rem, 1rem + 3.5vw, 4.5rem.
+          expect(doctor.name).toBeCloseTo(
+            Math.min(72, Math.max(32, 16 + 0.035 * device.viewport.width)),
+            1,
+          );
+          expect(doctor.specialty).toBe(14);
+          expect(doctor.paragraph).toBe(18);
+          expect(doctor.year).toBe(30);
+          expect(doctor.line).toBe(18);
+          expect(doctor.week).toBe(Math.min(320, doctor.column));
+          // Counted first, so a reader that found no tile cannot pass the loop.
+          expect(doctor.tiles).toHaveLength(4);
+          for (const tile of doctor.tiles) expect(tile.sentence).toBe(16);
         });
       });
     }

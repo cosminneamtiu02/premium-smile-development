@@ -1,6 +1,11 @@
 import { useId, type ComponentPropsWithRef, type ReactElement } from 'react';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
 import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
+import {
+  bandColumnClasses,
+  bandScaleClasses,
+} from '@/components/ui/Container/Container';
+import { cx } from '@/lib/cx/cx';
 import type { HoursRow } from '@/lib/hours/hours';
 import { ScheduleCard } from './ScheduleCard';
 
@@ -31,6 +36,9 @@ import { ScheduleCard } from './ScheduleCard';
 // fixed". The G2-R2 review (tier 2, a11y F2, 2026-09-26) then made the
 // biography a named region of its own beside the card's, which put the step's
 // grid back on ONE row (the D37 and TWO <h2>s, TWO REGIONS paragraphs below).
+// Since 2026-10-13 the whole band draws in ui/Container's band scale on a
+// laptop or desktop, like every Home band (CLAUDE.md §15.32 round 4; THE BAND
+// SCALE paragraph below).
 //
 // ── RUN D1 · IT IS A DUMB BAND, the PriceList/Hero shape: zero message keys,
 // zero data imports, no `t()`, no `Locale`. Both headings, every paragraph and
@@ -58,9 +66,10 @@ import { ScheduleCard } from './ScheduleCard';
 // (sections/DoctorStats): §4's first sharing row (identical mechanics, second
 // consumer → the nearest tier both may import) and its section → section rule
 // (a section composes another section's PUBLIC component, never its
-// internals). So this file renders `<TintedBand>` and hands it the grid. The
-// tint, the two fades, the `relative bg-page` outer, ui/Container, the
-// plain-page fallback, the KEEP-IN-SYNC pair with the Hero's `fadeClasses` and
+// internals). So this file renders `<TintedBand>` and hands it the grid (in
+// THE BAND SCALE's box since 2026-10-13). The tint, the two fades, the
+// `relative bg-page` outer, ui/Container, the plain-page fallback, the
+// KEEP-IN-SYNC pair with the Hero's `fadeClasses` and
 // its `?raw` cross-pin all live THERE now — argued in TintedBand.tsx's header,
 // pinned in TintedBand.test.tsx, measured in TintedBand.stories — and this
 // band's suite only proves it IS one (the same outer and the same three boxes
@@ -75,15 +84,20 @@ import { ScheduleCard } from './ScheduleCard';
 // (ScheduleCard's D14 paragraph has the frame measured on this ground).
 //
 // ── THE GRID IS THIS BAND'S CONTENT, and it sits in TintedBand's ui/Container
-// (the PAGE-BAND RECIPE in Container.tsx's header): the ground owns the paint,
-// the Container owns the width, the gutter and the container-query context,
-// and the grid owns the band's vertical rhythm. The `py` cannot ride on
-// Container itself — an element cannot query its OWN size — so it sits on the
-// grid one level in, the ClinicLocation precedent; TintedBand adds no padding
-// of its own for exactly that reason. Two container steps, measured against
-// the gutter box (the viewport less two gutters — 10vw a side from a 600px
-// window, 5vw on a phone since 2026-10-09's phone gutter, ui/Container's THE
-// PHONE GUTTER), never a media query (§6.5):
+// (the PAGE-BAND RECIPE in Container.tsx's header), inside the band-scale box
+// since 2026-10-13 (THE BAND SCALE, next): the ground owns the paint, the
+// Container owns the width, the gutter and the container-query context, the
+// scale box owns the design pixel, the cap and the centring, and the grid
+// owns the band's vertical rhythm. The `py` cannot ride on Container itself —
+// an element cannot query its OWN size — so it sits on the grid, two levels
+// in now, the ClinicLocation precedent; TintedBand adds no padding of its own
+// for exactly that reason. Two container steps, measured against the gutter
+// box (the viewport less two gutters — 10vw a side from a 600px window, 5vw on
+// a phone since 2026-10-09's phone gutter, ui/Container's THE PHONE GUTTER) —
+// the scale box between is no container, so every `@`-step here still asks
+// the column — and never a width media query (§6.5; the band's one media
+// condition is the scale's pointer gate, ui/Container's, which asks no
+// width):
 //   · `@lg` (container 512px, ≈ a 640px viewport) buys the second `py` step;
 //   · `@3xl` (container 768px, ≈ a 960px viewport) is where the prose and the
 //     card go side by side. At §7's sampling points the box is 288 (320) · 351
@@ -94,20 +108,89 @@ import { ScheduleCard } from './ScheduleCard';
 //     biography comes first (DOM order = reading order), the card under it at
 //     its one width, centred (D53), `gap-10` between them.
 //
-// ── D53 · ONE WIDTH, 20rem (owner, 2026-09-26, round 2k: "the cand ma
-// gasesti la clinica [card] should not be widening as you widen the screen or
-// tighten when you tighten it. so it should be fixed and remain fixed").
+// ── THE BAND SCALE (owner, 2026-10-13, CLAUDE.md §15.32 round 4: "take
+// current heading and eyebrow from main page. look how reactive and nice it
+// is. make the exact same thing with the heading and eyebrow from the
+// individual dr page" — and, asked how far, "Whole page, like Home"). On a
+// laptop or desktop the band draws as ONE design, the owner's 1401-window look
+// scaled to its column, exactly as every Home band does: the „Despre" eyebrow
+// and title, the paragraphs, the grid's rhythm, the outdent, the gap and the
+// schedule card with everything in it grow and shrink together, in the one
+// design pixel every scaled band on the page draws in — so the opener is the
+// size of theirs at every width. On every phone, every touch tablet, under
+// the step and in an engine that cannot register custom properties nothing is
+// declared, and every pixel is what it was (§7). The rule and its numbers are
+// ui/Container's (THE BAND SCALE, recipe rule 5): this band IMPORTS its two
+// strings, `bandColumnClasses` and `bandScaleClasses`, and spells neither
+// (tests/unit/design-scale.test.ts). Three decisions are this band's own:
+//   · THE STRINGS RIDE A BOX OF THEIR OWN, between ui/Container and the grid —
+//     not the grid, the recipe's usual rhythm box. `bandColumnClasses` is
+//     `mx-auto w-full` under its cap, and the grid wears THE PROSE OUTDENT, a
+//     negative start margin (below). On one element the two fight: the
+//     outdent replaces the start margin `mx-auto` sets, so past the cap the
+//     band would not centre; and `w-full` fixes the box to the column's width,
+//     so the outdent would stop widening the prose track leftward and pull the
+//     card's right edge 2rem in instead. On the scale box the cap and the
+//     centring are clean, and the grid inside it outdents from the box's edge
+//     as it always did from the column's — by 32 design pixels in the scale.
+//     The box is a plain <div>: no paint, no padding, no role; the grid keeps
+//     the `py`.
+//   · THE CARD'S ONE WIDTH IS EIGHTY SPACING STEPS (D53, re-spelled): the
+//     track `calc(var(--spacing)*80)` beside the card's `max-w-80`, the same
+//     eighty steps, KEEP-IN-SYNC. Outside the scale a step is 0.25rem, so the
+//     card is the 20rem — 320px — it always was; inside, 320 DESIGN pixels.
+//     The owner's "should not be widening as you widen the screen" holds in
+//     the design's pixels: at every laptop and desktop width the card is the
+//     same 320 of the design's 1106, the way the Team page's staff tiles keep
+//     their one width in the same regime (sections/TeamRoster, §15.32). A
+//     20rem literal would have held 320px while the prose, the gap and the
+//     headings around it scaled — the disproportion the scale exists to end.
+//   · WHAT STAYS IN rem, RECORDED. TintedBand's two 6rem fades: the ground's
+//     own boxes, outside ui/Container (its NO OUTER MARGIN), so nothing in
+//     them can read the column the design pixel comes from — at a 1920 window
+//     the band between them is drawn at s ≈ 1.375 (a classic scrollbar) while
+//     they stay 96px. The card's 3px frame, a px border by ui/Card's THE SUM
+//     RULE. And the outdent stays the owner's own step off the column's edge,
+//     32 design pixels now: the „Despre" opener sits that far left of the
+//     other bands' openers at every width, one constant of the design.
+// MEASURED — the engine's numbers on the real stylesheet (Chromium, the band
+// in the column a window leaves beside a classic 15px scrollbar,
+// DoctorProfile.scale.test.tsx's harness), as the „Despre" title / eyebrow /
+// prose / the card / the outdent, s in brackets; before this change every
+// laptop width drew 36 / 14 / 18 / 320 / 32:
+//   · 1140 [0.811]: 29.2 / 11.4 / 14.6 / 259.5 / 26.0;
+//   · 1280 [0.912]: 32.8 / 12.8 / 16.4 / 291.9 / 29.2;
+//   · 1401 [1.000]: 36.0 / 14.0 / 18.0 / 319.9 / 32.0 — the owner's look;
+//   · 1536 [1.097]: 39.5 / 15.4 / 19.8 / 351.2 / 35.1 — the stories' pin;
+//   · 1920 [1.375]: 49.5 / 19.3 / 24.8 / 440.1 / 44.0;
+//   · 2560 [1.389, capped]: 50.0 / 19.4 / 25.0 / 444.4 / 44.4, the scale box
+//     1536 wide and centred, 304.5px in from the column's edge;
+//   · 390 and 768: 30 and 36 / 14 / 18 / 320 / none (stacked) — the theme's
+//     own, nothing declared, every pixel as before.
+// THE TRADE, RECORDED (the regime's own — §15.25 round 2, §15.32): under the
+// reference the biography reads SMALLER than its 18px — 14.6 at 1140, 16.4
+// at 1280 — as every Home band's words do, and a browser zoom inside the
+// regime enlarges it less than rem would. ui/Container's THE FLOOR (the price
+// list's) is the one-class lever that would hold it at the theme's size under
+// the reference — the owner's call, not taken here.
+//
+// ── D53 · ONE WIDTH, 20rem — 320 design pixels in THE BAND SCALE (owner,
+// 2026-09-26, round 2k: "the cand ma gasesti la clinica [card] should not be
+// widening as you widen the screen or tighten when you tighten it. so it
+// should be fixed and remain fixed").
 // Round 2e's D14 track was `minmax(20rem,1fr)` beside `3fr` — a quarter of the
 // free space, floored at 20rem — so the card grew with the window once the
 // floor let go (from a ~1620px window; 380px at 1920), and below the step it
 // was a full-width stacked item, as wide as the column (614px on a tablet).
 // Now it has ONE width, spelled twice in this file and pinned equal in
 // DoctorProfile.test.tsx (a KEEP-IN-SYNC pair inside one file: the track's
-// `20rem` and `max-w-80` = 80 × 0.25rem are the same length):
-//   · at `@3xl` the second track is EXACTLY `20rem` —
-//     `grid-cols-[minmax(0,1fr)_20rem]` across a `gap-x-12` (3rem) — and the
-//     prose takes every other pixel of the row (`minmax(0,1fr)`: a long word
-//     can never push on the card's track);
+// eighty spacing steps and `max-w-80`'s are the same length — 20rem, and 320
+// design pixels inside THE BAND SCALE, whose paragraph re-spelled the track
+// from a 20rem literal on 2026-10-13):
+//   · at `@3xl` the second track is EXACTLY eighty steps —
+//     `@3xl:grid-cols-[minmax(0,1fr)_calc(var(--spacing)*80)]` across a
+//     `gap-x-12` (3rem) — and the prose takes every other pixel of the row
+//     (`minmax(0,1fr)`: a long word can never push on the card's track);
 //   · below it the card is `w-full max-w-80 mx-auto`: 20rem when the column
 //     allows it, centred under the prose. It shrinks only where the column
 //     ITSELF is narrower than 20rem — a box wider than its container would
@@ -120,9 +203,11 @@ import { ScheduleCard } from './ScheduleCard';
 //     reached 20rem only from a ~400px window, past both 320 AND 390. `w-full`
 //     is load-bearing: a grid item with auto inline margins no longer
 //     stretches (it shrinks to fit), so without it the card would size to its
-//     longest row. At the step the three change nothing — `w-full` of a 20rem
-//     track IS 20rem and the auto margins find no free space — so none of
-//     them is gated.
+//     longest row. At the step the three change nothing — `w-full` of the
+//     eighty-step track IS its width and the auto margins find no free space
+//     — so none of them is gated. Stacked, the band is never in THE BAND
+//     SCALE (the scale starts at a 56rem column, the stack ends at 48rem), so
+//     every number in this bullet is the theme's own.
 // MEASURED — the card's border box, before → after, in the Vitest storybook
 // project's Chromium over the Default fixture. That frame draws a classic 15px
 // scrollbar, so its column is the window − 15 − 2 × 10vw; the no-scrollbar
@@ -143,12 +228,16 @@ import { ScheduleCard } from './ScheduleCard';
 // directions now hold from a ~356px window up, ~372 beside the scrollbar.)
 // The narrower card at 1920 is TALLER (290 → 326, its title back
 // on two lines) and still shorter than the capped prose (368), so D37's one
-// caveat below does not fire. The GRID ITSELF is outdented 2rem into the
-// gutter (`@3xl:-ms-8`, the PROSE OUTDENT paragraph), so its box is the
-// Container column plus 32px and its right edge — where the card ends — is
-// still the gutter's. A two-line „Când mă găsiți la clinică” over the seven
-// rows needs ~270px of content box, which 20rem less the frame and the inset
-// gives (ScheduleCard's heading paragraph).
+// caveat below does not fire. (Since 2026-10-13 the three beside rows are the
+// design's 320 × s on a laptop or desktop — THE BAND SCALE's MEASURED line;
+// the stacked rows did not move.) The GRID ITSELF is outdented eight steps
+// into the gutter (`@3xl:-ms-8`, the PROSE OUTDENT paragraph), so its box is
+// the scale box plus 32px — 32 design pixels in the scale — and its right
+// edge, where the card ends, is the scale box's: the gutter's under the cap.
+// A two-line „Când mă găsiți la clinică” over the seven rows needs ~270px of
+// content box, which the one width less the frame and the inset gives
+// (ScheduleCard's heading paragraph) — 270 design pixels in the scale, where
+// the title and the rows scale with it.
 // D37 · THE CARD IS CENTRED ON THE BAND (owner, 2026-09-26, round 2g: "center
 // it also verticaly in the lila section" — superseding round 2e's "starts on y
 // axis where text starts", where the card sat `row-start-2 self-start` with its
@@ -168,8 +257,10 @@ import { ScheduleCard } from './ScheduleCard';
 // item, so the row is exactly its height; the card, `@3xl:self-center` in the
 // second track, sets its vertical middle on the row's; the row fills the
 // grid's content box, the grid's rhythm `py` is symmetric at every step
-// (`py-6` · `@lg:py-8` · `@3xl:py-10`), the grid is the one thing inside
-// TintedBand's Container, and the two fades are boxes OUTSIDE the tinted one —
+// (`py-6` · `@lg:py-8` · `@3xl:py-10`), the grid is the one thing inside the
+// scale box, which adds no padding and is the one thing inside TintedBand's
+// Container (THE BAND SCALE), and the two fades are boxes OUTSIDE the tinted
+// one —
 // so the row's middle IS the tinted box's, and the card sits centred "in the
 // lila section" at every width above the step, whatever the heading's or the
 // prose's height in any language (the stories measure it, within 1px). No
@@ -202,30 +293,40 @@ import { ScheduleCard } from './ScheduleCard';
 // inside the tinted box's 96 → 748), its middle the card's.
 // THE PROSE OUTDENT — `@3xl:-ms-8` ON THE GRID (owner, 2026-09-25, round 2d:
 // "move left margin of text a bit more to the left", and, asked which text,
-// "only the lilac band's prose"): at the wide step the grid's box starts 2rem
-// LEFT of ui/Container's gutter, so the opener and the paragraphs — column 1 —
-// reach into it, while the card in column 2 keeps its right edge on the gutter
+// "only the lilac band's prose"): at the wide step the grid's box starts eight
+// spacing steps LEFT of the scale box's edge — ui/Container's gutter, under
+// THE BAND SCALE's cap — so the opener and the paragraphs — column 1 — reach
+// into it, while the card in column 2 keeps its right edge on the box's
 // (a negative margin-inline-start widens the box leftward and moves nothing on
-// the right; the extra 2rem lands in the prose track's `1fr`). It rode the
+// the right; the extra width lands in the prose track's `1fr`). It rode the
 // about half until round 2e dissolved that box, and it STAYED on the grid when
 // G2-R2 (a11y F2) made the half a box again: on the grid the extra 2rem widens
 // the prose TRACK, while on the half it would pull the region 2rem out of its
 // own grid area, a box overflowing its track. ONE spelling, on the box whose
-// edge moved. A RECORDED DEPARTURE from the page-band recipe (Container.tsx: the
-// Container owns the width and the gutter), the owner's call, kept to one
+// edge moved — and the reason THE BAND SCALE rides a box of its own: beside
+// `mx-auto` on one element, the outdent would cancel the centring (that
+// paragraph). A RECORDED DEPARTURE from the page-band recipe (Container.tsx:
+// the Container owns the width and the gutter), the owner's call, kept to one
 // utility on one element. Why the step only: below it the gutter is 1rem at
 // 320 (since 2026-10-09's phone gutter; 2rem before) and ~4.8rem at 768, and
 // a 2rem outdent there would push the prose 16px past the screen's edge at
 // 320 or break the one-column alignment with the card under it — the owner
-// was looking at the wide row. "A bit" = 2rem (32px).
-// THE ONE LEVER ON THE MEASURE is `max-w-4xl` (56rem) on the paragraphs'
-// block: at 1920 the prose track is ~1200px (1536 + 32 − 48 − 320, D53),
-// which at 18px (~9.4px per character of Source Serif — an estimate, not a
-// measurement) is a ~130-character line, far past a comfortable measure for
-// §1's 70-year-old reader; the cap holds it near 95. It binds once the track
-// passes 56rem — a 1232px column, a ~1540px window (the 1536 window's track is
-// ~893, just under) — and changes nothing below. It sits on the paragraphs and
-// not on the half, so the heading above keeps the whole track.
+// was looking at the wide row. "A bit" = 2rem (32px) — 32 design pixels in
+// the scale, the same step of the same design.
+// THE ONE LEVER ON THE MEASURE is `max-w-4xl` (56rem; 896 design pixels in
+// the scale) on the paragraphs' block. Since 2026-10-13 it binds only where
+// the band is NOT scaled: in THE BAND SCALE the prose track is 770 design
+// pixels at every laptop and desktop width (1106 + 32 − 48 − 320), under the
+// cap, so every line keeps the measure of the owner's 1401 window — ~82
+// characters at 18 design pixels (~9.4 per character of Source Serif at 18px,
+// an estimate, not a measurement), the line drawn larger, never longer.
+// Unscaled — a touch screen that wide, an engine that cannot register — the
+// old arithmetic stands: at 1920 the track is ~1200px (1536 + 32 − 48 − 320,
+// D53), a ~130-character line, far past a comfortable measure for §1's
+// 70-year-old reader, and the cap holds it near 95, binding once the track
+// passes 56rem — a 1232px column, a ~1540px window — and nowhere below. It
+// sits on the paragraphs and not on the half, so the heading above keeps the
+// whole track.
 //
 // ── NO DIVIDER. Round 1's thin line between the halves (one border that
 // changed side at the step) is deleted with its constant: the white card's own
@@ -355,57 +456,65 @@ export function DoctorProfile({
     // the native props and `className` travel to that <section> untouched —
     // TintedBand merges the caller's className LAST (§6.8).
     <TintedBand {...rest} className={className}>
-      {/* Two tracks — the prose, then EXACTLY 20rem (the header's D53 · ONE
-          WIDTH paragraph, with the measurements) — and ONE row (D37's THE
-          CARD IS CENTRED ON THE BAND, one row since G2-R2 a11y F2); THE PROSE
-          OUTDENT is the `-ms-8`. Below `@3xl` one column: the biography,
-          then the card. */}
-      <div className="grid gap-10 py-6 @lg:py-8 @3xl:-ms-8 @3xl:grid-cols-[minmax(0,1fr)_20rem] @3xl:gap-x-12 @3xl:py-10">
-        {/* THE BIOGRAPHY — a region named by its own <h2> (G2-R2 a11y F2),
-            and therefore a BOX at every width: never `contents`, which would
-            cost the region its role. The opener over the paragraphs' block,
-            24px apart, stacked and beside alike. */}
-        <section aria-labelledby={aboutId} className="flex flex-col gap-6">
-          {/* THE NAME IS NEVER SPLIT (2026-09-30). This title carries a
-              PERSON'S NAME, and a name wraps between words or not at all —
-              the rule PersonnelCard, DoctorIntro and ReviewCard keep wherever
-              one is printed. Inheriting the body's `hyphens: auto` (§15.14),
-              it did not: MEASURED on the built export over the six real
-              doctors of lib/team (Range.getClientRects()), Chromium broke
-              „Sa-bău" at 390 (ro, de), „Ele-na" at 360 (ro) and 320–335 (de),
-              „Ali-na" and „Hora-țiu" at 320–335 (fr, it), „Cătă-lina" at
-              390–430 (fr, it). `hyphens-none` rides SectionHeading's ROOT, the
-              one element it merges a className onto, and reaches the <h2>
-              because `hyphens` is inherited (the one-word eyebrow takes it
-              too, harmlessly). It cannot push the column open:
-              tests/unit/team-data.test.ts holds every unbreakable token of a
-              name to NAME_CEILING, 16 characters measured for the larger
-              `hero` step, and the title's other words are short. */}
-          <SectionHeading
-            className="hyphens-none"
-            level={2}
-            id={aboutId}
-            eyebrow={about.eyebrow}
-            title={about.title}
+      {/* THE BAND SCALE — ui/Container's two strings, imported, on a box of
+          their own between the column and the grid (the header's paragraph
+          of that name: on the grid, `mx-auto` and THE PROSE OUTDENT would
+          fight over one start margin). No paint, no padding, no role. */}
+      <div className={cx(bandColumnClasses, bandScaleClasses)}>
+        {/* Two tracks — the prose, then EXACTLY eighty spacing steps, 20rem
+            or 320 design pixels (the header's D53 · ONE WIDTH paragraph, with
+            the measurements) — and ONE row (D37's THE CARD IS CENTRED ON THE
+            BAND, one row since G2-R2 a11y F2); THE PROSE OUTDENT is the
+            `-ms-8`. Below `@3xl` one column: the biography, then the card. */}
+        <div className="grid gap-10 py-6 @lg:py-8 @3xl:-ms-8 @3xl:grid-cols-[minmax(0,1fr)_calc(var(--spacing)*80)] @3xl:gap-x-12 @3xl:py-10">
+          {/* THE BIOGRAPHY — a region named by its own <h2> (G2-R2 a11y F2),
+              and therefore a BOX at every width: never `contents`, which would
+              cost the region its role. The opener over the paragraphs' block,
+              24px apart, stacked and beside alike. */}
+          <section aria-labelledby={aboutId} className="flex flex-col gap-6">
+            {/* THE NAME IS NEVER SPLIT (2026-09-30). This title carries a
+                PERSON'S NAME, and a name wraps between words or not at all —
+                the rule PersonnelCard, DoctorIntro and ReviewCard keep
+                wherever one is printed. Inheriting the body's `hyphens: auto`
+                (§15.14), it did not: MEASURED on the built export over the six
+                real doctors of lib/team (Range.getClientRects()), Chromium
+                broke „Sa-bău" at 390 (ro, de), „Ele-na" at 360 (ro) and
+                320–335 (de), „Ali-na" and „Hora-țiu" at 320–335 (fr, it),
+                „Cătă-lina" at 390–430 (fr, it). `hyphens-none` rides
+                SectionHeading's ROOT, the one element it merges a className
+                onto, and reaches the <h2> because `hyphens` is inherited (the
+                one-word eyebrow takes it too, harmlessly). It cannot push the
+                column open: tests/unit/team-data.test.ts holds every
+                unbreakable token of a name to NAME_CEILING, 16 characters
+                measured for the larger `hero` step, and the title's other
+                words are short. */}
+            <SectionHeading
+              className="hyphens-none"
+              level={2}
+              id={aboutId}
+              eyebrow={about.eyebrow}
+              title={about.title}
+            />
+            {/* `max-w-4xl` is the header's ONE LEVER ON THE MEASURE. */}
+            <div className="flex max-w-4xl flex-col gap-4">
+              {about.paragraphs.map((paragraph) => (
+                <p key={paragraph} className="text-lg text-ink text-justify">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </section>
+          {/* THE CARD — ONE width, eighty spacing steps: `max-w-80` is the
+              track's eighty above, KEEP-IN-SYNC (D53) — 20rem, or 320 design
+              pixels in THE BAND SCALE — centred when stacked and yielding only
+              to a column narrower than itself; at the step the second track of
+              the one row, its own height, its middle the band's (D37). */}
+          <ScheduleCard
+            className="w-full max-w-80 mx-auto @3xl:self-center"
+            title={schedule.title}
+            rows={schedule.rows}
           />
-          {/* `max-w-4xl` is the header's ONE LEVER ON THE MEASURE. */}
-          <div className="flex max-w-4xl flex-col gap-4">
-            {about.paragraphs.map((paragraph) => (
-              <p key={paragraph} className="text-lg text-ink text-justify">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </section>
-        {/* THE CARD — ONE width, 20rem: `max-w-80` is the track's `20rem`
-            above, KEEP-IN-SYNC (D53), centred when stacked and yielding only
-            to a column narrower than itself; at the step the second track of
-            the one row, its own height, its middle the band's (D37). */}
-        <ScheduleCard
-          className="w-full max-w-80 mx-auto @3xl:self-center"
-          title={schedule.title}
-          rows={schedule.rows}
-        />
+        </div>
       </div>
     </TintedBand>
   );

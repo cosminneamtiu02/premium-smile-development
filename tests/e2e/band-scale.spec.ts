@@ -12,14 +12,18 @@ import { expect, type Page, test } from '@playwright/test';
 // the doctor card's quote size), the map band grows as one design, the
 // reviews band's opener alone scales (its deck is untouched) and the staff
 // tiles hold one width. On every phone, every touch tablet and every window
-// under the step, nothing changes.
+// under the step, nothing changes. Since 2026-10-13 a doctor's page draws its
+// map band in the scale too (§15.32 round 3, the owner: "as the current map
+// on home page is now … on absoultey every page"), and the last block below
+// reads that band beside Home's at every window — phone and tablet included.
 //
 // WHY THE BUILT EXPORT: the scale is real CSS — a registered custom property,
 // container queries, `@supports` and `(pointer: fine)` — resolved by the
 // engine against the page a visitor downloads. Nothing here is a screenshot:
 // computed font sizes and boxes, read off the page (the doctor-showcase
-// spec's idiom). The one band word read here is spelled below, never
-// imported, so a silent rename fails here.
+// spec's idiom). The two band words read here — the staff band's title and
+// the map band's — are spelled below, never imported, so a silent rename
+// fails here.
 //
 // THE NUMBERS: s = min(column, 1536) / 1106 with `column` read off the page
 // (ui/Container's width), so the checks hold under a classic scrollbar and
@@ -34,6 +38,16 @@ const STAFF_TITLE: Record<Locale, string> = {
   ro: 'Oamenii fără de care nu ne-am descurca',
   de: 'Die Menschen, ohne die es nicht ginge',
 };
+
+/** The map band's <h2> — `home.location.title`, on every page that mounts it. */
+const LOCATION_TITLE: Record<Locale, string> = {
+  ro: 'Vizitează clinica noastră',
+  de: 'Besuchen Sie unsere Klinik',
+};
+
+/** A doctor's page — the first in lib/team's list (the phone-gutter spec's). */
+const DOCTOR_PATH = (locale: Locale): string =>
+  `/${locale}/team/malea-sabau-oana-bianca/`;
 
 /** The pages and what each must hold. */
 const PAGES: readonly {
@@ -475,5 +489,136 @@ for (const locale of ['ro', 'de'] as const) {
       expect(shape.staff).toHaveLength(3);
       for (const tile of shape.staff) expect(tile.width).toBe(288);
     });
+  });
+
+  test.describe(`${DOCTOR_PATH(locale)} — its map band IS Home’s, at every window (§15.32 round 3)`, () => {
+    // The owner, 2026-10-13: "as the current map on home page is now, i need
+    // it updated reactivity wise on absoultey every page, including
+    // reactivity. with this i am refering to individual doctor page". So a
+    // doctor's map band is read beside Home's at the same window — on a
+    // laptop or desktop, where both pages pass `scaled` and THE BAND SCALE
+    // draws it, and on a phone and a touch tablet, where neither declares
+    // anything — and every number of it must agree: the eyebrow and the <h2>,
+    // their left edge and the gap between them, the band's column, the map's
+    // box, the band's width, the address and the discs. The doctor page's
+    // OTHER bands do not scale yet (the recorded price), so only the map band
+    // is read.
+    test.use({ locale: BROWSER_LOCALE[locale] });
+    onLaptopOnly();
+
+    interface MapBand {
+      readonly opener: Opener;
+      readonly map: NonNullable<PageShape['map']>;
+      readonly pointerFine: boolean;
+    }
+
+    /** One page's map band at one window, read off the built page. */
+    const mapBandAt = async (
+      page: Page,
+      path: string,
+      viewport: { width: number; height: number },
+    ): Promise<MapBand> => {
+      await openAt(page, path, viewport);
+      const shape = await readPage(page, STAFF_TITLE[locale]);
+      const opener = shape.openers.find(
+        (candidate) => candidate.title === LOCATION_TITLE[locale],
+      );
+      if (opener === undefined) throw new Error(`no map band on ${path}`);
+      if (shape.map === null) throw new Error(`no map on ${path}`);
+      expect(shape.sideways, `sideways scroll on ${path}`).toBeLessThanOrEqual(
+        0,
+      );
+      return { opener, map: shape.map, pointerFine: shape.pointerFine };
+    };
+
+    /** Every number the band is made of, by name. */
+    const numbersOf = (band: MapBand): Readonly<Record<string, number>> => ({
+      'eyebrow size': band.opener.eyebrowSize,
+      'title size': band.opener.titleSize,
+      'eyebrow left': band.opener.eyebrowLeft,
+      'title left': band.opener.titleLeft,
+      'eyebrow → title gap': band.opener.gap,
+      column: band.opener.column,
+      'map width': band.map.width,
+      'map height': band.map.height,
+      'band width': band.map.band,
+      address: band.map.address,
+      'row disc': band.map.disc,
+    });
+
+    /** The doctor's band and Home's, number for number, to a twentieth of a
+     *  pixel — never vacuous: each number is a real length on both pages. */
+    const expectSameBand = (
+      doctor: MapBand,
+      home: MapBand,
+      where: string,
+    ): void => {
+      const homes = numbersOf(home);
+      for (const [name, value] of Object.entries(numbersOf(doctor))) {
+        const theirs = homes[name] ?? NaN;
+        expect(Number.isFinite(value), `${name} at ${where}`).toBe(true);
+        expect(Number.isFinite(theirs), `Home’s ${name} at ${where}`).toBe(
+          true,
+        );
+        expect(value, `${name} at ${where}: the doctor page’s`).toBeCloseTo(
+          theirs,
+          1,
+        );
+      }
+    };
+
+    for (const viewport of LAPTOPS) {
+      test(`at ${viewport.width} × ${viewport.height}: the band Home draws — every number equal, every size the design × s`, async ({
+        page,
+      }) => {
+        const home = await mapBandAt(page, `/${locale}/`, viewport);
+        const doctor = await mapBandAt(page, DOCTOR_PATH(locale), viewport);
+        expect(doctor.pointerFine, 'a mouse device').toBe(true);
+        expectSameBand(doctor, home, `${viewport.width}`);
+
+        // …and in THE BAND SCALE itself, read on the doctor's page alone, so
+        // the pair cannot agree by both losing it.
+        const s = Math.min(doctor.opener.column, 1536) / 1106;
+        const near = (actual: number, design: number, what: string): void =>
+          expect(actual, `${what} at ${viewport.width}`).toBeCloseTo(
+            design * s,
+            1,
+          );
+        near(doctor.opener.titleSize, DESIGN.title, 'the title');
+        near(doctor.opener.eyebrowSize, DESIGN.eyebrow, 'the eyebrow');
+        near(doctor.map.address, DESIGN.address, 'the address');
+        near(doctor.map.disc, DESIGN.mapDisc, 'the row disc');
+        expect(doctor.map.width / doctor.map.height).toBeCloseTo(2, 1);
+      });
+    }
+
+    for (const device of [
+      { name: 'a 390 × 844 phone', viewport: { width: 390, height: 844 } },
+      {
+        name: 'a 1180 × 820 touch tablet',
+        viewport: { width: 1180, height: 820 },
+      },
+    ] as const) {
+      test.describe(device.name, () => {
+        test.use({ viewport: device.viewport, hasTouch: true, isMobile: true });
+
+        test('the band Home draws — every number equal, the theme’s own sizes on both', async ({
+          page,
+        }) => {
+          const home = await mapBandAt(page, `/${locale}/`, device.viewport);
+          const doctor = await mapBandAt(
+            page,
+            DOCTOR_PATH(locale),
+            device.viewport,
+          );
+          expect(doctor.pointerFine, 'a touch device').toBe(false);
+          expectSameBand(doctor, home, device.name);
+          // Nothing declared on a touch screen: the theme's 16px address and
+          // 44px disc, on both pages.
+          expect(doctor.map.address).toBe(16);
+          expect(doctor.map.disc).toBe(44);
+        });
+      });
+    }
   });
 }

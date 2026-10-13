@@ -148,8 +148,12 @@ import { cx } from '@/lib/cx/cx';
 // requirements, but the idea is the following, i do not want the map to be
 // too large, the space the buttons take up too small or disproportioned and
 // text just as readable as this always: [a doctor's quote]".
-// THE DECISION (the planner's, the same day): `scaled` — the prop Home and
-// Team pass — puts the rhythm box in ui/Container's two band-scale strings,
+// THE DECISION (the planner's, the same day): `scaled` — the prop every page
+// passes: Home and Team from that day, the doctor pages from 2026-10-13 (the
+// owner: "as the current map on home page is now, i need it updated
+// reactivity wise on absoultey every page … with this i am refering to
+// individual doctor page"; §15.32 round 3) — puts the rhythm box in
+// ui/Container's two band-scale strings,
 // `bandColumnClasses` and `bandScaleClasses`, so on a laptop or desktop, from
 // a max(56rem, 896px) column, the WHOLE band — opener, map tray, rows, discs,
 // words, rhythm — is ONE design drawn at the owner's 1401 window and scaled
@@ -254,8 +258,9 @@ const ROW_HOVER =
 // reads both back from the real stylesheet) — and inside a scaled band it is
 // 44 design px with a 20-design-px glyph, because the variable is resolved on
 // the disc, against the `--spacing` the band hands down. One rule for every
-// mount, so the doctor page's band and Home's can never disagree about what a
-// disc is made of — only about the pixel it is measured in.
+// mount, so the band's unscaled default and every scaled page can never
+// disagree about what a disc is made of — only about the pixel it is measured
+// in.
 const DISC_SIZE = '[--disc-size:calc(var(--spacing)*11)]';
 
 /**
@@ -350,12 +355,19 @@ export type ClinicLocationProps = Readonly<{
    * (the header's THE BAND SCALE; ui/Container's): the rhythm box wears
    * `bandColumnClasses` + `bandScaleClasses`, so opener, map, rows, discs and
    * words scale with the column like every band around them and cap and
-   * centre at the same width. Home and Team pass it — every band below the
-   * Home hero and every band of the Team page wears the scale. Default
-   * `false`, because the doctor page mounts this band too and its other bands
-   * do not scale yet: there the band stays its rem self, every pixel as
-   * before. Below the step, on every touch device and in an engine that
-   * cannot register custom properties, `true` declares nothing either.
+   * centre at the same width. EVERY page that mounts the band passes it:
+   * Home and Team since 2026-10-02 (every band below the Home hero and every
+   * band of the Team page wears the scale) and the doctor pages since
+   * 2026-10-13 — the owner's "as the current map on home page is now … on
+   * absoultey every page" (§15.32 round 3), so the map is one band wherever
+   * it stands, though the doctor page's other bands do not scale yet.
+   * app/[locale]/page-twins.test.ts holds every page and twin to the bare
+   * flag. Default `false`, the band's plain rem self — what its own stories
+   * draw — because the prop arrived additive (§6.6); wearing the scale
+   * unconditionally and deleting the prop (ui/Container's recipe, a band
+   * living only on scaled pages) is the recorded lever. Below the step, on
+   * every touch device and in an engine that cannot register custom
+   * properties, `true` declares nothing either.
    */
   scaled?: boolean;
 }>;

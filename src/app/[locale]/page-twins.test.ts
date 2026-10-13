@@ -19,7 +19,9 @@ import teamPage from './team/page.tsx?raw';
 // net cannot see a prop that moves no pixel. (tests/e2e/doctor-showcase.spec.ts
 // does read the built pages, but the e2e suite runs in no workflow and no hook.)
 //
-// So this file reads all six sources and compares what a drift would change:
+// So this file reads the pages and their twins — eight named sources, and
+// since 2026-10-13 every .tsx under this folder through one glob — and
+// compares what a drift would change:
 //   · THE BANDS, IN ORDER — the elements each page returns, and its twin's;
 //   · THE DOCTORS BAND'S PROPS — by NAME: the Team page says `firstScreen`
 //     (the band opens its first screen — DoctorShowcase D9), Home does not
@@ -35,19 +37,26 @@ import teamPage from './team/page.tsx?raw';
 //     lost `ground="page"` would ship the band lilac again, while the pixel
 //     net photographs the TWIN, which would still say it;
 //   · THE BAND SCALE (2026-10-02, CLAUDE.md §15.32) — `scaled` on the numbers
-//     band and on the map, by NAME: Home and the Team page say it (every band
-//     on both pages draws in ui/Container's THE BAND SCALE, one heading size
-//     and one offset), the doctor page says it on NEITHER (its other bands do
-//     not scale yet, and its headings must stay one size with them), and each
+//     band and on the map, by NAME: Home and the Team page say it on both
+//     (every band on both pages draws in ui/Container's THE BAND SCALE, one
+//     heading size and one offset), the doctor page says it on the MAP alone
+//     since 2026-10-13 (round 3 — the owner: "as the current map on home page
+//     is now, i need it updated reactivity wise on absoultey every page") and
+//     not on the numbers band (its other bands do not scale yet), and each
 //     twin says what its page says. A page that lost the word would ship one
 //     band out of step with its neighbours on every laptop — in pixels the net
 //     does see, but only on the TWIN, which would still say it;
+//   · THE MAP ON EVERY PAGE (round 3) — every file under this folder that
+//     imports the map, found by a glob, mounts it once, `scaled`, bare, with
+//     nothing else in the tag, so a page added here later cannot draw a
+//     second kind of map;
 //   · THE STAFF BAND'S PROPS (since 2026-10-02): the Team page hands
 //     sections/TeamRoster its eyebrow and its title, and its twin the same.
 // Only names are compared, never values: a page reads `getTranslations`, its
 // twin `useTranslations`. And only the doctors band's and the numbers band's
 // props are held equal — a twin may pin a band for the workbench (a clock, a
-// viewport) with a prop its page does not pass.
+// viewport) with a prop its page does not pass. The map is the exception:
+// since round 3 the census holds every page AND twin to `scaled` alone.
 //
 // It runs in the `components` project (src/**/*.test.{ts,tsx}); nothing is
 // rendered — the mechanism of team/stat-tiles.test.tsx's "THE ONE COPY",
@@ -371,10 +380,121 @@ describe('a doctor’s page and its story twin — read off their source', () =>
     }
   });
 
-  it('leaves BOTH shared bands UNSCALED — the numbers and the map, page and twin alike (§15.32: its own bands do not scale yet)', () => {
+  it('draws the map in the band scale — `scaled`, BARE, and nothing else, page and twin alike (§15.32 round 3: the map Home and Team draw)', () => {
+    for (const jsx of [DOCTOR.page, DOCTOR.twin]) {
+      expect(propsOf(jsx, 'ClinicLocation')).toEqual(['scaled']);
+      expect(flagsOf(jsx, 'ClinicLocation')).toEqual(['scaled']);
+      expect(jsx).not.toMatch(/\bscaled=/);
+    }
+  });
+
+  it('leaves the numbers band UNSCALED — its page’s other bands do not scale yet — page and twin alike (§15.32)', () => {
     for (const jsx of [DOCTOR.page, DOCTOR.twin]) {
       expect(propsOf(jsx, 'DoctorStats')).not.toContain('scaled');
-      expect(propsOf(jsx, 'ClinicLocation')).toEqual([]);
+    }
+  });
+});
+
+/**
+ * Every .tsx under app/[locale]/ but the tests — pages, the layout, twins and
+ * helpers alike — as SOURCE: the census for THE MAP ON EVERY PAGE (§15.32
+ * round 3). `import.meta.glob` is a build-time Vite transform
+ * (src/assets/flags/Flags.test.tsx's precedent), so a file added later is in
+ * this record without an edit here. Typed by Next's own declaration
+ * (next/types/global.d.ts), whose eager form answers `unknown` per file: each
+ * is checked to be text where it is read.
+ */
+const LOCALE_SOURCES = import.meta.glob(['./**/*.tsx', '!./**/*.test.tsx'], {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+
+/** The map band's module, as every importer under app/[locale]/ spells it. */
+const MAP_MODULE = '@/components/sections/ClinicLocation/ClinicLocation';
+
+/**
+ * The name a file imports the map band under — `ClinicLocation`, or the alias
+ * of `ClinicLocation as …` — or null when it does not import it by name. A file
+ * is chosen by WHAT IT IMPORTS, never by a match in its JSX (the TypeScript
+ * review, 2026-10-13): a mount the comment scanner swallowed — it reads a `//`
+ * inside JSX text as a comment — then fails the one-mount check below instead
+ * of hiding its file from the census. A namespace or default import is not
+ * read; nothing in this folder imports the band that way.
+ */
+const mapNameIn = (code: string): string | null => {
+  const specifiers = new RegExp(
+    String.raw`import\s*\{([^}]*)\}\s*from\s*['"]${MAP_MODULE}['"]`,
+  ).exec(code)?.[1];
+  if (specifiers === undefined) return null;
+  const binding =
+    /(?:^|,)\s*ClinicLocation(?:\s+as\s+([A-Za-z_$][\w$]*))?\s*(?=,|$)/.exec(
+      specifiers.trim(),
+    );
+  return binding === null ? null : (binding[1] ?? 'ClinicLocation');
+};
+
+/**
+ * Every JSX mount of `name` in `code`, each as the text from its `<` to the
+ * file's end — the shape `propsOf` and `flagsOf` read (from the FIRST `<name`
+ * to the next `/>`), so each mount is read on its own (the React and
+ * TypeScript reviews: the first cut read only the first). `(?![\w$.])` keeps a
+ * longer name out — `<ClinicLocationProps>` as a type argument.
+ */
+const mountsOf = (code: string, name: string): string[] =>
+  Array.from(
+    code.matchAll(
+      new RegExp(String.raw`<${name.replaceAll('$', '\\$')}(?![\w$.])`, 'g'),
+    ),
+    (match) => code.slice(match.index),
+  );
+
+describe('THE MAP ON EVERY PAGE — one band, one scale, wherever app/[locale]/ mounts it (§15.32 round 3)', () => {
+  // The owner, 2026-10-13: "as the current map on home page is now, i need it
+  // updated reactivity wise on absoultey every page … with this i am refering
+  // to individual doctor page". The doctor page had been left out of THE BAND
+  // SCALE by a flag it did not pass, so the guard is on the flag, in every
+  // file under app/[locale]/ that imports the band: ONE mount each, `scaled`,
+  // bare, and nothing else in the tag — no other prop, and no spread that
+  // could carry a `scaled={false}` past the names. A page added later that
+  // forgets the flag fails here, by its path. Outside this folder it does not
+  // look: the band's own stories (sections/ClinicLocation) draw its unscaled
+  // default for the workbench, and a section that composed the band (§4
+  // allows it; none does today) would need a guard of its own.
+  const importers = Object.entries(LOCALE_SOURCES).flatMap(([path, source]) => {
+    if (typeof source !== 'string') {
+      throw new Error(`${path} did not load as text`);
+    }
+    const code = stripComments(source);
+    const name = mapNameIn(code);
+    return name === null ? [] : [{ path, code, name }];
+  });
+
+  it('finds every file that imports the map — Home, the Team page and the doctor page, each with its twin', () => {
+    expect(importers.map(({ path }) => path).toSorted()).toEqual([
+      './(home)/Home.stories.tsx',
+      './(home)/page.tsx',
+      './team/Team.stories.tsx',
+      './team/[slug]/Doctor.stories.tsx',
+      './team/[slug]/page.tsx',
+      './team/page.tsx',
+    ]);
+  });
+
+  it('mounts the map ONCE in each — `scaled`, bare, nothing else, no spread', () => {
+    // Never vacuous, even run alone (`-t`): the census holds its six files.
+    expect(importers).toHaveLength(6);
+    for (const { path, code, name } of importers) {
+      const mounts = mountsOf(code, name);
+      expect(mounts, `${path}: one <${name}>`).toHaveLength(1);
+      for (const mount of mounts) {
+        expect(propsOf(mount, name), path).toEqual(['scaled']);
+        expect(flagsOf(mount, name), path).toEqual(['scaled']);
+        expect(
+          mount.slice(0, mount.indexOf('/>')),
+          `${path}: a spread`,
+        ).not.toContain('{...');
+      }
     }
   });
 });
@@ -451,5 +571,50 @@ describe('the reader itself — a guard that cannot fail is not a guard', () => 
     expect(() => returned('const x = 1;', 'TeamPage')).toThrow(
       'no function TeamPage',
     );
+  });
+
+  it('finds the map by its IMPORT — under an alias too — and never by a name that merely starts like it', () => {
+    expect(mapNameIn(`import { ClinicLocation } from '${MAP_MODULE}';`)).toBe(
+      'ClinicLocation',
+    );
+    expect(
+      mapNameIn(`import {\n  ClinicLocation as Map,\n} from '${MAP_MODULE}';`),
+    ).toBe('Map');
+    expect(
+      mapNameIn(
+        `import { ClinicLocation, type ClinicLocationProps } from '${MAP_MODULE}';`,
+      ),
+    ).toBe('ClinicLocation');
+    expect(
+      mapNameIn(`import { type ClinicLocationProps } from '${MAP_MODULE}';`),
+    ).toBeNull();
+    expect(
+      mapNameIn(`import { Hero } from '@/components/sections/Hero/Hero';`),
+    ).toBeNull();
+  });
+
+  it('reads EVERY mount on its own — a second, unscaled one and a spread are both visible', () => {
+    const conditional = mountsOf(
+      '{wide ? <ClinicLocation scaled /> : <ClinicLocation />}',
+      'ClinicLocation',
+    );
+    expect(conditional.map((m) => flagsOf(m, 'ClinicLocation'))).toEqual([
+      ['scaled'],
+      [],
+    ]);
+    // A longer name is not a mount.
+    expect(
+      mountsOf(
+        'useState<ClinicLocationProps>(); <ClinicLocation scaled />',
+        'ClinicLocation',
+      ),
+    ).toHaveLength(1);
+    // The names alone cannot see a spread; the tag's text can.
+    const [spread = ''] = mountsOf(
+      '<ClinicLocation scaled {...overrides} />',
+      'ClinicLocation',
+    );
+    expect(propsOf(spread, 'ClinicLocation')).toEqual(['scaled']);
+    expect(spread.slice(0, spread.indexOf('/>'))).toContain('{...');
   });
 });

@@ -453,12 +453,13 @@ const productFiles = readdirSync(new URL('src/', REPO), {
  *  hero and every band of the Team page — the doctors, the numbers, the map,
  *  the reviews' opener and the staff — and, since round 2 the same evening,
  *  the Services page's one band, the price list (its menu and its cards);
- *  and, since round 4 (2026-10-13), every band of a doctor's page — the three
- *  that live only there wear it themselves (the opener, the biography and the
- *  courses), the numbers and the map take `scaled` from the page. */
+ *  and, since round 4 (2026-10-13), every band of a doctor's page — the two
+ *  that live only there wear it themselves (the opener, and the band with the
+ *  biography beside the courses — the courses block inside it inherits the
+ *  scale and wears none of its own since round 7 the same day), the numbers
+ *  and the map take `scaled` from the page. */
 const WEARERS = [
   'components/sections/ClinicLocation/ClinicLocation.tsx',
-  'components/sections/DoctorCourses/DoctorCourses.tsx',
   'components/sections/DoctorIntro/DoctorIntro.tsx',
   'components/sections/DoctorProfile/DoctorProfile.tsx',
   'components/sections/DoctorShowcase/DoctorShowcase.tsx',

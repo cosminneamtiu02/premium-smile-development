@@ -111,7 +111,10 @@ per page, `@type: Dentist`, values === clinic.ts, no raw `<` in the payload.
    language tabs of one doctor cannot tell them apart by title. The full pattern here is
    `{name} — {position} — {siteName}` (the specialty is the page's one locale-varying fact: „Dr. Elena
    Marin — Medic specialist ortodonție — Premium Smile"), from lib/team's `words[locale].position`; the
-   description from the biography's first paragraph.
+   description from the biography's first paragraph — its READING, not its source: since 2026-10-13 every
+   `about` paragraph carries `<k>…</k>` key-word marks under a plain `string` type (CLAUDE.md §15.23 round 7),
+   so `words.about[0]` as it stands would put the tags into the meta description with tsc green. Join
+   `splitKeywords(paragraph)`'s segments' `text` (what tests/unit/team-data.test.ts's `readingOf` does).
 2. **seo.ts part 2 (the old S7)** — build-time generation (§16: everything identical for
    every visitor is compiled) of:
    - `sitemap.xml`: every locale × route with hreflang alternates + `x-default` (ro);

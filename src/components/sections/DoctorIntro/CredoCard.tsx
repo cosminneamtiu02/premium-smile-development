@@ -22,8 +22,9 @@ import { Card } from '@/components/ui/Card/Card';
 //
 // It lives inside the band's folder rather than beside it because it has
 // exactly one consumer, DoctorIntro, and nothing about it is shared (the
-// CategoryCard-in-PriceList and ScheduleCard-in-DoctorProfile precedent: a band's
-// own piece stays in the band's folder until a second consumer exists).
+// CategoryCard-in-PriceList precedent — and ScheduleCard-in-DoctorProfile's,
+// until the owner dropped that card on 2026-10-13: a band's own piece stays
+// in the band's folder until a second consumer exists).
 // Exported all the same, so the suites can mount it alone. It has NO story of
 // its own, on purpose: it is photographed inside every DoctorIntro story, and
 // a second frame would only duplicate those pixels.
@@ -98,7 +99,8 @@ import { Card } from '@/components/ui/Card/Card';
 //   from the last glow pixel to the ground; with `pb-8` the tail ends on the
 //   same 1/255 as the tablet's (re-measured at 320 and 390).
 //
-// ── D12 · THE CARD IS A NAMED REGION, the ScheduleCard idiom exactly:
+// ── D12 · THE CARD IS A NAMED REGION (the idiom the doctor page's schedule
+// card shared until it was dropped on 2026-10-13):
 // `ui/Card asChild` puts the surface, the inset and the `@container` context
 // ON the <section> this file chose, so nothing sits between the words column
 // and the element being named. `aria-labelledby` → the heading's id is what
@@ -107,7 +109,8 @@ import { Card } from '@/components/ui/Card/Card';
 // The band that holds it stays GENERIC (DoctorIntro's THE BAND NAMES NOTHING,
 // ITSELF INCLUDED): its only heading is the page's <h1>, while this card's
 // heading is its own.
-// NO `tabIndex={-1}`: nobody's jump target (the ScheduleCard reasoning).
+// NO `tabIndex={-1}`: nobody's jump target — that attribute is for a box a
+// link or a script moves focus to, and nothing on the site names this card.
 //
 // ── THE HEADING IS AN <h2>, THROUGH sections/SectionHeading. The page's
 // outline is h1 (the doctor's name, the band's pair) → h2 (this card) — the
@@ -288,7 +291,7 @@ export type DoctorIntroCredo = Readonly<{
 
 export type CredoCardProps = DoctorIntroCredo &
   // The native <section> surface minus what this component owns (§6.8
-  // fidelity, the ScheduleCard Omit idiom). `children` goes because content
+  // fidelity, the ReviewCard / PersonnelCard Omit idiom). `children` goes because content
   // arrives as `body` — without the Omit a caller could nest something,
   // type-check, and watch it vanish. `title` leaves the native side with the
   // own keys: here it means the heading's text, not HTML's tooltip. The two

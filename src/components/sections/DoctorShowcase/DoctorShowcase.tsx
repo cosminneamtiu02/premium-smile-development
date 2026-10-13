@@ -83,7 +83,7 @@ import { cx } from '@/lib/cx/cx';
 // word: "remove that space") — and that room IS this band's air. The usual
 // `pb` on top of it would double it, and so would a `gap`. The stepped `pt`
 // sits on the rhythm box one level in, because an element cannot query its
-// own size (the DoctorCourses / ClinicLocation spelling, ui/Container's recipe
+// own size (the DoctorProfile / ClinicLocation spelling, ui/Container's recipe
 // rule 3) — and inside the regime it is drawn in the band's design pixel like
 // every other length (D10): the box that remaps the step is the box it sits on.
 //

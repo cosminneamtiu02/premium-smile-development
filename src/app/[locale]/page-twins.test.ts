@@ -345,12 +345,17 @@ describe('the Home page and its story twin — read off their source', () => {
 });
 
 describe('a doctor’s page and its story twin — read off their source', () => {
-  it('returns the same bands in the same order: opener → profile → courses → numbers → map', () => {
+  it('returns the same bands in the same order: opener → numbers → profile → map', () => {
+    // The owner's order since 2026-10-13 (CLAUDE.md §15.23 round 7): "hero
+    // section, then Experience confirmed over time and below on the left
+    // biography and on the right the thing with the "Courses and
+    // specialisations"". The courses are no band of their own any more:
+    // sections/DoctorProfile composes sections/DoctorCourses beside the
+    // biography, so the page mounts four bands, the courses inside the third.
     expect(bandsOf(DOCTOR.page)).toEqual([
       'DoctorIntro',
-      'DoctorProfile',
-      'DoctorCourses',
       'DoctorStats',
+      'DoctorProfile',
       'ClinicLocation',
     ]);
     expect(bandsOf(DOCTOR.twin)).toEqual(bandsOf(DOCTOR.page));

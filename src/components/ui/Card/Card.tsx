@@ -519,7 +519,7 @@ const cardGeometry = '@container flex flex-col gap-3';
 // chosen per kind and recorded (§15.29), never inferred from a neighbour.
 // Emitted right after the geometry, where `rounded-md` always stood, so every
 // card that does not ask keeps its class string byte for byte — the
-// consumers' pins (ReviewCard, CategoryCard, CredoCard, ScheduleCard) never
+// consumers' pins (ReviewCard, CategoryCard, CredoCard) never
 // noticed the axis arrive. The glow's `before:rounded-[inherit]` follows
 // whichever corner the card wears. tests/unit/soft-corner-census.test.ts
 // counts this file's one spelling of the token among the wearers.

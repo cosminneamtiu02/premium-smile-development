@@ -107,7 +107,7 @@
         "title": "About {name}"
       },
       "courses": {
-        "eyebrow": "Continuing education",
+        "eyebrow": "Milestones on my path to specialisation",
         "title": "Courses and specialisations"
       },
       "stats": {
@@ -115,10 +115,6 @@
         "title": "Experience confirmed over time",
         "lead": "The numbers below say, in short, how we work: with care, with modern technology and with genuine attention to every patient.",
         "atLeast": "over"
-      },
-      "schedule": {
-        "title": "When to find me at the clinic",
-        "closed": "Closed"
       }
     }
   },

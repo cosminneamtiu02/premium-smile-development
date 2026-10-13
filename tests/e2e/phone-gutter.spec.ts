@@ -12,7 +12,8 @@ import { expect, type Page, test } from '@playwright/test';
 // ramp below 600), plus the two side effects the lane found and handled: the
 // logo's phone size on the largest iPhones (sections/Wordmark's `@max-md`
 // step) and a sideways scroll during the course timeline's forward
-// animation (sections/DoctorCourses' belt).
+// animation (the belt — sections/DoctorProfile's since 2026-10-13, when the
+// courses joined the biography's band; sections/DoctorCourses' until then).
 
 const PAGES = [
   '/ro/',
@@ -156,56 +157,115 @@ for (const path of PAGES) {
   });
 }
 
+/** The courses' rhythm, KEEP-IN-SYNC with sections/DoctorCourses'
+ *  COURSES_INTERVAL_MS — spelled here because this suite reads the built
+ *  page and imports nothing from src. */
+const COURSES_INTERVAL_MS = 3_000;
+
 test.describe('the course timeline comes forward without a sideways scroll', () => {
-  // Its current year scales 1.04 and overshoots ~1.06 for a few frames
-  // (sections/DoctorCourses/CourseTimeline.tsx), growing to the right: the
-  // overshoot fit the old 32–43px phone gutter and pokes 2.6–3.5px past the
-  // halved one, so the band's full-bleed outer wears an `overflow-x-clip`
-  // belt. Motion ON here (no reduced-motion emulation): the animation IS the
-  // case. Every frame of a walk through the band is sampled, the walk
-  // bounded to the band and its scrolls instant (the site's smooth scrolling
-  // would make each a glide).
+  // The lit idea scales 1.04 and overshoots ~1.06 for a few frames each time
+  // the automatic cycle lights it (sections/DoctorCourses/CourseTimeline.tsx),
+  // growing to the right: on a phone the ideas stack column-wide, so the
+  // overshoot pokes ~2.7–3.7px past the halved phone gutter, and the band's
+  // full-bleed outer — sections/DoctorProfile's since 2026-10-13, when the
+  // courses joined the biography's band — wears an `overflow-x-clip` belt.
+  // Motion ON here (no reduced-motion emulation): the animation IS the case.
+  // Since the highlight follows a CLOCK, not the scroll (the owner,
+  // 2026-10-13: "the scrolll highiight has to be automatic now"), the walk
+  // first waits for the island's FIRST light (it lands at mount, below the
+  // fold, and holds there — the off-screen hold), brings the courses into
+  // view instantly (the site's smooth scrolling would make it a glide), times
+  // the cycle lighting the NEXT idea — a full interval after they arrive —
+  // and samples every frame of that idea's forward motion. Reading the lit
+  // idea before the first light had landed made the walk vacuous: `null`,
+  // then idea 1 a few milliseconds later, "changed" with no clock involved
+  // (G2 typescript M1, react L1 — 20 of 21 runs measured that way).
   for (const width of [320, 390, 430] as const) {
     test(`a ${width}px phone, every frame`, async ({ page }) => {
       test.setTimeout(60_000);
       await openAt(page, '/ro/team/malea-sabau-oana-bianca/', width);
+      await page.waitForFunction(
+        () => document.querySelector('main li[data-current]') !== null,
+        null,
+        { timeout: 10_000 },
+      );
       const walk = await page.evaluate(async () => {
         const root = document.documentElement;
         const title = [...document.querySelectorAll('h2')].find((h) =>
           /Cursuri/.test(h.textContent ?? ''),
         );
-        const band = title?.closest('section');
-        if (!band) return null;
-        const top = band.getBoundingClientRect().top + window.scrollY;
-        const bottom = top + band.getBoundingClientRect().height;
+        const courses = title?.closest('section');
+        if (!courses) return null;
+        const ideas = [...courses.querySelectorAll('li')];
+        const litIdea = (): Element | null =>
+          courses.querySelector('[data-current]');
+        const indexOf = (idea: Element | null): number =>
+          idea === null ? -1 : ideas.indexOf(idea as HTMLLIElement);
+        // THE PREMISE: the courses start below the fold, so the cycle is
+        // HELD and the next light can only come after they arrive.
+        const offAtLoad =
+          courses.getBoundingClientRect().top >= window.innerHeight;
+        const before = litIdea();
+        courses.scrollIntoView({ block: 'center', behavior: 'instant' });
+        const arrived = performance.now();
+        // Bounded, so a stopped cycle fails here rather than hanging the run.
+        const deadline = arrived + 10_000;
+        while (litIdea() === before && performance.now() < deadline) {
+          await new Promise(requestAnimationFrame);
+        }
+        const waited = performance.now() - arrived;
+        const after = litIdea();
         let sideways = Number.NEGATIVE_INFINITY;
         let peak = Number.NEGATIVE_INFINITY;
         let lit = 0;
-        for (let y = top - window.innerHeight; y <= bottom; y += 40) {
-          window.scrollTo({ top: y, behavior: 'instant' });
-          for (let frame = 0; frame < 6; frame++) {
-            await new Promise(requestAnimationFrame);
-            sideways = Math.max(sideways, root.scrollWidth - root.clientWidth);
-            for (const group of band.querySelectorAll('[data-current]')) {
-              lit++;
-              peak = Math.max(
-                peak,
-                group.getBoundingClientRect().right - window.innerWidth,
-              );
-            }
+        // Every frame of the forward motion: 450ms, sampled for 900.
+        const end = performance.now() + 900;
+        while (performance.now() < end) {
+          await new Promise(requestAnimationFrame);
+          sideways = Math.max(sideways, root.scrollWidth - root.clientWidth);
+          const idea = litIdea();
+          if (idea) {
+            lit++;
+            peak = Math.max(
+              peak,
+              idea.getBoundingClientRect().right - window.innerWidth,
+            );
           }
         }
-        return { sideways, peak, lit };
+        return {
+          offAtLoad,
+          count: ideas.length,
+          before: indexOf(before),
+          after: indexOf(after),
+          waited,
+          sideways,
+          peak,
+          lit,
+        };
       });
-      expect(walk, 'the courses band').not.toBeNull();
-      // Never vacuous: a year was lit, and its forward peak really did pass
-      // the screen's edge — the belt was exercised, not merely present.
-      expect(walk?.lit).toBeGreaterThan(0);
-      expect(walk?.peak, 'the forward peak past the edge').toBeGreaterThan(0);
+      expect(walk, 'the courses region').not.toBeNull();
+      if (walk === null) return;
+      // Never vacuous: the courses started held below the fold with an idea
+      // lit, the cycle moved on BY ITSELF to the very next idea a full
+      // interval after they arrived, an idea was lit through the whole
+      // sample, and its forward peak really did pass the screen's edge — the
+      // belt was exercised, not merely present.
+      expect(walk.offAtLoad, 'the courses start below the fold').toBe(true);
+      expect(walk.before, 'an idea lit before the walk').toBeGreaterThanOrEqual(
+        0,
+      );
+      expect(walk.after, 'the cycle lit the next idea').toBe(
+        (walk.before + 1) % walk.count,
+      );
       expect(
-        walk?.sideways,
-        'sideways scroll at any frame',
-      ).toBeLessThanOrEqual(0);
+        walk.waited,
+        'a full interval after arriving',
+      ).toBeGreaterThanOrEqual(COURSES_INTERVAL_MS - 250);
+      expect(walk.lit).toBeGreaterThan(0);
+      expect(walk.peak, 'the forward peak past the edge').toBeGreaterThan(0);
+      expect(walk.sideways, 'sideways scroll at any frame').toBeLessThanOrEqual(
+        0,
+      );
     });
   }
 });

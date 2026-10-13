@@ -16,8 +16,9 @@ import source from './TintedBand.tsx?raw';
 // shared ground needs and a single band never did: the content slot (children
 // inside ui/Container, nothing of the band's own around them) and the names a
 // consumer hands through (`aria-labelledby` reaching the <section>, so
-// DoctorStats can make its band a region while DoctorProfile keeps refusing
-// one in ITS props).
+// DoctorStats can make its band a region while a consumer that wants none —
+// DoctorProfile, until it left the tint on 2026-10-13 — refuses one in ITS
+// props).
 //
 // ── HARNESS NOTE — there is NO NextIntlClientProvider in this file, and the
 // absence is itself an assertion (the SectionHeading/DoctorProfile precedent):
@@ -311,7 +312,8 @@ describe('TintedBand — the native surface (§6.8)', () => {
 
   it('is no region until a consumer names it', () => {
     // An unnamed <section> maps to a generic box, not a region — which is
-    // what DoctorProfile wants (two equal halves, no one noun for both).
+    // what a consumer with two equal halves and no one noun for both wants
+    // (DoctorProfile's shape until it left the tint on 2026-10-13).
     const { container } = renderBand();
 
     expect(screen.queryByRole('region')).toBeNull();
@@ -398,7 +400,8 @@ describe('TintedBand — type-level pins', () => {
     // Erased to no-ops at runtime; they fail at `tsc --noEmit` time, naming
     // the property. `children` is the band's one own prop; the two ARIA naming
     // attributes STAY on the native side (a consumer names its band by its own
-    // heading — DoctorProfile's Omit refuses them in ITS props, not here).
+    // heading, or refuses a name in ITS OWN props — DoctorProfile's Omit did,
+    // while it composed this band — never here).
     expectTypeOf<TintedBandProps['children']>().toEqualTypeOf<ReactNode>();
     expectTypeOf<TintedBandProps>().toHaveProperty('aria-labelledby');
     expectTypeOf<TintedBandProps>().toHaveProperty('aria-label');

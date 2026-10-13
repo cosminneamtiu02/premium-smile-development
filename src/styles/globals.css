@@ -142,7 +142,7 @@
      kinds), the Header pill with NavMenu's panel, ui/TextButton's box and
      ui/Modal's box — the contact dialog. §15.1's 6px default (rounded-md)
      still holds for every other corner on the site: ui/Button, GlyphButton's
-     square, the price, review, credo and schedule cards, the language
+     square, the price, review and credo cards, the language
      banner's toast, the map frame — the price cards by the owner's taste: the
      soft corner was put on the services page on his "apply to all cards on
      services page too" and taken off the same evening ("i liked card from
@@ -160,14 +160,16 @@
 
   /* THE POP — the "jump at you" the owner asked of the current year on a
      doctor's course timeline (2026-09-26, the doctor-pages run's round 2g,
-     D36): 0.7 → 1.25 → 1 over 450ms on an overshoot curve, fill `both` so the
+     D36), worn since 2026-10-13 by the dot of the lit IDEA, one per dot, lit
+     by a clock (CLAUDE.md §15.23 round 7): 0.7 → 1.25 → 1 over 450ms on an
+     overshoot curve, fill `both` so the
      first frame is already small. Tailwind v4 mints `animate-pop` from the
      `--animate-*` namespace and emits the keyframes only where it is worn.
      It animates `transform`, so it COMPOSES with a `scale-*` utility (v4's
      separate `scale` property): the lit dot, which also wears `scale-125`,
-     lands at 1.25; the year, at 1. Every wearer pairs it with
-     `motion-reduce:animate-none` (§9). Consumer: sections/DoctorCourses/
-     CourseTimeline (the lit dot and the lit year). Declared AFTER the aura
+     lands at 1.25. Every wearer pairs it with `motion-reduce:animate-none`
+     (§9). Consumer: sections/DoctorCourses/CourseTimeline (the lit idea's
+     dot). Declared AFTER the aura
      on purpose: tests/unit/aura-token.test.ts reads this block up to its
      first closing brace, and the keyframes below bring the first ones. */
   --animate-pop: pop 450ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
@@ -186,12 +188,13 @@
 
   /* THE FORWARD — the "come for you on a theoretical z axis" the owner asked
      of the current subsection of a doctor's course timeline (2026-09-26, the
-     doctor-pages run's round 2j, D44c): the WHOLE group — its stretch of
-     line, its dot, its year, its courses — grows toward the viewer, drawn
+     doctor-pages run's round 2j, D44c), since 2026-10-13 the lit IDEA — one
+     per dot, lit by a clock (CLAUDE.md §15.23 round 7): the WHOLE item — its
+     stretch of line, its dot, its words — grows toward the viewer, drawn
      1 → 1.06 → 1.04 over 450ms on the pop's overshoot curve, and STAYS at
      1.04 for as long as it is current. THE KEYFRAMES ARE RELATIVE TO THE
      WEARER'S OWN SETTLED SIZE (G2-R2 tier 2, react F1, 2026-09-26): the
-     current group wears a static `scale-104`, and this animation carries
+     lit item wears a static `scale-104`, and this animation carries
      ONLY the overshoot on top of it — 0.9615 → 1.0192 → 1 on `transform`,
      which multiplies with the `scale` property, so the product is the drawn
      1 → ~1.06 → 1.04 above (MEASURED peak ~1.065 at ~160ms: the overshoot
@@ -214,7 +217,7 @@
      motion only the static `scale-104` remains — a size, not a motion — and
      the wearer's `motion-reduce:transition-none` makes both directions an
      instant switch. Consumer: sections/DoctorCourses/CourseTimeline
-     (the current group). Declared AFTER the aura for the same reason as the
+     (the lit idea). Declared AFTER the aura for the same reason as the
      pop: tests/unit/aura-token.test.ts reads this block up to its first
      closing brace. */
   --animate-forward: forward 450ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
@@ -275,9 +278,13 @@
      off — until 2026-10-02, when the key words took --accent, the doctor
      card button's lavender, at this ink's own lightness (1.02:1; the owner:
      "i want that highlighted text to actually be the color of the current
-     mai multe despre mine button"). Consumers: the two doctor quotes ONLY
-     — PersonnelCard's <blockquote> and sections/DoctorIntro's CredoCard <p>
-     — and the
+     mai multe despre mine button"). Consumers: the two doctor quotes —
+     PersonnelCard's <blockquote> and sections/DoctorIntro's CredoCard <p> —
+     and, since 2026-10-13, the THIRD-PERSON BIOGRAPHY beside the courses
+     (sections/DoctorProfile's paragraphs, on --page: the owner's "like the
+     text at [the credo quote] … so gary-ish er"; CLAUDE.md §15.23 round 7),
+     which alone gives the full ink back under prefers-contrast: more — and
+     the
      STAND-IN of the first in ui/Ribbon's stories (Ribbon.fixtures.tsx,
      §15.26): a stand-in judged beside the ribbon must wear the card's own
      ink, on the same white ground. Every other quiet text keeps --ink-muted.

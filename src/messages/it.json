@@ -107,7 +107,7 @@
         "title": "{name} in breve"
       },
       "courses": {
-        "eyebrow": "Formazione continua",
+        "eyebrow": "Tappe del mio percorso di specializzazione",
         "title": "Corsi e specializzazioni"
       },
       "stats": {
@@ -115,10 +115,6 @@
         "title": "Un’esperienza confermata nel tempo",
         "lead": "I numeri qui sotto raccontano, in breve, come lavoriamo: con cura, con tecnologie moderne e con un’attenzione autentica per ogni paziente.",
         "atLeast": "oltre"
-      },
-      "schedule": {
-        "title": "Quando mi trovate in clinica",
-        "closed": "Chiuso"
       }
     }
   },

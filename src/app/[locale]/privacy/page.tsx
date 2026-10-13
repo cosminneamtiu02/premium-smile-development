@@ -7,8 +7,9 @@ import { clinic } from '@/lib/clinic/clinic';
 
 // THE PRIVACY AND COOKIE POLICY PAGE — /{locale}/privacy, in all five locales
 // (CLAUDE.md §12; the owner, 2026-10-10: "build all things mentioned and all
-// fixes"). Reached from the Footer's legal strip (lib/routes' LEGAL_ROUTES)
-// and from the note under the map, which points at its #map part.
+// fixes"). Reached from the Footer's legal strip on every page (lib/routes'
+// LEGAL_ROUTES) — the one way in since the note under the map, which also
+// pointed here, left on 2026-10-13 (§15.38 round 3).
 //
 // ── THE WHOLE PAGE IS ONE BAND, sections/PrivacyPolicy, which translates
 // itself and reads lib/clinic — so this file is the wiring: the route, the

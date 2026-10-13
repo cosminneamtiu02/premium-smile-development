@@ -15,9 +15,10 @@
 >
 > **Amended 2026-10-10 (owner: "build all things mentioned and all fixes"; CLAUDE.md §15.38):**
 > the map's frame is **`credentialless`** — the cookie-READING half §3 now records is closed; the
-> **privacy and cookie policy page** exists (`/{locale}/privacy`, §8's disclosure, done) and a
-> note under the map says, where it happens, that Google receives the visitor's IP. The IP
-> transfer itself stays the accepted, deferred risk of §7.
+> **privacy and cookie policy page** exists (`/{locale}/privacy`, §8's disclosure, done). A note
+> under the map that said, where it happens, that Google receives the visitor's IP was removed on
+> the owner's word on 2026-10-13 — the policy, linked from every footer, carries it alone (CLAUDE.md
+> §15.38 round 3). The IP transfer itself stays the accepted, deferred risk of §7.
 
 ---
 
@@ -271,8 +272,9 @@ IP-transfer limb did not, and the owner chose to ship and revisit.
 - `referrerPolicy="no-referrer"` (Google learns the IP, never the page URL) · `allow=""`
   (no frame permissions) · `loading="lazy"` · `credentialless` since 2026-10-10 (no stored
   Google cookie travels or can be read — §3);
-- a note under the map (`home.location.mapNote`, since 2026-10-10) saying Google receives the
-  visitor's IP address, linked to the privacy page's map part (`/{locale}/privacy/#map`);
+- NO note under the map since 2026-10-13 (one stood from 2026-10-10, saying Google receives the
+  visitor's IP address; removed on the owner's word, CLAUDE.md §15.38 round 3) — the privacy page's
+  map part (`/{locale}/privacy/#map`), linked from every footer, says it;
 - **no consent record, no banner, no `lib/consent`** — the site still stores exactly one
   cookie (row 1). §2 of CLAUDE.md stays literally true.
 - The **`CONSENT SEAM`** comment block sits directly above the `<iframe>`; `ClinicLocation.test.tsx`
@@ -334,7 +336,7 @@ never load the iframe from a `display:none` box.
 **DISCHARGED 2026-10-10 (CLAUDE.md §15.38):** `/{locale}/privacy` (sections/PrivacyPolicy, five
 languages) lists the language cookie — its name and lifetime read from `src/i18n`, Safari's ~7
 days — says the map hands the frame to Google with the visitor's IP, and is linked from every
-page's footer and from the note under the map. The clinic's legal facts on it are placeholders
+page's footer (and, from 2026-10-10 to 2026-10-13, from a note under the map). The clinic's legal facts on it are placeholders
 until the owner supplies them (BACKLOG.md entry 3). The paragraph below is the original
 requirement, kept as the checklist the page answers.
 

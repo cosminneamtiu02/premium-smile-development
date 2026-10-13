@@ -7,7 +7,6 @@ import {
   LEGAL_ROUTES,
   matchesRoute,
   PRIMARY_ROUTES,
-  PRIVACY_MAP_ANCHOR,
   PRIVACY_PATH,
   primaryRoutes,
 } from './routes';
@@ -250,11 +249,5 @@ describe('lib/routes — LEGAL_ROUTES, the legal strip’s own list (nav board R
     for (const locale of locales) {
       expect(equivalentPath('/privacy/', locale)).toBe('/privacy/');
     }
-  });
-
-  it('builds the map note’s target — the policy’s #map part, slash before the fragment', () => {
-    expect(localeHref('ro', `${PRIVACY_PATH}#${PRIVACY_MAP_ANCHOR}`)).toMatch(
-      /\/ro\/privacy\/#map$/,
-    );
   });
 });

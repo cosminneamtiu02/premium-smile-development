@@ -3,7 +3,6 @@ import { NextIntlClientProvider } from 'next-intl';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import '@/styles/globals.css';
-import { NOTE_LINK } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { LOCALE_COOKIE_MAX_AGE_S } from '@/i18n/cookie';
 import { locales, type Locale } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic/clinic';
@@ -212,10 +211,6 @@ describe('PrivacyPolicy — the links out', () => {
       expect(link.className).toBe(POLICY_LINK);
       expect(getComputedStyle(link).textDecorationLine).toContain('underline');
     }
-  });
-
-  it('KEEP-IN-SYNC: the map note’s link wears the very same classes', () => {
-    expect(NOTE_LINK).toBe(POLICY_LINK);
   });
 });
 

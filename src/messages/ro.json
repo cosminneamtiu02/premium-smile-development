@@ -65,7 +65,6 @@
       "eyebrow": "Ne găsești",
       "title": "Vizitează clinica noastră",
       "mapAlt": "Hartă cu locația clinicii {name}",
-      "mapNote": "Harta este afișată de Google, care primește adresa IP a dispozitivului tău. <link>Detalii în politica de confidențialitate</link>",
       "directionsLabel": "Vezi direcțiile către {address}",
       "callLabel": "Sună la {phone}"
     },

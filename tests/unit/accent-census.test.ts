@@ -97,14 +97,14 @@ const WEARERS: Readonly<Record<string, number>> = {
   'components/ui/GlyphButton/GlyphButton.tsx': 6,
   // The map band's whole-row hover: GlyphButton's solid.accent hover face
   // re-spelled with the `group-` prefix (ClinicLocation's ROW_HOVER, its
-  // KEEP-IN-SYNC with the atom) — the glyph and the hairline. And since
-  // 2026-10-10 (CLAUDE.md §15.38) the hover label of the note's link under the
-  // map (NOTE_LINK), a 14px label on the band's page ground: 4.81:1.
-  'components/sections/ClinicLocation/ClinicLocation.tsx': 3,
-  // The privacy page's inline links (POLICY_LINK, KEEP-IN-SYNC with the map
-  // note's NOTE_LINK), lavender under the pointer only — underlined ink at
-  // rest. Every one sits in the page's prose on the page ground, 4.81:1; none
-  // inside its two cards (2026-10-10, CLAUDE.md §15.38).
+  // KEEP-IN-SYNC with the atom) — the glyph and the hairline. (A third, the
+  // hover label of the note's link under the map, stood from 2026-10-10 to
+  // 2026-10-13 — CLAUDE.md §15.38 round 3.)
+  'components/sections/ClinicLocation/ClinicLocation.tsx': 2,
+  // The privacy page's inline links (POLICY_LINK), lavender under the
+  // pointer only — underlined ink at rest. Every one sits in the page's
+  // prose on the page ground, 4.81:1; none inside its two cards
+  // (2026-10-10, CLAUDE.md §15.38).
   'components/sections/PrivacyPolicy/PrivacyPolicy.tsx': 1,
   // The reviewer's initials disc — its letters' ground (owner 2026-10-01: "the
   // circle of persons initials to be in lilla, not in current green"; the

@@ -51,7 +51,7 @@ export const Romanian: Story = {
     ).toBeInTheDocument();
     // The ten parts, each an h2 — the outline a screen reader walks.
     await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(10);
-    // The map part the note under the map links to.
+    // The map part, by its fixed id.
     await expect(
       canvasElement.querySelector(`#${PRIVACY_MAP_ANCHOR}`),
     ).not.toBeNull();

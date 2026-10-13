@@ -29,7 +29,9 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   the page closes: measured 19 → 0, the map, its dragging and its card
   buttons unchanged); Safari blocks those cookies anyway and Firefox keeps each site's cookies
   apart. The finding and the fix are in COOKIES.md §3 and §7 and CLAUDE.md §12's rider; the
-  privacy page discloses the map (entry 3) and a note under the map says it where it happens.
+  privacy page discloses the map (entry 3). A note under the map said it where it happens from 2026-10-10
+  until the owner removed it on 2026-10-13 (CLAUDE.md §15.38 round 3): the policy, linked from every footer,
+  carries it alone, and such a line is required again only beside the button if the map goes click-to-load.
 - **The owner's direction, 2026-10-10 (advice session, no code changed by it):** "i want that thing
   with the map to work automatically when you open the website". The advice given, recorded here
   for the day this entry is picked up: automatic + Google's map + no consent — the law allows two
@@ -154,7 +156,8 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **BUILT 2026-10-10 (CLAUDE.md §15.38; the owner: "build all things mentioned and all fixes and
   add to backlog what needs to be done"):** `/{locale}/privacy` in all five languages
   (`sections/PrivacyPolicy`), linked from the Footer's legal strip („Confidențialitate și
-  cookie-uri") and from a note under the map that points at the page's map part; the Services page
+  cookie-uri") on every page (a note under the map also pointed at its map part until
+  2026-10-13); the Services page
   says under its last card that the prices include all taxes. The page states what the site
   measurably does: the host's logs, the ONE language cookie (its name and its 12 months read from
   the code, Safari's ~7 days), the Google map and its IP transfer, phone and WhatsApp contact, the

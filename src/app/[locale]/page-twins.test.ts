@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import blogTwin from './blog/Blog.stories.tsx?raw';
+import blogNumberedPage from './blog/page/[page]/page.tsx?raw';
+import blogPage from './blog/page.tsx?raw';
+import blogPopulate from './blog/populate.ts?raw';
+import blogWords from './blog/words.ts?raw';
 import homeTwin from './(home)/Home.stories.tsx?raw';
 import homePage from './(home)/page.tsx?raw';
 import doctorTwin from './team/[slug]/Doctor.stories.tsx?raw';
@@ -7,6 +12,7 @@ import privacyTwin from './privacy/Privacy.stories.tsx?raw';
 import privacyPage from './privacy/page.tsx?raw';
 import teamTwin from './team/Team.stories.tsx?raw';
 import teamPage from './team/page.tsx?raw';
+import ro from '../../messages/ro.json';
 
 // THE PAGES AND THEIR STORY TWINS, held together by their SOURCE (G2 react,
 // 2026-09-30). A page under app/[locale]/ is an async Server Component — it
@@ -528,6 +534,73 @@ describe('the privacy page and its story twin — read off their source', () => 
 
   it('the twin mounts that same component', () => {
     expect(stripComments(privacyTwin)).toMatch(/component: PrivacyPolicy,/);
+  });
+});
+
+describe('the blog’s list pages and their story twin — read off their source', () => {
+  // Both route pages render ONE band, sections/PostList, from the SAME pure
+  // populator, with words built by ./blog/populate.ts' `blogWordsFrom` from
+  // getTranslations' translators (./blog/words.ts); the twin mounts the same
+  // band through the same populator and the same `blogWordsFrom`, with
+  // useTranslations' translators (CLAUDE.md §15.39). A drift would show as a
+  // page rendering something else, or as either side building its words
+  // another way — then the twin's plays would no longer cover the pages.
+  it('page 1 and the numbered pages return the populated PostList and nothing else', () => {
+    expect(stripComments(blogPage)).toMatch(
+      /return <PostList \{\.\.\.populateBlogPage\(1, await blogPageWords\(\)\)\} \/>;/,
+    );
+    expect(stripComments(blogNumberedPage)).toMatch(
+      /return \(\s*<PostList\s+\{\.\.\.populateBlogPage\(parsePageParam\(page\), await blogPageWords\(\)\)\}\s+\/>\s*\);/,
+    );
+  });
+
+  it('every key the list pages read exists — the tab title included (next-intl only logs a miss)', () => {
+    // A typo in a key would ship as its own path („blog.pageTitle — …") with
+    // the build green: next-intl logs a missing message and prints the path.
+    // The keys are spelled in two files: the words in ./blog/populate.ts'
+    // `blogWordsFrom`, the tab's title in ./blog/words.ts.
+    const source = stripComments(blogPopulate) + stripComments(blogWords);
+    const read = (fn: string) =>
+      [...source.matchAll(new RegExp(`\\b${fn}\\('([^']+)'`, 'g'))].map(
+        (match) => match[1] ?? '',
+      );
+    const lookup = (root: unknown, dotted: string): unknown =>
+      dotted
+        .split('.')
+        .reduce<unknown>(
+          (node, part) =>
+            node !== null && typeof node === 'object'
+              ? (node as Record<string, unknown>)[part]
+              : undefined,
+          root,
+        );
+    const blogKeys = read('t');
+    const commonKeys = read('common');
+    expect(blogKeys.length).toBeGreaterThan(0);
+    expect(commonKeys).toContain('siteName');
+    for (const key of blogKeys) {
+      expect(typeof lookup(ro.blog, key), `blog.${key}`).toBe('string');
+    }
+    for (const key of commonKeys) {
+      expect(typeof lookup(ro.common, key), `common.${key}`).toBe('string');
+    }
+  });
+
+  it('the twin mounts the same band through the same populator', () => {
+    expect(stripComments(blogTwin)).toMatch(
+      /return <PostList \{\.\.\.populateBlogPage\(page, words\)\} \/>;/,
+    );
+  });
+
+  it('the pages and the twin build their words through the one blogWordsFrom', () => {
+    expect(stripComments(blogWords)).toMatch(
+      /return blogWordsFrom\(\s*await getTranslations\(\{ locale: BLOG_LOCALE, namespace: 'blog' \}\),\s*await getTranslations\(\{ locale: BLOG_LOCALE, namespace: 'common' \}\),\s*\);/,
+    );
+    expect(stripComments(blogTwin)).toMatch(
+      /blogWordsFrom\(\s*useTranslations\('blog'\),\s*useTranslations\('common'\),\s*\)/,
+    );
+    // …and neither spells a word key of its own: the mapping lives in one place.
+    expect(stripComments(blogTwin)).not.toMatch(/\bt\('/);
   });
 });
 

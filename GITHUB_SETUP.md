@@ -30,6 +30,19 @@ Also add at repo root: `.nvmrc` containing `24` (the workflows read it).
   `main` whose source branch is not `develop`** (guard step in release.yml) —
   promotions have exactly one origin. Merge methods are ruleset-enforced:
   squash-only into `develop`, merge-commit-only into `main`.
+- **`blog` = the blog's long-lived branch** *(added 2026-10-11, owner — brief
+  §15.39)*. Created from `develop`; blog lanes (`feat/blog-…`) branch off it and
+  squash back via PR. `develop` flows in through a `develop → blog` PR merged
+  with a **merge commit** — never squash, never rebase, so develop's commits
+  become ancestors of blog and the next sync carries only what is new. The blog
+  lands as a `blog → develop` PR after a `develop → main` promotion and reaches
+  `main` with the next one (the release gate's guard above keeps it from going
+  to `main` directly). Protected like `develop` — required check **Lint · Types
+  · Tests · Builds** (strict), no force push, no deletion — plus ruleset
+  "blog: lanes merge by squash, syncs from develop by merge commit" (squash and
+  merge allowed, no bypass: direct pushes are refused). CI's fast lane runs on
+  it; the staging deploy stays develop-only; Dependabot targets `develop` only,
+  and blog receives every bump through a sync.
 
 **One-time settings (GitHub → Settings):**
 1. Create `develop` from `main`; set `develop` as the default branch.

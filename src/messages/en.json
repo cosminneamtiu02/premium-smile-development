@@ -119,7 +119,15 @@
     }
   },
   "blog": {
-    "title": "Articles & news"
+    "title": "Articles & news",
+    "pageTitle": "{title}, page {page}",
+    "tags": "Categories",
+    "pagination": {
+      "label": "Article pages",
+      "status": "Page {page} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "contact": {
     "heading": "Reach us by phone or on WhatsApp.",

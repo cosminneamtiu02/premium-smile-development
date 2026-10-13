@@ -119,7 +119,15 @@
     }
   },
   "blog": {
-    "title": "Articole și noutăți"
+    "title": "Articole și noutăți",
+    "pageTitle": "{title}, pagina {page}",
+    "tags": "Categorii",
+    "pagination": {
+      "label": "Paginile articolelor",
+      "status": "Pagina {page} din {total}",
+      "previous": "Anterior",
+      "next": "Următor"
+    }
   },
   "contact": {
     "heading": "Ne găsiți la telefon sau pe WhatsApp.",

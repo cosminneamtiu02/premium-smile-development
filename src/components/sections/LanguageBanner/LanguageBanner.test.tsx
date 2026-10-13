@@ -240,6 +240,56 @@ describe('LanguageBanner — the visibility matrix (D2/D3, §8.6)', () => {
     expect(card()).toBeNull();
   });
 
+  it.each(['/blog/', '/blog', '/blog/page/2/', '/blog/un-articol/'] as const)(
+    'says nothing on %s — a page the offered language does not have (SC 2.4.4)',
+    (pathname) => {
+      // THE SAME PAGE, OR NO CARD (G2 a11y MEDIUM, 2026-10-14). The card says
+      // „This page is also available in English.", and the Romanian-only blog
+      // (§5) has no English twin: equivalentPath answers '/', so the link
+      // would land on /en/ under a sentence that promised the page itself.
+      // matchesRoute is what files the page index and the article "under
+      // /blog"; both slash shapes, because the rule compares the locale-less
+      // path with equivalentPath's own answer and the address bar's trailing
+      // slash must never decide it.
+      nav.pathname = pathname;
+      stubLanguages(['en-GB', 'en']);
+      mount('ro');
+      expect(card()).toBeNull();
+      // Refused by the PATH, not by an earlier rule: no cookie, and the
+      // languages WERE read (English matched, and it is not the page's).
+      expect(cookieReads).toBeGreaterThan(0);
+      expect(languageReads).toBeGreaterThan(0);
+
+      // The restore runs the same rule (`settle` is the one writer), so Back
+      // onto a blog page brings no card either — and nothing was written.
+      fireEvent(
+        window,
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      );
+      expect(card()).toBeNull();
+      expect(cookieWrites).toEqual([]);
+    },
+  );
+
+  it.each([
+    ['/services/', '/en/services/'],
+    ['/services', '/en/services/'],
+    ['/', '/en/'],
+  ] as const)(
+    'still offers English on %s — a page every language has — and links to it there (%s)',
+    (pathname, href) => {
+      // The control for the row above: the same English reader on the same
+      // Romanian pages, on a page that HAS its English twin. The card shows,
+      // in English, and its link is that very page there — '/' is a locale
+      // home, the one '/' the rule compares equal, and it exists everywhere.
+      nav.pathname = pathname;
+      stubLanguages(['en-GB', 'en']);
+      mount('ro');
+      expect(card()).toHaveAccessibleName(BANNER.en.text);
+      expect(acceptLink('en')).toHaveAttribute('href', href);
+    },
+  );
+
   it('offers the language the visitor reads, IN that language (SC 3.1.2)', () => {
     mount('ro');
     const banner = card();
@@ -332,18 +382,6 @@ describe('LanguageBanner — accept: a real navigation, with the choice stamped 
     // (§15.13). Only this suite's guard stops the runner leaving.
     expect(clicks).toEqual([false]);
   });
-
-  it.each(['/blog/', '/blog/un-articol/'] as const)(
-    'sends the suggestion HOME from %s — the blog is Romanian-only (§5)',
-    (pathname) => {
-      // /de/blog is never generated, so linking to it would be a 404 in the one
-      // language the visitor actually reads. equivalentPath knows that;
-      // matchesRoute is what makes the article count as "under /blog".
-      nav.pathname = pathname;
-      mount('ro');
-      expect(acceptLink()).toHaveAttribute('href', '/de/');
-    },
-  );
 
   it('writes NOTHING on mount, on re-render, or on anything but a press', () => {
     const { rerender } = mount('ro');

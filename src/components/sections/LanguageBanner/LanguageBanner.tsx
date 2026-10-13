@@ -27,6 +27,22 @@ import { equivalentPath } from '@/lib/routes/routes';
 // this section never redirects, never rewrites a URL and never chooses for
 // anyone: it offers ONE link and one way to say no.
 //
+// ── THE SAME PAGE, OR NO CARD (G2 a11y MEDIUM, SC 2.4.4, 2026-10-14). The
+// card says „This page is also available in English."
+// (`common.language.banner.text` ×5), and its one link is the other half of
+// that sentence, so the link's purpose IS this page in that language. On a
+// page with no twin there — today the blog, Romanian only (§5) —
+// `equivalentPath` answers '/', and the link went to that language's HOME
+// under a sentence that promised the page itself. So `decide()` shows the
+// card only where `equivalentPath` keeps the visitor's own path: a page that
+// exists in the suggested language gets the offer, and a page that does not
+// gets no card at all — never a link that quietly lands elsewhere. On the
+// blog that is every page, because the one language with a twin there is the
+// page's own, which is never suggested. The language dial in the corner still
+// offers every language from such a page, and its home answer keeps its
+// purpose there: its links name a LANGUAGE (an endonym, §8.5), never „this
+// page".
+//
 // ── §15.15 LANE-OPEN VERDICT, 2026-09-04 (board §1, owner-confirmed Q-F):
 // THE LANGUAGEBANNER IS NOT THE THIRD STATEFUL OVERLAY. The overlay-manners
 // consolidation does NOT fire; the trigger stays armed, and the next live
@@ -307,11 +323,22 @@ function hasLanguageChoice(): boolean {
  * THE VISIBILITY RULE, in one place so that mount and the bfcache restore below
  * cannot drift: show a suggestion only when the visitor has made NO choice yet,
  * AND one of our five locales is among the languages they read, AND it is not
- * the one they are already reading. `null` means "say nothing" — including the
+ * the one they are already reading, AND this very page exists in it (THE SAME
+ * PAGE, OR NO CARD — the header). `null` means "say nothing" — including the
  * ordinary case where `matchLocale` finds nothing at all, which is a hidden
  * banner and never a redirect (D3, and see src/i18n/match.ts' header).
+ *
+ * `pathname` is usePathname's answer: LOCALE-STRIPPED ('/ro/blog/' →
+ * '/blog/', src/i18n/href.ts' stripLocale) and free of the base path, which
+ * Next removes before the hook ever sees the URL (src/i18n/navigation.ts) —
+ * the very shape `equivalentPath` takes. It hands back THAT SAME STRING when
+ * the page exists in the target and '/' when it does not, so comparing its
+ * answer with its input is exact: whichever trailing slash the address bar
+ * shows rides through unchanged, the base path never reaches either side
+ * (localeHref adds it to the href alone), and the one '/' that compares equal
+ * is a locale home, which exists in every language.
  */
-function decide(pageLocale: string): Locale | null {
+function decide(pageLocale: string, pathname: `/${string}`): Locale | null {
   if (hasLanguageChoice()) return null;
   // The `?? [navigator.language ?? '']` shape is inherited from the root
   // stub's retired read (its walk left 2026-09-06 — root Romanian-first, the
@@ -322,7 +349,11 @@ function decide(pageLocale: string): Locale | null {
   // the whole hydrated tree — menu, dial and modal included — to spare one
   // optional banner.
   const match = matchLocale(navigator.languages ?? [navigator.language ?? '']);
-  return match !== null && match !== pageLocale ? match : null;
+  if (match === null || match === pageLocale) return null;
+  // THE SAME PAGE, OR NO CARD (G2 a11y MEDIUM, SC 2.4.4, 2026-10-14): the
+  // card's sentence promises THIS page in that language, so a page with no
+  // twin there — today the Romanian-only blog — is offered nothing.
+  return equivalentPath(pathname, match) === pathname ? match : null;
 }
 
 /**
@@ -334,7 +365,8 @@ export function LanguageBanner({
 }: LanguageBannerProps): ReactElement | null {
   const pageLocale = useLocale();
   // Locale-STRIPPED ('/ro/blog/' → '/blog/'), which is the shape equivalentPath
-  // compares against lib/routes/routes.ts' rows — the useLanguageOptions precedent.
+  // compares against lib/routes/routes.ts' rows — the useLanguageOptions precedent
+  // — and the one decide() compares equivalentPath's answer with.
   const pathname = usePathname();
   // `null` = show nothing, and it is BOTH the undecided and the decided-hidden
   // state on purpose: the two render identically, and one variable that cannot
@@ -375,7 +407,7 @@ export function LanguageBanner({
   // precedent is ui/Modal's "Does the body ACTUALLY overflow?" effect, whose
   // `measure` is the same one-writer shape for the same reason.
   useEffect(() => {
-    const settle = () => setSuggested(decide(pageLocale));
+    const settle = () => setSuggested(decide(pageLocale, pathname));
     settle();
 
     const onPageShow = (event: PageTransitionEvent) => {
@@ -385,7 +417,7 @@ export function LanguageBanner({
     return () => {
       window.removeEventListener('pageshow', onPageShow);
     };
-  }, [pageLocale]);
+  }, [pageLocale, pathname]);
 
   if (suggested === null) return null;
 
@@ -393,11 +425,13 @@ export function LanguageBanner({
     <LanguageBannerCard
       suggested={suggested}
       strings={messages[suggested]}
-      // The same page over there, or that locale's home when it does not exist
-      // there — equivalentPath knows the blog is Romanian-only (§5), so a
-      // suggestion from /ro/blog/un-articol/ lands on /de/ rather than on a URL
-      // `next build` never generated. localeHref puts the prefix, the trailing
-      // slash and the interim base path on (§15.13).
+      // The same page over there — the only kind of page this card is shown on
+      // since 2026-10-14 (THE SAME PAGE, OR NO CARD), so equivalentPath hands
+      // back the visitor's own path here. The call stays as the href's belt:
+      // should the rule and the link ever drift apart, the link still lands
+      // on a page `next build` generated — that language's home — and never
+      // on a URL it did not (/de/blog/ is never written, §5). localeHref puts
+      // the prefix, the trailing slash and the interim base path on (§15.13).
       href={localeHref(suggested, equivalentPath(pathname, suggested))}
       onAccept={() => setLocaleCookie(suggested)}
       onDismiss={() => {

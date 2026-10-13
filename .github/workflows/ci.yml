@@ -1,15 +1,21 @@
 # .github/workflows/ci.yml
-# Fast lane: every PR into develop, and pushes to develop.
+# Fast lane: every PR into develop or blog, and pushes to either.
 # Pixel/visual tests deliberately NOT here — they run locally (native) in the
 # dev loop before commits and are re-verified by release.yml before main.
+#
+# `blog` is the long-lived branch the blog is built on (CLAUDE.md §15.39): its
+# lanes and its syncs from develop are PRs into it, so they get the same gate a
+# PR into develop gets. A PR's workflow file is read from the PR's merge
+# commit, so this list reaches blog the moment it is merged there — develop
+# learns it when the blog lands.
 
 name: CI
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [develop, blog]
   push:
-    branches: [develop]
+    branches: [develop, blog]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -66,6 +72,19 @@ jobs:
       - name: Site builds (static export)
         run: npm run build
 
+      - name: The blog exists in Romanian only (CLAUDE.md §5, §15.39)
+        # Each blog page's generateStaticParams sets locale 'ro', which Next
+        # merges OVER the layout's five locales and de-duplicates — an internal
+        # merge order, not a documented one, so a Next release that changed it
+        # would bring the four other languages' blog pages back silently.
+        run: |
+          for l in en de fr it; do
+            if [ -e "out/$l/blog" ]; then
+              echo "::error::out/$l/blog exists — the blog is Romanian only"
+              exit 1
+            fi
+          done
+
       - name: Internal link & hreflang check on the export
         # The ROOT-served shape, through the same tool release.yml runs on the
         # Pages shape (tools/check-export-links.mjs — linkinator, the ~pinned
@@ -85,7 +104,10 @@ jobs:
 
   deploy-staging:
     name: Deploy staging (placeholder until host confirmed)
-    if: github.event_name == 'push'
+    # develop only: the `development` environment's deployment rule allows
+    # develop alone, so a push to blog would fail here — and staging shows what
+    # the next release holds, which the blog does not until it lands.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: quality
     runs-on: ubuntu-latest
     environment: development

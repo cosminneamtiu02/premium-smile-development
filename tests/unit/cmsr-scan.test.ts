@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BLOG_LOCALE, posts as blogPosts } from '../../src/lib/blog/blog';
 import { heroSlides } from '../../src/lib/hero-slides/hero-slides';
 import { reviews } from '../../src/lib/reviews/reviews';
 import { auxiliaries, clinicStats, doctors } from '../../src/lib/team/team';
@@ -35,7 +36,12 @@ import ro from '../../src/messages/ro.json';
 // phrase cut on the owner's choice — so both are read like every other clinic
 // string. And every slogan and alt lib/hero-slides ships (2026-10-01, the
 // hero-photos lane: the scan widened the day the opener's copy was rewritten,
-// so the new drafts were gated before they shipped). WHY THAT SCOPE: the
+// so the new drafts were gated before they shipped). And the blog's posts
+// (2026-10-11, the blog branch's first lane, CLAUDE.md §15.39): every title,
+// summary and tag src/content/blog/posts.json holds — a clinic's articles about
+// teeth are the clinic talking, and the scan widened in the lane that wrote
+// the first drafts. Romanian only (§5), so the other four languages scan
+// nothing there. WHY THAT SCOPE: the
 // doctor pages, the reviews and the opener are where a clinic talks about
 // itself. Widening it to lib/prices and the other namespaces is one more entry
 // in SOURCES below — a deliberate act, because older copy must be read first,
@@ -203,6 +209,24 @@ function reviewStrings(locale: Locale): readonly [string, string][] {
   ]);
 }
 
+/**
+ * The blog's posts (CLAUDE.md §15.39) — every title, summary, tag and picture
+ * description (an empty alt, a decorative picture, has nothing to read). The
+ * blog is written in Romanian only (§5), so every other language scans
+ * nothing here.
+ */
+function blogStrings(locale: Locale): readonly [string, string][] {
+  if (locale !== BLOG_LOCALE) return [];
+  return blogPosts.flatMap((post): [string, string][] => [
+    [`${post.slug}.title`, post.title],
+    [`${post.slug}.summary`, post.summary],
+    ...post.tags.map((tag): [string, string] => [`${post.slug}.tag`, tag]),
+    ...(post.image.alt === ''
+      ? []
+      : [[`${post.slug}.alt`, post.image.alt] satisfies [string, string]]),
+  ]);
+}
+
 /** The sources the scan walks today; a new lane ADDS a row, never edits one. */
 const SOURCES: readonly [
   string,
@@ -212,6 +236,7 @@ const SOURCES: readonly [
   ['messages team.*', messageStrings],
   ['lib/reviews', reviewStrings],
   ['lib/hero-slides', heroStrings],
+  ['content/blog', blogStrings],
 ];
 
 /**
@@ -232,7 +257,7 @@ function hits(locale: Locale, text: string): readonly string[] {
   return PATTERNS[locale].filter((p) => p.test(read)).map(String);
 }
 
-describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages, the reviews and the opener say', () => {
+describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages, the reviews, the opener and the blog say', () => {
   it.each(locales)('%s: every shipped string passes the scan', (locale) => {
     const offenders: string[] = [];
     for (const [source, read] of SOURCES) {
@@ -260,6 +285,15 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
       expect(reviewStrings(locale).length).toBe(reviews.length * 2);
       expect(heroStrings(locale).length).toBe(heroSlides.length * 2);
     }
+    // The blog: Romanian only — every post's title, summary, tags and
+    // non-empty picture description, exactly.
+    expect(blogStrings(BLOG_LOCALE)).toHaveLength(
+      blogPosts.reduce(
+        (sum, post) =>
+          sum + 2 + post.tags.length + (post.image.alt === '' ? 0 : 1),
+        0,
+      ),
+    );
   });
 
   it.each([

@@ -209,6 +209,11 @@ const PILL_RENDERERS: Readonly<Record<string, string>> = {
   // 4.81:1 on the one and 5.06:1 on the other.
   'components/sections/PriceList/PriceMenu.tsx':
     '--page at rest, and the category cards’ white --surface scrolling under the stuck strip — each chip paints its white or lavender face',
+  // The blog card's categories (CLAUDE.md §15.39, 2026-10-11): the owner's
+  // "buttons from menu at rest (so not current one)" — resting chips only,
+  // never `active`, on the article card's white ground.
+  'components/sections/PostCard/PostCard.tsx':
+    'bg-surface — the blog card, ui/Card framed; resting chips on their own white face',
 };
 
 /**
@@ -255,6 +260,10 @@ const ACCENT_TONE_CALLERS: Readonly<Record<string, string>> = {
   // owner later that night. The face's edge meets the dialog's white box.
   'components/sections/ContactModal/ContactModal.tsx':
     'bg-surface — the dialog’s white box, ui/Modal; the two controls on their own lavender face',
+  // The blog's page navigation (solid, md) — previous and next under the list
+  // of articles (CLAUDE.md §15.39, 2026-10-11). The edge meets the page.
+  'components/sections/Pagination/Pagination.tsx':
+    'bg-page — the blog list band, the two controls on their own lavender face',
 };
 
 /** The lilac band and every band that composes it — where the role fails.

@@ -99,7 +99,8 @@ import { DoctorStats, type DoctorStatTile } from './DoctorStats';
 //     CONTAINER width. The Vitest runner applies the pin; Playwright ignores it
 //     and sets its own page size per project — which is exactly why the
 //     arrangement assertion DERIVES its branch from the measured column
-//     instead of assuming the pinned width (the DoctorCourses recipe).
+//     instead of assuming the pinned width (a recipe this file shared with
+//     the doctor page's year-timeline stories until 2026-10-13).
 //
 // ── THE OWNER'S ADAPTABILITY RULE (2026-09-25, D21): anything side by side on
 // the desktop MUST stack one above the other on phones. The one-column branch
@@ -164,7 +165,7 @@ const TILES = [
     icon: <Trophy />,
     value: 10,
     label: 'Cursuri',
-    description: 'Formare continuă în tehnici și tehnologii moderne.',
+    description: 'Fiecare curs este un reper pe drumul spre specializare.',
   },
   {
     id: 'interventions',
@@ -197,7 +198,7 @@ const GERMAN_TILES = [
   {
     ...TILES[2],
     label: 'Kurse',
-    description: 'Laufende Fortbildung in modernen Techniken und Technologien.',
+    description: 'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
   },
   {
     ...TILES[3],
@@ -263,7 +264,7 @@ const PSEUDO = {
       ...TILES[2],
       label: 'Çúršúrí ···',
       description:
-        'Fórmáré çóñťíñúă îñ ťéhñíçí șí ťéhñólógíí módérñé. ····················',
+        'Fíéçáré çúrš éšťé úñ répér pé drúmúl špré špéçíálížáré. ······················',
     },
     {
       ...TILES[3],
@@ -508,13 +509,14 @@ const expectPaintOrder = async (
 };
 
 /**
- * THE INTRO (`Counting`'s decorator, the DoctorCourses `withIntro` recipe):
+ * THE INTRO (`Counting`'s decorator — a recipe first written for the doctor
+ * page's year-timeline stories, retired 2026-10-13):
  * 81rem of page above the band, ~150 % of the laptop's 864px, standing in for
  * the doctor's opener, profile and courses. The tiles therefore sit below the
  * fold at mount, and the first intersection the island can see is the one the
  * play's scroll causes. REM, not `vh`: a full-page capture may lay the page
  * out against a viewport as tall as itself, and a `vh` intro would grow with
- * it (DoctorCourses' header).
+ * it.
  */
 const withIntro: Decorator = (Story) => (
   <>
@@ -523,7 +525,7 @@ const withIntro: Decorator = (Story) => (
   </>
 );
 
-/** Instant, so no smooth-scroll setting stretches a play (DoctorCourses). */
+/** Instant, so no smooth-scroll setting stretches a play. */
 const jumpTo = (top: number): void => {
   window.scrollTo({ top, behavior: 'instant' });
 };
@@ -585,7 +587,7 @@ const expectArrangement = async (band: HTMLElement): Promise<Branch> => {
 };
 
 /**
- * THE PIN IS NOT VACUOUS (the DoctorCourses guard): below 28rem of WINDOW the
+ * THE PIN IS NOT VACUOUS: below 28rem of WINDOW the
  * column is narrower still, so one column is the only possibility; from 64rem
  * of window the column (the window less two gutters of at most 10vw) is past
  * 48rem, so four is the only possibility; and for THREE tiles, from 48rem of
@@ -1215,7 +1217,7 @@ export const PseudoLocale: Story = {
 
 /**
  * THE COUNT, WATCHED FROM ITS FIRST FRAME — a play-only twin of `Default`
- * (G2-R2 tier 2, react F3; the DoctorCourses `Current` idiom). In `Default`
+ * (G2-R2 tier 2, react F3). In `Default`
  * the first tile is on screen at mount, so its count starts before any play
  * can watch it; here an 81rem intro stands above the band (`withIntro`), the
  * tiles sit below the fold at mount, and the island's first intersection can
@@ -1236,7 +1238,7 @@ export const PseudoLocale: Story = {
  * its play and its per-story axe run in the Vitest storybook project. It
  * starts at the top of the page and puts the scroll back afterwards
  * (`beforeEach`), because the runner renders stories one after another in one
- * document (DoctorCourses' header).
+ * document.
  */
 export const Counting: Story = {
   tags: ['no-visual'],

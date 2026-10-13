@@ -1,35 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import {
-  coursesByYear,
   doctors,
   findAuxiliary,
   findDoctor,
   splitKeywords,
   type AboutSegment,
-  type Course,
   type Doctor,
 } from './team';
-import { locales, type Locale } from '../../i18n/locales';
 
 // lib/team — the FUNCTIONS, beside the module (the lib-foldering lane). The
-// data's own integrity — pictures on disk, five real languages, hours that
-// make sense — lives in tests/unit/team-data.test.ts, which runs in node and
-// can read the file system; everything here is pure and would run anywhere.
-// It runs in the components project's real Chromium only because that is
-// where `src/**/*.test.ts` runs, which costs nothing and keeps one convention.
+// data's own integrity — pictures on disk, five real languages, numbers that
+// agree with their rows — lives in tests/unit/team-data.test.ts, which runs in
+// node and can read the file system; everything here is pure and would run
+// anywhere. It runs in the components project's real Chromium only because
+// that is where `src/**/*.test.ts` runs, which costs nothing and keeps one
+// convention.
 //
 // `splitKeywords` is the whole reason run ledger D2 could move a doctor's
 // words out of the message files: the `<k>…</k>` marks PersonnelCard's D9
 // authored inside a message key are authored beside the person now, in the
-// field round 2 renamed `philosophy` (D17), and this function is what turns
-// them back into the fragments ui/Keyword dresses. A page renders whatever it
-// returns, so the shape of its output IS the contract.
-//
-// `coursesByYear` (D17) is the other half: the doctor page's courses band
-// (D15) prints one year heading per group it returns, so the pins below are
-// the band's reading order — years newest first, the file's order inside a
-// year, one group per year however the rows were typed, `[]` for a doctor
-// with none, and the data it read left exactly as it was.
+// field round 2 renamed `philosophy` (D17) — and, since 2026-10-13, in every
+// paragraph of his `about` (lib/team's THE BIOGRAPHY'S KEY WORDS, CLAUDE.md
+// §15.23 round 7) — and this function is what turns them back into the
+// fragments ui/Keyword dresses. A page renders whatever it
+// returns, so the shape of its output IS the contract. (Its old companion,
+// `coursesByYear`, left with the course years on 2026-10-13 — lib/team's A
+// COURSE IS ONE IDEA — and its pins with it.)
 
 /** The flags of a split, in order — the cheapest description of a sentence's shape. */
 const flagsOf = (segments: readonly AboutSegment[]): readonly boolean[] =>
@@ -79,11 +75,15 @@ describe('splitKeywords — two shipped doctors’ own sentences (run ledger D2,
     expect(readingOf(segments)).toBe(philosophy.replaceAll(/<\/?k>/g, ''));
   });
 
-  it('never returns an empty piece, in any locale of any doctor', () => {
+  it('never returns an empty piece, in any locale of any doctor — the quote and every biography paragraph', () => {
     for (const doctor of doctors) {
       for (const words of Object.values(doctor.words)) {
-        for (const segment of splitKeywords(words.philosophy)) {
-          expect(segment.text, `${doctor.id}: ${segment.text}`).not.toBe('');
+        // The two marked texts (lib/team's THE BIOGRAPHY'S KEY WORDS): the
+        // philosophy, and since 2026-10-13 each `about` paragraph.
+        for (const text of [words.philosophy, ...words.about]) {
+          for (const segment of splitKeywords(text)) {
+            expect(segment.text, `${doctor.id}: ${segment.text}`).not.toBe('');
+          }
         }
       }
     }
@@ -146,13 +146,13 @@ describe('splitKeywords — the shapes a sentence can take', () => {
     // typescript F1).
     ['an upper-case pair', '<K>a</K>'],
   ])('throws on %s, naming the text', (_case, philosophy) => {
-    // The data test calls splitKeywords on every `philosophy` in every
-    // locale, so a typo dies in CI rather than shipping a visible <k> to a
-    // patient.
+    // The data test calls splitKeywords on every `philosophy` and every
+    // `about` paragraph in every locale, so a typo dies in CI rather than
+    // shipping a visible <k> to a patient.
     expect(() => splitKeywords(philosophy)).toThrow(/unbalanced <k>/);
-    // …and the message carries the sentence itself, which is the only way a
-    // reader of a red CI log knows WHICH `philosophy` field (one per doctor per
-    // language) to open.
+    // …and the message carries the text itself, which is the only way a
+    // reader of a red CI log knows WHICH marked field — a `philosophy` or one
+    // `about` paragraph, per doctor per language — to open.
     expect(() => splitKeywords(philosophy)).toThrow(philosophy);
   });
 
@@ -160,117 +160,6 @@ describe('splitKeywords — the shapes a sentence can take', () => {
     const philosophy = 'Lucrez în <k>ortodonție</k> de peste zece ani.';
     expect(splitKeywords(philosophy)).toEqual(splitKeywords(philosophy));
   });
-});
-
-/**
- * One course row with a DIFFERENT line per language, so a group that read the
- * wrong language is visible in the assertion rather than equal by accident.
- */
-const row = (year: number, line: string): Course => ({
-  year,
-  words: {
-    ro: line,
-    en: `${line} (en)`,
-    de: `${line} (de)`,
-    fr: `${line} (fr)`,
-    it: `${line} (it)`,
-  },
-});
-
-/** A shipped doctor wearing other course rows — the one field under test. */
-const withCourses = (courses: readonly Course[]): Doctor => ({
-  ...shipped('malea-sabau-oana-bianca'),
-  id: 'medic-proba',
-  courses,
-});
-
-/**
- * The rows typed OUT of order on purpose (2016, 2024, 2021, 2024): the data
- * test keeps the shipped file sorted, so only a fixture can show that the
- * grouping does not lean on that.
- */
-const SHUFFLED: readonly Course[] = [
-  row(2016, 'Specializare în endodonție, Iași'),
-  row(2024, 'Curs de implantologie digitală, Brașov'),
-  row(2021, 'Curs de restaurări estetice, Sibiu'),
-  row(2024, 'Atelier de fotografie dentară, Constanța'),
-];
-
-describe('coursesByYear — the courses band’s groups (run ledger D15, D17)', () => {
-  it('groups Dr. Malea’s Romanian as 2025 · 2023 ×2 · 2019 · 2017 · 2012, the two 2023 lines in file order', () => {
-    // Six placeholder rows over five years (lib/team's TODO(owner) block) —
-    // the one shipped doctor with two courses in one year, kept on purpose.
-    const groups = coursesByYear(shipped('malea-sabau-oana-bianca'), 'ro');
-
-    expect(groups.map((group) => group.year)).toEqual([
-      2025, 2023, 2019, 2017, 2012,
-    ]);
-    expect(groups.map((group) => group.courses.length)).toEqual([
-      1, 2, 1, 1, 1,
-    ]);
-    expect(groups[1].courses).toEqual([
-      'Curs de chirurgie plastică parodontală, Cluj-Napoca',
-      'Curs de restaurări protetice din zirconiu, Sibiu',
-    ]);
-  });
-
-  it('sorts shuffled rows into descending years, one group per year, the two 2024 rows in file order', () => {
-    expect(coursesByYear(withCourses(SHUFFLED), 'ro')).toEqual([
-      {
-        year: 2024,
-        courses: [
-          'Curs de implantologie digitală, Brașov',
-          'Atelier de fotografie dentară, Constanța',
-        ],
-      },
-      { year: 2021, courses: ['Curs de restaurări estetice, Sibiu'] },
-      { year: 2016, courses: ['Specializare în endodonție, Iași'] },
-    ]);
-  });
-
-  it('reads the asked language and no other', () => {
-    const [newest] = coursesByYear(withCourses(SHUFFLED), 'de');
-    expect(newest.courses).toEqual([
-      'Curs de implantologie digitală, Brașov (de)',
-      'Atelier de fotografie dentară, Constanța (de)',
-    ]);
-  });
-
-  it('gives a doctor with no rows no groups at all — the band renders nothing', () => {
-    expect(coursesByYear(withCourses([]), 'ro')).toEqual([]);
-  });
-
-  it('is pure — two calls agree, and the doctor’s rows are left exactly as they were', () => {
-    const doctor = withCourses(SHUFFLED);
-    const before = structuredClone(doctor.courses);
-
-    const first = coursesByYear(doctor, 'ro');
-    const second = coursesByYear(doctor, 'ro');
-
-    expect(second).toEqual(first);
-    // The file's order survives — a sort in place would have moved the 2024
-    // rows to the front of the ARRAY the next page reads.
-    expect(doctor.courses).toEqual(before);
-    expect(doctor.courses.map((course) => course.year)).toEqual([
-      2016, 2024, 2021, 2024,
-    ]);
-  });
-
-  it.each(locales)(
-    'gives every group of every doctor as many lines as that year has rows, for "%s"',
-    (locale: Locale) => {
-      for (const doctor of [...doctors, withCourses(SHUFFLED)]) {
-        for (const group of coursesByYear(doctor, locale)) {
-          const rows = doctor.courses.filter(
-            (course) => course.year === group.year,
-          );
-          expect(group.courses, `${doctor.id}.${locale}.${group.year}`).toEqual(
-            rows.map((course) => course.words[locale]),
-          );
-        }
-      }
-    },
-  );
 });
 
 // The two finders search the SHIPPED lists. Their callers are the doctor

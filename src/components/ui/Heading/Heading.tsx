@@ -163,57 +163,8 @@ import { slotClone } from '../slot';
 // 'inverse-stroked''s reason; the elders are byte-identical. axe reads the
 // stroke as the foreground here as on the two stroked tones — the AuraTone
 // story records the exemption with the measurement.
-// 'accent' JOINED 2026-09-25 with sections/DoctorCourses as its measured
-// consumer (the doctor-pages run's round 2, D16): the year labels over a
-// doctor's courses, "bold and lilac" in the owner's words.
-// `--color-accent-decorative` is §15.1's role for LARGE display text (≥ 3:1)
-// and graphics, never body copy — MEASURED: #7a6d9c on `--page` #faf9f7 is
-// 4.44:1, under the 4.5:1 body text needs. So the tone is BOLD BY
-// CONSTRUCTION: at the `title` step (20px) bold is what makes the text
-// "large" in WCAG's definition (≥ 18.67px bold), where 3:1 binds and 4.44:1
-// clears it with room; at `section`/`band`/`page`/`hero` it is large by size
-// alone.
-// The consumer joined at `title` and has worn `section` — 30px, large by
-// size alone — since round 2j (D44a: the year's <h3> in
-// sections/DoctorCourses/CourseTimeline.tsx). The AccentTone and
-// AccentIdleTone stories still photograph the 20px `title` step ON PURPOSE:
-// it is the harder case, the one where the weight is what makes the text
-// large, so a frame that passes there passes at every step above it.
-// A caller may not pair this tone with a smaller step because there is none —
-// and the step that joins below `title` one day, if it ever does, must be
-// argued against this paragraph first. The weight rides the TONE row, not the
-// caller's className, so the pair cannot be split at a call site (§6.8 — a
-// caller never restyles an atom's internals). The other grounds it may meet
-// were measured with it: 4.67:1 on the white `--surface`, and 3.06:1 on
-// sections/TintedBand's lilac ground (the 30 % tint of the doctor-pages run's
-// D23 — still over the 3:1 large text needs, with almost nothing to spare; it
-// was 3.48:1 at the 20 % the ground first shipped with). A darker ground than
-// that tint is a new measurement, not a given.
-// The elders are byte-identical; only the union and one table row grew.
-// 'accent-idle' JOINED 2026-09-26 as the accent tone's REST TWIN, with the
-// same consumer (the doctor-pages run's round 2g, D35): the course timeline
-// greys every year at rest and lights only the one being read — "all are
-// grayed out at rest … the current should have a non grayed out jump at you
-// animation" (owner). It is `font-bold text-ink-muted`: the SAME weight as
-// 'accent' in the body copy's muted ink, and the weight is the whole reason
-// it is a row of its own rather than 'default' plus a colour. The timeline
-// switches ONE year between the two as the visitor scrolls, and a lit/unlit
-// pair that differed in weight would re-measure the line on every switch —
-// the year growing wider, a long German label re-wrapping, every course
-// under it nudged. So the pair differs in the INK ALONE (the test file pins
-// exactly one token of difference at every step). The contrast is not what
-// the bold is for this time: `--ink-muted` #5b554f on `--page` #faf9f7 is
-// 6.99:1 at full opacity, over body text's 4.5:1 at any weight.
-// KEEP-IN-SYNC with sections/DoctorCourses/CourseTimeline.tsx (its CONTRAST,
-// MEASURED paragraph and `groupIdle`): the one consumer fades the whole
-// resting group to 0.65, where this ink blends to rgb(147 142 138) and reads
-// 3.07:1 on `--page` — the large-text bar, which every step of this atom
-// meets by construction (the smallest, `title`, is 20px, and this row is
-// bold: ≥ 18.67px bold is large) — so no consumer may fade it below 0.65
-// without re-measuring (at 0.50 it would read 2.27:1, a failure).
-// Same tone reasoning as its twin (the weight rides the row, never a
-// caller's className, §6.8); the elders, 'accent' included, are
-// byte-identical.
+// The `accent`/`accent-idle` year tones of 2026-09-25/26 left with the doctor
+// page's year timeline, 2026-10-13 — CLAUDE.md §15.23.
 //
 // 'band' JOINED 2026-09-26 as THE h2 STEP (the doctor-pages run's round 2j,
 // D48), under §15.24's one-size-per-outline-level rule: the owner asked for
@@ -241,9 +192,10 @@ import { slotClone } from '../slot';
 // border-box less 25px per side on every tone (Card.tsx's SUM RULE: 1 + 24,
 // or 3 + 22 for `framed`), so a card title reaches 36px only on a card at
 // least 28rem + 50px = 498px wide. The category cards clear it from a tablet
-// up (564px of content at 768, 702px at 1280 — PriceMenu.tsx's table); the
-// 20rem schedule card never does (270px of content at most, 30px
-// everywhere). Two cards rest at 30px beside wider neighbours, RECORDED: the
+// up (564px of content at 768, 702px at 1280 — PriceMenu.tsx's table); a
+// 20rem card never does (270px of content at most, 30px everywhere — the
+// doctor page's schedule card, until it was dropped on 2026-10-13). Two
+// cards rest at 30px beside wider neighbours, RECORDED: the
 // price menu's „Categorii" (its `minmax(15rem,1fr)` track, 190px of content
 // at 1280 — "one step under", PriceMenu.tsx's THE TITLE'S STEP IS `band`
 // paragraph) at every laptop width, and the credo card's „Filozofia mea" on
@@ -336,9 +288,7 @@ export type HeadingTone =
   | 'inverse'
   | 'inverse-stroked'
   | 'inverse-outlined'
-  | 'inverse-aura'
-  | 'accent'
-  | 'accent-idle';
+  | 'inverse-aura';
 
 type HeadingOwnProps = {
   /**
@@ -373,16 +323,7 @@ type HeadingOwnProps = {
    * Hero's third face, 2026-09-21) · 'inverse-aura' → the outlined face,
    * the plain weight, plus a lilac halo in two em-scaled layers mixed from
    * the display lilac (the Hero's DEFAULT face since 2026-10-01: "a lila
-   * aura … around letters", then "drop the bold.") · 'accent' →
-   * text-accent-decorative,
-   * ALWAYS bold: the lilac year labels over a doctor's courses
-   * (sections/DoctorCourses, 2026-09-25). The ink is 4.44:1 on the page
-   * ground — large-text only (§15.1) — and bold is what makes the 20px
-   * `title` step large, so the weight ships inside the tone (see the
-   * header) · 'accent-idle' → the same bold in text-ink-muted, accent's REST
-   * twin: the course timeline's grey years (2026-09-26). The pair differs in
-   * the ink alone, so a year switching between them never reflows.
-   * Orthogonal to `size`.
+   * aura … around letters", then "drop the bold."). Orthogonal to `size`.
    * @default 'default'
    */
   tone?: HeadingTone;
@@ -444,13 +385,6 @@ const toneClasses: Record<HeadingTone, string> = {
   // 107px alike. The <p>'s own shadow outranks a wrapper's inherited one.
   'inverse-aura':
     'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill] [text-shadow:0_0_0.28em_color-mix(in_srgb,var(--color-accent-decorative)_60%,transparent),0_0_0.08em_color-mix(in_srgb,var(--color-accent-decorative)_40%,transparent)]',
-  // The lilac year labels (header, D16): the accent ink is 4.44:1 on the
-  // page ground, so it travels with `font-bold` — the weight that makes the
-  // 20px title step "large" text, where 3:1 binds. Never one without the other.
-  accent: 'font-bold text-accent-decorative',
-  // Its REST twin (header, D35): the same weight, the muted ink — so a year
-  // switching between the two changes colour and nothing else.
-  'accent-idle': 'font-bold text-ink-muted',
 };
 
 export function Heading({

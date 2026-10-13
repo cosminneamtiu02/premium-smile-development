@@ -1,16 +1,14 @@
-import type { CourseGroup } from '@/components/sections/DoctorCourses/DoctorCourses';
 import type {
   DoctorIntroCredo,
   DoctorIntroPhoto,
 } from '@/components/sections/DoctorIntro/DoctorIntro';
+import type { DoctorProfileProps } from '@/components/sections/DoctorProfile/DoctorProfile';
 import type { DoctorShowcaseDoctor } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import type { TeamRosterMember } from '@/components/sections/TeamRoster/TeamRoster';
 import { localeHref } from '@/i18n/href';
 import type { Locale } from '@/i18n/locales';
-import { formatHoursRows, type HoursRow } from '@/lib/hours/hours';
 import {
   auxiliaries,
-  coursesByYear,
   doctors,
   splitKeywords,
   type AboutSegment,
@@ -24,11 +22,12 @@ import {
 // props of the pages that show them — the Team page, every doctor page and,
 // since 2026-09-30, the Home page's doctors band (and since 2026-10-01 the
 // clinic's numbers band on Home and Team, `populateStats` over lib/team's
-// `clinicStats`) — in ONE language. Pure: a locale, a couple of callbacks and
-// (for tests) a list go in, plain objects come out. JSX-free and
+// `clinicStats`) — in ONE language. Pure: a locale, a finished label, one
+// callback and (for tests) a list go in, plain objects come out. JSX-free and
 // next-intl-free, no DOM — React reaches it only through the sections' prop
 // types it already imports (`DoctorShowcaseDoctor['about']`,
-// `DoctorIntroCredo['body']`); the `react` specifier itself is gone (G2-R2
+// `DoctorIntroCredo['body']`, `DoctorProfileProps['about']['paragraphs']`);
+// the `react` specifier itself is gone (G2-R2
 // tier 3, react F3 — by tests/unit/lib-react-free.test.ts' definition a
 // type-only `react` import is still a React import, and nothing here needs
 // one). The services and home populators' shape (./../services/populate.ts,
@@ -39,20 +38,18 @@ import {
 //     DoctorIntro, DoctorProfile, DoctorCourses and DoctorStats hold zero
 //     message keys and import no data; none of them knows what a `Locale` is.
 //     Somebody still has to pick the visitor's words, build the link to a
-//     doctor's page, cut the `<k>`
-//     marks out of a doctor's philosophy, print his week, group his courses by
-//     year and pick his numbers' words — and the PAGE is that somebody. This
-//     file is the page's arithmetic, lifted out of the JSX.
+//     doctor's page, cut the `<k>` marks out of a doctor's philosophy and his
+//     biography's paragraphs, pick his course ideas and his numbers' words —
+//     and the PAGE is that
+//     somebody. This file is the page's arithmetic, lifted out of the JSX.
 //
 //   · IT CANNOT LIVE IN lib/team, whose return type would then have to name
-//     `sections/` types (`DoctorShowcaseDoctor`, DoctorCourses' `CourseGroup`) —
-//     the one arrow §4's dependency direction forbids, since the foundation
-//     ring is importable BY every tier and imports none of them. Restating
-//     those prop shapes inside lib/ instead would give a contract that
-//     deliberately has one declaration a second one. (lib/team exports a
-//     `CourseGroup` of its own — the year still a NUMBER — and this file
-//     imports only its `coursesByYear`, never that type: the name below is
-//     the band's, the year a finished string.)
+//     `sections/` types (`DoctorShowcaseDoctor`, `TeamRosterMember`,
+//     DoctorIntro's `DoctorIntroPhoto`) — the one arrow §4's dependency
+//     direction forbids, since the foundation ring is importable BY every
+//     tier and imports none of them. Restating those prop shapes inside lib/
+//     instead would give a contract that deliberately has one declaration a
+//     second one.
 //
 //   · IT CANNOT BE INLINE IN THE page.tsx FILES. Each has a KEEP-IN-SYNC
 //     story twin beside it (./Team.stories.tsx, ./[slug]/Doctor.stories.tsx,
@@ -66,22 +63,33 @@ import {
 //     Home pages — follows the same argument into a module of its own,
 //     ./stat-tiles.tsx, because this file builds no element (G2-R2 tier 3).
 //
-// ── WHY CALLBACKS AND NOT A `t` (run ledger D1's second half). `renderQuote`
-// and `closedLabel` are the two places this module would otherwise have to
-// know about React and about next-intl:
-//   · `renderQuote` receives SEGMENTS, never a string with markup in it — the
-//     cutting happens here (lib/team's `splitKeywords`), the rendering in the
-//     caller's `<Keywords>` (ui/Keyword). That is what keeps this file JSX-free
-//     while the `<k>` marks still become <b> fragments on the page. It renders
-//     ONE text in both walks: a doctor's `philosophy` (round 2's D17), which
-//     the showcase's card quotes and the doctor page's credo card quotes again
-//     (D12) — hence the name; round 1 spelled it `renderAbout` while the
-//     quoted field was still called `about`.
-//   · `closedLabel` is finished text for lib/hours, which has refused message
-//     keys since the Footer first called it (§8.1).
-// Both callers reach next-intl through different APIs — `getTranslations` on
-// the server, `useTranslations` in the story twin — so a callback is the seam
-// both satisfy, and this module needs neither a provider nor a mock to test.
+// ── WHY CALLBACKS AND NOT A `t` (run ledger D1's second half). A render
+// callback is the one place this module would otherwise have to know about
+// React: it receives SEGMENTS, never a string with markup in it — the cutting
+// happens here (lib/team's `splitKeywords`), the rendering in the caller's
+// `<Keywords>` (ui/Keyword). That is what keeps this file JSX-free while the
+// `<k>` marks still become <b> fragments on the page. The showcase walk's
+// `renderQuote` renders ONE text, a doctor's `philosophy` (round 2's D17),
+// which his card quotes — hence the name; round 1 spelled it `renderAbout`
+// while the quoted field was still called `about`. The doctor walk's callback
+// renders MORE than a quote since 2026-10-13 (CLAUDE.md §15.23 round 7, the
+// owner's pack feedback the same evening, verbatim: "i also wan thte text of
+// biografie to be like the text at: "Înainte de orice lucrare protetică
+// verific sănătatea gingiei, …" so gary-ish er and with tighlighted
+// keywords"): the same philosophy for the credo card (D12) AND every
+// paragraph of the biography, which carries `<k>` marks of its own since that
+// day (lib/team's THE BIOGRAPHY'S KEY WORDS). So it is `renderKeywords` —
+// `renderQuote` until that day — and what it hands back must be a node BOTH
+// bands take (`KeywordsNode` below). Words from the message files never need
+// a callback: they arrive FINISHED — the showcase's one label as
+// `profileLabel` — or stay with the page, which spells every eyebrow and
+// title of a doctor's page itself. (Until 2026-10-13 the doctor walk took a
+// second option, `closedLabel`, the finished „Închis" lib/hours printed on a
+// day the doctor did not work; it left with the doctor's week — lib/team's NO
+// WEEK ON A DOCTOR.) Both callers reach next-intl through different APIs —
+// `getTranslations` on the server, `useTranslations` in the story twin — so
+// finished strings and one callback per walk are the seam both satisfy, and
+// this module needs neither a provider nor a mock to test.
 //
 // ── NO `TEAM_TITLE_ID` HERE, unlike the services populator. Since 2026-09-30
 // the Team page owns its <h1> the way that page does — a bare `sr-only`
@@ -93,26 +101,29 @@ import {
 // ── THE LIST IS AN ARGUMENT, and lib/team's `findDoctor` is therefore NOT
 // called here. It searches the SHIPPED array; the one lookup below searches the
 // list it was HANDED, because that argument is this module's test seam — it is
-// how ./populate.test.ts hands the walks
-// course rows written out of year order, or no courses at all: shapes the real
-// data need not hold on the day the suite runs. On the default list the two
-// are the same search. Calling the lib helper here would make the `list`
-// parameter a lie for the one lookup this file makes.
+// how ./populate.test.ts hands the walks a doctor with no course at all, a
+// paragraph with no mark, or a philosophy or a paragraph with an unbalanced
+// `<k>`: shapes the real data need not hold on the day the suite runs. On the
+// default list the two are the same search.
+// Calling the lib helper here would make the `list` parameter a lie for the
+// one lookup this file makes.
 //
 // ── NO ASSISTANTS, AND NO THROW OF ITS OWN (run ledger D13, round 2). Round 1
 // resolved each doctor's two assistant ids here for the „Echipa mea" band and
 // threw on a dangling or a doubled id; the owner dropped the band, lib/team
 // dropped the pair, and both belts left with them. What can still throw on the
-// way through is lib/team's `splitKeywords` (an unbalanced `<k>`) and
-// lib/hours' formatter (an unknown day) — each naming its own input, each
-// already refused in the shipped data by tests/unit/team-data.test.ts, and
-// each surfacing HERE UNCHANGED, never caught or reworded: ./populate.test.ts
-// feeds both shapes through the `list` seam and pins the libraries' own
-// messages (its „lets lib/team’s unbalanced-<k> error surface unchanged",
-// once for the showcase walk and once for the doctor walk, and „lets lib/hours’
-// unknown-day error surface unchanged"; G2-R2 tier 3, typescript F4). A
-// try/catch that quietly printed the raw text instead would turn those three
-// red.
+// way through is lib/team's `splitKeywords` (an unbalanced `<k>`) — in a
+// doctor's philosophy, which both walks cut, or, since 2026-10-13, in one of
+// his biography's paragraphs, which the doctor walk cuts too — naming its own
+// input, already refused in the shipped data by
+// tests/unit/team-data.test.ts, and surfacing HERE UNCHANGED, never caught or
+// reworded: ./populate.test.ts feeds that shape through the `list` seam and
+// pins the library's own message (its „lets lib/team’s unbalanced-<k> error
+// surface unchanged", for the showcase walk, the doctor walk's philosophy and
+// the doctor walk's paragraph; G2-R2 tier 3, typescript F4). A try/catch that
+// quietly printed the raw text instead would turn all three red. (lib/hours'
+// unknown-day error was the second such shape until the doctor's week left
+// the page, 2026-10-13.)
 
 /**
  * The two lists a walk reads. Defaulted to the real people, so every shipping
@@ -127,16 +138,27 @@ export type TeamList = Readonly<{
 const SITE_LIST: TeamList = { doctors, auxiliaries };
 
 /**
- * Everything a `/{locale}/team/{id}/` page's four content bands need, in one
- * language (run ledger D18, extended by D33: the opener → the tinted band →
- * the courses → the „în cifre" tiles; the map reads lib/clinic itself). Only
- * FACTS ABOUT THE PERSON travel here: every eyebrow and title, and the
- * closed-day word, are the page's own `team.doctor.*` keys (D20), which this
+ * What the doctor walk's `renderKeywords` hands back: ONE node for its two
+ * receivers — the credo card's quote (DoctorIntro's `body`) and every
+ * biography paragraph (DoctorProfile's `paragraphs`) — so it is spelled as
+ * both bands' own prop types at once, and a band that ever narrowed its own
+ * would fail here, at the callback, before it failed on a page. Typed through
+ * the sections' props, the credo precedent, so no `react` import is needed.
+ */
+type KeywordsNode = DoctorIntroCredo['body'] &
+  DoctorProfileProps['about']['paragraphs'][number];
+
+/**
+ * Everything a `/{locale}/team/{id}/` page's three content bands need, in one
+ * language — since 2026-10-13 (the owner's reshape, CLAUDE.md §15.23 round 7)
+ * the opener → the „în cifre" tiles → the biography beside the courses; the
+ * map reads lib/clinic itself. Only FACTS ABOUT THE PERSON travel here: every
+ * eyebrow and title is the page's own `team.doctor.*` key (D20), which this
  * module never sees.
  */
 export type DoctorPageContent = Readonly<{
   /** sections/DoctorIntro — the cutout, the specialty, the name, and the
-   *  credo card's quote (D12): `renderQuote`'s node over the philosophy,
+   *  credo card's quote (D12): `renderKeywords`' node over the philosophy,
    *  typed as the card's own `body` so no `react` import is needed here. */
   intro: Readonly<{
     name: string;
@@ -144,16 +166,20 @@ export type DoctorPageContent = Readonly<{
     photo: DoctorIntroPhoto;
     credo: DoctorIntroCredo['body'];
   }>;
-  /** sections/DoctorProfile — the „Despre" paragraphs (D14: plain prose, one
-   *  string each) and the schedule card's week, lib/hours' seven rows. */
+  /** sections/DoctorProfile — the „Despre" paragraphs (D14), one node each:
+   *  `renderKeywords`' node over the paragraph's cut-up text, since
+   *  2026-10-13 a paragraph carries `<k>` marks (lib/team's THE BIOGRAPHY'S
+   *  KEY WORDS), typed as the band's own `paragraphs` so no `react` import is
+   *  needed here — and, for the courses column it composes
+   *  (sections/DoctorCourses), the course IDEAS: one finished line each, in
+   *  lib/team's order, the order the column prints them and highlights them
+   *  one by one (the owner, 2026-10-13: "jsut dot ideas … a single idea per
+   *  section"). No year and no grouping — lib/team's A COURSE IS ONE IDEA.
+   *  Empty when the doctor has no course. */
   profile: Readonly<{
-    paragraphs: readonly string[];
-    rows: readonly HoursRow[];
+    paragraphs: DoctorProfileProps['about']['paragraphs'];
+    courses: readonly string[];
   }>;
-  /** sections/DoctorCourses — the year groups, newest first, each year a
-   *  finished LABEL string (D15, D17). Empty when the doctor has no course,
-   *  and the band then renders nothing. */
-  courses: readonly CourseGroup[];
   /** sections/DoctorStats — one row per tile (D32), the WORDS in this language
    *  and the drawing as an ID: ./stat-tiles.tsx maps it to a glyph
    *  (lib is React-free, the band takes a ReactNode, and this file builds no
@@ -260,19 +286,18 @@ export function populateTeamRoster(
  * @param locale the visitor's language, already narrowed (see the showcase walk).
  * @param slug the `[slug]` segment — a doctor's `id` in lib/team, which IS the
  *   URL (run ledger D3).
- * @param options `renderQuote` cuts nothing and renders everything (see the
- *   file header); `closedLabel` is the finished „Închis" lib/hours prints on a
- *   day the doctor does not work.
+ * @param options `renderKeywords` cuts nothing and renders everything — the
+ *   credo card's quote AND every biography paragraph, one call each, in that
+ *   order (see the file header; `renderQuote` until 2026-10-13, when the
+ *   paragraphs gained their key words) — the one option since the doctor's
+ *   week, and with it `closedLabel`, left the page the same day.
  * @param list the people to walk. Defaults to lib/team's own.
  */
 export function populateDoctorPage(
   locale: Locale,
   slug: string,
   options: Readonly<{
-    renderQuote: (
-      segments: readonly AboutSegment[],
-    ) => DoctorIntroCredo['body'];
-    closedLabel: string;
+    renderKeywords: (segments: readonly AboutSegment[]) => KeywordsNode;
   }>,
   list: TeamList = SITE_LIST,
 ): DoctorPageContent | undefined {
@@ -292,34 +317,30 @@ export function populateDoctorPage(
       // THE CREDO CARD's quote (D12): the SAME philosophy the doctor card
       // quotes, cut here and rendered by the caller, so the two pages can
       // never quote the doctor differently.
-      credo: options.renderQuote(splitKeywords(words.philosophy)),
+      credo: options.renderKeywords(splitKeywords(words.philosophy)),
     },
     profile: {
-      // The paragraphs pass through FINISHED, in lib/team's order (D14, D17):
-      // plain prose, one string per <p>, nothing to cut — a `<k>` in one is
-      // refused by tests/unit/team-data.test.ts, never parsed here.
-      paragraphs: words.about,
-      // THE DOCTOR'S OWN WEEK, through the same formatter that prints the
-      // clinic's in the Footer: seven rows, Monday → Sunday, closed days in
-      // their calendar place, weekday names from a fixed reference week (so a
-      // baseline shot on a Tuesday equals one shot on a Sunday). `locale` is a
-      // BCP-47 tag to `Intl` here, which our five plain codes already are.
-      rows: formatHoursRows(doctor.hours, locale, options.closedLabel),
+      // THE PARAGRAPHS, in lib/team's order (D14, D17), each CUT here and
+      // RENDERED by the caller exactly as the credo's quote is: since
+      // 2026-10-13 a paragraph carries `<k>` marks of its own (CLAUDE.md
+      // §15.23 round 7 — the owner: "… so gary-ish er and with tighlighted
+      // keywords"; lib/team's THE BIOGRAPHY'S KEY WORDS), so each one leaves
+      // as the caller's node, one per <p>, and no `<k>` ever reaches the band.
+      // A fresh array, so the band can never reach the data's own.
+      paragraphs: words.about.map((paragraph) =>
+        options.renderKeywords(splitKeywords(paragraph)),
+      ),
+      // THE COURSE IDEAS, one finished line each in this language, in
+      // lib/team's order — the design order the courses column prints them
+      // and highlights them in, one by one (the owner, 2026-10-13: "jsut dot
+      // ideas, and each section will be jsut one dot"). Nothing grouped,
+      // nothing sorted, no year: a course is one idea (lib/team's A COURSE IS
+      // ONE IDEA). A fresh array, so the band can never reach the data's own.
+      courses: doctor.courses.map((course) => course.words[locale]),
     },
     // THE NUMBERS — his own rows, through the one stats walk below (the Home
     // page's band walks the clinic's rows through the same function).
     stats: populateStats(locale, doctor.stats),
-    // THE YEARS BECOME LABELS HERE, and nowhere else (D15, D17). lib/team's
-    // `coursesByYear` groups the rows — newest year first, the file's order
-    // inside a year — and hands each year back as the NUMBER it is; the band
-    // prints a finished string and formats nothing. `String(year)` is the
-    // conversion on purpose: `Intl.NumberFormat`, or an ICU `{year, number}`,
-    // would group the digits by locale and print „2.024" in Romanian and in
-    // German. A calendar year is a name for a year, not a quantity.
-    courses: coursesByYear(doctor, locale).map(({ year, courses }) => ({
-      year: String(year),
-      courses,
-    })),
   };
 }
 

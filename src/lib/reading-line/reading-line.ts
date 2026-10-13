@@ -1,6 +1,6 @@
 // lib/reading-line — "WHERE SHOULD A JUMP TO THIS TARGET COME TO REST, AND
 // WHICH TARGET IS BEING READ?", as pure arithmetic. The numbers
-// lib/scroll-spy's third line measures with (`line: 'reading'`, that header's
+// lib/scroll-spy's reading line measures with (`line: 'reading'`, that header's
 // THE READING LINE): the spy reads the page, hands this module a FRAME of
 // plain numbers and gets back a PLAN — where each target's jump should land,
 // and what the walk should measure at any scroll position. No DOM, no window,
@@ -47,10 +47,11 @@
 // ── THE READING LINE is the middle of the part of the window the page keeps
 // CLEAR: `line = (padding + viewport) / 2`, where `padding` is the document's
 // `scroll-padding-top` (the header pill's reach, 96px on this site) and
-// `viewport` is `innerHeight`. Not `innerHeight / 2` — that is lib/scroll-spy's
-// MIDDLE line, the doctor page's course timeline (D49): under a 96px pill the
-// middle of what the eye can actually see sits 48px below the middle of the
-// screen.
+// `viewport` is `innerHeight`. Not `innerHeight / 2` — the screen's middle,
+// which lib/scroll-spy measured for the doctor page's year timeline until that
+// timeline left on 2026-10-13 (D49; CLAUDE.md §15.23 round 7): under a 96px
+// pill the middle of what the eye can actually see sits 48px below the middle
+// of the screen.
 //
 // ── A TARGET'S REST — where a jump to it comes to rest, as the viewport y of
 // its top edge. It is CENTRED on the line when it fits, and otherwise its top

@@ -284,8 +284,9 @@ describe('Heading — the band step (the h2 step, D48, 2026-09-26)', () => {
     classes.split(' ').filter((token) => /^@?[a-z0-9-]+:/.test(token));
 
   it('renders size="band" wearing exactly the band classes on a plain <p>', () => {
-    // The narrow consumer's own words: the schedule card's title, the 320px
-    // column where the step rests at 30px (§15.7: Romanian, diacritics).
+    // The narrow case's words: the title of the doctor page's former schedule
+    // card (a 20rem card until 2026-10-13), the 320px column where the step
+    // rests at 30px (§15.7: Romanian, diacritics).
     render(<Heading size="band">Când mă găsiți la clinică</Heading>);
     const title = screen.getByText('Când mă găsiți la clinică');
     expect(title.tagName).toBe('P');
@@ -492,7 +493,7 @@ describe('Heading — the name step, MEASURED (real stylesheet)', () => {
 });
 
 describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', () => {
-  // Record<HeadingTone, …> on purpose, the size table's twin: a third ink
+  // Record<HeadingTone, …> on purpose, the size table's twin: a new ink
   // cannot ship with zero coverage — this file stops typechecking until it
   // is classified here.
   const expectedInk: Record<HeadingTone, string> = {
@@ -511,13 +512,6 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     // lilac. The Hero's default face.
     'inverse-aura':
       'text-ink-inverse [-webkit-text-stroke:2px_var(--color-accent-decorative)] [paint-order:stroke_fill] [text-shadow:0_0_0.28em_color-mix(in_srgb,var(--color-accent-decorative)_60%,transparent),0_0_0.08em_color-mix(in_srgb,var(--color-accent-decorative)_40%,transparent)]',
-    // The lilac year labels (2026-09-25, the doctor-pages run's D16): the
-    // accent ink with its weight — 4.44:1 on the page ground is large-text
-    // contrast only, and bold is what makes the 20px title step large.
-    accent: 'font-bold text-accent-decorative',
-    // Their REST twin (2026-09-26, the run's D35): the same weight in the
-    // muted ink, so a year switching between the two never reflows.
-    'accent-idle': 'font-bold text-ink-muted',
   };
 
   // Pin the union itself, exactly as the size axis does: widening it to
@@ -528,8 +522,6 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
     | 'inverse-stroked'
     | 'inverse-outlined'
     | 'inverse-aura'
-    | 'accent'
-    | 'accent-idle'
   >();
 
   it.each(Object.keys(expectedInk) as HeadingTone[])(
@@ -597,74 +589,6 @@ describe('Heading — the tone axis (inverse ink for the scrim, 2026-09-19)', ()
       'font-display text-3xl text-ink-inverse',
     );
   });
-
-  it('is orthogonal to size for the accent ink too — the DoctorCourses <h3>', () => {
-    // The measuring consumer's own shape (D16): a real <h3> handed in through
-    // asChild at the title step, a year as its whole text. Size row first,
-    // the tone row after it, the child's own classes (none here) last — so
-    // the title step's `font-display text-xl` is untouched and the ink swaps
-    // in whole, weight included.
-    render(
-      <Heading size="title" tone="accent" asChild>
-        <h3>2024</h3>
-      </Heading>,
-    );
-    expect(
-      screen.getByRole('heading', { level: 3, name: '2024' }).className,
-    ).toBe('font-display text-xl font-bold text-accent-decorative');
-  });
-
-  it.each(Object.keys(expectedClasses) as HeadingSize[])(
-    'tone "accent" is bold at the "%s" step — the weight never leaves the ink (D16)',
-    (size) => {
-      // §15.1 licenses the accent for LARGE display text only; at the 20px
-      // title step the bold IS what makes it large (≥ 18.67px bold), and at
-      // every larger step it keeps the look one face. A future edit that moved
-      // `font-bold` out of the tone row (onto one caller's className, say)
-      // would leave the other call sites under 4.5:1 at body weight.
-      render(
-        <Heading size={size} tone="accent">
-          Formare continuă
-        </Heading>,
-      );
-      const tokens = screen.getByText('Formare continuă').className.split(' ');
-      expect(tokens).toContain('font-bold');
-      expect(tokens).toContain('text-accent-decorative');
-      expect(tokens).not.toContain('text-ink-strong');
-    },
-  );
-
-  it.each(Object.keys(expectedClasses) as HeadingSize[])(
-    'tones "accent" and "accent-idle" differ in the INK alone at the "%s" step — a lit/unlit pair never reflows (D35)',
-    (size) => {
-      // The course timeline switches ONE year between the two as the visitor
-      // scrolls. Anything but the colour changing — the weight above all —
-      // would re-measure the line and nudge every course under it. So the
-      // two class strings must be the same tokens with exactly one swapped.
-      const { unmount } = render(
-        <Heading size={size} tone="accent">
-          2024
-        </Heading>,
-      );
-      const lit = screen.getByText('2024').className.split(' ');
-      unmount();
-      render(
-        <Heading size={size} tone="accent-idle">
-          2024
-        </Heading>,
-      );
-      const rest = screen.getByText('2024').className.split(' ');
-
-      expect(rest).toContain('font-bold');
-      expect(rest).toContain('text-ink-muted');
-      expect(lit.filter((token) => !rest.includes(token))).toEqual([
-        'text-accent-decorative',
-      ]);
-      expect(rest.filter((token) => !lit.includes(token))).toEqual([
-        'text-ink-muted',
-      ]);
-    },
-  );
 
   it('keeps the caller className LAST, after the ink', () => {
     render(

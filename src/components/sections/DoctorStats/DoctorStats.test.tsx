@@ -117,7 +117,7 @@ const TILES = [
     icon: <Trophy />,
     value: 10,
     label: 'Cursuri',
-    description: 'Formare continuă în tehnici și tehnologii moderne.',
+    description: 'Fiecare curs este un reper pe drumul spre specializare.',
   },
   {
     id: 'interventions',

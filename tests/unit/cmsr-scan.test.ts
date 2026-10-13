@@ -53,7 +53,8 @@ import ro from '../../src/messages/ro.json';
 //
 // The last `it` proves each list has teeth (one sample per language trips).
 
-/** The exact strings the owner has verified and allows through, verbatim. */
+/** The exact strings the owner has verified and allows through, verbatim —
+ *  as a visitor READS them, with no `<k>` key-word marks (`visible`, below). */
 const ALLOWED: readonly string[] = [];
 
 const PATTERNS: Readonly<Record<Locale, readonly RegExp[]>> = {
@@ -213,9 +214,22 @@ const SOURCES: readonly [
   ['lib/hero-slides', heroStrings],
 ];
 
+/**
+ * The words a visitor READS: lib/team's `<k>…</k>` key-word marks removed
+ * before any pattern runs. A doctor's philosophy carries them and, since
+ * 2026-10-13, every biography paragraph too (CLAUDE.md §15.23 round 7) — and
+ * a mark inside a banned phrase („fără <k>durere</k>") would otherwise split
+ * it out of every pattern's reach while the page still prints it whole.
+ */
+const visible = (text: string): string => text.replace(/<\/?k>/g, '');
+
 function hits(locale: Locale, text: string): readonly string[] {
-  if (ALLOWED.includes(text)) return [];
-  return PATTERNS[locale].filter((p) => p.test(text)).map(String);
+  // The ALLOWED list holds what a visitor reads too — written without marks,
+  // compared without them — so moving a key word never voids an exception
+  // the owner documented (G2 typescript NIT, 2026-10-13).
+  const read = visible(text);
+  if (ALLOWED.includes(read)) return [];
+  return PATTERNS[locale].filter((p) => p.test(read)).map(String);
 }
 
 describe('CMSR — no guarantee, superlative, comparison or undocumented award in what the team pages, the reviews and the opener say', () => {
@@ -261,6 +275,24 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
     expect(hits(locale, text).length).toBeGreaterThan(0);
   });
 
+  it.each([
+    ['ro', 'Tratăm totul fără <k>durere</k>, cu grijă.'],
+    ['ro', 'Oferim rezultate <k>predictibile</k> fiecărui pacient.'],
+    ['de', 'Wir versprechen sichere <k>Ergebnisse</k> für jeden Patienten.'],
+  ] as const)(
+    'reads past the key-word marks in %s: „%s" is refused',
+    (locale, text) => {
+      // Each case is a MULTI-WORD pattern the mark splits in the SOURCE — red
+      // without `visible`, never on the page, where the phrase prints whole.
+      // The scan reads what a visitor reads, so the mark hides nothing.
+      expect(hits(locale, text).length).toBeGreaterThan(0);
+      expect(
+        PATTERNS[locale].some((p) => p.test(text)),
+        'the raw source escapes every pattern — the case proves the stripping',
+      ).toBe(false);
+    },
+  );
+
   it('lets descriptive copy through (no false positive on the shapes it must allow)', () => {
     expect(
       hits('ro', 'Workshop de suturi și vindecare a plăgilor orale, Milano.'),
@@ -283,6 +315,8 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
     for (const text of ALLOWED) {
       expect(text.trim()).toBe(text);
       expect(text.length).toBeGreaterThan(0);
+      // Written as it reads: a mark inside an exception would never match.
+      expect(visible(text)).toBe(text);
     }
   });
 });

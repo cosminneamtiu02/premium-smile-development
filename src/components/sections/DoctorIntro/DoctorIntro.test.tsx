@@ -388,7 +388,7 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
     expect(bandOf(container).className).toBe('bg-page');
     // ui/Container's `containerClasses` — the ONE gutter definition (§15.15 a),
     // IMPORTED rather than spelled: tests/unit/gutter-single-spelling.test.ts
-    // fences every file under src/, this suite included (the DoctorCourses way).
+    // fences every file under src/, this suite included.
     expect(containerOf(container).className).toBe(containerClasses);
     expect(containerOf(container).children).toHaveLength(1);
     expect(scaleBoxOf(container).className).toBe(SCALE_BOX);

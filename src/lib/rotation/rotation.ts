@@ -155,7 +155,14 @@ import {
 //    ("not autoscrolling like … the slides"): the 2026-09-12 stand-ins named
 //    at the top of this bullet are history, both rotators share the Hero's
 //    manners and the Hero's 5.5 s rhythm, and `handNavigation` has no
-//    consumer.
+//    consumer. A THIRD rotator (2026-10-13, the doctor page's course timeline,
+//    sections/DoctorCourses/CourseTimeline) HIDES NOTHING: every idea stays
+//    on screen and readable, and the ring only says which one is lit — so it
+//    is not the carousel this law's markup duties are written for (no
+//    control, no prev/next, no live region, no `inert`, no roledescription).
+//    It holds while off screen (lib/clock's `'offscreen'` cause) and for
+//    nobody else, on the owner's same "it always moves on"; its header and
+//    CLAUDE.md §15.23 round 7 carry the SC 2.2.2 record.
 //    The hover-wrapper and focus bullets below stay the law for every other
 //    rotator. `rotationControl()` below is untouched and waits for the first
 //    rotator that renders the control — unnamed today.
@@ -266,8 +273,10 @@ import {
 export type RotationStatus = ClockStatus;
 
 /**
- * The two transient-pause causes, re-exported so a consumer typing its own
- * handlers never has to import from lib/clock (the ring is the tier they know).
+ * The three transient-pause causes — hover, focus and, since 2026-10-13, the
+ * widget being off screen (lib/clock's SuspendCause doc) — re-exported so a
+ * consumer typing its own handlers never has to import from lib/clock (the
+ * ring is the tier they know).
  */
 export type { SuspendCause };
 

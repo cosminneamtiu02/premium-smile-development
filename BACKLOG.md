@@ -85,8 +85,16 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   - reflow at 320px and at 200% zoom with no sideways scroll; Windows High Contrast (forced
     colours); reduced motion.
 - **Open records to confirm or re-open in that pass:**
-  - SC 2.2.2 on the two rotators — no stop for mouse or touch, and no hold while a screen reader's
-    reading cursor is on a review (CLAUDE.md §15.19 round 4, §15.21 round 3);
+  - SC 2.2.2 on the three rotators — no stop for mouse or touch, and no hold while a screen reader's
+    reading cursor is on a review (CLAUDE.md §15.19 round 4, §15.21 round 3); the third, since
+    2026-10-13, is the doctor page's courses column, whose highlight moves from idea to idea every
+    3 seconds on its own (§15.23 round 7) — it hides nothing, every idea stays readable, but it
+    starts by itself, never stops while the courses are on screen, and runs BESIDE the biography,
+    the page's main reading; and unlike the Hero and the reviews deck, which hold while keyboard
+    focus is inside them, it has NO STOP FOR ANYONE, keyboard included — nothing in it is
+    focusable (the accessibility review's MEDIUM of that day). What would conform: a pause/stop
+    control, or one sweep that finishes within 5 seconds when the list comes into view and then
+    rests; a hover hold alone, or one lap then stop (18 seconds), would not;
   - SC 2.4.5 Multiple Ways — a doctor page is reachable only through its card (§15.23; the doctors
     dropdown recorded in §15.15 is one answer);
   - forced colours — `ui/Button`'s solid face loses its boundary when it dresses an `<a>` (§15.23,
@@ -271,13 +279,14 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **`src/lib/team/team.ts`:**
   - the six doctors — their names and specialties are the owner's; everything else is a random
     placeholder under those real names, in all five languages: the pictures (demo silhouettes),
-    the weekly hours, the course rows, the four „în cifre" numbers, the quotes and the three
-    biography paragraphs (§15.23 round 3, and the file's `TODO(owner): REAL DOCTORS, PLACEHOLDER
-    DETAILS` block, which also flags Claude's two edits to the names and the specialties for
-    confirmation). The hours matter most: a patient could act on a placeholder "Thursday: closed".
-    The reviewers' interim fix is the clinic's own week for all six until each doctor's is known;
-    the uncommitted `rework/drop-doctor-schedule` lane takes the doctors' weeks off the site
-    altogether — if it merges, the hours leave this entry;
+    the course rows, the four „în cifre" numbers, the quotes and the three biography paragraphs
+    with their key words (§15.23 round 3 and round 7, and the file's `TODO(owner): REAL DOCTORS,
+    PLACEHOLDER DETAILS` block, which also flags Claude's two edits to the names and the
+    specialties for confirmation). The weekly hours left the site with the doctor page's schedule
+    card on 2026-10-13 (§15.23 round 7), so no placeholder "Thursday: closed" remains for a
+    patient to act on. Also Claude's drafts, from the same day: the courses' eyebrow „Repere din
+    drumul meu spre specializare" in five languages, and each doctor's second biography paragraph
+    and „Cursuri" tile written around it;
   - the clinic's three numbers on Home and Team — 16+ years, 8.000+ patients, 11.000+ procedures —
     placeholders too (`clinicStats`, §15.23 round 5): no clinic-wide count exists in the
     repository or on the old site.

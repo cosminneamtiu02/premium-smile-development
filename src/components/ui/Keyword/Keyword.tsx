@@ -174,12 +174,16 @@ import { cx } from '@/lib/cx/cx';
 // chartered for WHITE and the PAGE ground — 5.06:1 and 4.81:1 — and the 30%
 // lilac tint is BARRED (3.32:1, the role's own "NOT FOR THE TINT"; under the
 // violet that ground read 6.12:1 and was open). No key word can reach it
-// today: the two bands on that ground take their words as plain strings BY
-// TYPE — sections/DoctorProfile's `paragraphs: readonly string[]` (the
-// doctors' `about`, which carries no <k>), sections/DoctorStats' `lead`,
-// `label` and `description` — so a <b> has no way in, and
-// tests/unit/accent-census.test.ts names the three pages that render key words
-// and the white cards they land on. A DARK ground is outside the charter too
+// today: the one band on that ground takes its words as plain strings BY
+// TYPE — sections/DoctorStats' `lead`, `label` and `description` — so a <b>
+// has no way in. sections/DoctorProfile's paragraphs DO take nodes since
+// 2026-10-13 (the doctors' `about` carries `<k>` marks — CLAUDE.md §15.23
+// round 7, the owner: "the text of biografie … with tighlighted keywords"),
+// and that is lawful because the band left the tint the same day: its
+// biography sits on the PAGE ground, 4.81:1. tests/unit/accent-census.test.ts
+// names the three pages that render key words, the grounds they land on, and
+// the one walk that may call the render callback — on a philosophy or a
+// biography paragraph, nowhere else. A DARK ground is outside the charter too
 // — 3.17:1 on --inverse-surface. A consumer that seats key words on either
 // fails SC 1.4.3 at body size and needs its own ink first (a token decision,
 // the owner's), never a className.

@@ -1,325 +1,149 @@
 import { useId, type ComponentPropsWithRef, type ReactElement } from 'react';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
-import {
-  Container,
-  bandColumnClasses,
-  bandScaleClasses,
-} from '@/components/ui/Container/Container';
 import { cx } from '@/lib/cx/cx';
 import { CourseTimeline } from './CourseTimeline';
 
-// sections/DoctorCourses — the doctor page's „Formare continuă / Cursuri și
-// specializări" band: an eyebrow over an <h2>, then the doctor's courses in
-// sub-sections by YEAR, newest first — a bold year over the bulleted lines
-// of that year — hung on a CV TIMELINE: one vertical line down the left, a
-// dot on it per year, and the ONE year the visitor is reading lit while every
-// other rests grey. Built to the round-2 composition contract of the
-// doctor-pages run (.claude/section-runs/2026-09-21_11-58_doctor-pages/
-// round2, unit R4), reshaped into the timeline by that round's contract R6
-// (round 2e), given its line on the left and its lit year by contract R10
-// (round 2g), and its larger years, doubled gaps and forward-coming current
-// subsection by builder A5 (round 2j, D44) — and, since 2026-10-13, drawn in
-// ui/Container's band scale on a laptop or desktop with the rest of the
-// doctor page (THE BAND SCALE, below; CLAUDE.md §15.32 round 4); the
-// D-numbers cited below are that run's ledger decisions and are the anchors
-// other files quote (§17.7 — never a line number).
+// sections/DoctorCourses — the doctor page's „Repere din drumul meu spre
+// specializare / Cursuri și specializări" block (its eyebrow „Formare
+// continuă" until 2026-10-13, round 7's rename): an eyebrow over an <h2>,
+// then the doctor's courses as
+// a rail of IDEAS — one dot per course on a line down the left — lit ONE BY
+// ONE, automatically, by ./CourseTimeline. Since 2026-10-13 (CLAUDE.md §15.23
+// round 7) it is a BLOCK, not a band: sections/DoctorProfile composes it in
+// the right-hand column of its band, beside the biography, and owns every
+// band-shaped thing this file used to own (A BLOCK, NOT A BAND, below).
+// Rounds 2e–2k's scroll-driven timeline of YEARS is history — CLAUDE.md
+// §15.23; the doctor-pages run's ledger (.claude/section-runs/
+// 2026-09-21_11-58_doctor-pages/) keeps its D-numbers, and the ones still
+// cited in this folder name the parts of that shape that survive (§17.7 —
+// anchors, never line numbers).
 //
-// Owner's brief, verbatim: "organised in a form of sub-sections, each
-// sub-section having just the heading without eyebrow with the year and then
-// in each sub-section with dot as they are now the courses. The year headings
-// have to be in bold and lilac. Maybe they shouldn't even be headings, maybe
-// just a larger bold text in lilac could suffice — you decide."
+// Owner's brief, 2026-10-13, verbatim: "this section would have biography as
+// text on the left and on the right the courses and specialisations … there
+// wont be any more years on the courses and specialisaation … no year
+// anymore. jsut dot ideas, and each section will be jsut one dot, so an
+// idea, a single idea per section of the current thing with the cv but with
+// no years. and they have to circle automatically through the ideas and
+// highlight them one by one. so the scrolll highiight has to be automatic
+// now. and maybe half the space that is now between higlihhted and non
+// highlighted section."
 //
-// ── D15 · THE YEARS ARE HEADINGS — <h3>s, the owner's open question closed.
-// A year is the LABEL of the list beneath it, which is exactly what a heading
-// is; a screen-reader user's H key then stops on every year, and the outline
-// reads page <h1> (the doctor's name, sections/DoctorIntro) → this band's <h2>
-// → one <h3> per year, one level at a time, no gaps (§9). A larger bold <p>
-// would LOOK identical and mean nothing: the structure a sighted visitor gets
-// from the lilac would be invisible to everyone else. The sub-section has no
-// eyebrow, as the owner asked — which is also why it is ui/Heading and not a
-// second sections/SectionHeading (that opener exists to pair an eyebrow with a
-// title; a year alone is the atom's job).
-//
-// ── D16 · THE INK IS THE ATOM'S — `tone="accent"`, never a className. The
-// "bold and lilac" ships as ONE row of ui/Heading's tone table (`font-bold
-// text-accent-decorative`), added for this band and argued in Heading.tsx's
-// header: the accent is 4.44:1 on the page ground, large-text contrast only
-// (§15.1), so the weight and the colour travel together inside the atom and
-// no call site can split them. Handing the colour in through className
-// instead would be the restyle §6.8 bans. Since round 2g the lilac is the LIT
-// year's only (D35): a resting year wears the tone's twin `accent-idle` (the
-// same bold in ink-muted), and the island (./CourseTimeline) switches between
-// the two. Since round 2j (D44a — "years have to be at least the size of what
-// is now current heading") the years sit on the `section` step, 30px — the
-// step the band's own title used to wear — large text by size alone, where
-// round 2g's 20px `title` step was large only by its bold.
+// ── ONE IDEA PER DOT, AND NO YEAR. Each item is one course line — one idea,
+// one dot, one <li> — in the order the page hands them over: lib/team's own
+// order of the doctor's course rows, flattened for one language by the
+// page's populator, the year that used to label each group gone from the
+// screen ("no year anymore"). The block prints the list as given and never
+// sorts: an order of its own would be a second opinion about the data. The
+// <h3> each year used to be went with the years — an idea is a list item,
+// not a heading — so the outline under this block's <h2> is one list.
 //
 // ── DUMB, PROPS-IN, ZERO KEYS — the PriceList/Hero/DoctorProfile shape (the
-// round-1 ledger's D1). Every string that arrives here is FINISHED: the page
-// groups lib/team's course rows by year for ONE language (`coursesByYear`,
-// D17) and hands the groups over already ordered. There is no t(), no message
-// key, no `Locale` and no import of lib DATA; this file could not tell
-// Romanian from German if it tried, which is what lets Storybook review it at
-// every width on invented courses before the real doctors are written.
+// round-1 ledger's D1). Every string that arrives here is FINISHED: there is
+// no t(), no message key, no `Locale` and no import of lib DATA; this file
+// could not tell Romanian from German if it tried, which is what lets
+// Storybook review it at every width on invented courses before the real
+// doctors are written.
 //
-// ── `year` IS A STRING ON PURPOSE. A year is a LABEL, not a quantity: run
-// through `Intl.NumberFormat` — the §8.3 tool for numbers — Romanian and
-// German print „2.024", English „2,024" and French „2 024" (measured), a
-// thousands separator no one writes in a year. So the page hands it over
-// finished (`String(year)`, the data's number made text once, at the one
-// populator) and the band prints it verbatim; a `number` prop would invite
-// exactly the formatting that breaks it.
-//
-// ── THE KEYS. A group is keyed by its year: `coursesByYear` folds every row
-// of one year into ONE group, so a doctor's years are unique by construction.
-// A line is keyed by its own text: finished, distinct sentences from a data
-// module (tests/unit/team-data.test.ts pins them unique per doctor and
-// locale), and an index key would survive a reorder by silently re-labelling
-// every bullet. A group always carries at least one line for the same
-// reason — it exists only because a row of that year does — so this band
-// prints no "empty year" branch; an empty `courses` would be a populator bug
-// and would show as a year over nothing.
-//
-// ── EMPTY `groups` RENDERS NOTHING — `null`, no landmark, no heading. A doctor
-// with no courses yet has no band: an empty region titled „Cursuri și
+// ── EMPTY `items` RENDERS NOTHING — `null`, no landmark, no heading. A doctor
+// with no courses yet has no block: an empty region titled „Cursuri și
 // specializări" would be an announcement of nothing. The early return sits
 // AFTER `useId()`, never before it: hooks run in the same order on every
 // render (the Rules of Hooks), and a hook skipped by an early return is the
 // kind of bug that only shows up the day the data changes.
 //
-// ── D28 → D34 · THE TIMELINE, AND WHERE ITS LINE RUNS. Round 2e (the
-// owner's pack verdict of 2026-09-25: "make the part with the cv more like
-// you know those things like in a cv with a timeline. like central a line
-// with a line. dots at year left and right alternatively") hung the years on
-// a CENTRAL line from the Container's `@3xl` step, alternating left and
-// right of it, one column with the line down the left below the step. Round
-// 2g struck the alternation on the owner's next word — "now that i think
-// about it, the line should be on the left side, not centered" — so the
-// left-hand recipe that used to be the phone's is now the ONLY recipe, at
-// every width, and the even/odd parity is gone with it (D34). The rail also
-// gained `max-w-4xl`, DoctorProfile's prose measure, because one column at
-// the laptop width would otherwise run a course line ~1200px. D15's first
-// shape (two years per row in a grid) and D28's are history.
-// The rail, its line, the dots and the lit year now live in ./CourseTimeline
-// — its header carries the geometry (the line's centre = the dot's centre,
-// the stretches, `top-3`, the doubled `gap-20`) and the states; this file
-// renders it and nothing of it.
+// ── A BLOCK, NOT A BAND (2026-10-13). The owner's new page is DoctorIntro →
+// DoctorStats → DoctorProfile → ClinicLocation, and the courses stand on the
+// RIGHT of the biography inside DoctorProfile's one band. So DoctorProfile
+// owns what this file owned while it was a band of its own: the full-bleed
+// <section> on the page ground, ui/Container, the rhythm `py`, ui/Container's
+// band-scale strings (this block is drawn in the design pixel on a laptop or
+// desktop because it stands inside DoctorProfile's rhythm box, never because
+// it wears the scale itself) and THE BELT that trims the lit idea's forward
+// overshoot at the screen's edge (./CourseTimeline's THE FORWARD MOTION).
+// What stays here is §4's props-in shared composition: a named region, its
+// opener and its list. Its own box is a flex column with `gap-6` — 24px
+// between the opener and the list, the same 24px the biography region beside
+// it puts between its opener and its paragraphs, so the two columns start
+// their content the same distance under their headings. No outer margin and
+// no width: the band places the block (§6.4).
 //
-// ── D35 · ONE ISLAND, THE TIMELINE (round 2g — "upon scrolling highlight top
-// dot with year and dots … all are grayed out at rest … the current should
-// have a non grayed out jump at you animation"). WHICH year is lit depends on
-// where this visitor has scrolled, which only a browser knows, so the rail
-// and its groups cross into ./CourseTimeline, a client island on
-// lib/scroll-spy (the price menu's mechanic, its second consumer). This file
-// stays a SERVER component: the <section>, its name, the eyebrow and the
-// <h2> are identical for every visitor and compile to inert HTML (§16). What
-// crosses is `groups` alone, exactly as this band received it — finished
-// strings, no class name, no callback (CourseTimeline's WHAT CROSSES THE
-// BOUNDARY). The island's server render is the rest state, all grey, so the
-// static HTML of every doctor page carries no lit year (§16 rule 2). Round
-// 2j (D44c) reworked the LOOK of the two states — the current subsection
-// comes forward whole, its stretch of line with it, the others fade — and
-// left the mechanic exactly as it was; CourseTimeline's TWO STATES paragraph
-// carries both. Round 2k moved the mechanic's line to the MIDDLE of the
-// window (D49 — a year lights as its top crosses it) and broke the line a
-// quarter rem above every dot (D50); CourseTimeline's MECHANIC and RAIL
-// paragraphs carry those.
+// ── THE RHYTHM, `COURSES_INTERVAL_MS`. §15.18: `intervalMs` is REQUIRED per
+// consumer and the site keeps no default, so this consumer's number lives
+// here, beside the block's other choices — the Hero keeps HERO_INTERVAL_MS
+// and the reviews band REVIEWS_INTERVAL_MS the same way. 3 s a light, the
+// planner's number (2026-10-13), and one line to change: a course line of
+// six to twelve words reads in 2.5–5 s at the ~150 wpm §15.18's reading-time
+// rider assumes, but here the rider does not bind — nothing is hidden when
+// the light moves on, so every idea can still be read after it
+// (./CourseTimeline's NOT THE APG CAROUSEL). The `intervalMs` prop is for the
+// stories and the tests (a short rhythm to watch the cycle by); the page
+// passes nothing. The value is READ ONCE, AT MOUNT (ui/use-rotation's
+// options rule), and lib/clock refuses anything under 1 ms at construction —
+// on the server too, so a bad number fails the build at its call site.
 //
-// ── THE STEPS, MEASURED ON ui/Container's COLUMN (§6.5 — a section measures
-// its own box, never the window; no media query anywhere in this band). The
-// owner's adaptability rule (D21) holds trivially now: nothing stands side by
-// side at any width, so nothing has to stack.
-//   · at every width — ONE column: the line down the left edge, every year
-//     under the last, each group as wide as the rail with its words 40px in
-//     from the line (the phone at 351px of column since 2026-10-09's phone
-//     gutter — 312 before — the tablet at 614px);
-//   · `@lg` (32rem of column, ≈ a 640px viewport) — the second rhythm step,
-//     `py` and the rail's top margin opening up;
-//   · `@3xl` (48rem of column, ≈ a 960px viewport) — the third, the same
-//     step DoctorProfile and ClinicLocation draw their splits at; the rail
-//     reaches its 56rem cap soon after (the column is 80 % of the viewport
-//     between the gutters, so at a ~1120px one), and from there on a course
-//     line wraps at ~836px of text (56rem less the group's 40px and the
-//     list's 20px) instead of the laptop column's full ~1230 — on a touch
-//     tablet, that is, and in any window outside THE BAND SCALE (below).
-//     Under a mouse, from a column of max(56rem, 896px), the cap and every
-//     other length are design pixels: the rail stops at 896 of them, 836
-//     of text, so a course line keeps the 1401 window's measure IN
-//     CHARACTERS at every laptop and desktop width — 726px of rail at the
-//     scale's step, 983 at a 1536 laptop, 1244 past the cap.
+// ── ONE ISLAND, THE RAIL (§16). WHICH idea is lit depends on time, which
+// only a browser has, so the rail crosses into ./CourseTimeline, a client
+// island on ui/use-rotation — the site's third rotator, after sections/Hero
+// and the reviews deck. This file stays a SERVER component: the <section>,
+// its name, the eyebrow and the <h2> are identical for every visitor and
+// compile to inert HTML. What crosses is `items` and `intervalMs`, finished
+// strings and one number (CourseTimeline's WHAT CROSSES THE BOUNDARY). The
+// island's server render is the NEUTRAL state — nothing lit, nothing faded —
+// so the static HTML of every doctor page carries no lit idea (§16 rule 2).
 //
-// ── THE LIST IS DoctorProfile's ROUND-1 RECIPE — `list-disc ps-5`, the
-// owner's "with dot as they are now" — its lines in `ink` in both states
-// since round 2j (D44c): a resting year's lines are greyed by their group's
-// 0.65 fade (4.64:1 on the page ground, still body-text contrast — the
-// island's CONTRAST paragraph has the arithmetic), the current year's are the
-// same ink at full opacity (14.1:1) with its bullets in the accent, a graphic
-// adjunct inside §15.1's charter. The
-// lines stay `text-lg`, the §15.1 1.125rem body base: reading text for §1's
-// older visitor, not a caption. `role="list"` is belt-and-braces here (the
-// G2-R2 tier-2 a11y review): WebKit drops list semantics from a
-// list-style-less list, which Tailwind's preflight makes of every <ul>, but
-// `list-disc` restores the `list-style-type`, so WebKit keeps these
-// semantics anyway; the role keeps them independent of the bullets, and it is
-// load-bearing on DoctorStats' and TeamRoster's bullet-less lists
-// (eslint.config.mjs configures the `no-redundant-roles` exception). The
-// recipes live in ./CourseTimeline.
-//
-// ── PROSE STAYS START-ALIGNED with no override anywhere in this band (§15.15
-// b, the text-align board): globals.css's `p, li, blockquote` fence is the
-// whole rule. The body's site-wide `hyphens: auto` (§15.14) is INHERITED and
-// left alone — course lines are prose, not control labels, so a German
+// ── PROSE STAYS START-ALIGNED with no override anywhere in this block
+// (§15.15 b, the text-align board): globals.css's `p, li, blockquote` fence is
+// the whole rule. The body's site-wide `hyphens: auto` (§15.14) is INHERITED
+// and left alone — course lines are prose, not control labels, so a German
 // compound may break at a syllable rather than push the column open.
-//
-// ── THE BAND'S OWN SHAPE IS ui/Container's PAGE-BAND RECIPE (the standing law
-// in Container.tsx's header): the semantic full-bleed <section> owns the paint
-// (`bg-page`) and the sideways belt (THE BELT, next) and nothing else — no
-// gutter, no outer margin, because the page owns the rhythm BETWEEN bands
-// (§6.4, D18/D33: this band follows DoctorProfile's fade-out and precedes
-// DoctorStats' fade-in). The Container inside owns the width and the
-// container-query context; the stepped `py` sits on the rhythm box one level
-// in, because an element cannot query its own size (ClinicLocation's
-// spelling, and DoctorIntro's).
-//
-// ── THE BAND SCALE (2026-10-13, CLAUDE.md §15.32 round 4 — ui/Container's THE
-// BAND SCALE). The owner, verbatim: "take current heading and eyebrow from
-// main page. look how reactive and nice it is. make the exact same thing with
-// the heading and eyebrow from the individual dr page" — and, asked whether
-// what stands under the headings should grow with them, "Whole page, like
-// Home". So the rhythm box wears BOTH of ui/Container's band-scale strings
-// after its `py`, `bandColumnClasses` then `bandScaleClasses` (that file's
-// recipe rule 5; DoctorStats' order): on a laptop or a desktop — a mouse or
-// trackpad, a column of max(56rem, 896px), from a ~1120–1140px window — the
-// band is ONE design, the owner's 1401 window, drawn in the design pixel
-// every band of Home and Team draws in, s = min(column, 96rem) / 1106, and it
-// caps and centres at the same 96rem column: its eyebrow (14 × s px) and its
-// <h2> (36 × s px) are one size and one left edge with every other opener on
-// the page, and everything under them grows and shrinks with them.
-// UNCONDITIONAL — no `scaled` prop: this band's only page is the doctor page,
-// and every band there scales (TeamRoster's THE BAND SCALE, the same
-// argument; DoctorCourses.test.tsx refuses the prop by type).
-//   · WHAT SCALES FOR FREE — every length, because every length is a theme
-//     step: the audit of 2026-10-13 found no rem or px literal in this file
-//     or in ./CourseTimeline that is part of the design, and the remap
-//     (globals.css, THE DESIGN SCALE) redraws the theme's variables, so the
-//     rhythm box's `py`, the opener, the rail's top margin, its `gap-20` and
-//     its `max-w-4xl` cap, each group's 40px indent, every stretch's inset,
-//     seat, 2px width and reach, every dot's seat and 12px size, the years'
-//     30px `section` step and the lines' 18px `text-lg` are all design
-//     lengths. Line heights are unitless, and so is the motion — the 1.04,
-//     the forward overshoot, the lit dot's 1.25 and its pop — so every ratio
-//     holds. DoctorCourses.test.tsx and CourseTimeline.test.tsx pin the
-//     audit: no bracketed length anywhere in the band, at rest or lit, and
-//     the dots' `ring-4` the one px utility.
-//   · WHAT DOES NOT. The dots' ring: `ring-4` is a 4px box-shadow at every
-//     root size and every scale (globals.css keeps borders and rings as
-//     drawn), so the bare ground above a dot — the 0.25rem break plus the
-//     dot's `top-3`, less the ring — is 16 design pixels less 4px: 9px at
-//     the scale's smallest pixel (s ≈ 0.81, at its step), 13.6 at the 1536
-//     laptop, 18.2 past the cap; a lit stretch, carried on by its group's
-//     1.04, still stops short of the next ring at every s (the island's RAIL
-//     paragraph). And the container steps (`@lg`, `@3xl`, the opener's
-//     `@md`) still read ui/Container's column in plain rem — Tailwind writes
-//     a container query's size into the sheet as a number — but the regime
-//     starts past the widest of them, so inside it every step holds.
-//   · THE FORWARD MOTION STAYS IN THE BAND'S BOX. The rail is capped at 896
-//     of the box's 1106 design pixels, so a group growing rightward from
-//     its left edge has room to reach 1.234 × before it meets the box's edge,
-//     against the ~1.065 of its overshoot: the current year never reaches
-//     the gutter on a laptop or desktop, and THE BELT (next) trims nothing
-//     there. The `Current` story pins it.
-//   · MEASURED in this band's stories (Vitest's storybook project, Chromium,
-//     a mouse, the 1536 × 864 laptop pin — a 1213.8px column, s = 1.0975):
-//     the <h2> 39.51px, the eyebrow 15.36, every year 32.92, every course
-//     line 19.75, every dot 13.16 wide, the line 2.19, the indent 43.90, 87.80
-//     between years, the rail 983.3 on the column's edge, the box the
-//     column's own 1213.8 (the cap binds only past a 1536px column, ≈ a
-//     1939px window, where the box stands 1536 wide and centred); a one-line
-//     year 83.4 tall; in `Current` the lit stretch carried 5.0px on, 8.5
-//     clear of the next ring, and the room 1.2344 against a drawn peak of
-//     1.0644. On the phone pins (390 × 844) nothing is declared and every
-//     size is the theme's own — 30, 14, 30, 18, 12, 2, 40 and 80px. And
-//     DoctorCourses.scale.test.tsx reads the same sizes on the real
-//     stylesheet at the columns no story pin reaches: nothing declared at a
-//     288, 351, 614.4 and a laptop's 880px column, every length × s at 900,
-//     the reference 1106 (s = 1, to the pixel), 1213.8, 1521 and 2000 — at
-//     2000 the box stands 1536 wide, centred — and the ring 4px at all nine.
-//   · Below the step, on every touch device and in an engine that cannot
-//     register custom properties, the strings declare nothing and remap
-//     nothing: the band is its rem self, every pixel as before — the phone
-//     and the tablet the owner left alone. The smartphone stories pin it.
-//
-// ── THE BELT (2026-10-09, THE PHONE GUTTER — ui/Container, CLAUDE.md §15.35).
-// The current year COMES FORWARD from its left edge (./CourseTimeline's THE
-// FORWARD MOTION): `scale-104` × the `--animate-forward` overshoot, drawn
-// ~1.065 at its peak, so for a few frames the group's right edge runs ~6.5 %
-// of its width past the column — ~19px at 320, ~23px at 390 — into the
-// gutter. The old phone gutter, 32–43px a side, held it; the halved one,
-// 16–21.5px, does not: MEASURED on the built doctor page (ro + de, emulated
-// phones, every frame of a walk through the rail) the group ran 2.6 / 3.0 /
-// 3.2 / 3.5px past the screen's right edge at 320 / 360 / 390 / 430 and the
-// page was 3–5px wider than the screen for those frames. So this outer wears
-// the reviews band's belt (sections/ReviewsCarousel's ONE DELIBERATE BREACH
-// OF THAT RECIPE, AND ITS BELT): `overflow-x: clip` trims paint at the band's
-// own box, which is the screen's width, and — unlike `hidden` — makes no
-// scroll container, so nothing vertical changes; the
-// `supports-[not_(overflow:clip)]` twin spells it `hidden` for Safari ≤ 15,
-// which does not know `clip`. It sits on the FULL-BLEED OUTER on purpose:
-// there it trims only what passes the screen's edge, while on ui/Container it
-// would cut every group at rest (1.04 already reaches ~14px into the gutter
-// on a 390 phone). Measured with the belt applied: the document never widens.
-// A clipped box still REPORTS its overflow as its own `scrollWidth` (the
-// reviews stories measure the document for that reason) — 3–4px at the peak,
-// measured; the page is what §7 protects. DoctorCourses.test.tsx pins the
-// belt on this box and on no other in the band.
 //
 // ── A NAMED REGION: the `id` lands on the <h2>, which names the <section>
 // through `aria-labelledby`. It comes from useId() rather than a hard-coded
-// constant: one of this band exists per doctor page today, but a page that
-// ever lists two would collide, and useId is server-safe and hydration-stable.
-// `{...rest}` rides FIRST so a caller's stray attribute can never replace the
-// name pair; `className` merges caller-last (§6.8).
+// constant: one of this block exists per doctor page today, but a page that
+// ever lists two would collide, and useId is server-safe and
+// hydration-stable. `{...rest}` rides FIRST so a caller's stray attribute can
+// never replace the name pair; `className` merges caller-last (§6.8).
 //
 // ── THIS FILE IS NOT THE ISLAND (§16). No 'use client', no state, no ref of
 // its own, no handler: useId is the only hook, and it is server-safe. The
-// band's shell compiles into the doctor page's static HTML; the JavaScript it
-// ships is ./CourseTimeline's alone (D35 above). DoctorCourses.test.tsx pins
-// this file's directive's absence, the one prop that crosses and the whole
-// import surface from the source text, because no runtime assertion can see
-// any of them.
+// block's shell compiles into the doctor page's static HTML; the JavaScript
+// it ships is ./CourseTimeline's alone. DoctorCourses.test.tsx pins this
+// file's directive's absence, what crosses and the whole import surface from
+// the source text, because no runtime assertion can see any of them.
 
-/** One year and its finished lines — grouped and translated by the page (run
- *  D1), newest year first. `year` is a LABEL, already a string (see the
- *  header): the band prints it verbatim and formats nothing. Strings only,
- *  because the groups cross into the client island (./CourseTimeline). */
-export type CourseGroup = Readonly<{
-  /** The year as finished text — „2024", never a number to be formatted. */
-  year: string;
-  /** That year's course lines, finished and distinct, in the data's order. */
-  courses: readonly string[];
-}>;
+/**
+ * The rhythm: 3 s a light (the header's THE RHYTHM). Exported for the tests
+ * and the stories; the page passes nothing and gets this default.
+ */
+export const COURSES_INTERVAL_MS = 3_000;
 
 type DoctorCoursesOwnProps = Readonly<{
   /** The mono micro-label over the title, finished text (§8.1). */
   eyebrow: string;
-  /** The band's <h2> — and, through aria-labelledby, the region's name. */
+  /** The block's <h2> — and, through aria-labelledby, the region's name. */
   title: string;
   /**
-   * The year groups, newest first — the page's order, printed as given.
-   * EMPTY renders nothing at all: no region, no heading (see the header).
+   * The ideas — one finished, distinct course line per dot, in the page's
+   * order, printed as given. EMPTY renders nothing at all: no region, no
+   * heading (see the header).
    */
-  groups: readonly CourseGroup[];
+  items: readonly string[];
+  /**
+   * The rhythm in ms, at least 1 — this consumer's number (§15.18). Defaults
+   * to COURSES_INTERVAL_MS; the stories and the tests pass a shorter one.
+   * READ ONCE, AT MOUNT.
+   */
+  intervalMs?: number;
 }>;
 
 export type DoctorCoursesProps = DoctorCoursesOwnProps &
-  // The native <section> surface, minus the band's own names and minus
-  // `children` (content arrives as `groups`; without the Omit a caller could
+  // The native <section> surface, minus the block's own names and minus
+  // `children` (content arrives as `items`; without the Omit a caller could
   // nest something, type-check, and watch it vanish — the SectionHeading
   // precedent). `title` leaves the native side with the own props: it is a
   // real HTML attribute (a tooltip), and the two meanings would otherwise
   // intersect into something that is neither. The two ARIA naming attributes
-  // leave too: the band's name is its <h2>'s text ALONE, and a caller's pair
+  // leave too: the block's name is its <h2>'s text ALONE, and a caller's pair
   // would land after the component's own and silently replace it. React 19
   // carries `ref` inside these props, so it needs no mention of its own (§6.8).
   Omit<
@@ -330,65 +154,37 @@ export type DoctorCoursesProps = DoctorCoursesOwnProps &
 export function DoctorCourses({
   eyebrow,
   title,
-  groups,
+  items,
+  intervalMs = COURSES_INTERVAL_MS,
   className,
   ...rest
 }: DoctorCoursesProps): ReactElement | null {
   // Hooks first, the early return after (the header's EMPTY paragraph).
   const headingId = useId();
 
-  if (groups.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
-    // BAND OUTER: the semantic element, full-bleed, owning the paint and the
-    // sideways belt (the header's THE BELT) and nothing else. `{...rest}`
-    // rides FIRST so a caller's stray attribute can never replace the name
-    // pair; className is merged caller-last (§6.8).
+    // THE BLOCK: the semantic element, a flex column spacing its opener and
+    // its list by the biography's own 24px (the header's A BLOCK, NOT A
+    // BAND). `{...rest}` rides FIRST so a caller's stray attribute can never
+    // replace the name pair; className is merged caller-last (§6.8).
     <section
       {...rest}
       aria-labelledby={headingId}
-      // `overflow-x-clip` is the belt; the `supports-[not_(overflow:clip)]`
-      // twin is its legacy fallback, the reviews band's spelling: Safari ≤ 15
-      // drops an unknown `clip`, and `hidden` rides ONLY behind that gate —
-      // emitted bare it would win on every engine (Tailwind orders it after
-      // `clip`) and turn the band into a scroll container. `wrap-anywhere`
-      // (inherited by every text inside) is the belt's other half (the G2
-      // a11y review, 2026-10-09): a clip HIDES what passes the screen edge,
-      // where develop let it scroll, so a word wider than the column — only
-      // at a very large text size without a hyphenation dictionary, e.g.
-      // „Spezialisierungen" at 200 % Android text — now breaks instead of
-      // being cut. At ordinary sizes no word is that wide and nothing moves.
-      className={cx(
-        'overflow-x-clip supports-[not_(overflow:clip)]:overflow-x-hidden wrap-anywhere bg-page',
-        className,
-      )}
+      className={cx('flex flex-col gap-6', className)}
     >
-      <Container>
-        {/* The rhythm box — band-owned `py` on container steps (see the
-            header for why it cannot sit on Container itself), and
-            ui/Container's band-scale column and pixel after them, in that
-            order (the header's THE BAND SCALE; ui/Container's recipe rule
-            5). */}
-        <div
-          className={cx(
-            'py-12 @lg:py-16 @3xl:py-20',
-            bandColumnClasses,
-            bandScaleClasses,
-          )}
-        >
-          <SectionHeading
-            level={2}
-            id={headingId}
-            eyebrow={eyebrow}
-            title={title}
-          />
-          {/* THE TIMELINE — the ONE island (D35): the rail, its line on the
-              left (D34) and the year groups, with the year being read lit.
-              `groups` crosses as given, strings only, and nothing else does
-              (the header's D35 paragraph). */}
-          <CourseTimeline groups={groups} />
-        </div>
-      </Container>
+      <SectionHeading
+        level={2}
+        id={headingId}
+        eyebrow={eyebrow}
+        title={title}
+      />
+      {/* THE RAIL — the ONE island: the ideas, their dots and their stretches
+          of line, lit one by one. `items` and `intervalMs` cross as given,
+          strings and a number, and nothing else does (the header's ONE
+          ISLAND). */}
+      <CourseTimeline items={items} intervalMs={intervalMs} />
     </section>
   );
 }

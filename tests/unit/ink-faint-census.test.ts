@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest';
 // THE `--ink-faint` CENSUS (doctor-pages lane, G2-R2 tier 1, a11y F1,
 // 2026-09-26). The 19th semantic role — `--ink-faint` #766f69, the washed
 // prose of the two doctor quotes (owner, round 2o: "what if you make the
-// faint text lighter") — passes body text's 4.5:1 on white (4.94:1) and on
+// faint text lighter") and, since 2026-10-13, of the doctor page's biography
+// (§15.23 round 7) — passes body text's 4.5:1 on white (4.94:1) and on
 // the page ground (4.70:1) and FAILS it on the 30 % lilac tint (3.24:1). Its
 // charter in globals.css and ui/Keyword's THREE LIMITS both say "never on the
 // tint", and until this file nothing kept that promise but reading: the two
@@ -34,11 +35,21 @@ const SRC_DIR = fileURLToPath(new URL('../../src', import.meta.url));
 const UTILITY = 'text-ink-faint';
 
 /**
- * Every wearer, with its ground — WHITE, never the tint. Growing this list is
- * a deliberate act: name the file AND the ground the ink sits on, and measure
- * (4.5:1 for body text) before the row goes in.
+ * Every wearer, with its ground — white or the page ground, never the tint.
+ * Growing this list is a deliberate act: name the file AND the ground the ink
+ * sits on, and measure (4.5:1 for body text) before the row goes in.
  */
 const WEARERS: Readonly<Record<string, { count: number; ground: string }>> = {
+  // The doctor page's biography paragraphs — on the band's PAGE ground since
+  // round 7 left the tint (2026-10-13), the owner the same evening: "i also
+  // want the text of biografie to be like the text at [the credo quote] … so
+  // gary-ish er and with tighlighted keywords". 4.70:1 on `--page` #faf9f7,
+  // body text's 4.5:1 kept (the header's numbers); one class in the source,
+  // worn by every paragraph of the map.
+  'components/sections/DoctorProfile/DoctorProfile.tsx': {
+    count: 1,
+    ground: 'bg-page',
+  },
   // The doctor card's <blockquote> — ui/Card `framed` since 2026-09-30 (the
   // owner: "the border of the non current review"), `surface` before it; white
   // either way (PersonnelCard D8, D17 + round 2o).
@@ -77,7 +88,7 @@ const sourceFiles = readdirSync(SRC_DIR, { recursive: true, encoding: 'utf8' })
   .map((file) => file.replaceAll('\\', '/'));
 
 describe('the `--ink-faint` ink has exactly its named wearers in src/ (G2-R2 a11y F1)', () => {
-  it('is worn by the two doctor quotes and the ribbon’s stand-in, each once, on a white ground', () => {
+  it('is worn by the two doctor quotes, the ribbon’s stand-in and the doctor page’s biography, each once, never on the tint', () => {
     for (const [file, wearer] of Object.entries(WEARERS)) {
       const source = stripComments(readFileSync(join(SRC_DIR, file), 'utf8'));
       expect(count(source, UTILITY), file).toBe(wearer.count);
@@ -98,11 +109,11 @@ describe('the `--ink-faint` ink has exactly its named wearers in src/ (G2-R2 a11
 
   it('never appears inside sections/TintedBand or the bands that compose it', () => {
     // The scenario this census exists for, spelled out: the lilac ground is
-    // exactly where the ink fails 4.5:1 (3.24:1, measured).
+    // exactly where the ink fails 4.5:1 (3.24:1, measured). DoctorProfile and
+    // its schedule card left the tint on 2026-10-13 (CLAUDE.md §15.23 round
+    // 7); the numbers band is the one that composes it now.
     const tinted = [
       'components/sections/TintedBand/TintedBand.tsx',
-      'components/sections/DoctorProfile/DoctorProfile.tsx',
-      'components/sections/DoctorProfile/ScheduleCard.tsx',
       'components/sections/DoctorStats/DoctorStats.tsx',
     ];
     for (const file of tinted) {

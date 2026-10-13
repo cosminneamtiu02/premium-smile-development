@@ -1,9 +1,8 @@
 import type { Locale } from '../../i18n/locales';
-import type { OpeningHours } from '../clinic/clinic';
 import type { ImagePath } from '../image-path/image-path';
 
 // lib/team — THE clinic's people: every doctor and every auxiliary member,
-// their pictures, their week, their courses, their numbers and their words in
+// their pictures, their courses, their numbers and their words in
 // all five languages — and, since 2026-10-01, the numbers of the clinic as a
 // whole (`clinicStats`, the Home and Team pages' „în cifre" band). Site DATA in §4's
 // foundation ring (the lib/clinic, lib/prices,
@@ -18,20 +17,21 @@ import type { ImagePath } from '../image-path/image-path';
 //
 // WHY A TYPESCRIPT MODULE AND NOT MESSAGE KEYS (run ledger D2 — the lib/prices
 // argument, word for word). A doctor's biography is CONTENT, the way a price
-// row and a review are content, so his pictures, his schedule, his courses and
+// row and a review are content, so his pictures, his courses, his numbers and
 // his words travel together in ONE object literal read top to bottom, and
 // `Record<Locale, …>` makes a missing German position a failed `tsc` instead
 // of a leaked Romanian one — the guarantee tests/unit/translation-parity.test.ts
 // could never have given, because it checks the five message files against
 // EACH OTHER and knows nothing about which person needs which key. The `team`
-// namespace keeps only what is NOT a fact about a person: the doctors band's
-// eyebrow and title and its card's one label (`team.showcase.*`, 2026-09-30),
-// the doctor page's three eyebrow/title pairs — philosophy · about · courses
-// (run ledger D20) — plus the schedule's title alone (its eyebrow struck in
-// round 2g, D37), the „în cifre" band's eyebrow, title and lead
-// (`team.doctor.stats.*`, D32), and the schedule's closed word. Where a key needs
-// a person it takes him as an ICU ARGUMENT, never as a key of his own: the
-// about band's title is „Despre {name}", and the name comes from here.
+// namespace keeps only what is NOT a fact about a person: the Team page's
+// title (`team.title`), the doctors band's eyebrow and title and its card's
+// one label (`team.showcase.*`, 2026-09-30), the staff band's eyebrow and
+// title (`team.roster.*`, 2026-10-02), the doctor page's three eyebrow/title
+// pairs — philosophy · about · courses (run ledger D20) — and the „în cifre"
+// band's eyebrow, title, lead and spoken „peste" (`team.doctor.stats.*`, D32
+// and round 2s). Where a key needs a person it takes him as an ICU ARGUMENT,
+// never as a key of his own: the biography's title is „Despre {name}", and
+// the name comes from here.
 //
 // ARRAYS, NOT OBJECTS KEYED BY ID (the lib/prices reasoning). Display order is
 // designed here — the doctors band (sections/DoctorShowcase, on Home and on
@@ -56,32 +56,55 @@ import type { ImagePath } from '../image-path/image-path';
 // „Filozofia mea" card beside the opener's photograph quotes it again (D12) —
 // so it is written once, here, and
 // `splitKeywords` below cuts it for both. Round 1 called it `about`; the
-// rename freed that word for what the doctor page's lilac band now holds.
-// `about` is the clinic speaking ABOUT the doctor: third person, plain prose,
-// ONE STRING PER PARAGRAPH, no marks (D14 prints one `<p>` per entry). An
-// array rather than one string with blank lines in it, because a paragraph
-// break is structure and a band should not have to parse it back out of the
-// text; and plain, because the only thing that ever cuts a `<k>` is
-// `splitKeywords`, which nothing calls on a paragraph — a mark there would
-// reach the page as visible text, so tests/unit/team-data.test.ts fails on
-// one. Every language carries the SAME number of paragraphs with the same
-// facts in them: a language one paragraph short is a translation nobody
-// finished.
+// rename freed that word for the doctor page's biography.
+// `about` is the clinic speaking ABOUT the doctor: third person, ONE STRING
+// PER PARAGRAPH (D14 prints one `<p>` per entry) — an array rather than one
+// string with blank lines in it, because a paragraph break is structure and a
+// band should not have to parse it back out of the text. Every language
+// carries the SAME number of paragraphs with the same facts in them: a
+// language one paragraph short is a translation nobody finished.
 //
-// COURSES ARE ROWS, AND A YEAR IS A FACT (run ledger D17). Round 1 wrote each
-// course as one finished line per language with „, 2024" at its end — five
-// copies of one number, free to disagree with each other, and a year the page
-// could only have grouped by parsing the tail of a sentence. A course is now
-// the lib/prices row shape: the FACT once (`year`, a number) and the finished
-// line in all five languages beside it (`words`), the year no longer inside
-// the line — the doctor page prints it as the heading of the group the line
-// sits in (D15), so inside the line it would be said twice. `coursesByYear`
-// below does the grouping. The rows are written newest first, and within one
-// year in the order the page should list them; tests/unit/team-data.test.ts
-// pins that order (the design order, like the doctors'), while `coursesByYear`
-// deliberately does not rely on it. A year never goes through
-// `Intl.NumberFormat` on its way to a page — ro and de would print „2.024" —
-// so the populator hands the band its plain digits.
+// THE BIOGRAPHY'S KEY WORDS (CLAUDE.md §15.23 round 7, the owner's pack
+// feedback the same evening, 2026-10-13, verbatim: "i also wan thte text of
+// biografie to be like the text at: "Înainte de orice lucrare protetică
+// verific sănătatea gingiei, pentru că pe ea se sprijină tot restul. Planul
+// îl stabilim împreună, iar fiecare etapă o explic înainte să începem." so
+// gary-ish er and with tighlighted keywords"). That sentence is Dr. Malea's
+// `philosophy`, whose marks set „sănătatea gingiei" and „explic" apart, and
+// since that day every `about` paragraph carries `<k>…</k>` marks the same
+// way. Until then a paragraph was plain prose with NO mark — nothing cut one
+// out of a paragraph, so a `<k>` there would have reached the page as visible
+// text, and tests/unit/team-data.test.ts refused any. Now `splitKeywords`
+// cuts every paragraph exactly as it cuts the philosophy (the doctor walk's
+// `renderKeywords` in app/[locale]/team/populate.ts) and the page renders the
+// pieces through ui/Keyword; the grey of the paragraphs themselves is
+// sections/DoctorProfile's ink. The marks keep the philosophy's manner: ONE OR
+// TWO per paragraph, its most important idea(s) — a short phrase of one to
+// four words, never a whole clause, never a person's name, never a number —
+// balanced, never cutting into a word, and the SAME idea(s) marked in every
+// language of one paragraph, so each paragraph carries as many marks in all
+// five as in the Romanian. tests/unit/team-data.test.ts holds what a machine
+// can read of that (the count, the length, the digit, the name, the word
+// edges, the parity); "the most important idea" is the author's. A mark is
+// salience and never information (ui/Keyword's THREE LIMITS): every sentence
+// reads complete without it.
+//
+// A COURSE IS ONE IDEA, AND IT HAS NO YEAR (the owner, 2026-10-13, verbatim:
+// "there wont be any more years on the courses and specialisaation. so huge
+// reiteration and htis must stand … jsut dot ideas, and each section will be
+// jsut one dot, so an idea, a single idea per section … and they have to
+// circle automatically through the ideas and highlight them one by one";
+// CLAUDE.md §15.23 round 7). A course is its finished line in all five
+// languages (`words`) and nothing else. The doctor page prints a doctor's rows
+// IN THIS ORDER, one idea per dot, in the column beside the biography
+// (sections/DoctorProfile, which composes sections/DoctorCourses), and the
+// column highlights them one by one on its own. The rows keep the order they
+// were written in while they still carried years — newest first — and that
+// order is now simply the design order, like the doctors': read top to
+// bottom, the list is the page's. (Round 2, run ledger D17, had made a course
+// the lib/prices row shape — its year a fact stored once beside the five
+// lines, grouped under one heading per year by a `coursesByYear` here; the
+// years, the grouping and the headings left together.)
 //
 // A DOCTOR'S NUMBERS ARE ROWS TOO (run ledger D32 — round 2f, the owner's „în
 // cifre" band of 2026-09-26, D30). The doctor page gains four tiles, each an
@@ -89,7 +112,7 @@ import type { ImagePath } from '../image-path/image-path';
 // populated like a dumb component" — so the NUMBER and the WORDS of a tile are
 // facts about the doctor and live here, beside his courses, while the band's
 // eyebrow, title and lead read the same on every doctor's page and are page
-// keys (the WHY paragraph above). A stat is the course row's shape once more:
+// keys (the WHY paragraph above). A stat is the lib/prices row shape:
 // the fact stored once — `value`, a whole number, and `suffix`, the „+" that
 // turns an exact count into "at least" — and the finished words in all five
 // languages beside it. The number is never inside the LABEL: the band prints
@@ -117,7 +140,7 @@ import type { ImagePath } from '../image-path/image-path';
 // A SENTENCE MAY CARRY THE NUMBER, AND THEN THE TWO MUST AGREE. By the owner's
 // own design the patients sentence repeats the tile's count („Peste 3000 de
 // zâmbete…") — one number written in two places that are free to disagree,
-// which is exactly what the course years stopped doing (COURSES above). It
+// which is exactly what storing a fact once, in `value`, exists to stop. It
 // cannot leave the sentence without rewriting the owner's words, so
 // tests/unit/team-data.test.ts holds it instead: every number a description
 // carries IS its row's `value` (grouping marks allowed, so a future „10.000"
@@ -146,10 +169,12 @@ import type { ImagePath } from '../image-path/image-path';
 //
 // EVERYTHING ELSE ABOUT THEM IS A RANDOM PLACEHOLDER, on his word of the same
 // day ("what you do not have info yet, generate random"): the pictures (the
-// demo silhouettes, handed out in list order), the weeks (each inside
-// lib/clinic's own week), the course rows and their years, the four „în
+// demo silhouettes, handed out in list order), the course rows, the four „în
 // cifre" numbers, the `philosophy` quotes and the three `about` paragraphs,
-// in all five languages, the Romanian included. None of it is a claim about
+// in all five languages, the Romanian included — and, since 2026-10-13, the
+// key words marked in those paragraphs (THE BIOGRAPHY'S KEY WORDS, above):
+// Claude's drafts in all five languages, chosen on placeholder text, so the
+// owner's real biographies will want their own. None of it is a claim about
 // the person it sits beside. So that none of it reads as one (the copy review
 // of 2026-09-30): the placeholders name no university, society or congress,
 // no year of joining the clinic and no hobby; a residency row carries no city,
@@ -159,13 +184,12 @@ import type { ImagePath } from '../image-path/image-path';
 // appliances, no ceramic veneers; and each doctor's third paragraph is
 // practical advice for patients. They still agree with their own rows, so the
 // page never contradicts itself while it waits: a `courses` tile counts the
-// rows exactly and every week lies inside the clinic's (tests/unit/
-// team-data.test.ts pins both), and — by how they were written, not by any
-// test — an experience tile never outruns the doctor's earliest row and the
-// courses a second paragraph names are rows of the list. Before launch every
-// one of them is replaced by what each doctor confirms, together with each
-// doctor's consent to being named, pictured and described (a name plus a face
-// plus a biography is personal data; the lib/reviews consent precedent).
+// rows exactly (tests/unit/team-data.test.ts pins it), and — by how they were
+// written, not by any test — the courses a second paragraph names are rows of
+// the list. Before launch every one of them is replaced by what each doctor
+// confirms, together with each doctor's consent to being named, pictured and
+// described (a name plus a face plus a biography is personal data; the
+// lib/reviews consent precedent).
 //
 // NOBODY IS GENDERED. The owner gave names and specialties, not pronouns, and
 // a name does not say how a person is referred to, so every text below is
@@ -222,7 +246,15 @@ import type { ImagePath } from '../image-path/image-path';
 // moderne." — in all five languages, and tests/unit/cmsr-scan.test.ts now
 // REFUSES the old shapes: a result promise, a success count, an undocumented
 // award. A real award the clinic can document goes into that file's ALLOWED
-// list verbatim, with the document named in the ledger. Every doctor wears
+// list verbatim, with the document named in the ledger. The courses tile's
+// sentence changed once more on 2026-10-13 (CLAUDE.md §15.23 round 7, the
+// owner: "rename the "FORMARE CONTINUĂ" to smth like a highlights in drumul
+// meu spre specializare … and rewrite paraggaph from descriere with it"):
+// „Fiecare curs este un reper pe drumul spre specializare.", the courses
+// band's new eyebrow put into the tile, while the second `about` paragraph
+// of every doctor opens on the same path, its key words „Drumul spre
+// specializare" — no „formare continuă" is left on a doctor's page, all
+// Claude's drafts in five languages, flagged like the rest. Every doctor wears
 // the same four sentences, written out per doctor rather than shared: a real
 // doctor's tiles are that doctor's own, and an edit to one row must never
 // reach another. Only the numbers differ, and a real number is a claim about
@@ -239,12 +271,9 @@ import type { ImagePath } from '../image-path/image-path';
 // ro/de/en/it, „Dr" in fr, French dropping the point on a contraction that
 // ends in its word's last letter. City names are translated where the
 // language has its own („București" → Bucharest/Bukarest/Bucarest), and never
-// where it does not (Cluj-Napoca, Sibiu, Timișoara, Iași). A course's year
-// belongs to no language at all: it is its row's fact, stored once (the
-// COURSES paragraph above), so no translation can disagree about one. A
-// number INSIDE an `about` paragraph is written five times, once per
-// language, and tests/unit/team-data.test.ts holds the five to the same
-// numbers.
+// where it does not (Cluj-Napoca, Sibiu, Timișoara, Iași). A number INSIDE
+// an `about` paragraph is written five times, once per language, and
+// tests/unit/team-data.test.ts holds the five to the same numbers.
 //
 // CMSR, the same rule lib/prices states: descriptive, never superlative, never
 // a promise, never a comparison. A `philosophy` says how a doctor works; an
@@ -285,18 +314,14 @@ import type { ImagePath } from '../image-path/image-path';
 // wording, deliberately) — while the TYPE stops at §11's folder, so a demo
 // picture needs no cast.
 //
-// HOURS are lib/clinic's own `OpeningHours` shape, so lib/hours prints a
-// doctor's week with exactly the machinery that prints the clinic's: seven
-// rows, Monday → Sunday, closed days in their calendar place. Round 2 moved
-// WHERE the week prints — into the white schedule card beside the `about`
-// paragraphs in the doctor page's lilac band (run ledger D14), because the
-// „Echipa mea" band it used to share with the assistants is gone (D13) — and
-// nothing about its shape. A doctor's week is the doctor's own, not the
-// clinic's — four mornings for one, three afternoons and a morning for
-// another — which is the reason this field exists at all rather than the page
-// reading `clinic.hours`. Every week below sits inside lib/clinic's own week,
-// and tests/unit/team-data.test.ts holds it there: a doctor's hours outside
-// the clinic's would send a patient to a closed door.
+// NO WEEK ON A DOCTOR (the owner, 2026-10-13: "drop the schedule from the
+// page. no more schedul box at all, drop it and remove anything related to
+// it"; CLAUDE.md §15.23 round 7). Until that day a doctor carried his own
+// week, `hours`, in lib/clinic's `OpeningHours` shape, for the schedule card
+// beside his biography; the card left the site, and the field and the six
+// weeks left with it — the reason NO ASSISTANTS gives below: a field nothing
+// prints still has to be kept true by somebody. The clinic's own week stays
+// lib/clinic's, printed by the Footer and the contact dialog.
 //
 // NO ASSISTANTS (run ledger D13, round 2). Round 1 paired every doctor with
 // exactly two auxiliary ids for the „Echipa mea" band; the owner dropped the
@@ -353,36 +378,27 @@ export type DoctorWords = Readonly<{
    */
   philosophy: string;
   /**
-   * The doctor page's „Despre" band (run ledger D14, D17): third person,
-   * PLAIN prose, ONE STRING PER PARAGRAPH, printed in this order. No `<k>`
-   * marks — nothing splits a paragraph — and no newline inside one; the same
-   * number of paragraphs in every language.
+   * The doctor page's biography, „Despre {name}" — the column left of the
+   * courses (run ledger D14, D17; CLAUDE.md §15.23 round 7): third person,
+   * ONE STRING PER PARAGRAPH, printed in this order, no newline inside one
+   * and the same number of paragraphs in every language. Since 2026-10-13
+   * each paragraph carries `<k>…</k>` marks like `philosophy` — one or two,
+   * the paragraph's key idea(s), the same in every language (the header's
+   * THE BIOGRAPHY'S KEY WORDS) — which `splitKeywords` below cuts, exactly as
+   * it cuts the philosophy, and the page renders through ui/Keyword.
    */
   about: readonly string[];
 }>;
 
 /**
- * One course a doctor followed — the lib/prices row shape (run ledger D17):
- * the year is a FACT, stored once, and `words` is the finished line in all
- * five languages WITHOUT the year, which the page prints as the heading of the
- * group the line sits in (D15).
+ * One course a doctor followed — ONE idea: its finished line in all five
+ * languages and nothing else (the owner, 2026-10-13: "no year anymore. jsut
+ * dot ideas"; the header's A COURSE IS ONE IDEA). The doctor page prints it
+ * as one dot of the courses column, in the list's order.
  */
 export type Course = Readonly<{
-  /** The calendar year — an integer; the data test holds it to 1990 … 2026. */
-  year: number;
   /** What and where, in every language — never when. */
   words: Readonly<Record<Locale, string>>;
-}>;
-
-/**
- * One year's courses in ONE language — what the doctor page's courses band
- * prints under each year heading (run ledger D15). The year stays a number
- * here; the populator turns it into the heading's text (the header's COURSES
- * paragraph: plain digits, never `Intl`).
- */
-export type CourseGroup = Readonly<{
-  year: number;
-  courses: readonly string[];
 }>;
 
 /**
@@ -447,13 +463,12 @@ export type Doctor = Readonly<{
    *  doctor page's opener (run ledger D6) and the doctor card (PersonnelCard
    *  D17). A doctor's ONE picture. */
   cutout: TeamPicture;
-  /** The doctor's OWN week, in lib/clinic's shape — lib/hours turns it into rows. */
-  hours: readonly OpeningHours[];
   /**
-   * The courses, newest first (run ledger D17) — `coursesByYear` groups them
-   * for one language. The TYPE allows none (a doctor without courses gets no
-   * courses band, D15); the data test demands at least one of every shipped
-   * doctor.
+   * The courses, one idea each, in the order the doctor page's courses column
+   * prints them and highlights them one by one (the header's A COURSE IS ONE
+   * IDEA). The TYPE allows none (a doctor without one gets no courses column,
+   * and the biography stands alone — sections/DoctorProfile's ONE BRANCH);
+   * the data test demands at least one of every shipped doctor.
    */
   courses: readonly Course[];
   /**
@@ -579,8 +594,9 @@ export const auxiliaries: readonly AuxiliaryMember[] = [
  * Add rows HERE — the type refuses a missing language and a course without
  * all five of its lines, and tests/unit/team-data.test.ts checks what only the
  * file system and the words themselves know: that the pictures exist, that
- * every language carries as many `about` paragraphs as the Romanian,
- * that the course rows run newest → oldest, and that every number a stat's
+ * every language carries as many `about` paragraphs as the Romanian, each with
+ * as many key words marked (the header's THE BIOGRAPHY'S KEY WORDS), that no
+ * course idea is listed twice for one doctor, and that every number a stat's
  * sentence carries is that stat's own `value` (D32).
  */
 export const doctors: readonly Doctor[] = [
@@ -590,17 +606,8 @@ export const doctors: readonly Doctor[] = [
   {
     id: 'malea-sabau-oana-bianca',
     cutout: CUTOUT_1,
-    hours: [
-      {
-        days: ['Monday', 'Wednesday', 'Friday'],
-        opens: '09:00',
-        closes: '15:00',
-      },
-      { days: ['Tuesday'], opens: '13:00', closes: '19:00' },
-    ],
     courses: [
       {
-        year: 2025,
         words: {
           ro: 'Curs de reabilitare protetică pe implanturi, București',
           en: 'Implant-supported prosthetic rehabilitation course, Bucharest',
@@ -610,7 +617,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2023,
         words: {
           ro: 'Curs de chirurgie plastică parodontală, Cluj-Napoca',
           en: 'Periodontal plastic surgery course, Cluj-Napoca',
@@ -619,10 +625,7 @@ export const doctors: readonly Doctor[] = [
           it: 'Corso di chirurgia plastica parodontale, Cluj-Napoca',
         },
       },
-      // Two rows in ONE year on purpose — the case the courses band has to lay
-      // out (two lines under one year heading), kept from the demo rows.
       {
-        year: 2023,
         words: {
           ro: 'Curs de restaurări protetice din zirconiu, Sibiu',
           en: 'Course on zirconia prosthetic restorations, Sibiu',
@@ -632,7 +635,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2019,
         words: {
           ro: 'Curs de tratament parodontal nechirurgical, Timișoara',
           en: 'Non-surgical periodontal treatment course, Timișoara',
@@ -642,7 +644,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2017,
         words: {
           ro: 'Rezidențiat în parodontologie',
           en: 'Residency in periodontics',
@@ -652,7 +653,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2012,
         words: {
           ro: 'Rezidențiat în protetică dentară',
           en: 'Residency in prosthodontics',
@@ -733,27 +733,28 @@ export const doctors: readonly Doctor[] = [
         words: {
           ro: {
             label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
+            description:
+              'Fiecare curs este un reper pe drumul spre specializare.',
           },
           en: {
             label: 'Courses',
             description:
-              'Continuing training in modern techniques and technologies.',
+              'Each course is a milestone on the path to specialisation.',
           },
           de: {
             label: 'Kurse',
             description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
+              'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
           },
           fr: {
             label: 'Formations',
             description:
-              'Formation continue aux techniques et technologies modernes.',
+              'Chaque formation est un jalon du parcours de spécialisation.',
           },
           it: {
             label: 'Corsi',
             description:
-              'Formazione continua in tecniche e tecnologie moderne.',
+              'Ogni corso è una tappa del percorso di specializzazione.',
           },
         },
       },
@@ -797,9 +798,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Înainte de orice lucrare protetică verific <k>sănătatea gingiei</k>, pentru că pe ea se sprijină tot restul. Planul îl stabilim împreună, iar fiecare etapă o <k>explic</k> înainte să începem.',
         about: [
-          'Dr. Malea lucrează în clinică și se ocupă de lucrările protetice și de tratamentul bolilor gingiei: coroane, punți și proteze, dar și igienizări și tratamente parodontale. Prima vizită începe cu o discuție despre ce îl deranjează pe pacient, continuă cu examinarea dinților și a gingiilor, iar la final medicul explică variantele de tratament și ordinea etapelor.',
-          'Formarea continuă face parte din munca de zi cu zi: în ultimii ani, Dr. Malea a urmat cursuri de reabilitare protetică pe implanturi și de chirurgie plastică parodontală. Când un plan de tratament are nevoie și de alte specialități, se stabilește împreună cu colegii din chirurgie, endodonție și ortodonție, iar pacientul află de la început ce presupune fiecare etapă.',
-          'La prima programare este util ca pacientul să aducă radiografiile mai vechi și lista medicamentelor pe care le ia. Controalele de după finalizarea unei lucrări protetice se stabilesc de la început, pentru ca atât lucrarea, cât și sănătatea gingiei să fie urmărite în timp.',
+          'Dr. Malea lucrează în clinică și se ocupă de <k>lucrările protetice</k> și de tratamentul <k>bolilor gingiei</k>: coroane, punți și proteze, dar și igienizări și tratamente parodontale. Prima vizită începe cu o discuție despre ce îl deranjează pe pacient, continuă cu examinarea dinților și a gingiilor, iar la final medicul explică variantele de tratament și ordinea etapelor.',
+          '<k>Drumul spre specializare</k> a trecut prin cursuri de reabilitare protetică pe implanturi și de chirurgie plastică parodontală. Când un plan de tratament are nevoie și de alte specialități, se stabilește împreună cu colegii din chirurgie, endodonție și ortodonție, iar pacientul află de la început ce presupune <k>fiecare etapă</k>.',
+          'La prima programare este util ca pacientul să aducă <k>radiografiile mai vechi</k> și lista medicamentelor pe care le ia. <k>Controalele</k> de după finalizarea unei lucrări protetice se stabilesc de la început, pentru ca atât lucrarea, cât și sănătatea gingiei să fie urmărite în timp.',
         ],
       },
       en: {
@@ -808,9 +809,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Before any prosthetic work I check the <k>health of the gums</k>, because everything else rests on them. We draw up the plan together, and I <k>explain</k> each stage before we begin.',
         about: [
-          'Dr. Malea works at the clinic, carrying out prosthetic work and treating gum disease: crowns, bridges and dentures, as well as professional cleaning and periodontal treatments. The first visit begins with a conversation about what troubles the patient, continues with an examination of the teeth and gums, and ends with the doctor explaining the treatment options and the order of the stages.',
-          'Continuing training is part of everyday work: in recent years, Dr. Malea has taken courses in implant-supported prosthetic rehabilitation and in periodontal plastic surgery. When a treatment plan also needs other specialties, it is drawn up together with colleagues in surgery, endodontics and orthodontics, and the patient learns from the start what each stage involves.',
-          'For the first appointment, it helps to bring any earlier X-rays and a list of current medication. Check-ups after a prosthetic treatment are scheduled from the start, so that both the restoration and the health of the gums are followed over time.',
+          'Dr. Malea works at the clinic, carrying out <k>prosthetic work</k> and treating <k>gum disease</k>: crowns, bridges and dentures, as well as professional cleaning and periodontal treatments. The first visit begins with a conversation about what troubles the patient, continues with an examination of the teeth and gums, and ends with the doctor explaining the treatment options and the order of the stages.',
+          'Dr. Malea’s <k>path to specialisation</k> led through courses in implant-supported prosthetic rehabilitation and in periodontal plastic surgery. When a treatment plan also needs other specialties, it is drawn up together with colleagues in surgery, endodontics and orthodontics, and the patient learns from the start what <k>each stage</k> involves.',
+          'For the first appointment, it helps to bring any <k>earlier X-rays</k> and a list of current medication. <k>Check-ups</k> after a prosthetic treatment are scheduled from the start, so that both the restoration and the health of the gums are monitored over time.',
         ],
       },
       de: {
@@ -819,9 +820,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Vor jeder prothetischen Arbeit prüfe ich die <k>Gesundheit des Zahnfleischs</k>, denn darauf baut alles andere auf. Den Plan legen wir gemeinsam fest, und jeden Schritt <k>erkläre</k> ich, bevor wir beginnen.',
         about: [
-          'Dr. Malea arbeitet in der Klinik und ist für prothetische Arbeiten und die Behandlung von Zahnfleischerkrankungen zuständig: Kronen, Brücken und Prothesen, aber auch professionelle Zahnreinigungen und Parodontalbehandlungen. Der erste Besuch beginnt mit einem Gespräch darüber, welche Beschwerden der Patient hat, geht mit der Untersuchung von Zähnen und Zahnfleisch weiter und endet mit der Erklärung der Behandlungsmöglichkeiten und der Reihenfolge der Schritte.',
-          'Fortbildung gehört zum Arbeitsalltag: In den letzten Jahren besuchte Dr. Malea Kurse zur implantatgetragenen prothetischen Versorgung und zur plastischen Parodontalchirurgie. Wenn ein Behandlungsplan auch andere Fachgebiete braucht, entsteht er gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie, Endodontie und Kieferorthopädie, und der Patient erfährt von Anfang an, was jeder Schritt umfasst.',
-          'Zum ersten Termin ist es hilfreich, frühere Röntgenbilder und eine Liste der eingenommenen Medikamente mitzubringen. Die Kontrollen nach einer prothetischen Behandlung werden von Anfang an vereinbart, damit die Versorgung und die Gesundheit des Zahnfleischs langfristig kontrolliert werden.',
+          'Dr. Malea arbeitet in der Klinik und ist für <k>prothetische Arbeiten</k> und die Behandlung von <k>Zahnfleischerkrankungen</k> zuständig: Kronen, Brücken und Prothesen, aber auch professionelle Zahnreinigungen und Parodontalbehandlungen. Der erste Besuch beginnt mit einem Gespräch darüber, welche Beschwerden der Patient hat, geht mit der Untersuchung von Zähnen und Zahnfleisch weiter und endet mit der Erklärung der Behandlungsmöglichkeiten und der Reihenfolge der Schritte.',
+          'Der <k>Weg zur Spezialisierung</k> umfasste Kurse zur implantatgetragenen prothetischen Versorgung und zur plastischen Parodontalchirurgie. Wenn ein Behandlungsplan auch andere Fachgebiete braucht, entsteht er gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie, Endodontie und Kieferorthopädie, und der Patient erfährt von Anfang an, was <k>jeder Schritt</k> umfasst.',
+          'Zum ersten Termin ist es hilfreich, <k>frühere Röntgenbilder</k> und eine Liste der eingenommenen Medikamente mitzubringen. Die <k>Kontrollen</k> nach einer prothetischen Behandlung werden von Anfang an vereinbart, damit die Versorgung und die Gesundheit des Zahnfleischs langfristig im Blick bleiben.',
         ],
       },
       fr: {
@@ -830,9 +831,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Avant tout travail prothétique, je vérifie la <k>santé des gencives</k>, car tout le reste repose sur elles. Nous établissons le plan ensemble, et <k>j’explique</k> chaque étape avant de commencer.',
         about: [
-          'Dr Malea exerce à la clinique et prend en charge les travaux prothétiques et le traitement des maladies des gencives : couronnes, bridges et prothèses amovibles, mais aussi nettoyages professionnels et traitements parodontaux. La première visite commence par un échange sur ce qui gêne le patient, se poursuit par l’examen des dents et des gencives et se termine par l’explication des options de traitement et de l’ordre des étapes.',
-          'La formation continue fait partie du travail quotidien. Dr Malea a suivi ces dernières années des formations en réhabilitation prothétique sur implants et en chirurgie plastique parodontale. Lorsqu’un plan de traitement fait appel à d’autres spécialités, il est établi avec les collègues de chirurgie, d’endodontie et d’orthodontie, et le patient sait dès le début ce que comprend chaque étape.',
-          'Pour le premier rendez-vous, il est utile d’apporter les anciennes radiographies et la liste des médicaments pris. Les contrôles après un traitement prothétique sont fixés dès le départ, afin de suivre dans le temps la prothèse comme la santé des gencives.',
+          'Dr Malea exerce à la clinique et prend en charge les <k>travaux prothétiques</k> et le traitement des <k>maladies des gencives</k> : couronnes, bridges et prothèses amovibles, mais aussi nettoyages professionnels et traitements parodontaux. La première visite commence par un échange sur ce qui gêne le patient, se poursuit par l’examen des dents et des gencives et se termine par l’explication des options de traitement et de l’ordre des étapes.',
+          'Le <k>parcours de spécialisation</k> est passé par des formations en réhabilitation prothétique sur implants et en chirurgie plastique parodontale. Lorsqu’un plan de traitement fait appel à d’autres spécialités, il est établi avec les collègues de chirurgie, d’endodontie et d’orthodontie, et le patient sait dès le début ce que comprend <k>chaque étape</k>.',
+          'Pour le premier rendez-vous, il est utile d’apporter les <k>anciennes radiographies</k> et la liste des médicaments pris. Les <k>contrôles</k> après un traitement prothétique sont fixés dès le départ, afin de suivre dans le temps la prothèse comme la santé des gencives.',
         ],
       },
       it: {
@@ -841,9 +842,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Prima di ogni lavoro protesico controllo la <k>salute delle gengive</k>, perché tutto il resto poggia su di esse. Il piano lo stabiliamo insieme e <k>spiego</k> ogni fase prima di cominciare.',
         about: [
-          'Lavora in clinica e si occupa di protesi e del trattamento delle malattie gengivali: corone, ponti e protesi mobili, ma anche igiene professionale e terapie parodontali. La prima visita inizia con un colloquio su ciò che disturba il paziente, prosegue con l’esame dei denti e delle gengive e si conclude con la spiegazione delle opzioni di trattamento e dell’ordine delle fasi.',
-          'La formazione continua fa parte del lavoro quotidiano: negli ultimi anni con corsi di riabilitazione protesica su impianti e di chirurgia plastica parodontale. Quando un piano di trattamento richiede anche altre specialità, viene definito insieme ai colleghi di chirurgia, endodonzia e ortodonzia, e il paziente sa fin dall’inizio che cosa comporta ogni fase.',
-          'Per il primo appuntamento è utile portare le radiografie precedenti e l’elenco dei farmaci che si assumono. I controlli dopo un trattamento protesico vengono fissati fin dall’inizio, per seguire nel tempo sia la protesi sia la salute delle gengive.',
+          'Lavora in clinica e si occupa di <k>protesi</k> e del trattamento delle <k>malattie gengivali</k>: corone, ponti e protesi mobili, ma anche igiene professionale e terapie parodontali. La prima visita inizia con un colloquio su ciò che disturba il paziente, prosegue con l’esame dei denti e delle gengive e si conclude con la spiegazione delle opzioni di trattamento e dell’ordine delle fasi.',
+          'Il <k>percorso di specializzazione</k> è passato attraverso corsi di riabilitazione protesica su impianti e di chirurgia plastica parodontale. Quando un piano di trattamento richiede anche altre specialità, viene definito insieme ai colleghi di chirurgia, endodonzia e ortodonzia, e il paziente sa fin dall’inizio che cosa comporta <k>ogni fase</k>.',
+          'Per il primo appuntamento è utile portare le <k>radiografie precedenti</k> e l’elenco dei farmaci che si assumono. I <k>controlli</k> dopo un trattamento protesico vengono fissati fin dall’inizio, per seguire nel tempo sia la protesi sia la salute delle gengive.',
         ],
       },
     },
@@ -851,17 +852,8 @@ export const doctors: readonly Doctor[] = [
   {
     id: 'toma-lucian',
     cutout: CUTOUT_2,
-    hours: [
-      {
-        days: ['Monday', 'Tuesday', 'Thursday'],
-        opens: '12:00',
-        closes: '19:00',
-      },
-      { days: ['Friday'], opens: '09:00', closes: '14:00' },
-    ],
     courses: [
       {
-        year: 2024,
         words: {
           ro: 'Curs de endodonție sub microscop, Cluj-Napoca',
           en: 'Microscope-assisted endodontics course, Cluj-Napoca',
@@ -871,7 +863,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2022,
         words: {
           ro: 'Curs de retratament endodontic, București',
           en: 'Endodontic retreatment course, Bucharest',
@@ -881,7 +872,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2020,
         words: {
           ro: 'Curs de protetică digitală și amprentare optică, Timișoara',
           en: 'Digital prosthodontics and optical impressions course, Timișoara',
@@ -891,7 +881,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2018,
         words: {
           ro: 'Curs de restaurări adezive pe dinți tratați endodontic, Sibiu',
           en: 'Course on adhesive restorations for root-treated teeth, Sibiu',
@@ -901,7 +890,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2014,
         words: {
           ro: 'Rezidențiat în protetică dentară',
           en: 'Residency in prosthodontics',
@@ -982,27 +970,28 @@ export const doctors: readonly Doctor[] = [
         words: {
           ro: {
             label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
+            description:
+              'Fiecare curs este un reper pe drumul spre specializare.',
           },
           en: {
             label: 'Courses',
             description:
-              'Continuing training in modern techniques and technologies.',
+              'Each course is a milestone on the path to specialisation.',
           },
           de: {
             label: 'Kurse',
             description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
+              'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
           },
           fr: {
             label: 'Formations',
             description:
-              'Formation continue aux techniques et technologies modernes.',
+              'Chaque formation est un jalon du parcours de spécialisation.',
           },
           it: {
             label: 'Corsi',
             description:
-              'Formazione continua in tecniche e tecnologie moderne.',
+              'Ogni corso è una tappa del percorso di specializzazione.',
           },
         },
       },
@@ -1047,9 +1036,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Lucrez cu <k>microscopul</k> pentru că îmi arată detalii pe care ochiul liber nu le vede. Prefer să păstrez cât mai mult din <k>dintele natural</k> și să explic de ce aleg fiecare pas.',
         about: [
-          'Dr. Toma lucrează în clinică și se ocupă de tratamentele de canal și de lucrările protetice: coroane, punți și restaurări pe dinți cu tratament de canal. Tratamentele de canal se fac la microscop, iar la prima vizită medicul analizează radiografia, examinează dintele și explică pe rând ce presupune tratamentul și câte ședințe sunt necesare.',
-          'Formarea continuă include cursuri de endodonție sub microscop și de retratament endodontic, dar și de protetică digitală. Când un dinte cu tratament de canal are nevoie apoi de o coroană sau de o lucrare mai amplă, planul se stabilește împreună cu colegii din chirurgie și parodontologie, iar ordinea pașilor îi este explicată pacientului de la început.',
-          'Un tratament de canal se face de obicei într-una sau două ședințe, în funcție de dinte. După tratament, pacientul primește recomandări pentru zilele următoare și o programare de control, la care dintele este verificat și se discută pasul următor.',
+          'Dr. Toma lucrează în clinică și se ocupă de <k>tratamentele de canal</k> și de lucrările protetice: coroane, punți și restaurări pe dinți cu tratament de canal. Tratamentele de canal se fac la <k>microscop</k>, iar la prima vizită medicul analizează radiografia, examinează dintele și explică pe rând ce presupune tratamentul și câte ședințe sunt necesare.',
+          '<k>Drumul spre specializare</k> a trecut prin cursuri de endodonție sub microscop și de retratament endodontic, dar și de protetică digitală. Când un dinte cu tratament de canal are nevoie apoi de o coroană sau de o lucrare mai amplă, planul se stabilește împreună cu colegii din chirurgie și parodontologie, iar <k>ordinea pașilor</k> îi este explicată pacientului de la început.',
+          'Un tratament de canal se face de obicei într-una sau două ședințe, în funcție de dinte. După tratament, pacientul primește <k>recomandări</k> pentru zilele următoare și o <k>programare de control</k>, la care dintele este verificat și se discută pasul următor.',
         ],
       },
       en: {
@@ -1059,9 +1048,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'I work with a <k>microscope</k> because it shows me details the naked eye cannot see. I prefer to keep as much of the <k>natural tooth</k> as possible and to explain why I choose each step.',
         about: [
-          'Dr. Toma works at the clinic and carries out root canal treatments and prosthetic work: crowns, bridges and restorations on root-treated teeth. Root canal treatments are carried out under the microscope, and at the first visit the doctor reviews the X-ray, examines the tooth and explains step by step what the treatment involves and how many sessions are needed.',
-          'Continuing training includes courses in microscope-assisted endodontics and endodontic retreatment, as well as in digital prosthodontics. When a root-treated tooth then needs a crown or more extensive work, the plan is drawn up together with colleagues in surgery and periodontics, and the order of the steps is explained to the patient from the start.',
-          'A root canal treatment usually takes one or two sessions, depending on the tooth. Afterwards, the patient receives advice for the following days and a check-up appointment, at which the tooth is examined and the next step discussed.',
+          'Dr. Toma works at the clinic and carries out <k>root canal treatments</k> and prosthetic work: crowns, bridges and restorations on root-treated teeth. Root canal treatments are carried out under the <k>microscope</k>, and at the first visit the doctor reviews the X-ray, examines the tooth and explains step by step what the treatment involves and how many sessions are needed.',
+          'Dr. Toma’s <k>path to specialisation</k> led through courses in microscope-assisted endodontics and endodontic retreatment, as well as in digital prosthodontics. When a root-treated tooth then needs a crown or more extensive work, the plan is drawn up together with colleagues in surgery and periodontics, and the <k>order of the steps</k> is explained to the patient from the start.',
+          'A root canal treatment usually takes one or two sessions, depending on the tooth. Afterwards, the patient receives <k>advice</k> for the following days and a <k>check-up appointment</k>, at which the tooth is examined and the next step discussed.',
         ],
       },
       de: {
@@ -1071,9 +1060,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Ich arbeite mit dem <k>Mikroskop</k>, weil es mir Details zeigt, die das bloße Auge nicht sieht. Ich möchte so viel wie möglich vom <k>natürlichen Zahn</k> erhalten und erklären, warum ich jeden Schritt wähle.',
         about: [
-          'Dr. Toma arbeitet in der Klinik und ist für Wurzelkanalbehandlungen und prothetische Arbeiten zuständig: Kronen, Brücken und Restaurationen an wurzelbehandelten Zähnen. Wurzelkanalbehandlungen erfolgen unter dem Mikroskop, und beim ersten Besuch wertet Dr. Toma das Röntgenbild aus, untersucht den Zahn und erklärt Schritt für Schritt, was die Behandlung umfasst und wie viele Sitzungen nötig sind.',
-          'Zur Fortbildung gehören Kurse zur Endodontie unter dem Mikroskop und zur endodontischen Revision sowie zur digitalen Prothetik. Wenn ein wurzelbehandelter Zahn danach eine Krone oder eine größere Versorgung braucht, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Parodontologie, und dem Patienten wird die Reihenfolge der Schritte von Anfang an erklärt.',
-          'Eine Wurzelkanalbehandlung dauert je nach Zahn meist eine oder zwei Sitzungen. Danach erhält der Patient Hinweise für die folgenden Tage und einen Kontrolltermin, bei dem der Zahn untersucht und der nächste Schritt besprochen wird.',
+          'Dr. Toma arbeitet in der Klinik und ist für <k>Wurzelkanalbehandlungen</k> und prothetische Arbeiten zuständig: Kronen, Brücken und Restaurationen an wurzelbehandelten Zähnen. Wurzelkanalbehandlungen erfolgen unter dem <k>Mikroskop</k>, und beim ersten Besuch wertet Dr. Toma das Röntgenbild aus, untersucht den Zahn und erklärt Schritt für Schritt, was die Behandlung umfasst und wie viele Sitzungen nötig sind.',
+          'Der <k>Weg zur Spezialisierung</k> umfasste Kurse zur Endodontie unter dem Mikroskop und zur endodontischen Revision sowie zur digitalen Prothetik. Wenn ein wurzelbehandelter Zahn danach eine Krone oder eine größere Versorgung braucht, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Parodontologie, und dem Patienten wird die <k>Reihenfolge der Schritte</k> von Anfang an erklärt.',
+          'Eine Wurzelkanalbehandlung dauert je nach Zahn meist eine oder zwei Sitzungen. Danach erhält der Patient <k>Hinweise</k> für die folgenden Tage und einen <k>Kontrolltermin</k>, bei dem der Zahn untersucht und der nächste Schritt besprochen wird.',
         ],
       },
       fr: {
@@ -1083,9 +1072,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Je travaille au <k>microscope</k>, car il me montre des détails que l’œil nu ne voit pas. Je préfère conserver le plus possible la <k>dent naturelle</k> et expliquer pourquoi je choisis chaque étape.',
         about: [
-          'Dr Toma exerce à la clinique et prend en charge les traitements canalaires et les travaux prothétiques : couronnes, bridges et restaurations sur dents dévitalisées. Les traitements canalaires sont réalisés sous microscope, et lors de la première visite la radiographie est analysée, la dent examinée, puis le traitement et le nombre de séances nécessaires sont expliqués point par point.',
-          'La formation continue comprend des cours d’endodontie sous microscope et de retraitement endodontique, ainsi que de prothèse numérique. Lorsqu’une dent dévitalisée a ensuite besoin d’une couronne ou d’un travail plus important, le plan est établi avec les collègues de chirurgie et de parodontologie, et l’ordre des étapes est expliqué au patient dès le début.',
-          'Un traitement canalaire se fait généralement en une ou deux séances, selon la dent. Ensuite, le patient reçoit des conseils pour les jours suivants et un rendez-vous de contrôle, lors duquel la dent est examinée et l’étape suivante discutée.',
+          'Dr Toma exerce à la clinique et prend en charge les <k>traitements canalaires</k> et les travaux prothétiques : couronnes, bridges et restaurations sur dents dévitalisées. Les traitements canalaires sont réalisés sous <k>microscope</k>, et lors de la première visite la radiographie est analysée, la dent examinée, puis le traitement et le nombre de séances nécessaires sont expliqués point par point.',
+          'Le <k>parcours de spécialisation</k> est passé par des cours d’endodontie sous microscope et de retraitement endodontique, ainsi que de prothèse numérique. Lorsqu’une dent dévitalisée a ensuite besoin d’une couronne ou d’un travail plus important, le plan est établi avec les collègues de chirurgie et de parodontologie, et <k>l’ordre des étapes</k> est expliqué au patient dès le début.',
+          'Un traitement canalaire se fait généralement en une ou deux séances, selon la dent. Ensuite, le patient reçoit des <k>conseils</k> pour les jours suivants et un <k>rendez-vous de contrôle</k>, lors duquel la dent est examinée et l’étape suivante discutée.',
         ],
       },
       it: {
@@ -1095,9 +1084,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Lavoro al <k>microscopio</k> perché mi mostra dettagli che l’occhio nudo non vede. Preferisco conservare il più possibile il <k>dente naturale</k> e spiegare perché scelgo ogni passaggio.',
         about: [
-          'Lavora in clinica e si occupa di trattamenti canalari e di protesi: corone, ponti e restauri su denti devitalizzati. I trattamenti canalari vengono eseguiti al microscopio e alla prima visita il medico valuta la radiografia, esamina il dente e spiega passo per passo che cosa comporta il trattamento e quante sedute servono.',
-          'La formazione continua comprende corsi di endodonzia al microscopio e di ritrattamento endodontico, oltre che di protesi digitale. Quando un dente devitalizzato ha poi bisogno di una corona o di un lavoro più ampio, il piano viene definito insieme ai colleghi di chirurgia e parodontologia e l’ordine delle fasi viene spiegato al paziente fin dall’inizio.',
-          'Un trattamento canalare richiede di solito una o due sedute, a seconda del dente. Dopo il trattamento il paziente riceve indicazioni per i giorni successivi e un appuntamento di controllo, in cui si verifica il dente e si discute il passo successivo.',
+          'Lavora in clinica e si occupa di <k>trattamenti canalari</k> e di protesi: corone, ponti e restauri su denti devitalizzati. I trattamenti canalari vengono eseguiti al <k>microscopio</k> e alla prima visita si valuta la radiografia, si esamina il dente e si spiega passo per passo che cosa comporta il trattamento e quante sedute servono.',
+          'Il <k>percorso di specializzazione</k> è passato attraverso corsi di endodonzia al microscopio e di ritrattamento endodontico, oltre che di protesi digitale. Quando un dente devitalizzato ha poi bisogno di una corona o di un lavoro più ampio, il piano viene definito insieme ai colleghi di chirurgia e parodontologia e <k>l’ordine delle fasi</k> viene spiegato al paziente fin dall’inizio.',
+          'Un trattamento canalare richiede di solito una o due sedute, a seconda del dente. Dopo il trattamento il paziente riceve <k>indicazioni</k> per i giorni successivi e un <k>appuntamento di controllo</k>, in cui si verifica il dente e si discute il passo successivo.',
         ],
       },
     },
@@ -1105,13 +1094,8 @@ export const doctors: readonly Doctor[] = [
   {
     id: 'nicu-elena-alina',
     cutout: CUTOUT_1,
-    hours: [
-      { days: ['Tuesday', 'Thursday'], opens: '09:00', closes: '16:00' },
-      { days: ['Wednesday'], opens: '12:00', closes: '19:00' },
-    ],
     courses: [
       {
-        year: 2025,
         words: {
           ro: 'Curs de terapie parodontală regenerativă, București',
           en: 'Regenerative periodontal therapy course, Bucharest',
@@ -1121,7 +1105,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2023,
         words: {
           ro: 'Curs de chirurgie mucogingivală, Cluj-Napoca',
           en: 'Mucogingival surgery course, Cluj-Napoca',
@@ -1131,7 +1114,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2021,
         words: {
           ro: 'Curs de tratament parodontal nechirurgical, Sibiu',
           en: 'Non-surgical periodontal treatment course, Sibiu',
@@ -1141,7 +1123,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2019,
         words: {
           ro: 'Curs de prevenție și igienă orală la adulți, Timișoara',
           en: 'Course on prevention and oral hygiene in adults, Timișoara',
@@ -1151,7 +1132,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2015,
         words: {
           ro: 'Rezidențiat în parodontologie',
           en: 'Residency in periodontics',
@@ -1232,27 +1212,28 @@ export const doctors: readonly Doctor[] = [
         words: {
           ro: {
             label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
+            description:
+              'Fiecare curs este un reper pe drumul spre specializare.',
           },
           en: {
             label: 'Courses',
             description:
-              'Continuing training in modern techniques and technologies.',
+              'Each course is a milestone on the path to specialisation.',
           },
           de: {
             label: 'Kurse',
             description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
+              'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
           },
           fr: {
             label: 'Formations',
             description:
-              'Formation continue aux techniques et technologies modernes.',
+              'Chaque formation est un jalon du parcours de spécialisation.',
           },
           it: {
             label: 'Corsi',
             description:
-              'Formazione continua in tecniche e tecnologie moderne.',
+              'Ogni corso è una tappa del percorso di specializzazione.',
           },
         },
       },
@@ -1296,9 +1277,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Încep mereu cu <k>prevenția</k>, pentru că o gingie sănătoasă ține dinții la locul lor. Le arăt pacienților cum să își îngrijească gingiile acasă, fiindcă <k>îngrijirea zilnică</k> contează la fel de mult ca tratamentul din cabinet.',
         about: [
-          'Dr. Nicu lucrează în clinică și se ocupă de prevenția și tratamentul bolilor gingiei: igienizări profesionale, tratamente parodontale și controale periodice. La prima vizită, medicul evaluează starea gingiilor, analizează radiografiile și îi explică pacientului ce a găsit și ce etape urmează.',
-          'Formarea continuă include cursuri de terapie parodontală regenerativă și de chirurgie mucogingivală. Pentru pacienții care au nevoie și de implanturi sau de lucrări protetice, planul se stabilește împreună cu colegii din chirurgie și protetică, astfel încât gingia să fie pregătită înaintea fiecărei etape.',
-          'Tratamentul parodontal continuă și acasă, așa că fiecare pacient pleacă cu instrucțiuni de periaj și de folosire a aței dentare potrivite situației sale. Controalele periodice se programează de obicei la trei sau la șase luni, în funcție de cum evoluează gingia.',
+          'Dr. Nicu lucrează în clinică și se ocupă de <k>prevenția</k> și tratamentul <k>bolilor gingiei</k>: igienizări profesionale, tratamente parodontale și controale periodice. La prima vizită, medicul evaluează starea gingiilor, analizează radiografiile și îi explică pacientului ce a găsit și ce etape urmează.',
+          '<k>Drumul spre specializare</k> a trecut prin cursuri de terapie parodontală regenerativă și de chirurgie mucogingivală. Pentru pacienții care au nevoie și de implanturi sau de lucrări protetice, planul se stabilește împreună cu colegii din chirurgie și protetică, astfel încât gingia să fie pregătită <k>înaintea fiecărei etape</k>.',
+          'Tratamentul parodontal continuă și <k>acasă</k>, așa că fiecare pacient pleacă cu instrucțiuni de periaj și de folosire a aței dentare potrivite situației sale. <k>Controalele periodice</k> se programează de obicei la trei sau la șase luni, în funcție de cum evoluează gingia.',
         ],
       },
       en: {
@@ -1307,9 +1288,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'I always start with <k>prevention</k>, because healthy gums keep the teeth in place. I show patients how to care for their gums at home, since <k>daily care</k> matters as much as the treatment in the clinic.',
         about: [
-          'Dr. Nicu works at the clinic and focuses on the prevention and treatment of gum disease: professional cleaning, periodontal treatments and regular check-ups. At the first visit, the doctor assesses the condition of the gums, reviews the X-rays and explains to the patient what was found and which stages come next.',
-          'Continuing training includes courses in regenerative periodontal therapy and mucogingival surgery. For patients who also need implants or prosthetic work, the plan is drawn up together with colleagues in surgery and prosthodontics, so that the gums are prepared before each stage.',
-          'Periodontal treatment continues at home, so every patient leaves with brushing and flossing instructions suited to their situation. Regular check-ups are usually scheduled every three or six months, depending on how the gums respond.',
+          'Dr. Nicu works at the clinic and focuses on the <k>prevention</k> and treatment of <k>gum disease</k>: professional cleaning, periodontal treatments and regular check-ups. At the first visit, the doctor assesses the condition of the gums, reviews the X-rays and explains to the patient what was found and which stages come next.',
+          'Dr. Nicu’s <k>path to specialisation</k> led through courses in regenerative periodontal therapy and mucogingival surgery. For patients who also need implants or prosthetic work, the plan is drawn up together with colleagues in surgery and prosthodontics, so that the gums are prepared <k>before each stage</k>.',
+          'Periodontal treatment continues <k>at home</k>, so every patient leaves with brushing and flossing instructions suited to their situation. <k>Regular check-ups</k> are usually scheduled every three or six months, depending on how the gums respond.',
         ],
       },
       de: {
@@ -1318,9 +1299,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Ich beginne immer mit der <k>Vorbeugung</k>, denn gesundes Zahnfleisch hält die Zähne an ihrem Platz. Ich zeige den Patienten, wie sie ihr Zahnfleisch zu Hause pflegen, denn die <k>tägliche Pflege</k> zählt genauso viel wie die Behandlung in der Klinik.',
         about: [
-          'Dr. Nicu arbeitet in der Klinik und ist für die Vorbeugung und Behandlung von Zahnfleischerkrankungen zuständig: professionelle Zahnreinigungen, Parodontalbehandlungen und regelmäßige Kontrollen. Beim ersten Besuch beurteilt Dr. Nicu den Zustand des Zahnfleischs, wertet die Röntgenbilder aus und erklärt dem Patienten, was festgestellt wurde und welche Schritte folgen.',
-          'Zur Fortbildung gehören Kurse zur regenerativen Parodontaltherapie und zur mukogingivalen Chirurgie. Für Patienten, die auch Implantate oder prothetische Arbeiten brauchen, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Prothetik, damit das Zahnfleisch vor jedem Schritt vorbereitet ist.',
-          'Die Parodontalbehandlung geht zu Hause weiter, deshalb erhält jeder Patient Anleitungen zum Zähneputzen und zur Anwendung von Zahnseide, die zu seiner Situation passen. Die regelmäßigen Kontrollen finden meist alle drei oder sechs Monate statt, je nachdem, wie sich das Zahnfleisch entwickelt.',
+          'Dr. Nicu arbeitet in der Klinik und ist für die <k>Vorbeugung</k> und Behandlung von <k>Zahnfleischerkrankungen</k> zuständig: professionelle Zahnreinigungen, Parodontalbehandlungen und regelmäßige Kontrollen. Beim ersten Besuch beurteilt Dr. Nicu den Zustand des Zahnfleischs, wertet die Röntgenbilder aus und erklärt dem Patienten, was festgestellt wurde und welche Schritte folgen.',
+          'Der <k>Weg zur Spezialisierung</k> umfasste Kurse zur regenerativen Parodontaltherapie und zur mukogingivalen Chirurgie. Für Patienten, die auch Implantate oder prothetische Arbeiten brauchen, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Prothetik, damit das Zahnfleisch <k>vor jedem Schritt</k> vorbereitet ist.',
+          'Die Parodontalbehandlung geht <k>zu Hause</k> weiter, deshalb erhält jeder Patient Anleitungen zum Zähneputzen und zur Anwendung von Zahnseide, die zu seiner Situation passen. Die <k>regelmäßigen Kontrollen</k> finden meist alle drei oder sechs Monate statt, je nachdem, wie sich das Zahnfleisch entwickelt.',
         ],
       },
       fr: {
@@ -1329,9 +1310,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Je commence toujours par la <k>prévention</k>, car des gencives saines maintiennent les dents en place. Je montre aux patients comment prendre soin de leurs gencives à la maison, car les <k>soins quotidiens</k> comptent autant que le traitement au cabinet.',
         about: [
-          'Dr Nicu exerce à la clinique et prend en charge la prévention et le traitement des maladies des gencives : nettoyages professionnels, traitements parodontaux et contrôles réguliers. Lors de la première visite, l’état des gencives est évalué, les radiographies sont analysées, puis le patient apprend ce qui a été constaté et quelles étapes vont suivre.',
-          'La formation continue comprend des cours de thérapie parodontale régénératrice et de chirurgie muco-gingivale. Pour les patients qui ont aussi besoin d’implants ou de prothèses, le plan est établi avec les collègues de chirurgie et de prothèse, afin que les gencives soient préparées avant chaque étape.',
-          'Le traitement parodontal continue à la maison : chaque patient repart avec des consignes de brossage et d’utilisation du fil dentaire adaptées à sa situation. Les contrôles réguliers sont généralement prévus tous les trois ou six mois, selon l’évolution des gencives.',
+          'Dr Nicu exerce à la clinique et prend en charge la <k>prévention</k> et le traitement des <k>maladies des gencives</k> : nettoyages professionnels, traitements parodontaux et contrôles réguliers. Lors de la première visite, l’état des gencives est évalué, les radiographies sont analysées, puis le patient apprend ce qui a été constaté et quelles étapes vont suivre.',
+          'Le <k>parcours de spécialisation</k> est passé par des cours de thérapie parodontale régénératrice et de chirurgie muco-gingivale. Pour les patients qui ont aussi besoin d’implants ou de prothèses, le plan est établi avec les collègues de chirurgie et de prothèse, afin que les gencives soient préparées <k>avant chaque étape</k>.',
+          'Le traitement parodontal continue <k>à la maison</k> : chaque patient repart avec des consignes de brossage et d’utilisation du fil dentaire adaptées à sa situation. Les <k>contrôles réguliers</k> sont généralement prévus tous les trois ou six mois, selon l’évolution des gencives.',
         ],
       },
       it: {
@@ -1340,9 +1321,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Comincio sempre dalla <k>prevenzione</k>, perché le gengive sane tengono i denti al loro posto. Mostro ai pazienti come curare le gengive a casa, perché la <k>cura quotidiana</k> conta quanto il trattamento in studio.',
         about: [
-          'Lavora in clinica e si occupa della prevenzione e del trattamento delle malattie gengivali: igiene professionale, terapie parodontali e controlli periodici. Alla prima visita il medico valuta lo stato delle gengive, esamina le radiografie e spiega al paziente che cosa ha trovato e quali fasi seguiranno.',
-          'La formazione continua comprende corsi di terapia parodontale rigenerativa e di chirurgia mucogengivale. Per i pazienti che hanno bisogno anche di impianti o di protesi, il piano viene definito insieme ai colleghi di chirurgia e protesi, in modo che le gengive siano preparate prima di ogni fase.',
-          'La terapia parodontale continua a casa, per questo ogni paziente riceve istruzioni su spazzolino e filo interdentale adatte alla propria situazione. I controlli periodici si fissano di solito ogni tre o sei mesi, a seconda di come rispondono le gengive.',
+          'Lavora in clinica e si occupa della <k>prevenzione</k> e del trattamento delle <k>malattie gengivali</k>: igiene professionale, terapie parodontali e controlli periodici. Alla prima visita si valuta lo stato delle gengive, si esaminano le radiografie e si spiega al paziente che cosa è emerso e quali fasi seguiranno.',
+          'Il <k>percorso di specializzazione</k> è passato attraverso corsi di terapia parodontale rigenerativa e di chirurgia mucogengivale. Per i pazienti che hanno bisogno anche di impianti o di protesi, il piano viene definito insieme ai colleghi di chirurgia e protesi, in modo che le gengive siano preparate <k>prima di ogni fase</k>.',
+          'La terapia parodontale continua <k>a casa</k>, per questo ogni paziente riceve istruzioni su spazzolino e filo interdentale adatte alla propria situazione. I <k>controlli periodici</k> si fissano di solito ogni tre o sei mesi, a seconda di come rispondono le gengive.',
         ],
       },
     },
@@ -1350,13 +1331,8 @@ export const doctors: readonly Doctor[] = [
   {
     id: 'ivascu-zugravu-catalina',
     cutout: CUTOUT_2,
-    hours: [
-      { days: ['Monday', 'Wednesday'], opens: '13:00', closes: '19:00' },
-      { days: ['Thursday'], opens: '09:00', closes: '15:00' },
-    ],
     courses: [
       {
-        year: 2025,
         words: {
           ro: 'Curs de tratament ortodontic cu aparate fixe estetice, București',
           en: 'Course on orthodontic treatment with aesthetic fixed appliances, Bucharest',
@@ -1366,7 +1342,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2023,
         words: {
           ro: 'Curs de ortodonție interceptivă la copii, Cluj-Napoca',
           en: 'Course on interceptive orthodontics in children, Cluj-Napoca',
@@ -1376,7 +1351,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2021,
         words: {
           ro: 'Curs de planificare digitală a tratamentului ortodontic, Timișoara',
           en: 'Digital orthodontic treatment planning course, Timișoara',
@@ -1386,7 +1360,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2018,
         words: {
           ro: 'Curs de biomecanică în tratamentul cu aparate fixe, Iași',
           en: 'Course on biomechanics in fixed appliance treatment, Iași',
@@ -1396,7 +1369,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2013,
         words: {
           ro: 'Rezidențiat în ortodonție și ortopedie facială',
           en: 'Residency in orthodontics and facial orthopaedics',
@@ -1477,27 +1449,28 @@ export const doctors: readonly Doctor[] = [
         words: {
           ro: {
             label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
+            description:
+              'Fiecare curs este un reper pe drumul spre specializare.',
           },
           en: {
             label: 'Courses',
             description:
-              'Continuing training in modern techniques and technologies.',
+              'Each course is a milestone on the path to specialisation.',
           },
           de: {
             label: 'Kurse',
             description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
+              'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
           },
           fr: {
             label: 'Formations',
             description:
-              'Formation continue aux techniques et technologies modernes.',
+              'Chaque formation est un jalon du parcours de spécialisation.',
           },
           it: {
             label: 'Corsi',
             description:
-              'Formazione continua in tecniche e tecnologie moderne.',
+              'Ogni corso è una tappa del percorso di specializzazione.',
           },
         },
       },
@@ -1541,9 +1514,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Un tratament ortodontic durează, așa că vreau ca pacientul să cunoască de la început <k>fiecare etapă</k>. Lucrez cu copii și cu adulți, iar pentru fiecare caut <k>soluția potrivită</k> vârstei și nevoilor sale.',
         about: [
-          'Dr. Ivașcu-Zugravu lucrează în clinică și se ocupă de ortodonția copiilor și a adulților, cu aparate dentare fixe, metalice sau ceramice. Prima vizită începe cu o discuție despre ce și-ar dori pacientul să schimbe, continuă cu examinarea, fotografiile și amprentele, iar la final medicul explică variantele de tratament și durata fiecăreia.',
-          'Formarea continuă include cursuri de ortodonție interceptivă la copii și de planificare digitală a tratamentului, dar și de tratament cu aparate fixe estetice. Când tratamentul ortodontic are nevoie și de alte specialități, planul se stabilește împreună cu colegii din chirurgie și protetică, iar ordinea etapelor este explicată de la început.',
-          'Pentru copii, un prim control ortodontic este util încă de la vârsta de șapte ani, când problemele de creștere ale maxilarelor se pot observa din timp. Pe parcursul tratamentului, controalele se programează de obicei o dată la patru până la șase săptămâni.',
+          'Dr. Ivașcu-Zugravu lucrează în clinică și se ocupă de <k>ortodonția</k> copiilor și a adulților, cu <k>aparate dentare fixe</k>, metalice sau ceramice. Prima vizită începe cu o discuție despre ce și-ar dori pacientul să schimbe, continuă cu examinarea, fotografiile și amprentele, iar la final medicul explică variantele de tratament și durata fiecăreia.',
+          '<k>Drumul spre specializare</k> a trecut prin cursuri de ortodonție interceptivă la copii și de planificare digitală a tratamentului, dar și de tratament cu aparate fixe estetice. Când tratamentul ortodontic are nevoie și de alte specialități, planul se stabilește împreună cu colegii din chirurgie și protetică, iar <k>ordinea etapelor</k> este explicată de la început.',
+          'Pentru copii, un prim <k>control ortodontic</k> este util încă de la vârsta de șapte ani, când problemele de creștere ale maxilarelor se pot observa <k>din timp</k>. Pe parcursul tratamentului, controalele se programează de obicei o dată la patru până la șase săptămâni.',
         ],
       },
       en: {
@@ -1552,9 +1525,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Orthodontic treatment takes time, so I want patients to know <k>every stage</k> from the start. I work with children and adults, and for each one I look for the <k>right approach</k> for their age and needs.',
         about: [
-          'Dr. Ivașcu-Zugravu works at the clinic and provides orthodontic care for children and adults, with fixed braces, metal or ceramic. The first visit begins with a conversation about what the patient would like to change, continues with the examination, photographs and impressions, and ends with the doctor explaining the treatment options and how long each one takes.',
-          'Continuing training includes courses in interceptive orthodontics for children and in digital treatment planning, as well as in treatment with aesthetic fixed appliances. When orthodontic treatment also needs other specialties, the plan is drawn up together with colleagues in surgery and prosthodontics, and the order of the stages is explained from the start.',
-          'For children, a first orthodontic check-up is useful from the age of seven, when problems with jaw growth can be spotted early. During treatment, check-ups are usually scheduled every four to six weeks.',
+          'Dr. Ivașcu-Zugravu works at the clinic and provides <k>orthodontic care</k> for children and adults, with <k>fixed braces</k>, metal or ceramic. The first visit begins with a conversation about what the patient would like to change, continues with the examination, photographs and impressions, and ends with the doctor explaining the treatment options and how long each one takes.',
+          'Dr. Ivașcu-Zugravu’s <k>path to specialisation</k> led through courses in interceptive orthodontics for children and in digital treatment planning, as well as in treatment with aesthetic fixed appliances. When orthodontic treatment also needs other specialties, the plan is drawn up together with colleagues in surgery and prosthodontics, and the <k>order of the stages</k> is explained from the start.',
+          'For children, a first <k>orthodontic check-up</k> is useful from the age of seven, when problems with jaw growth can be spotted <k>early</k>. During treatment, check-ups are usually scheduled every four to six weeks.',
         ],
       },
       de: {
@@ -1563,9 +1536,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Eine kieferorthopädische Behandlung braucht Zeit, deshalb möchte ich, dass Patienten <k>jeden Schritt</k> von Anfang an kennen. Ich arbeite mit Kindern und Erwachsenen und suche für jeden den <k>passenden Weg</k>, je nach Alter und Bedürfnissen.',
         about: [
-          'Dr. Ivașcu-Zugravu arbeitet in der Klinik und behandelt Kinder und Erwachsene kieferorthopädisch, mit festsitzenden Zahnspangen aus Metall oder Keramik. Der erste Besuch beginnt mit einem Gespräch darüber, was der Patient verändern möchte, geht mit der Untersuchung, den Fotos und den Abdrücken weiter und endet mit der Erklärung der Behandlungsmöglichkeiten und deren Dauer.',
-          'Zur Fortbildung gehören Kurse zur interzeptiven Kieferorthopädie bei Kindern und zur digitalen Behandlungsplanung sowie zur Behandlung mit ästhetischen festsitzenden Apparaturen. Wenn eine kieferorthopädische Behandlung auch andere Fachgebiete braucht, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Prothetik, und die Reihenfolge der Schritte wird von Anfang an erklärt.',
-          'Bei Kindern ist eine erste kieferorthopädische Kontrolle schon ab dem Alter von sieben Jahren sinnvoll, weil sich Wachstumsprobleme der Kiefer dann früh erkennen lassen. Während der Behandlung finden die Kontrollen meist alle vier bis sechs Wochen statt.',
+          'Dr. Ivașcu-Zugravu arbeitet in der Klinik und behandelt Kinder und Erwachsene <k>kieferorthopädisch</k>, mit <k>festsitzenden Zahnspangen</k> aus Metall oder Keramik. Der erste Besuch beginnt mit einem Gespräch darüber, was der Patient verändern möchte, geht mit der Untersuchung, den Fotos und den Abdrücken weiter und endet mit der Erklärung der Behandlungsmöglichkeiten und deren Dauer.',
+          'Der <k>Weg zur Spezialisierung</k> umfasste Kurse zur interzeptiven Kieferorthopädie bei Kindern und zur digitalen Behandlungsplanung sowie zur Behandlung mit ästhetischen festsitzenden Apparaturen. Wenn eine kieferorthopädische Behandlung auch andere Fachgebiete braucht, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus Chirurgie und Prothetik, und die <k>Reihenfolge der Schritte</k> wird von Anfang an erklärt.',
+          'Bei Kindern ist eine erste <k>kieferorthopädische Kontrolle</k> schon ab dem Alter von sieben Jahren sinnvoll, weil sich Wachstumsprobleme der Kiefer dann <k>früh</k> erkennen lassen. Während der Behandlung finden die Kontrollen meist alle vier bis sechs Wochen statt.',
         ],
       },
       fr: {
@@ -1574,9 +1547,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Un traitement orthodontique prend du temps, alors je tiens à ce que le patient connaisse <k>chaque étape</k> dès le début. Je travaille avec des enfants et des adultes, et pour chacun je cherche la <k>solution adaptée</k> à son âge et à ses besoins.',
         about: [
-          'Dr Ivașcu-Zugravu exerce à la clinique et prend en charge l’orthodontie des enfants et des adultes, avec des appareils fixes, métalliques ou en céramique. La première visite commence par un échange sur ce que le patient souhaite changer, se poursuit par l’examen, les photographies et les empreintes et se termine par l’explication des options de traitement et de leur durée.',
-          'La formation continue comprend des cours d’orthodontie interceptive chez l’enfant et de planification numérique du traitement, ainsi que de traitement par appareils fixes esthétiques. Lorsqu’un traitement orthodontique fait appel à d’autres spécialités, le plan est établi avec les collègues de chirurgie et de prothèse, et l’ordre des étapes est expliqué dès le début.',
-          'Chez l’enfant, un premier contrôle orthodontique est utile dès l’âge de sept ans, quand les problèmes de croissance des mâchoires peuvent être repérés tôt. Pendant le traitement, les contrôles ont lieu en général toutes les quatre à six semaines.',
+          'Dr Ivașcu-Zugravu exerce à la clinique et prend en charge <k>l’orthodontie</k> des enfants et des adultes, avec des <k>appareils fixes</k>, métalliques ou en céramique. La première visite commence par un échange sur ce que le patient souhaite changer, se poursuit par l’examen, les photographies et les empreintes et se termine par l’explication des options de traitement et de leur durée.',
+          'Le <k>parcours de spécialisation</k> est passé par des cours d’orthodontie interceptive chez l’enfant et de planification numérique du traitement, ainsi que de traitement par appareils fixes esthétiques. Lorsqu’un traitement orthodontique fait appel à d’autres spécialités, le plan est établi avec les collègues de chirurgie et de prothèse, et <k>l’ordre des étapes</k> est expliqué dès le début.',
+          'Chez l’enfant, un premier <k>contrôle orthodontique</k> est utile dès l’âge de sept ans, quand les problèmes de croissance des mâchoires peuvent être repérés <k>tôt</k>. Pendant le traitement, les contrôles ont lieu en général toutes les quatre à six semaines.',
         ],
       },
       it: {
@@ -1585,9 +1558,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Un trattamento ortodontico richiede tempo, quindi voglio che il paziente conosca <k>ogni fase</k> fin dall’inizio. Lavoro con bambini e adulti e per ognuno cerco la <k>soluzione adatta</k> all’età e alle esigenze.',
         about: [
-          'Lavora in clinica e si occupa di ortodonzia per bambini e adulti, con apparecchi fissi, metallici o in ceramica. La prima visita inizia con un colloquio su ciò che il paziente vorrebbe cambiare, prosegue con l’esame, le fotografie e le impronte e si conclude con la spiegazione delle opzioni di trattamento e della loro durata.',
-          'La formazione continua comprende corsi di ortodonzia intercettiva in età pediatrica e di pianificazione digitale del trattamento, oltre che di trattamento con apparecchi fissi estetici. Quando un trattamento ortodontico richiede anche altre specialità, il piano viene definito insieme ai colleghi di chirurgia e protesi e l’ordine delle fasi viene spiegato fin dall’inizio.',
-          'Per i bambini una prima visita ortodontica è utile già a partire dai sette anni, quando i problemi di crescita dei mascellari si possono notare per tempo. Durante il trattamento i controlli si fissano di solito a intervalli compresi tra le quattro e le sei settimane.',
+          'Lavora in clinica e si occupa di <k>ortodonzia</k> per bambini e adulti, con <k>apparecchi fissi</k>, metallici o in ceramica. La prima visita inizia con un colloquio su ciò che il paziente vorrebbe cambiare, prosegue con l’esame, le fotografie e le impronte e si conclude con la spiegazione delle opzioni di trattamento e della loro durata.',
+          'Il <k>percorso di specializzazione</k> è passato attraverso corsi di ortodonzia intercettiva in età pediatrica e di pianificazione digitale del trattamento, oltre che di trattamento con apparecchi fissi estetici. Quando un trattamento ortodontico richiede anche altre specialità, il piano viene definito insieme ai colleghi di chirurgia e protesi e <k>l’ordine delle fasi</k> viene spiegato fin dall’inizio.',
+          'Per i bambini una prima <k>visita ortodontica</k> è utile già a partire dai sette anni, quando i problemi di crescita dei mascellari si possono notare <k>per tempo</k>. Durante il trattamento i controlli si fissano di solito a intervalli compresi tra le quattro e le sei settimane.',
         ],
       },
     },
@@ -1595,16 +1568,8 @@ export const doctors: readonly Doctor[] = [
   {
     id: 'opris-mircea',
     cutout: CUTOUT_1,
-    hours: [
-      {
-        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-        opens: '09:00',
-        closes: '15:00',
-      },
-    ],
     courses: [
       {
-        year: 2024,
         words: {
           ro: 'Curs de implantologie ghidată digital, București',
           en: 'Digitally guided implantology course, Bucharest',
@@ -1614,7 +1579,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2022,
         words: {
           ro: 'Curs de augmentare osoasă și regenerare tisulară ghidată, Sibiu',
           en: 'Bone augmentation and guided tissue regeneration course, Sibiu',
@@ -1624,7 +1588,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2020,
         words: {
           ro: 'Curs de extracție a molarilor de minte incluși, Cluj-Napoca',
           en: 'Impacted wisdom tooth extraction course, Cluj-Napoca',
@@ -1634,7 +1597,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2016,
         words: {
           ro: 'Curs de chirurgie preprotetică, Timișoara',
           en: 'Pre-prosthetic surgery course, Timișoara',
@@ -1644,7 +1606,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2010,
         words: {
           ro: 'Rezidențiat în chirurgie dento-alveolară',
           en: 'Residency in dentoalveolar surgery',
@@ -1725,27 +1686,28 @@ export const doctors: readonly Doctor[] = [
         words: {
           ro: {
             label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
+            description:
+              'Fiecare curs este un reper pe drumul spre specializare.',
           },
           en: {
             label: 'Courses',
             description:
-              'Continuing training in modern techniques and technologies.',
+              'Each course is a milestone on the path to specialisation.',
           },
           de: {
             label: 'Kurse',
             description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
+              'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
           },
           fr: {
             label: 'Formations',
             description:
-              'Formation continue aux techniques et technologies modernes.',
+              'Chaque formation est un jalon du parcours de spécialisation.',
           },
           it: {
             label: 'Corsi',
             description:
-              'Formazione continua in tecniche e tecnologie moderne.',
+              'Ogni corso è una tappa del percorso di specializzazione.',
           },
         },
       },
@@ -1789,9 +1751,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Înaintea oricărei intervenții îi explic pacientului <k>fiecare pas</k>, ca să știe exact ce urmează. Lucrez fără grabă, iar la <k>controlul</k> de după verificăm împreună cum se vindecă zona.',
         about: [
-          'Dr. Opriș lucrează în clinică și se ocupă de chirurgia dento-alveolară: extracții, inclusiv ale molarilor de minte, inserarea implanturilor și intervenții de augmentare osoasă. La prima vizită, medicul examinează zona, analizează radiografia sau tomografia și explică ce presupune intervenția, cât durează și cum decurge vindecarea.',
-          'Formarea continuă include cursuri de implantologie ghidată digital și de augmentare osoasă. Când o intervenție chirurgicală face parte dintr-un plan mai amplu, lucrul se coordonează cu colegii din protetică și parodontologie, iar etapele se stabilesc înainte de începerea tratamentului.',
-          'Înaintea unei intervenții, pacientul primește instrucțiuni despre alimentație și despre medicamentele pe care le ia. După intervenție, controlul se programează de obicei la o săptămână, când se verifică vindecarea și, dacă e cazul, se scot firele.',
+          'Dr. Opriș lucrează în clinică și se ocupă de <k>chirurgia dento-alveolară</k>: extracții, inclusiv ale molarilor de minte, inserarea implanturilor și intervenții de augmentare osoasă. La prima vizită, medicul examinează zona, analizează radiografia sau tomografia și explică ce presupune intervenția, cât durează și cum decurge <k>vindecarea</k>.',
+          '<k>Drumul spre specializare</k> a trecut prin cursuri de implantologie ghidată digital și de augmentare osoasă. Când o intervenție chirurgicală face parte dintr-un plan mai amplu, lucrul se coordonează cu colegii din protetică și parodontologie, iar <k>etapele</k> se stabilesc înainte de începerea tratamentului.',
+          'Înaintea unei intervenții, pacientul primește <k>instrucțiuni</k> despre alimentație și despre medicamentele pe care le ia. După intervenție, <k>controlul</k> se programează de obicei la o săptămână, când se verifică vindecarea și, dacă e cazul, se scot firele.',
         ],
       },
       en: {
@@ -1800,9 +1762,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Before any procedure I explain <k>every step</k> to the patient, so that they know exactly what comes next. I work without rushing, and at the <k>follow-up</k> visit we check together how the area is healing.',
         about: [
-          'Dr. Opriș works at the clinic and practises dentoalveolar surgery: extractions, wisdom teeth included, implant placement and bone augmentation procedures. At the first visit, the doctor examines the area, reviews the X-ray or CT scan and explains what the procedure involves, how long it takes and how healing progresses.',
-          'Continuing training includes courses in digitally guided implantology and bone augmentation. When a surgical procedure is part of a wider plan, the work is coordinated with colleagues in prosthodontics and periodontics, and the stages are set before treatment begins.',
-          'Before a procedure, the patient receives instructions about eating and about any medication they take. After the procedure, the check-up is usually booked for a week later, when the healing is checked and the stitches are removed if needed.',
+          'Dr. Opriș works at the clinic and practises <k>dentoalveolar surgery</k>: extractions, wisdom teeth included, implant placement and bone augmentation procedures. At the first visit, the doctor examines the area, reviews the X-ray or CT scan and explains what the procedure involves, how long it takes and how <k>healing</k> progresses.',
+          'Dr. Opriș’s <k>path to specialisation</k> led through courses in digitally guided implantology and bone augmentation. When a surgical procedure is part of a wider plan, the work is coordinated with colleagues in prosthodontics and periodontics, and the <k>stages</k> are set before treatment begins.',
+          'Before a procedure, the patient receives <k>instructions</k> about eating and about any medication they take. After the procedure, the <k>check-up</k> is usually booked for a week later, when the healing is assessed and the stitches are removed if needed.',
         ],
       },
       de: {
@@ -1811,9 +1773,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Vor jedem Eingriff erkläre ich dem Patienten <k>jeden Schritt</k>, damit genau klar ist, was als Nächstes kommt. Ich arbeite ohne Eile, und bei der <k>Nachkontrolle</k> prüfen wir gemeinsam, wie die Stelle heilt.',
         about: [
-          'Dr. Opriș arbeitet in der Klinik und ist in der dentoalveolären Chirurgie tätig: Extraktionen, auch von Weisheitszähnen, das Setzen von Implantaten und Knochenaufbau. Beim ersten Besuch untersucht Dr. Opriș den betroffenen Bereich, wertet das Röntgenbild oder die dreidimensionale Aufnahme (DVT) aus und erklärt, was der Eingriff umfasst, wie lange er dauert und wie die Heilung verläuft.',
-          'Zur Fortbildung gehören Kurse zur digital geführten Implantologie und zur Knochenaugmentation. Wenn ein chirurgischer Eingriff Teil eines größeren Plans ist, wird die Arbeit mit den Kolleginnen und Kollegen aus Prothetik und Parodontologie abgestimmt, und die Schritte werden vor Beginn der Behandlung festgelegt.',
-          'Vor einem Eingriff erhält der Patient Hinweise zum Essen und zu den Medikamenten, die er einnimmt. Die Kontrolle nach dem Eingriff findet meist eine Woche später statt, dabei wird die Heilung geprüft, und falls nötig werden die Fäden entfernt.',
+          'Dr. Opriș arbeitet in der Klinik und ist in der <k>dentoalveolären Chirurgie</k> tätig: Extraktionen, auch von Weisheitszähnen, das Setzen von Implantaten und Knochenaufbau. Beim ersten Besuch untersucht Dr. Opriș den betroffenen Bereich, wertet das Röntgenbild oder die dreidimensionale Aufnahme (DVT) aus und erklärt, was der Eingriff umfasst, wie lange er dauert und wie die <k>Heilung</k> verläuft.',
+          'Der <k>Weg zur Spezialisierung</k> umfasste Kurse zur digital geführten Implantologie und zur Knochenaugmentation. Wenn ein chirurgischer Eingriff Teil eines größeren Plans ist, wird die Arbeit mit den Kolleginnen und Kollegen aus Prothetik und Parodontologie abgestimmt, und die <k>Schritte</k> werden vor Beginn der Behandlung festgelegt.',
+          'Vor einem Eingriff erhält der Patient <k>Hinweise</k> zum Essen und zu den Medikamenten, die er einnimmt. Die <k>Kontrolle</k> nach dem Eingriff findet meist eine Woche später statt, dabei wird die Heilung geprüft, und falls nötig werden die Fäden entfernt.',
         ],
       },
       fr: {
@@ -1822,9 +1784,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Avant chaque intervention, j’explique <k>chaque étape</k> au patient, pour qu’il sache exactement ce qui va suivre. Je travaille sans précipitation, et lors du <k>contrôle</k> nous vérifions ensemble la cicatrisation.',
         about: [
-          'Dr Opriș exerce à la clinique et se consacre à la chirurgie dento-alvéolaire : extractions, dents de sagesse comprises, pose d’implants et interventions d’augmentation osseuse. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est analysé, puis l’intervention, sa durée et le déroulement de la cicatrisation sont expliqués.',
-          'La formation continue comprend des cours d’implantologie guidée numériquement et d’augmentation osseuse. Lorsqu’une intervention chirurgicale fait partie d’un plan plus large, le travail est coordonné avec les collègues de prothèse et de parodontologie, et les étapes sont fixées avant le début du traitement.',
-          'Avant une intervention, le patient reçoit des consignes sur l’alimentation et sur les médicaments qu’il prend. Après l’intervention, le contrôle est généralement prévu une semaine plus tard, pour vérifier la cicatrisation et retirer les fils si nécessaire.',
+          'Dr Opriș exerce à la clinique et se consacre à la <k>chirurgie dento-alvéolaire</k> : extractions, dents de sagesse comprises, pose d’implants et interventions d’augmentation osseuse. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est analysé, puis l’intervention, sa durée et le déroulement de la <k>cicatrisation</k> sont expliqués.',
+          'Le <k>parcours de spécialisation</k> est passé par des cours d’implantologie guidée numériquement et d’augmentation osseuse. Lorsqu’une intervention chirurgicale fait partie d’un plan plus large, le travail est coordonné avec les collègues de prothèse et de parodontologie, et les <k>étapes</k> sont fixées avant le début du traitement.',
+          'Avant une intervention, le patient reçoit des <k>consignes</k> sur l’alimentation et sur les médicaments qu’il prend. Après l’intervention, le <k>contrôle</k> est généralement prévu une semaine plus tard, pour vérifier la cicatrisation et retirer les fils si nécessaire.',
         ],
       },
       it: {
@@ -1833,9 +1795,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Prima di ogni intervento spiego al paziente <k>ogni passaggio</k>, perché sappia esattamente che cosa succederà. Lavoro senza fretta e al <k>controllo</k> successivo verifichiamo insieme come guarisce la zona.',
         about: [
-          'Lavora in clinica e si occupa di chirurgia dento-alveolare: estrazioni, compresi i denti del giudizio, inserimento di impianti e interventi di aumento osseo. Alla prima visita il medico esamina la zona, valuta la radiografia o la TAC e spiega in che cosa consiste l’intervento, quanto dura e come procede la guarigione.',
-          'La formazione continua comprende corsi di implantologia a guida digitale e di aumento osseo. Quando un intervento chirurgico fa parte di un piano più ampio, il lavoro viene coordinato con i colleghi di protesi e parodontologia e le fasi vengono stabilite prima dell’inizio del trattamento.',
-          'Prima di un intervento il paziente riceve indicazioni sull’alimentazione e sui farmaci che assume. Dopo l’intervento il controllo si fissa di solito a una settimana, quando si verifica la guarigione e, se serve, si rimuovono i punti.',
+          'Lavora in clinica e si occupa di <k>chirurgia dento-alveolare</k>: estrazioni, compresi i denti del giudizio, inserimento di impianti e interventi di aumento osseo. Alla prima visita si esamina la zona, si valuta la radiografia o la TAC e si spiega in che cosa consiste l’intervento, quanto dura e come procede la <k>guarigione</k>.',
+          'Il <k>percorso di specializzazione</k> è passato attraverso corsi di implantologia a guida digitale e di aumento osseo. Quando un intervento chirurgico fa parte di un piano più ampio, il lavoro viene coordinato con i colleghi di protesi e parodontologia e le <k>fasi</k> vengono stabilite prima dell’inizio del trattamento.',
+          'Prima di un intervento il paziente riceve <k>indicazioni</k> sull’alimentazione e sui farmaci che assume. Dopo l’intervento il <k>controllo</k> si fissa di solito a una settimana, quando si verifica la guarigione e, se serve, si rimuovono i punti.',
         ],
       },
     },
@@ -1843,17 +1805,8 @@ export const doctors: readonly Doctor[] = [
   {
     id: 'bozdog-horatiu',
     cutout: CUTOUT_2,
-    hours: [
-      { days: ['Monday'], opens: '09:00', closes: '13:00' },
-      {
-        days: ['Wednesday', 'Thursday', 'Friday'],
-        opens: '12:00',
-        closes: '19:00',
-      },
-    ],
     courses: [
       {
-        year: 2025,
         words: {
           ro: 'Curs de chirurgie piezoelectrică în stomatologie, Cluj-Napoca',
           en: 'Course on piezoelectric surgery in dentistry, Cluj-Napoca',
@@ -1863,7 +1816,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2023,
         words: {
           ro: 'Curs de sinus lift și augmentare de creastă, București',
           en: 'Sinus lift and ridge augmentation course, Bucharest',
@@ -1873,7 +1825,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2021,
         words: {
           ro: 'Curs de interpretare a tomografiei dentare CBCT, Sibiu',
           en: 'Dental CBCT interpretation course, Sibiu',
@@ -1883,7 +1834,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2019,
         words: {
           ro: 'Workshop de suturi și vindecare a plăgilor orale, Timișoara',
           en: 'Suturing and oral wound healing workshop, Timișoara',
@@ -1893,7 +1843,6 @@ export const doctors: readonly Doctor[] = [
         },
       },
       {
-        year: 2016,
         words: {
           ro: 'Rezidențiat în chirurgie dento-alveolară',
           en: 'Residency in dentoalveolar surgery',
@@ -1974,27 +1923,28 @@ export const doctors: readonly Doctor[] = [
         words: {
           ro: {
             label: 'Cursuri',
-            description: 'Formare continuă în tehnici și tehnologii moderne.',
+            description:
+              'Fiecare curs este un reper pe drumul spre specializare.',
           },
           en: {
             label: 'Courses',
             description:
-              'Continuing training in modern techniques and technologies.',
+              'Each course is a milestone on the path to specialisation.',
           },
           de: {
             label: 'Kurse',
             description:
-              'Laufende Fortbildung in modernen Techniken und Technologien.',
+              'Jeder Kurs ist eine Station auf dem Weg zur Spezialisierung.',
           },
           fr: {
             label: 'Formations',
             description:
-              'Formation continue aux techniques et technologies modernes.',
+              'Chaque formation est un jalon du parcours de spécialisation.',
           },
           it: {
             label: 'Corsi',
             description:
-              'Formazione continua in tecniche e tecnologie moderne.',
+              'Ogni corso è una tappa del percorso di specializzazione.',
           },
         },
       },
@@ -2038,9 +1988,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Pentru mine, o intervenție bine pregătită începe cu o <k>radiografie</k> citită atent și cu o discuție deschisă. Vreau ca pacientul să plece din cabinet știind ce are de făcut acasă, de aceea dau mereu <k>recomandări</k> scrise.',
         about: [
-          'Dr. Bozdog lucrează în clinică și se ocupă de chirurgia dento-alveolară: extracții simple și chirurgicale, extracția molarilor de minte, inserarea implanturilor și intervenții la nivelul gingiei și al osului. La prima vizită, medicul examinează zona, citește radiografia sau tomografia și explică pe rând pașii intervenției și ce urmează după ea.',
-          'Formarea continuă include cursuri de chirurgie piezoelectrică și de augmentare a crestei osoase, dar și de interpretare a tomografiei dentare. Pentru tratamentele care includ și lucrări protetice, planul se stabilește împreună cu colegii din protetică, astfel încât fiecare etapă să o pregătească pe următoarea.',
-          'În ziua intervenției, pacientul primește recomandări scrise pentru îngrijirea de acasă și numărul clinicii, pentru orice întrebare. Controlul de după intervenție se programează de obicei la șapte până la zece zile, în funcție de tipul intervenției.',
+          'Dr. Bozdog lucrează în clinică și se ocupă de <k>chirurgia dento-alveolară</k>: extracții simple și chirurgicale, extracția molarilor de minte, inserarea implanturilor și intervenții la nivelul gingiei și al osului. La prima vizită, medicul examinează zona, citește radiografia sau tomografia și explică pe rând <k>pașii intervenției</k> și ce urmează după ea.',
+          '<k>Drumul spre specializare</k> a trecut prin cursuri de chirurgie piezoelectrică și de augmentare a crestei osoase, dar și de interpretare a tomografiei dentare. Pentru tratamentele care includ și lucrări protetice, planul se stabilește împreună cu colegii din protetică, astfel încât <k>fiecare etapă</k> să o pregătească pe următoarea.',
+          'În ziua intervenției, pacientul primește <k>recomandări scrise</k> pentru îngrijirea de acasă și numărul clinicii, pentru orice întrebare. <k>Controlul</k> de după intervenție se programează de obicei la șapte până la zece zile, în funcție de tipul intervenției.',
         ],
       },
       en: {
@@ -2049,9 +1999,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'For me, a well-prepared procedure starts with a carefully read <k>X-ray</k> and an open conversation. I want patients to leave knowing what to do at home, which is why I always give written <k>instructions</k>.',
         about: [
-          'Dr. Bozdog works at the clinic and practises dentoalveolar surgery: simple and surgical extractions, wisdom tooth removal, implant placement and procedures on the gums and bone. At the first visit, the doctor examines the area, reads the X-ray or CT scan and explains the steps of the procedure one by one, along with what follows afterwards.',
-          'Continuing training includes courses in piezoelectric surgery and alveolar ridge augmentation, as well as in reading dental CT scans. For treatments that also include prosthetic work, the plan is drawn up together with colleagues in prosthodontics, so that each stage prepares the next.',
-          'On the day of the procedure, the patient receives written instructions for care at home and the clinic’s number for any questions. The check-up after the procedure is usually booked seven to ten days later, depending on the type of procedure.',
+          'Dr. Bozdog works at the clinic and practises <k>dentoalveolar surgery</k>: simple and surgical extractions, wisdom tooth removal, implant placement and procedures on the gums and bone. At the first visit, the doctor examines the area, reads the X-ray or CT scan and explains the <k>steps of the procedure</k> one by one, along with what follows.',
+          'Dr. Bozdog’s <k>path to specialisation</k> led through courses in piezoelectric surgery and alveolar ridge augmentation, as well as in reading dental CT scans. For treatments that also include prosthetic work, the plan is drawn up together with colleagues in prosthodontics, so that <k>each stage</k> prepares the next.',
+          'On the day of the procedure, the patient receives <k>written instructions</k> for care at home and the clinic’s number for any questions. The <k>check-up</k> after the procedure is usually booked seven to ten days later, depending on the type of procedure.',
         ],
       },
       de: {
@@ -2060,9 +2010,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Für mich beginnt ein gut vorbereiteter Eingriff mit einem sorgfältig ausgewerteten <k>Röntgenbild</k> und einem offenen Gespräch. Patienten sollen wissen, was zu Hause zu tun ist, deshalb gebe ich immer schriftliche <k>Hinweise</k> mit.',
         about: [
-          'Dr. Bozdog arbeitet in der Klinik und ist in der dentoalveolären Chirurgie tätig: einfache und chirurgische Extraktionen, die Entfernung von Weisheitszähnen, das Setzen von Implantaten und Eingriffe an Zahnfleisch und Knochen. Beim ersten Besuch untersucht Dr. Bozdog den betroffenen Bereich, wertet das Röntgenbild oder die dreidimensionale Aufnahme (DVT) aus und erklärt nacheinander die Schritte des Eingriffs und das, was danach folgt.',
-          'Zur Fortbildung gehören Kurse zur piezoelektrischen Chirurgie und zum Kieferkammaufbau sowie zur Auswertung der dentalen DVT. Für Behandlungen, die auch prothetische Arbeiten umfassen, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus der Prothetik, damit jeder Schritt den nächsten vorbereitet.',
-          'Am Tag des Eingriffs erhält der Patient schriftliche Hinweise für die Nachsorge zu Hause und die Telefonnummer der Klinik für Rückfragen. Die Kontrolle nach dem Eingriff findet meist sieben bis zehn Tage später statt, je nach Art des Eingriffs.',
+          'Dr. Bozdog arbeitet in der Klinik und ist in der <k>dentoalveolären Chirurgie</k> tätig: einfache und chirurgische Extraktionen, die Entfernung von Weisheitszähnen, das Setzen von Implantaten und Eingriffe an Zahnfleisch und Knochen. Beim ersten Besuch untersucht Dr. Bozdog den betroffenen Bereich, wertet das Röntgenbild oder die dreidimensionale Aufnahme (DVT) aus und erklärt nacheinander die <k>Schritte des Eingriffs</k> und das, was danach folgt.',
+          'Der <k>Weg zur Spezialisierung</k> umfasste Kurse zur piezoelektrischen Chirurgie und zum Kieferkammaufbau sowie zur Auswertung der dentalen DVT. Für Behandlungen, die auch prothetische Arbeiten umfassen, entsteht der Plan gemeinsam mit den Kolleginnen und Kollegen aus der Prothetik, damit <k>jeder Schritt</k> den nächsten vorbereitet.',
+          'Am Tag des Eingriffs erhält der Patient <k>schriftliche Hinweise</k> für die Nachsorge zu Hause und die Telefonnummer der Klinik für Rückfragen. Die <k>Kontrolle</k> nach dem Eingriff findet meist sieben bis zehn Tage später statt, je nach Art des Eingriffs.',
         ],
       },
       fr: {
@@ -2071,9 +2021,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Pour moi, une intervention bien préparée commence par une <k>radiographie</k> lue avec attention et une discussion ouverte. Je tiens à ce que le patient reparte en sachant quoi faire à la maison, c’est pourquoi je donne toujours des <k>consignes</k> écrites.',
         about: [
-          'Dr Bozdog exerce à la clinique et se consacre à la chirurgie dento-alvéolaire : extractions simples et chirurgicales, extraction des dents de sagesse, pose d’implants et interventions sur la gencive et l’os. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est lu, puis les étapes de l’intervention sont expliquées une à une, ainsi que ce qui se passe ensuite.',
-          'La formation continue comprend des cours de chirurgie piézoélectrique et d’augmentation de la crête osseuse, ainsi que de lecture du scanner dentaire. Pour les traitements qui comprennent aussi des prothèses, le plan est établi avec les collègues de prothèse, afin que chaque étape prépare la suivante.',
-          'Le jour de l’intervention, le patient reçoit des consignes écrites à suivre à la maison et le numéro de la clinique pour toute question. Le contrôle après l’intervention est généralement prévu sept à dix jours plus tard, selon le type d’intervention.',
+          'Dr Bozdog exerce à la clinique et se consacre à la <k>chirurgie dento-alvéolaire</k> : extractions simples et chirurgicales, extraction des dents de sagesse, pose d’implants et interventions sur la gencive et l’os. Lors de la première visite, la zone est examinée, la radiographie ou le scanner est lu, puis les <k>étapes de l’intervention</k> sont expliquées une à une, ainsi que ce qui se passe ensuite.',
+          'Le <k>parcours de spécialisation</k> est passé par des cours de chirurgie piézoélectrique et d’augmentation de la crête osseuse, ainsi que de lecture du scanner dentaire. Pour les traitements qui comprennent aussi des prothèses, le plan est établi avec les collègues de prothèse, afin que <k>chaque étape</k> prépare la suivante.',
+          'Le jour de l’intervention, le patient reçoit des <k>consignes écrites</k> à suivre à la maison et le numéro de la clinique pour toute question. Le <k>contrôle</k> après l’intervention est généralement prévu sept à dix jours plus tard, selon le type d’intervention.',
         ],
       },
       it: {
@@ -2082,9 +2032,9 @@ export const doctors: readonly Doctor[] = [
         philosophy:
           'Per me un intervento ben preparato comincia da una <k>radiografia</k> letta con attenzione e da un colloquio aperto. Voglio che il paziente esca sapendo che cosa fare a casa, per questo do sempre <k>indicazioni</k> scritte.',
         about: [
-          'Lavora in clinica e si occupa di chirurgia dento-alveolare: estrazioni semplici e chirurgiche, estrazione dei denti del giudizio, inserimento di impianti e interventi su gengiva e osso. Alla prima visita il medico esamina la zona, legge la radiografia o la TAC e spiega passo per passo le fasi dell’intervento e che cosa succede dopo.',
-          'La formazione continua comprende corsi di chirurgia piezoelettrica e di aumento della cresta ossea, oltre che di lettura della TAC dentale. Per i trattamenti che comprendono anche lavori protesici, il piano viene definito insieme ai colleghi di protesi, in modo che ogni fase prepari la successiva.',
-          'Il giorno dell’intervento il paziente riceve indicazioni scritte per le cure a casa e il numero della clinica per qualsiasi domanda. Il controllo dopo l’intervento si fissa di solito tra i sette e i dieci giorni successivi, a seconda del tipo di intervento.',
+          'Lavora in clinica e si occupa di <k>chirurgia dento-alveolare</k>: estrazioni semplici e chirurgiche, estrazione dei denti del giudizio, inserimento di impianti e interventi su gengiva e osso. Alla prima visita si esamina la zona, si legge la radiografia o la TAC e si spiegano passo per passo le <k>fasi dell’intervento</k> e che cosa succede dopo.',
+          'Il <k>percorso di specializzazione</k> è passato attraverso corsi di chirurgia piezoelettrica e di aumento della cresta ossea, oltre che di lettura della TAC dentale. Per i trattamenti che comprendono anche lavori protesici, il piano viene definito insieme ai colleghi di protesi, in modo che <k>ogni fase</k> prepari la successiva.',
+          'Il giorno dell’intervento il paziente riceve <k>indicazioni scritte</k> per le cure a casa e il numero della clinica per qualsiasi domanda. Il <k>controllo</k> dopo l’intervento si fissa di solito tra i sette e i dieci giorni successivi, a seconda del tipo di intervento.',
         ],
       },
     },
@@ -2239,48 +2189,10 @@ export function findAuxiliary(id: string): AuxiliaryMember | undefined {
 }
 
 /**
- * A doctor's course rows grouped by year, for ONE language (run ledger D17 —
- * the doctor page's courses band prints one heading per group, D15).
- *
- * YEARS DESCENDING, newest first: the band reads like the top of a CV, what
- * the doctor learned lately before what the doctor learned first. INSIDE a
- * year, the FILE's order: two courses of one year have no order of their own
- * except the one written here.
- *
- * It does not trust the file's order to do the grouping. The data test pins
- * the rows newest → oldest, which keeps the file readable, but a row pasted in
- * out of place must still land under its OWN year — once, and not as a second
- * heading for the same year further down the page (the band keys its groups
- * by the year). So one pass collects each year's lines into a Map in file
- * order — a Map keeps insertion order, which is exactly "the file's order
- * inside a year" — and only the distinct YEARS are sorted afterwards, as a
- * fresh array. `doctor.courses` is never sorted and never touched: a
- * `readonly` array sorted in place would be a data change hiding inside a
- * read, and every page built after it in the same process would inherit it.
- *
- * A doctor with no rows gets `[]` — no groups, so the band renders nothing
- * (D15). Pure: everything is built per call from the two arguments, so two
- * calls agree.
- */
-export function coursesByYear(
-  doctor: Doctor,
-  locale: Locale,
-): readonly CourseGroup[] {
-  const byYear = new Map<number, string[]>();
-  for (const course of doctor.courses) {
-    const line = course.words[locale];
-    const lines = byYear.get(course.year);
-    if (lines === undefined) byYear.set(course.year, [line]);
-    else lines.push(line);
-  }
-  return [...byYear]
-    .sort(([newer], [older]) => older - newer)
-    .map(([year, courses]) => ({ year, courses }));
-}
-
-/**
- * One piece of a `philosophy` sentence: plain text, or a key word. The NAME is
- * round 1's (the field was `about` then, run ledger D17) and is kept on
+ * One piece of a marked text — a `philosophy` sentence or, since 2026-10-13,
+ * an `about` paragraph: plain text, or a key word. The NAME is round 1's (the
+ * field was `about` then, run ledger D17; it fits that field again since the
+ * biography carries marks) and is kept on
  * purpose: this type is ui/Keyword's `KeywordSegment`'s structural twin, and
  * the pin between the two — in app/[locale]/team/populate.test.ts, the one
  * tier that may import BOTH (`expectTypeOf<AboutSegment>().toEqualTypeOf<
@@ -2320,9 +2232,12 @@ const STRAY_TAG = /<\/?k>/i;
  * { text: 'ortodonție', keyword: true }, …]` — the segments ui/Keyword's
  * `Keywords` turns into text and `<b>` fragments (run ledger D2: the marks are
  * authored beside the person now, and split HERE instead of by next-intl's
- * `t.rich`). Its input is a doctor's `philosophy` (D17), the one field that
- * carries marks, split for the doctor card's quote and for the doctor page's
- * credo card (D12) alike.
+ * `t.rich`). Its inputs are the two fields that carry marks: a doctor's
+ * `philosophy` (D17), split for the doctor card's quote and for the doctor
+ * page's credo card (D12) alike, and — since 2026-10-13 — each paragraph of
+ * his `about`, split for the doctor page's biography (the header's THE
+ * BIOGRAPHY'S KEY WORDS; CLAUDE.md §15.23 round 7). Both reach the page
+ * through app/[locale]/team/populate.ts.
  *
  * A piece with no text is dropped — the empty lead of a sentence that opens on
  * a key word, the empty gap between two adjacent tags, and an empty
@@ -2330,7 +2245,8 @@ const STRAY_TAG = /<\/?k>/i;
  * would only make the consumer's `key={index}` lie.
  *
  * ANY MARK THAT IS NOT PART OF A FLAT, BALANCED PAIR THROWS, naming the text.
- * The data test calls this function on every `philosophy` in every locale, so
+ * The data test calls this function on every `philosophy` and every `about`
+ * paragraph in every locale, so
  * the throw is what a typo hits in CI; it exists at runtime as well because a
  * `string` field cannot be checked by the compiler, and a stray tag would
  * otherwise reach the page as a visible `<k>`. The check is exhaustive because
@@ -2339,10 +2255,10 @@ const STRAY_TAG = /<\/?k>/i;
  * tag and a lone `</k>` all survive into the residue, where `STRAY_TAG` sees
  * them.
  */
-export function splitKeywords(philosophy: string): readonly AboutSegment[] {
-  if (STRAY_TAG.test(philosophy.replace(keywordTag(), ''))) {
+export function splitKeywords(source: string): readonly AboutSegment[] {
+  if (STRAY_TAG.test(source.replace(keywordTag(), ''))) {
     throw new Error(
-      `lib/team: unbalanced <k> in ${JSON.stringify(philosophy)} — every <k> needs its </k>, and the pairs never nest.`,
+      `lib/team: unbalanced <k> in ${JSON.stringify(source)} — every <k> needs its </k>, and the pairs never nest.`,
     );
   }
 
@@ -2352,12 +2268,12 @@ export function splitKeywords(philosophy: string): readonly AboutSegment[] {
   };
 
   let cursor = 0;
-  for (const match of philosophy.matchAll(keywordTag())) {
-    push(philosophy.slice(cursor, match.index), false);
+  for (const match of source.matchAll(keywordTag())) {
+    push(source.slice(cursor, match.index), false);
     push(match[1], true);
     cursor = match.index + match[0].length;
   }
-  push(philosophy.slice(cursor), false);
+  push(source.slice(cursor), false);
 
   return segments;
 }

@@ -107,7 +107,7 @@
         "title": "Über {name}"
       },
       "courses": {
-        "eyebrow": "Fortbildung",
+        "eyebrow": "Stationen meines Weges zur Spezialisierung",
         "title": "Kurse und Spezialisierungen"
       },
       "stats": {
@@ -115,10 +115,6 @@
         "title": "Über die Jahre bestätigte Erfahrung",
         "lead": "Die Zahlen unten sagen in Kürze, wie wir arbeiten: sorgfältig, mit moderner Technik und mit echter Aufmerksamkeit für jeden Patienten.",
         "atLeast": "über"
-      },
-      "schedule": {
-        "title": "Wann Sie mich in der Praxis finden",
-        "closed": "Geschlossen"
       }
     }
   },

@@ -107,7 +107,7 @@
         "title": "{name} en quelques mots"
       },
       "courses": {
-        "eyebrow": "Formation continue",
+        "eyebrow": "Jalons de mon parcours de spécialisation",
         "title": "Cours et spécialisations"
       },
       "stats": {
@@ -115,10 +115,6 @@
         "title": "Une expérience confirmée dans le temps",
         "lead": "Les chiffres ci-dessous résument notre façon de travailler : avec soin, avec des technologies modernes et une attention sincère pour chaque patient.",
         "atLeast": "plus de"
-      },
-      "schedule": {
-        "title": "Quand me trouver à la clinique",
-        "closed": "Fermé"
       }
     }
   },

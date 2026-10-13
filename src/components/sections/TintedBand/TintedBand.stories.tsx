@@ -5,7 +5,8 @@ import { SectionHeading } from '@/components/sections/SectionHeading/SectionHead
 import { TintedBand } from './TintedBand';
 
 // The doctor page's lilac ground, alone — TWO stories: the everyday picture at
-// the laptop width with an unnamed band (DoctorProfile's shape), and the named
+// the laptop width with an unnamed band (the shape DoctorProfile drew on it
+// until 2026-10-13, CLAUDE.md §15.23 round 7), and the named
 // region at the phone width (DoctorStats' shape, D30). The export NAMES are
 // load-bearing — each one names a baseline file (`sections-tintedband--default`,
 // `sections-tintedband--named`), so renaming or adding an export re-records
@@ -19,7 +20,7 @@ import { TintedBand } from './TintedBand';
 // own (its strings are its consumers', §8.1), so there is nothing for §8.9's
 // transform to reach — flipping the toolbar to Pseudo over either story here
 // changes nothing, which is that sweep PASSING. The expansion stresses live
-// with the words, in DoctorProfile's and DoctorStats' stories. No German story
+// with the words, in DoctorStats' stories. No German story
 // either, for the same reason: `lang` would ride the native spread (the test
 // pins it), but a ground cannot hyphenate.
 //
@@ -100,7 +101,8 @@ const FIGURES = {
 
 /**
  * What a consumer puts on the ground — ITS rhythm (the `py` steps DoctorProfile
- * uses, on its own column: TintedBand's NO VERTICAL PADDING paragraph), ITS
+ * used on its own column until 2026-10-13: TintedBand's NO VERTICAL PADDING
+ * paragraph), ITS
  * opener at level 2, ITS prose in the full ink (9.7:1 on the tint, TintedBand's
  * D23 table). A plain component rather than a story arg per element, so both
  * stories hand over the same shape.
@@ -221,9 +223,10 @@ const expectTintedGround = async (
 
 /**
  * THE EVERYDAY PICTURE — the ground at the laptop width the §13 matrix
- * samples, holding what DoctorProfile holds in shape: an eyebrow and an <h2>
- * over two paragraphs of prose, with the consumer's own rhythm. The band is
- * UNNAMED, as DoctorProfile leaves it — a generic box, not a region.
+ * samples, holding what DoctorProfile held in shape until 2026-10-13: an
+ * eyebrow and an <h2> over two paragraphs of prose, with the consumer's own
+ * rhythm. The band is UNNAMED, as DoctorProfile left it — a generic box, not
+ * a region.
  *
  * The frame shows the whole ground at once: the lavender arriving out of the
  * page through the top fade, the tinted middle behind the words, and the tint

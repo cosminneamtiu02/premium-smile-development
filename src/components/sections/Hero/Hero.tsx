@@ -675,9 +675,9 @@ const groundClasses =
  * — the SAME ten stops with `var(--tint)` in place of `var(--color-page)`,
  * because the doctor page's lilac ground arrives and leaves the way the home
  * page's stage does. That ground is ONE component every lilac band composes
- * (DoctorProfile, DoctorStats — extracted from DoctorProfile in the
- * doctor-pages run's D29), so the curve has one other spelling, not one per
- * band. The pin lives on that side: TintedBand.test.tsx reads THIS constant
+ * (DoctorStats since 2026-10-13 — extracted from DoctorProfile, its first
+ * consumer, in the doctor-pages run's D29), so the curve has one other
+ * spelling, not one per band. The pin lives on that side: TintedBand.test.tsx reads THIS constant
  * through `?raw`, substitutes the variable and demands the two gradients
  * match, so retuning the curve here turns that suite red in the same
  * change-set instead of leaving two curves that only used to agree (G2 react,

@@ -631,14 +631,22 @@ for (const locale of ['ro', 'de'] as const) {
     // the heading and eyebrow from the individual dr page" — and, asked
     // whether the content under the titles should follow, "Whole page, like
     // Home". So a doctor's page is read beside Home at the same window. On a
-    // laptop or desktop every band opener — the biography, the courses, the
-    // tiles, the map — has Home's eyebrow and <h2>, to a twentieth of a pixel,
-    // and Home's left edge (the biography 32 design pixels outdented, D14; the
-    // tiles' opener centred, D30, so not compared); and everything under the
-    // openers is its design size × s: the name (the `hero` step's 1401 value,
-    // 65.04), the specialty, the credo card, a biography paragraph, a year, a
-    // course line, the tiles at 9/8, the week's card. On a phone and a touch
-    // tablet nothing is declared: every size is the theme's, Home's too.
+    // laptop or desktop every band opener — the tiles, the biography, the
+    // courses, the map — has Home's eyebrow and <h2>, to a twentieth of a
+    // pixel; the biography's and the map's stand on Home's left edge, and the
+    // courses' — beside the biography since round 7 (2026-10-13), in the
+    // band's second column — three fifths of the box less its 48-design-pixel
+    // gap, plus the gap, to the right of it: the biography's 3fr beside the
+    // courses' 2fr (the owner, the same evening: "like 20% wider"); and the
+    // two contents start level, the courses' list and the biography's
+    // paragraphs on one y ("to start at same y when they sit next to the
+    // other" — the band's subgrid). The tiles' opener is centred, D30, so not
+    // compared.
+    // Everything under the openers is its design size × s: the name (the
+    // `hero` step's 1401 value, 65.04), the specialty, the credo card, a
+    // biography paragraph, an idea of the courses, the tiles at 9/8. On a
+    // phone and a touch tablet nothing is declared: every size is the
+    // theme's, Home's too.
     test.use({ locale: BROWSER_LOCALE[locale] });
     onLaptopOnly();
 
@@ -693,10 +701,14 @@ for (const locale of ['ro', 'de'] as const) {
       readonly name: number;
       readonly specialty: number;
       readonly paragraph: number;
-      readonly year: number;
-      readonly line: number;
+      /** The first idea of the courses — one `<li>` per idea, no years since
+       *  2026-10-13 (CLAUDE.md §15.23 round 7). */
+      readonly idea: number;
+      /** Where the two contents start — the biography's paragraphs block and
+       *  the courses' list, untransformed boxes (the lit idea inside the
+       *  list is drawn at 1.04, so it is not the box compared). */
+      readonly starts: { readonly paragraphs: number; readonly ideas: number };
       readonly tiles: PageShape['tiles'];
-      readonly week: number;
     }
 
     /** The doctor page at one window, read off the built page. */
@@ -784,14 +796,15 @@ for (const locale of ['ro', 'de'] as const) {
             specialty: size(name?.nextElementSibling),
             // The biography region: its opener, then the paragraphs' block.
             paragraph: size(about?.lastElementChild?.querySelector('p')),
-            year: size(courses?.querySelector('h3')),
-            line: size(courses?.querySelector('li')),
+            idea: size(courses?.querySelector('li')),
+            starts: {
+              paragraphs:
+                about?.lastElementChild?.getBoundingClientRect().top ?? NaN,
+              ideas:
+                courses?.querySelector('ul')?.getBoundingClientRect().top ??
+                NaN,
+            },
             tiles,
-            week:
-              document
-                .querySelector('main dl')
-                ?.closest('section')
-                ?.getBoundingClientRect().width ?? NaN,
           };
         },
         { ...TITLES[locale], location: LOCATION_TITLE[locale] },
@@ -838,8 +851,12 @@ for (const locale of ['ro', 'de'] as const) {
             1,
           );
         }
-        // …on Home's left edge, the biography outdented 32 design pixels.
-        expect(doctor.openers.courses.left, 'courses left').toBeCloseTo(
+        // …the biography and the map on Home's left edge (no outdent since
+        // round 7), the courses at the second column's start: the band's box
+        // is the column capped at 96rem, its tracks 3fr and 2fr, 48 design
+        // pixels apart (sections/DoctorProfile's grid) — the second track
+        // begins 3/5 of the box less the gap, plus the gap, in.
+        expect(doctor.openers.about.left, 'biography left').toBeCloseTo(
           home.titleLeft,
           1,
         );
@@ -847,10 +864,17 @@ for (const locale of ['ro', 'de'] as const) {
           home.titleLeft,
           1,
         );
+        const box = Math.min(doctor.column, 1536);
+        const gap = 48 * s;
+        expect(doctor.openers.courses.left, 'courses left').toBeCloseTo(
+          home.titleLeft + (3 / 5) * (box - gap) + gap,
+          1,
+        );
+        // …and the two contents start level, whatever each opener's height.
         expect(
-          doctor.openers.about.left + 32 * s,
-          'the biography’s outdent',
-        ).toBeCloseTo(home.titleLeft, 1);
+          Math.abs(doctor.starts.ideas - doctor.starts.paragraphs),
+          'the courses and the paragraphs start level',
+        ).toBeLessThanOrEqual(0.5);
 
         // THE OPENER: the name, the specialty, the credo card's two steps
         // (its title on `band` against the card's own content box).
@@ -863,12 +887,11 @@ for (const locale of ['ro', 'de'] as const) {
           'the credo title',
         );
 
-        // UNDER THE OPENERS: a biography paragraph, a year, a course line,
-        // the week's one width, and the tiles at 9/8 — Home's tiles exactly.
+        // UNDER THE OPENERS: a biography paragraph, an idea of the courses —
+        // the same 18 design pixels, side by side — and the tiles at 9/8,
+        // Home's tiles exactly.
         near(doctor.paragraph, 18, 'a biography paragraph');
-        near(doctor.year, 30, 'a year');
-        near(doctor.line, 18, 'a course line');
-        near(doctor.week, 320, 'the week’s card');
+        near(doctor.idea, 18, 'an idea of the courses');
         expect(doctor.tiles).toHaveLength(4);
         for (const tile of doctor.tiles) {
           near(tile.sentence, DESIGN.tileSentence, 'the tile sentence');
@@ -913,9 +936,7 @@ for (const locale of ['ro', 'de'] as const) {
           );
           expect(doctor.specialty).toBe(14);
           expect(doctor.paragraph).toBe(18);
-          expect(doctor.year).toBe(30);
-          expect(doctor.line).toBe(18);
-          expect(doctor.week).toBe(Math.min(320, doctor.column));
+          expect(doctor.idea).toBe(18);
           // Counted first, so a reader that found no tile cannot pass the loop.
           expect(doctor.tiles).toHaveLength(4);
           for (const tile of doctor.tiles) expect(tile.sentence).toBe(16);

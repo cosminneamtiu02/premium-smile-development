@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
-import { DoctorCourses } from '@/components/sections/DoctorCourses/DoctorCourses';
 import {
   DoctorIntro,
   type DoctorIntroCredo,
@@ -15,16 +14,17 @@ import {
 } from '@/components/sections/DoctorStats/DoctorStats';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale, type Locale } from '@/i18n/locales';
-import { coursesByYear, doctors, type Doctor } from '@/lib/team/team';
+import { doctors, splitKeywords, type Doctor } from '@/lib/team/team';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { populateDoctorPage } from '../populate';
 import { toStatTiles } from '../stat-tiles';
 
 // Pages/Doctor — a real `/{locale}/team/{id}/` page as it ships: the opener
-// with its credo card, the tinted „Despre" band beside the schedule card, the
-// courses by year, the „în cifre" tiles and the map, at the six page-tier
-// widths (§13: Pages/* → 320 · 390 · 768 · 1280 · 1536 · 1920,
+// with its credo card, the „în cifre" tiles on the lilac band, the biography
+// — its key words set apart like the credo's — beside the courses — one idea
+// per dot, lit one by one — and the map, at the six page-tier widths (§13:
+// Pages/* → 320 · 390 · 768 · 1280 · 1536 · 1920,
 // tests/visual/stories.spec.ts).
 //
 // ── WHY A STORY-LOCAL TWIN AND NOT THE PAGE ITSELF. ./page.tsx is an async
@@ -36,49 +36,60 @@ import { toStatTiles } from '../stat-tiles';
 // `useTranslations` + `useLocale`.
 // What is NOT twinned is the mapping: both sides call the one
 // `populateDoctorPage` from ../populate.ts with the real `doctors`, so the
-// thing most likely to drift — which language, which person, which week,
-// which years — cannot, because there is only one copy of it.
+// thing most likely to drift — which language, which person, which course
+// ideas in which order — cannot, because there is only one copy of it.
 //
 // ── THIS IS A KEEP-IN-SYNC PAIR (§4's sharing table), written down rather than
 // assumed: the twin lives here, the original in ./page.tsx, and that file's
-// header points back at this one. Both must render the same five bands in the
-// same order (round 2's D18, extended by D33: DoctorIntro → DoctorProfile →
-// DoctorCourses → DoctorStats → ClinicLocation), fed by the same populator and
-// the same ../stat-tiles.tsx, with the same twelve `team.doctor.*` keys (D20,
-// D32, D37) — the about title taking the doctor's name as its ICU argument on
-// both sides. The plays pin exactly that from the outside, so a change on
-// either side that the other does not follow turns this suite red instead of
-// quietly photographing something the site no longer ships. The FUTURE SEAM
-// page.tsx marks between the tiles and the map (D19, the doctor's blog
-// articles) is marked here too: when that band lands, both files gain it in
-// the same change, and the region count and the heading census below move
-// with it.
+// header points back at this one. Both must render the same four bands in the
+// same order (CLAUDE.md §15.23 round 7, 2026-10-13: DoctorIntro → DoctorStats
+// → DoctorProfile → ClinicLocation, the courses inside DoctorProfile), fed by
+// the same populator and the same ../stat-tiles.tsx, with the same ten
+// `team.doctor.*` keys (D20, D32, round 2s) — the biography's title taking
+// the doctor's name as its ICU argument on both sides. The plays pin exactly
+// that from the outside, so a change on either side that the other does not
+// follow turns this suite red instead of quietly photographing something the
+// site no longer ships. The FUTURE SEAM page.tsx marks above the map (D19,
+// the doctor's blog articles) is marked here too: when that band lands, both
+// files gain it in the same change, and the region count and the heading
+// census below move with it.
 //
 // ── ONE DOCTOR, THE FIRST OF lib/team, and derived rather than named: this is
 // a page SHAPE, reused for every person the owner adds (his dispatch: „this
 // page as structure will be reused for more doctors"), so the story follows
 // the list instead of pinning a demo id that a real roster will retire. What
 // the picture is ABOUT is the structure — the cutout beside the name with the
-// credo card under it, the prose beside the week on the tint, the years down
-// the timeline, the tiles on the second tint, the map — not who is in it.
+// credo card under it, the tiles on the tint, the prose beside the course
+// ideas, the map — not who is in it.
 //
 // ── THE OWNER'S ADAPTABILITY RULE, PLAY-PINNED (round 2's D21, 2026-09-25:
 // "sections that are next to each other when in phone mode … must come one
-// above the other"). The plays read FOUR arrangements — the picture beside
-// the words, the „Despre" prose beside the schedule card, the stat tiles four
-// on a row, and the timeline, which since D34 is one year per row down the
-// left at every width and so votes by its column's width alone — and every
-// side-by-side one flips below ui/Container's `@3xl` step (48rem of column, a
-// ~960px window; the tiles fall to two per row, then one). Each band's suite
-// already proves its own flip; what only the PAGE can prove is that the four
-// flip TOGETHER, at one width, because all four stand in the same Container
-// gutter. So the plays measure all four, each in the branch its OWN measured
-// column puts it in (never the pinned width: the visual runner ignores the
-// pin and renders these same plays at all six widths), and then assert the
-// four branches agree. The pins make each branch non-vacuous in
-// the Vitest runner, which DOES honour them: Romanian at the laptop width
-// must have taken the beside branch, German at the smartphone width the
-// stacked one — tops under bottoms and shared left edges, not only pixels.
+// above the other"). The plays read THREE arrangements — the picture beside
+// the words, the stat tiles four on a row, and the biography beside the
+// courses (CLAUDE.md §15.23 round 7) — and every side-by-side one flips below
+// ui/Container's `@3xl` step (48rem of column, a ~960px window; the tiles fall
+// to two per row, then one). Each band's suite already proves its own flip;
+// what only the PAGE can prove is that the three flip TOGETHER, at one width,
+// because all three stand in the same Container gutter. So the plays measure
+// all three, each in the branch its OWN measured column puts it in (never the
+// pinned width: the visual runner ignores the pin and renders these same
+// plays at all six widths), and then assert the three branches agree. The
+// pins make each branch non-vacuous in the Vitest runner, which DOES honour
+// them: Romanian at the laptop width must have taken the beside branch,
+// German at the smartphone width the stacked one — tops under bottoms and
+// shared left edges, not only pixels.
+//
+// ── THE LIGHT, READ FROM THE OUTSIDE (CLAUDE.md §15.23 round 7 — the owner:
+// "they have to circle automatically through the ideas and highlight them
+// one by one"). The courses' island lights ONE idea at a time by itself and
+// holds the light while its rail is off screen (sections/DoctorCourses/
+// CourseTimeline's THE OFF-SCREEN HOLD). This story never scrolls, so the
+// plays find exactly ONE idea lit once the island has started — the FIRST
+// wherever the rail stands below the first screen — and none under reduced
+// motion, where the island never starts (the neutral rail; the pixel net's
+// projects emulate reduced motion, the Vitest storybook project does not).
+// When the light moves on, and to which idea, is the island's own suite's
+// business.
 //
 // ── THE 404 BRANCH IS NOT A STORY. `populateDoctorPage` returns `undefined`
 // for a slug nobody wears and the page answers with `notFound()`, which
@@ -103,7 +114,7 @@ import { toStatTiles } from '../stat-tiles';
 // the built export, and „Über die Jahre bestätigte Erfahrung" has worn
 // `hyphens-none` since 2026-10-01); the „Despre" paragraphs are built out of
 // compounds like „Zahnfleischerkrankungen" and „Behandlungsmöglichkeiten",
-// which must break at syllable points instead of pushing the tint open; and
+// which must break at syllable points instead of pushing the column open; and
 // the course lines are the kind of long German sentence §8.4's expansion
 // headroom was written for. Every story PINS ITS LOCALE with `globals`: the
 // locale toolbar is manager state and the visual runner opens each story by
@@ -119,7 +130,7 @@ import { toStatTiles } from '../stat-tiles';
 // doctor card's one link leads HERE). A provider nobody asks for would only put a
 // context in the picture that the page does not have.
 //
-// layout 'fullscreen' because all five bands are full-bleed and Container owns
+// layout 'fullscreen' because all four bands are full-bleed and Container owns
 // the gutter: Storybook's default canvas padding would add a second inset on
 // top of the clamp and put the story's ground and the bands' margins on two
 // rulers.
@@ -142,9 +153,10 @@ const DOCTOR = firstDoctor();
 
 /** KEEP-IN-SYNC twin of ./page.tsx — see this file's header. Every comment
  *  justifying this markup lives in that file (why the opener owns the <h1>,
- *  why it no longer passes an `align` seat, why the about title takes the name as
- *  an argument, the `isLocale` narrowing); duplicating the arguments here
- *  would give them two homes and no owner. */
+ *  why it no longer passes an `align` seat, why the numbers come second, why
+ *  the biography's title takes the name as an argument, the `isLocale`
+ *  narrowing); duplicating the arguments here would give them two homes and
+ *  no owner. */
 function DoctorPageBands(): ReactElement {
   const t = useTranslations('team');
   const locale = useLocale();
@@ -152,8 +164,7 @@ function DoctorPageBands(): ReactElement {
     throw new Error(`doctor story: unknown locale "${locale}"`);
 
   const page = populateDoctorPage(locale, DOCTOR.id, {
-    renderQuote: (segments) => <Keywords segments={segments} />,
-    closedLabel: t('doctor.schedule.closed'),
+    renderKeywords: (segments) => <Keywords segments={segments} />,
   });
   // The page answers `notFound()` here; the twin throws, because a story that
   // rendered nothing would photograph a blank canvas and pass.
@@ -176,30 +187,13 @@ function DoctorPageBands(): ReactElement {
           } satisfies DoctorIntroCredo
         }
       />
-      <DoctorProfile
-        about={{
-          eyebrow: t('doctor.about.eyebrow'),
-          title: t('doctor.about.title', { name: page.intro.name }),
-          paragraphs: page.profile.paragraphs,
-        }}
-        schedule={{
-          title: t('doctor.schedule.title'),
-          rows: page.profile.rows,
-        }}
-      />
-      <DoctorCourses
-        eyebrow={t('doctor.courses.eyebrow')}
-        title={t('doctor.courses.title')}
-        groups={page.courses}
-      />
-      {/* THE „ÎN CIFRE" TILES (D30, D33): the second lilac band, on the same
-          TintedBand ground as the profile. The numbers come through as
-          numbers — the island counts up to them — and are printed by
-          `Intl.NumberFormat` in the visitor's language (§8.3), never by the
-          band; the icon ids become glyphs in ../stat-tiles.tsx, the one
-          mapping this twin and the page share (G2-R2 tier 3). `scaled`, as
-          on the page (CLAUDE.md §15.32 round 4; ./page.tsx's THE WHOLE PAGE
-          IN THE BAND SCALE). */}
+      {/* THE „ÎN CIFRE" TILES (D30), second since 2026-10-13, on the lilac
+          TintedBand ground: the numbers come through as numbers — the island
+          counts up to them — and are printed by `Intl.NumberFormat` in the
+          visitor's language (§8.3), never by the band; the icon ids become
+          glyphs in ../stat-tiles.tsx, the one mapping this twin and the page
+          share (G2-R2 tier 3). `scaled`, as on the page (CLAUDE.md §15.32
+          round 4; ./page.tsx's THE WHOLE PAGE IN THE BAND SCALE). */}
       <DoctorStats
         scaled
         eyebrow={t('doctor.stats.eyebrow')}
@@ -209,9 +203,21 @@ function DoctorPageBands(): ReactElement {
         tiles={toStatTiles(page.stats)}
         format={new Intl.NumberFormat(locale).format}
       />
+      <DoctorProfile
+        about={{
+          eyebrow: t('doctor.about.eyebrow'),
+          title: t('doctor.about.title', { name: page.intro.name }),
+          paragraphs: page.profile.paragraphs,
+        }}
+        courses={{
+          eyebrow: t('doctor.courses.eyebrow'),
+          title: t('doctor.courses.title'),
+          items: page.profile.courses,
+        }}
+      />
       {/* ── FUTURE SEAM (run ledger D19): the doctor's blog-articles band,
-          between the tiles and the map when it exists — see ./page.tsx,
-          which carries the full note. */}
+          above the map when it exists — see ./page.tsx, which carries the
+          full note. */}
       {/* `scaled`, as on the page: the map band Home and Team draw (CLAUDE.md
           §15.32 round 3; ./page.tsx carries the owner's words). */}
       <ClinicLocation scaled />
@@ -307,9 +313,9 @@ const settled = async (root: HTMLElement): Promise<void> => {
  * nothing between a band's grid and its Container is one. Found by the
  * computed `container-type` rather than by counting parents, so a wrapper a
  * band adds tomorrow does not silently move the measurement. The walk starts
- * ABOVE the element on purpose: the schedule card is a ui/Card, which is a
- * container of its own, and its arrangement is decided by the column it
- * stands in, not by itself.
+ * ABOVE the element on purpose: a box that is a size container itself — a
+ * ui/Card is one — has its arrangement decided by the column it stands in,
+ * never by its own width.
  */
 const columnOf = (element: Element): HTMLElement => {
   for (let node = element.parentElement; node; node = node.parentElement) {
@@ -322,7 +328,7 @@ const columnOf = (element: Element): HTMLElement => {
  * THE WIDTH A CONTAINER QUERY ASKS: the column's CONTENT box, so any padding
  * and border come off the FRACTIONAL border-box width (`clientWidth` is an
  * integer and would disagree with the engine inside a sub-pixel window around
- * a step). One function for every arrangement below, so the four verdicts
+ * a step). One function for every arrangement below, so the three verdicts
  * measure their columns the same way (G2-R2 tier 3, typescript F2 — the
  * tiles once read the border box off a class-name lookup of their own).
  */
@@ -351,21 +357,24 @@ const sitsBeside = (element: Element): boolean =>
  *  bare "cannot read properties of null" somewhere further down. */
 const parentOf = (element: Element): HTMLElement => {
   const parent = element.parentElement;
-  if (!parent) throw new Error('doctor story: a timeline box lost its parent');
+  if (!parent) throw new Error('doctor story: a box lost its parent');
   return parent;
 };
 
-// ── WHAT THE FOUR `expect…` HELPERS BELOW RE-DERIVE, ON PURPOSE. Each one
-// measures more than its D21 verdict: the opener's third, floor and shared
-// left edge (D62–D64; this lane re-spelled them here, as the cost below
-// says), the schedule card's 20rem and its vertical middle, the timeline's gap, line and
-// rest paint, the tiles' grid. Those are section pins the bands' own suites
-// already hold; they are spelled again here because the owner asked for
-// page-level proof of rounds 2e–2k on the page as it ships. The cost is
-// recorded in G2-R2 tier 3, react F2: a band builder who changes one of those
-// numbers turns THIS file red too, a file the one-agent-per-folder rule keeps
-// out of his lane — a future lane may thin each helper to its D21 verdict and
-// a "not collapsed" check.
+// ── WHAT THE `expect…` HELPERS BELOW RE-DERIVE, ON PURPOSE. `expectOpener`
+// measures more than its D21 verdict — the opener's third, floor and shared
+// left edge (D62–D64; that lane re-spelled them here) — and `expectStats` the
+// tiles' grid: section pins the bands' own suites already hold, spelled again
+// because the owner asked for page-level proof of rounds 2e–2k on the page as
+// it ships. The cost is recorded in G2-R2 tier 3, react F2: a band builder who
+// changes one of those numbers turns THIS file red too, a file the
+// one-agent-per-folder rule keeps out of his lane. The two helpers written for
+// round 7 (2026-10-13) take the lever that record named: `expectProfile` holds
+// its D21 verdict, a "not collapsed" check and the owner's left-and-right
+// (the biography's 3fr beside the courses' 2fr, their contents starting
+// level), `expectCourses` what the owner asked of
+// the courses (the ideas in order, no year, one lit) — and neither re-spells
+// a length a band's own suite owns.
 
 /**
  * THE NAME'S LINES (D62, the owner, 2026-10-01: "in a single line on longest
@@ -546,211 +555,13 @@ const expectOpener = async (
 };
 
 /**
- * THE TINTED BAND (D14, D21, round 2e, D37). Beside: the schedule card sits
- * right of every paragraph and is CENTRED on the opener + prose block — the
- * biography is a named region and the row's tall item since G2-R2 tier 2
- * (a11y F2), the card `self-center` beside it in a ONE-row grid, its vertical
- * middle on the block's middle (round 2g, the owner's "center it also
- * vertically in the lila section"; round 2e's "level with the first
- * paragraph" and round 2g's two-row placement are history — the geometry is
- * pixel-identical, measured). Stacked: the card starts at or
- * under the last paragraph's bottom, ONE width of 20rem where the column allows it (D53) and
- * centred under the prose — it follows the column only where the column is narrower.
- */
-const expectProfile = async (
-  aboutHeading: HTMLElement,
-  paragraphs: readonly HTMLElement[],
-  schedule: HTMLElement,
-): Promise<Branch> => {
-  const card = schedule.getBoundingClientRect();
-  const last = paragraphs.at(-1)?.getBoundingClientRect();
-  if (!last) throw new Error('doctor story: the about band has no paragraph');
-  await expect(card.height).toBeGreaterThan(0);
-  await expect(last.height).toBeGreaterThan(0);
-
-  if (sitsBeside(schedule)) {
-    for (const paragraph of paragraphs) {
-      await expect(card.left).toBeGreaterThanOrEqual(
-        paragraph.getBoundingClientRect().right,
-      );
-    }
-    // The block the card centres on runs from the OPENER's top (the
-    // SectionHeading root — the eyebrow's top, not the h2's) to the last
-    // paragraph's bottom; the tinted box is TintedBand's middle box — the
-    // band's root <section> (the nearest one around the biography's own
-    // <section>), second child after the fade in — and its middle is the same
-    // line (symmetric `py`). Found from the band's root, never by counting
-    // parents up from the card: §15.32 round 4 put a wrapper between the
-    // Container and the grid.
-    const opener = aboutHeading.parentElement?.getBoundingClientRect();
-    const band = aboutHeading
-      .closest('section')
-      ?.parentElement?.closest('section');
-    const tinted = band?.children[1]?.getBoundingClientRect();
-    if (!opener || !tinted)
-      throw new Error('doctor story: the about band lost its boxes');
-    const cardMiddle = (card.top + card.bottom) / 2;
-    await expect(
-      Math.abs(cardMiddle - (opener.top + last.bottom) / 2),
-    ).toBeLessThanOrEqual(1);
-    await expect(
-      Math.abs(cardMiddle - (tinted.top + tinted.bottom) / 2),
-    ).toBeLessThanOrEqual(1);
-    // Not vacuous: the card sits INSIDE the block at both ends.
-    await expect(card.top).toBeGreaterThan(opener.top + 1);
-    await expect(last.bottom).toBeGreaterThan(card.bottom + 1);
-    // ONE WIDTH, 20rem (round 2k, D53: "fixed and remain fixed") — 320
-    // design pixels, so the theme's 20rem outside the scale and 320 × s
-    // inside it (§15.32 round 4: the one width holds in the design's pixel).
-    await expect(
-      Math.abs(card.width - 320 * unitAt(schedule)),
-    ).toBeLessThanOrEqual(1);
-    return 'beside';
-  }
-  await expect(card.top).toBeGreaterThanOrEqual(last.bottom);
-  // Stacked: the same 20rem wherever the column allows it, centred under the
-  // prose; only a column narrower than 20rem shrinks it — since 2026-10-09's
-  // phone gutter only the narrowest phones' is (288px at 320; at 390 the
-  // column is 351px, so the card keeps its 20rem, centred), where every phone
-  // column was before (312px at 390, 256 at 320). Never in the scale: a
-  // stacked band is under the step (`unitAt` is then the theme's own pixel).
-  const stackedColumn = columnOf(schedule).getBoundingClientRect();
-  await expect(
-    Math.abs(
-      card.width - Math.min(320 * unitAt(schedule), stackedColumn.width),
-    ),
-  ).toBeLessThanOrEqual(1);
-  await expect(
-    Math.abs(
-      (card.left + card.right) / 2 -
-        (stackedColumn.left + stackedColumn.right) / 2,
-    ),
-  ).toBeLessThanOrEqual(1);
-  return 'stacked';
-};
-
-/**
- * THE COURSES (D15, D21, D28, D34, D35, D44) — the CV timeline as round 2j
- * left it: one year per row down the LEFT at every width, the rail a column
- * of groups 5rem apart, and the line PER GROUP — each group's own stretch
- * from its dot's centre to the next dot's centre (the last to its own box),
- * 1.5 spacing units in (6px at the 16px root), so the rail still reads as
- * one seamless line with a dot on it at every year; the years on Heading's
- * `section` step; and, at rest, NOTHING lit — every group faded to 0.65,
- * every stretch and dot grey — because the CourseTimeline island marks a
- * current year only once the visitor has scrolled one to the pill's landing
- * line (and this story has not scrolled).
- */
-const expectCourses = async (
-  years: readonly HTMLElement[],
-): Promise<Branch> => {
-  const groups = years.map(parentOf);
-  // group → the rail (the column of groups itself since D44)
-  const railEl = parentOf(groups[0]);
-  const rail = railEl.getBoundingClientRect();
-  // The timeline's lengths in its band's design pixel (`unitAt`, §15.32
-  // round 4): the line 6 in, the groups 80 apart, a stretch stopping 4 short
-  // of the next group, the years 30 tall — the theme's own rem outside the
-  // scale, the same numbers × s inside it.
-  const unit = unitAt(railEl);
-  const lineX = rail.left + 6 * unit;
-  const GAP = 80 * unit;
-  const GREY = 'rgb(216, 212, 207)';
-
-  const boxes = groups.map((group) => group.getBoundingClientRect());
-  const stretches = groups.map((group) =>
-    group.children[0].getBoundingClientRect(),
-  );
-  // THE PREMISE of every "at rest" check below (round 2k, D49): the island's
-  // line is the viewport's middle, so a year lights the moment its top passes
-  // `innerHeight / 2`; this story has not scrolled and the timeline sits far
-  // below the first screen, so the first year's top must still be under it.
-  await expect(boxes[0].top).toBeGreaterThan(window.innerHeight / 2 + 1);
-  for (const [index, box] of boxes.entries()) {
-    await expect(box.height).toBeGreaterThan(0);
-    await expect(Math.abs(box.left - rail.left)).toBeLessThanOrEqual(1);
-    if (index > 0) {
-      await expect(
-        Math.abs(box.top - boxes[index - 1].bottom - GAP),
-      ).toBeLessThanOrEqual(1);
-    }
-    const stretch = stretches[index];
-    const dotEl = groups[index].children[1];
-    const dot = dotEl.getBoundingClientRect();
-    const year = years[index].getBoundingClientRect();
-    await expect(dot.width).toBeGreaterThan(0);
-    await expect(stretch.width).toBeGreaterThan(0);
-    // The stretch and the dot share the line's x; the stretch starts at the
-    // dot's centre and ends 0.25rem ABOVE the next group's top — or, last, at
-    // its own box — so nothing of the line hangs above the first dot and a
-    // short break sits above every next dot (round 2k, D50: a lit stretch
-    // never runs under the next subsection's dot).
-    await expect(
-      Math.abs(stretch.left + stretch.width / 2 - lineX),
-    ).toBeLessThanOrEqual(1);
-    await expect(
-      Math.abs(dot.left + dot.width / 2 - lineX),
-    ).toBeLessThanOrEqual(1);
-    const dotY = dot.top + dot.height / 2;
-    await expect(Math.abs(stretch.top - dotY)).toBeLessThanOrEqual(1);
-    const nextBox = boxes[index + 1];
-    await expect(
-      Math.abs(
-        stretch.bottom - (nextBox ? nextBox.top - 4 * unit : box.bottom),
-      ),
-    ).toBeLessThanOrEqual(1);
-    if (nextBox) {
-      // …and the next dot's page-coloured ring (4px outside its box, which
-      // sits `top-3` under the group's top) starts at least 8px lower.
-      const nextDot = groups[index + 1].children[1].getBoundingClientRect();
-      await expect(nextDot.top - 4 - stretch.bottom).toBeGreaterThanOrEqual(8);
-    }
-    await expect(dotY).toBeGreaterThanOrEqual(year.top);
-    await expect(dotY).toBeLessThanOrEqual(year.bottom);
-    // The year on the `section` step, bold in either tone (D44a, D16): 30
-    // design pixels (`unit` above).
-    await expect(
-      Math.abs(parseFloat(getComputedStyle(years[index]).fontSize) - 30 * unit),
-    ).toBeLessThanOrEqual(0.05);
-    await expect(
-      Number(getComputedStyle(years[index]).fontWeight),
-    ).toBeGreaterThanOrEqual(700);
-    // AT REST the whole subsection recedes: faded, grey stretch, grey dot.
-    await expect(getComputedStyle(groups[index]).opacity).toBe('0.65');
-    await expect(
-      getComputedStyle(groups[index].children[0]).backgroundColor,
-    ).toBe(GREY);
-    await expect(getComputedStyle(dotEl).backgroundColor).toBe(GREY);
-  }
-
-  // AT REST NOTHING IS LIT (D35): the island's spy runs with
-  // `topFallback: 'none'`, and this story has not scrolled — the timeline is
-  // below the first screen — so no group carries the current mark, and the
-  // static HTML never does (§16 rule 2). The branch is still reported, read
-  // off the timeline's column, so the D21 "every arrangement agrees" check
-  // keeps the timeline's vote.
-  await expect(railEl.querySelectorAll('[data-current]')).toHaveLength(0);
-  return sitsBeside(groups[0]) ? 'beside' : 'stacked';
-};
-
-/** The five `team.doctor.*` groups a play reads back, plus the map's title. */
-type PageWords = {
-  philosophy: { eyebrow: string; title: string };
-  about: { eyebrow: string; title: string };
-  schedule: { title: string };
-  courses: { eyebrow: string; title: string };
-  stats: { eyebrow: string; title: string; lead: string; atLeast: string };
-  location: string;
-};
-
-/**
  * THE STATS TILES (D30, D21) — the „în cifre" band's four tiles: four on one
  * row from the Container's `@3xl` (tops level, lefts increasing), two per row
  * from its `@md` (28rem — pairs level, the second pair under the first), one
  * column below (each under the previous, one left edge). The tablet state is
  * reported as 'stacked' to the page's branch set: it is the not-beside
- * branch, exactly as the other three bands report it at that width. The
- * column is found and measured exactly as the other three find theirs —
+ * branch, exactly as the other two arrangements report it at that width. The
+ * column is found and measured exactly as the other two find theirs —
  * `columnOf`, then `contentWidthOf` — never by a class name (G2-R2 tier 3,
  * typescript F2: a named container or a padded wrapper would have left the
  * old lookup with `null` and a bare TypeError).
@@ -777,6 +588,94 @@ const expectStats = async (tiles: readonly HTMLElement[]): Promise<Branch> => {
   return perRow === 4 ? 'beside' : 'stacked';
 };
 
+/**
+ * THE BIOGRAPHY BESIDE THE COURSES (CLAUDE.md §15.23 round 7, D21 — the
+ * owner, 2026-10-13: "on the left biography and on the right the thing with
+ * the "Courses and specialisations""). Beside: the biography's 3fr beside the
+ * courses' 2fr (the owner, the same evening: "like 20% wider"), the courses
+ * right of the biography, both regions starting at the grid's one top, so the
+ * two openers stand level — and the two contents too, by the band's subgrid
+ * (sections/DoctorProfile's header).
+ * Stacked: the courses under the biography, on its left edge.
+ */
+const expectProfile = async (
+  biography: HTMLElement,
+  courses: HTMLElement,
+): Promise<Branch> => {
+  const left = biography.getBoundingClientRect();
+  const right = courses.getBoundingClientRect();
+  // A collapsed box would satisfy every comparison below by accident.
+  await expect(left.height).toBeGreaterThan(0);
+  await expect(right.height).toBeGreaterThan(0);
+
+  if (sitsBeside(biography)) {
+    await expect(right.left).toBeGreaterThan(left.right);
+    await expect(Math.abs(right.top - left.top)).toBeLessThanOrEqual(1);
+    // 3fr beside 2fr: the biography 1.5 × the courses (the owner's "like 20%
+    // wider" — 1.2 × the equal half it had, the courses 0.8 ×).
+    await expect(left.width / right.width).toBeCloseTo(1.5, 2);
+    // …and the two CONTENTS start level (the owner: "to start at same y when
+    // they sit next to the other"): the paragraphs' block and the courses'
+    // list, untransformed boxes in the band's second row.
+    const paragraphs = biography.lastElementChild?.getBoundingClientRect();
+    const list = courses.querySelector('ul')?.getBoundingClientRect();
+    await expect(paragraphs, 'the biography’s paragraphs').toBeDefined();
+    await expect(list, 'the courses’ list').toBeDefined();
+    await expect(
+      Math.abs((list?.top ?? NaN) - (paragraphs?.top ?? NaN)),
+    ).toBeLessThanOrEqual(0.5);
+    return 'beside';
+  }
+  await expect(right.top).toBeGreaterThanOrEqual(left.bottom);
+  await expect(Math.abs(right.left - left.left)).toBeLessThanOrEqual(1);
+  return 'stacked';
+};
+
+/**
+ * THE COURSES (CLAUDE.md §15.23 round 7 — the owner, 2026-10-13: "no year
+ * anymore. jsut dot ideas, and each section will be jsut one dot … they have
+ * to circle automatically through the ideas and highlight them one by one").
+ * ONE list of the doctor's ideas, in lib/team's order, each visible, and NO
+ * year: the region holds no <h3> — an idea is a list item, never a heading.
+ * THE LIGHT (the header's paragraph of that name): exactly ONE idea carries
+ * `data-current` once the island has started — the first while the rail
+ * stands below the first screen, where the light holds — and none under
+ * reduced motion, where the island never starts. `waitFor`, because the
+ * first light comes one render after mount.
+ */
+const expectCourses = async (
+  courses: HTMLElement,
+  lines: readonly string[],
+): Promise<void> => {
+  await expect(
+    within(courses).queryAllByRole('heading', { level: 3 }),
+  ).toHaveLength(0);
+  const rail = within(courses).getByRole('list');
+  const ideas = within(rail).getAllByRole('listitem');
+  await expect(ideas.map((idea) => idea.textContent)).toEqual([...lines]);
+  for (const idea of ideas) await expect(idea).toBeVisible();
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  await waitFor(
+    () =>
+      expect(rail.querySelectorAll('[data-current]')).toHaveLength(
+        reduced ? 0 : 1,
+      ),
+    { timeout: 3_000 },
+  );
+  if (!reduced && rail.getBoundingClientRect().top >= window.innerHeight)
+    await expect(ideas[0]).toHaveAttribute('data-current');
+};
+
+/** The four `team.doctor.*` groups a play reads back, plus the map's title. */
+type PageWords = {
+  philosophy: { eyebrow: string; title: string };
+  about: { eyebrow: string; title: string };
+  courses: { eyebrow: string; title: string };
+  stats: { eyebrow: string; title: string; lead: string; atLeast: string };
+  location: string;
+};
+
 /** A band's opener, as SectionHeading draws it: the eyebrow is the <p> right
  *  before the heading, inside the same root. */
 const eyebrowOf = (title: HTMLElement): HTMLElement => {
@@ -800,27 +699,31 @@ const fontSizeOf = (element: Element): number =>
  * 96rem) / 1106, Home's; on a phone or a touch tablet none does and every
  * size is the theme's (§7). So, in both cases, every band opener is Home's:
  * its eyebrow 14 design pixels and its <h2> on the `band` step (36, or 30 in
- * a column under 28rem — only ever outside the scale), and the two card
- * openers the same steps against their own card. Inside the scale the band
- * openers also stand on ONE left edge — the column's — but for the tinted
- * band's prose, 32 design pixels outdented (D14), and the tiles' opener,
- * centred (D30); and the name, the page's <h1>, is the `hero` step's value at
- * the owner's 1401 window, 16.26 spacing steps (DoctorIntro's THE BAND
- * SCALE). Outside it the name is the `hero` clamp itself. Returns whether the
- * page was in the scale, so a story can say which it expects.
+ * a column under 28rem — only ever outside the scale), and the credo card's
+ * opener the same steps against its own card. Inside the scale the
+ * biography's and the map's openers also stand on ONE left edge — the
+ * column's; the biography's prose outdent left with the lilac on 2026-10-13
+ * (CLAUDE.md §15.23 round 7) — the courses' at the second column's start
+ * (sections/DoctorProfile's THE BIOGRAPHY THREE FIFTHS — its 3fr beside the
+ * courses' 2fr, 48 design pixels apart), and
+ * the tiles' centred (D30); and the name, the page's <h1>, is the `hero`
+ * step's value at the owner's 1401 window, 16.26 spacing steps (DoctorIntro's
+ * THE BAND SCALE). Outside it the name is the `hero` clamp itself. Returns
+ * whether the page was in the scale, so a story can say which it expects.
  */
 const expectScale = async (parts: {
   name: HTMLElement;
   position: HTMLElement;
   credo: HTMLElement;
-  about: HTMLElement;
-  schedule: HTMLElement;
-  courses: HTMLElement;
   stats: HTMLElement;
+  about: HTMLElement;
+  biography: HTMLElement;
+  courses: HTMLElement;
   map: HTMLElement;
 }): Promise<boolean> => {
   // ui/Container's column — the about title's nearest size container: nothing
-  // between the two is one (DoctorProfile's wrapper carries no `@container`).
+  // between the two is one (DoctorProfile's rhythm box and grid carry no
+  // `@container`).
   const column = columnOf(parts.about).getBoundingClientRect().width;
   const regime =
     window.matchMedia('(pointer: fine)').matches &&
@@ -846,10 +749,9 @@ const expectScale = async (parts: {
     within(region).getAllByRole('heading', { level: 2 })[0];
   const openers = [
     ['the credo card', titleOf(parts.credo)],
-    ['the biography', parts.about],
-    ['the week', titleOf(parts.schedule)],
-    ['the courses', titleOf(parts.courses)],
     ['the tiles', titleOf(parts.stats)],
+    ['the biography', parts.about],
+    ['the courses', titleOf(parts.courses)],
     ['the map', titleOf(parts.map)],
   ] as const;
 
@@ -859,15 +761,13 @@ const expectScale = async (parts: {
     await near(unitAt(element), unit, 'a band’s design pixel', 0.0001);
   }
 
-  // The band openers, and the two cards': the eyebrow 14, the title on the
-  // `band` step against its own nearest container (a card's for the two
-  // cards — ui/Card is one).
+  // The band openers, and the credo card's: the eyebrow 14, the title on the
+  // `band` step against its own nearest container (the card's for the credo
+  // card — ui/Card is one).
   for (const [what, title] of openers) {
     const step = contentWidthOf(columnOf(title)) >= 28 * rem() ? 36 : 30;
     await near(fontSizeOf(title), step * unit, `${what}’s title`);
-    // The week's card has no eyebrow row (D37).
-    if (what !== 'the week')
-      await near(fontSizeOf(eyebrowOf(title)), 14 * unit, `${what}’s eyebrow`);
+    await near(fontSizeOf(eyebrowOf(title)), 14 * unit, `${what}’s eyebrow`);
   }
   await near(fontSizeOf(parts.position), 14 * unit, 'the specialty');
 
@@ -883,16 +783,24 @@ const expectScale = async (parts: {
   );
 
   if (regime) {
-    // ONE LEFT EDGE: the courses' and the map's titles on the band's own edge
-    // — the column's, and past the cap the capped box's — the biography's 32
-    // design pixels before it (D14's outdent).
-    const courses = titleOf(parts.courses).getBoundingClientRect().left;
+    // ONE LEFT EDGE: the biography's and the map's titles on the band's own
+    // edge — the column's, and past the cap the capped box's — and the
+    // profile's grid on it too, so the courses' title stands at the start of
+    // its second column: three fifths of the grid less the 48-design-pixel
+    // gap, plus the gap, in (the 3fr/2fr split).
     const map = titleOf(parts.map).getBoundingClientRect().left;
-    await near(courses, map, 'the courses’ and the map’s left edge', 1);
     await near(
-      parts.about.getBoundingClientRect().left + 32 * unit,
-      courses,
-      'the biography’s outdent',
+      parts.about.getBoundingClientRect().left,
+      map,
+      'the biography’s and the map’s left edge',
+      1,
+    );
+    const grid = parentOf(parts.biography).getBoundingClientRect();
+    await near(grid.left, map, 'the profile’s grid on the map’s edge', 1);
+    await near(
+      titleOf(parts.courses).getBoundingClientRect().left,
+      grid.left + (3 / 5) * (grid.width - 48 * unit) + 48 * unit,
+      'the courses’ opener at the second column’s start',
       1,
     );
   }
@@ -953,72 +861,16 @@ const playPage =
     await expect(bold).toBeVisible();
     await expect(canvasElement.textContent).not.toContain('<k>');
 
-    // THE „DESPRE" HALF (D14): a region of its own since G2-R2 tier 2 (a11y
-    // F2 — the biography was the one block a landmark walk skipped), named
-    // by an <h2> whose ICU argument is the doctor's name — resolved here the
-    // way next-intl resolves it on the page — and every paragraph of
-    // lib/team's `about`, visible, in order.
-    const aboutTitle = words.about.title.replace('{name}', doctor.name);
-    const biography = canvas.getByRole('region', { name: aboutTitle });
-    const about = within(biography).getByRole('heading', {
-      level: 2,
-      name: aboutTitle,
-    });
-    // THE NAME IS NEVER SPLIT (sections/DoctorProfile, 2026-09-30): this is
-    // the one band title that carries a person's name, and under the
-    // site-wide `hyphens: auto` Chromium broke „(Sa-bău)" and „Ele-na" on
-    // phones (measured on the built pages). The opt-out rides the opener's
-    // root and inherits to the <h2>; read here as the COMPUTED value, which
-    // is what the browser breaks lines by — a class name alone could sit on
-    // the wrong element.
-    await expect(getComputedStyle(about).hyphens).toBe('none');
-    await expect(canvas.getByText(words.about.eyebrow)).toBeVisible();
-    const paragraphs = doctor.about.map((text) => canvas.getByText(text));
-    for (const paragraph of paragraphs) await expect(paragraph).toBeVisible();
-    for (const [index, paragraph] of paragraphs.entries()) {
-      if (index > 0)
-        await expect(precedes(paragraphs[index - 1], paragraph)).toBe(true);
-    }
-
-    // THE SCHEDULE CARD: a named region, no eyebrow, and seven rows — the
-    // count is the page's proof that it printed a CALENDAR and not just the
-    // days the doctor works (lib/hours' own rule, reached from here).
-    const schedule = canvas.getByRole('region', {
-      name: words.schedule.title,
-    });
-    // No eyebrow row in the card any more (round 2g, D37): the only <p> a
-    // SectionHeading emits is its eyebrow, and the week is a <dl>.
-    await expect(schedule.querySelectorAll('p')).toHaveLength(0);
-    await expect(schedule.querySelectorAll('dt')).toHaveLength(7);
-    await expect(schedule.querySelectorAll('dd')).toHaveLength(7);
-
-    // THE COURSES (D15): a named region, one <h3> per year of lib/team's own
-    // grouping — the labels plain digits, newest first — and every line of
-    // every year visible under it.
-    const courses = canvas.getByRole('region', { name: words.courses.title });
-    await expect(
-      within(courses).getByText(words.courses.eyebrow),
-    ).toBeVisible();
-    const groups = coursesByYear(DOCTOR, locale);
-    const years = within(courses).getAllByRole('heading', { level: 3 });
-    await expect(years.map((year) => year.textContent)).toEqual(
-      groups.map((group) => String(group.year)),
-    );
-    await expect(
-      groups.every((group, index) =>
-        index === 0 ? true : groups[index - 1].year > group.year,
-      ),
-    ).toBe(true);
-    for (const line of groups.flatMap((group) => group.courses))
-      await expect(within(courses).getByText(line)).toBeVisible();
-
-    // THE „ÎN CIFRE" TILES (D30/D32): a named region with its eyebrow and
-    // lead, one <h3> per stat row of lib/team in the doctor's own order, and
-    // — from the FIRST frame, before any count-up — the FINAL value of every
-    // number: SEEN as „3.000+" in the aria-hidden span, HEARD as the page's
-    // `atLeast` word before the number („peste 3.000") in the island's twin, the
-    // number alone when the row has no suffix (round 2s, owner 2026-09-27) —
-    // both formatted the way the page formats them.
+    // THE „ÎN CIFRE" TILES (D30/D32), second since 2026-10-13: a named region
+    // with its eyebrow and lead, one <h3> per stat row of lib/team in the
+    // doctor's own order, and the FINAL value of every number: HEARD as the
+    // page's `atLeast` word before the number („peste 3.000") in the island's
+    // twin from the first frame, the number alone when the row has no suffix
+    // (round 2s, owner 2026-09-27), and SEEN as „3.000+" in the aria-hidden
+    // span — at once wherever no count-up runs, once the 1.5 s count has
+    // landed wherever one does (the band now stands second, and a tall
+    // window may have its tiles on screen at load) — both formatted the way
+    // the page formats them.
     const stats = canvas.getByRole('region', { name: words.stats.title });
     await expect(within(stats).getByText(words.stats.eyebrow)).toBeVisible();
     await expect(within(stats).getByText(words.stats.lead)).toBeVisible();
@@ -1040,9 +892,13 @@ const playPage =
       await expect(
         within(tiles[index]).getByText(heard, { selector: '[data-spoken]' }),
       ).toBeInTheDocument();
-      await expect(
-        within(tiles[index]).getByText(seen, { selector: '[aria-hidden]' }),
-      ).toBeInTheDocument();
+      await waitFor(
+        () =>
+          expect(
+            within(tiles[index]).getByText(seen, { selector: '[aria-hidden]' }),
+          ).toBeInTheDocument(),
+        { timeout: 3_000 },
+      );
       // The sign is seen, never heard: the tile's twin never carries it.
       await expect(
         within(tiles[index]).queryByText(/\+/, { selector: '[data-spoken]' }),
@@ -1052,18 +908,94 @@ const playPage =
       ).toBeVisible();
     }
 
-    // EXACTLY SIX REGIONS, in page order: the credo, the biography, the week,
-    // the courses, the tiles and the map. Round 1's „Echipa mea" region is
-    // gone (D13) and the biography joined in G2-R2 tier 2 (a11y F2) —
-    // counting the landmarks the page really has, identity by identity, is
-    // what keeps the first gone, and what moves by one the day the D19 band
-    // arrives. The tinted band itself is never one of them (its own Omit).
+    // THE BIOGRAPHY (D14): a region of its own since G2-R2 tier 2 (a11y F2 —
+    // the biography was the one block a landmark walk skipped), named by an
+    // <h2> whose ICU argument is the doctor's name — resolved here the way
+    // next-intl resolves it on the page — and every paragraph of lib/team's
+    // `about`, visible, in order, found by what a reader sees of it: since
+    // 2026-10-13 a paragraph carries `<k>` marks (lib/team's THE BIOGRAPHY'S
+    // KEY WORDS), cut by the populator, so its text on the page is the source
+    // with the marks gone, split across the <b>s below.
+    const aboutTitle = words.about.title.replace('{name}', doctor.name);
+    const biography = canvas.getByRole('region', { name: aboutTitle });
+    const about = within(biography).getByRole('heading', {
+      level: 2,
+      name: aboutTitle,
+    });
+    // THE NAME IS NEVER SPLIT (sections/DoctorProfile, 2026-09-30): this is
+    // the one band title that carries a person's name, and under the
+    // site-wide `hyphens: auto` Chromium broke „(Sa-bău)" and „Ele-na" on
+    // phones (measured on the built pages). The opt-out rides the opener's
+    // root and inherits to the <h2>; read here as the COMPUTED value, which
+    // is what the browser breaks lines by — a class name alone could sit on
+    // the wrong element.
+    await expect(getComputedStyle(about).hyphens).toBe('none');
+    await expect(
+      within(biography).getByText(words.about.eyebrow),
+    ).toBeVisible();
+    const paragraphs = doctor.about.map((source) => {
+      const reading = splitKeywords(source)
+        .map((segment) => segment.text)
+        .join('');
+      return within(biography).getByText(
+        (_content, element) =>
+          element?.tagName === 'P' && element.textContent === reading,
+      );
+    });
+    for (const paragraph of paragraphs) await expect(paragraph).toBeVisible();
+    for (const [index, paragraph] of paragraphs.entries()) {
+      if (index > 0)
+        await expect(precedes(paragraphs[index - 1], paragraph)).toBe(true);
+    }
+    // THE KEY WORDS AND THE GREY (CLAUDE.md §15.23 round 7 — the owner,
+    // 2026-10-13: "i also wan thte text of biografie to be like the text at
+    // [the credo's quote] … so gary-ish er and with tighlighted keywords").
+    // Every paragraph sets at least one key word apart as ui/Keyword's <b> —
+    // exactly lib/team's marks, in order, so the populator cut them and the
+    // page rendered them (a mark left as text fails the canvas-wide `<k>`
+    // check above) — and wears the doctor quotes' faint ink, --ink-faint
+    // #766f69: sections/DoctorProfile's, read here as the COMPUTED colour.
+    for (const [index, paragraph] of paragraphs.entries()) {
+      const bold = Array.from(
+        paragraph.querySelectorAll('b'),
+        (element) => element.textContent,
+      );
+      await expect(bold.length).toBeGreaterThanOrEqual(1);
+      await expect(bold).toEqual(
+        splitKeywords(doctor.about[index])
+          .filter((segment) => segment.keyword)
+          .map((segment) => segment.text),
+      );
+      await expect(getComputedStyle(paragraph).color).toBe(
+        'rgb(118, 111, 105)',
+      );
+    }
+
+    // THE COURSES (CLAUDE.md §15.23 round 7): a named region with its
+    // eyebrow, the doctor's ideas one per dot — `expectCourses` reads the
+    // list, the missing years and the light.
+    const courses = canvas.getByRole('region', { name: words.courses.title });
+    await expect(
+      within(courses).getByText(words.courses.eyebrow),
+    ).toBeVisible();
+    await expectCourses(
+      courses,
+      DOCTOR.courses.map((course) => course.words[locale]),
+    );
+
+    // EXACTLY FIVE REGIONS, in page order: the credo, the tiles, the
+    // biography, the courses and the map. Round 1's „Echipa mea" region left
+    // with D13, the biography joined in G2-R2 tier 2 (a11y F2) and the week's
+    // card left on 2026-10-13 ("no more schedul box at all") — counting the
+    // landmarks the page really has, identity by identity, is what keeps the
+    // gone ones gone, and what moves by one the day the D19 band arrives. The
+    // profile band's own root is never one of them (its own Omit).
     const map = canvas.getByRole('region', { name: words.location });
-    const expected = [credo, biography, schedule, courses, stats, map];
+    const expected = [credo, stats, biography, courses, map];
     const regions = canvas.getAllByRole('region');
-    await expect(regions).toHaveLength(6);
+    await expect(regions).toHaveLength(5);
     await expect(regions.map((region) => expected.indexOf(region))).toEqual([
-      0, 1, 2, 3, 4, 5,
+      0, 1, 2, 3, 4,
     ]);
 
     // THE OUTLINE, WHOLE (G2-R2 tier 3, a11y F2): every heading on the page,
@@ -1072,10 +1004,10 @@ const playPage =
     // which is what a heading-navigation user hears (SC 1.3.1 / 2.4.6) — a
     // band arriving with an <h3> title, or a title level turned into a prop
     // and passed wrong, would pass every band suite and fail here. Built from
-    // lib/team's own lengths (the years `coursesByYear` groups, the doctor's
-    // stat rows), never typed by hand, so a new year or tile moves it by
-    // itself. The canvas holds the page's bands and nothing else (no Header,
-    // no Footer — see NO HEADER above), so this is the page's own outline.
+    // lib/team's own lengths (the doctor's stat rows), never typed by hand, so
+    // a new tile moves it by itself; the course ideas add no heading at all.
+    // The canvas holds the page's bands and nothing else (no Header, no
+    // Footer — see NO HEADER above), so this is the page's own outline.
     await expect(
       canvas
         .getAllByRole('heading')
@@ -1083,37 +1015,33 @@ const playPage =
     ).toEqual([
       1, // the doctor's name (DoctorIntro)
       2, // the credo card
-      2, // the „Despre" half of the tinted band
-      2, // the schedule card
-      2, // the courses band
-      ...groups.map(() => 3), // one per year
       2, // the „în cifre" band
       ...DOCTOR.stats.map(() => 3), // one per tile
+      2, // the biography
+      2, // the courses — its ideas are list items, never headings
       2, // the map
     ]);
 
-    // THE BANDS STAND IN D18/D33's ORDER: name → credo → about → week →
-    // courses → tiles → map.
+    // THE BANDS STAND IN ROUND 7's ORDER (2026-10-13): name → credo → tiles
+    // → biography → courses → map.
     await expect(precedes(heading, credo)).toBe(true);
-    await expect(precedes(credo, about)).toBe(true);
-    await expect(precedes(about, schedule)).toBe(true);
-    await expect(precedes(schedule, courses)).toBe(true);
-    await expect(precedes(courses, stats)).toBe(true);
-    await expect(precedes(stats, map)).toBe(true);
+    await expect(precedes(credo, stats)).toBe(true);
+    await expect(precedes(stats, biography)).toBe(true);
+    await expect(precedes(biography, courses)).toBe(true);
+    await expect(precedes(courses, map)).toBe(true);
     // NOTHING FOLLOWS THE MAP. The map region IS ClinicLocation's own
-    // <section>, so its next sibling is what a sixth band would be — and there
+    // <section>, so its next sibling is what a fifth band would be — and there
     // is none (G2 react, 2026-09-21: a "last child contains it" spelling was
     // vacuous).
     await expect(map.nextElementSibling).toBeNull();
 
-    // D21 — THE FOUR ARRANGEMENTS, each in the branch its own column puts it
-    // in, and all four the SAME branch: they stand in one gutter, so they
+    // D21 — THE THREE ARRANGEMENTS, each in the branch its own column puts it
+    // in, and all three the SAME branch: they stand in one gutter, so they
     // must flip at one width.
     const branches = [
       await expectOpener(heading, credo, nameLines),
-      await expectProfile(about, paragraphs, schedule),
-      await expectCourses(years),
       await expectStats(tiles),
+      await expectProfile(biography, courses),
     ];
     await expect(new Set(branches).size).toBe(1);
     // THE PIN IS NOT VACUOUS. Below 48rem of window the column is narrower
@@ -1135,10 +1063,10 @@ const playPage =
       name: heading,
       position: canvas.getByText(doctor.position),
       credo,
-      about,
-      schedule,
-      courses,
       stats,
+      about,
+      biography,
+      courses,
       map,
     });
     if (
@@ -1168,15 +1096,18 @@ const playPage =
  * picture, the framed „Filozofia mea" card — the reviews
  * deck's idle card, under the price cards' lavender glow since round 2r (D61)
  * — quoting the doctor in Romanian marks („…”) with the key words at weight 650 in
- * the doctor card button's lavender, accent (since 2026-10-02); the lavender band fading in and out of the page ground with
- * „Despre Dr. Malea (Sabău) Oana Bianca" and three paragraphs on the left and the „Când mă
- * găsiți la clinică" card on the right, centred on them (D37); the years in
- * one column down the timeline on the left (D34), newest first, all at rest
- * here — one year lights as it crosses the middle of the screen on scroll
- * (D35, D49); the four „în cifre" tiles on one row on the second tint; the
- * map last. All of it drawn in the band scale (§15.32 round 4): this width's
- * look is the owner's 1401 window magnified about 1.1×, every eyebrow and
- * title the size Home's are here.
+ * the doctor card button's lavender, accent (since 2026-10-02); then, second
+ * since 2026-10-13, the four „în cifre" tiles on one row on the lilac band;
+ * then, on the page ground, „Despre Dr. Malea (Sabău) Oana Bianca" and three
+ * justified paragraphs in the quotes' faint ink on the left, two key words in
+ * each set apart like the credo's (since 2026-10-13), and „Cursuri și
+ * specializări" on the right
+ * — the doctor's courses one idea per dot on a line down the left, no year,
+ * the first idea lit and held while the courses stand below the first screen,
+ * one idea after another every 3 s once they are in view (reduced motion:
+ * none lit); the map last. All of it drawn in the band scale (§15.32 round
+ * 4): this width's look is the owner's 1401 window magnified about 1.1×,
+ * every eyebrow and title the size Home's are here.
  */
 export const Romanian: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
@@ -1184,7 +1115,6 @@ export const Romanian: Story = {
     {
       philosophy: ro.team.doctor.philosophy,
       about: ro.team.doctor.about,
-      schedule: ro.team.doctor.schedule,
       courses: ro.team.doctor.courses,
       stats: ro.team.doctor.stats,
       location: ro.home.location.title,
@@ -1199,13 +1129,12 @@ export const Romanian: Story = {
 /**
  * GERMAN — the §8.4 expansion stress, pinned to the SMARTPHONE width, where
  * every arrangement is one column (D21): the name over the cutout, the cutout
- * over the credo card (D51c), the „Über Dr. Malea (Sabău) Oana Bianca" prose
- * over the „Wann Sie mich in der Praxis finden" card, the years one under the
- * other, and the tiles one per row. „Fachrichtung Prothetik und
- * Parodontologie" over the name, „Kurse und Spezialisierungen" as an h2 that must not break inside a
- * word, and paragraphs and course lines that must break at syllable points,
- * which they only do under a declared `lang` — stamped by
- * the preview decorator exactly as the shell stamps it (§15.14).
+ * over the credo card (D51c), the tiles one per row, and the „Über Dr. Malea
+ * (Sabău) Oana Bianca" prose over the „Kurse und Spezialisierungen" ideas.
+ * „Fachrichtung Prothetik und Parodontologie" over the name, and paragraphs
+ * and course lines that must break at syllable points, which they only do
+ * under a declared `lang` — stamped by the preview decorator exactly as the
+ * shell stamps it (§15.14).
  */
 export const German: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
@@ -1214,7 +1143,6 @@ export const German: Story = {
       {
         philosophy: de.team.doctor.philosophy,
         about: de.team.doctor.about,
-        schedule: de.team.doctor.schedule,
         courses: de.team.doctor.courses,
         stats: de.team.doctor.stats,
         location: de.home.location.title,

@@ -120,7 +120,8 @@ import {
 //                  remount builds a new store)
 //
 // ── SUSPENSION IS CAUSE-KEYED (G2-2, a11y HIGH). suspend()/resume() carry a
-// cause — 'pointer' or 'focus' — and the clock holds a SET of live causes,
+// cause — 'pointer' or 'focus', and since 2026-10-13 'offscreen' (the
+// SuspendCause type's doc) — and the clock holds a SET of live causes,
 // resuming only when the set empties. One collapsed flag let a pointer leaving
 // the widget resume motion while keyboard focus was still inside it, which is
 // the APG's reason for keeping hover and focus as separate flags. A set of
@@ -173,9 +174,15 @@ export type ClockIdleReason = 'not-started' | 'disabled' | 'reduced-motion';
 
 /**
  * Why a clock is transiently suspended. The two APG flags, kept apart: the
- * pointer being over the widget, and focus being inside it.
+ * pointer being over the widget, and focus being inside it — and, since
+ * 2026-10-13, a third the APG has no word for: the widget being OFF SCREEN,
+ * which its consumer learns from an IntersectionObserver (the doctor page's
+ * course timeline, sections/DoctorCourses/CourseTimeline). The tab-hidden rule
+ * of ENV REACTIONS, applied to one widget: nobody is watching it, so nothing
+ * moves, and the visitor who scrolls back finds the item they left a full
+ * interval from its next move.
  */
-export type SuspendCause = 'pointer' | 'focus';
+export type SuspendCause = 'pointer' | 'focus' | 'offscreen';
 
 /** An immutable read of the clock at one instant. */
 export type ClockSnapshot = Readonly<{

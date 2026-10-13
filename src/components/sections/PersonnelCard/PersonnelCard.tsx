@@ -373,7 +373,8 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // placement wins where placement is allowed and nothing restyles an atom's
 // insides. `ref` and every other native prop spread onto the article too, and
 // the SPREAD RIDES FIRST — before `aria-labelledby` and `className` — which is
-// the belt behind the Omit that CredoCard and ScheduleCard already practise:
+// the belt behind the Omit that CredoCard already practises (and the doctor
+// page's schedule card did, until it was dropped on 2026-10-13):
 // the types refuse a caller's naming attribute, and attribute order then makes
 // sure nothing that dodged them (a cast, a `{...props}` of unknown shape, or a
 // plain hyphenated JSX attribute — which TypeScript exempts from its

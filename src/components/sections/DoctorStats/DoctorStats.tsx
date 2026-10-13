@@ -16,8 +16,11 @@ import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
 import { StatNumber, type CountFrames } from './StatNumber';
 
-// sections/DoctorStats — the doctor page's „în cifre" band: a second lilac
-// ground under the courses, an eyebrow over a centred <h2> and a lead
+// sections/DoctorStats — the doctor page's „în cifre" band: a lilac ground
+// right under the opener (the page's SECOND band since 2026-10-13, the
+// owner: "so "IN NUMBERS" would be the second element in the page" — CLAUDE.md
+// §15.23 round 7; it stood under the courses until then, the second of two
+// lilac bands), an eyebrow over a centred <h2> and a lead
 // sentence, then a row of tiles — a line icon in a white disc, a big number
 // that counts up once, a serif label and one sentence. Built to the round-2f
 // composition contract of the doctor-pages run
@@ -208,14 +211,16 @@ import { StatNumber, type CountFrames } from './StatNumber';
 // consumer (§4's sharing table, first row). This band names itself through
 // it — `aria-labelledby` → the <h2>'s generated id, a named `region` — which
 // is exactly why TintedBand passes the naming attributes through while
-// DoctorProfile refuses them in its own props. (On the PAGE ground, the
+// DoctorProfile, its other consumer until 2026-10-13, refused them in its own
+// props. (On the PAGE ground, the
 // SECOND AND THIRD PAGES paragraph, the band's own <section> carries the same
 // name pair and the same ui/Container sits inside it.) Everything below sits
 // inside that ui/Container on either ground; the vertical rhythm is OURS, on
 // the first box inside it, because an element cannot query its own size (the
 // Container cannot carry its own container-stepped `py`): `py-12 @lg:py-16
-// @3xl:py-20`, DoctorCourses' rhythm — and the Home and Team bands' — so the
-// bands around it breathe alike. On Home and Team the same box is where THE
+// @3xl:py-20`, DoctorProfile's rhythm (the courses band's until 2026-10-13,
+// when the courses joined the biography's band) — and the Home and Team
+// bands' — so the bands around it breathe alike. On Home and Team the same box is where THE
 // BAND SCALE rides (ui/Container's recipe rule 5), so on a laptop or desktop
 // its `py` is drawn in the band's design pixel, as its neighbours' is. NO
 // OUTER MARGIN (§6.4): the page owns the space between bands.
@@ -296,7 +301,7 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     glyph's own size class by specificity) in `text-accent-decorative` —
 //     LILAC since 2026-10-01 (the owner: "paint it's svgs lilla"; the green
 //     CTA family until then). The role is §15.1's for "graphics ONLY", the
-//     hue the courses timeline lights its dots with one band above — and NOT
+//     hue the courses timeline lights its dots with one band below — and NOT
 //     `--accent`, the menu buttons' lavender, which
 //     tests/unit/accent-census.test.ts bars from every band that composes
 //     TintedBand (as text it fails on the tint, 3.32:1); a drawing is a

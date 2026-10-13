@@ -22,6 +22,12 @@ import {
 // 2026-09-09). Two consumers — sections/ReviewsCarousel/ReviewsDeck and
 // sections/Hero — are what told which lines are the pattern and which were one
 // band's taste; the lines below are exactly the ones both bands had typed.
+// A THIRD arrived on 2026-10-13: the doctor page's course timeline
+// (sections/DoctorCourses/CourseTimeline, CLAUDE.md §15.23 round 7), which
+// takes useRotation ALONE — it hides nothing and nothing in it can take focus,
+// so neither manners object below has anything to answer; its one hold, while
+// the list is off screen, is lib/clock's `'offscreen'` cause, set from its own
+// IntersectionObserver.
 //
 // ── WHY ui/ AND NOT lib/ (lib/cx/cx.ts's two questions, in order). Question 1:
 // this module imports React — useState, useEffect, useSyncExternalStore — so
@@ -56,8 +62,8 @@ import {
 //     move within the region neither) and the hover pair, as two objects —
 //     SEPARATE, because the law splits them for a rotator WITH a control:
 //     focus goes on the REGION (Tab landing on the control is an entry),
-//     pointer on the hover WRAPPER that excludes the control. Today's two
-//     consumers render no control (each on the owner's word), and since
+//     pointer on the hover WRAPPER that excludes the control. The two
+//     carousels render no control (each on the owner's word), and since
 //     2026-09-20 BOTH spread ONLY the focus pair, with `keyboardEntry:
 //     'suspend'` (the transient hold instead of the law's sticky pause) and
 //     `pointerEntry: 'none'` (a click-focused control holds nothing), and NO

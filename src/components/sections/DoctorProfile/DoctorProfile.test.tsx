@@ -1,82 +1,80 @@
-import { createRef } from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { createRef, type ReactNode } from 'react';
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import {
+  DoctorCourses,
+  type DoctorCoursesProps,
+} from '@/components/sections/DoctorCourses/DoctorCourses';
 import { SectionHeading } from '@/components/sections/SectionHeading/SectionHeading';
-import { TintedBand } from '@/components/sections/TintedBand/TintedBand';
 import {
   bandColumnClasses,
   bandScaleClasses,
+  containerClasses,
 } from '@/components/ui/Container/Container';
-import { formatHoursRows, type HoursRow } from '@/lib/hours/hours';
 import {
   DoctorProfile,
   type DoctorProfileProps,
   type ProfileHeading,
 } from './DoctorProfile';
 import source from './DoctorProfile.tsx?raw';
-import { ScheduleCard } from './ScheduleCard';
 
 // sections/DoctorProfile — the interaction suite. Role-based queries wherever a
 // role exists (§9, §13): a passing test doubles as proof of accessible markup,
-// and here that is most of the contract — each half opens with a REAL <h2>,
-// EACH HALF is a `region` named by its own heading (the schedule card since
-// round 2, the biography since the G2-R2 review's tier-2 a11y F2), and the band
-// itself is deliberately NOT a named region (so exactly TWO regions coming
-// back, biography then week, and neither of them the root, is an assertion
-// rather than an omission). Since round 2g (D37) the card's heading is its
-// title ALONE — the only eyebrow left in the band is the „Despre" half's, and
-// the first suite below proves the card prints none — and since G2-R2 the
-// step's grid is ONE row: the biography stays a box (a region never wears
-// `contents`), the card centred beside it.
+// and here that is most of the contract — each column opens with a REAL <h2>,
+// EACH COLUMN is a `region` named by its own heading (the biography since the
+// G2-R2 review's tier-2 a11y F2, the courses by sections/DoctorCourses' own
+// <section aria-labelledby>), and the band itself is deliberately NOT a named
+// region (so exactly TWO regions coming back, biography then courses, and
+// neither of them the root, is an assertion rather than an omission). Since
+// 2026-10-13 (CLAUDE.md §15.23 round 7) the band is the biography beside the
+// courses on the plain page ground: no lilac, no schedule card, no outdent —
+// and, since the owner's pack feedback the same evening, the biography on
+// three fifths of the row and the courses on two, the two regions sharing the
+// band's two rows from `@3xl`, and the paragraphs in the credo card's faint
+// ink, any finished node each, so the page can hand them over with their key
+// words.
 //
 // ── HARNESS NOTE — there is NO NextIntlClientProvider in this file, and the
 // absence is itself an assertion (the Wordmark/SectionHeading/PersonnelCard
 // precedent). next-intl's hooks throw without one, so a green render proves
-// what the run's D1 states: this band calls no t() and owns no message key.
-// Every string below is a FIXTURE the doctor page would have translated —
-// Romanian with diacritics (§15.7), factual (CMSR: no superlatives, no
-// promises, no result guarantees), D-DASH-clean (no mid-sentence punctuation
-// dashes), and drafted for this suite rather than copied from lib/team, so a
-// data edit can never turn a layout test red.
+// what the run's D1 states: this band calls no t() and owns no message key —
+// and neither does the courses' island it composes. Every string below is a
+// FIXTURE the doctor page would have translated — Romanian with diacritics
+// (§15.7), factual (CMSR: no superlatives, no promises, no result
+// guarantees), D-DASH-clean (no mid-sentence punctuation dashes), and drafted
+// for this suite rather than copied from lib/team, so a data edit can never
+// turn a layout test red.
 //
 // ── Styles are NOT loaded in this project (tests/setup/components.ts imports no
 // stylesheet), so computed values would read back as browser defaults: the
 // utility TOKENS are the contract here, the convention every component test in
-// this repo follows. What needs real CSS — the card's one 20rem width beside
-// the prose and centred under it (D53), the card's vertical middle on the
-// band's (D37), the card never
-// stretched to the prose's height, the one-column stack below the step — is
-// asserted one tier up, in DoctorProfile.stories' play functions; THE BAND
-// SCALE's lengths (2026-10-13, CLAUDE.md §15.32 round 4 — every length × the
-// design pixel on a laptop or desktop, nothing moved elsewhere) are computed
-// on the real stylesheet in DoctorProfile.scale.test.tsx, one premise per
-// file (the PriceList.scale precedent). This file pins the scale's CLASS
-// contract — which box wears it, and that its classes are ui/Container's.
-// The GROUND's real CSS (the tint's measured alpha, the fades reaching the
-// middle box's colour) is TintedBand.stories' to measure now (run D29).
+// this repo follows. What needs real CSS — the 3 : 2 columns side by side at
+// the step and stacked below it, the two contents starting on one line, no
+// sideways scroll — is asserted one tier up, in DoctorProfile.stories' play
+// functions; THE BAND SCALE's lengths (CLAUDE.md §15.32 round 4 — every length
+// × the design pixel on a laptop or desktop, nothing moved elsewhere) and THE
+// SHARED ROWS' lines are computed on the real stylesheet in
+// DoctorProfile.scale.test.tsx, one premise per file (the PriceList.scale
+// precedent). This file pins the CLASS contract.
 //
-// ── THE ONE OTHER SECTION IN THIS FILE IS THE GROUND, RENDERED WHOLE:
-// sections/TintedBand is this band's composed public component (§4's section
-// → section rule, run D29), and the "composes sections/TintedBand" suite below
-// renders a BARE one to read its outer and its three boxes off the DOM — so
-// this file spells none of the ground, and a retuned tint or fade turns
-// TintedBand.test.tsx red (its byte pins, its `?raw` cross-pin with the Hero)
-// rather than this one. ScheduleCard is rendered standalone below too, as this
-// band's OWN in-folder piece: the card's classes are read off it rather than
-// re-spelled here. And sections/SectionHeading is rendered bare ONCE, in the
-// one-row suite, so that "the band hands the biography's opener no className"
-// is compared against the opener's own row rather than a copy of it.
+// ── THE ONE OTHER SECTION IN THE BAND IS THE COURSES, RENDERED WHOLE:
+// sections/DoctorCourses is this band's composed public component (§4's
+// section → section rule), and the suite renders a BARE one with the same
+// props to read its class row off the DOM — so this file spells none of the
+// courses' own markup, and a retuned list turns DoctorCourses' suites red
+// rather than this one. sections/SectionHeading is rendered bare ONCE for the
+// same reason: "the band hands the biography's opener one class" is compared
+// against the opener's own row rather than a copy of it.
 
-// ── FIXTURES. The doctor of the run's demo people, in three short
-// third-person paragraphs (D14: plain prose, one string per paragraph). The
-// card's title is the page's own Romanian draft of `team.doctor.schedule.title`
-// (D26) — and, since D37, the card's only heading row: no eyebrow travels.
+// ── FIXTURES. The run's demo doctor, in three short third-person paragraphs
+// — plain strings, which a ReactNode list takes as they are; the cases that
+// need the page's shape hand over fragments with a <b>, as ui/Keyword's
+// <Keywords> would — and five courses, one idea each, no year (the owner,
+// 2026-10-13: "no year anymore. jsut dot ideas").
 const ABOUT_HEADING = {
   eyebrow: 'Biografie',
   title: 'Despre Dr. Elena Marin',
 } satisfies ProfileHeading;
-
-const SCHEDULE_TITLE = 'Când mă găsiți la clinică';
 
 const PARAGRAPHS = [
   'Dr. Elena Marin este medic specialist în ortodonție și lucrează în clinica noastră din 2015. Tratează copii, adolescenți și adulți, cu aparate fixe sau cu gutiere transparente, după caz.',
@@ -84,72 +82,106 @@ const PARAGRAPHS = [
   'Fiecare etapă este explicată înainte de a începe, cu durata estimată și costul ei. Între ședințe, pacientul poate suna la clinică pentru orice nelămurire legată de tratament.',
 ] as const;
 
-// The week through lib/hours — a MECHANICS call, exactly what the page makes:
-// mornings on Monday, Wednesday and Friday, afternoons on Tuesday and
-// Thursday, the weekend closed.
-const ROWS: readonly HoursRow[] = formatHoursRows(
-  [
-    {
-      days: ['Monday', 'Wednesday', 'Friday'],
-      opens: '09:00',
-      closes: '17:00',
-    },
-    { days: ['Tuesday', 'Thursday'], opens: '12:00', closes: '20:00' },
+/** Two paragraphs as the page hands them over: finished nodes, their key
+ *  words already <b>s (ui/Keyword's <Keywords> renders exactly that — a
+ *  fragment of text and <b>s, no wrapper). The band never sees a mark. */
+const NODES: readonly ReactNode[] = [
+  <>
+    Dr. Elena Marin este medic specialist în <b>ortodonție</b> și lucrează cu{' '}
+    <b>aparate fixe</b>.
+  </>,
+  <>
+    <b>Planul de tratament</b> se stabilește împreună.
+  </>,
+];
+/** The words of NODES, read as a screen reader or `textContent` reads them. */
+const NODE_TEXTS = [
+  'Dr. Elena Marin este medic specialist în ortodonție și lucrează cu aparate fixe.',
+  'Planul de tratament se stabilește împreună.',
+];
+
+const COURSES = {
+  eyebrow: 'Repere din drumul meu spre specializare',
+  title: 'Cursuri și specializări',
+  items: [
+    'Curs de reabilitare protetică pe implanturi, București',
+    'Curs de ortodonție digitală și scanare intraorală, Cluj-Napoca',
+    'Curs de ortodonție interceptivă la copii, Timișoara',
+    'Curs de aliniere dentară cu gutiere transparente, Iași',
+    'Specializare în ortodonție și ortopedie dento-facială',
   ],
-  'ro',
-  'Închis',
-);
+} as const satisfies DoctorProfileProps['courses'];
 
 const ABOUT = { ...ABOUT_HEADING, paragraphs: PARAGRAPHS };
-const SCHEDULE = { title: SCHEDULE_TITLE, rows: ROWS };
+/** The courses with nothing in them — sections/DoctorCourses renders null. */
+const NO_COURSES = { ...COURSES, items: [] };
 
 // ── THE BYTE PINS, written OUT rather than imported: the test must fail on a
 // silent edit to the band's own classes, which an import would follow (the
 // ui/Eyebrow RECIPE convention, and PersonnelCard's reading of it). These are
-// the band's OWN markup — the grid and what sits in it; the ground's classes
-// are read off a bare TintedBand (`bareGround`) and every atom's off a render.
-// THE ONE EXCEPTION IS THE SCALE BOX (`SCALE_BOX` below): its classes are
-// ui/Container's two exported strings, compared against the IMPORTS — they
-// are not the band's to spell, tests/unit/design-scale.test.ts holds them to
-// ONE spelling, and a retyped copy of the design pixel's arbitrary class here
-// would ship a CSS rule only this file needed (that census's D-LIT rule).
-/** D53's two tracks — the prose takes the rest, the card EXACTLY eighty
- *  spacing steps (20rem; 320 design pixels in THE BAND SCALE): no share, no
- *  floor, nothing that grows with the window but the design's own pixel. */
-const TWO_TRACKS = '@3xl:grid-cols-[minmax(0,1fr)_calc(var(--spacing)*80)]';
-/** The grid: two tracks and ONE row at the step, the outdent and the column
- *  gap (the header's D53 · ONE WIDTH, D37 and PROSE OUTDENT paragraphs). No
- *  row gap is re-stated at the step: one row has no gap between rows. */
-const GRID =
-  'grid gap-10 py-6 @lg:py-8 @3xl:-ms-8 @3xl:grid-cols-[minmax(0,1fr)_calc(var(--spacing)*80)] @3xl:gap-x-12 @3xl:py-10';
-/** THE BAND SCALE's box (the header's paragraph of that name): ui/Container's
- *  `bandColumnClasses` then `bandScaleClasses`, in the order cx() joins them —
- *  READ OFF THE IMPORTS, never retyped (the exception above). */
-const SCALE_BOX = [
+// the band's OWN markup; every atom's row, the Container's and the courses'
+// are read off a render or an import. THE ONE EXCEPTION IS THE SCALE
+// (`RHYTHM` below): its classes are ui/Container's two exported strings,
+// compared against the IMPORTS — they are not the band's to spell,
+// tests/unit/design-scale.test.ts holds them to ONE spelling, and a retyped
+// copy of the design pixel's arbitrary class here would ship a CSS rule only
+// this file needed (that census's D-LIT rule).
+/** THE BAND OUTER: the paint and THE BELT — the clip, its Safari ≤ 15 twin
+ *  behind its gate, and `wrap-anywhere` — and nothing else. */
+const BAND =
+  'overflow-x-clip supports-[not_(overflow:clip)]:overflow-x-hidden wrap-anywhere bg-page';
+/** THE BELT's three tokens, which ride the outer and no other element. */
+const BELT = [
+  'overflow-x-clip',
+  'supports-[not_(overflow:clip)]:overflow-x-hidden',
+  'wrap-anywhere',
+];
+/** The rhythm box: the band's `py` on the Container's three steps, then
+ *  ui/Container's band-scale column and pixel, in the order cx() joins them —
+ *  the two strings READ OFF THE IMPORTS, never retyped. */
+const RHYTHM_PY = ['py-12', '@lg:py-16', '@3xl:py-20'];
+const RHYTHM = [
+  ...RHYTHM_PY,
   ...bandColumnClasses.split(' '),
   ...bandScaleClasses.split(' '),
 ];
+/** The grid with courses: one column, 64px between the two, and from `@3xl`
+ *  THREE FIFTHS and TWO of the row 48px apart, over TWO rows 24px apart (the
+ *  header's THE BIOGRAPHY THREE FIFTHS and THE SHARED ROWS). */
+const GRID_TWO =
+  'grid gap-16 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:grid-rows-[auto_auto] @3xl:gap-x-12 @3xl:gap-y-6';
+/** The grid without courses: ONE column at every width (ONE BRANCH). */
+const GRID_ONE = 'grid gap-16';
+/** THE SHARED ROWS: from `@3xl` a region spans both rows and adopts them as a
+ *  subgrid, its two children keep their own heights (THE ITEMS KEEP THEIR
+ *  HEIGHTS), and its rows are packed at its top where subgrid is missing (THE
+ *  FALLBACK). Worn by BOTH regions whenever the courses render. */
+const SHARED_ROWS = [
+  '@3xl:row-span-2',
+  '@3xl:grid',
+  '@3xl:grid-rows-subgrid',
+  '@3xl:items-start',
+  '@3xl:content-start',
+];
+/** The biography alone: a named region (G2-R2 a11y F2), a flex column at
+ *  EVERY width — the opener over the paragraphs' block, 24px apart — and
+ *  never `contents`, which would cost the region its role. */
+const ABOUT_ALONE = 'flex flex-col gap-6';
+/** The biography beside the courses: the same flex column, a subgrid of the
+ *  band's two rows from `@3xl`. */
+const ABOUT_SECTION = `${ABOUT_ALONE} ${SHARED_ROWS.join(' ')}`;
+/** The paragraphs' block — `max-w-4xl` is the ONE lever on the measure. */
+const PARAGRAPHS_BLOCK = 'flex max-w-4xl flex-col gap-4';
+/** Each paragraph: the §15.1 body base, the credo card's faint ink (THE INK),
+ *  justified ON THE ELEMENT (§15.1's third exception, §15.15 b). */
+const PARAGRAPH = 'text-lg text-ink-faint contrast-more:text-ink text-justify';
 /** A class behind globals.css's `scalable:` gate — every class of the scale
  *  wears it outermost (tests/unit/design-scale.test.ts). */
 const GATED = /^scalable:/;
-/** The biography: a named region (G2-R2 a11y F2), so a flex column at EVERY
- *  width — the opener over the paragraphs' block, 24px apart — and never
- *  `contents`, which would cost the region its role. */
-const ABOUT_SECTION = 'flex flex-col gap-6';
-/** The paragraphs' block — `max-w-4xl` is the ONE lever on the measure. */
-const PARAGRAPHS_BLOCK = 'flex max-w-4xl flex-col gap-4';
-/** The card's ONE width (D53): the full column up to 20rem, centred — the
- *  same length as TWO_TRACKS' second track, ungated. */
-const CARD_WIDTH = 'w-full max-w-80 mx-auto';
-/** The card's placement (D37): centred in the one row — its middle the
- *  band's — at its own height; the DOM order seats it in the second track. */
-const CARD_PLACE = '@3xl:self-center';
-/** Any grid placement utility, at any variant: the one-row shape names no
- *  row and no column — two items, two tracks, the DOM order seats them. */
+/** Any grid placement utility, at any variant. */
 const PLACEMENT = /(^|:)-?(row|col)-(start|end|span)-/;
-/** `display: contents`, at any variant — allowed ONLY on the week's role-less
- *  <div> pairs (ScheduleCard's THE WEEK IS CENTRED paragraph). */
-const DISSOLVES = /(^|:)contents$/;
+/** Any alignment utility, at any variant. */
+const ALIGNMENT = /(^|:)(items|self|place-items|place-self|content|align)-/;
 
 /**
  * The section's source with its PROSE removed, which is what the zero-island
@@ -167,144 +199,163 @@ const stripComments = (code: string): string =>
 
 const CODE = stripComments(source);
 
-/**
- * THE GROUND, READ OFF A BARE sections/TintedBand (run D29) — the outer's class
- * row, the three boxes' rows and the column's, from a TintedBand holding
- * nothing. This band is SUPPOSED to be one of those with its grid inside, so
- * comparing against a live render (rather than a spelled copy) is what makes
- * "the section IS TintedBand's" a checkable claim: a ground retuned in its own
- * file moves both sides of every comparison at once, and a DoctorProfile that
- * grew a paint of its own fails here.
- */
-const bareGround = (): Readonly<{
-  band: string;
-  fadeIn: string;
-  middle: string;
-  fadeOut: string;
-  column: string;
-}> => {
-  const { container, unmount } = render(<TintedBand>{null}</TintedBand>);
-  const band = container.firstElementChild as HTMLElement;
-  const [fadeIn, middle, fadeOut] = [...band.children] as HTMLElement[];
-  const ground = {
-    band: band.className,
-    fadeIn: fadeIn.className,
-    middle: middle.className,
-    fadeOut: fadeOut.className,
-    column: (middle.firstElementChild as HTMLElement).className,
-  };
-  unmount();
-  return ground;
+/** The node a step found, as an HTMLElement — or a failure that NAMES what
+ *  went missing, instead of a TypeError further on. */
+const htmlElement = (
+  node: Element | null | undefined,
+  name: string,
+): HTMLElement => {
+  if (!(node instanceof HTMLElement)) {
+    throw new Error(`DoctorProfile: no ${name}`);
+  }
+  return node;
 };
 
-/** The <section> — the band itself; everything else is found through a role or
- *  through the three boxes below it. */
+/** The <section> — the band itself; everything else is found through a role
+ *  or, for the layout boxes that carry none, through structure. */
 const bandOf = (container: HTMLElement): HTMLElement =>
-  container.firstElementChild as HTMLElement;
-
-/** The three ground boxes TintedBand renders, in flow order: fade in · tinted
- *  middle · fade out (run D7, extracted in D29). Reached by structure because
- *  paint carries no role. */
-const boxesOf = (container: HTMLElement): HTMLElement[] =>
-  [...bandOf(container).children] as HTMLElement[];
-
-/** The middle box's ui/Container — the column every `@`-step asks — then
- *  THE BAND SCALE's box inside it, then the grid inside that, and the grid's
- *  two direct children: layout boxes, so structure again. */
+  htmlElement(container.firstElementChild, 'band');
+/** ui/Container — the band's ONE child (no fades, no tint: THE GROUND). */
 const columnOf = (container: HTMLElement): HTMLElement =>
-  boxesOf(container)[1].firstElementChild as HTMLElement;
-const scaleBoxOf = (container: HTMLElement): HTMLElement =>
-  columnOf(container).firstElementChild as HTMLElement;
+  htmlElement(bandOf(container).firstElementChild, 'ui/Container column');
+/** The rhythm box — the column's one child, wearing THE BAND SCALE. */
+const rhythmOf = (container: HTMLElement): HTMLElement =>
+  htmlElement(columnOf(container).firstElementChild, 'rhythm box');
+/** The grid — the rhythm box's one child; its children are the columns. */
 const gridOf = (container: HTMLElement): HTMLElement =>
-  scaleBoxOf(container).firstElementChild as HTMLElement;
-const halvesOf = (container: HTMLElement): HTMLElement[] =>
+  htmlElement(rhythmOf(container).firstElementChild, 'grid');
+const columnsOf = (container: HTMLElement): HTMLElement[] =>
   [...gridOf(container).children] as HTMLElement[];
 
-/** The paragraphs' block — the about half's last child, under the opener. */
+/** The paragraphs' block — the biography's last child, under the opener. */
 const paragraphsBlockOf = (container: HTMLElement): HTMLElement =>
-  halvesOf(container)[0].lastElementChild as HTMLElement;
+  htmlElement(columnsOf(container)[0]?.lastElementChild, 'paragraphs’ block');
+
+/** The band and every element in it — the walk the "nowhere else" pins use. */
+const everyElementOf = (container: HTMLElement): Element[] => [
+  bandOf(container),
+  ...bandOf(container).querySelectorAll('*'),
+];
+
+/** The band's OWN boxes — the ones whose classes this file spells: the outer,
+ *  the rhythm box, the grid, the biography's region, its paragraphs' block and
+ *  each paragraph. ui/Container's row is the atom's, the opener's
+ *  SectionHeading's and the courses' DoctorCourses' — each read off a render
+ *  where this suite needs it, never claimed here. */
+const ownBoxesOf = (container: HTMLElement): Element[] => {
+  const about = htmlElement(columnsOf(container)[0], 'biography');
+  const block = paragraphsBlockOf(container);
+  return [
+    bandOf(container),
+    rhythmOf(container),
+    gridOf(container),
+    about,
+    block,
+    ...block.children,
+  ];
+};
 
 const renderBand = (
   props: Partial<DoctorProfileProps> = {},
 ): ReturnType<typeof render> =>
-  render(<DoctorProfile about={ABOUT} schedule={SCHEDULE} {...props} />);
+  render(<DoctorProfile about={ABOUT} courses={COURSES} {...props} />);
 
 const tokensOf = (element: Element): string[] =>
-  element.className.split(/\s+/).filter(Boolean);
+  (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
 
 /**
- * The card's own class row, READ OFF A STANDALONE ScheduleCard with the same
- * strings — so what the band adds on top of it (its placement, and nothing
- * else) is the only thing this suite spells.
+ * The courses' own class row, READ OFF A BARE sections/DoctorCourses with the
+ * same three props — so what the band adds on top of it (THE SHARED ROWS, and
+ * nothing else) is the only thing this suite claims.
  */
-const cardRow = (): string => {
-  const { container, unmount } = render(<ScheduleCard {...SCHEDULE} />);
-  const row = (container.firstElementChild as HTMLElement).className;
+const bareCoursesRow = (): string => {
+  const { container, unmount } = render(
+    <DoctorCourses
+      eyebrow={COURSES.eyebrow}
+      title={COURSES.title}
+      items={COURSES.items}
+    />,
+  );
+  const row = htmlElement(
+    container.firstElementChild,
+    'bare courses',
+  ).className;
   unmount();
   return row;
 };
 
-describe('DoctorProfile — about ‖ schedule (D14)', () => {
-  it('opens each half with its own <h2> — the prose over its eyebrow, the card over none (D37)', () => {
+/** Every console.error React raised about a KEY while `run` rendered. */
+const keyWarningsDuring = (run: () => void): string[] => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  try {
+    run();
+    return error.mock.calls
+      .map((call) => call.map(String).join(' '))
+      .filter((message) => /\bkey\b/i.test(message));
+  } finally {
+    error.mockRestore();
+  }
+};
+
+describe('DoctorProfile — the biography ‖ the courses (§15.23 round 7)', () => {
+  it('opens each column with its own <h2> — eyebrow over title, the biography first', () => {
     renderBand();
 
-    // Level 2, both of them: the page's <h1> is the doctor's name, one band up
-    // in sections/DoctorIntro, and the two halves are siblings.
+    // Level 2, both: the page's <h1> is the doctor's name, two bands up in
+    // sections/DoctorIntro, and the two columns are siblings.
     const headings = screen.getAllByRole('heading', { level: 2 });
     expect(headings.map((heading) => heading.textContent)).toEqual([
       ABOUT_HEADING.title,
-      SCHEDULE_TITLE,
+      COURSES.title,
     ]);
-    // The „Despre" eyebrow sits directly ABOVE its own title (SectionHeading's
+    // Each eyebrow sits directly ABOVE its own title (SectionHeading's
     // order), and the diacritics survive the chain — queried by TEXT, because
     // a role query would still match a mangled string.
-    const label = screen.getByText(ABOUT_HEADING.eyebrow);
-    expect(label.textContent).toBe(ABOUT_HEADING.eyebrow);
-    expect(label.nextElementSibling).toBe(headings[0]);
-    expect(headings[1].textContent).toBe('Când mă găsiți la clinică');
-    // The card's opener is its <h2> ALONE (D37): nothing before the title in
-    // its wrapper, and no <p> anywhere in the card — SectionHeading renders no
-    // row for an omitted eyebrow, never an empty one.
-    const card = screen.getByRole('region', { name: SCHEDULE_TITLE });
-    expect(headings[1].previousElementSibling).toBeNull();
-    expect(headings[1].parentElement?.children).toHaveLength(1);
-    expect(card.querySelectorAll('p')).toHaveLength(0);
-    // Nothing else claims a heading level — an <h1> here would fight the page.
+    for (const [eyebrow, heading] of [
+      [ABOUT_HEADING.eyebrow, headings[0]],
+      [COURSES.eyebrow, headings[1]],
+    ] as const) {
+      const label = screen.getByText(eyebrow);
+      expect(label.textContent).toBe(eyebrow);
+      expect(label.nextElementSibling).toBe(heading);
+    }
+    // Nothing else claims a heading level — an <h1> here would fight the
+    // page, and the courses' ideas are list items, never headings.
     expect(screen.getAllByRole('heading')).toHaveLength(2);
   });
 
-  it('names TWO regions by their <h2>s, biography then week — never the band (G2-R2 a11y F2)', () => {
+  it('names TWO regions by their <h2>s, biography then courses — never the band (G2-R2 a11y F2)', () => {
     const { container } = renderBand();
 
-    // A landmark walk over the doctor page must stop on the biography as well
-    // as on the card beside it (the header's TWO <h2>s, TWO REGIONS
-    // paragraph): exactly two regions, in DOM order, each named by its own
-    // title ALONE — exact-match queries, so a name that had picked up the
-    // „Biografie" eyebrow fails — and the band's root is neither of them.
+    // A landmark walk over the doctor page stops on the doctor's story and on
+    // the courses beside it (the header's TWO <h2>s, TWO REGIONS): exactly
+    // two regions, in DOM order, each named by its own title ALONE —
+    // exact-match queries, so a name that had picked up its eyebrow fails —
+    // and the band's root is neither of them.
     const regions = screen.getAllByRole('region');
     expect(regions).toHaveLength(2);
-    const [about, week] = regions;
+    const [about, courses] = regions;
     expect(screen.getByRole('region', { name: ABOUT_HEADING.title })).toBe(
       about,
     );
-    expect(screen.getByRole('region', { name: SCHEDULE_TITLE })).toBe(week);
+    expect(screen.getByRole('region', { name: COURSES.title })).toBe(courses);
     expect(regions).not.toContain(bandOf(container));
-    // Each region holds its OWN heading and not its sibling's: the biography
-    // is not nested in the card, nor the card in the biography.
+    // Each region holds its OWN heading and not its sibling's: neither column
+    // is nested in the other.
     const aboutHeading = screen.getByRole('heading', {
       level: 2,
       name: ABOUT_HEADING.title,
     });
-    const weekHeading = screen.getByRole('heading', {
+    const coursesHeading = screen.getByRole('heading', {
       level: 2,
-      name: SCHEDULE_TITLE,
+      name: COURSES.title,
     });
     expect(about).toContainElement(aboutHeading);
-    expect(about).not.toContainElement(weekHeading);
-    expect(week).toContainElement(weekHeading);
-    expect(week).not.toContainElement(aboutHeading);
+    expect(about).not.toContainElement(coursesHeading);
+    expect(courses).toContainElement(coursesHeading);
+    expect(courses).not.toContainElement(aboutHeading);
     // Both are bare <section>s made regions by their name — no role bolted on
-    // (§9 semantic HTML first), the CredoCard/ScheduleCard idiom.
+    // (§9 semantic HTML first), the CredoCard idiom.
     for (const region of regions) {
       expect(region.tagName).toBe('SECTION');
       expect(region).not.toHaveAttribute('role');
@@ -322,9 +373,9 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
       level: 2,
       name: ABOUT_HEADING.title,
     });
-    const id = heading.getAttribute('id') as string;
+    const id = heading.getAttribute('id');
     expect(id).toBeTruthy();
-    expect(document.getElementById(id)).toBe(heading);
+    expect(document.getElementById(id ?? '')).toBe(heading);
     expect(about).toHaveAttribute('aria-labelledby', id);
     expect(about).not.toHaveAttribute('id');
     expect(heading.parentElement).not.toHaveAttribute('id');
@@ -333,10 +384,10 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
   it('gives two bands on one page four different region ids (useId)', () => {
     render(
       <>
-        <DoctorProfile about={ABOUT} schedule={SCHEDULE} />
+        <DoctorProfile about={ABOUT} courses={COURSES} />
         <DoctorProfile
           about={{ ...ABOUT, title: 'Despre Dr. Andrei Pop' }}
-          schedule={{ ...SCHEDULE, title: 'Programul doctorului' }}
+          courses={{ ...COURSES, title: 'Cursurile doctorului' }}
         />
       </>,
     );
@@ -349,63 +400,114 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     expect(
       screen.getByRole('region', { name: 'Despre Dr. Andrei Pop' }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Cursurile doctorului' }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('region')).toHaveLength(4);
   });
 
-  it('renders the paragraphs as plain <p>s, in order, in the full ink', () => {
+  it('renders the paragraphs as <p>s, in order, in the credo card’s faint ink, justified (THE INK)', () => {
     const { container } = renderBand();
 
     const block = paragraphsBlockOf(container);
+    expect(block.className).toBe(PARAGRAPHS_BLOCK);
     const paragraphs = [...block.children] as HTMLElement[];
     expect(paragraphs.map((p) => p.tagName)).toEqual(['P', 'P', 'P']);
     expect(paragraphs.map((p) => p.textContent)).toEqual([...PARAGRAPHS]);
     for (const paragraph of paragraphs) {
-      // `text-ink`, not muted (D14: reading prose for §1's reader, 9.7:1 on
-      // the 30 % tint), and JUSTIFIED on the element — the owner's word of
-      // 2026-09-25 (round 2c), §15.1's third per-element exception.
-      expect(paragraph.className).toBe('text-lg text-ink text-justify');
-      // PLAIN text: no fragments, no markup — one string became one <p>.
+      // `text-ink-faint` — the credo card's grey, the owner's pack feedback of
+      // 2026-10-13 ("like the text at [the credo quote] … so gary-ish er"),
+      // 4.70:1 on the page ground — and JUSTIFIED on the element, the owner's
+      // word of 2026-09-25 (round 2c), §15.1's third per-element exception.
+      expect(paragraph.className).toBe(PARAGRAPH);
+      // A plain string stays plain: one string became one <p>'s text.
       expect(paragraph.children).toHaveLength(0);
+    }
+    // ONE ink on the paragraphs — the faint one, never the full ink beside
+    // it (a second `text-*` colour would leave the cascade to decide).
+    for (const paragraph of paragraphs) {
+      expect(
+        tokensOf(paragraph).filter((token) =>
+          /^text-(ink|accent|cta)/.test(token),
+        ),
+      ).toEqual(['text-ink-faint']);
     }
   });
 
-  it('justifies the three paragraphs and NOTHING else — and centres only the card’s opener (§15.15 b)', () => {
+  it('prints a paragraph that arrives as a NODE as it is — a fragment with a <b> lands inside its <p>, the band adds nothing', () => {
+    // The page's shape (THE INK): ui/Keyword's <Keywords> hands over text and
+    // <b>s with no wrapper, and the band prints whatever node it is given —
+    // the <b>s become the <p>'s own children, the words read through intact.
+    const { container } = renderBand({
+      about: { ...ABOUT_HEADING, paragraphs: NODES },
+    });
+
+    const paragraphs = [
+      ...paragraphsBlockOf(container).children,
+    ] as HTMLElement[];
+    expect(paragraphs.map((p) => p.tagName)).toEqual(['P', 'P']);
+    expect(paragraphs.map((p) => p.textContent)).toEqual(NODE_TEXTS);
+    for (const paragraph of paragraphs) {
+      expect(paragraph.className).toBe(PARAGRAPH);
+    }
+    // The key words: <b>s, children of their <p> — no wrapper in between,
+    // and no class from the band (ui/Keyword's recipe is the <b>'s own).
+    const keywords = [...paragraphsBlockOf(container).querySelectorAll('b')];
+    expect(keywords.map((b) => b.textContent)).toEqual([
+      'ortodonție',
+      'aparate fixe',
+      'Planul de tratament',
+    ]);
+    for (const keyword of keywords) {
+      expect(paragraphs).toContain(keyword.parentElement);
+      expect(keyword).not.toHaveAttribute('class');
+    }
+  });
+
+  it('keys the paragraphs by their INDEX — a node is never a key, and two equal paragraphs both print (THE KEYS ARE INDICES)', () => {
+    // A key is invisible in the DOM, so two things carry the pin: React's own
+    // warnings (none — a node as a key would stringify to one shared
+    // "[object Object]", two equal strings would collide), and the source.
+    let container: HTMLElement | undefined;
+    const warnings = keyWarningsDuring(() => {
+      ({ container } = renderBand({
+        about: {
+          ...ABOUT_HEADING,
+          paragraphs: [...NODES, PARAGRAPHS[0], PARAGRAPHS[0]],
+        },
+      }));
+    });
+    expect(warnings).toEqual([]);
+    expect(
+      [...paragraphsBlockOf(htmlElement(container, 'render')).children].map(
+        (p) => p.textContent,
+      ),
+    ).toEqual([...NODE_TEXTS, PARAGRAPHS[0], PARAGRAPHS[0]]);
+    expect(CODE).toMatch(/\bkey=\{index\}/);
+    expect(CODE).not.toMatch(/\bkey=\{paragraph\}/);
+  });
+
+  it('justifies the biography’s paragraphs and NOTHING else — and centres nothing (§15.15 b)', () => {
     const { container } = renderBand();
 
-    // The elements that carry `text-justify` are exactly the about paragraphs
-    // (the per-element canon: the utility rides each <p>, never a wrapper).
-    // The ONE `text-center` is SectionHeading's own `align="center"` root inside
-    // the schedule card (round 2e, D26): a heading block — display text, which
-    // the canon leaves free to centre — never a wrapper around prose.
-    const opener = screen.getByRole('heading', {
-      level: 2,
-      name: SCHEDULE_TITLE,
-    }).parentElement as HTMLElement;
-    expect(tokensOf(opener)).toContain('text-center');
-    const justified = [...container.querySelectorAll('*')].filter((element) =>
+    // The elements that carry `text-justify` are exactly the biography's
+    // paragraphs (the per-element canon: the utility rides each <p>, never a
+    // wrapper) — the course ideas stay start-aligned (DoctorCourses' header).
+    // And both openers are start-aligned: since the card left, nothing in the
+    // band is centred.
+    const justified = everyElementOf(container).filter((element) =>
       tokensOf(element).includes('text-justify'),
     );
-    expect(justified.map((element) => element.tagName)).toEqual([
-      'P',
-      'P',
-      'P',
-    ]);
-    expect(justified.map((element) => element.textContent)).toEqual([
-      ...PARAGRAPHS,
-    ]);
-    for (const element of [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ]) {
+    expect(justified).toEqual([...paragraphsBlockOf(container).children]);
+    for (const element of everyElementOf(container)) {
       for (const token of tokensOf(element)) {
         if (token === 'text-justify' && justified.includes(element)) continue;
-        if (token === 'text-center' && element === opener) continue;
-        expect(token).not.toMatch(/(^|:)text-(justify|center)$/);
+        expect(token).not.toMatch(/(^|:)text-(justify|center|end|right)$/);
       }
     }
   });
 
-  it('opts the doctor’s name out of hyphenation — on the biography’s opener, never above the card’s title (§15.14)', () => {
+  it('opts the doctor’s name out of hyphenation — on the biography’s opener, never above the courses’ title (§15.14)', () => {
     const { container } = renderBand();
 
     // The biography's title carries a PERSON'S NAME, and the body's site-wide
@@ -416,24 +518,24 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     // CLASS is the pin: no stylesheet is loaded here, so a computed `hyphens`
     // would read back the browser's default with or without it.
     const about = screen.getByRole('region', { name: ABOUT_HEADING.title });
-    const opener = screen.getByRole('heading', {
-      level: 2,
-      name: ABOUT_HEADING.title,
-    }).parentElement as HTMLElement;
+    const opener = htmlElement(
+      screen.getByRole('heading', { level: 2, name: ABOUT_HEADING.title })
+        .parentElement,
+      'biography opener',
+    );
     expect(opener).toBe(about.firstElementChild);
     expect(tokensOf(opener)).toContain('hyphens-none');
-    // …and the card's title beside it keeps the inheritance: its words are
-    // ordinary words, wrapping between them (ScheduleCard's heading
-    // paragraph). Nothing from that <h2> up to the band's root may carry the
-    // class, so a refactor that hoists the opt-out to the grid, the ground or
-    // the whole band fails here, naming the element. The walk must reach the
-    // root, or it proved nothing.
+    // …and the courses' title keeps the inheritance: its words are ordinary
+    // words, which may break at a syllable. Nothing from that <h2> up to the
+    // band's root may carry the class, so a refactor that hoists the opt-out
+    // to the grid, the rhythm box or the whole band fails here, naming the
+    // element. The walk must reach the root, or it proved nothing.
     const band = bandOf(container);
     const path: HTMLElement[] = [];
     for (
       let element: HTMLElement | null = screen.getByRole('heading', {
         level: 2,
-        name: SCHEDULE_TITLE,
+        name: COURSES.title,
       });
       element !== null && band.contains(element);
       element = element.parentElement
@@ -444,198 +546,171 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     expect(
       path.filter((element) => tokensOf(element).includes('hyphens-none')),
     ).toEqual([]);
+    // The opener's row is a bare SectionHeading's, read off a live render,
+    // plus that ONE class, merged last — the band hands it nothing else.
+    const { container: bare, unmount } = render(
+      <SectionHeading level={2} eyebrow="x" title="y" />,
+    );
+    const bareRow = htmlElement(
+      bare.firstElementChild,
+      'bare opener',
+    ).className;
+    unmount();
+    expect(opener.className).toBe(`${bareRow} hyphens-none`);
   });
 
-  it('draws no list and no divider — the card’s own edge separates', () => {
+  it('composes sections/DoctorCourses’ public component — its own row, its three props, and THE SHARED ROWS merged last', () => {
     const { container } = renderBand();
 
-    // The courses left this band (D15), and with them the <ul>.
-    expect(container.querySelector('ul, ol, li')).toBeNull();
-    // Round 1's one border that changed side is deleted (D14): no side or
-    // top rule anywhere, no accent line, no <hr>, no separator role. Round 2c's
-    // rule under the schedule's heading came and went (round 2e, "remove thin
-    // line"), so the <dl> carries no border side either.
-    for (const element of [
+    // The courses column IS a bare DoctorCourses with the same eyebrow, title
+    // and items, plus ONE thing the band hands it through `className`: THE
+    // SHARED ROWS, placement in this band's grid (§6.8). Its class row is read
+    // off a live render, never spelled here — the page ground, the belt, the
+    // `py` and the scale are the band's, not handed down.
+    const courses = screen.getByRole('region', { name: COURSES.title });
+    expect(columnsOf(container)[1]).toBe(courses);
+    expect(courses.className).toBe(
+      `${bareCoursesRow()} ${SHARED_ROWS.join(' ')}`,
+    );
+    // Every idea, in the order given, as one list item each — printed, not
+    // rewritten: the band forwards `items` untouched.
+    const list = within(courses).getByRole('list');
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual([...COURSES.items]);
+  });
+
+  it('draws no divider — the gap separates the two columns', () => {
+    const { container } = renderBand();
+
+    // No side or top rule on the band's own boxes, no <hr>, no separator
+    // role: nothing is drawn BETWEEN the biography and the courses (the
+    // header's NO DIVIDER). The courses' own line down its rail is its
+    // business, inside its region.
+    const own = [
       bandOf(container),
-      ...container.querySelectorAll('*'),
-    ]) {
+      columnOf(container),
+      rhythmOf(container),
+      gridOf(container),
+      ...columnsOf(container),
+    ];
+    for (const element of own) {
       for (const token of tokensOf(element)) {
-        expect(token).not.toMatch(/(^|:)border-(t|s|e|b|x|y)(-|$)/);
-        expect(token).not.toMatch(/border-accent/);
+        expect(token).not.toMatch(/(^|:)border(-|$)/);
+        expect(token).not.toMatch(/(^|:)divide-/);
       }
     }
     expect(container.querySelector('hr')).toBeNull();
     expect(screen.queryByRole('separator')).toBeNull();
   });
+});
 
-  it('seats the biography region and the card as the grid’s two direct children — both BOXES', () => {
+describe('DoctorProfile — the grid (THE BIOGRAPHY THREE FIFTHS, THE SHARED ROWS, ONE BRANCH)', () => {
+  it('seats the biography and the courses as the grid’s two items — 3 : 2 from `@3xl` over two rows they share, one column below', () => {
     const { container } = renderBand();
 
     const grid = gridOf(container);
-    expect(grid.className).toBe(GRID);
-    // The two-track token itself, pinned apart from the whole row so its
-    // failure message names the one-width decision (D53).
-    expect(tokensOf(grid)).toContain(TWO_TRACKS);
+    expect(grid.className).toBe(GRID_TWO);
+    // ONE track list, two SHARES of the row — the biography 1.2 × the equal
+    // half round 7's first cut gave it, the courses 0.8 × — each with a zero
+    // floor, so a long word never widens one column at the other's expense;
+    // never a rem or px track, which THE BAND SCALE could not redraw. And ONE
+    // row list: two auto rows, the openers' and the contents'.
+    expect(tokensOf(grid).filter((token) => /grid-cols-/.test(token))).toEqual([
+      '@3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]',
+    ]);
+    expect(tokensOf(grid).filter((token) => /grid-rows-/.test(token))).toEqual([
+      '@3xl:grid-rows-[auto_auto]',
+    ]);
+    expect(
+      tokensOf(grid).filter((token) => /\d(rem|px)\b/.test(token)),
+    ).toEqual([]);
+    // The row gap is the 24px each region keeps between its opener and its
+    // content (both regions' `gap-6`), so a subgrid's own gap adds nothing.
+    expect(tokensOf(grid)).toContain('@3xl:gap-y-6');
+    expect(tokensOf(columnsOf(container)[0] ?? grid)).toContain('gap-6');
 
-    const [about, card] = halvesOf(container);
-    expect(halvesOf(container)).toHaveLength(2);
-    // The first child IS the biography's region (G2-R2 a11y F2): a flex
-    // column at every width, the opener then the paragraphs' block.
+    const [about, courses] = columnsOf(container);
+    expect(columnsOf(container)).toHaveLength(2);
+    // The first item IS the biography's region (G2-R2 a11y F2): a flex
+    // column at every width, the opener then the paragraphs' block — DOM
+    // order = reading order = region order, in both arrangements (D21) — and
+    // from `@3xl` a subgrid of the band's two rows.
     expect(about).toBe(
       screen.getByRole('region', { name: ABOUT_HEADING.title }),
     );
-    expect(about.className).toBe(ABOUT_SECTION);
-    expect(about.children).toHaveLength(2);
-    expect(about.firstElementChild).toBe(
-      screen.getByRole('heading', { name: ABOUT_HEADING.title }).parentElement,
-    );
-    expect(paragraphsBlockOf(container).className).toBe(PARAGRAPHS_BLOCK);
-    // DOM order = reading order = region order: the biography first, then
-    // the card, in both arrangements.
-    expect(card).toBe(screen.getByRole('region', { name: SCHEDULE_TITLE }));
-    // A REGION NEVER DISSOLVES: `display: contents` on an element with a
-    // role is the accessibility-tree bug ScheduleCard's THE WEEK IS CENTRED
-    // paragraph cites. Round 2g's `@3xl:contents` on this half is gone, and
-    // the one place the token may appear is the week's role-less <div>
-    // pairs, inside the <dl>.
-    const dissolving = [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ].filter((element) => tokensOf(element).some((t) => DISSOLVES.test(t)));
-    expect(dissolving.length).toBeGreaterThan(0);
-    for (const element of dissolving) {
-      expect(element.tagName).toBe('DIV');
-      expect(element.parentElement?.tagName).toBe('DL');
-      expect(element).not.toHaveAttribute('role');
+    expect(about?.className).toBe(ABOUT_SECTION);
+    expect(about?.children).toHaveLength(2);
+    expect(courses).toBe(screen.getByRole('region', { name: COURSES.title }));
+    // THE SHARED ROWS on BOTH regions, whole, behind `@3xl` — the courses'
+    // through its className (the test above reads the merge).
+    for (const region of [about, courses]) {
+      for (const token of SHARED_ROWS) {
+        expect(tokensOf(htmlElement(region, 'region'))).toContain(token);
+      }
     }
-  });
-
-  it('seats the card in ONE row, centred, at its own height — D37 by construction', () => {
-    const { container } = renderBand();
-
-    // ScheduleCard's own row, then the band's width and its one placement
-    // utility, merged caller-last (§6.8). Nothing else is added from here.
-    const card = halvesOf(container)[1];
-    const tokens = tokensOf(card);
-    expect(tokens).toContain('@3xl:self-center');
-    expect(card.className).toBe(`${cardRow()} ${CARD_WIDTH} ${CARD_PLACE}`);
-    // Round 2g's two-row seat is gone, not stacked under the one-row shape
-    // (G2-R2 a11y F2): no element in the band names a row or a column — the
-    // card's `row-start-1 row-span-2`, the opener's `row-start-1`, the
-    // paragraphs' `row-start-2` and the `col-start-*`s all left together —
-    // and the grid re-states no row gap, since one row has none.
-    for (const element of [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ]) {
+    // Placement: each region spans the two rows and NAMES nothing — no
+    // column, no line; the DOM order seats the two side by side. None is
+    // `contents`: a region never dissolves (the header's TWO REGIONS).
+    for (const element of [grid, ...columnsOf(container)]) {
       expect(
-        tokensOf(element).filter((token) => PLACEMENT.test(token)),
-      ).toEqual([]);
-    }
-    expect(
-      tokensOf(gridOf(container)).filter((token) => /gap-y-/.test(token)),
-    ).toEqual([]);
-    // Centring aligns the card, it never pulls it to the row's height: no
-    // `self-stretch`, and no `self-start` pinning its top where D37 wants
-    // its middle.
-    expect(
-      tokens.filter((token) => /self-(stretch|start)/.test(token)),
-    ).toEqual([]);
-    // The opener is the region's child, never a grid item, so the band hands
-    // it NO placement: its row is a bare SectionHeading's, read off a live
-    // render rather than spelled here, plus the ONE class the name in its
-    // title needs, `hyphens-none`, merged last (DoctorProfile.tsx's THE NAME
-    // IS NEVER SPLIT comment).
-    const [about] = halvesOf(container);
-    const { container: bare, unmount } = render(
-      <SectionHeading level={2} eyebrow="x" title="y" />,
-    );
-    const bareRow = (bare.firstElementChild as HTMLElement).className;
-    unmount();
-    expect((about.firstElementChild as HTMLElement).className).toBe(
-      `${bareRow} hyphens-none`,
-    );
-  });
-
-  it('gives the card ONE width, eighty spacing steps — the track and the cap are one length (D53; in the step since §15.32 round 4)', () => {
-    // "should not be widening as you widen the screen or tighten when you
-    // tighten it" (owner, round 2k). Two spellings of the same length, a
-    // KEEP-IN-SYNC pair inside this band: the step's second track, and the
-    // stacked card's cap. Since 2026-10-13 BOTH are counts of the spacing
-    // step — the length THE BAND SCALE redraws — so the pair is 20rem outside
-    // the scale and 320 design pixels inside it, the one width held in the
-    // design's pixel (the header's THE BAND SCALE paragraph). Read off the
-    // RENDER and compared, so retuning one without the other fails here,
-    // naming the pair — and a track that slips back to a rem or px literal,
-    // which the scale would leave at 320px while the prose, the gap and the
-    // headings round it grew, fails the pattern.
-    const { container } = renderBand();
-
-    const grid = tokensOf(gridOf(container));
-    const tracks = grid
-      .map((token) =>
-        /^@3xl:grid-cols-\[minmax\(0,1fr\)_calc\(var\(--spacing\)\*(\d+)\)\]$/.exec(
-          token,
+        tokensOf(element).filter(
+          (token) => PLACEMENT.test(token) || /(^|:)contents$/.test(token),
         ),
-      )
-      .find(Boolean);
-    expect(
-      tracks,
-      'the prose track, then ONE length counted in spacing steps',
-    ).toBeTruthy();
-    const card = tokensOf(halvesOf(container)[1]);
-    const cap = card
-      .map((token) => /^max-w-(\d+(?:\.\d+)?)$/.exec(token))
-      .find(Boolean);
-    expect(cap, 'the stacked card is capped on the spacing scale').toBeTruthy();
-    // `max-w-N` is N spacing steps on Tailwind's untouched scale (§3) — the
-    // same step the track counts — so equal counts are one length at ANY
-    // design pixel: eighty, round 2k's 20rem.
-    expect(Number(cap?.[1])).toBe(Number(tracks?.[1]));
-    expect(Number(tracks?.[1])).toBe(80);
-    // No fixed literal anywhere in the track list: a rem or a px there is
-    // exactly what the scale cannot redraw.
-    expect(
-      grid.filter(
-        (token) => token.includes('grid-cols-') && /\d(rem|px)\b/.test(token),
-      ),
-    ).toEqual([]);
-
-    // Round 2e's share and floor are gone, not stacked under the new track:
-    // ONE track list on the grid, so nothing can still hand the card a slice
-    // of the free space.
-    expect(grid.filter((token) => token.includes('grid-cols-'))).toEqual([
-      TWO_TRACKS,
-    ]);
-    expect(grid.filter((token) => /minmax\(20rem|3fr/.test(token))).toEqual([]);
-    // Stacked, the card fills the column UP TO the cap and sits centred: the
-    // three utilities ride the card UNGATED (at the step they are inert —
-    // `w-full` of the eighty-step track is its width, the auto margins find
-    // no room), and
-    // no width, min-width or inline margin is re-stated under a container
-    // variant, where it could fight the track.
-    for (const token of ['w-full', 'max-w-80', 'mx-auto']) {
-      expect(card).toContain(token);
+      ).toEqual(element === grid ? [] : ['@3xl:row-span-2']);
     }
-    expect(
-      card.filter((token) => /^@[^:]+:(-?m[xse]?-|(min-|max-)?w-)/.test(token)),
-    ).toEqual([]);
-    expect(card.filter((token) => /^min-w-/.test(token))).toEqual([]);
+    // Alignment: on each region, and only from `@3xl`, TWO utilities —
+    // `@3xl:items-start`, so its opener and its content keep their own
+    // heights at the top of their rows instead of stretching to them (THE
+    // ITEMS KEEP THEIR HEIGHTS: the courses' island watches its list for the
+    // off-screen hold), and `@3xl:content-start`, THE FALLBACK's belt —
+    // and nothing on the grid.
+    for (const element of [grid, ...columnsOf(container)]) {
+      expect(
+        tokensOf(element).filter((token) => ALIGNMENT.test(token)),
+      ).toEqual(
+        element === grid ? [] : ['@3xl:items-start', '@3xl:content-start'],
+      );
+    }
+    // Every class of the arrangement waits for the Container's `@3xl`: below
+    // it the grid is one column and both regions plain flex columns.
+    for (const element of [grid, ...columnsOf(container)]) {
+      const own = element === grid ? GRID_ONE : ABOUT_ALONE;
+      for (const token of tokensOf(element)) {
+        if (own.split(' ').includes(token)) continue;
+        if (element === courses && bareCoursesRow().split(' ').includes(token))
+          continue;
+        expect(token, `${element.tagName} ${token}`).toMatch(/^@3xl:/);
+      }
+    }
   });
 
-  it('prints the week the page formatted: seven terms, seven values', () => {
-    renderBand();
+  it('with NO courses: ONE column at every width — no courses region, no list, no shared rows, the biography alone', () => {
+    // sections/DoctorCourses renders nothing for an empty `items` (its EMPTY
+    // paragraph), and the band's one branch is the same fact: no second
+    // column waits beside nothing, no row waits to be shared, and the
+    // biography stays a plain flex column (the header's ONE BRANCH, a
+    // KEEP-IN-SYNC pair this test holds from both sides).
+    const { container } = renderBand({ courses: NO_COURSES });
 
-    const card = screen.getByRole('region', { name: SCHEDULE_TITLE });
-    const terms = [...card.querySelectorAll('dt')].map((dt) => dt.textContent);
-    const values = [...card.querySelectorAll('dd')].map((dd) => dd.textContent);
-    expect(terms).toEqual(ROWS.map((row) => row.label));
-    expect(values).toEqual(ROWS.map((row) => row.value));
-    expect(terms).toHaveLength(7);
+    expect(gridOf(container).className).toBe(GRID_ONE);
+    expect(columnsOf(container)).toHaveLength(1);
+    const about = screen.getByRole('region', { name: ABOUT_HEADING.title });
+    expect(columnsOf(container)[0]).toBe(about);
+    expect(about.className).toBe(ABOUT_ALONE);
+    expect(screen.getAllByRole('region')).toHaveLength(1);
+    expect(screen.queryByRole('heading', { name: COURSES.title })).toBeNull();
+    expect(screen.queryByText(COURSES.eyebrow)).toBeNull();
+    expect(screen.queryByRole('list')).toBeNull();
+    // The measure is then `max-w-4xl` on the paragraphs' block, as it always
+    // was — the same block, the same row.
+    expect(paragraphsBlockOf(container).className).toBe(PARAGRAPHS_BLOCK);
   });
 
   it('renders what it is given: no paragraphs is an empty block, not a branch', () => {
-    // A page bug, not a state (the header's NO BRANCHES paragraph): the band
+    // A page bug, not a state (the header's ONE BRANCH paragraph): the band
     // keeps its shape and simply has nothing to print in the block.
     const { container } = renderBand({
       about: { ...ABOUT_HEADING, paragraphs: [] },
@@ -644,112 +719,139 @@ describe('DoctorProfile — about ‖ schedule (D14)', () => {
     const block = paragraphsBlockOf(container);
     expect(block.className).toBe(PARAGRAPHS_BLOCK);
     expect(block.children).toHaveLength(0);
-    expect(halvesOf(container)).toHaveLength(2);
+    expect(columnsOf(container)).toHaveLength(2);
+    expect(columnsOf(container)[0]?.className).toBe(ABOUT_SECTION);
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2);
   });
 });
 
-describe('DoctorProfile — composes sections/TintedBand (run D29)', () => {
-  it('IS a TintedBand: the same outer, the same three boxes, the same column', () => {
-    // The ground left this file for sections/TintedBand, and this is the
-    // whole claim the band still makes about it: every class the ground
-    // paints is the one a bare TintedBand paints, read off a live render —
-    // the tint, the fades and their Hero cross-pin are pinned THERE.
-    const ground = bareGround();
+describe('DoctorProfile — the ground, the belt and the scale (the header’s THE GROUND, THE BELT, THE BAND SCALE)', () => {
+  it('stands on the plain page ground — ui/Container’s page-band recipe, no TintedBand', () => {
     const { container } = renderBand();
 
+    // THE GROUND IS THE PLAIN PAGE (2026-10-13): the band is a <section> on
+    // `bg-page` whose ONE child is ui/Container — no fade box before or after
+    // it, no tinted middle, no colour mix anywhere in the band's own markup.
+    // The faint ink of the paragraphs is chartered for this ground and barred
+    // from the tint (THE INK; tests/unit/ink-faint-census.test.ts).
     const band = bandOf(container);
     expect(band.tagName).toBe('SECTION');
-    expect(band.className).toBe(ground.band);
-
-    const [fadeIn, middle, fadeOut] = boxesOf(container);
-    expect(boxesOf(container)).toHaveLength(3);
-    expect(fadeIn.className).toBe(ground.fadeIn);
-    expect(middle.className).toBe(ground.middle);
-    expect(fadeOut.className).toBe(ground.fadeOut);
-    // The fades are paint on this band as on every TintedBand.
-    expect(fadeIn).toHaveAttribute('aria-hidden', 'true');
-    expect(fadeOut).toHaveAttribute('aria-hidden', 'true');
-    expect((middle.firstElementChild as HTMLElement).className).toBe(
-      ground.column,
-    );
+    expect(band.className).toBe(BAND);
+    expect(band.children).toHaveLength(1);
+    expect(columnOf(container).className).toBe(containerClasses);
+    expect(columnOf(container).children).toHaveLength(1);
+    expect(rhythmOf(container).children).toHaveLength(1);
+    for (const element of [
+      band,
+      columnOf(container),
+      rhythmOf(container),
+      gridOf(container),
+    ]) {
+      expect(element.getAttribute('aria-hidden')).toBeNull();
+      for (const token of tokensOf(element)) {
+        expect(token).not.toMatch(/color-mix|--tint|bg-linear|gradient/);
+      }
+    }
+    // The one paint in the band's own markup is the page's.
+    expect(
+      ownBoxesOf(container).flatMap((element) =>
+        tokensOf(element).filter((token) => /(^|:)bg-/.test(token)),
+      ),
+    ).toEqual(['bg-page']);
   });
 
-  it('puts ONE thing on the ground: THE BAND SCALE’s box, holding the D14 grid and nothing else', () => {
-    // What this band adds is its content, and since 2026-10-13 exactly ONE
-    // box between the ground's column and the grid — the scale's (the next
-    // block). The `py` still rides the grid: TintedBand adds no padding (its
-    // NO VERTICAL PADDING paragraph), and neither does the scale box.
+  it('wears THE BELT on the full-bleed outer and on no other element of the band', () => {
     const { container } = renderBand();
 
-    const column = columnOf(container);
-    expect(column.children).toHaveLength(1);
-    expect(column.firstElementChild).toBe(scaleBoxOf(container));
-    expect(scaleBoxOf(container).children).toHaveLength(1);
-    expect(scaleBoxOf(container).firstElementChild).toBe(gridOf(container));
-    expect(gridOf(container).className).toBe(GRID);
+    // The clip trims the lit idea's overshoot at the screen's edge only on
+    // the outer (the header's THE BELT); on the Container or the grid it
+    // would cut an idea at rest, and a second `wrap-anywhere` would be a
+    // second, quieter version of the same rule. The belt's three tokens ride
+    // the outer and NO other element of the band — the courses' included,
+    // whose own belt moved here on 2026-10-13 — and no other box of the
+    // band's own markup clips at all.
+    const band = bandOf(container);
+    for (const token of BELT) expect(tokensOf(band)).toContain(token);
+    for (const element of everyElementOf(container)) {
+      if (element === band) continue;
+      expect(
+        tokensOf(element).filter((token) => BELT.includes(token)),
+        `${element.tagName}.${element.getAttribute('class') ?? ''}`,
+      ).toEqual([]);
+    }
+    for (const element of ownBoxesOf(container)) {
+      if (element === band) continue;
+      expect(
+        tokensOf(element).filter((token) =>
+          /(^|:)overflow(-[xy])?-/.test(token),
+        ),
+        `${element.tagName}.${element.getAttribute('class') ?? ''}`,
+      ).toEqual([]);
+    }
+  });
+
+  it('wears THE BAND SCALE on the rhythm box — the `py` steps, then ui/Container’s two strings, imported, whole, in cx() order', () => {
+    // The owner, 2026-10-13: "Whole page, like Home" (CLAUDE.md §15.32 round
+    // 4). The rule is ui/Container's (THE BAND SCALE, recipe rule 5): the
+    // band wears it unconditionally on its RHYTHM box — no prop, no box of
+    // its own since the outdent left — and the box's classes are the `py`
+    // steps and the two exports, nothing added, nothing dropped.
+    const { container } = renderBand();
+
+    const rhythm = rhythmOf(container);
+    expect(rhythm.tagName).toBe('DIV');
+    expect(tokensOf(rhythm)).toEqual(RHYTHM);
+    // Never vacuous: the imported strings really carry the gate — the pin
+    // above could not tell an emptied export from the scale.
+    expect(RHYTHM.filter((token) => GATED.test(token)).length).toBeGreaterThan(
+      0,
+    );
+    // A plain layout box: its class and nothing else — no role, no name, no
+    // id, nothing a screen reader or a jump could find.
+    expect(rhythm.getAttributeNames()).toEqual(['class']);
+    // ONE box declares the design pixel: the gated classes ride it alone,
+    // never the band, the Container, the grid or anything inside — the
+    // courses included, which inherit the scale and wear none of their own.
+    for (const element of everyElementOf(container)) {
+      if (element === rhythm) continue;
+      expect(
+        tokensOf(element).filter((token) => GATED.test(token)),
+        `${element.tagName}.${element.getAttribute('class') ?? ''}`,
+      ).toEqual([]);
+    }
+  });
+
+  it('keeps the biography on the column’s edge — no outdent, no negative margin anywhere in the band’s own markup', () => {
+    const { container } = renderBand();
+
+    // Round 2d's step into the gutter left with the lilac (the header's
+    // HISTORY): the ONE margin utility on the band's own boxes is the scale
+    // column's centring — no outdent, nothing negative — so the biography's
+    // opener stands on the column's edge at every width.
+    const margins = ownBoxesOf(container).flatMap((element) =>
+      tokensOf(element).filter((token) => /(^|:)-?m[xytrblse]?-/.test(token)),
+    );
+    expect(margins).toEqual(['mx-auto']);
+    // …and that one comes from ui/Container's column string, not this file.
+    expect(bandColumnClasses.split(' ')).toContain('mx-auto');
   });
 });
 
-describe('DoctorProfile — THE BAND SCALE, the class contract (§15.32 round 4)', () => {
-  it('wears ui/Container’s two strings on ONE box between the column and the grid — imported, whole, in cx() order', () => {
-    // The owner, 2026-10-13: "make the exact same thing with the heading and
-    // eyebrow from the individual dr page" — "Whole page, like Home". The
-    // rule is ui/Container's (THE BAND SCALE, recipe rule 5); this band wears
-    // it unconditionally — it lives on the doctor page alone, and that page
-    // scales whole — so there is no prop, and the box's classes are the two
-    // exports, nothing added, nothing dropped.
-    const { container } = renderBand();
+describe('DoctorProfile — no schedule, no lilac (the owner, 2026-10-13: “no more schedul box at all”)', () => {
+  it('prints no week: no <dl>, no card, no third heading', () => {
+    renderBand();
 
-    const box = scaleBoxOf(container);
-    expect(box.tagName).toBe('DIV');
-    expect(tokensOf(box)).toEqual(SCALE_BOX);
-    // Never vacuous: the imported strings really carry the gate — the pin
-    // above could not tell an emptied export from the scale.
-    expect(
-      SCALE_BOX.filter((token) => GATED.test(token)).length,
-    ).toBeGreaterThan(0);
-    // A plain layout box: its class and nothing else — no role, no name, no
-    // id, nothing a screen reader or a jump could find.
-    expect(box.getAttributeNames()).toEqual(['class']);
+    expect(document.querySelector('dl, dt, dd')).toBeNull();
+    expect(screen.getAllByRole('heading')).toHaveLength(2);
+    expect(screen.getAllByRole('region')).toHaveLength(2);
   });
 
-  it('keeps the scale off every other element — and the OUTDENT off the scale box (the header’s THE BAND SCALE, first bullet)', () => {
-    const { container } = renderBand();
-
-    const box = scaleBoxOf(container);
-    const grid = gridOf(container);
-    // ONE box declares the design pixel and redraws the theme: the gated
-    // classes ride it alone, never the ground, the column, the grid or
-    // anything inside (the whole band follows through the remapped theme).
-    for (const element of [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ]) {
-      if (element === box) continue;
-      expect(
-        tokensOf(element).filter((token) => GATED.test(token)),
-        `${element.tagName}.${element.className}`,
-      ).toEqual([]);
-    }
-    // THE WHY OF THE EXTRA BOX: `mx-auto` (the cap's centring) and the
-    // prose's negative start margin may never share an element — on one, the
-    // outdent would cancel the centring past the cap and `w-full` would pull
-    // the card's edge 2rem in. So the centring and the width are the scale
-    // box's, the outdent and the rhythm the grid's.
-    expect(tokensOf(box)).toContain('mx-auto');
-    expect(tokensOf(box)).toContain('w-full');
-    // Every margin and padding utility on the scale box, at any variant: the
-    // centring alone — no outdent, no rhythm.
-    expect(
-      tokensOf(box).filter((token) => /(^|:)-?[mp][xytrblse]?-/.test(token)),
-    ).toEqual(['mx-auto']);
-    expect(tokensOf(grid)).toContain('@3xl:-ms-8');
-    expect(
-      tokensOf(grid).filter((token) =>
-        /(^|:)(m[xse]?-auto|w-full)$/.test(token),
-      ),
-    ).toEqual([]);
+  it('imports no schedule, no hours module and no tinted ground — read off the source', () => {
+    expect(CODE).not.toMatch(/ScheduleCard/);
+    expect(CODE).not.toMatch(/@\/lib\/hours\b/);
+    expect(CODE).not.toMatch(/HoursRow/);
+    expect(CODE).not.toMatch(/TintedBand/);
+    expect(CODE).not.toMatch(/\bschedule\b/);
   });
 });
 
@@ -757,18 +859,16 @@ describe('DoctorProfile — the native surface (§6.8)', () => {
   it('merges the caller className LAST on the <section>', () => {
     const { container } = renderBand({ className: 'mt-10' });
 
-    // The className travels to TintedBand untouched and lands after the
-    // ground's own row there — the bare ground's row, then the caller's.
     const band = bandOf(container);
     expect(band.tagName).toBe('SECTION');
-    expect(band.className).toBe(`${bareGround().band} mt-10`);
+    expect(band.className).toBe(`${BAND} mt-10`);
   });
 
   it('spreads native props onto the band', () => {
     const { container } = render(
       <DoctorProfile
         about={ABOUT}
-        schedule={SCHEDULE}
+        courses={COURSES}
         lang="de"
         id="profile"
         data-band="doctor-profile"
@@ -783,19 +883,21 @@ describe('DoctorProfile — the native surface (§6.8)', () => {
 
   it('accepts ref as a regular prop (React 19) — it is the <section>', () => {
     const band = createRef<HTMLElement>();
-    render(<DoctorProfile about={ABOUT} schedule={SCHEDULE} ref={band} />);
+    const { container } = render(
+      <DoctorProfile about={ABOUT} courses={COURSES} ref={band} />,
+    );
 
+    expect(band.current).toBe(bandOf(container));
     expect(band.current?.tagName).toBe('SECTION');
   });
 
   it('takes no name of its own — the two headings are the structure', () => {
     const { container } = renderBand();
 
-    // An <section> without an accessible name is a generic box, not a region:
-    // there is no single noun covering "who he is" and "when he is here", and
-    // a name invented for the pair would wrap the two named halves in a third
-    // region called after one of them. The TWO regions in the band are its
-    // halves (G2-R2 a11y F2), never the band itself.
+    // A <section> without an accessible name is a generic box, not a region:
+    // there is no single noun covering "who the doctor is" and "what the
+    // doctor has trained in", and a name invented for the pair would wrap the
+    // two named columns in a third region called after one of them.
     const band = bandOf(container);
     expect(screen.getAllByRole('region')).toHaveLength(2);
     expect(screen.getAllByRole('region')).not.toContain(band);
@@ -804,7 +906,7 @@ describe('DoctorProfile — the native surface (§6.8)', () => {
   });
 });
 
-describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', () => {
+describe('DoctorProfile — container steps only, zero islands of its own (§6.5, §16)', () => {
   it('carries no WIDTH media query anywhere — those are the page’s; its one media condition is THE BAND SCALE’s pointer gate, imported', () => {
     // Container variants (@lg:, @3xl:, the scale's @4xl: and @min-[…]:) are
     // the allowed shape: they measure the gutter COLUMN, which is what makes
@@ -814,10 +916,7 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
     // an `@` in front, and stays allowed.
     const { container } = renderBand();
 
-    for (const element of [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ]) {
+    for (const element of everyElementOf(container)) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/(^|:)(max-)?(sm|md|lg|xl|2xl):/);
         expect(token).not.toMatch(/(^|:)(min|max)-\[/);
@@ -825,20 +924,20 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
     }
     // The ONE media condition in the band — globals.css's `scalable:` gate, a
     // fine pointer in an engine that registers custom properties, never a
-    // width — rides the scale box alone, and only through ui/Container's
-    // strings (the class-contract block above).
-    const gatedElements = [
-      bandOf(container),
-      ...container.querySelectorAll('*'),
-    ].filter((element) => tokensOf(element).some((token) => GATED.test(token)));
-    expect(gatedElements).toEqual([scaleBoxOf(container)]);
+    // width — rides the rhythm box alone, and only through ui/Container's
+    // strings (the scale block above).
+    const gatedElements = everyElementOf(container).filter((element) =>
+      tokensOf(element).some((token) => GATED.test(token)),
+    );
+    expect(gatedElements).toEqual([rhythmOf(container)]);
   });
 
-  it('ships NO client directive — the band is inert HTML (§16)', () => {
+  it('ships NO client directive — the band itself is inert HTML (§16)', () => {
     // The source guard, read through Vite's ?raw (typed by the repo's own
     // src/types/raw-import.d.ts) so it runs in the same browser project as the
     // rest of the suite. Anchored to a line of its OWN, because that is what a
-    // directive is, and tolerant of a trailing comment.
+    // directive is, and tolerant of a trailing comment. The courses' island
+    // is DoctorCourses' file, never this one.
     expect(CODE).not.toMatch(/^\s*['"]use client['"]\s*;?\s*(\/\/.*)?$/m);
     expect(CODE).not.toMatch(/\bon[A-Z]\w*=/);
     expect(CODE).not.toMatch(/\buseTranslations\b/);
@@ -847,25 +946,20 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
   });
 
   it('calls exactly ONE hook, and it is the server-safe useId', () => {
-    // Since G2-R2 (a11y F2) the biography's region is named through useId —
-    // the CredoCard/ScheduleCard idiom, server-safe and hydration-stable, so
-    // it costs no 'use client'. Once, and nothing else.
+    // The biography's region is named through useId — the CredoCard idiom,
+    // server-safe and hydration-stable, so it costs no 'use client'. Once,
+    // and nothing else.
     const hooks = [...CODE.matchAll(/\buse[A-Z]\w*\(/g)].map((m) => m[0]);
     expect(hooks).toEqual(['useId(']);
   });
 
-  it('imports EXACTLY what it renders, plus react and the row TYPE', () => {
+  it('imports EXACTLY what it renders, plus react — never ui/Keyword, never lib/team', () => {
     // The import surface is the guard a regex over the body cannot be: a data
     // module imported here would make the band its own populator and break the
-    // run's D1 in a way no rendered assertion would notice. lib/hours is the
-    // one lib specifier and it must arrive `import type`: the band never
-    // formats a row (the page does), and a type import erases to nothing at
-    // build time. sections/TintedBand joined in run D29 — and ui/Container and
-    // lib/cx LEFT with the markup they served (the Container is rendered
-    // inside TintedBand, and `className` passes through to it unjoined). Both
-    // came BACK on 2026-10-13 for THE BAND SCALE's box: ui/Container for its
-    // two band-scale strings — this file renders no Container of its own —
-    // and lib/cx to join them, the way every scaled band does.
+    // run's D1 in a way no rendered assertion would notice. Since 2026-10-13
+    // the band renders ui/Container itself (the page-band recipe, with
+    // TintedBand gone) and composes sections/DoctorCourses, whose props TYPE
+    // it reads for `courses`; lib/hours and ./ScheduleCard left with the week.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -873,24 +967,28 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
       .toSorted();
 
     expect(specifiers).toEqual([
-      './ScheduleCard',
+      '@/components/sections/DoctorCourses/DoctorCourses',
       '@/components/sections/SectionHeading/SectionHeading',
-      '@/components/sections/TintedBand/TintedBand',
       '@/components/ui/Container/Container',
       '@/lib/cx/cx',
-      '@/lib/hours/hours',
       'react',
     ]);
-    // From ui/Container, the two strings and nothing else: the band never
-    // renders a second Container inside TintedBand's.
+    // From ui/Container, the atom and the two band-scale strings — never the
+    // gutter pair, which the atom already applies.
     expect(CODE).toMatch(
-      /^import \{\s*bandColumnClasses,\s*bandScaleClasses,?\s*\} from '@\/components\/ui\/Container\/Container';$/m,
+      /^import \{\s*Container,\s*bandColumnClasses,\s*bandScaleClasses,?\s*\} from '@\/components\/ui\/Container\/Container';$/m,
     );
+    // From DoctorCourses, the component and its props TYPE — never an
+    // internal (§4's section → section rule).
     expect(CODE).toMatch(
-      /^import type \{[^}]*\bHoursRow\b[^}]*\} from '@\/lib\/hours\/hours';$/m,
+      /^import \{\s*DoctorCourses,\s*type DoctorCoursesProps,?\s*\} from '@\/components\/sections\/DoctorCourses\/DoctorCourses';$/m,
     );
-    // No lib DATA at all (run D1): the words and the week arrive finished.
+    // No lib DATA at all (run D1): the words arrive finished.
     expect(CODE).not.toMatch(/@\/lib\/(clinic|prices|reviews|team|routes)/);
+    // THE KEY WORDS ARE THE PAGE'S (THE INK): the band names neither
+    // ui/Keyword nor the cutter that feeds it — a paragraph arrives rendered.
+    expect(CODE).not.toMatch(/@\/components\/ui\/Keyword/);
+    expect(CODE).not.toMatch(/\bKeywords?\b|\bsplitKeywords\b|<b\b/);
     // Side-effect (`import './x'`) and re-export (`export … from './x'`) forms
     // add a dependency the matcher above would not see.
     expect(CODE).not.toMatch(/^import\s*['"]/m);
@@ -904,12 +1002,10 @@ describe('DoctorProfile — container steps only, zero islands (§6.5, §16)', (
 
     expect(screen.queryAllByRole('button')).toHaveLength(0);
     expect(screen.queryAllByRole('link')).toHaveLength(0);
-    // Every character on the band, in order — and no eyebrow between the
-    // prose and the card's title (D37).
+    // Every character on the band, in order: the biography, then the courses.
     expect(container.textContent).toBe(
       `${ABOUT_HEADING.eyebrow}${ABOUT_HEADING.title}${PARAGRAPHS.join('')}` +
-        SCHEDULE_TITLE +
-        ROWS.map((row) => `${row.label}${row.value}`).join(''),
+        `${COURSES.eyebrow}${COURSES.title}${COURSES.items.join('')}`,
     );
     expect(container.textContent).not.toMatch(/\b[a-z]+\.[a-zA-Z]+\.[a-zA-Z]+/);
   });
@@ -920,30 +1016,33 @@ describe('DoctorProfile — type-level pins', () => {
     // Erased to no-ops at runtime; they fail at `tsc --noEmit` time, naming
     // the property. `children` would be swallowed silently (JSX children beat
     // spread ones), and either ARIA naming attribute would turn the band into
-    // a region announced by a name that covers only one of its halves.
+    // a region announced by a name that covers only one of its columns.
     expectTypeOf<ProfileHeading>().toEqualTypeOf<
       Readonly<{ eyebrow: string; title: string }>
     >();
+    // A paragraph is any finished node (THE INK): the page hands over
+    // ui/Keyword's fragments, and a plain string is a node too.
     expectTypeOf<DoctorProfileProps['about']['paragraphs']>().toEqualTypeOf<
-      readonly string[]
+      readonly ReactNode[]
     >();
-    expectTypeOf<DoctorProfileProps['schedule']['rows']>().toEqualTypeOf<
-      readonly HoursRow[]
+    // The courses are DoctorCourses' own three shown props, as given — the
+    // eyebrow, the <h2> and the ideas — and its rhythm is NOT among them
+    // (the band leaves `intervalMs` to DoctorCourses' default).
+    expectTypeOf<DoctorProfileProps['courses']>().toEqualTypeOf<
+      Readonly<{ eyebrow: string; title: string; items: readonly string[] }>
     >();
-    // The card's content is a title and the week — nothing else (D37 struck
-    // the eyebrow; `ProfileHeading` above is the prose's pair alone now).
-    expectTypeOf<DoctorProfileProps['schedule']>().toEqualTypeOf<
-      Readonly<{ title: string; rows: readonly HoursRow[] }>
+    expectTypeOf<DoctorProfileProps['courses']['items']>().toEqualTypeOf<
+      DoctorCoursesProps['items']
     >();
-    expectTypeOf<DoctorProfileProps['schedule']>().not.toHaveProperty(
-      'eyebrow',
+    expectTypeOf<DoctorProfileProps['courses']>().not.toHaveProperty(
+      'intervalMs',
     );
     expectTypeOf<DoctorProfileProps>().not.toHaveProperty('children');
     expectTypeOf<DoctorProfileProps>().not.toHaveProperty('aria-label');
     expectTypeOf<DoctorProfileProps>().not.toHaveProperty('aria-labelledby');
-    // The courses LEFT this band (D15) — a caller still handing them over is
-    // a caller that has not moved them to sections/DoctorCourses.
-    expectTypeOf<DoctorProfileProps>().not.toHaveProperty('courses');
+    // The week LEFT this band on 2026-10-13 ("no more schedul box at all"): a
+    // caller still handing it over is a caller that has not dropped it.
+    expectTypeOf<DoctorProfileProps>().not.toHaveProperty('schedule');
   });
 
   it('does carry the surface those pins are read against', () => {
@@ -951,70 +1050,75 @@ describe('DoctorProfile — type-level pins', () => {
     // degraded to `{}`, every negative pin above would pass while proving
     // nothing.
     expectTypeOf<DoctorProfileProps>().toHaveProperty('about');
-    expectTypeOf<DoctorProfileProps>().toHaveProperty('schedule');
+    expectTypeOf<DoctorProfileProps>().toHaveProperty('courses');
     expectTypeOf<DoctorProfileProps>().toHaveProperty('className');
   });
 
-  it('refuses the shapes the Omits and the two halves exist to refuse', () => {
+  it('takes the page’s shape — fragments with key words, or plain strings — as paragraphs', () => {
+    // Compiles, or `tsc --noEmit` names the line: the doctor page's
+    // <Keywords> output and the plain strings every story keeps are both
+    // finished nodes.
+    const keyworded: DoctorProfileProps = {
+      about: { ...ABOUT_HEADING, paragraphs: NODES },
+      courses: COURSES,
+    };
+    const plain: DoctorProfileProps = { about: ABOUT, courses: COURSES };
+    expect([keyworded, plain]).toHaveLength(2);
+  });
+
+  it('refuses the shapes the Omits and the two columns exist to refuse', () => {
     // Never rendered: these exist so `tsc --noEmit` fails if the surface
     // loosens. @ts-expect-error is itself an error when the line compiles, so
     // both directions are covered (the ui/GlyphButton precedent).
     const BASE = {
       about: ABOUT,
-      schedule: SCHEDULE,
+      courses: COURSES,
     } satisfies DoctorProfileProps;
 
     // @ts-expect-error — the band exists for the doctor's words (run D1)
-    const wordless: DoctorProfileProps = { schedule: BASE.schedule };
-    // @ts-expect-error — the white card is half the band (D14)
-    const cardless: DoctorProfileProps = { about: BASE.about };
+    const wordless: DoctorProfileProps = { courses: BASE.courses };
+    // @ts-expect-error — the courses are the other column; empty is `items: []`
+    const courseless: DoctorProfileProps = { about: BASE.about };
     // @ts-expect-error — content arrives as props; children would vanish
     const nested: DoctorProfileProps = { ...BASE, children: 'x' };
     // @ts-expect-error — the band deliberately has no one name
     const named: DoctorProfileProps = { ...BASE, 'aria-label': 'Despre' };
-    // @ts-expect-error — a caller's pair would name it after one half
+    // @ts-expect-error — a caller's pair would name it after one column
     const paired: DoctorProfileProps = { ...BASE, 'aria-labelledby': 'x' };
-    // @ts-expect-error — the courses left for sections/DoctorCourses (D15)
-    const coursed: DoctorProfileProps = { ...BASE, courses: [] };
+    // @ts-expect-error — the schedule card is gone (2026-10-13)
+    const scheduled: DoctorProfileProps = { ...BASE, schedule: {} };
     // The last three sit INSIDE the literal: a multi-line object reports the
     // mismatch on the offending PROPERTY, and @ts-expect-error only silences
-    // the line right under it (TS2578 caught both when they sat on the `const`).
+    // the line right under it (on the `const`, TS2578 reports it unused).
     const oneString: DoctorProfileProps = {
       ...BASE,
-      // @ts-expect-error — paragraphs are a LIST of finished strings, never one
+      // @ts-expect-error — paragraphs are a LIST of finished nodes, never one
       about: { ...ABOUT_HEADING, paragraphs: PARAGRAPHS[0] },
     };
-    const fragments: DoctorProfileProps = {
+    const paced: DoctorProfileProps = {
       ...BASE,
-      // @ts-expect-error — plain prose only: no ReactNode body (D14)
-      about: { ...ABOUT_HEADING, paragraphs: [<b key="k">ortodonție</b>] },
-    };
-    const eyebrowed: DoctorProfileProps = {
-      ...BASE,
-      schedule: {
-        // @ts-expect-error — the card's eyebrow is struck (D37, round 2g)
-        eyebrow: 'Program',
-        title: SCHEDULE_TITLE,
-        rows: ROWS,
+      courses: {
+        ...COURSES,
+        // @ts-expect-error — the rhythm is DoctorCourses' own default
+        intervalMs: 1_000,
       },
     };
     const untitled: DoctorProfileProps = {
       ...BASE,
-      // @ts-expect-error — the title names the card's region; it stays required
-      schedule: { rows: ROWS },
+      // @ts-expect-error — the title names the courses' region: required
+      courses: { eyebrow: COURSES.eyebrow, items: COURSES.items },
     };
 
     expect([
       wordless,
-      cardless,
+      courseless,
       nested,
       named,
       paired,
-      coursed,
+      scheduled,
       oneString,
-      fragments,
-      eyebrowed,
+      paced,
       untitled,
-    ]).toHaveLength(10);
+    ]).toHaveLength(9);
   });
 });

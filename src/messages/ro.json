@@ -107,7 +107,7 @@
         "title": "Despre {name}"
       },
       "courses": {
-        "eyebrow": "Formare continuă",
+        "eyebrow": "Repere din drumul meu spre specializare",
         "title": "Cursuri și specializări"
       },
       "stats": {
@@ -115,10 +115,6 @@
         "title": "Experiență confirmată în timp",
         "lead": "Cifrele de mai jos spun, pe scurt, cum lucrăm: cu atenție, cu tehnologie modernă și cu grijă reală pentru fiecare pacient.",
         "atLeast": "peste"
-      },
-      "schedule": {
-        "title": "Când mă găsiți la clinică",
-        "closed": "Închis"
       }
     }
   },

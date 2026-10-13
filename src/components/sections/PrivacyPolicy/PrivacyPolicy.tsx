@@ -73,9 +73,7 @@ export const PRIVACY_TITLE_ID = 'privacy-title';
  * focus-visible:outline-2 focus-visible:outline-focus`, 200ms ease-out).
  * Every link here sits on the page ground, where `--accent` reads 4.81:1
  * (tests/unit/accent-census.test.ts names this file a wearer, with that
- * ground). KEEP-IN-SYNC with sections/ClinicLocation's NOTE_LINK — the note
- * under the map links HERE in the same dress; PrivacyPolicy.test.tsx holds
- * the two strings equal.
+ * ground).
  */
 export const POLICY_LINK =
   'rounded-xs underline decoration-1 underline-offset-2 outline-offset-2 ' +

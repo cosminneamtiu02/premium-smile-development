@@ -65,7 +65,6 @@
       "eyebrow": "So finden Sie uns",
       "title": "Besuchen Sie unsere Klinik",
       "mapAlt": "Karte mit dem Standort der Klinik {name}",
-      "mapNote": "Die Karte wird von Google angezeigt, das dabei die IP-Adresse Ihres Geräts erhält. <link>Details in der Datenschutzerklärung</link>",
       "directionsLabel": "Route zu {address} anzeigen",
       "callLabel": "Rufen Sie {phone} an"
     },

@@ -188,7 +188,7 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 | Team | `/ro/team` | ✓ | ✓ | ✓ | ✓ |
 | Blog index + posts | `/ro/blog`, `/ro/blog/[slug]` | — | — | — | — |
 | Doctor pages *(2026-09-21, §15.23)* | `/ro/team/[slug]` — one per `lib/team` doctor id, every locale (`generateStaticParams` over the list, `dynamicParams = false`); no `lib/routes` row: `matchesRoute` already files them under Team and `equivalentPath` keeps the slug across languages | ✓ | ✓ | ✓ | ✓ |
-| Privacy & cookies *(2026-10-10, §15.38)* | `/ro/privacy` — the privacy and cookie policy (§12), every locale; linked from the Footer's legal strip through `lib/routes`' separate `LEGAL_ROUTES` list (never the nav's), and its `#map` part from the note under the map; the shared English slug, a translated one the §15.3 decision | ✓ | ✓ | ✓ | ✓ |
+| Privacy & cookies *(2026-10-10, §15.38)* | `/ro/privacy` — the privacy and cookie policy (§12), every locale; linked from the Footer's legal strip through `lib/routes`' separate `LEGAL_ROUTES` list (never the nav's), and, from 2026-10-10 to 2026-10-13, its `#map` part from a note under the map (§15.38 round 3); the shared English slug, a translated one the §15.3 decision | ✓ | ✓ | ✓ | ✓ |
 | Contact | modal, no route (see §14) | | | | |
 
 - **Home lives at `/{locale}` itself.** Do not create `/{locale}/home`.
@@ -375,8 +375,10 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   placeholders until the owner supplies them (BACKLOG.md entry 3).
   **The map rider, AMENDED 2026-10-10 (§15.38):** the frame is `credentialless` — the
   cookie-READING limb measured on 2026-10-01 (a signed-in Chrome visitor's Google cookies sent on
-  19 of 46 requests) is closed — and a note under the map says the IP goes to Google, linked to
-  the policy's map part. The IP transfer stays the accepted, deferred risk recorded above.
+  19 of 46 requests) is closed. A note under the map said the IP goes to Google, linked to the policy's map part,
+  until the owner removed it on 2026-10-13 (§15.38 round 3): the policy, linked from every footer,
+  carries GDPR art. 13's information alone. The IP transfer stays the accepted, deferred risk
+  recorded above.
 - **Analytics is out of scope by owner decision** — historical data explicitly not needed,
   so never install any analytics script. If this ever changes: cookieless only (Plausible/
   Umami/Cloudflare) = one script tag, no banner. Search Console + GBP insights already cover
@@ -4654,6 +4656,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     `.d.ts`); tests/unit/credentialless-render.test.ts renders it through both Reacts. A note under the map (16px,
     `home.location.mapNote`) says Google receives the IP and links to `/{locale}/privacy/#map`; at @3xl it takes its
     own grid row so the contact rows stay centred on the map (measured 15–28px low before; a test holds ±1px).
+    *(The note REMOVED 2026-10-13 on the owner's word — round 3 below; `credentialless` stays.)*
     (4) **THE PRICES LINE** — PriceList's optional `note`, printed last in the cards column; the Services page passes
     „Prețurile sunt exprimate în RON și includ toate taxele." ×5 (TODO(owner) confirm); absent or empty, nothing.
     **Reviews (four Opus agents — react, typescript, a11y, a five-language copy read):** APPROVE WITH CHANGES ×3, 0
@@ -4701,6 +4704,35 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     tree: prettier · eslint · tsc clean; vitest 152 files / 3 981 passed + 2 skipped with the optimizer variants hidden
     (CI's condition); `next build` and build-storybook green; the link crawl 613 links / 53 pages / 0 broken; e2e 333
     passed / 223 skipped.
+    **Round 3 — THE NOTE UNDER THE MAP REMOVED (owner, 2026-10-13, verbatim: "my nr 1 priority right now is to
+    remove that discaimer from below the map. i need you to find a legal way to do so" — having compared
+    jonaclinic.ro, whose map carries no such line in Italian or English; lane `rework/remove-map-note`):** THE LEGAL
+    WAY is the one the site already had. GDPR art. 13 obliges the clinic — joint controller with Google for loading
+    the map and sending the IP (CJEU *Fashion ID*, C-40/17) — to INFORM the visitor; the regulators' transparency
+    guidelines (WP260 rev.01, endorsed by the EDPB) say a website does that with a privacy notice linked from every
+    page, and count a notice at the point of collection (a "just-in-time" notice) as good practice, not a duty. The
+    policy's map part („Harta Google": what Google receives, the joint responsibility, the legitimate-interest basis,
+    the US transfer) is linked from every page's footer, so it carries the information alone. The note was never
+    consent — the lazy frame loads as the visitor scrolls towards it, before the line is on screen — so §12's
+    deferred risk (the IP sent without asking) is the same with or without it. What the removal gives up, the
+    owner's call: a small good-faith signal, and a little support for the legitimate-interest basis (recital 47:
+    what a visitor can expect "at the time and in the context of the collection"). Such a line becomes REQUIRED
+    again the day the map goes click-to-load (BACKLOG.md entry 1): a click is consent only if the visitor read,
+    before clicking, what it sends. Not a lawyer's opinion — one more question for the read BACKLOG.md entry 3
+    owes. THE CHANGE: sections/ClinicLocation's grid is the one-row grid it was before #155 — the map's tray alone
+    in its track, so the rows centre on the map itself, every class as it stood (`credentialless` stays); the key
+    `home.location.mapNote` ×5, the note's link constant and its KEEP-IN-SYNC test with the policy's link are gone;
+    the accent census counts ClinicLocation's two wearings again; lib/routes keeps `PRIVACY_MAP_ANCHOR`, the
+    policy part's one id, with no link pointing at it. ClinicLocation.test.tsx holds the absence in five languages
+    (the map and the rows the grid's only two children, no word naming Google) and the rows centred on the map,
+    ±1px, on the real stylesheet. No reviewer round — a deletion, the map-phone lane's precedent (§15.34).
+    **Evidence:** prettier · eslint · tsc clean; vitest 156 files / 4 217 passed + 2 skipped with the optimizer
+    variants hidden (CI's condition); `next build` (63 pages) and build-storybook green; the export carries the
+    note's text in none of the five languages, no link to `#map`, and `credentialless` on every map; the link crawl
+    613 links / 53 pages / 0 broken; e2e band-scale 64 passed (the map band's one proportion among them). Visual:
+    exactly the 44 cells the note had moved — Pages/Home, Team and Doctor ×12 each, Sections/ClinicLocation 8 —
+    re-recorded under classic scrollbars (the 15px gutter probed) and verified, with 39 control cells (Footer,
+    ContactModal, Pages/Services, Pages/Privacy) passing against the committed set unchanged.
 
 ## 16. Build-time vs runtime contract
 

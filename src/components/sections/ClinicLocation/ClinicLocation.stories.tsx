@@ -306,9 +306,7 @@ export const Smartphone: Story = {
     await expect(
       canvas.getByTitle(fill(ro.home.location.mapAlt, { name: clinic.name })),
     ).toBeInTheDocument();
-    // The two contact rows and, since 2026-10-10, the note's one link under
-    // the map (CLAUDE.md §15.38) — three, none dropped at the phone width.
-    await expect(canvas.getAllByRole('link')).toHaveLength(3);
+    await expect(canvas.getAllByRole('link')).toHaveLength(2);
     await expect(band).toHaveTextContent(clinic.phoneDisplay);
     await expectMapShape(band);
     await expectNoSidewaysScroll(band);

@@ -120,9 +120,10 @@ export interface LegalRoute {
 export const PRIVACY_PATH = '/privacy' satisfies `/${string}`;
 
 /**
- * The policy's map paragraph — the fragment the map band's note links to
- * (`${PRIVACY_PATH}#${PRIVACY_MAP_ANCHOR}`) and the id that paragraph's
- * section wears, so the link and its target are one string. English, like
+ * The policy's map paragraph — the id its section wears, one spelling for
+ * the page and its tests. A link to it would be
+ * `${PRIVACY_PATH}#${PRIVACY_MAP_ANCHOR}`; none ships since the note under
+ * the map left on 2026-10-13 (CLAUDE.md §15.38 round 3). English, like
  * every fragment id on the site (§15.20).
  */
 export const PRIVACY_MAP_ANCHOR = 'map';

@@ -33,7 +33,9 @@ import { toStatTiles } from '../stat-tiles';
 //      of the screen (DoctorCourses, D15, D34, D35);
 //   4. the „în cifre" tiles on a second lilac band — a glyph, a number that
 //      counts up once, a label and a sentence each (DoctorStats, D30, D33);
-//   5. the „Ne găsești" map, which every page of this run closes with.
+//   5. the „Ne găsești" map, which every page of this run closes with — since
+//      2026-10-13 in THE BAND SCALE, the very band Home and Team draw (the
+//      JSX's own note; CLAUDE.md §15.32 round 3).
 // Round 1's „Echipa mea" band (two assistants beside the week) is GONE — the
 // owner dropped it outright (D13); the week moved into band 2's card.
 //
@@ -275,8 +277,16 @@ export default async function DoctorPage({
           like the four above, and ./Doctor.stories.tsx follows in the same
           change. */}
       {/* The map closes every page of this run — the owner's „add at the end
-          the map". It reads lib/clinic itself and takes nothing from here. */}
-      <ClinicLocation />
+          the map". It reads lib/clinic itself and takes only `scaled` from
+          here: THE BAND SCALE on a laptop or desktop, the map band Home and
+          Team draw to the pixel (CLAUDE.md §15.32 round 3 — the owner,
+          2026-10-13: "as the current map on home page is now, i need it
+          updated reactivity wise on absoultey every page … with this i am
+          refering to individual doctor page"). The page's OTHER bands do
+          not scale yet, so on a laptop or desktop the map's eyebrow and
+          <h2> part from theirs above the 1401 window and below it — the
+          recorded price; the numbers band right above keeps its default. */}
+      <ClinicLocation scaled />
     </>
   );
 }

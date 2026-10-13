@@ -35,13 +35,18 @@ import teamPage from './team/page.tsx?raw';
 //     lost `ground="page"` would ship the band lilac again, while the pixel
 //     net photographs the TWIN, which would still say it;
 //   · THE BAND SCALE (2026-10-02, CLAUDE.md §15.32) — `scaled` on the numbers
-//     band and on the map, by NAME: Home and the Team page say it (every band
-//     on both pages draws in ui/Container's THE BAND SCALE, one heading size
-//     and one offset), the doctor page says it on NEITHER (its other bands do
-//     not scale yet, and its headings must stay one size with them), and each
+//     band and on the map, by NAME: Home and the Team page say it on both
+//     (every band on both pages draws in ui/Container's THE BAND SCALE, one
+//     heading size and one offset), the doctor page says it on the MAP alone
+//     since 2026-10-13 (round 3 — the owner: "as the current map on home page
+//     is now, i need it updated reactivity wise on absoultey every page") and
+//     not on the numbers band (its other bands do not scale yet), and each
 //     twin says what its page says. A page that lost the word would ship one
 //     band out of step with its neighbours on every laptop — in pixels the net
 //     does see, but only on the TWIN, which would still say it;
+//   · THE MAP ON EVERY PAGE (round 3) — every page and twin under this folder
+//     that mounts the map, found by a glob, passes `scaled` bare and nothing
+//     else, so a page added later cannot draw a second kind of map;
 //   · THE STAFF BAND'S PROPS (since 2026-10-02): the Team page hands
 //     sections/TeamRoster its eyebrow and its title, and its twin the same.
 // Only names are compared, never values: a page reads `getTranslations`, its
@@ -371,10 +376,66 @@ describe('a doctor’s page and its story twin — read off their source', () =>
     }
   });
 
-  it('leaves BOTH shared bands UNSCALED — the numbers and the map, page and twin alike (§15.32: its own bands do not scale yet)', () => {
+  it('draws the map in the band scale — `scaled`, BARE, and nothing else, page and twin alike (§15.32 round 3: the map Home and Team draw)', () => {
+    for (const jsx of [DOCTOR.page, DOCTOR.twin]) {
+      expect(propsOf(jsx, 'ClinicLocation')).toEqual(['scaled']);
+      expect(flagsOf(jsx, 'ClinicLocation')).toEqual(['scaled']);
+      expect(jsx).not.toMatch(/\bscaled=/);
+    }
+  });
+
+  it('leaves the numbers band UNSCALED — its page’s other bands do not scale yet — page and twin alike (§15.32)', () => {
     for (const jsx of [DOCTOR.page, DOCTOR.twin]) {
       expect(propsOf(jsx, 'DoctorStats')).not.toContain('scaled');
-      expect(propsOf(jsx, 'ClinicLocation')).toEqual([]);
+    }
+  });
+});
+
+/**
+ * Every page under app/[locale]/ and every story twin beside one, as SOURCE —
+ * the census for THE MAP ON EVERY PAGE (§15.32 round 3). `import.meta.glob`
+ * is a build-time Vite transform (src/assets/flags/Flags.test.tsx's
+ * precedent), so a page added later is in this record without an edit here.
+ * Typed by Next's own declaration (next/types/global.d.ts), whose eager form
+ * answers `unknown` per file: each is checked to be text where it is read.
+ */
+const PAGES_AND_TWINS = import.meta.glob(
+  ['./**/page.tsx', './**/*.stories.tsx'],
+  { query: '?raw', import: 'default', eager: true },
+);
+
+describe('THE MAP ON EVERY PAGE — one band, one scale, wherever a page mounts it (§15.32 round 3)', () => {
+  // The owner, 2026-10-13: "as the current map on home page is now, i need it
+  // updated reactivity wise on absoultey every page … with this i am refering
+  // to individual doctor page". The doctor page had been left out of THE BAND
+  // SCALE by a flag it did not pass, so the guard is on the flag, in every
+  // file that mounts the band: a page added later that forgets it fails here,
+  // by its path. The band's own stories (sections/ClinicLocation) stay outside
+  // this folder on purpose — they draw its unscaled default for the workbench.
+  const mounts = Object.entries(PAGES_AND_TWINS)
+    .map(([path, source]) => {
+      if (typeof source !== 'string') {
+        throw new Error(`${path} did not load as text`);
+      }
+      return [path, stripComments(source)] as const;
+    })
+    .filter(([, code]) => code.includes('<ClinicLocation'));
+
+  it('finds every mount — Home, the Team page and the doctor page, each with its twin', () => {
+    expect(mounts.map(([path]) => path).toSorted()).toEqual([
+      './(home)/Home.stories.tsx',
+      './(home)/page.tsx',
+      './team/Team.stories.tsx',
+      './team/[slug]/Doctor.stories.tsx',
+      './team/[slug]/page.tsx',
+      './team/page.tsx',
+    ]);
+  });
+
+  it('mounts the map `scaled` — bare, and nothing else — in every one of them', () => {
+    for (const [path, code] of mounts) {
+      expect(propsOf(code, 'ClinicLocation'), path).toEqual(['scaled']);
+      expect(flagsOf(code, 'ClinicLocation'), path).toEqual(['scaled']);
     }
   });
 });

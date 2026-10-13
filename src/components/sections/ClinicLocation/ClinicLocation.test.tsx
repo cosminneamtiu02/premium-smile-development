@@ -575,8 +575,10 @@ describe('ClinicLocation — measured boxes and zero islands', () => {
     // An element cannot query its OWN size: the Container IS the container, so
     // stepped `py` has to sit on a child of it. The recipe's "band owns its py"
     // holds; only the element wearing it moves down one level (Footer, with a
-    // single un-stepped py-10, never needed this). The band as the doctor page
-    // mounts it — no `scaled`; THE BAND SCALE block below holds the other.
+    // single un-stepped py-10, never needed this). The band's DEFAULT — no
+    // `scaled`, the band its own stories draw (every page passes the flag
+    // since 2026-10-13, §15.32 round 3); THE BAND SCALE block below holds
+    // the other.
     const { band } = mount();
     const rhythm = (band().firstElementChild as HTMLElement)
       .firstElementChild as HTMLElement;
@@ -655,10 +657,12 @@ const gatedClassesOf = (el: Element): string[] =>
 const DISC_SIZE = '[--disc-size:calc(var(--spacing)*11)]';
 
 describe('ClinicLocation — THE BAND SCALE, the class contract (§15.32)', () => {
-  it('is OFF by default — the doctor page’s band: three `py` tokens on the rhythm box, no gated class anywhere, and `scaled={false}` the same markup to the byte', () => {
-    // The doctor page mounts the band with no prop, and its other bands do not
-    // scale yet (§15.32) — so the default must be today's band exactly. The
-    // markup comparison is safe: nothing in the band generates an id.
+  it('is OFF by default — the band’s plain, unscaled self: three `py` tokens on the rhythm box, no gated class anywhere, and `scaled={false}` the same markup to the byte', () => {
+    // Every page passes `scaled` since 2026-10-13 (§15.32 round 3 — the
+    // doctor page last), but the default is still the band's plain self, the
+    // one its own stories draw (§6.6: the prop arrived additive) — so the
+    // default must be that band exactly. The markup comparison is safe:
+    // nothing in the band generates an id.
     const implicit = render(<Mounted locale="ro" />);
     const markup = implicit.container.innerHTML;
     const band = screen.getByRole('region', { name: ro.home.location.title });
@@ -722,8 +726,9 @@ describe('ClinicLocation — THE BAND SCALE, the class contract (§15.32)', () =
 
   it('sizes each disc in the band’s own spacing step, in BOTH modes — eleven steps, the atom’s 2.75rem drawn in the band’s pixel', () => {
     // ui/disc.ts's D16 door ("a HOST may set per screen type through
-    // className"), worn ALWAYS, so the doctor page's band and Home's can never
-    // disagree about what a disc is made of (the component's DISC_SIZE). The
+    // className"), worn ALWAYS, so the band's unscaled default and every scaled
+    // mount can never disagree about what a disc is made of (the component's
+    // DISC_SIZE). The
     // computed block below shows what the class buys in each mode.
     for (const scaled of [false, true]) {
       const { band, unmount } = mount('ro', { scaled });
@@ -825,7 +830,7 @@ describe('ClinicLocation — THE BAND SCALE, computed (§15.32 — the real styl
 
   it.each([
     {
-      where: 'the doctor page’s band (no `scaled`) at a laptop’s column',
+      where: 'the unscaled default (no `scaled`) at a laptop’s column',
       width: 1382.5,
       scaled: false,
     },

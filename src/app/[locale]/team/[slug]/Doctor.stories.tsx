@@ -207,7 +207,9 @@ function DoctorPageBands(): ReactElement {
       {/* ── FUTURE SEAM (run ledger D19): the doctor's blog-articles band,
           between the tiles and the map when it exists — see ./page.tsx,
           which carries the full note. */}
-      <ClinicLocation />
+      {/* `scaled`, as on the page: the map band Home and Team draw (CLAUDE.md
+          §15.32 round 3; ./page.tsx carries the owner's words). */}
+      <ClinicLocation scaled />
     </>
   );
 }

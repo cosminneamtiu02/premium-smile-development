@@ -89,8 +89,9 @@ src/
       (home)/page.tsx    # Home content  → /ro (route group: folder only, URL-invisible; owner 2026-09-06)
       services/page.tsx  #               → /ro/services
       team/page.tsx      #               → /ro/team
-      blog/page.tsx      # ro only       → /ro/blog
-      blog/[slug]/page.tsx
+      blog/page.tsx      # ro only       → /ro/blog — page 1 of the list (the blog branch, §15.39)
+      blog/page/[page]/page.tsx  # ro only → /ro/blog/page/2/ … — the list's later pages, five posts each
+      blog/[slug]/page.tsx  # (not built yet) — one article
       404/page.tsx       # localized 404 → /ro/404 — real shell page ×5 (S6, §5; dispatcher = out/404.html)
       privacy/page.tsx   # the privacy and cookie policy → /ro/privacy ×5, sections/PrivacyPolicy (§12, §15.38)
     icon.svg             # THE BROWSER TAB'S ICON — a byte copy of public/images/brand/mark.svg (Next's icon convention; §15.31)
@@ -133,7 +134,7 @@ src/
   messages/
     ro.json en.json de.json fr.json it.json   # namespaces: common, home, services, team, blog, contact
     privacy/{ro,en,de,fr,it}.json   # the privacy policy's own words, read by its one page — never serialised into every page by the shell's provider (§15.38)
-  content/blog/          # MDX posts (ro)
+  content/blog/          # the blog (ro): posts.json = THE list of posts — slug, title, summary, date, author, image, tags — read and checked at build by lib/blog/blog.ts (§15.39); MDX article bodies later
   styles/globals.css     # Tailwind theme tokens
 public/                  # pre-optimized images, self-hosted fonts, robots.txt
   images/brand/mark.svg  # THE clinic's tooth mark — two paths in the brand's two colours, traced from the owner's PNG (2026-10-01, §15.28); sections/Wordmark's default artwork; an .svg the optimizer never touches
@@ -186,7 +187,7 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 | Home | `/ro` | `/en` | `/de` | `/fr` | `/it` |
 | Services (incl. prices) | `/ro/services` | ✓ | ✓ | ✓ | ✓ |
 | Team | `/ro/team` | ✓ | ✓ | ✓ | ✓ |
-| Blog index + posts | `/ro/blog`, `/ro/blog/[slug]` | — | — | — | — |
+| Blog index + posts *(the index built 2026-10-11 on the blog branch, §15.39)* | `/ro/blog/` = page 1 and `/ro/blog/page/[n]/` = page n ≥ 2, five posts a page — ro ONLY: each page's own `generateStaticParams` sets `locale: 'ro'`, so the four phantom non-ro pages of the old stub are gone; `/ro/blog/[slug]` not built yet | — | — | — | — |
 | Doctor pages *(2026-09-21, §15.23)* | `/ro/team/[slug]` — one per `lib/team` doctor id, every locale (`generateStaticParams` over the list, `dynamicParams = false`); no `lib/routes` row: `matchesRoute` already files them under Team and `equivalentPath` keeps the slug across languages | ✓ | ✓ | ✓ | ✓ |
 | Privacy & cookies *(2026-10-10, §15.38)* | `/ro/privacy` — the privacy and cookie policy (§12), every locale; linked from the Footer's legal strip through `lib/routes`' separate `LEGAL_ROUTES` list (never the nav's), and, from 2026-10-10 to 2026-10-13, its `#map` part from a note under the map (§15.38 round 3); the shared English slug, a translated one the §15.3 decision | ✓ | ✓ | ✓ | ✓ |
 | Contact | modal, no route (see §14) | | | | |
@@ -415,7 +416,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   hit; an owner-maintained `ALLOWED` list carries documented exceptions verbatim. Widening it to
   other data lists and namespaces is one more `SOURCES` row, a deliberate act (the older copy must be
   read first; `lib/reviews` joined 2026-09-30 with the real reviews, `lib/hero-slides` on
-  2026-10-01, the day its copy was rewritten — §15.21 round 11).
+  2026-10-01, the day its copy was rewritten — §15.21 round 11 — and the blog's posts on
+  2026-10-11, the lane that wrote the first ones — §15.39).
 - **Link check:** linkinator crawls the built export for broken internal links and hreflang
   targets on every CI run.
 - **CI lanes (decided, see GITHUB_SETUP.md):** branches `main` (production) + `develop`
@@ -438,7 +440,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Services | an `sr-only` h1 (page markup; the VISIBLE opener dropped — owner 2026-09-14, pack round 2 — while §9's one-h1 rule and the SEO outline keep the element) · **PriceList** (the sticky in-page jump menu inside an aura'd Card beside eleven category cards, of which ONLY the one the visitor is at wears the aura, faded in and out over 400ms — round 4, 2026-09-29; every card wore it from 2026-09-14 until then; "at" is THE READING LINE since round 5, the same day: a card lights as its top crosses the middle of the clear part of the window, the first card at the top of the page, and a menu click brings a card that fits to that middle, with no focus ring for a pointer — SectionHeading eyebrow + title on EVERY card, `<dl>` name/price rows in ONE column always; the menu CARD (nav + title + `<ul>`) is the band's one client island `PriceMenu` on `lib/scroll-spy` (the current category marked `aria-current="location"` on its link in BOTH directions, scroll and click, and — round 4 — by a `data-current` mark the island stamps on the card that link points at) and `lib/sticky-rail` (a menu taller than the window pins by its bottom edge scrolling down and by its top edge scrolling up, never a scroll container — round 3, 2026-09-18) — and, on every touch screen and in every window under 60rem since 2026-10-09 (§15.20 round 6), the same island's STRIP instead of the card: a full-width row of ui/PillButton links that scrolls sideways, sticky 12px under the top bar with nothing painted behind it, the current category's pill filled lilac and kept centred by `lib/strip-follow`, the rail the laptop's alone (a fine pointer and a window of at least 60rem); a DUMB props-in band populated by the page from `lib/prices` — owner brief 2026-09-13 + pack round 2 2026-09-14, board `price-list.plan.md`; supersedes the „ServiceCard list with price rows" dossier; FAQ void per §15.15 — and on a laptop or desktop, since 2026-10-02, the band draws in ONE scale, ui/Container's THE BAND SCALE: its menu and its cards one design scaled to the column past the 1401 reference and floored at the theme's own size under it (the owner's delegated decision — the price text never smaller than today), the stuck menu's 8.5rem line and the cards' 2.5rem landing still rem, coupled to the pill — §15.32 round 2) · CTABanner | `services` |
 | Team | an `sr-only` h1 (page markup, the Services page's shape — „Echipa noastră" was the VISIBLE opener until 2026-09-30, and §9's one-h1 rule and the tab title keep the element) · **DoctorShowcase** (the visible opener since that day, §15.25: eyebrow „Familia Premium Smile" + h2 „Specialiștii cu care ne mândrim" over the doctors as **PersonnelCard** doctor cards in ONE column inside `ui/Ribbon` (§15.26 — the ribbon's first mount), scaled as one design on a laptop or desktop (§15.25 round 2) — each card ui/Card `framed`, the reviews deck's idle frame; the doctor's transparent waist-up cutout over name + specialty beside the justified, quoted `philosophy`, sides alternating; ONE solid button „Mai multe despre mine" → the doctor's page, level with the name on row 2 of a 40 / 60 grid at the card's own `@3xl`; below the step specialty → name → picture → words → button on a tablet, and ON A PHONE — the card's inset between 12.5rem and 24rem, every phone at 100 % (a phone zoomed narrower keeps the stacked card), since 2026-10-10 (§15.25 round 3) — the specialty across the top over a ROW: a 112px round photo, the cutout cropped to head and shoulders, ALWAYS ON THE LEFT, beside the name at 24px, then the words and the button unchanged (the cards alternate sides only from the card's `@3xl` up); the FIRST card's picture preloads on this page, its LCP element from the tablet up (on a phone the first card's quote is). The two-link card of 2026-09-21 is history, and the link to a doctor's prices left with it) · **TeamRoster** (the auxiliary-staff tiles ALONE since 2026-09-30, until then also the visible h1 and the doctor cards; owner brief 2026-09-10, a NEW design with no old-site reference; supersedes the TeamMemberCard dossier — and since 2026-10-02 a TITLED band, its own eyebrow „Echipa de sprijin" over the h2 „Oamenii fără de care nu ne-am descurca" (`team.roster.*`, Claude's drafts ×5), the tiles `<h3>`s at ONE width: 18rem on tablets (on a phone, since 2026-10-09, the column's own — the doctor cards' width, §15.35), a third of the scaled column on a laptop or desktop — §15.32; the `<h2>` names on `repeat(auto-fit, minmax(16rem, 1fr))` are history) · **DoctorStats** (the clinic's numbers since 2026-10-01 — the Home page's band, prop for prop, between the staff and the map: the owner, "same component as on main page with the stats on the team page between map and helping staff"; §15.23 round 5) · **ClinicLocation** (the map, last — „so I can test how it goes back and forth on the page”) · TeamIntro / ClinicGallery (opt, unbuilt). EVERY band of this page draws in ONE scale on a laptop or desktop since 2026-10-02 — ui/Container's THE BAND SCALE, one heading size and one offset for all four (`scaled` on the numbers and the map); §15.32 | `team` |
 | Doctor (`/team/[slug]`, one per doctor — §15.23; reshaped in round 2, 2026-09-25, and again in round 7, 2026-10-13) | **DoctorIntro** (the opener, like jonaclinic.ro's doctor pages: OUTSIDE a card on the page ground, the transparent cutout portrait left, eyebrow = specialty + `<h1>` = full name right on Heading's `hero` step; on a laptop and a desktop, since 2026-10-01 (§15.23 round 6), the owner's TWO CONTAINERS across the whole column — the picture's track a third of the column after an inset of 15 % of the gutter, a gap of a sixth of the column clamped to 3–10.5rem, the words in the rest: the specialty over the name a ninth of the column down and the credo card under them on ONE left edge 1.5rem into the words, the card up to 36rem wide and centred in the height the name leaves (as much space above it as below), and the cutout drawn out of flow as tall as the row, growing (centred, up to 1.4 × its third) until it stands on the words' floor, so the two containers share ONE floor — the `align` seat axis (rounds 2e–2l's `lowered`) and round 2k's centred content-sized columns retired with it; the band's own rhythm halved in round 2j ("it starts height wise too low … also the image, so the whole thing"), the credo's quote on `text-xl`; and BELOW `@3xl` the order name → picture → credo card with the eyebrow and the h1 centred (round 2k: "name and speciality … above the photo and … centered"); the `<k>` keywords in the quote at weight 650 in the doctor card button's lavender `accent` since 2026-10-02 (§15.1's keyword rider — "i want that highlighted text to actually be the color of the current mai multe despre mine button"; the deep violet `accent-strong` until then) (round 2p: "add just a little more bold and underline them maybe"; round 2q, one look later: "remove the underline") (ui/Keyword, round 2m — one evening's road: darkest ink → bold ("a more serious contrast") → italic ("try italic") → "a darker lilla and just a little bold"); under the name the **CredoCard** — ui/Card `framed` + `aura`, the reviews deck's idle card under the price cards' lavender glow (round 2r, 2026-09-26: "add an aura around the filozofia mea card"), eyebrow „În cuvintele mele” + h2 „Filozofia mea” over the doctor card's quoted `<k>` words in the locale's own quotation marks; a free `children` slot after it) · **DoctorStats** (the lilac band, SECOND on the page since 2026-10-13 — round 7, the owner: "so "IN NUMBERS" would be the second element in the page"; it stood after the courses until then — on the **TintedBand** ground, its one consumer since that day — „În cifre / Experiență confirmată în timp” (the reference's „Excelență" until round 2s) centred over a lead sentence and four tiles: a light disc with a line glyph — LILAC (`accent-decorative`) since 2026-10-01, the owner: "paint it's svgs lilla"; green until then —, the number counting up once from 0 through the `StatNumber` island (the static HTML prints the final value; reduced motion = no count, re-asked when the count would start), an `<h3>` label — BEFORE the number in the DOM since G2-R2 tier 2 (a screen reader's H key lands on the label with the number next), the paint order kept by two `order` tokens — a muted sentence; a tile's `value` is refused by `countFrames` unless a whole number ≥ 0; the twin (`sr-only` until 2026-10-01, since then an invisible copy laid exactly over the digits on one line, so a screen reader's cursor outlines the number and VoiceOver touch finds it — §15.23 round 5) SPEAKS the `+` suffix's meaning — „peste 3.000" / "over 3,000" / „über" / « plus de » / « oltre » — from the page's `team.doctor.stats.atLeast` key (owner 2026-09-27, round 2s; the visible span keeps „3.000+"; a space grouping the spoken number's digits dropped since round 5 — « plus de 3000 »); the band's title is „Experiență confirmată în timp" and every stat sentence descriptive — the CMSR scan (§13) refuses the old „Excelență" / „Rezultate predictibile și sigure" / „Intervenții reușite" / „Recunoaștere" shapes; four on a row from `@3xl`, two on a tablet, one column on a phone; the numbers and words per doctor in `lib/team`, the three band keys the page's; owner 2026-09-26 round 2f) · **DoctorProfile** (since 2026-10-13 — §15.23 round 7 — ONE band on the plain PAGE ground, the lilac tint, the schedule card and the prose outdent gone with that round (the owner: "no more schedul box at all"): „Biografie / Despre {name}” third-person justified paragraphs on the LEFT — in the credo quote's grey (`--ink-faint`) with `<k>` key words, the owner's pack word the same evening — ‖ **DoctorCourses** on the RIGHT, the biography's 3fr beside the courses' 2fr from the Container's `@3xl` step (the biography "like 20% wider"), both contents starting LEVEL whatever each title's height (a CSS subgrid) and, below the step, the biography above the courses; „Repere din drumul meu spre specializare / Cursuri și specializări” (the eyebrow „Formare continuă” until the owner's rename that night) over the doctor's courses as ONE IDEA PER DOT — no years since that day (the owner: "there wont be any more years … this must stand"), the ideas in the order lib/team writes them — on the CV line down the left, 40px apart (half the year groups' 80px: "maybe half the space"), the last idea's line trailing on below its dot as far as every other's ("a stable trail"), ONE idea lit at a time BY ITSELF through the **CourseTimeline** island on `ui/use-rotation`, the site's third rotator ("the scrolll highiight has to be automatic now"): every 3 s the next idea comes forward (`--animate-forward`, settling at 1.04, `origin-left`), its stretch of line and its dot in the accent, the others faded to 0.65 — a blend that passes 4.5:1 on the page ground and not on the tint, the reason the band left it; the cycle holds while the courses are off screen (lib/clock's `offscreen` cause) and moves on a full interval after they return; no hover hold (the owner's rotators "always move on"); reduced motion = every idea at full ink, nothing lit, nothing moving; the server HTML carries no lit idea; the year timeline's scroll spy, its `<h3>` years and their two Heading tones left with it) · *[FUTURE, owner 2026-09-25: a band of this doctor's blog articles goes HERE, above the map — not built until the blog exists]* · **ClinicLocation** (`scaled` since 2026-10-13 — the very map band Home and Team draw, one design on a laptop or desktop; §15.32 round 3). Every side-by-side arrangement stacks one above the other below the Container's `@3xl` step (the owner's adaptability rule, play-pinned). EVERY band of this page draws in ONE scale on a laptop or desktop since 2026-10-13 — ui/Container's THE BAND SCALE, so every eyebrow and h2 here is Home's size, on Home's left edge or, for the courses, at the second column's start (the biography's outdent, kept that morning, left with round 7 the same day), and the opener, the tiles, the biography and the courses grow and shrink with them, the doctor's name the `hero` step's 1401 value × s; the opener reads its column shares off a `@container` wrapper capped with the band; phones and touch tablets as before (§15.32 round 4) | `team` |
-| Blog (ro only) | PostCard list · PostPage (MDX) | `blog` |
+| Blog (ro only) | **PostList** (the index, built 2026-10-11 on the blog branch, §15.39 — the owner's reference, infiniswiss.com/blog: a centred eyebrow „Blog" over the page's `<h1>` „Articole și noutăți", then the posts one under another, five a page, as **PostCard**s — ui/Card `framed`, a square picture beside the title (an `<h2>` on `band`), „date · author" on the eyebrow line, the categories as ui/PillButton chips AT REST and the summary, stacked under the picture on a phone; the whole card JUMPS on hover like a button and links nowhere yet — then **Pagination**, „Anterior · 1 / 3 · Următor": plain links between pages built ahead of time, the ends disabled. A DUMB props-in band the page populates from `src/content/blog/posts.json` through `lib/blog`; zero client JavaScript) · PostPage (MDX, not built) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
 | Privacy & cookies (`/privacy`, 2026-10-10 — §15.38) | **PrivacyPolicy** (the whole page, one band wired to site data: the `<h1>`, „Pe scurt" in the deck's idle frame, then nine parts, each an `<h2>` on a plain `<section>` with an English id — who runs the clinic, the visit, the one cookie as a definition list, the Google map (`#map`), contact, the patients' reviews, links out, rights, changes; zero client JavaScript; the clinic's legal facts placeholders until supplied) | its own files, `messages/privacy/*.json` |
 | Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher) · Footer (the logo, the same link + **full NAP** + hours + the policy link, built 2026-10-10 — „Confidențialitate și cookie-uri" under the copyright, `LEGAL_ROUTES`, §15.38) | `common` |
@@ -5053,6 +5055,139 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     exactly the 44 cells the note had moved — Pages/Home, Team and Doctor ×12 each, Sections/ClinicLocation 8 —
     re-recorded under classic scrollbars (the 15px gutter probed) and verified, with 39 control cells (Footer,
     ContactModal, Pages/Services, Pages/Privacy) passing against the committed set unchanged.
+
+39. **The blog branch, and the blog's first page — ON THE OWNER'S WORD (2026-10-11, verbatim: "i want to have 3
+    branches for now. i want to have main, develop and the 3rd branch will be the one that handles the blog. i want to
+    have merges into develop for the current version of the website that will go onto there directly and then i will
+    also want the other branch that handles lots of updates form hte blog and so on and so forht and that requires lots
+    of work. so i will want to work in parallel on blog and onto develop with new merges directley into develop and when
+    i finoish with develop upgrades and merge into main this big branch of blog will go onto develo0p too and later onto
+    main."; then its first job, below; lane `feat/blog-index`, worktree `premium-smile-worktrees/blog-index`):**
+    **(1) THE BRANCH MODEL.** `blog` is a long-lived branch beside `develop`, created from develop **a5e9f3d** the same
+    day. `develop` stays the default and the integration branch: lanes for the current site branch from it and squash
+    into it exactly as before, and `develop → main` promotions are unchanged — release.yml's guard refuses any PR into
+    main whose source is not develop, so the blog can reach production only THROUGH develop, which is the owner's order.
+    BLOG LANES (`feat/blog-…`) branch from `origin/blog` and squash back into it through a PR; ci.yml's fast lane runs on
+    PRs into `blog` and on pushes to it (a PR's workflow file is read from the PR's merge commit, so the list reached
+    blog with this lane's own PR), while the staging deploy stays develop-only — the `development` environment's
+    deployment rule allows `develop` alone (measured), so a blog push would otherwise fail there. THE SYNC: develop
+    flows into blog often, through a PR `develop → blog` merged with a MERGE COMMIT — never squash, never rebase. A merge
+    commit makes develop's commits ancestors of blog, so the next sync and the final landing carry only what is new; a
+    squashed sync would leave the two histories unrelated, and every later sync and the landing would carry develop's
+    changes again (the "1 ahead / N behind" banner a squashed promotion, #11, once left on main). Cadence: after each
+    develop merge that touches files the blog also touches, and always before a blog lane starts and before the
+    landing; conflicts are resolved inside the sync PR, on blog's side. GITHUB (2026-10-11): `blog` is protected like
+    develop — the required check "Lint · Types · Tests · Builds" (strict), no force push, no deletion; the no-deletion
+    rule also keeps the repository's auto-delete-head-branches setting from removing blog when it is the head of the
+    landing PR (GitHub: "Branch protection rules and repository rules can also prevent branches being automatically
+    deleted") — and ruleset 24879778 "blog: lanes merge by squash, syncs from develop by merge commit" (a pull_request
+    rule allowing squash and merge, no bypass: a direct push to blog is refused, as on develop). DEPENDABOT stays on
+    develop alone: blog receives every bump through a sync, so the lockfile is never edited on two branches. THE LANDING,
+    in the owner's order: after a develop → main promotion, a PR `blog → develop`, and a later promotion takes the blog
+    to main. develop's ruleset is squash-only, so the landing is ONE squashed commit unless the owner allows a merge
+    commit for that one PR (a temporary ruleset edit) — squash keeps develop's log one commit per PR and drops the blog's
+    lane history from it (it stays in the blog branch and its PRs); a merge commit keeps that history and lets blog
+    continue without a re-sync. The owner's call, at the landing. THE SHARED-SURFACE RULE, to keep every sync cheap:
+    blog lanes touch files develop also changes as little as they can. The top bar's Blog item stays HIDDEN on blog
+    (lib/routes' `hidden` flag, §5) until the landing — showing it changes every Romanian page's top bar and re-records
+    every Pages/* baseline, which would conflict at every sync; a conflicted binary baseline is re-recorded on the merged
+    tree, never resolved by picking a side. RECORDS: blog lanes record their decisions as ROUNDS of this item, never as
+    a new §15 number, so the two branches never claim the same one.
+    **(2) ROUND 1 — THE BLOG'S LIST PAGE (the owner, the same day, verbatim: "create a page very much alike this one:
+    https://www.infiniswiss.com/blog with navigation of pages and cards with an image, title, a summary and date and
+    creator. the pages should not be clickable yet. so just react on hover like a button and have described assets,
+    each element should be a list that is populated by a json … remember these are just static pages … on clicking next
+    of naivtation it just oulls whole compiled thing form server and on click of article it goes to that article and
+    pulls it there from the server or maybe preload pages urls or smth for faster load" · "article title is heading,
+    image you have ui atom, text you have, keep "ai" "software" dependent stuff, these should be the buttons from menu
+    at rest (so not current one) the assets from the menu item from phone navigation on services, the rounded left
+    right edge pill with border" · "create whole thing with individual new needed sections and atoms in a single …
+    branch, no pr yet").** THE REFERENCE, measured (screenshots at 1440 and 393): a centred heading over five
+    full-width white cards a page — a square thumbnail on the left, then the title, "24 Aug 2026 - Raoul Sulimovici",
+    the category badges and the summary; stacked, picture first, on a phone — and "Previous · 1 / 7 · Next" with page 2
+    at /blog/page2. THE DATA: `src/content/blog/posts.json`, the owner's JSON — an array of posts `{ slug, title,
+    summary, date YYYY-MM-DD, author, image { src, alt }, tags }` — read by NEW React-free `src/lib/blog`, which checks
+    it at BUILD (`parsePosts`: exactly the seven keys, a real calendar day, a kebab-case slug that is never "page",
+    trimmed text, a picture under /images/; the build fails naming the post and the field), sorts it newest first and
+    cuts it into pages of five (`POSTS_PER_PAGE`, the reference's). Twelve PLACEHOLDER posts — Claude's drafts, ordinary
+    dental-care topics under the clinic's real doctors' names and the clinic's three photographs; no article behind any
+    of them (BACKLOG.md entry 7). THE ROUTES: `/ro/blog/` = page 1, `/ro/blog/page/n/` = page n ≥ 2, ROMANIAN ONLY: a
+    page's own `generateStaticParams` returning `locale: 'ro'` is merged OVER each language the layout generated and
+    de-duplicated (`{ ...parent, ...item }` then `filterUniqueParams`, read in Next 16.3's static-paths build), so the
+    stub's four phantom pages (/en|de|fr|it/blog/) are gone; an EMPTY result is refused under `output: 'export'` (build
+    error E1454), which is also why a blog of five posts or fewer generates /ro/blog/page/1/ (linked from nowhere)
+    rather than nothing. `app/[locale]/blog/populate.ts` is the ONE populator (pure — the team folder's precedent: the
+    pages pass `getTranslations`' words through `./words.ts`, the Pages/Blog twin `useTranslations`' words);
+    each tab is titled „Articole și noutăți — Premium Smile", later pages „…, pagina n — …" (SC 2.4.2). NEW SECTIONS,
+    no new atom — each built by one Opus builder in its own folder (the owner's process rule): **sections/PostCard** —
+    an `<article>` named by its title, ui/Card `framed` (house corners), a grid that becomes a row at the card's own
+    `@lg` (`minmax(0,1fr)_minmax(0,3fr)`, the reference's quarter / three quarters) with a SQUARE ui/Image `framed`
+    `fill` picture (`sizes="(min-width: 46rem) 20vw, 90vw"`, derived from the gutter: 44rem would hand a 704–721px window
+    behind a scrollbar a file four times too small), the title an `<h2>` on ui/Heading `band`, the date and the author on
+    the Eyebrow line („29 SEPTEMBRIE 2026 · DR. …", a `<time dateTime>`; an aria-hidden middle dot plus an sr-only comma,
+    never a dash — D-DASH), the categories as **ui/PillButton AT REST** (`asChild` onto `<li>`s, never `active` — the
+    owner's "buttons from menu at rest"), the summary on ui/Text `muted`; and THE CARD JUMP — the owner's "react on hover
+    like a button": the article wears ui/Button's own jump for the scale alone, `[--jump:200ms] transition-[scale]
+    duration-(--jump) ease-[ease-out] hover:scale-105 motion-reduce:hover:scale-100` (`ease-[ease-out]`, the CSS keyword
+    Button uses — Tailwind's `ease-out` utility is another curve), pinned equal to Button's numbers by
+    tests/unit/jump-census.test.ts; no hover shadow (the census bans one), no link, no button, no tabindex — the hover is
+    a DELIBERATE PLACEHOLDER for the article link that lands with the article pages, and until then a known false
+    affordance; the first card of a page preloads its picture. **sections/Pagination** — a `<nav>` named „Paginile
+    articolelor": ui/Button `solid` `accent` `md` links `rel="prev"` / `rel="next"`, the end that has no page a real
+    DISABLED `<button>` (the reference's greyed Previous), the counter „1 / 3" `aria-hidden` beside an sr-only „Pagina 1
+    din 3"; one row from 20rem of its own width (`@xs`), below it the two controls side by side over the counter — no
+    sideways scroll at 320 (measured); a named RangeError for an inconsistent set (an href on the wrong end, a page past
+    the count); renders nothing on a one-page blog. **sections/PostList** — the DUMB band: a centred eyebrow „Blog" over
+    the page's `<h1>` on `hero`, the cards in a `<ul role="list">` 3rem apart (the jump grows the tallest stacked card
+    19.8px into each gap), the pager under them — the privacy page's rhythm box, zero keys. NO ISLAND (§16 unchanged):
+    the hover is CSS and the pager's links plain `<a href>`s, every page a full document load (§15.13). THE PREFETCH
+    the owner floated ("maybe preload pages urls") is NOT built — §15.13 is his decision against any prefetch; the
+    recorded lever, for when articles exist: one `<script type="speculationrules">` prefetching a link the visitor
+    hovers (`eagerness: "moderate"`), Chromium-based browsers, a decision of his. THE NAVIGATION stays as it was: the
+    Blog item hidden (part 1's shared-surface rule). WORDS: `blog.{pageTitle, tags, pagination.{label, status, previous,
+    next}}` ×5 (the parity test needs all five; only Romanian is ever shown; EN/DE/FR/IT Claude's drafts, flagged).
+    GUARDS: the CMSR scan reads every title, summary and tag (its SOURCES gains `content/blog`); NEW
+    tests/unit/blog-data.test.ts (each picture exists and is ≥ 1080px wide, D-DASH, no title word over 16 characters,
+    lower-case tags of ≤ 18, summaries ≤ 320, unique titles); accent-census names PostCard a PillButton renderer and
+    Pagination an `accent` caller; page-twins.test.ts holds the two route pages and the twin to one band, one populator
+    and one key list. THE LANDING (the owner, 2026-10-14, verbatim: "pull latest development from remote and merge it into latest main and
+    also host latest version. then take this current blog branch and create pr into development"): after the third
+    promotion (#164 → main 2c4327e, deployed), the lane — rebased onto develop b2a99f7, two doc conflicts resolved (§14's
+    adjacent Doctor and Blog rows, MIGRATION_INVENTORY's appended rows) — goes to develop as ONE PR. It goes STRAIGHT to
+    develop, not through `blog`: a PR into `blog` first would cost a PR and a CI run and land the same squashed commit on
+    develop; `blog` (still at a5e9f3d) takes develop back by its first merge-commit sync after this merges — the merged
+    ci.yml lists `blog`, so that sync PR runs CI. G2 — one round, three Opus reviewers (react · typescript · a11y), each
+    APPROVE WITH CHANGES, 0 critical / 0 high — FOLDED: `parsePosts`' `fail` typed as never-returning, so every check
+    narrows its field and the post is built with NO cast (deleting a check is now a compile error); the jump census's
+    comment stripper is the accent census's three-pass one (a full-line `//` naming a glob had hidden real code lines from
+    it), its literal reader refuses anything but literals, and the card's 200ms / ease-out are read off the position
+    `scale` holds in Button's own lists; the CMSR scan reads non-empty alts and counts its blog strings exactly; ONE words
+    mapping, `blogWordsFrom` in populate.ts, called by words.ts and by the twin, so the twin's plays cover the pages'
+    labels; page-twins checks that every key the pages read exists in ro.json (next-intl only logs a miss); the twin's
+    plays count cards and pages from the data; page 1 `dynamicParams = false`; /ro/blog/page/1/ (the one-page fallback)
+    noindex; a ci.yml step fails if out/{en,de,fr,it}/blog exists; the link crawl also starts at /ro/blog/; the twelve
+    stand-in photos carry `alt=""` (a waiting room illustrates no article — the a11y review); PostCard resets a
+    smuggled `aria-label`, types its date and image `Readonly`, wears `wrap-anywhere` on its title (SC 1.4.12 —
+    measured: „Parodontopatia" 28.5px past the card's content edge at 320 with text spacing, inside with the belt); and
+    sections/LanguageBanner offers NO card on a page with no equivalent in the suggested language (`decide()` compares
+    `equivalentPath` with the path): its „This page is also available in English" had sent every foreign reader of the
+    Romanian-only blog to the English HOME page (SC 2.4.4). EVIDENCE AT THE PR: prettier · eslint (0 errors; develop's
+    `UNIT_PX` warning) · tsc clean; vitest 4 385 passed + 2 skipped with the optimizer's variants hidden (CI's
+    condition); build-storybook and `next build` green — the export writes /ro/blog/, /ro/blog/page/2/ and /ro/blog/page/3/
+    and no other blog page; the link crawl, now starting at the blog too: 691 links on 56 pages, 0 broken; the compiled
+    stylesheet against develop's: 0 rules removed or changed, 12 added, each worn by the new sections (two class-shaped
+    words in tests — a placement example, a comment — had each shipped a dead rule; both reworded). VISUAL, OWED — the
+    owner's: the 31 new darwin cells (Sections/PostCard · Pagination · PostList, Pages/Blog's LastPage) and Pages/Blog
+    Romanian's 6 stale ones (they show the stub) need classic scrollbars, which this Mac draws only with a mouse
+    connected — `AppleShowScrollBars=Always` did not reach headless Chromium (measured: a 0px gutter), so nothing was
+    recorded in overlay mode; the linux cells come from visual-baseline.yml before the next promotion, as every promotion
+    refreshes them first. RECORDED, the owner's calls: the false affordance above; the tags at the strip chip's full
+    44px; titles that hyphenate on a phone (§15.14's site-wide rule; `hyphens-none` on the card title is the one-class
+    lever); the band scale (§15.32) not worn — the blog draws in rem like the privacy and doctor pages, one class string
+    the day the owner wants it to grow with the screen; a tablet's thumbnail is 129px in the row (`@lg` → `@2xl` would
+    stack tablets); the jump at 105% on a full-width card moves its edge 26px at 1280 for a magnifier user (a 1.02 scale
+    is the lever); the page counter's sr-only twin cannot be found by touch (StatNumber's overlay is the lever); in forced
+    colours the pager's live control loses its box (ui/Button's `forced-colors:border` debt, BACKLOG entry 2).
 
 ## 16. Build-time vs runtime contract
 

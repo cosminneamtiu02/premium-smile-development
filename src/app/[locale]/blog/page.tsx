@@ -1,32 +1,47 @@
-import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { PostList } from '@/components/sections/PostList/PostList';
+import { BLOG_LOCALE } from '@/lib/blog/blog';
+import { populateBlogPage } from './populate';
+import { blogPageTitle, blogPageWords } from './words';
 
-// INTERIM STUB — the real Blog index arrives in its own Phase-4 lane (see
-// MIGRATION_PLAYBOOK's Phase-4 order: the ro-only MDX pipeline, PostCard list
-// and blog/[slug] pages). It exists so the shell's live nav has a resolvable
-// target: the placeholder shell linked nothing, the real Header/Footer nav
-// links every primary route, and CI's link check caught the difference
-// (PR #69 — 11 broken internal links).
-// No new message keys: the <h1> reuses the nav label the bar already renders.
-// KEEP-IN-SYNC with ./Blog.stories.tsx: this file is an async Server Component
-// and cannot render in the browser runner, so the story twins its markup
-// through `useTranslations` and pins it (owner, 2026-09-06).
+// /ro/blog/ — PAGE 1 of the blog's list (CLAUDE.md §15.39, the blog branch,
+// 2026-10-11): the owner's reference is infiniswiss.com/blog — a centred
+// heading, five articles a page as cards, „Anterior · 1 / 3 · Următor" under
+// them. Page n lives at /ro/blog/page/n/ (./page/[page]/page.tsx); every page
+// is a complete document built ahead of time, and the pager's links are plain
+// `<a href>`s, so moving between pages is a fresh page load (§15.13 — the
+// owner: "on clicking next of navigation it just pulls whole compiled thing
+// from server"). ./populate.ts turns lib/blog's posts into the band's props,
+// ./words.ts reads the words.
 //
-// ── DELIBERATE, INTERIM §5 DEVIATION, recorded so nobody reads it as a bug.
-// §5 says the blog is ROMANIAN ONLY, and lib/routes/routes.ts already enforces that
-// where it is visible: `{ path: '/blog', key: 'nav.blog', locale: 'ro' }` keeps
-// the item out of the other four locales' nav, so only /ro/blog/ is ever
-// linked. This file, though, sits under [locale] and `output: 'export'`
-// pre-renders every page for every locale in generateStaticParams — so four
-// PHANTOM pages (/en/blog/, /de/blog/, /fr/blog/, /it/blog/) are emitted that
-// nothing on the site points at. They are harmless while they last: the interim
-// host is noindexed in full (§15.2, NOINDEX=1), so they cannot compete for
-// search, and no visitor can reach them without typing the URL.
-// The real Blog lane owns the fix — ro-only generation, whether by its own
-// generateStaticParams or by a route shape outside [locale] — and retires this
-// note along with the stub.
+// ── ROMANIAN ONLY (§5) — the stub's FOUR PHANTOM PAGES ARE GONE. This file
+// sits under [locale], whose layout generates all five languages, so until
+// today /en/blog/, /de/blog/, /fr/blog/ and /it/blog/ were exported too. A page
+// may export its own `generateStaticParams`, and Next 16 runs it once for each
+// language the layout generated and merges the result OVER that language
+// (`{ ...parent, ...item }`, node_modules/next/dist/build/static-paths/app.js),
+// then removes the duplicates (`filterUniqueParams`): returning `locale: 'ro'`
+// every time leaves exactly one page, /ro/blog/. Returning NOTHING for the
+// other four is not an option — under `output: 'export'` Next refuses an
+// empty result (its build error E1454).
+//
+// KEEP-IN-SYNC with ./Blog.stories.tsx: this is an async Server Component the
+// browser runner cannot render, so the twin there mounts the same band through
+// the same ./populate.ts with `useTranslations`' words, and its plays pin what
+// it renders; ../page-twins.test.ts holds the two sources together.
+
+// No page beyond the ones named below is guessed — so `next dev` refuses
+// /en/blog/ the way the export never writes it (G2 react, 2026-10-14).
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return [{ locale: BLOG_LOCALE }];
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await blogPageTitle(1) };
+}
 
 export default async function BlogPage() {
-  const t = await getTranslations('common');
-
-  return <h1 className="font-display text-ink-strong">{t('nav.blog')}</h1>;
+  return <PostList {...populateBlogPage(1, await blogPageWords())} />;
 }

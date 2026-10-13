@@ -119,7 +119,15 @@
     }
   },
   "blog": {
-    "title": "Articles et actualités"
+    "title": "Articles et actualités",
+    "pageTitle": "{title}, page {page}",
+    "tags": "Catégories",
+    "pagination": {
+      "label": "Pages des articles",
+      "status": "Page {page} sur {total}",
+      "previous": "Précédent",
+      "next": "Suivant"
+    }
   },
   "contact": {
     "heading": "Joignables par téléphone ou WhatsApp.",

@@ -61,9 +61,18 @@ const PASSES_JUMP = /\bmotion=["']jump["']/g;
 const SHADOW_POP =
   /\b(?:hover|active|focus|focus-visible|group-hover|group-active):(?:inset-)?shadow-/;
 
-/** Line and block comments out; strings and code stay. */
+/**
+ * Line and block comments out; strings and code stay. THREE passes, the
+ * accent census's fix of 2026-10-02 (G2 typescript, 2026-10-14): a FULL-LINE
+ * `//` comment goes first, because one that names a glob — `src/messages/*.json`
+ * — would otherwise open a fake `/*` block and the next pass would delete real
+ * code up to the next `*\/` (measured: 18 code lines of the team page, 9 of
+ * the services page, 12 of the 404 page and 1 of ui/Keyword were invisible
+ * to this census until then). Blocks second, trailing `//` comments last.
+ */
 function stripComments(source: string): string {
   return source
+    .replace(/^[ \t]*\/\/.*$/gm, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 }
@@ -119,5 +128,95 @@ describe('the jump — who wears it (owner, 2026-10-01)', () => {
     ).toBe(2);
     expect(SHADOW_POP.test('hover:shadow-cta-lg')).toBe(true);
     expect(SHADOW_POP.test('shadow-aura hover:bg-surface')).toBe(false);
+  });
+});
+
+// THE CARD JUMP (owner, 2026-10-11, the blog's first page — CLAUDE.md §15.39:
+// "the pages should not be clickable yet. so just react on hover like a
+// button"). sections/PostCard's article jumps on hover with no button under
+// it: the jump SPELLED outside the two atoms, as its own constant (CARD_JUMP),
+// because the `motion` axis belongs to ui/Button and ui/GlyphButton and a
+// card is neither. This block names every file whose code spells a hover
+// scale, and holds the card to the buttons' own numbers — the 200ms clock,
+// the `ease-out` KEYWORD (Tailwind's `ease-out` utility is another curve),
+// 105% and still under reduced motion — so the card and the buttons cannot
+// drift (KEEP-IN-SYNC, §4).
+const HOVER_SCALE = /\bhover:scale-/;
+
+/** The files whose CODE spells a hover scale: the two button atoms and the named cards. */
+const SPELLS_A_HOVER_SCALE = [
+  'components/ui/Button/Button.tsx',
+  'components/ui/GlyphButton/GlyphButton.tsx',
+  'components/sections/PostCard/PostCard.tsx', // the blog card, 2026-10-11
+];
+
+/**
+ * The value of `name` when its source joins string literals with `+` — and
+ * ONLY literals: anything else in the capture (an identifier, a template
+ * hole) would add classes this reader cannot see, so it throws instead of
+ * returning a value that looks complete.
+ */
+function joinedLiterals(source: string, name: RegExp): string {
+  const match = name.exec(source);
+  if (!match?.[1]) throw new Error(`no ${String(name)} in the source`);
+  const rest = match[1].replace(/'[^']*'/g, '').trim();
+  if (!/^[+\s]*$/.test(rest)) {
+    throw new Error(`${String(name)} joins more than string literals: ${rest}`);
+  }
+  return [...match[1].matchAll(/'([^']*)'/g)].map((m) => m[1]).join('');
+}
+
+/** One of Button's bracketed transition lists, read into its entries (the three lists hold one entry per property, in order). No example is spelled here: Tailwind turns any class-shaped text in a scanned file into a CSS rule, tests included. */
+function transitionList(cell: string, longhand: string): string[] {
+  const list = new RegExp(`\\[transition-${longhand}:([^\\]]+)\\]`).exec(cell);
+  if (!list?.[1]) throw new Error(`no transition-${longhand} list in ${cell}`);
+  return list[1].split(',');
+}
+
+describe('the card jump — a hover scale with no button under it (owner, 2026-10-11)', () => {
+  it('is spelled in code by the two button atoms and the named cards only', () => {
+    const spellers = sourceFiles.filter((file) =>
+      HOVER_SCALE.test(stripComments(read(file))),
+    );
+    expect(spellers.sort()).toEqual([...SPELLS_A_HOVER_SCALE].sort());
+  });
+
+  it('jumps the blog card on the buttons’ own numbers', () => {
+    const card = joinedLiterals(
+      stripComments(read('components/sections/PostCard/PostCard.tsx')),
+      /const CARD_JUMP =([^;]*);/,
+    );
+    expect(card).toBe(
+      '[--jump:200ms] transition-[scale] duration-(--jump) ease-[ease-out] hover:scale-105 motion-reduce:hover:scale-100',
+    );
+    const button = joinedLiterals(
+      stripComments(read('components/ui/Button/Button.tsx')),
+      /\bjump:((?:\s*'[^']*'\s*\+?)+),/,
+    );
+    expect(button).toContain('[--jump:200ms]');
+    expect(button).toContain('hover:scale-105');
+    expect(button).toContain('motion-reduce:hover:scale-100');
+    // The card's clock and curve are the ones Button gives its SCALE — read
+    // off the very position `scale` holds in Button's per-property lists, so
+    // a Button whose scale moved to another clock turns this red.
+    const at = transitionList(button, 'property').indexOf('scale');
+    expect(at, 'Button transitions its scale').toBeGreaterThanOrEqual(0);
+    expect(transitionList(button, 'duration')[at]).toBe('var(--jump)');
+    expect(transitionList(button, 'timing-function')[at]).toBe('ease-out');
+  });
+
+  it('refuses to read a constant that joins anything but string literals', () => {
+    expect(() =>
+      joinedLiterals("const X = 'a ' + EXTRA + 'b';", /const X =([^;]*);/),
+    ).toThrow(/joins more than string literals/);
+    expect(
+      joinedLiterals("const X = 'a ' +\n  'b';", /const X =([^;]*);/),
+    ).toBe('a b');
+  });
+
+  it('keeps real code a fake comment would hide — the three-pass stripper', () => {
+    const code =
+      "// see src/messages/*.json\nconst KEEP = 'hover:scale-105';\n// end */";
+    expect(stripComments(code)).toContain('hover:scale-105');
   });
 });

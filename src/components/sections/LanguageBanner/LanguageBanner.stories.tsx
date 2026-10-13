@@ -123,7 +123,7 @@ const meta = {
     href: {
       control: false,
       description:
-        'The finished URL — locale prefix, trailing slash and interim base path already on (localeHref); the blog’s Romanian-only pages resolve to the target locale’s home (equivalentPath, §5)',
+        'The finished URL of THIS page in the suggested language — locale prefix, trailing slash and interim base path already on (localeHref). A page with no twin there, like the Romanian-only blog (§5), gets no card at all: the wrapper’s decide() refuses it (SC 2.4.4, G2 a11y, 2026-10-14)',
     },
     onAccept: { control: false },
     onDismiss: { control: false },

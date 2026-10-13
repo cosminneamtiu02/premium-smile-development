@@ -294,6 +294,13 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   carry `TODO(owner): verify against the printed sheet` (§15.20).
 - **`src/lib/hero-slides/hero-slides.ts`:** the Home opener's three slogans and their picture
   descriptions are Claude's drafts in all five languages (§15.21 round 11) — to confirm or rewrite.
+- **`src/content/blog/posts.json`** (the blog's list page, §15.39 — added 2026-10-11): the twelve
+  posts are Claude's placeholder drafts — titles, summaries, dates and tags written so the blog
+  page can be seen, attributed to the clinic's real doctors and illustrated with the clinic's own
+  three photographs. No article exists behind any of them. They landed on develop with the page on
+  the owner's word (2026-10-14), so the next promotion publishes them on the interim host —
+  reachable only by typing /ro/blog/ while the nav item stays hidden, and noindex like the whole
+  host. Replace them, or have each named doctor confirm theirs, before the blog is shown.
 - **Consent (GDPR):** written consent from the patients whose seven Google reviews show their
   names, three with their photographs — a name beside a dental review is health data, art. 9
   (§15.19 round 4, `src/lib/reviews/reviews.ts`); and the same from every doctor and every member

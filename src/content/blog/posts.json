@@ -1,0 +1,146 @@
+[
+  {
+    "slug": "cum-iti-alegi-periuta-de-dinti",
+    "title": "Cum îți alegi periuța de dinți",
+    "summary": "Periuța potrivită depinde de gingiile tale, de lucrările pe care le ai în gură și de cât de ușor o mânuiești. Îți spunem ce să cauți pe ambalaj și de ce e bine s-o schimbi la fiecare trei luni.",
+    "date": "2026-09-29",
+    "author": "Dr. Nicu Elena Alina",
+    "image": {
+      "src": "/images/hero/lobby.jpg",
+      "alt": ""
+    },
+    "tags": ["igienă", "sfaturi"]
+  },
+  {
+    "slug": "ce-este-tartrul",
+    "title": "Ce este tartrul și de ce se formează",
+    "summary": "Tartrul este placa bacteriană întărită pe dinți, pe care periajul de acasă nu o mai poate îndepărta. Află cum se formează, ce probleme le aduce gingiilor și cât de des e bine să faci o igienizare profesională.",
+    "date": "2026-09-15",
+    "author": "Dr. Malea (Sabău) Oana Bianca",
+    "image": {
+      "src": "/images/hero/treatment-room.jpg",
+      "alt": ""
+    },
+    "tags": ["prevenție", "igienă"]
+  },
+  {
+    "slug": "prima-vizita-a-copilului-la-dentist",
+    "title": "Prima vizită a copilului la dentist",
+    "summary": "O primă vizită liniștită îl ajută pe copil să se obișnuiască cu cabinetul. Câteva idei despre cum îl pregătești acasă, la ce vârstă e potrivit să vină și ce se întâmplă în timpul consultației.",
+    "date": "2026-08-30",
+    "author": "Dr. Ivașcu-Zugravu Cătălina",
+    "image": {
+      "src": "/images/hero/instruments.jpg",
+      "alt": ""
+    },
+    "tags": ["copii", "sfaturi"]
+  },
+  {
+    "slug": "aparatul-dentar-la-adulti",
+    "title": "Aparatul dentar la adulți: ce trebuie să știi",
+    "summary": "Dinții se pot alinia și la vârsta adultă. Îți explicăm cum decurge tratamentul ortodontic, cât durează de obicei și cum îți îngrijești dinții cât timp porți aparatul.",
+    "date": "2026-08-12",
+    "author": "Dr. Ivașcu-Zugravu Cătălina",
+    "image": {
+      "src": "/images/hero/lobby.jpg",
+      "alt": ""
+    },
+    "tags": ["ortodonție"]
+  },
+  {
+    "slug": "gingiile-care-sangereaza-la-periaj",
+    "title": "Gingiile care sângerează la periaj",
+    "summary": "Sângerarea la periaj este adesea primul semn al unei inflamații a gingiilor. Află ce o poate provoca, ce poți face acasă și când e momentul să ceri un consult.",
+    "date": "2026-07-28",
+    "author": "Dr. Nicu Elena Alina",
+    "image": {
+      "src": "/images/hero/treatment-room.jpg",
+      "alt": ""
+    },
+    "tags": ["parodontologie", "prevenție"]
+  },
+  {
+    "slug": "implantul-dentar-pas-cu-pas",
+    "title": "Implantul dentar, pas cu pas",
+    "summary": "De la prima consultație și radiografie până la coroana finală, un implant se face în mai multe etape. Le luăm pe rând, ca să știi la ce să te aștepți la fiecare vizită.",
+    "date": "2026-07-10",
+    "author": "Dr. Bozdog Horațiu",
+    "image": {
+      "src": "/images/hero/instruments.jpg",
+      "alt": ""
+    },
+    "tags": ["implantologie"]
+  },
+  {
+    "slug": "durere-de-masea-in-weekend",
+    "title": "Ce faci când te doare o măsea în weekend",
+    "summary": "Câteva lucruri simple care te ajută până la programare: ce poți face pentru durere, ce e bine să eviți și ce semne îți spun că trebuie să suni la clinică imediat ce se deschide.",
+    "date": "2026-06-24",
+    "author": "Dr. Toma Lucian",
+    "image": {
+      "src": "/images/hero/lobby.jpg",
+      "alt": ""
+    },
+    "tags": ["urgențe", "sfaturi"]
+  },
+  {
+    "slug": "albirea-dentara-intrebari-frecvente",
+    "title": "Albirea dentară: întrebări frecvente",
+    "summary": "Cât timp ține efectul, ce sensibilitate poate apărea și cine nu ar trebui să-și albească dinții. Răspunsuri scurte la întrebările pe care le auzim des în cabinet.",
+    "date": "2026-06-05",
+    "author": "Dr. Malea (Sabău) Oana Bianca",
+    "image": {
+      "src": "/images/hero/treatment-room.jpg",
+      "alt": ""
+    },
+    "tags": ["estetică"]
+  },
+  {
+    "slug": "ata-dentara-si-periutele-interdentare",
+    "title": "Ața dentară și periuțele interdentare",
+    "summary": "Periuța curăță suprafețele dinților, dar nu ajunge între ei. Îți arătăm cum folosești ața dentară și periuțele interdentare și cum alegi mărimea potrivită pentru tine.",
+    "date": "2026-05-20",
+    "author": "Dr. Nicu Elena Alina",
+    "image": {
+      "src": "/images/hero/instruments.jpg",
+      "alt": ""
+    },
+    "tags": ["igienă"]
+  },
+  {
+    "slug": "coroane-si-punti-dentare",
+    "title": "Coroane și punți dentare: care e diferența",
+    "summary": "Când un dinte e prea afectat pentru o plombă, medicul poate propune o coroană; când lipsește, o punte sau un implant. Iată cum diferă aceste lucrări și cum le îngrijești.",
+    "date": "2026-04-30",
+    "author": "Dr. Toma Lucian",
+    "image": {
+      "src": "/images/hero/lobby.jpg",
+      "alt": ""
+    },
+    "tags": ["protetică"]
+  },
+  {
+    "slug": "sensibilitatea-dentara-la-rece-si-cald",
+    "title": "Sensibilitatea dentară la rece și cald",
+    "summary": "Senzația scurtă și neplăcută la băuturi reci sau calde poate avea mai multe cauze, de la gingii retrase la carii. Află ce o declanșează și ce poți face ca s-o reduci.",
+    "date": "2026-04-08",
+    "author": "Dr. Opriș Mircea",
+    "image": {
+      "src": "/images/hero/treatment-room.jpg",
+      "alt": ""
+    },
+    "tags": ["prevenție", "sfaturi"]
+  },
+  {
+    "slug": "de-ce-conteaza-controlul-la-sase-luni",
+    "title": "De ce contează controlul la șase luni",
+    "summary": "Un control regulat descoperă problemele mici înainte să devină mari. Îți explicăm ce verifică medicul la fiecare vizită și de ce igienizarea face parte din ea.",
+    "date": "2026-03-17",
+    "author": "Dr. Opriș Mircea",
+    "image": {
+      "src": "/images/hero/instruments.jpg",
+      "alt": ""
+    },
+    "tags": ["prevenție"]
+  }
+]

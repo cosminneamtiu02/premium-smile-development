@@ -61,8 +61,9 @@ const MESSAGES: Record<Locale, typeof ro> = { ro, en, de, fr, it: it_ };
  *  the whole tree) and in Storybook (.storybook/preview.tsx decorator), so the
  *  tests mount it the same way. ClinicLocation is NOT a client component;
  *  useTranslations is isomorphic and reads this context. The band's one prop
- *  passes straight through — absent unless a case names it, which is the
- *  doctor page's call (§15.32). */
+ *  passes straight through — absent unless a case names it: the band's
+ *  unscaled default, which only its own stories and these tests draw since
+ *  every page passes `scaled` (§15.32 round 3). */
 const Mounted = ({
   locale,
   ...props

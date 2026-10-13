@@ -283,9 +283,14 @@ export default async function DoctorPage({
           2026-10-13: "as the current map on home page is now, i need it
           updated reactivity wise on absoultey every page … with this i am
           refering to individual doctor page"). The page's OTHER bands do
-          not scale yet, so on a laptop or desktop the map's eyebrow and
-          <h2> part from theirs above the 1401 window and below it — the
-          recorded price; the numbers band right above keeps its default. */}
+          not scale yet, so on a laptop or desktop the map band parts from
+          them at every window but the 1401 reference: its eyebrow and <h2>,
+          its own padding (the gap from the numbers band to its eyebrow
+          65px at a 1140 window and 110 at 1920, where it was 80), past a
+          ≈ 1939px window its left edge — the band centres in its cap — and,
+          under a browser zoom, it alone keeps its size until the column
+          drops under the step. The recorded price (§15.32 round 3); the
+          numbers band right above keeps its default. */}
       <ClinicLocation scaled />
     </>
   );

@@ -7,8 +7,10 @@ import { ClinicLocation } from './ClinicLocation';
 
 // The „Ne găsești" band's FOUR stories — the two widths §13 samples for this
 // tier, the language that stresses them, and (since 2026-10-02, §15.32) the
-// band as Home and Team render it, `Scaled`. The first three are the doctor
-// page's band, which passes no prop. Conventions are the Footer's, and the
+// band as every page renders it, `Scaled` (Home and Team from that day, the
+// doctor pages from 2026-10-13 — round 3). The first three draw the band's
+// unscaled default, which no page passes any more: they are its workbench
+// self. Conventions are the Footer's, and the
 // two mechanics that would otherwise fail SILENTLY are spelled out again
 // because they are exactly as invisible here:
 //

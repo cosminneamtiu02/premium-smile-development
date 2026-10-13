@@ -4319,17 +4319,38 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the owner:** the page's OTHER bands keep the theme's steps, so on a laptop or desktop the map's eyebrow and h2 part
     from theirs — the h2 29.2px at a 1140 window, 32.8 at 1280, 36 at the 1401 reference, 39.5 at 1536, 41.2 at 1600,
     48.5 at 1882, 49.5 at 1920 and 50 past the cap, beside „Despre …", „Cursuri și specializări" and „Experiență
-    confirmată în timp" at 36 — and past a ≈ 1939px window the map band centres (x 504.5 at 2560) while they keep the
-    column's edge (x 200). THE LEVER: the page's other bands in the scale — this item's recipe, the lane its main text
-    foresaw — when the owner sends that page: the numbers band there is one `scaled` away, DoctorIntro, DoctorProfile
-    and DoctorCourses need the recipe. ALSO RECORDED: every page that mounts the band passes the flag now, so its
+    confirmată în timp" at 36 (in windows of ≈ 1139–1171px the map's h2, 29.2–30px, is no larger than the timeline's
+    year h3s or the credo card's h2, both 30 — G2 a11y, no criterion failed) — and past a ≈ 1939px window the map band
+    centres (x 504.5 at 2560) while they keep the column's edge (x 200). Its own padding scales too: the gap from the
+    numbers band to the map's eyebrow reads 64.9 / 73.0 / 80 / 91.5 / 110.0 / 111.1px at 1140 / 1280 / 1401 / 1600 /
+    1920 / 2560 where develop's was 80 at every width (G2 react, measured). BELOW the 1401 reference the band SHRINKS
+    while the rest of the page holds the theme's sizes — the address 12.98 / 14.6 / 15.6px and the eyebrow 11.35 /
+    12.8 / 13.6px at 1140 / 1280 / 1366, the eyebrow at 1140 under the 12px the owner turned down for this audience
+    (ui/Eyebrow's THE RECIPE); the Footer and the contact dialog still print the address and the phone in rem (G2
+    a11y). And under a BROWSER ZOOM the map band is now the one band on the doctor page that keeps its size —
+    MEASURED (Chromium, the zoom emulated as a narrower layout viewport drawn at z device px per CSS px): on a 1440
+    laptop the address holds 16.45 / 16.43 / 16.39 device px at 100 / 110 / 125 % while the biography grows 18 → 19.8
+    → 22.5, first growing at 150 % (24); on a 1920 screen it holds 22.0 / 21.95 / 21.9 up to 150 % (the biography 27),
+    first growing at 175 % (28) — where develop's address grew with every step (§15.25 round 2's SC 1.4.4 trade, the
+    F94 pattern, now on 30 pages: six doctors × five languages). ACCEPTED BY THE OWNER the same day, asked after G2
+    with these numbers: "Accept, like Home" — the trade he took for Home and Team, now on the doctor pages' map.
+    THE LEVERS, should that change: (a) the page's other bands in the scale —
+    this item's recipe, the lane its main text foresaw — when the owner sends that page: the numbers band there is one
+    `scaled` away, DoctorIntro, DoctorProfile and DoctorCourses need the recipe; it makes every heading one size again
+    but SPREADS the zoom trade to the biography, the timeline and the numbers (G2 a11y); (b) THE FLOOR (round 2) on
+    every scaled band — Home's, Team's and this map alike, so the map stays one band on all three pages: no shrink
+    under the reference, and a zoom or a larger default font followed there as rem is. ALSO RECORDED: every page that mounts the band passes the flag now, so its
     `false` default has no page caller — it stays the band's own stories' unscaled self (§6.6: the prop arrived
     additive); wearing the scale unconditionally and deleting the prop (ui/Container's recipe: a band that lives only
     on scaled pages) is the cleanup lever, its stories' and tests' unscaled cases moving with it. **Guards:**
     page-twins.test.ts — the doctor page and its twin pass `scaled` bare and nothing else, the numbers band still
-    none, and NEW "THE MAP ON EVERY PAGE": every page and twin under app/[locale]/ that mounts the map, found by a
-    build-time glob, passes `scaled` bare and nothing else, so a page added later cannot draw a second kind of map
-    (both red on an unscaled doctor page, tried); a NEW block in tests/e2e/band-scale.spec.ts reads the doctor page's
+    none, and NEW "THE MAP ON EVERY PAGE": every .tsx under app/[locale]/ but the tests, read by a build-time glob,
+    and each that IMPORTS the band (under its own name or an alias) mounts it exactly once, `scaled`, bare, nothing else
+    in the tag and no spread — so a page added there later cannot draw a second kind of map (red on an unscaled doctor
+    page, tried; the readers' own self-tests hold a conditional second mount, a spread, an alias and a longer name
+    that merely starts like it). Outside app/[locale]/ it does not look: the band's own stories draw its unscaled
+    default, and a section that composed the band (none does) would need its own guard. A NEW block in
+    tests/e2e/band-scale.spec.ts reads the doctor page's
     map band beside Home's at seven laptop windows (every number equal, every size the design × s) and on a 390 phone
     and an 1180 touch tablet (equal, the theme's sizes), RO + DE — 18 green on the lane's export; on develop's export
     the 14 laptop checks red, 1401 included, and the phone and the tablet green, as they should be. The comments that
@@ -4342,8 +4363,16 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     82 skipped (the desktop project's duplicates); the visual net over every story that renders the map (Pages/Home,
     Pages/Team, Pages/Doctor, Sections/ClinicLocation — 44 cells) against the committed darwin set, #159's: exactly the
     six Pages/Doctor cells at 1280, 1536 and 1920 in both languages differ — 8.2k to 16.8k pixels, the page 11px shorter
-    at 1280, 12px taller at 1536 and 47px taller at 1920 — and the other 38 pass. No reviewer round (one word per call
-    site); Opus reviewers on the owner's word.
+    at 1280, 12px taller at 1536 and 47px taller at 1920 — and the other 38 pass. **G2 — react-reviewer,
+    typescript-reviewer and a11y-architect, all three on Opus, after the PR opened (the owner: "did you run the
+    reviewers?"):** three times APPROVE WITH CHANGES, 0 critical / 0 high; the change itself found correct (the
+    round's numbers re-measured by the React review). FOLDED in one round: the census (TypeScript MEDIUM, React LOW —
+    it read only the first mount, so a conditional second mount, a spread, a string before the mount, an alias or a
+    `//` in JSX text slipped past; files are now chosen by their import and every mount is read), a longer name read as
+    a mount, a census test vacuous when run alone, Home's numbers held finite in the e2e comparison, stale comments in
+    the band's stories and tests and in page-twins.test.ts, the inventory row's owner cell, and THE PRICE above
+    (a11y MEDIUM: the zoom trade on 30 pages; LOW: the shrink under the reference; NIT: the h2 against the h3s; React
+    LOW: the padding).
 
 33. **The logo is a link home — ON THE OWNER'S WORD (2026-10-02, verbatim: "i want to create  a new button
     class. so i just want the "premium smile" logo from top bar and from footer bto be a component that takes

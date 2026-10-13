@@ -21,8 +21,9 @@ import { expect, type Page, test } from '@playwright/test';
 // container queries, `@supports` and `(pointer: fine)` — resolved by the
 // engine against the page a visitor downloads. Nothing here is a screenshot:
 // computed font sizes and boxes, read off the page (the doctor-showcase
-// spec's idiom). The one band word read here is spelled below, never
-// imported, so a silent rename fails here.
+// spec's idiom). The two band words read here — the staff band's title and
+// the map band's — are spelled below, never imported, so a silent rename
+// fails here.
 //
 // THE NUMBERS: s = min(column, 1536) / 1106 with `column` read off the page
 // (ui/Container's width), so the checks hold under a classic scrollbar and
@@ -556,6 +557,9 @@ for (const locale of ['ro', 'de'] as const) {
       for (const [name, value] of Object.entries(numbersOf(doctor))) {
         const theirs = homes[name] ?? NaN;
         expect(Number.isFinite(value), `${name} at ${where}`).toBe(true);
+        expect(Number.isFinite(theirs), `Home’s ${name} at ${where}`).toBe(
+          true,
+        );
         expect(value, `${name} at ${where}: the doctor page’s`).toBeCloseTo(
           theirs,
           1,

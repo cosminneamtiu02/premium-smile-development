@@ -531,3 +531,86 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     same doctor fires no `hashchange`, though the browser scrolls again);
   - THE STEPS GIVE WAY TO A CLICK — a click on an in-page link ends a step under way at once, so
     the browser's jump is the only movement left.
+
+## 12 · The patients' reviews — the „[…]" cuts and the CMSR's testimonial rule
+
+- **Why it waits:** the owner, 2026-10-16, after asking why the reviews on Home show „[…]" and
+  whether showing them straight from Google would still leave the clinic answerable for them
+  („ele sunt pubblice pe google reviews adica daca de exemplu iau un api care numa streamuieste
+  reviewurile, mai is "liable" de chestia asta??"): "add to backlog that i should come back on
+  this". Nothing changes until he decides.
+- **Today:** the seven reviews (`src/lib/reviews/reviews.ts`, CLAUDE.md §15.19 round 4) are the
+  patients' Google reviews with eleven phrases cut, each cut marked „[…]" — on 2026-09-30 the
+  owner picked "Trim" over "Word for word". The four other languages were translated from the
+  cut Romanian and carry the same marks. What each mark hides, by the card's title (the names
+  stay in the data rows alone: the repository is public, and the consents are still owed —
+  entry 7):
+  - „Empatie și implicare": „Recomand cu […] încredere!" ← „cea mai mare";
+  - „Procedura, explicată clar", four: the opening „Experiența mea … a fost extraordinară, …",
+    „de optimă calitate", „impecabilă", „o super profesionistă";
+  - „De la recepție până în cabinet": „este una […]." ← „impecabilă, din toate punctele de
+    vedere";
+  - „Atenție la detalii": „a fost […]." ← „extraordinară", and „experiențe stomatologice […]." ←
+    „de calitate";
+  - „Instrumente și tratamente noi": „sunt noi […]." ← „și foarte calitative";
+  - „Același medic de zece ani": „de aproximativ 10 ani […]." ← „și colaborarea cu ea a fost la
+    superlativ";
+  - „Grijă și pentru cei mici": „cât și de profesionalism […]." ← „- premium 😄".
+- **The rule, in the adopted text:** Decizia CMSR nr. 04/2CN/2025 (Monitorul Oficial nr. 529 of
+  6 June 2025, in force since 1 July 2025), annex, pct. 3.1 lit. d): „Forma de exercitare a
+  profesiei sau medicul care preia pe site-ul web sau paginile din cadrul rețelelor de socializare
+  afirmațiile/testimonialele pacienților este responsabil conform legii și poate fi sancționat în
+  conformitate cu prevederile Codului deontologic al medicului stomatolog pentru conținutul
+  preluat." The banned words are pct. 3.3 lit. (a)(iii) — „cea mai bună", „top", „optim",
+  „excelență", „servicii profesionale" / „calitative" / „de înaltă calitate", „servicii premium
+  sau exclusiviste" among them. Read on 2026-10-16 in the copy the Argeș county college published
+  (cmsarges.ro, „Ghidului de bune practici privind publicitatea medicilor stomatologi"); cmsr.ro's
+  own page for the guide serves the April 2025 draft, the same paragraph in substance, and the old
+  PDF address under cmsr.ro/wp-content/uploads/2025/04/ answers 404.
+- **The API question — no, read off the guide (not a lawyer's opinion):** being public on Google
+  is not the point. There the patient publishes; on the site the clinic does, and the rule's verb,
+  „preia", says nothing about how the taking is done. A feed of Google's reviews (the Places API)
+  leaves the liability where it is and adds risks:
+  - the text arrives whole, the banned words included; cutting them makes it a feed no longer;
+  - Google picks the reviews — "A maximum of 5 reviews can be returned", "sorted by relevance" —
+    so a new review would appear on the site unread, and the clinic would answer for it;
+  - Google's display rules ("Policies and attributions for Places API") require each review's
+    author and avatar and a link to the original, while the guide's same page asks the patient's
+    prior consent for photos, „inclusiv cu privire la indicarea numelui";
+  - Google forbids storing Places API content (place IDs excepted), so the reviews could not be
+    written into the static HTML at build: each visitor's browser would fetch them, which
+    CLAUDE.md §16 rules out — a paid API key, and the visitor's IP sent to Google before any
+    consent, entry 1's question a second time.
+- **Found while checking (2026-10-15 and 16):**
+  - two cuts leave a sentence without its point — „Atenție la detalii"'s „… a fost […]." and „De
+    la recepție până în cabinet"'s „… este una […]."; the rule was the smallest cut that leaves a
+    whole sentence, and screen readers skip the brackets at their default settings, so a listener
+    hears "My experience … was." The lever: cut the whole clause, as „Procedura, explicată clar"
+    does for its opening;
+  - the line between kept and cut is a judgment: „sunt mulțumit de calitatea lucrărilor" stayed
+    and „experiențe stomatologice de calitate" went; and while the guide bans „servicii
+    profesionale", six of the seven quotes keep „profesionalism", „profesionalitate" or „foarte
+    profesional", said by patients about their visit — for the lawyer's read (entry 3);
+  - the CMSR scan (`tests/unit/cmsr-scan.test.ts`, CLAUDE.md §13) would catch ONE of the eleven
+    phrases if it came back, „cea mai mare" (run against its Romanian patterns on 2026-10-16): it
+    has none for „extraordinar", „impecabil", „optim" alone, „super", „la superlativ",
+    „calitativ" or „premium" — the last needs care, since the clinic's own name carries it.
+    lib/reviews' header says such a word "fails CI instead of shipping"; for these it would not.
+- **The choices when the owner comes back (none taken):**
+  1. keep the cuts and their marks — honest and inside the guide; the cost is the look;
+  2. settle it with the consents entry 7 already owes: show each patient the shortened text when
+     asking, and a text the patient approved is theirs — the marks on that card can go (the
+     recommendation of 2026-10-15);
+  3. replace the reviews with ones that need no cut — every one on the site needs one today;
+  4. no reviews on the site, a link to the clinic's Google listing instead: nothing is taken
+     over. The same guide, pct. 2 lit. f (iii), bars links to pages whose content may be
+     considered contrary to the profession's ethical and deontological principles; a link to the
+     clinic's own listing is common practice, but that is the lawyer's call (entry 3);
+  5. word for word — the 2026-09-30 choice reversed: no marks, and every phrase the guide bans
+     shown on the clinic's own site.
+- **Not on the list:** the API (above), and the cuts without their marks, which would show a
+  shortened text as the patient's whole words.
+- **The work, once decided:** the rows of `src/lib/reviews/reviews.ts` in all five languages, its
+  data test (`tests/unit/reviews-data.test.ts`) and the CMSR scan; lib/reviews' header and
+  CLAUDE.md §15.19 round 4 record the decision; the screenshots that show the deck — Pages/Home,
+  Sections/ReviewsCarousel and Sections/ReviewCard.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BLOG_LOCALE, posts as blogPosts } from '../../src/lib/blog/blog';
+import { postsIn as blogPostsIn } from '../../src/lib/blog/blog';
 import { heroSlides } from '../../src/lib/hero-slides/hero-slides';
 import { reviews } from '../../src/lib/reviews/reviews';
 import { auxiliaries, clinicStats, doctors } from '../../src/lib/team/team';
@@ -40,8 +40,12 @@ import ro from '../../src/messages/ro.json';
 // (2026-10-11, the blog branch's first lane, CLAUDE.md §15.39): every title,
 // summary and tag src/content/blog/posts.json holds — a clinic's articles about
 // teeth are the clinic talking, and the scan widened in the lane that wrote
-// the first drafts. Romanian only (§5), so the other four languages scan
-// nothing there. WHY THAT SCOPE: the
+// the first drafts; in Romanian until round 3 (2026-10-14), in all five
+// languages since, read in the lane that drafted the other four. And the
+// `blog` namespace of the five message files (2026-10-14, CLAUDE.md §15.39
+// round 2): the list page's hero — its heading and its lead, the clinic
+// describing what it writes — drafted in that lane.
+// WHY THAT SCOPE: the
 // doctor pages, the reviews and the opener are where a clinic talks about
 // itself. Widening it to lib/prices and the other namespaces is one more entry
 // in SOURCES below — a deliberate act, because older copy must be read first,
@@ -60,7 +64,12 @@ import ro from '../../src/messages/ro.json';
 // The last `it` proves each list has teeth (one sample per language trips).
 
 /** The exact strings the owner has verified and allows through, verbatim —
- *  as a visitor READS them, with no `<k>` key-word marks (`visible`, below). */
+ *  as a visitor READS them, which is how `visible` (below) reads every string
+ *  before it is compared: no `<k>` key-word marks, no invisible format
+ *  character, and every run of whitespace ONE plain space, U+0020. So an
+ *  exception copied out of a message file is written with a plain space
+ *  where the copy has a line break, a no-break space or two spaces in a row,
+ *  or it never matches; the honesty test at the end holds every entry to it. */
 const ALLOWED: readonly string[] = [];
 
 const PATTERNS: Readonly<Record<Locale, readonly RegExp[]>> = {
@@ -138,8 +147,11 @@ const MESSAGES: Readonly<Record<Locale, Messages>> = {
   it: itMessages,
 };
 
-/** Every string value under the `team` namespace, with its dotted key. */
-function messageStrings(locale: Locale): readonly [string, string][] {
+/** Every string value under one namespace of a message file, with its dotted key. */
+function namespaceStrings(
+  locale: Locale,
+  namespace: 'team' | 'blog',
+): readonly [string, string][] {
   const out: [string, string][] = [];
   const walk = (node: unknown, path: string): void => {
     if (typeof node === 'string') out.push([path, node]);
@@ -147,8 +159,24 @@ function messageStrings(locale: Locale): readonly [string, string][] {
       for (const [key, value] of Object.entries(node))
         walk(value, `${path}.${key}`);
   };
-  walk(MESSAGES[locale].team, 'team');
+  walk(MESSAGES[locale][namespace], namespace);
   return out;
+}
+
+/** Every string value under the `team` namespace, with its dotted key. */
+function messageStrings(locale: Locale): readonly [string, string][] {
+  return namespaceStrings(locale, 'team');
+}
+
+/**
+ * Every string value under the `blog` namespace — the list page's own words
+ * since 2026-10-14 (CLAUDE.md §15.39 round 2): its hero heading and lead are
+ * the clinic talking about what it writes, so the scan reads them in the lane
+ * that drafted them, in all five languages — the list pages' own since round
+ * 3.
+ */
+function blogMessageStrings(locale: Locale): readonly [string, string][] {
+  return namespaceStrings(locale, 'blog');
 }
 
 /** Every string lib/team ships for one language, labelled — names excluded. */
@@ -211,13 +239,13 @@ function reviewStrings(locale: Locale): readonly [string, string][] {
 
 /**
  * The blog's posts (CLAUDE.md §15.39) — every title, summary, tag and picture
- * description (an empty alt, a decorative picture, has nothing to read). The
- * blog is written in Romanian only (§5), so every other language scans
- * nothing here.
+ * description in the language scanned (an empty alt, a decorative picture,
+ * has nothing to read): each post's words in that language, as its list page
+ * prints them (lib/blog's `postsIn`). Every language since round 3
+ * (2026-10-14); Romanian alone until then.
  */
 function blogStrings(locale: Locale): readonly [string, string][] {
-  if (locale !== BLOG_LOCALE) return [];
-  return blogPosts.flatMap((post): [string, string][] => [
+  return blogPostsIn(locale).flatMap((post): [string, string][] => [
     [`${post.slug}.title`, post.title],
     [`${post.slug}.summary`, post.summary],
     ...post.tags.map((tag): [string, string] => [`${post.slug}.tag`, tag]),
@@ -237,6 +265,7 @@ const SOURCES: readonly [
   ['lib/reviews', reviewStrings],
   ['lib/hero-slides', heroStrings],
   ['content/blog', blogStrings],
+  ['messages blog.*', blogMessageStrings],
 ];
 
 /**
@@ -244,9 +273,24 @@ const SOURCES: readonly [
  * before any pattern runs. A doctor's philosophy carries them and, since
  * 2026-10-13, every biography paragraph too (CLAUDE.md §15.23 round 7) — and
  * a mark inside a banned phrase („fără <k>durere</k>") would otherwise split
- * it out of every pattern's reach while the page still prints it whole.
+ * it out of every pattern's reach while the page still prints it whole. Then
+ * every invisible FORMAT character removed — Unicode's Cf: the soft hyphen
+ * U+00AD, the zero-width space U+200B, the word joiner U+2060 and their kin.
+ * None prints (a soft hyphen only where a line ends on it), yet each splits a
+ * word or a phrase in the source out of every pattern's reach; and those
+ * three are no whitespace to `\s`, so the next step would never see them.
+ * Removed FIRST, so that a space, a zero-width space and a space read as the
+ * one space they show. Last, every run of whitespace read as ONE plain space,
+ * the space the patterns spell: the blog hero's line breaks (set as lines on
+ * a laptop since 2026-10-15, CLAUDE.md §15.39 round 3) and the copy's no-break
+ * spaces (U+00A0, French's U+202F) would otherwise split a phrase the same
+ * way — and a RUN of them, a space beside a no-break space, as much as one.
  */
-const visible = (text: string): string => text.replace(/<\/?k>/g, '');
+const visible = (text: string): string =>
+  text
+    .replace(/<\/?k>/g, '')
+    .replace(/\p{Cf}/gu, '')
+    .replace(/\s+/g, ' ');
 
 function hits(locale: Locale, text: string): readonly string[] {
   // The ALLOWED list holds what a visitor reads too — written without marks,
@@ -282,18 +326,24 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
         ),
       ).toHaveLength(clinicStats.length * 2);
       expect(messageStrings(locale).length).toBeGreaterThan(10);
+      // The blog's own words: the hero's heading and lead among them.
+      expect(blogMessageStrings(locale).map(([where]) => where)).toEqual(
+        expect.arrayContaining(['blog.hero.title', 'blog.hero.lead']),
+      );
       expect(reviewStrings(locale).length).toBe(reviews.length * 2);
       expect(heroStrings(locale).length).toBe(heroSlides.length * 2);
+      // The blog, in this language: every post's title, summary, tags and
+      // non-empty picture description, exactly.
+      const posts = blogPostsIn(locale);
+      expect(posts.length).toBeGreaterThan(0);
+      expect(blogStrings(locale)).toHaveLength(
+        posts.reduce(
+          (sum, post) =>
+            sum + 2 + post.tags.length + (post.image.alt === '' ? 0 : 1),
+          0,
+        ),
+      );
     }
-    // The blog: Romanian only — every post's title, summary, tags and
-    // non-empty picture description, exactly.
-    expect(blogStrings(BLOG_LOCALE)).toHaveLength(
-      blogPosts.reduce(
-        (sum, post) =>
-          sum + 2 + post.tags.length + (post.image.alt === '' ? 0 : 1),
-        0,
-      ),
-    );
   });
 
   it.each([
@@ -327,6 +377,73 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
     },
   );
 
+  // WHAT THE SOURCE SPLITS AND A VISITOR READS WHOLE: a banned MULTI-WORD
+  // phrase whose words the source parts with something other than one plain
+  // space. Every invisible character is built from its code point, so none
+  // hides in this file; and each table names its cases in a label column, so
+  // no case's text reaches a test's title, where a line break would split the
+  // reporter's line and break a `-t` filter.
+  const NBSP = String.fromCodePoint(0x00a0);
+  const NARROW_NBSP = String.fromCodePoint(0x202f);
+  it.each([
+    ['ro', 'a line break', 'Ne pasă de tine: cea\nmai bună grijă.'],
+    ['de', 'a line break', 'Wir zeigen Ihnen den Weg ohne\nSchmerz.'],
+    ['fr', 'a no-break space', `Un soin sans${NBSP}douleur pour vous.`],
+    ['it', 'a narrow no-break space', `Una cura senza${NARROW_NBSP}dolore.`],
+    [
+      'ro',
+      'a space and a no-break space in a row',
+      `Ne pasă de tine: cea ${NBSP}mai bună grijă.`,
+    ],
+  ] as const)(
+    '%s: reads past %s between the words of a banned phrase',
+    (locale, what, text) => {
+      // On a laptop the blog hero's line break SHOWS — the phrase runs over
+      // two lines — and a no-break space is a space to the eye: either way it
+      // is the visitor who reads ONE phrase, and the scan reads it as they
+      // do. The last case is a RUN of whitespace: one space to `visible`
+      // however many characters make it, never two (the patterns spell one).
+      expect(
+        hits(locale, text).length,
+        `${what} read as one plain space`,
+      ).toBeGreaterThan(0);
+      expect(
+        PATTERNS[locale].some((p) => p.test(text)),
+        'the raw source escapes every pattern — the case proves the reading',
+      ).toBe(false);
+    },
+  );
+
+  const SOFT_HYPHEN = String.fromCodePoint(0x00ad);
+  const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b);
+  const WORD_JOINER = String.fromCodePoint(0x2060);
+  it.each([
+    ['ro', 'a soft hyphen in a word', `Tratament fără du${SOFT_HYPHEN}rere.`],
+    ['en', 'a word joiner in a word', `A pain${WORD_JOINER}less visit.`],
+    [
+      'fr',
+      'a zero-width space between two spaces',
+      `Un soin sans ${ZERO_WIDTH_SPACE} douleur pour vous.`,
+    ],
+  ] as const)(
+    '%s: reads past %s — an invisible format character',
+    (locale, what, text) => {
+      // None of the three prints — a soft hyphen only where a line ends on it
+      // — yet each splits a banned word or phrase in the SOURCE, and none is
+      // whitespace to `\s`. The scan removes every format character (Cf), and
+      // removes it BEFORE it reads the whitespace: the last case is red if the
+      // two steps swap, for its two spaces would then stay two.
+      expect(
+        hits(locale, text).length,
+        `${what} removed before the words are read`,
+      ).toBeGreaterThan(0);
+      expect(
+        PATTERNS[locale].some((p) => p.test(text)),
+        'the raw source escapes every pattern — the case proves the removal',
+      ).toBe(false);
+    },
+  );
+
   it('lets descriptive copy through (no false positive on the shapes it must allow)', () => {
     expect(
       hits('ro', 'Workshop de suturi și vindecare a plăgilor orale, Milano.'),
@@ -349,8 +466,14 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
     for (const text of ALLOWED) {
       expect(text.trim()).toBe(text);
       expect(text.length).toBeGreaterThan(0);
-      // Written as it reads: a mark inside an exception would never match.
-      expect(visible(text)).toBe(text);
+      // Written as it reads: `hits` compares an exception with what `visible`
+      // makes of a string, so an entry carrying a mark, an invisible format
+      // character, a line break, a no-break space or two spaces in a row
+      // would never match anything.
+      expect(
+        visible(text),
+        'write it as visible() reads it: no <k> marks, no invisible format characters, every run of whitespace one U+0020',
+      ).toBe(text);
     }
   });
 });

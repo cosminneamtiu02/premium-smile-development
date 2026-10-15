@@ -1,50 +1,71 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { Button } from '@/components/ui/Button/Button';
+import { ChevronLeft } from '@/assets/glyphs/ChevronLeft';
+import { ChevronRight } from '@/assets/glyphs/ChevronRight';
+import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
 
-// sections/Pagination — the blog index's page navigation: back at the start,
-// the counter „2 / 3" in the middle, forward at the end. The owner's brief
+// sections/Pagination — the blog list's page navigation: back, the counter
+// „1 / 2", forward, in ONE row. The owner's brief for the blog's first page
 // (2026-10-11), verbatim: "create a page very much alike this
 // one: https://www.infiniswiss.com/blog with navigation of pages and cards …
 // remember these are just static pages, no pull from a server with assets of
 // a page, but on clicking next of navigation it just pulls whole compiled
-// thing from server". The reference's row, measured by the planner: "Previous"
-// at the start, greyed out on page 1; the counter „1 / 7" centred; a solid
-// "Next" at the end.
+// thing from server". Its second round (2026-10-14, CLAUDE.md §15.39) gave the
+// row the face it wears now, verbatim: "there below it below the last item's
+// bottom right corner i'd wnat the left right button from the reviews
+// carrousell implemented instae of the current buttons from curent page at
+// urmator posterior as they look horrible. obviously if on last page, you
+// should not be able to go from first page more to the laft, so if not
+// possible gray out putton and make unusabel as it is now. between them there
+// should be as now current page and max page as in ixample: "1 / 3"."
 //
 // ── IT IS A DUMB BAND (the PriceList shape, owner fb-459): every word arrives
-// as a prop, finished — the landmark's name, the two labels and the counter's
-// sentence, which the page formats through ICU („Pagina 2 din 3") — and every
-// href arrives built, by the page's localeHref. No message key, no t(), no
-// data, no 'use client': a Server Component that compiles into the static HTML
-// of every blog page and ships no JavaScript (§16). The one thing it makes
-// itself is the visible fraction, two numbers and a slash.
+// as a prop, finished — the landmark's name, the two controls' names and the
+// counter's sentence, which the page formats through ICU („Pagina 2 din 3") —
+// and every href arrives built, by the page's localeHref. No message key, no
+// t(), no data, no 'use client': a Server Component that compiles into the
+// static HTML of every blog page and ships no JavaScript (§16). The one thing
+// it makes itself is the visible fraction, two numbers and a slash.
 //
-// ── EVERY CONTROL IS A WHOLE PAGE (§15.13, and the owner's own sentence above).
-// A neighbour is a plain <a href> wearing ui/Button through `asChild`: a click
-// loads the next pre-rendered document — `/ro/blog/` is page 1 and
-// `/ro/blog/page/2/` page 2 — with no prefetch and no client routing. `rel`
-// says which neighbour it is (prev, next), the relation HTML defines for a
-// series of documents.
+// ── EVERY CONTROL IS A WHOLE PAGE (§15.13, and the owner's first sentence
+// above). A neighbour is a plain <a href> wearing ui/GlyphButton through
+// `asChild`: a click loads the next pre-rendered document — `/ro/blog/` is
+// page 1 and `/ro/blog/page/2/` page 2 — with no prefetch and no client
+// routing. `rel` says which neighbour it is (prev, next), the relation HTML
+// defines for a series of documents.
 //
-// ── THE ENDS ARE DISABLED BUTTONS, NOT MISSING LINKS (the reference's greyed
-// Previous). On page 1 the back control is a real <button type="button"
-// disabled>, and on the last page the forward one: the row keeps its shape on
-// every page, a screen reader announces the control as unavailable, the
-// keyboard skips it (a disabled button takes no focus), and ui/Button's own
-// disabled face greys it — half opacity, no pointer. Its contrast is exempt by
-// the letter of SC 1.4.3 ("part of an inactive user interface component"). It
-// is never an <a> without an href: that is no control at all, and a link that
-// goes nowhere would be one more stop for nothing.
+// ── THE ENDS ARE DISABLED BUTTONS, NOT MISSING LINKS (the owner: "if not
+// possible gray out putton and make unusabel as it is now"). On page 1 the back
+// control is a real <button type="button" disabled>, and on the last page the
+// forward one: the row keeps its shape on every page, a screen reader
+// announces the control as unavailable, the keyboard skips it (a disabled
+// button takes no focus), and ui/GlyphButton's own disabled face greys it —
+// half opacity, no pointer. Its contrast is exempt by the letter of SC 1.4.3
+// and SC 1.4.11 ("part of an inactive user interface component"). It is never
+// an <a> without an href: that is no control at all, and a link that goes
+// nowhere would be one more stop for nothing.
 //
-// ── THE FACE: ui/Button's lavender solid family at the `md` size — 44px
-// tall, the §9 target — the site's lilac controls (§15.30). No jump: these
-// buttons are not on the owner's list of 2026-10-01, and
+// ── THE FACE: THE REVIEWS DECK'S DISCS. Both ends are ui/GlyphButton with
+// `variant="outline" tone="accent"` and the atom's defaults — `md`, the 44px
+// circle of §9's target, round, still — holding the Lucide chevrons: exactly
+// what sections/ReviewsCarousel/ReviewsDeck.tsx passes its prev and next, so
+// the two pairs are one look. At rest a white disc with a lavender border and
+// chevron; on hover it fills lavender under a white chevron (the atom's
+// two-way mirror); a press is the deep violet. No jump: neither these discs
+// nor the deck's are on the owner's list of 2026-10-01, and
 // tests/unit/jump-census.test.ts holds every caller to it. This file asks the
 // atom for the lavender, so tests/unit/accent-census.test.ts, the census of
-// who does, must name it with the ground the page sets it on (each face
-// paints its own ground; what the band's ground meets is the face's edge).
+// who does, names it with the ground the page sets it on.
+//
+// ── GLYPH-ONLY, SO THE LABELS ARE NAMES (§6.6 — a changed meaning, recorded):
+// until 2026-10-14 `previousLabel` and `nextLabel` were the two buttons'
+// visible words; now nothing but a chevron shows, and they are the controls'
+// ACCESSIBLE NAMES — ui/GlyphButton's `aria-label`, which its type requires of
+// every glyph-only control (§6.3). The chevron inside is aria-hidden (the
+// glyphs' default), so a screen reader says „Pagina următoare, link" and voice
+// control answers to the same words. SC 2.5.3 (Label in Name) binds a VISIBLE
+// text label, and there is none to match.
 //
 // ── THE COUNTER SPEAKS A SENTENCE. The eye reads „2 / 3"; a screen reader
 // would say "two slash three", or skip the slash and say "two three". So the
@@ -52,46 +73,60 @@ import { cx } from '@/lib/cx/cx';
 // beside it — what a listener hears is „Pagina 2 din 3". (sections/DoctorStats
 // moved its own twin from `sr-only` to an invisible overlay on its digits, so
 // that VoiceOver's touch exploration lands on it — §15.23 round 5; the same
-// overlay is the lever here if this counter ever needs it.) The <p> is
-// ui/Text, and it is centred ON THE ELEMENT (§15.15 b).
+// overlay is the lever here if this counter ever needs it.)
 //
-// ── THE ROW, AND WHERE IT GIVES WAY (measured in Chromium in the real face,
-// Source Serif 4, 2026-10-11). The nav is its own size container, so the row
-// reads the width it actually has wherever a page puts it.
-//   · FROM 20rem OF NAV (`@xs`, Tailwind's named step) it is the reference's
-//     ONE ROW: three tracks, the outer two equal shares and the middle as wide
-//     as the counter, so the counter sits on the row's centre line and each
-//     control at its own end.
-//   · UNDER IT the row cannot hold. A label at the md face is its text plus
-//     2.5rem of padding: „Anterior" 110.6px, „Următor" 111.0px, the counter
-//     „1 / 3" 29.6px, and two 1rem gaps — 283.2px for the row, 299.8px with a
-//     two-digit counter. A 320px window gives the column 288px, and only 273px
-//     behind a classic scrollbar (Windows, and macOS with a mouse — so the
-//     reflow case WCAG names, a desktop at 400 %, is the 273), where the row
-//     would push the page 10px sideways (§7). The two-word stress labels,
-//     „Pagina anterioară" and „Pagina următoare", need 315.5px even with each
-//     label broken onto two lines. So below the step the row becomes TWO: the
-//     controls side by side, the counter centred on its own line under them.
-//     Each control shares its line at its narrowest (a label breaks between
-//     words, never inside one — ui/Button's `hyphens-none`) and grows back up
-//     to its natural width when the line has room; were even the two
-//     narrowest controls too wide for one line (the stress pair below a ~270px
-//     column), the forward control drops under the back one, still at its own
-//     end.
-//   · THE ORDER: the DOM keeps back → counter → forward, the reference's
-//     reading order, and only the two-row picture shows the counter last. Only
-//     the two controls take focus and their order never changes (SC 2.4.3);
-//     the counter's place in the sequence carries no meaning to lose (SC
-//     1.3.2).
-//   · IN THE ONE ROW the counter is the last thing to give: the controls
-//     shrink to their narrowest first, and only then may the counter break at
-//     its spaces — a two-digit counter beside the stress pair between a 320
-//     and a 332px nav — never the page scroll sideways.
-//   · Every length is the theme's (rem), so a larger default font size and
-//     browser zoom move the step together with the labels it was measured
-//     against. (Inside a band that wears ui/Container's THE BAND SCALE the
-//     labels are drawn in design pixels, but that scale starts at a 56rem
-//     column, far past this step.)
+// ── THE ARROWS NEVER MOVE BETWEEN PAGES (measured in Chromium in the real
+// face, Source Serif 4's committed subset, at the counter's 16px — ui/Text's
+// `text-base`). The row stands at the grid's end edge on every page (THE ROW,
+// below), so its forward control never moves; the back control stands one row
+// width to its left, and holds still only while that width does.
+//   · The face's DEFAULT figures already share one advance — each of the ten
+//     digits 8.313px (0.52em) — so „1 / 3", „2 / 3" and „3 / 3" are all
+//     29.547px and the row keeps one width on every page of a list.
+//     `tabular-nums` asks for exactly that, so a face whose default figures
+//     are proportional would keep it too.
+//   · No figure can hold a page number that GAINS A DIGIT: „9 / 12" is
+//     37.859px and „10 / 12" 46.172px, and the back control would step 8.3px
+//     between page 9 and page 10. So the visible fraction shares one grid
+//     cell with an invisible twin, „{total} / {total}" — the widest fraction
+//     this list can print — and the cell is always the twin's width, the
+//     fraction centred in it (FRACTION below). Both sit inside the
+//     `aria-hidden` span, and the twin is `visibility: hidden`, so it never
+//     reaches a screen reader, a find in the page or a copy.
+//   · `whitespace-nowrap`: a fraction never breaks at its spaces.
+//
+// ── THE ROW. ONE flex line — back · counter · forward, the DOM order the eye
+// reads (SC 1.3.2); only an end that is a link takes focus, back before
+// forward (SC 2.4.3). It HUGS its content wherever it is put (`w-fit`); where
+// it stands is the parent's (§6.4): sections/PostList passes `self-end`, so
+// the forward disc's edge stands on the grid's end edge, under its last
+// card's bottom-right corner, on every page. `items-center` levels the
+// counter's middle with the discs', and `gap-3` spaces the three cells 12px
+// apart — the reviews deck's own gap between its two discs. MEASURED: 141.56 ×
+// 44px at any page of a list of three (44 + 12 + 29.56 + 12 + 44 — the
+// counter's cell rounds to layout's 1/64px), 158.19 × 44px at any page of a
+// list of twelve. The narrowest column a page hands it is 273px (a 320 window
+// behind a classic scrollbar), so the row never meets an edge and needs no
+// step: the two-row shape that labels in words once required, and the
+// container query that chose it, left with the words.
+//
+// ── THE BAND SCALE (ui/Container's paragraph of that name; CLAUDE.md §15.32).
+// sections/PostList wears the band scale, so on a laptop or a desktop this row
+// is drawn in the band's design pixel. The gap and the counter are theme
+// lengths and follow by themselves; ui/GlyphButton's box is not — it is
+// `size-[var(--disc-size,2.75rem)]`, a rem literal no remap can redraw, and
+// alone among the band's lengths it would stay 44 CSS px while the cards grew
+// round it. So the row sets `--disc-size` to eleven spacing steps, ALWAYS —
+// sections/ClinicLocation's DISC_SIZE, the precedent and the spelling: outside
+// the scale `--spacing` is the theme's 0.25rem and the disc is 2.75rem, the
+// atom's own fallback to the pixel; inside it the disc is 44 design pixels
+// with a 20-design-pixel chevron, and the row is the 1401 design × s: 193.38 ×
+// 60.5px at a 1920 window, 115.25 × 35.67px at a 1140 one. Only the counter
+// strays, by the face's optical-size axis — set narrower per em as it grows,
+// 39.38px at 1920 where × s would give 40.66 — so the row stays within 0.7 %
+// of × s (Pagination.scale.test.tsx measures all of it). Like the map band's
+// discs, a window under the 1401 reference draws them under 44px (35.67px at
+// a 1140 window), still over SC 2.5.8's 24.
 //
 // ── THE BELT. The page builds the hrefs and the band refuses a set that
 // contradicts itself — a page number that is not a whole number from 1, a
@@ -121,9 +156,16 @@ type PaginationOwnProps = Readonly<{
    * THE COUNTER SPEAKS A SENTENCE).
    */
   status: string;
-  /** The back control's visible label, e.g. „Anterior" — and its name. */
+  /**
+   * The back control's ACCESSIBLE NAME, e.g. „Pagina anterioară" — never
+   * shown: the control is a chevron (the header's GLYPH-ONLY, SO THE LABELS
+   * ARE NAMES).
+   */
   previousLabel: string;
-  /** The forward control's visible label, e.g. „Următor" — and its name. */
+  /**
+   * The forward control's ACCESSIBLE NAME, e.g. „Pagina următoare" — never
+   * shown, like the back control's.
+   */
   nextLabel: string;
   /**
    * Page `current − 1`, built by the page (localeHref). ABSENT on page 1,
@@ -154,37 +196,27 @@ export type PaginationProps = PaginationOwnProps &
   >;
 
 /**
- * THE ROW (the header's THE ROW, AND WHERE IT GIVES WAY): below the nav's
- * `@xs` step a wrapping flex line — the two controls, then the counter on a
- * line of its own; from it the reference's three tracks, the counter's in the
- * middle. `items-center` aligns the cells' middles in both shapes, `gap-4`
- * spaces them (§6.4: the band owns its children's spacing). One whole static
+ * THE ROW (the header's paragraphs of that name and THE BAND SCALE): one flex
+ * line hugging its content, the three cells levelled on their middles and
+ * 12px apart, and the discs' size handed down as eleven spacing steps
+ * (sections/ClinicLocation's DISC_SIZE, byte for byte). One whole static
  * string, because Tailwind reads class names from source text.
  */
 const ROW =
-  'flex flex-wrap items-center gap-4 @xs:grid @xs:grid-cols-[1fr_auto_1fr]';
+  'flex w-fit items-center gap-3 [--disc-size:calc(var(--spacing)*11)]';
 
 /**
- * A control's placement, the same in both shapes. `flex-1` with `max-w-max`:
- * on the two-row line each control asks for its narrowest width when the line
- * is shared out, then grows back toward its natural width, never past it; in
- * a grid track the same cap keeps the face as wide as its label rather than
- * its track (a stretched item held by its max-width sits at the track's
- * start), which is all the back control needs — it is first in both shapes.
- * The forward control's auto start margin pushes it to the end: of the flex
- * line, and of its track, as an auto margin on a grid item does. Placement
- * only (§6.8): the face is ui/Button's.
+ * The counter's <p> (the header's THE ARROWS NEVER MOVE BETWEEN PAGES):
+ * figures of one width, and never a break inside the fraction.
  */
-const PREVIOUS = 'flex-1 max-w-max';
-const NEXT = 'ms-auto flex-1 max-w-max';
+const COUNTER = 'whitespace-nowrap tabular-nums';
 
 /**
- * The counter's <p>: centred on the element (§15.15 b); under the step a
- * line of its own, after the controls (`order-last basis-full`); from it back
- * in the middle track (`@xs:order-none` — `order` also steers a grid's
- * placement).
+ * The fraction and its invisible twin in ONE grid cell — `*:` places each
+ * child in column 1, row 1 — so the cell is as wide as the wider of the two,
+ * always the twin, and the fraction is centred in it.
  */
-const COUNTER = 'order-last basis-full text-center @xs:order-none';
+const FRACTION = 'grid justify-items-center *:col-start-1 *:row-start-1';
 
 /** A number the way a refusal prints it: `-0` spelled, never "0" (countFrames' lesson). */
 function shown(value: number): string {
@@ -243,6 +275,39 @@ function refuseInconsistent(
   }
 }
 
+/**
+ * One end of the row (the header's THE ENDS and THE FACE): the neighbour page
+ * as a link wearing the deck's disc, or — where the list has no page on this
+ * side — the same disc as a disabled button. `label` is its accessible name
+ * either way; `children` is the chevron.
+ */
+function Neighbour({
+  label,
+  href,
+  rel,
+  children,
+}: Readonly<{
+  label: string;
+  href: string | undefined;
+  rel: 'prev' | 'next';
+  children: ReactElement;
+}>): ReactElement {
+  if (href === undefined) {
+    return (
+      <GlyphButton variant="outline" tone="accent" disabled aria-label={label}>
+        {children}
+      </GlyphButton>
+    );
+  }
+  return (
+    <GlyphButton asChild variant="outline" tone="accent" aria-label={label}>
+      <a href={href} rel={rel}>
+        {children}
+      </a>
+    </GlyphButton>
+  );
+}
+
 export function Pagination({
   label,
   current,
@@ -264,70 +329,30 @@ export function Pagination({
   return (
     // THE BELT ON THE NAME: `{...rest}` rides FIRST and the band's own name
     // after it, so a smuggled `aria-label` cannot rename the landmark and a
-    // smuggled `aria-labelledby` (which would outrank it) is reset. `@container`
-    // makes the nav the box the row measures; `w-full` keeps that box the
-    // width of its parent even inside a flex or grid that sizes children to
-    // their content, where a size container would collapse to nothing.
+    // smuggled `aria-labelledby` (which would outrank it) is reset.
     <nav
       {...rest}
       aria-label={label}
       aria-labelledby={undefined}
-      className={cx('@container w-full', className)}
+      className={cx(ROW, className)}
     >
-      <div className={ROW}>
-        {previousHref === undefined ? (
-          <Button
-            variant="solid"
-            tone="accent"
-            size="md"
-            disabled
-            className={PREVIOUS}
-          >
-            {previousLabel}
-          </Button>
-        ) : (
-          <Button
-            asChild
-            variant="solid"
-            tone="accent"
-            size="md"
-            className={PREVIOUS}
-          >
-            <a href={previousHref} rel="prev">
-              {previousLabel}
-            </a>
-          </Button>
-        )}
-        <Text className={COUNTER}>
-          <span aria-hidden="true">
+      <Neighbour label={previousLabel} href={previousHref} rel="prev">
+        <ChevronLeft />
+      </Neighbour>
+      <Text className={COUNTER}>
+        <span aria-hidden="true" className={FRACTION}>
+          <span>
             {current} / {total}
           </span>
-          <span className="sr-only">{status}</span>
-        </Text>
-        {nextHref === undefined ? (
-          <Button
-            variant="solid"
-            tone="accent"
-            size="md"
-            disabled
-            className={NEXT}
-          >
-            {nextLabel}
-          </Button>
-        ) : (
-          <Button
-            asChild
-            variant="solid"
-            tone="accent"
-            size="md"
-            className={NEXT}
-          >
-            <a href={nextHref} rel="next">
-              {nextLabel}
-            </a>
-          </Button>
-        )}
-      </div>
+          <span className="invisible">
+            {total} / {total}
+          </span>
+        </span>
+        <span className="sr-only">{status}</span>
+      </Text>
+      <Neighbour label={nextLabel} href={nextHref} rel="next">
+        <ChevronRight />
+      </Neighbour>
     </nav>
   );
 }

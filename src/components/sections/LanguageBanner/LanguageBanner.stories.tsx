@@ -123,7 +123,7 @@ const meta = {
     href: {
       control: false,
       description:
-        'The finished URL of THIS page in the suggested language — locale prefix, trailing slash and interim base path already on (localeHref). A page with no twin there, like the Romanian-only blog (§5), gets no card at all: the wrapper’s decide() refuses it (SC 2.4.4, G2 a11y, 2026-10-14)',
+        'The finished URL of THIS page in the suggested language — the visitor’s own path, with the locale prefix, trailing slash and interim base path already on (localeHref). Every page exists in all five languages since the blog joined them (2026-10-14), so the link always lands on the page the sentence promises',
     },
     onAccept: { control: false },
     onDismiss: { control: false },
@@ -158,8 +158,8 @@ export const Default: Story = {
     suggested: 'de',
     strings: de.common.language.banner,
     // A finished href, spelled out rather than built here: what the wrapper
-    // hands over is a string, and localeHref/equivalentPath are pinned by
-    // LanguageBanner.test.tsx and lib/routes/routes.test.ts.
+    // hands over is a string, and localeHref is pinned by
+    // LanguageBanner.test.tsx and tests/unit/href.test.ts.
     href: '/de/services/',
   },
   play: async ({ canvas }) => {

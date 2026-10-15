@@ -43,10 +43,15 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 //     the chain one spelling worn twice (KEEP IN SYNC); the zoom one variable
 //     with ONE setter (DoctorStats' tiles, at 9/8); and the gate ONE custom
 //     variant in globals.css with exactly its two conditions. No other
-//     product file in src/ declares the pixel or spells the remap — every
-//     wearer (WEARERS below) IMPORTS both strings — and the few classes that
-//     must re-spell the chain as a literal (the staff tile's width and gap,
-//     the doctors band's ribbon share, the doctor page's name) spell the
+//     product file in src/ declares the band's pixel or spells its remap —
+//     every wearer (WEARERS below) IMPORTS both strings, and the one other
+//     declarer, sections/PostCard, draws its chips in a pixel of its own
+//     CARD (THE CHIPS' PIXEL, 2026-10-14) — and the few classes that must
+//     re-spell the chain as a literal (the staff tile's width and gap, the
+//     doctors band's ribbon share, the doctor page's name — and the blog
+//     list's hero: its <h1>, which wears that very size and reaches past its
+//     column, and both of its blocks, the <h1> and the lead, which keep the
+//     copy's line breaks on a laptop, the stairway of 2026-10-15) spell the
 //     same chain.
 //   · A PICTURE ASKED FOR AT THE WRONG SIZE (G2, T5/R7). PersonnelCard's
 //     CUTOUT_SIZES tells the browser how wide the doctor's cutout is drawn,
@@ -65,7 +70,8 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 // explain the regime in prose that names the very tokens counted below.
 // THE D-LIT RULE, for this file and every other: Tailwind reads class names
 // out of every file it scans, tests and comments included, so a complete
-// arbitrary class spelled anywhere but in ui/Container ships as a rule only
+// arbitrary class spelled anywhere but in the one file that wears it
+// (ui/Container; sections/PostCard for its chip pixel) ships as a rule only
 // that file needs (globals.css, THE DESIGN SCALE — THE BARE RULE SHIPS). The
 // design pixel's bracketed declaration is therefore never written here whole:
 // its name is matched as a part, every sample is assembled from parts, and
@@ -457,13 +463,16 @@ const productFiles = readdirSync(new URL('src/', REPO), {
  *  that live only there wear it themselves (the opener, and the band with the
  *  biography beside the courses — the courses block inside it inherits the
  *  scale and wears none of its own since round 7 the same day), the numbers
- *  and the map take `scaled` from the page. */
+ *  and the map take `scaled` from the page; and, since 2026-10-14, the blog's
+ *  list band (CLAUDE.md §15.39 round 2: its hero, its three-across grid and
+ *  its pager), the map under it `scaled` like everywhere else. */
 const WEARERS = [
   'components/sections/ClinicLocation/ClinicLocation.tsx',
   'components/sections/DoctorIntro/DoctorIntro.tsx',
   'components/sections/DoctorProfile/DoctorProfile.tsx',
   'components/sections/DoctorShowcase/DoctorShowcase.tsx',
   'components/sections/DoctorStats/DoctorStats.tsx',
+  'components/sections/PostList/PostList.tsx',
   'components/sections/PriceList/PriceList.tsx',
   'components/sections/ReviewsCarousel/ReviewsCarousel.tsx',
   'components/sections/TeamRoster/TeamRoster.tsx',
@@ -610,13 +619,19 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(arbitrary(samples[3]?.utility ?? '')?.name).toBe('--ribbon-unit');
   });
 
-  it('is the ONLY product file in src/ that declares a design pixel or spells the remap — and every band of Home, Team, the price list and a doctor’s page wears it by IMPORTING both strings', () => {
+  it('is the ONLY product file in src/ that declares the BAND’s design pixel or spells its remap — sections/PostCard’s card-relative chip pixel the one sanctioned second — and every band of Home, Team, the price list, a doctor’s page and the blog’s list wears it by IMPORTING both strings', () => {
     const spellers = productFiles
       .filter((name) =>
         /design-scale|--scale-px/.test(tsCode(read(`src/${name}`))),
       )
       .toSorted();
-    expect(spellers).toEqual(['components/ui/Container/Container.tsx']);
+    // THE BAND SCALE is spelled once, in ui/Container. The one other speller
+    // is NOT a band scale: sections/PostCard's chips draw in a pixel of their
+    // own CARD (THE CHIPS' PIXEL, the next `it`).
+    expect(spellers).toEqual([
+      'components/sections/PostCard/PostCard.tsx',
+      'components/ui/Container/Container.tsx',
+    ]);
     const wearers = productFiles
       .filter((name) => name !== 'components/ui/Container/Container.tsx')
       .filter((name) =>
@@ -631,20 +646,49 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     }
   });
 
+  it('lets ONE card draw in a pixel of its own — sections/PostCard’s chips: the card’s width over the owner’s 723px reference, floored at a 12px label, behind the container-units guard (THE CHIPS’ PIXEL)', () => {
+    // The owner (2026-10-14): "the perfect ratio of photo - menu item category
+    // … is at 723px x 1123 px". The chip list redraws its theme lengths in a
+    // pixel of its CARD (`100cqw` — the card's content box, 513.40625px at
+    // that window behind a classic scrollbar), never of the band; a label
+    // under 12px is refused (`0.75rem / 18`); an engine without container
+    // units keeps the theme's chips (`supports-[width:1cqw]:`, Safari 15).
+    // Ungated by `scalable:` — it holds on phones and touch tablets too.
+    // Assembled from parts, never one literal (THE D-LIT RULE).
+    const card = tokensOf(
+      tsCode(read('src/components/sections/PostCard/PostCard.tsx')),
+    ).filter(
+      ({ utility }) =>
+        utility === 'design-scale' || arbitrary(utility)?.name === PIXEL,
+    );
+    expect(
+      card.map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual([
+      `supports-[width:1cqw]:[${PIXEL}:max(calc(0.75rem/18),calc(100cqw/513.40625))]`,
+      'supports-[width:1cqw]:design-scale',
+    ]);
+  });
+
   it('lets the GATE CHAIN be re-spelled only where Tailwind needs a literal of its own — and only as the regime’s chain', () => {
     // A class that must follow the regime but is none of its strings — the
     // staff tile's width and its row's gap, the doctors band's ribbon drawn
-    // 30 % thinner (DoctorShowcase D11, §15.26 round 6), and the doctor
-    // page's name, whose `hero` step reads the viewport and so is the one
-    // size the remap cannot redraw (DoctorIntro's THE BAND SCALE, §15.32
-    // round 4) — spells the
-    // chain itself, because Tailwind reads class names from source text. Every such token must carry
-    // the SAME chain, gate first, so a tile can never switch at another width
-    // than the band (the doctor page's name reads a box capped at 96rem, so
-    // for it that holds at any root of 9⅓px or more — DoctorIntro's THE NAME
-    // records the bound). The gate is looked for ANYWHERE in a chain (a reordered
-    // `@4xl:scalable:` is caught as itself) and in backtick literals too (the
-    // Opus review's census probe).
+    // 30 % thinner (DoctorShowcase D11, §15.26 round 6), the doctor page's
+    // name, whose `hero` step reads the viewport and so is the one size the
+    // remap cannot redraw (DoctorIntro's THE BAND SCALE, §15.32 round 4), and
+    // the blog list's four (sections/PostList's THE STAIRWAY, THE HEADING'S
+    // REACH and THE BAND SCALE, CLAUDE.md §15.39): the pre-line white-space
+    // its two hero blocks wear, the <h1>'s max-content width and that
+    // width's cap, the column plus 100 design pixels a side, and the <h1>'s
+    // size, the doctor page's name's — spells the chain itself, because
+    // Tailwind reads class names from source text. Every such token must
+    // carry the SAME chain, gate first, so a tile can never switch at another
+    // width than the band (the doctor page's name reads a box capped at
+    // 96rem, so for it that holds at any root of 9⅓px or more — DoctorIntro's
+    // THE NAME records the bound; the blog's four read ui/Container's own
+    // column, as the regime's classes on the band's rhythm box do). The gate
+    // is looked for ANYWHERE in a chain (a reordered `@4xl:scalable:` is
+    // caught as itself) and in backtick literals too (the Opus review's
+    // census probe).
     const chain = regime[0]?.variants ?? [];
     const gatedTokens = productFiles.flatMap((name) =>
       tokensOf(tsCode(read(`src/${name}`)))
@@ -661,6 +705,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     ).toEqual([
       'components/sections/DoctorIntro/DoctorIntro.tsx',
       'components/sections/DoctorShowcase/DoctorShowcase.tsx',
+      'components/sections/PostList/PostList.tsx',
       'components/sections/TeamRoster/TeamRoster.tsx',
       'components/ui/Container/Container.tsx',
     ]);
@@ -706,6 +751,44 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     ).toEqual([
       'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
     ]);
+    // The blog list's four (sections/PostList's THE BAND SCALE, THE STAIRWAY
+    // and THE HEADING'S REACH): both hero blocks keep the copy's own line
+    // breaks behind the chain (the pre-line white-space, spelled once, in
+    // PostList.tsx's STAIRWAY constant, and worn twice — on the <h1> and on
+    // the lead, which this census of source literals cannot see:
+    // PostList.test.tsx holds it, its own STAIRWAY constant the one
+    // white-space token on each block and the lead's one gated class), the
+    // <h1> as wide as its longest line up to the column's full width plus 50
+    // spacing steps — 100 design pixels a side — and its size, LAST, the
+    // doctor page's name's. The grid's three columns need no token of their
+    // own: they start at the Container's `@4xl`, the regime's own step.
+    const blog = gatedTokens
+      .filter(({ name }) => name.endsWith('PostList.tsx'))
+      .map(({ variants, utility }) => [...variants, utility].join(':'));
+    expect(blog).toEqual([
+      'scalable:@4xl:@min-[896px]:whitespace-pre-line',
+      'scalable:@4xl:@min-[896px]:w-max',
+      'scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*50)]',
+      'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
+    ]);
+    // KEEP IN SYNC, restored the same day: the blog's <h1> wears the doctor
+    // page's name's size class BYTE FOR BYTE. For a few hours of 2026-10-15
+    // it wore 14 steps of its own — the owner, asked how to make room for a
+    // heading a phrase longer in every language, had chosen "Heading a size
+    // smaller" — and then he took it back, verbatim: "tbh i kinda liked it
+    // how it looked before. so if it is larger but still fits in page and
+    // looks good it should not be constrained by a div so that it has same
+    // space left and right as the articles seciton". So the room comes from
+    // the heading's reach, never from its size, and a third consumer of this
+    // class is again the trigger for a sibling step in ui/Heading.
+    const sizeOf = (file: string): string[] =>
+      gatedTokens
+        .filter(({ name }) => name.endsWith(file))
+        .filter(({ utility }) => utility.startsWith('text-[length:'))
+        .map(({ variants, utility }) => [...variants, utility].join(':'));
+    expect(sizeOf('PostList.tsx')).toHaveLength(1);
+    expect(sizeOf('PostList.tsx')).toEqual(sizeOf('DoctorIntro.tsx'));
+    expect(blog.at(-1)).toBe(sizeOf('DoctorIntro.tsx')[0]);
   });
 
   it('has a gate-chain reader with teeth — a backtick class and a reordered chain are both seen', () => {
@@ -765,12 +848,13 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(count('design-scale')).toBe(1);
   });
 
-  it('lets no scanned file spell the design pixel’s declaration but as ui/Container’s own class (THE D-LIT RULE)', () => {
+  it('lets no scanned file spell a design pixel’s declaration but as its one wearer’s class — ui/Container’s, and sections/PostCard’s chip pixel (THE D-LIT RULE)', () => {
     // Tailwind scans comments and tests too, so a bracketed declaration in
     // any other spelling would ship a rule nobody wears. Every occurrence in
     // src/, tests/ and .storybook/ — raw text, comments included — must be
-    // ui/Container's own regime class, whole. Never vacuous: Container's own
-    // source is among the occurrences.
+    // ui/Container's own regime class, whole, or PostCard's chip pixel in
+    // PostCard's own file (below). Never vacuous: Container's own source is
+    // among the occurrences.
     const own = scaleString
       .split(/\s+/)
       .find((token) => arbitrary(parse(token).utility)?.name === PIXEL);
@@ -797,11 +881,24 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
         }
       }
     }
+    // The one other declaration allowed is sections/PostCard's chip pixel
+    // (THE CHIPS' PIXEL above), whole, in that file alone.
+    const cardOwn = tokensOf(
+      tsCode(read('src/components/sections/PostCard/PostCard.tsx')),
+    )
+      .map(({ variants, utility }) => [...variants, utility].join(':'))
+      .find((token) => token.includes(opener));
     expect(own).toBeDefined();
+    expect(cardOwn).toBeDefined();
     expect(found.length).toBeGreaterThan(0);
-    expect(found.filter((entry) => !entry.endsWith(`: ${own ?? ''}`))).toEqual(
-      [],
-    );
+    expect(
+      found.filter(
+        (entry) =>
+          !entry.endsWith(`: ${own ?? ''}`) &&
+          entry !==
+            `src/components/sections/PostCard/PostCard.tsx: ${cardOwn ?? ''}`,
+      ),
+    ).toEqual([]);
   });
 
   it('lets no scanned file spell a floor or a zoom setter but as its one wearer’s class, whole (THE D-LIT RULE, the setters)', () => {

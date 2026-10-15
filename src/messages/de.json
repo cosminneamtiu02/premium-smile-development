@@ -3,7 +3,7 @@
     "siteName": "Premium Smile",
     "skipToContent": "Zum Inhalt springen",
     "nav": {
-      "home": "Startseite",
+      "home": "Start",
       "services": "Leistungen",
       "team": "Team",
       "blog": "Blog",
@@ -121,12 +121,20 @@
   "blog": {
     "title": "Artikel & Neuigkeiten",
     "pageTitle": "{title}, Seite {page}",
+    "hero": {
+      "title": "Ihr Lächeln ist uns wichtig: Wir zeigen Ihnen,\nwie Sie es pflegen, in unserem Blog",
+      "lead": "Neues aus der Klinik und Tipps unseres Zahnärzteteams:\nwie Sie Zähne und Zahnfleisch zu Hause pflegen\nund wann ein Besuch sinnvoll ist."
+    },
     "tags": "Kategorien",
+    "card": {
+      "readMore": "Weiterlesen…",
+      "readingTime": "{minutes, number} Min. Lesezeit"
+    },
     "pagination": {
       "label": "Artikelseiten",
       "status": "Seite {page} von {total}",
-      "previous": "Zurück",
-      "next": "Weiter"
+      "previous": "Vorherige Seite",
+      "next": "Nächste Seite"
     }
   },
   "contact": {

@@ -72,17 +72,39 @@ jobs:
       - name: Site builds (static export)
         run: npm run build
 
-      - name: The blog exists in Romanian only (CLAUDE.md §5, §15.39)
-        # Each blog page's generateStaticParams sets locale 'ro', which Next
-        # merges OVER the layout's five locales and de-duplicates — an internal
-        # merge order, not a documented one, so a Next release that changed it
-        # would bring the four other languages' blog pages back silently.
+      - name: The blog exists in every language (CLAUDE.md §5, §15.39 round 3)
+        # Since round 3 (2026-10-14) every page of the list is written in
+        # every language the [locale] layout generates. Page 1 inherits the
+        # five locales and is asserted for all five. The NUMBERED pages are
+        # the multiplied ones — their generateStaticParams returns the page
+        # alone, and Next multiplies it by the layout's locales — so a change
+        # to that multiplication would drop languages there silently: every
+        # numbered page Romanian has must exist in the other four (the route
+        # always writes at least one — lib/blog's numberedPages: page 1 again
+        # for a blog of six posts or fewer). Whether the pages' links work is
+        # the link check's below: its crawl from / reaches every language's
+        # list through the bar's „Blog" and follows each pager.
         run: |
-          for l in en de fr it; do
-            if [ -e "out/$l/blog" ]; then
-              echo "::error::out/$l/blog exists — the blog is Romanian only"
+          for l in ro en de fr it; do
+            if [ ! -f "out/$l/blog/index.html" ]; then
+              echo "::error::out/$l/blog/index.html is missing — the blog exists in every language"
               exit 1
             fi
+          done
+          shopt -s nullglob
+          numbered=(out/ro/blog/page/*/index.html)
+          if [ ${#numbered[@]} -eq 0 ]; then
+            echo "::error::out/ro/blog/page/ holds no page — the numbered route always writes one (lib/blog's numberedPages)"
+            exit 1
+          fi
+          for page in "${numbered[@]}"; do
+            rel="${page#out/ro/}"
+            for l in en de fr it; do
+              if [ ! -f "out/$l/$rel" ]; then
+                echo "::error::out/$l/$rel is missing — out/ro/$rel exists, and every page of the list exists in every language"
+                exit 1
+              fi
+            done
           done
 
       - name: Internal link & hreflang check on the export

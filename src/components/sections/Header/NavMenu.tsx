@@ -188,12 +188,14 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // Header.tsx tells that story) the panel is a SECOND glass card: `mt-2` of
 // dimmed page between the two, and the same soft corner + full border +
 // static-blur chrome the bar wears.
-// B2 · the panel can be taller than a landscape phone (~356px of content vs a
-// 320px-tall screen), so it caps itself and scrolls INTERNALLY — the panel
-// scrolls, the page behind it stays frozen. `dvh`, not `vh`, because mobile
-// URL bars change the viewport height as you scroll; 5.5rem is the panel's
-// own top edge — the pill's reach plus the gap, top-4 + h-20 + mt-2 = 6.5rem —
-// i.e. everything below the hanging panel and nothing more.
+// B2 · the panel can be taller than the room a landscape phone leaves under
+// the bar — its content is 272px in every language (four links since the
+// blog joined all five, 2026-10-14), against the 216px a 568×320 screen
+// leaves it (measured, Chromium) — so it caps itself and scrolls
+// INTERNALLY: the panel scrolls, the page behind it stays frozen. `dvh`, not
+// `vh`, because mobile URL bars change the viewport height as you scroll;
+// 6.5rem is the panel's own top edge — the pill's reach plus the gap, top-4 +
+// h-20 + mt-2 — i.e. everything below the hanging panel and nothing more.
 // THE NUMBER MOVED ON 2026-09-04 (owner: "make top bar same size on every
 // screen as it is on a standard pc screen now"), 5.5rem → 6.5rem. Worth
 // recording why it moved THIS round and pointedly did not the round before,

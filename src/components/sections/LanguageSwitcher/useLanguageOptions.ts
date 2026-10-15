@@ -11,7 +11,6 @@ import type { SpeedDialOption } from '@/components/ui/SpeedDial/SpeedDial';
 import { localeHref } from '@/i18n/href';
 import { locales, type Locale, nativeNames } from '@/i18n/locales';
 import { usePathname } from '@/i18n/navigation';
-import { equivalentPath } from '@/lib/routes/routes';
 
 // sections/LanguageSwitcher — the hook that turns the locale manifest into the
 // five discs of the dial: each one already knowing what it prints, what it is
@@ -24,8 +23,8 @@ import { equivalentPath } from '@/lib/routes/routes';
 // useNavItems out of HeaderNav:
 //  · the component then reads as what it is — one atom, one translated string,
 //    one side effect — and the DATA question ("which five links, pointing
-//    where") is answered in one place, where a future sixth locale or a second
-//    ro-only route is a diff of a few lines with its own tests;
+//    where") is answered in one place, where a future sixth locale is a diff
+//    of a few lines with its own tests;
 //  · it draws the client boundary at the honest place. Everything here is pure
 //    except the two hooks, and only one of them, usePathname, actually needs
 //    the browser: under static export (§16) the current path is not knowable at
@@ -101,9 +100,8 @@ export function useLanguageOptions(): {
   options: readonly SpeedDialOption[];
 } {
   const locale = useLocale();
-  // Locale-STRIPPED ('/ro/services/' → '/services/'), which is the shape both
-  // halves below need: equivalentPath compares it against lib/routes/routes.ts' rows,
-  // and localeHref puts a — possibly different — prefix back on.
+  // Locale-STRIPPED ('/ro/services/' → '/services/'), the shape localeHref
+  // takes: it puts each disc's own prefix back on.
   const pathname = usePathname();
 
   const options = locales.map((target) => ({
@@ -124,10 +122,12 @@ export function useLanguageOptions(): {
     // a crawler learns this is the German edition of the page (§10.4).
     lang: target,
     // The FINAL href: locale prefix, trailing slash and interim base path all
-    // already in it (localeHref), pointing at the same page over there or at
-    // that locale's home when the page does not exist there (equivalentPath,
-    // §5 — the blog is Romanian-only).
-    href: localeHref(target, equivalentPath(pathname, target)),
+    // already in it (localeHref), pointing at the same page over there (§5).
+    // Every page exists in all five languages since the blog joined them on
+    // 2026-10-14, so the visitor's own path is the answer for every disc;
+    // until then a blog page's discs pointed at the other languages' homes
+    // (lib/routes' AND THE PER-LOCALE HALF LEFT).
+    href: localeHref(target, pathname),
     // The country flag BEHIND the code — decoration the atom hides, clips and
     // scrims (owner 2026-09-04, board .claude/plans/speed-dial-flags.plan.md;
     // §8.5 amended the same day). It rides the option because the atom must

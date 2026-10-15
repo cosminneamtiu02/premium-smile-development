@@ -94,7 +94,7 @@ Decisions that ride with it (D-S1-4…8):
 | JSON-LD `image` | **omitted** — §15.6: no asset in repo; inventing a URL = dead link (recommended field, not required — zero-errors target unaffected) |
 | `og:image` | **omitted** — §15.6 blocks the share image |
 | `og:locale` map | ro→`ro_RO`, en→`en_GB` (Union Jack precedent §8.5 — **confirm en_GB vs en_US**), de→`de_DE`, fr→`fr_FR`, it→`it_IT` |
-| Blog pages | `alternates=false` → canonical only, no languages map (§10.4) |
+| Blog pages | `alternates=false` → canonical only, no languages map (§10.4) — *SUPERSEDED 2026-10-14: the blog is in every language (CLAUDE.md §10.4, §15.39 round 3), so its pages take the alternates every page takes; a cherry-pick of S1 drops this branch* |
 
 Proof achieved at S1 seal: built `out/` HTML carries exactly one parseable JSON-LD script
 per page, `@type: Dentist`, values === clinic.ts, no raw `<` in the payload.
@@ -115,10 +115,16 @@ per page, `@type: Dentist`, values === clinic.ts, no raw `<` in the payload.
    `about` paragraph carries `<k>…</k>` key-word marks under a plain `string` type (CLAUDE.md §15.23 round 7),
    so `words.about[0]` as it stands would put the tags into the meta description with tsc green. Join
    `splitKeywords(paragraph)`'s segments' `text` (what tests/unit/team-data.test.ts's `readingOf` does).
+   **The blog's list pages (2026-10-15):** the obvious description source, `blog.hero.lead`, carries two
+   `\n` line breaks (the laptop stairway, CLAUDE.md §15.39 round 3 (7)) and no-break spaces, and the
+   heading `blog.hero.title` one; reused raw they would put line breaks into the meta description and
+   the OG text. Collapse every run of whitespace to one space first (what `tests/unit/cmsr-scan.test.ts`'s
+   `visible()` does), or give the blog a description key of its own.
 2. **seo.ts part 2 (the old S7)** — build-time generation (§16: everything identical for
    every visitor is compiled) of:
    - `sitemap.xml`: every locale × route with hreflang alternates + `x-default` (ro);
-     blog URLs listed **bare** (ro-only, no alternates);
+     the blog's URLs with their alternates like every page's (the blog is in every language
+     since 2026-10-14, CLAUDE.md §15.39 round 3; listed bare while it was Romanian-only);
    - `robots.txt` pointing at the sitemap;
    - respecting the staging/interim rule (§15.2): NOINDEX=1 until the real domain — the
      sitemap ships but the interim host must never compete with launch SEO.
@@ -168,7 +174,10 @@ These bind the copy regardless of who writes it:
   gray-matter out; the shape is compiler-checked). ro-only mechanics: slug pages
   subtract via child `generateStaticParams` returning `[]` off-ro; the static index
   cannot be subtracted, so it calls `notFound()` for non-ro. Zero real posts exist —
-  content is the owner's.
+  content is the owner's. *(SUPERSEDED: the list page was built on 2026-10-11 from
+  `content/blog/posts.json`, CLAUDE.md §15.39, and the blog is in every language since
+  2026-10-14 — round 3 — so nothing is subtracted off-ro; the article pages, when built,
+  take the five locales like every page.)*
 - **Localized 404 (old S6):** `common.notFound {title, text, home}` × 5 — Romanian drafts
   in the ledger (needs building + the owner's wording).
 

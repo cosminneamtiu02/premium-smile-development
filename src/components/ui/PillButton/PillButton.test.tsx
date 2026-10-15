@@ -1,7 +1,20 @@
-import { createRef, type Ref } from 'react';
-import { render, screen } from '@testing-library/react';
+import {
+  createRef,
+  type ComponentPropsWithRef,
+  type ReactNode,
+  type Ref,
+} from 'react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from 'vitest';
 import { userEvent as realUser } from 'vitest/browser';
 // The REAL stylesheet, compiled by the site's own Tailwind pipeline, for the
 // facts a class name cannot show — the chip's computed height, its round ends
@@ -11,12 +24,19 @@ import { userEvent as realUser } from 'vitest/browser';
 import '@/styles/globals.css';
 import { Button } from '../Button/Button';
 import { Card } from '../Card/Card';
-import { PillButton } from './PillButton';
+import {
+  PillButton,
+  type PillButtonKind,
+  type PillButtonProps,
+} from './PillButton';
 import source from './PillButton.tsx?raw';
 
 // Role-based queries on purpose (§3, §9): passing tests double as proof of
-// accessible markup. Fixtures are Romanian with diacritics (§15.7) — the price
-// page's own category names: „Consultații" „Endodonție" „Estetică dentară".
+// accessible markup — and a TAG, which has no role of its own (it is a label
+// worn by its child), is found as the listitem it rides or by its text.
+// Fixtures are Romanian with diacritics (§15.7) — the price page's own
+// category names: „Consultații" „Endodonție" „Estetică dentară" — and, for
+// the tags, the blog's own categories: „igienă" „prevenție" „sfaturi".
 
 /** Computed colours are read at REST: the chip's paint rides a 400ms clock,
  *  and a state change mid-test would be read mid-fade. An unlayered rule
@@ -29,11 +49,105 @@ beforeAll(() => {
 });
 afterAll(() => still.remove());
 
-const tokensOf = (props: { active?: boolean } = {}) => {
-  const { unmount } = render(<PillButton {...props}>Endodonție</PillButton>);
-  const cls = screen.getByRole('button').className;
+/** A chip's face for the class reads: a control in either state, or a tag —
+ *  on a <span> through `asChild`, as a tag always rides a child (THE TAG). */
+type Face = { kind?: 'control'; active?: boolean } | { kind: 'tag' };
+
+/** EVERY face a chip can wear, keyed by kind: a THIRD kind is a compile error
+ *  here until its faces are listed, so no loop over FACES can miss it (G2
+ *  typescript N2 — the unions themselves are pinned in "the union, exactly").
+ *  A control in both its states; a tag in its one face. */
+const FACES_BY_KIND: Record<PillButtonKind, readonly Face[]> = {
+  control: [{}, { active: true }],
+  tag: [{ kind: 'tag' }],
+};
+const FACES: readonly Face[] = Object.values(FACES_BY_KIND).flat();
+
+/** The current chip's face — the one face with a forced-colours rule. */
+const isCurrent = (face: Face): boolean =>
+  'active' in face && face.active === true;
+
+/** The label every class read renders — found by its TEXT, since a tag has no
+ *  role to be found by. */
+const LABEL = 'Endodonție';
+
+const tokensOf = (face: Face = {}) => {
+  const { unmount } = render(
+    face.kind === 'tag' ? (
+      <PillButton kind="tag" asChild>
+        <span>{LABEL}</span>
+      </PillButton>
+    ) : (
+      <PillButton {...face}>{LABEL}</PillButton>
+    ),
+  );
+  const cls = screen.getByText(LABEL).className;
   unmount();
   return { cls, tokens: cls.split(/\s+/).filter(Boolean) };
+};
+
+/**
+ * THE CONTROL, BYTE FOR BYTE: the class strings a resting and an active chip
+ * rendered before `kind` existed (develop 517f2ac), pinned whole — the tag's
+ * arrival must not move one chip the price strip draws.
+ */
+const RESTING_CLASSES =
+  'inline-flex min-h-11 items-center justify-center rounded-full border-2 ' +
+  'px-5 text-lg font-medium whitespace-nowrap hyphens-none shadow-aura ' +
+  'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
+  'disabled:pointer-events-none disabled:opacity-50 [--fade:400ms] ' +
+  'transition-[background-color,border-color,color] duration-(--fade) ' +
+  'ease-in-out motion-reduce:transition-none border-card-tint bg-surface ' +
+  'text-ink hover:border-accent hover:text-accent';
+const ACTIVE_CLASSES =
+  'inline-flex min-h-11 items-center justify-center rounded-full border-2 ' +
+  'px-5 text-lg font-medium whitespace-nowrap hyphens-none shadow-aura ' +
+  'outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus ' +
+  'disabled:pointer-events-none disabled:opacity-50 [--fade:400ms] ' +
+  'transition-[background-color,border-color,color] duration-(--fade) ' +
+  'ease-in-out motion-reduce:transition-none border-accent bg-accent ' +
+  'text-ink-inverse forced-colors:[forced-color-adjust:none] ' +
+  'forced-colors:border-[color:Highlight] forced-colors:bg-[color:Highlight] ' +
+  'forced-colors:text-[color:HighlightText] forced-colors:shadow-none ' +
+  'forced-colors:focus-visible:outline-[color:CanvasText]';
+
+/** A computed colour as three 0–255 channels, whichever way the engine
+ *  serializes it: `rgb(r, g, b)`, or `color(srgb r g b)` with 0–1 channels —
+ *  what Chromium answers for a color-mix(). */
+const rgbOf = (color: string): readonly number[] => {
+  const channels = (color.match(/[\d.]+/g) ?? []).map(Number);
+  return color.startsWith('color(')
+    ? channels.slice(0, 3).map((value) => value * 255)
+    : channels.slice(0, 3);
+};
+
+/** WCAG 2.2's contrast ratio of two 0–255 colours, from their relative
+ *  luminance — the census's arithmetic, run on what the engine painted. */
+const contrastOf = (a: readonly number[], b: readonly number[]): number => {
+  const luminance = (rgb: readonly number[]): number => {
+    const [r, g, bl] = rgb.map((channel) => {
+      const value = channel / 255;
+      return value <= 0.04045
+        ? value / 12.92
+        : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (high + 0.05) / (low + 0.05);
+};
+
+/** THE POINTER, PARKED away from every chip before a colour is read at rest
+ *  — a resting pointer is :hover (the house's park-the-pointer rule,
+ *  LanguageBanner.test.tsx's and ReviewsDeck.test.tsx's precedent). A REAL
+ *  pointer (vitest/browser's userEvent): a synthetic event cannot move
+ *  :hover. Returns the clean-up, run after the reads. */
+const parkPointer = async (): Promise<() => void> => {
+  const parking = document.createElement('div');
+  parking.style.cssText = 'width: 2rem; height: 2rem';
+  document.body.prepend(parking);
+  await realUser.hover(parking);
+  return () => parking.remove();
 };
 
 /**
@@ -296,30 +410,31 @@ describe('PillButton — the shape (owner 2026-10-09: “rounded left and right 
   });
 });
 
+describe('PillButton — a control, byte for byte as before the tag', () => {
+  it('a RESTING control wears the very class string it wore before `kind` existed — kind omitted or named', () => {
+    for (const kind of [undefined, 'control'] as const) {
+      const { unmount } = render(
+        <PillButton kind={kind}>Endodonție</PillButton>,
+      );
+      expect(screen.getByRole('button').className).toBe(RESTING_CLASSES);
+      unmount();
+    }
+  });
+
+  it('an ACTIVE control likewise', () => {
+    for (const kind of [undefined, 'control'] as const) {
+      const { unmount } = render(
+        <PillButton kind={kind} active>
+          Endodonție
+        </PillButton>,
+      );
+      expect(screen.getByRole('button').className).toBe(ACTIVE_CLASSES);
+      unmount();
+    }
+  });
+});
+
 describe('PillButton — the paint (two states, one hover)', () => {
-  /** A computed colour as three 0–255 channels, whichever way the engine
-   *  serializes it: `rgb(r, g, b)`, or `color(srgb r g b)` with 0–1 channels —
-   *  what Chromium answers for a color-mix(). */
-  const rgbOf = (color: string): readonly number[] => {
-    const channels = (color.match(/[\d.]+/g) ?? []).map(Number);
-    return color.startsWith('color(')
-      ? channels.slice(0, 3).map((value) => value * 255)
-      : channels.slice(0, 3);
-  };
-
-  /** THE POINTER, PARKED away from every chip before a colour is read at rest
-   *  — a resting pointer is :hover (the house's park-the-pointer rule,
-   *  LanguageBanner.test.tsx's and ReviewsDeck.test.tsx's precedent). A REAL
-   *  pointer (vitest/browser's userEvent): a synthetic event cannot move
-   *  :hover. Returns the clean-up, run after the reads. */
-  const parkPointer = async (): Promise<() => void> => {
-    const parking = document.createElement('div');
-    parking.style.cssText = 'width: 2rem; height: 2rem';
-    document.body.prepend(parking);
-    await realUser.hover(parking);
-    return () => parking.remove();
-  };
-
   it('RESTING: ink on the white surface inside the card tint’s thin edge — the doctor card’s frame colour', async () => {
     const { tokens } = tokensOf();
     expect(tokens).toEqual(
@@ -438,18 +553,18 @@ describe('PillButton — the paint (two states, one hover)', () => {
     expect(still_.color).toBe('rgb(255, 255, 255)');
   });
 
-  it('wears the header pill’s glow in BOTH states, and no second shadow — but the forced-colours opt-out', () => {
-    for (const active of [false, true]) {
-      const { tokens } = tokensOf({ active });
+  it('wears the header pill’s glow in EVERY face, and no second shadow — but the forced-colours opt-out', () => {
+    for (const face of FACES) {
+      const { tokens } = tokensOf(face);
       const shadows = tokens.filter((t) => /(^|:)shadow-/.test(t));
-      // ONE unconditional shadow, in both states…
+      // ONE unconditional shadow, in both states and on the tag…
       expect(shadows.filter((t) => !t.startsWith('forced-colors:'))).toEqual([
         'shadow-aura',
       ]);
       // …and, on the ACTIVE chip alone, the one forced-colours override: an
       // opted-out box keeps an author shadow, and High Contrast wants none.
       expect(shadows.filter((t) => t.startsWith('forced-colors:'))).toEqual(
-        active ? ['forced-colors:shadow-none'] : [],
+        isCurrent(face) ? ['forced-colors:shadow-none'] : [],
       );
     }
   });
@@ -538,9 +653,288 @@ describe('PillButton — the current chip in forced colours (G2 a11y, 2026-10-09
     }
   });
 
-  it('a RESTING chip carries no forced-colours rule — it keeps every system colour the mode gives it', () => {
-    expect(
-      tokensOf().tokens.filter((token) => token.startsWith('forced-colors:')),
-    ).toEqual([]);
+  it('a RESTING chip and a TAG carry no forced-colours rule — neither has a state to keep, so each takes every system colour the mode gives it', () => {
+    for (const face of FACES.filter((face) => !isCurrent(face))) {
+      expect(
+        tokensOf(face).tokens.filter((token) =>
+          token.startsWith('forced-colors:'),
+        ),
+      ).toEqual([]);
+    }
+  });
+});
+
+describe('PillButton — kind="tag": a label that answers nothing (owner 2026-10-14, the header’s THE TAG)', () => {
+  /** The blog card's markup in miniature: a named list, each tag an <li>
+   *  through `asChild` (sections/PostCard's THE TAGS). */
+  const tagList = (...tags: string[]) => (
+    <ul role="list" aria-label="Categorii">
+      {tags.map((tag) => (
+        <PillButton key={tag} kind="tag" asChild>
+          <li>{tag}</li>
+        </PillButton>
+      ))}
+    </ul>
+  );
+  const renderTags = (...tags: string[]) => render(tagList(...tags));
+
+  /** `node` between two real buttons, the stops a keyboard must go between
+   *  when nothing in `node` is one (TextButton.test.tsx's placeholder-link
+   *  shape). */
+  const renderBetween = (node: ReactNode) =>
+    render(
+      <>
+        <button type="button">Înainte</button>
+        {node}
+        <button type="button">După</button>
+      </>,
+    );
+
+  /** THE BROWSER'S OWN Tab — vitest/browser's, a real key press, never
+   *  user-event's simulation of one — from the button before to the button
+   *  after, and Shift+Tab back: nothing between them is a tab stop. */
+  const expectNoTabStopBetween = async (): Promise<void> => {
+    await realUser.click(screen.getByRole('button', { name: 'Înainte' }));
+    await realUser.tab();
+    expect(screen.getByRole('button', { name: 'După' })).toHaveFocus();
+    await realUser.tab({ shift: true });
+    expect(screen.getByRole('button', { name: 'Înainte' })).toHaveFocus();
+  };
+
+  /** The `--accent` token as the engine resolves it — read off a probe that
+   *  paints with the variable itself, never retyped as a number here. */
+  const accentToken = (): string => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--accent)';
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  };
+
+  /** The three colours a face is made of. */
+  const paintOf = (chip: HTMLElement) => {
+    const style = getComputedStyle(chip);
+    return {
+      label: style.color,
+      edge: style.borderTopColor,
+      ground: style.backgroundColor,
+    };
+  };
+
+  it('wears the resting chip’s hover face held still — the accent edge and label on the white face — and not one `hover:` utility', () => {
+    const { tokens } = tokensOf({ kind: 'tag' });
+    expect(tokens).toEqual(
+      expect.arrayContaining(['border-accent', 'bg-surface', 'text-accent']),
+    );
+    // No hover of any spelling — a plain `hover:` or a group's.
+    expect(tokens.filter((t) => t.includes('hover:'))).toEqual([]);
+    // Neither control face: no resting ink or tint, no lavender fill.
+    for (const token of [
+      'border-card-tint',
+      'text-ink',
+      'bg-accent',
+      'text-ink-inverse',
+    ]) {
+      expect(tokens).not.toContain(token);
+    }
+  });
+
+  it('its edge and label ARE the --accent token on the white face — at rest and under a REAL hover, unchanged', async () => {
+    const accent = accentToken();
+    const unpark = await parkPointer();
+    try {
+      renderTags('igienă', 'prevenție');
+      const tags = screen.getAllByRole('listitem');
+      const atRest = tags.map(paintOf);
+      for (const paint of atRest) {
+        expect(paint).toEqual({
+          label: accent,
+          edge: accent,
+          ground: 'rgb(255, 255, 255)',
+        });
+      }
+      // The stillness rule above means a hover face would land at once: so a
+      // paint read right after the real pointer arrives IS the hover's.
+      for (const [index, tag] of tags.entries()) {
+        await realUser.hover(tag);
+        expect(tag.matches(':hover')).toBe(true);
+        expect(paintOf(tag)).toEqual(atRest[index]);
+      }
+    } finally {
+      unpark();
+    }
+  });
+
+  it('IS the resting control’s hover face — KEEP-IN-SYNC with THE PAINT, held by paint', async () => {
+    render(
+      <>
+        <PillButton>Consultații</PillButton>
+        <ul role="list" aria-label="Categorii">
+          <PillButton kind="tag" asChild>
+            <li>sfaturi</li>
+          </PillButton>
+        </ul>
+      </>,
+    );
+    const control = screen.getByRole('button', { name: 'Consultații' });
+    await realUser.hover(control);
+    expect(control.matches(':hover')).toBe(true);
+    expect(paintOf(screen.getByRole('listitem'))).toEqual(paintOf(control));
+  });
+
+  it('meets SC 1.4.3 on its own opaque white face: MEASURED 5.06:1 from the computed paint, past the 4.5:1 any chip’s label owes', () => {
+    renderTags('sfaturi');
+    const { label, ground } = paintOf(screen.getByRole('listitem'));
+    const ratio = contrastOf(rgbOf(label), rgbOf(ground));
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+    expect(ratio).toBeCloseTo(5.06, 2);
+  });
+
+  it('is never current: no aria-current, the types refuse `active` and `aria-current`, and a value that slips past them changes nothing the atom emits', () => {
+    renderTags('igienă');
+    expect(screen.getByRole('listitem')).not.toHaveAttribute('aria-current');
+    // The compile-time half: each element below is an error, and the
+    // directive on it is itself an error the day the line compiles. The
+    // run-time half: those very elements, rendered — what a Storybook control
+    // or an untyped spread would hand the atom — still wear the tag's one
+    // face and carry no aria-current from the atom.
+    const current = (
+      // @ts-expect-error — a tag is never current
+      <PillButton kind="tag" asChild active>
+        <span>Igienă</span>
+      </PillButton>
+    );
+    const located = (
+      // @ts-expect-error — not even by a passed aria-current
+      <PillButton kind="tag" asChild aria-current="location">
+        <span>Igienă</span>
+      </PillButton>
+    );
+    const tagTokens = tokensOf({ kind: 'tag' }).tokens;
+    for (const element of [current, located]) {
+      const { unmount } = render(element);
+      const chip = screen.getByText('Igienă');
+      expect(chip).not.toHaveAttribute('aria-current');
+      expect(chip.className.split(/\s+/)).toEqual(tagTokens);
+      unmount();
+    }
+  });
+
+  it('is never bare: the types require `asChild` — and a tag that arrives without it, past them, is put on a <span>: the same face, no role, no tab stop, nothing of a button’s', async () => {
+    // The compile-time half, as above; the run-time half is THE BELT
+    // (PillButton.tsx's THE KIND RULE).
+    const bare = (
+      // @ts-expect-error — a tag requires asChild
+      <PillButton kind="tag">igienă</PillButton>
+    );
+    const unslotted = (
+      // @ts-expect-error — and asChild={false} is no way round it
+      <PillButton kind="tag" asChild={false}>
+        prevenție
+      </PillButton>
+    );
+    const tagTokens = tokensOf({ kind: 'tag' }).tokens;
+    renderBetween(
+      <>
+        {bare}
+        {unslotted}
+      </>,
+    );
+    // The two stops either side are the only buttons in the document.
+    expect(screen.getAllByRole('button')).toHaveLength(2);
+    for (const label of ['igienă', 'prevenție']) {
+      const chip = screen.getByText(label);
+      expect(chip.tagName).toBe('SPAN');
+      expect(chip.className.split(/\s+/)).toEqual(tagTokens);
+      // No type, no aria-current, no kind — the class and nothing else.
+      expect(chip.getAttributeNames()).toEqual(['class']);
+      chip.focus();
+      expect(chip).not.toHaveFocus();
+    }
+    await expectNoTabStopBetween();
+  });
+
+  it('the union, exactly — the surgical twins of the line-scoped @ts-expect-error above', () => {
+    // A line-scoped @ts-expect-error swallows ANY error on its line; these
+    // name the property and fail tsc the day the rule loosens or tightens.
+    // Erased at run time.
+    type Tag = Extract<PillButtonProps, { kind: 'tag' }>;
+    type Control = Exclude<PillButtonProps, { kind: 'tag' }>;
+    expectTypeOf<PillButtonKind>().toEqualTypeOf<'control' | 'tag'>();
+    expectTypeOf<Tag['kind']>().toEqualTypeOf<'tag'>();
+    expectTypeOf<Tag['asChild']>().toEqualTypeOf<true>();
+    expectTypeOf<Tag['active']>().toEqualTypeOf<undefined>();
+    expectTypeOf<Tag['aria-current']>().toEqualTypeOf<undefined>();
+    expectTypeOf<Control['kind']>().toEqualTypeOf<'control' | undefined>();
+    expectTypeOf<Control['asChild']>().toEqualTypeOf<boolean | undefined>();
+    expectTypeOf<Control['active']>().toEqualTypeOf<boolean | undefined>();
+    expectTypeOf<Control['aria-current']>().toEqualTypeOf<
+      ComponentPropsWithRef<'button'>['aria-current']
+    >();
+    // …and this file's own union covers every kind, so FACES_BY_KIND's
+    // record can hold a face for each (G2 typescript N2).
+    expectTypeOf<NonNullable<Face['kind']>>().toEqualTypeOf<PillButtonKind>();
+  });
+
+  it('on an <li> through asChild — the blog card’s shape — it takes no focus and is read as an item of a named list, never as a button', async () => {
+    renderBetween(tagList('igienă', 'prevenție', 'sfaturi'));
+    const list = screen.getByRole('list', { name: 'Categorii' });
+    const tags = within(list).getAllByRole('listitem');
+    expect(tags).toHaveLength(3);
+    expect(within(list).queryByRole('button')).not.toBeInTheDocument();
+    // The behaviour is the evidence (TextButton's placeholder-link test): no
+    // focus target for a script…
+    for (const tag of tags) {
+      tag.focus();
+      expect(tag).not.toHaveFocus();
+    }
+    // …and no stop for the keyboard.
+    await expectNoTabStopBetween();
+  });
+
+  it('never puts `kind` on the DOM — a named control or a tag (the bare tag’s attributes are read above)', () => {
+    render(
+      <>
+        <PillButton kind="control">Consultații</PillButton>
+        {tagList('sfaturi')}
+      </>,
+    );
+    for (const chip of [
+      screen.getByRole('button'),
+      screen.getByRole('listitem'),
+    ]) {
+      expect(chip).not.toHaveAttribute('kind');
+    }
+  });
+});
+
+describe('PillButton — a kind past the types fails CLOSED (PillButton.tsx’s THE KIND RULE)', () => {
+  it('never throws: it is read as a TAG, the kind that claims nothing — the tag’s face, no aria-current, a <span> when bare, the child’s own element through asChild', () => {
+    // A kind no type admits — what an untyped spread could hand the atom. A
+    // lookup by the raw value would throw a TypeError here (the G2
+    // typescript review's LOW, 2026-10-14).
+    const stray = 'eticheta' as never;
+    const tagTokens = tokensOf({ kind: 'tag' }).tokens;
+    expect(() =>
+      render(
+        <>
+          <PillButton kind={stray} active>
+            Igienă
+          </PillButton>
+          <PillButton kind={stray} asChild active aria-current="location">
+            <a href="#prevenire">Prevenție</a>
+          </PillButton>
+        </>,
+      ),
+    ).not.toThrow();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    const bare = screen.getByText('Igienă');
+    expect(bare.tagName).toBe('SPAN');
+    const link = screen.getByRole('link', { name: 'Prevenție' });
+    for (const chip of [bare, link]) {
+      expect(chip.className.split(/\s+/)).toEqual(tagTokens);
+      expect(chip).not.toHaveAttribute('aria-current');
+    }
   });
 });

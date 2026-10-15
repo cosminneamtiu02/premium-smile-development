@@ -15,7 +15,7 @@ import { withBasePath } from '@/lib/base-path/base-path';
 import type { ClinicInfo } from '@/lib/clinic/clinic';
 import { clinic } from '@/lib/clinic/clinic';
 import { formatHoursRows } from '@/lib/hours/hours';
-import { LEGAL_ROUTES, primaryRoutes } from '@/lib/routes/routes';
+import { LEGAL_ROUTES, PRIMARY_ROUTES } from '@/lib/routes/routes';
 
 // sections/Footer — the band that closes every page: brand · four info columns
 // (contact · site map · the ANPC/SAL badge · opening hours) · legal strip.
@@ -214,14 +214,18 @@ export function Footer(): ReactElement {
             short labels while its neighbours carry sentences, an address and a
             250px badge.
             CALIBRATION (German, the longest language): at the @5xl step the
-            0.6fr track is ~155px; the longest German label — "Startseite" at
-            text-lg — needs ~106px including TextButton's px-2, and the column
-            title above it — the clinic name at text-xl (owner 2026-08-18) —
-            ~135px, so the step still holds; at the sampled 1536 it is ~189px. The
-            steps measure the BOX, not the window: with the 10vw gutters the
-            two-column flip lands around a ~960px canvas and the four-column one
-            at ~1280px. Fluid in between, no fixed widths anywhere (§7), and
-            gap-8 is the section owning ALL child spacing (§6.4). */}
+            0.6fr track is 154.7px; the longest label in any language — German
+            „Leistungen" at text-lg — is 108.1px including TextButton's px-2,
+            and the column title above it — the clinic name at text-xl (owner
+            2026-08-18) — 138.8px, so the step still holds; at the sampled 1536
+            it is 186.3–188.8px (measured, Chromium, 2026-10-14 — the German
+            home label is „Start" since that day, where „Startseite", 94px,
+            stood; the four links of every language since the blog's joined
+            them change no width, „Blog" being 52.9px). The steps measure the
+            BOX, not the window: with the 10vw gutters the two-column flip
+            lands around a ~960px canvas and the four-column one at ~1280px.
+            Fluid in between, no fixed widths anywhere (§7), and gap-8 is the
+            section owning ALL child spacing (§6.4). */}
         <div className="grid grid-cols-1 gap-8 border-t border-line-subtle pt-8 pb-10 @3xl:grid-cols-2 @5xl:grid-cols-[1fr_0.6fr_1fr_1fr]">
           {/* COLUMN 1 · CONTACT. items-start so each child hugs its own
               content: the phone control is then a link-sized target, not a
@@ -278,9 +282,10 @@ export function Footer(): ReactElement {
               HeaderNav's aria-label note anticipated. No new message key for
               it — the visible title is the clinic name (data), so the landmark
               announces as "Premium Smile, navigation".
-              The routes come from lib/routes/routes.ts, the ONE list the Header's row
-              and panel render as well; Blog is absent on every non-`ro` locale — and hidden on `ro` too for now (owner 2026-09-20, lib/routes' `hidden`)
-              (§5) because the module filters it, not because this file knows. */}
+              The routes come from lib/routes/routes.ts, the ONE list the
+              Header's row and panel render as well — the same four links in
+              every language since the blog joined all five (2026-10-14), Blog
+              the last. */}
           <nav aria-labelledby={NAV_TITLE_ID} className="flex flex-col gap-2">
             {/* Both column titles are Heading's `title` step — visual twins by
                 the ATOM now, not by a shared local constant: two different
@@ -292,7 +297,7 @@ export function Footer(): ReactElement {
             {/* A list, because it IS one: screen readers announce "list, N
                 items" and offer item-by-item navigation. */}
             <ul className="flex flex-col items-start gap-1">
-              {primaryRoutes(locale).map((route) => (
+              {PRIMARY_ROUTES.map((route) => (
                 <li key={route.path}>
                   {/* One <a> per entry, through TextButton's asChild slot, so
                       the atom leaves no tag of its own. A PLAIN anchor (§15.13):

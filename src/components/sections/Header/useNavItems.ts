@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { localeHref } from '@/i18n/href';
 import { usePathname } from '@/i18n/navigation';
-import { matchesRoute, primaryRoutes } from '@/lib/routes/routes';
+import { matchesRoute, PRIMARY_ROUTES } from '@/lib/routes/routes';
 import type { NavRoute } from './NavItem';
 
 // sections/Header — the hook that turns the site's route list into the bar's
@@ -23,21 +23,23 @@ import type { NavRoute } from './NavItem';
 // sections/Header/useNavItems — a sideways dependency §4 does not allow
 // (app → sections → ui). So the pure data climbed to lib/, beside clinic/,
 // and this hook kept the two things that need the browser. Observable
-// behaviour is unchanged, deliberately: same order, same ro-only blog, same
-// aria-current.
+// behaviour was unchanged, deliberately: same order, the same then-`ro`-only
+// blog (in every language since 2026-10-14), same aria-current.
 //
 // ── AND SO DID THE MATCH RULE (language-dial lane, 2026-08-28). This file used
 // to own a private `isActive` — "section-scoped, not prefix matching for '/'" —
 // with the comment that it stayed here because marking the current page needs
 // the router and only the Header does it. sections/LanguageSwitcher became its
-// second consumer: to decide whether the page you are on exists in the language
-// you are picking, `equivalentPath` has to ask the very same question
-// (/blog/<slug> is under /blog, so it is Romanian-only too, §5). Rule of two,
-// same §4 direction as the list — the rule climbed to lib/routes/routes.ts as
-// `matchesRoute` and this hook now calls it. The router did NOT climb with it:
-// comparing two paths was always pure, and asking "where am I?" is still
-// usePathname's job, right here. Zero pixels move; the Header's suites and
-// stories are untouched by design.
+// second consumer: to decide whether the page you were on existed in the
+// language you were picking (/blog/<slug> is under /blog, and the blog was
+// Romanian-only, §5), its `equivalentPath` asked the very same question. Rule
+// of two, same §4 direction as the list — the rule climbed to
+// lib/routes/routes.ts as `matchesRoute` and this hook calls it. That second
+// consumer left on 2026-10-14, when the blog joined every language and the
+// per-locale scope was deleted (routes.ts' AND THE PER-LOCALE HALF LEFT); the
+// rule stayed beside the list it reads, this hook its one caller. The router
+// did NOT climb with it: comparing two paths was always pure, and asking
+// "where am I?" is still usePathname's job, right here.
 //
 // ── Why this module is client code ('use client'). Both consumers must know
 // WHICH PAGE YOU ARE ON to mark it, and under static export (§16) the answer
@@ -75,7 +77,7 @@ export function useNavItems(): NavRoute[] {
   const locale = useLocale();
   const pathname = usePathname();
 
-  return primaryRoutes(locale).map((route) => ({
+  return PRIMARY_ROUTES.map((route) => ({
     href: localeHref(locale, route.path),
     label: t(route.key),
     active: matchesRoute(pathname, route.path),

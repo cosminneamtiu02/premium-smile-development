@@ -76,7 +76,7 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   for "a manual keyboard walkthrough and a screen-reader pass (NVDA or VoiceOver) before launch".
   Every lane has tested its own part; nobody has yet walked the whole site as built.
 - **The work, on the built export, on every page type (Home, Services, Team, a doctor page, the
-  404, the contact dialog, the language banner), in Romanian and in German:**
+  blog's list, the 404, the contact dialog, the language banner), in Romanian and in German:**
   - automated: the per-story axe run (CI already has it) plus an axe or Lighthouse pass over the
     built pages;
   - keyboard only: Tab and Shift+Tab through every page — focus always visible, nothing trapped,
@@ -101,7 +101,14 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     §15.25: the `forced-colors:border` follow-up) — the contact dialog's call and WhatsApp
     controls among them, the site's main conversion controls (§15.30 round 5);
   - owed listens — iOS VoiceOver on the doctors list and its phone reading order (§15.25), and on
-    the stat tiles, plus NVDA with Firefox in browse mode on a tile (§15.23 round 5);
+    the stat tiles, plus NVDA with Firefox in browse mode on a tile (§15.23 round 5); and, on the
+    blog's list at a laptop width (`/ro/blog/`), the site's first forced line breaks (§15.39 round 3
+    (7)): the `<h1>` and the lead keep their line breaks there, so check with NVDA in Chrome and in
+    Firefox, and with VoiceOver in Safari (WebKit computes its own accessible name), that H and the
+    headings list announce the WHOLE heading — its second line, which ends on „prin blogul nostru",
+    is what says the page is the blog — and that arrowing reads both heading lines and the lead's
+    three (Chromium's accessible name has a space at the break, measured; the tests' library keeps
+    the break, so only a real screen reader proves it);
   - the map — the corner buttons over Google's zoom controls at 320 and 390px, and the Tab order
     through Google's frame (COOKIES.md §7);
   - SC 2.4.11 Focus Not Obscured under the language banner — an ACCEPTED gap (the owner, 2026-10-03,
@@ -144,8 +151,27 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     scroll indicator (iOS 18.2 and later), a link straight to a category on a slow connection (the
     load wait) and VoiceOver's reading order through the chips; on a laptop window under 60rem with
     a mouse only: whether the row stays discoverable with its scrollbar hidden (the owner's call);
-  - SC 1.4.4 Resize Text on Home, Team and Services, and on every doctor page since 2026-10-13 —
-    its map band first, then the whole page the same day — the band scale (CLAUDE.md §15.25 round
+  - the blog's list (CLAUDE.md §15.39 rounds 2 and 3, 2026-10-14), in every language: in FIREFOX
+    with View → Zoom → "Zoom Text Only", the cards' category chips — drawn in a pixel of their own,
+    relative to the card (THE CHIPS' PIXEL in tests/unit/design-scale.test.ts) — may zoom twice,
+    like the price list's floor above: open `/de/blog/` in a 1920 window at 150 and 200 % and check
+    that a chip's label reads ≈ 1.5× and 2× its 100 % size, not more, and stays on its picture; on
+    page 1 in a 390px window in SAFARI (macOS: Settings → Advanced → "Press Tab to highlight each
+    item on a webpage", or Option+Tab; an iPhone: Full Keyboard Access), scroll until the pager rests
+    behind the bottom-right discs, then Tab onto its forward arrow — the pager sits right-aligned
+    under the call and WhatsApp discs, and WebKit leaves a focused control where it is, so the arrow
+    can be entirely hidden (SC 2.4.11; the root's `scroll-padding-bottom` keeps it clear only where
+    a browser scrolls the focused control into view); on a phone held sideways, open the menu and
+    reach „Blog", the panel's fourth link, below the screen's fold — the panel scrolls by design (its
+    height capped to the screen), so check that a finger reaches „Blog" and that Tab brings it into
+    view; and the top bar's step with four links in every row was measured in Chromium only
+    — re-measure it at 62rem in Firefox and Safari (CLAUDE.md §15.22's arithmetic; French binds);
+  - SC 1.4.4 Resize Text on Home, Team and Services, on every doctor page since 2026-10-13 —
+    its map band first, then the whole page the same day — and on the blog's list since 2026-10-14
+    (at a 1140 window its summaries and its hero's lead — the page's introduction — read 13px, its
+    authors 11.4 and its card titles 24.3, and a
+    20px default font is not followed — ACCEPTED as on Home by the owner on 2026-10-15, the floor
+    left to this pass with every scaled page) — the band scale (CLAUDE.md §15.25 round
     2, §15.32 and its rounds 2, 3 and 4; a doctor's biography is the page's longest reading): on a laptop
     or desktop every band there — the Services page's price list since
     the same evening, which a floor holds at the theme's own size under the reference, so there it
@@ -297,10 +323,17 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **`src/content/blog/posts.json`** (the blog's list page, §15.39 — added 2026-10-11): the twelve
   posts are Claude's placeholder drafts — titles, summaries, dates and tags written so the blog
   page can be seen, attributed to the clinic's real doctors and illustrated with the clinic's own
-  three photographs. No article exists behind any of them. They landed on develop with the page on
-  the owner's word (2026-10-14), so the next promotion publishes them on the interim host —
-  reachable only by typing /ro/blog/ while the nav item stays hidden, and noindex like the whole
-  host. Replace them, or have each named doctor confirm theirs, before the blog is shown.
+  three photographs — and, since round 3 (2026-10-14), translated by Claude into English, German,
+  French and Italian, the blog being in every language. No article exists behind any of them. They
+  landed on develop with the page on the owner's word (2026-10-14), so the next promotion publishes
+  them on the interim host — linked from the top bar of every page in every language since rounds 2
+  and 3 of the same day (§15.39), and noindex like the whole host. Their reading times („4 min de
+  citit", `readingMinutes`) are placeholders too, and so are the list page's hero heading and lead
+  and the card's „Citește mai mult…" — Claude's drafts in all five languages (`blog.hero.*`,
+  `blog.card.*`); since 2026-10-15 the heading ends on "through our blog" (the German one the
+  owner's, refined with him: „…wie Sie es pflegen, in unserem Blog") and the lead is three phrases, its middle item dropped for the stairway. Replace them, or have each named doctor confirm theirs, in every language, before
+  launch (the next promotion already publishes them, linked from every page, on the noindex interim
+  host).
 - **Consent (GDPR):** written consent from the patients whose seven Google reviews show their
   names, three with their photographs — a name beside a dental review is health data, art. 9
   (§15.19 round 4, `src/lib/reviews/reviews.ts`); and the same from every doctor and every member

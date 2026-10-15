@@ -124,9 +124,11 @@ const CONSUMERS = [
   ],
   // The price strip's chip joined on the owner's 2026-10-09 "they should have
   // aura and thin edge like dr cards": ui/PillButton wears the glow in BOTH of
-  // its states, ONE spelling in its shared base.
+  // its states and, since 2026-10-14, as a TAG too (the blog card's categories,
+  // the owner's "current hover aspect" — the glow is part of it), ONE spelling
+  // in its shared base.
   [
-    'PillButton.tsx (the selectable chip, both states)',
+    'PillButton.tsx (the chip — both states of a control, and a tag)',
     '../../src/components/ui/PillButton/PillButton.tsx',
     1,
   ],

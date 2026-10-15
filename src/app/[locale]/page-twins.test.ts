@@ -25,9 +25,9 @@ import ro from '../../messages/ro.json';
 // net cannot see a prop that moves no pixel. (tests/e2e/doctor-showcase.spec.ts
 // does read the built pages, but the e2e suite runs in no workflow and no hook.)
 //
-// So this file reads the pages and their twins — eight named sources, and
-// since 2026-10-13 every .tsx under this folder through one glob — and
-// compares what a drift would change:
+// So this file reads the pages and their twins — every source imported by
+// name above, and since 2026-10-13 every .tsx under this folder through one
+// glob — and compares what a drift would change:
 //   · THE BANDS, IN ORDER — the elements each page returns, and its twin's;
 //   · THE DOCTORS BAND'S PROPS — by NAME: the Team page says `firstScreen`
 //     (the band opens its first screen — DoctorShowcase D9), Home does not
@@ -59,7 +59,12 @@ import ro from '../../messages/ro.json';
 //     nothing else in the tag, so a page added here later cannot draw a
 //     second kind of map;
 //   · THE STAFF BAND'S PROPS (since 2026-10-02): the Team page hands
-//     sections/TeamRoster its eyebrow and its title, and its twin the same.
+//     sections/TeamRoster its eyebrow and its title, and its twin the same;
+//   · THE BLOG'S LIST PAGES (CLAUDE.md §15.39): both route pages render the
+//     populated list, then the map, in the ROUTE's language — the band, its
+//     words and the tab's title alike — no source of theirs names a language
+//     of its own, and the one-page fallback stays out of search on every
+//     build; the twin mounts the same two bands through the same populator.
 // Only names are compared, never values: a page reads `getTranslations`, its
 // twin `useTranslations`. And only the doctors band's and the numbers band's
 // props are held equal — a twin may pin a band for the workbench (a clock, a
@@ -200,6 +205,19 @@ const DOCTOR = {
   page: returned(doctorPage, 'DoctorPage'),
   twin: returned(doctorTwin, 'DoctorPageBands'),
 };
+
+/** The blog list's ROUTE sources — its two pages and the two modules they
+ *  share (CLAUDE.md §15.39); the story twin is read on its own. */
+const BLOG_ROUTE_SOURCES = [
+  ['page.tsx', blogPage],
+  ['page/[page]/page.tsx', blogNumberedPage],
+  ['populate.ts', blogPopulate],
+  ['words.ts', blogWords],
+] as const;
+
+/** A locale code in quotes — single, double or backtick, the same on both
+ *  sides: what a source that pinned a language would have to spell. */
+const QUOTED_LOCALE = /(['"`])(?:ro|en|de|fr|it)\1/;
 
 /**
  * The numbers band's props as Home and the Team page pass them (owner,
@@ -491,10 +509,13 @@ describe('THE MAP ON EVERY PAGE — one band, one scale, wherever app/[locale]/ 
     return name === null ? [] : [{ path, code, name }];
   });
 
-  it('finds every file that imports the map — Home, the Team page and the doctor page, each with its twin', () => {
+  it('finds every file that imports the map — Home, the Team page, the doctor page and the blog’s list pages, each with its twin', () => {
     expect(importers.map(({ path }) => path).toSorted()).toEqual([
       './(home)/Home.stories.tsx',
       './(home)/page.tsx',
+      './blog/Blog.stories.tsx',
+      './blog/page.tsx',
+      './blog/page/[page]/page.tsx',
       './team/Team.stories.tsx',
       './team/[slug]/Doctor.stories.tsx',
       './team/[slug]/page.tsx',
@@ -503,8 +524,8 @@ describe('THE MAP ON EVERY PAGE — one band, one scale, wherever app/[locale]/ 
   });
 
   it('mounts the map ONCE in each — `scaled`, bare, nothing else, no spread', () => {
-    // Never vacuous, even run alone (`-t`): the census holds its six files.
-    expect(importers).toHaveLength(6);
+    // Never vacuous, even run alone (`-t`): the census holds its nine files.
+    expect(importers).toHaveLength(9);
     for (const { path, code, name } of importers) {
       const mounts = mountsOf(code, name);
       expect(mounts, `${path}: one <${name}>`).toHaveLength(1);
@@ -538,19 +559,70 @@ describe('the privacy page and its story twin — read off their source', () => 
 });
 
 describe('the blog’s list pages and their story twin — read off their source', () => {
-  // Both route pages render ONE band, sections/PostList, from the SAME pure
-  // populator, with words built by ./blog/populate.ts' `blogWordsFrom` from
-  // getTranslations' translators (./blog/words.ts); the twin mounts the same
-  // band through the same populator and the same `blogWordsFrom`, with
-  // useTranslations' translators (CLAUDE.md §15.39). A drift would show as a
-  // page rendering something else, or as either side building its words
-  // another way — then the twin's plays would no longer cover the pages.
-  it('page 1 and the numbered pages return the populated PostList and nothing else', () => {
+  // Both route pages render TWO bands since round 2 — sections/PostList from
+  // the SAME pure populator, in the route's language read once by
+  // ./blog/words.ts' `blogLocale`, with words built by ./blog/populate.ts'
+  // `blogWordsFrom` from getTranslations' translator in that language, then
+  // the map, `scaled` (THE MAP ON EVERY PAGE above holds its one mount); the
+  // twin mounts the same two through the same populator and the same
+  // `blogWordsFrom`, with useLocale's language and useTranslations' translator
+  // (CLAUDE.md §15.39). A drift would show as a page rendering something else,
+  // or as either side building its words another way — then the twin's plays
+  // would no longer cover the pages. And since round 3 (2026-10-14) the blog
+  // is written in EVERY language: no source here may name a language of its
+  // own, and the pages are generated for each one the [locale] layout makes.
+  it('page 1 and the numbered pages return the populated PostList in the route’s language, then the map, and nothing else (rounds 2 and 3)', () => {
     expect(stripComments(blogPage)).toMatch(
-      /return <PostList \{\.\.\.populateBlogPage\(1, await blogPageWords\(\)\)\} \/>;/,
+      /const locale = await blogLocale\(\);\s*return \(\s*<>\s*<PostList \{\.\.\.populateBlogPage\(locale, 1, await blogPageWords\(locale\)\)\} \/>\s*<ClinicLocation scaled \/>\s*<\/>\s*\);/,
     );
     expect(stripComments(blogNumberedPage)).toMatch(
-      /return \(\s*<PostList\s+\{\.\.\.populateBlogPage\(parsePageParam\(page\), await blogPageWords\(\)\)\}\s+\/>\s*\);/,
+      /const locale = await blogLocale\(\);\s*return \(\s*<>\s*<PostList\s+\{\.\.\.populateBlogPage\(\s*locale,\s*parsePageParam\(page\),\s*await blogPageWords\(locale\),?\s*\)\}\s+\/>\s*<ClinicLocation scaled \/>\s*<\/>\s*\);/,
+    );
+  });
+
+  it('generates the pages in every language — page 1 inherits the layout’s locales, the numbered pages name the page alone (round 3)', () => {
+    // Page 1 declares no `generateStaticParams`: the [locale] layout's five
+    // languages are its pages, as for the services, team and privacy pages.
+    expect(stripComments(blogPage)).not.toMatch(/generateStaticParams/);
+    // The numbered pages return the PAGE alone; Next merges it with each of
+    // the layout's languages (the doctor pages' precedent). A `locale` key
+    // here would cut the export back to one language.
+    expect(stripComments(blogNumberedPage)).toMatch(
+      /export function generateStaticParams\(\) \{\s*return numberedPages\(\)\.map\(\(page\) => \(\{ page: String\(page\) \}\)\);\s*\}/,
+    );
+    // No route source pins a language: not a retired constant, and no
+    // locale code in quotes ANYWHERE in its code — a `locale: 'ro'` key, a
+    // `getTranslations({ locale: 'de' … })`, a `lang="ro"`, a comparison with
+    // `'ro'` alike (comments stripped; the twin names its two story
+    // languages and is not read here).
+    for (const [name, source] of BLOG_ROUTE_SOURCES) {
+      const code = stripComments(source);
+      expect(code, name).not.toMatch(QUOTED_LOCALE);
+      expect(code, name).not.toMatch(/BLOG_LOCALE/);
+    }
+    // The language is the ROUTE's: read back from next-intl, then narrowed.
+    expect(stripComments(blogWords)).toMatch(
+      /const locale = await getLocale\(\);\s*if \(!isLocale\(locale\)\)/,
+    );
+  });
+
+  it('titles each tab in the ROUTE’s language, and keeps the one-page fallback out of search on every build (round 3)', () => {
+    // A metadata function takes the locale off its `params` — the route's
+    // [locale] segment — and hands it to ./blog/words.ts' `blogPageTitle`,
+    // whose two translators read that language and no other.
+    expect(stripComments(blogPage)).toMatch(
+      /export async function generateMetadata\(\{ params \}: Props\): Promise<Metadata> \{\s*const \{ locale \} = await params;\s*return \{ title: await blogPageTitle\(locale, 1\) \};\s*\}/,
+    );
+    // The numbered pages likewise — and /{locale}/blog/page/1/, which repeats
+    // page 1 for a blog of six posts or fewer, says BOTH halves of its
+    // robots: Next replaces the layout's whole value rather than merging it,
+    // so `index: false` alone would leave a NOINDEX build's fallback open to
+    // being followed where its shell is not.
+    expect(stripComments(blogNumberedPage)).toMatch(
+      /export async function generateMetadata\(\{ params \}: Props\): Promise<Metadata> \{\s*const \{ locale, page \} = await params;\s*const n = parsePageParam\(page\);\s*return \{\s*title: await blogPageTitle\(locale, n\),\s*\.\.\.\(n === 1 \? \{ robots: \{ index: false, follow: false \} \} : \{\}\),?\s*\};\s*\}/,
+    );
+    expect(stripComments(blogWords)).toMatch(
+      /export async function blogPageTitle\(\s*locale: string,\s*page: number,?\s*\): Promise<string> \{\s*const t = await getTranslations\(\{ locale, namespace: 'blog' \}\);\s*const common = await getTranslations\(\{ locale, namespace: 'common' \}\);/,
     );
   });
 
@@ -558,7 +630,10 @@ describe('the blog’s list pages and their story twin — read off their source
     // A typo in a key would ship as its own path („blog.pageTitle — …") with
     // the build green: next-intl logs a missing message and prints the path.
     // The keys are spelled in two files: the words in ./blog/populate.ts'
-    // `blogWordsFrom`, the tab's title in ./blog/words.ts.
+    // `blogWordsFrom`, the tab's title in ./blog/words.ts. Read against the
+    // Romanian file; the pages read them in all five languages since round 3,
+    // and tests/unit/translation-parity.test.ts holds the other four files to
+    // the same keys.
     const source = stripComments(blogPopulate) + stripComments(blogWords);
     const read = (fn: string) =>
       [...source.matchAll(new RegExp(`\\b${fn}\\('([^']+)'`, 'g'))].map(
@@ -586,18 +661,31 @@ describe('the blog’s list pages and their story twin — read off their source
     }
   });
 
-  it('the twin mounts the same band through the same populator', () => {
+  it('the twin mounts the same two bands through the same populator, in its story’s language', () => {
     expect(stripComments(blogTwin)).toMatch(
-      /return <PostList \{\.\.\.populateBlogPage\(page, words\)\} \/>;/,
+      /const locale = useLocale\(\);\s*if \(!isLocale\(locale\)\)/,
+    );
+    expect(stripComments(blogTwin)).toMatch(
+      /return \(\s*<>\s*<PostList \{\.\.\.populateBlogPage\(locale, page, words\)\} \/>\s*<ClinicLocation scaled \/>\s*<\/>\s*\);/,
+    );
+  });
+
+  it('the twin renders the list in Romanian AND German (§13 — pages in RO + DE)', () => {
+    const code = stripComments(blogTwin);
+    expect(code).toMatch(
+      /export const Romanian: Story = \{\s*globals: \{ locale: 'ro' \}/,
+    );
+    expect(code).toMatch(
+      /export const German: Story = \{\s*globals: \{ locale: 'de' \}/,
     );
   });
 
   it('the pages and the twin build their words through the one blogWordsFrom', () => {
     expect(stripComments(blogWords)).toMatch(
-      /return blogWordsFrom\(\s*await getTranslations\(\{ locale: BLOG_LOCALE, namespace: 'blog' \}\),\s*await getTranslations\(\{ locale: BLOG_LOCALE, namespace: 'common' \}\),\s*\);/,
+      /return blogWordsFrom\(\s*await getTranslations\(\{ locale, namespace: 'blog' \}\),?\s*\);/,
     );
     expect(stripComments(blogTwin)).toMatch(
-      /blogWordsFrom\(\s*useTranslations\('blog'\),\s*useTranslations\('common'\),\s*\)/,
+      /blogWordsFrom\(useTranslations\('blog'\)\)/,
     );
     // …and neither spells a word key of its own: the mapping lives in one place.
     expect(stripComments(blogTwin)).not.toMatch(/\bt\('/);
@@ -653,6 +741,28 @@ describe('the reader itself — a guard that cannot fail is not a guard', () => 
     expect(
       flagsOf('<DoctorStats scaled ground="page" tiles={x} />', 'DoctorStats'),
     ).toEqual(['scaled']);
+  });
+
+  it('sees a quoted locale code in any quotes, and never a key, a namespace or a path', () => {
+    for (const pinned of [
+      `getTranslations({ locale: 'de', namespace: 'blog' })`,
+      `{ locale: "ro" }`,
+      '<html lang="it">',
+      'if (locale === `fr`)',
+      `const BLOG = 'en';`,
+    ]) {
+      expect(pinned).toMatch(QUOTED_LOCALE);
+    }
+    for (const free of [
+      `getTranslations({ locale, namespace: 'blog' })`,
+      `t('hero.title')`,
+      'localeHref(locale, `/blog/page/${page}`)',
+      `'route'`,
+      // two different quotes are no quoted code
+      `"de'`,
+    ]) {
+      expect(free).not.toMatch(QUOTED_LOCALE);
+    }
   });
 
   it('names the function it could not find', () => {

@@ -372,7 +372,11 @@
      opaque white card, on the owner's "drop that green and replace with the
      casual lilla from the app, the one that the "mai multe despre mine"
      button has": 5.06:1 at rest, --accent-strong 9.34:1 under the pointer
-     (LanguageBanner.test.tsx pins the paint). As an outline's hover
+     (LanguageBanner.test.tsx pins the paint) — and, since 2026-10-14,
+     ui/TextButton's `accent` tone AT REST, the blog card's „Citește mai
+     mult…" — an 18px medium label on the card's white ground, 5.06:1, on the
+     owner's "the top bar button, but always lilla, the lilla from hover"
+     (CLAUDE.md §15.39 round 2). As an outline's hover
      GROUND the lavender family greys
      to --line, not --line-subtle (the owner, the same evening: "on hover of
      vezi serviciile i want little darker shade of gray"): --accent-strong

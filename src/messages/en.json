@@ -121,12 +121,20 @@
   "blog": {
     "title": "Articles & news",
     "pageTitle": "{title}, page {page}",
+    "hero": {
+      "title": "We care about your smile, so we’ll show you\nhow to look after it through our blog",
+      "lead": "Here you’ll find news from the clinic and our dentists’ advice:\nhow to care for your teeth and gums at home\nand when to visit us."
+    },
     "tags": "Categories",
+    "card": {
+      "readMore": "Read more…",
+      "readingTime": "{minutes, number} min read"
+    },
     "pagination": {
       "label": "Article pages",
       "status": "Page {page} of {total}",
-      "previous": "Previous",
-      "next": "Next"
+      "previous": "Previous page",
+      "next": "Next page"
     }
   },
   "contact": {

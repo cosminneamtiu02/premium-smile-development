@@ -6,12 +6,13 @@ import { expect, type Page, test } from '@playwright/test';
 // dropdown menu"). sections/Header's breakpoint is a container step measured
 // on the BAR, not the window — 62rem of content box since 2026-10-01 (60rem
 // from the header-nav-gap lane of 2026-09-26 until the owner's sizes grew the
-// brand to 270.1px), the smallest whole rem that keeps a German gap of 4rem at
-// the flip (Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block carries the
-// arithmetic). The pill's side margins are 10vw each and `vw` counts the
-// scrollbar gutter while the containing block does not, so in a window V wide
-// the bar's content box is 0.8 × V − gutter − 2px of borders: the step lands
-// at ≈1261px with the 15px classic gutter Chromium reserves
+// brand to 270.1px), where every language keeps 70 % of its first link as air
+// between the brand and that link (Header.tsx's "THE BREAKPOINT IS A CONTAINER
+// STEP" block carries the arithmetic, and its THE FIVE ROWS GREW the table of
+// the four-link rows). The pill's side margins are 10vw each and `vw` counts
+// the scrollbar gutter while the containing block does not, so in a window V
+// wide the bar's content box is 0.8 × V − gutter − 2px of borders: the step
+// lands at ≈1261px with the 15px classic gutter Chromium reserves
 // (`scrollbar-gutter: stable`), ≈1243 without one. The two windows below
 // straddle it with real margins on BOTH sides, gutter or no gutter: at 1220
 // the bar is 959–974px (18–33px under the step), at 1280 it is 1007–1022px
@@ -19,15 +20,26 @@ import { expect, type Page, test } from '@playwright/test';
 // of borders can move the answer (G2, 2026-09-26: the first cut sat 2px under
 // the step on a scrollbar-less engine, and those 2px were the borders). The
 // third window is the project's own laptop, where the row is comfortably
-// centred. Both locales the bar calibrates against run: Romanian, the default,
-// and German, the longest (§8.4).
+// centred. ALL FIVE LANGUAGES run since 2026-10-14, when the blog's link joined
+// every row (the owner: "internationalise and add that blog on eveyer
+// language"): on the 1007px bar of the 1280 window German, the widest row
+// („Start · Leistungen · Team · Blog", 301.5px), keeps 66.6px, Romanian 71.3,
+// English 72.9, French 73.0 and Italian 79.2 — measured, Chromium. Until that
+// day Romanian (the default) and German (the longest, §8.4) ran alone.
 //
 // Nothing here is a screenshot; the assertions are geometry and DOM, the
 // price-menu spec's idiom (playwright.e2e.config.ts says why this suite is
 // separate from the visual net).
 
-/** 4rem — the floor the step was chosen for (Header.tsx). */
+/**
+ * 4rem — the air every language keeps from the 1280 window up (the least,
+ * German's 66.6px, on the 1007px bar). The step itself answers to the owner's
+ * floor read per language, 70 % of each row's first link — 54.2px at the most
+ * (French's „Accueil") — which this flat 4rem covers at every window below.
+ */
 const GAP = 64;
+/** Every locale the bar is built in — each row four links since 2026-10-14. */
+const LOCALES = ['ro', 'en', 'de', 'fr', 'it'] as const;
 /** Below → the burger; above → the row (the header comment has the margins). */
 const BELOW = 1220;
 const ABOVE = 1280;
@@ -64,9 +76,10 @@ const readBar = (page: Page): Promise<Bar> =>
     // became a fixed rem with `max-w-none` (2026-10-01) the link box hugs the
     // lockup in Chromium and WebKit alike (270.1px, measured 2026-10-02), and
     // the painted edge stays the honest measure all the same. At the owner's
-    // sizes the lockup is ~270px and the German gap at the 62rem step 70.6px
-    // (Header.tsx, THE BRAND GREW). Chromium is the only engine this suite
-    // runs today; the measurement is engine-proof anyway.
+    // sizes the lockup is 270.1px, and at the 62rem step the five four-link
+    // rows keep 59.1px (German) to 71.7 (Italian) — Header.tsx's THE FIVE ROWS
+    // GREW. Chromium is the only engine this suite runs today; the
+    // measurement is engine-proof anyway.
     const brand = header.querySelector('img')?.closest('a');
     if (!brand) {
       throw new Error(
@@ -122,7 +135,7 @@ async function openAt(
   await page.evaluate(() => document.fonts.ready);
 }
 
-for (const locale of ['ro', 'de']) {
+for (const locale of LOCALES) {
   test.describe(`${locale}/services — the bar's step`, () => {
     test.beforeEach(({}, testInfo) => {
       test.skip(

@@ -71,13 +71,7 @@ let links;
 try {
   const site = await crawl(`${origin}/`, true);
   const dispatcher = await crawl(`${origin}/404.html`, false);
-  // The blog's list pages (CLAUDE.md §15.39) are linked from no page while
-  // its nav item stays hidden, so the crawl from `/` never reaches them — and
-  // a base-path slip in their pager or their pictures would pass unseen (the
-  // class of bug §15.2 recorded: 1,120 broken links behind a green crawl). It
-  // starts there too, recursing into the pages they link (G2 react, 2026-10-14).
-  const blog = await crawl(`${origin}/ro/blog/`, true);
-  links = [...site.links, ...dispatcher.links, ...blog.links];
+  links = [...site.links, ...dispatcher.links];
 } finally {
   server.close();
 }

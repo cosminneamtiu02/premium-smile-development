@@ -1,47 +1,60 @@
 import type { Metadata } from 'next';
+import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { PostList } from '@/components/sections/PostList/PostList';
-import { BLOG_LOCALE } from '@/lib/blog/blog';
 import { populateBlogPage } from './populate';
-import { blogPageTitle, blogPageWords } from './words';
+import { blogLocale, blogPageTitle, blogPageWords } from './words';
 
-// /ro/blog/ — PAGE 1 of the blog's list (CLAUDE.md §15.39, the blog branch,
-// 2026-10-11): the owner's reference is infiniswiss.com/blog — a centred
-// heading, five articles a page as cards, „Anterior · 1 / 3 · Următor" under
-// them. Page n lives at /ro/blog/page/n/ (./page/[page]/page.tsx); every page
-// is a complete document built ahead of time, and the pager's links are plain
-// `<a href>`s, so moving between pages is a fresh page load (§15.13 — the
-// owner: "on clicking next of navigation it just pulls whole compiled thing
-// from server"). ./populate.ts turns lib/blog's posts into the band's props,
-// ./words.ts reads the words.
+// /{locale}/blog/ — PAGE 1 of the blog's list (CLAUDE.md §15.39, the blog
+// branch, 2026-10-11; reshaped in round 2, 2026-10-14): a centred hero — the
+// page's <h1> over a three-line lead —, the articles as cards three to a row
+// and six a page, the round previous/next arrows under the grid's right end,
+// and the map under it all, the very band Home draws (the owner: "below all
+// blog items on this page i want to have the map as it is reactive as an item
+// now"). Page n lives at /{locale}/blog/page/n/ (./page/[page]/page.tsx), the
+// same two bands. Every page is a complete document built ahead of time, and
+// the pager's links are plain `<a href>`s, so moving between pages is a fresh
+// page load (§15.13 — the owner: "on clicking next of navigation it just pulls
+// whole compiled thing from server"). ./populate.ts turns lib/blog's posts
+// into the band's props, ./words.ts reads the language and the words.
 //
-// ── ROMANIAN ONLY (§5) — the stub's FOUR PHANTOM PAGES ARE GONE. This file
-// sits under [locale], whose layout generates all five languages, so until
-// today /en/blog/, /de/blog/, /fr/blog/ and /it/blog/ were exported too. A page
-// may export its own `generateStaticParams`, and Next 16 runs it once for each
-// language the layout generated and merges the result OVER that language
-// (`{ ...parent, ...item }`, node_modules/next/dist/build/static-paths/app.js),
-// then removes the duplicates (`filterUniqueParams`): returning `locale: 'ro'`
-// every time leaves exactly one page, /ro/blog/. Returning NOTHING for the
-// other four is not an option — under `output: 'export'` Next refuses an
-// empty result (its build error E1454).
+// THE HERO AND THE MAP ON EVERY PAGE OF THE LIST (the owner asked the planner
+// to decide, round 2): the list's pages are one archive cut into pages, so
+// they share one template — an <h1> on each (§9), and a visitor from a search
+// can land on page 2 directly, where the hero still says where they are; the
+// map is the closing band of every other page of the site, and the way to the
+// clinic for a reader who arrived through an article. The map is `scaled`
+// (§15.32): PostList wears THE BAND SCALE too, so on a laptop or a desktop the
+// whole page grows and shrinks with the screen as one design, like Home.
+//
+// ── IN EVERY LANGUAGE (round 3, 2026-10-14 — the owner: "internationalise and
+// add that blog on every language"). Every post carries its words in all five
+// languages (lib/blog), so this page declares no `generateStaticParams` of its
+// own: like the services, team and privacy pages it is written once for each
+// language the [locale] layout generates — /ro/blog/, /en/blog/, /de/blog/,
+// /fr/blog/ and /it/blog/ — and the language comes from the route, never from
+// this file (./words.ts' ONE LANGUAGE, READ ONCE). Until round 3 it returned
+// `locale: 'ro'`, which Next merged over each of the five and de-duplicated
+// to one Romanian page.
 //
 // KEEP-IN-SYNC with ./Blog.stories.tsx: this is an async Server Component the
 // browser runner cannot render, so the twin there mounts the same band through
-// the same ./populate.ts with `useTranslations`' words, and its plays pin what
-// it renders; ../page-twins.test.ts holds the two sources together.
+// the same ./populate.ts with `useLocale`'s language and `useTranslations`'
+// words, and its plays pin what it renders; ../page-twins.test.ts holds the
+// two sources together.
 
-// No page beyond the ones named below is guessed — so `next dev` refuses
-// /en/blog/ the way the export never writes it (G2 react, 2026-10-14).
-export const dynamicParams = false;
+type Props = { params: Promise<{ locale: string }> };
 
-export function generateStaticParams() {
-  return [{ locale: BLOG_LOCALE }];
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  return { title: await blogPageTitle(1) };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  return { title: await blogPageTitle(locale, 1) };
 }
 
 export default async function BlogPage() {
-  return <PostList {...populateBlogPage(1, await blogPageWords())} />;
+  const locale = await blogLocale();
+  return (
+    <>
+      <PostList {...populateBlogPage(locale, 1, await blogPageWords(locale))} />
+      <ClinicLocation scaled />
+    </>
+  );
 }

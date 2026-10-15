@@ -76,9 +76,10 @@ import { NavMenu } from './NavMenu';
 // BRAND. Measured in Chromium, Firefox and WebKit (Storybook, statics at
 // 1536): the lockup is 258.5px wide (artwork 107.8 + `gap-3` 12 + the name
 // 138.8); the row "Startseite · Leistungen · Team" is 279.3 (German, the
-// longest, §8.4 — Romanian 231.3, English 228.0); and the grid holds the nav
-// EXACTLY on the bar's centre line in all three engines. So the visible gap
-// between the brand and the first link is simply
+// longest then, §8.4 — Romanian 231.3, English 228.0, three links each until
+// the blog's link joined every row; THE FIVE ROWS GREW, below); and the grid
+// holds the nav EXACTLY on the bar's centre line in all three engines. So the
+// visible gap between the brand and the first link is simply
 //     (row − nav) / 2 − 258.5,   row = the bar's content box − 32 (`px-4`)
 // — and at a bar of 48rem it was NEGATIVE: −30.2px in German, −6.2 in
 // Romanian, an OVERLAP. Seen in a 985px Chromium window (a 771px bar): side
@@ -118,10 +119,13 @@ import { NavMenu } from './NavMenu';
 // auto floor counts the artwork in all three engines — measured — so neither
 // is needed; THE BRAND GREW below has the numbers.)
 //
-// The proofs: the AtTheStep story (German, the bar's content box held at the
-// step + 4px — the gap at its floor) and GermanStress (German at 1536). Move the
-// NUMBER if the brand or German ever outgrows it — re-run the arithmetic
-// above, never the architecture, and never without the planning loop.
+// The proofs: Header.step.test.tsx (all five languages at a bar of exactly
+// the step, since 2026-10-14), the AtTheStep story (the bar's content box held
+// at the step + 4px, in the language whose gap sits nearest its floor —
+// German until 2026-10-14, French since) and GermanStress (German at 1536).
+// Move the NUMBER if the brand or any language's row ever outgrows it — re-run
+// the arithmetic above, never the architecture, and never without the
+// planning loop.
 // THE BRAND SHRANK, THE NUMBER STAYED (2026-10-01, the wordmark-brand lane):
 // the clinic's mark is near-square (258:261) where the demo cat was 1.49:1,
 // so at the row's 72px the lockup is ~222px wide (71.2 + 12 + 138.8), not
@@ -150,6 +154,47 @@ import { NavMenu } from './NavMenu';
 // text-spacing overrides the brand's track floors at its real width and the
 // nav moves a few pixels right instead of under it — measured in Chromium,
 // Firefox and WebKit: no box overlaps anywhere, no ink closer than 1px.
+// THE FIVE ROWS GREW, THE NUMBER STAYED (2026-10-14). The blog's link came
+// back on Romanian pages ("don't forget … to give a clickable link to top bar
+// for blog page") and joined every language with the blog itself the same day
+// ("internationalise and add that blog on eveyer language" — lib/routes'
+// blog row lost its `locale: 'ro'`), so every row has four links, and
+// German's home label is „Start" since (de.json's `common.nav.home`; the
+// brand link's spoken name keeps „Startseite"). With „Startseite" the German
+// row would be 340.1px, and 70 % of its 94px first link would take a bar
+// ≥ 2 × (270.1 + 65.8) + 340.1 + 32 ≈ 1044px — a 66rem step that flips every
+// 1280 laptop to the burger, the trade the arithmetic above refused.
+// Measured AT the step — a bar of exactly 62rem, the real faces, Chromium (a
+// Storybook probe) — every language keeps the owner's 70 % of ITS first link
+// ("70% of the width of the menu button"):
+//          row    first link       70 %   gap   over the floor
+//     ro   292.2  „Acasă"   64.0   44.8   63.8  19.0
+//     en   288.9  „Home"    66.0   46.2   65.4  19.3
+//     de   301.5  „Start"   55.4   38.8   59.1  20.4
+//     fr   288.8  „Accueil" 77.4   54.2   65.5  11.3
+//     it   276.4  „Home"    66.0   46.2   71.7  25.5
+// — each row its four link boxes and three 8px gaps, each gap
+// (960 − row) / 2 − 270.1. FRENCH sits nearest its floor, its first link the
+// widest — so AtTheStep is French since that day — and German's is the
+// widest row, so the narrowest gap. A flat 4rem no longer holds AT the step
+// (German 59.1, Romanian 63.8): it was German's 70 % of „Startseite" rounded
+// down, and the floor is read per language now. From the 1280 Notebook up
+// (its bar 1007–1022px) every language keeps 4rem all the same — on the
+// 1007px bar German 66.6, Romanian 71.3, English 72.9, French 73.0, Italian
+// 79.2.
+// Under WCAG 1.4.12's text-spacing overrides at the step every row squeezes
+// the brand's track to its floor (321.7px, the brand's own width there) and
+// sits against it — box to box 0px, the first link's ink 8px clear of the
+// name's (the link's own `px-2`) — right of centre by 17.3px in German, 12.7
+// in Romanian, 9.9 in French, 7.8 in English and 0.5 in Italian: nothing
+// overlapping, nothing scrolling sideways, the Contact button still 127px
+// clear of the row at the least (German). Firefox and WebKit were not
+// re-measured for the four-link rows. Re-run per language, the arithmetic's
+// own answer is now a LOWER step — French, the binding row, needs a bar
+// ≥ 2 × (270.1 + 54.2) + 288.8 + 32 = 969.4px, so 61rem would do (the flip at
+// ≈1241px of window behind a classic scrollbar, ≈1223 without) — not taken,
+// the precedent of THE BRAND SHRANK: a behaviour change nobody asked for with
+// the blog. The step keeps 22.6px of bar in hand over French's need.
 //
 // THE COUPLED SPELLINGS — one number, every place it is written. Move the step
 // and ALL of these move in the same change-set:
@@ -162,7 +207,9 @@ import { NavMenu } from './NavMenu';
 //                        step is ONE number in three files" fence read;
 //   Header.stories.tsx   AtTheStep — its wrapper's `calc(62rem+6px+…)` and
 //                        its play's `62 * rem` (the "frame IS the step"
-//                        check) and the gap bounds that follow from the step;
+//                        check) and the gap's ceiling that follows from it;
+//   Header.step.test.tsx `STEP_REM` — the bar it holds every language at,
+//                        and the bar a pixel under it (THE FIVE ROWS GREW);
 //   tests/e2e/           header-step.spec.ts — `BELOW` / `ABOVE`, the windows
 //                        derived from the step (KNOWN CONSEQUENCE below);
 //   the prose            KNOWN CONSEQUENCE's window widths (this file) and
@@ -438,14 +485,18 @@ export function Header(): ReactElement {
           SIZES) makes the brand's min-content the whole lockup, so a track
           squeezed below it is FLOORED there and the nav moves right of centre
           rather than under the brand (measured under WCAG 1.4.12's
-          text-spacing overrides at the step: the left track 321.7px, the nav
-          7px right of centre, no overlap — Chromium; Firefox and WebKit never
-          squeeze there). The STEP is still what keeps the owner's air: past
-          `@min-[62rem]:` each side track is at least 340.35px (German)
-          against the 270.1px brand, a gap ≥ 4rem (70.6px measured).
-          Where the row is shown, the two side tracks are equal and the nav
-          sits on the screen's centre line exactly (1536, Chromium: side
-          tracks of ~450px German, ~474 Romanian — measured). */}
+          text-spacing overrides at the step, every row four links since
+          2026-10-14: the left track 321.7px, the nav right of centre by
+          0.5px in Italian up to 17.3 in German, no overlap — Chromium;
+          Firefox and WebKit were measured for German's old three-link row
+          alone). The STEP is still what keeps the owner's air: past
+          `@min-[62rem]:` each side track is at least 329.3px (German, the
+          widest row, 301.5px) against the 270.1px brand — a gap of 59.1px in
+          German and 63.8–71.7 in the other four, each over 70 % of its own
+          first link (the file header's THE FIVE ROWS GREW). Where the row is
+          shown, the two side tracks are equal and the nav sits on the
+          screen's centre line exactly (1536, Chromium: side tracks of 439.2px
+          in German up to 451.7 in Italian — measured). */}
       <div className="flex h-20 items-center px-4 @min-[62rem]:grid @min-[62rem]:grid-rows-1 @min-[62rem]:grid-cols-[1fr_auto_1fr]">
         {/* The brand corner — now ONE component shared with the Footer
             (sections/Wordmark, built to the owner-approved contract

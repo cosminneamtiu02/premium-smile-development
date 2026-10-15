@@ -88,8 +88,13 @@ const WEARS_ACCENT =
 /** The wearers — six atoms and three sections — and how many spellings each carries. */
 const WEARERS: Readonly<Record<string, number>> = {
   // The hover label, the underline and the active label — TextButton.tsx's
-  // COLOR INVARIANT: one colour for all three.
-  'components/ui/TextButton/TextButton.tsx': 3,
+  // COLOR INVARIANT: one colour for all three — and, since 2026-10-14, the
+  // `accent` tone's RESTING label (the blog card's „Citește mai mult…": the
+  // owner's "always lilla, the lilla from hover") and THE HOVER AREA's label
+  // (the same hover lavender, drawn while the blog card is hovered: "on hover
+  // of a card the underline from citeste mai mult animation to trigger"), the
+  // same one colour.
+  'components/ui/TextButton/TextButton.tsx': 5,
   // The `accent` FAMILY of the two button atoms (owner 2026-10-01): Button's
   // solid cell — the ground, the hover label, the hover hairline — and its
   // outline cell — the border, the label — spell the role five times;
@@ -130,8 +135,11 @@ const WEARERS: Readonly<Record<string, number>> = {
   // current selected mecanism should be lilla"): ui/PillButton's ACTIVE face —
   // the ground and the edge, white label on it (5.06:1, ui/Button's lavender
   // face at rest) — and its resting HOVER, the label and the edge on the white
-  // face (5.06:1). Its renderers are named in PILL_RENDERERS.
-  'components/ui/PillButton/PillButton.tsx': 4,
+  // face (5.06:1) — and, since 2026-10-14, the TAG's face, that same hover
+  // face held still (the blog card's categories: "i do not want to give
+  // impression of a button"), the edge and the label again. Its renderers are
+  // named in PILL_RENDERERS.
+  'components/ui/PillButton/PillButton.tsx': 6,
 };
 
 /**
@@ -192,6 +200,10 @@ const RENDERERS: Readonly<Record<string, string>> = {
   // The price menu's categories.
   'components/sections/PriceList/PriceMenu.tsx':
     'bg-surface — the menu card, ui/Card',
+  // The blog card's „Citește mai mult…" (CLAUDE.md §15.39 round 2,
+  // 2026-10-14): the `accent` tone, lavender at rest, in the card's footer row.
+  'components/sections/PostCard/PostCard.tsx':
+    'bg-surface — the blog card, ui/Card framed: 5.06:1',
 };
 
 /**
@@ -211,14 +223,20 @@ const PILL_RENDERERS: Readonly<Record<string, string>> = {
     '--page at rest, and the category cards’ white --surface scrolling under the stuck strip — each chip paints its white or lavender face',
   // The blog card's categories (CLAUDE.md §15.39, 2026-10-11): the owner's
   // "buttons from menu at rest (so not current one)" — resting chips only,
-  // never `active`, on the article card's white ground.
+  // never `active`. Since round 2 (2026-10-14) they float over the card's
+  // photograph ("hovering above the image … starting in the top right
+  // corner"), and since the owner's second look they are TAGS (`kind="tag"`:
+  // the lavender edge and label held still, no hover), each on its own white
+  // face, so the lavender label (5.06:1) never meets the photo.
   'components/sections/PostCard/PostCard.tsx':
-    'bg-surface — the blog card, ui/Card framed; resting chips on their own white face',
+    'the card’s photograph — tags, each on its own white face: the label at 5.06:1',
 };
 
 /**
  * Every file that passes `tone="accent"` to ui/Button or ui/GlyphButton —
- * the owner's list of 2026-10-01, one row per band, with the ground. A button
+ * the owner's list of 2026-10-01, one row per band, with the ground — and,
+ * since 2026-10-14, to ui/TextButton (the blog card's „Citește mai mult…",
+ * whose LABEL is the lavender: 4.5:1 binds, met on the card's white). A button
  * paints its OWN ground (the solid's lavender face, the outline's white box),
  * so what the band's ground meets is the face's edge or the outline's border
  * (SC 1.4.11's 3:1: 4.81:1 over --page, 5.06:1 over white) — never the tint
@@ -260,10 +278,16 @@ const ACCENT_TONE_CALLERS: Readonly<Record<string, string>> = {
   // owner later that night. The face's edge meets the dialog's white box.
   'components/sections/ContactModal/ContactModal.tsx':
     'bg-surface — the dialog’s white box, ui/Modal; the two controls on their own lavender face',
-  // The blog's page navigation (solid, md) — previous and next under the list
-  // of articles (CLAUDE.md §15.39, 2026-10-11). The edge meets the page.
+  // The blog's page navigation — previous and next under the grid of
+  // articles (CLAUDE.md §15.39, 2026-10-11); since round 2 (2026-10-14) the
+  // reviews deck's round outline discs („i'd want the left right button from
+  // the reviews carrousell"). The border meets the page.
   'components/sections/Pagination/Pagination.tsx':
-    'bg-page — the blog list band, the two controls on their own lavender face',
+    'bg-page — the blog list band, the two outline discs on their own white box',
+  // The blog card's „Citește mai mult…" — ui/TextButton's `accent` tone, a
+  // lavender LABEL at rest (CLAUDE.md §15.39 round 2).
+  'components/sections/PostCard/PostCard.tsx':
+    'bg-surface — the blog card, ui/Card framed: the label at 5.06:1',
 };
 
 /** The lilac band and every band that composes it — where the role fails.

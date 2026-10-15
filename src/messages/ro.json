@@ -121,12 +121,20 @@
   "blog": {
     "title": "Articole și noutăți",
     "pageTitle": "{title}, pagina {page}",
+    "hero": {
+      "title": "Pentru că ne pasă de zâmbetul tău, îți arătăm\ncum să ai grijă de el prin blogul nostru",
+      "lead": "Aici găsești noutățile clinicii și sfaturile medicilor noștri:\ncum să îți îngrijești dinții și gingiile acasă\nși când e bine să ne faci o vizită."
+    },
     "tags": "Categorii",
+    "card": {
+      "readMore": "Citește mai mult…",
+      "readingTime": "{minutes, number} min de citit"
+    },
     "pagination": {
       "label": "Paginile articolelor",
       "status": "Pagina {page} din {total}",
-      "previous": "Anterior",
-      "next": "Următor"
+      "previous": "Pagina anterioară",
+      "next": "Pagina următoare"
     }
   },
   "contact": {

@@ -138,6 +138,32 @@ const parkPointer = async (): Promise<() => void> => {
   return () => parking.remove();
 };
 
+/** THE REAL POINTER onto `element` for a hover read — THE PREMISE before it,
+ *  :hover after it. Every hover END value this atom paints compiles under
+ *  `@media (hover: hover)`, so in a tab that reports no hovering, fine pointer
+ *  the real pointer still moves :hover while every rule it should light stays
+ *  dead: a hover read takes the REST state, a "stays at rest" read passes for
+ *  nothing. CI met exactly that (run 38735369242, 2026-10-15 — the area
+ *  :hover, the colour still ink): an earlier file in the same tab had turned
+ *  CDP touch emulation on and off, and on a Linux runner Chromium then
+ *  restores the platform's pointer types — none, on a VM with no input
+ *  device — over Playwright's launch-time mouse, for every later file in the
+ *  tab (DoctorShowcase.test.tsx's THE GATES test met it on 2026-10-01). So a
+ *  red read here is a red rule, never a dead tab or a missed pointer. */
+const realHover = async (element: Element): Promise<void> => {
+  const hovers = matchMedia('(hover: hover)').matches;
+  const fine = matchMedia('(pointer: fine)').matches;
+  expect(
+    hovers && fine,
+    `THE PREMISE: this tab reports (hover: hover) ${hovers}, (pointer: fine) ` +
+      `${fine} — an earlier file left it with a coarse or no pointer (CDP ` +
+      'touch emulation turned on and off?), so every hover rule is dead and ' +
+      'hover cannot be tested here',
+  ).toBe(true);
+  await realUser.hover(element);
+  expect(element.matches(':hover'), 'the real pointer reached it').toBe(true);
+};
+
 describe('TextButton — element & semantics', () => {
   it('renders a real <button> exposing its accessible name', () => {
     render(<TextButton>Servicii</TextButton>);
@@ -555,7 +581,7 @@ describe('TextButton — THE TONE’s paint, read from the real stylesheet', () 
       expect(getComputedStyle(control).color).toBe(tokenColour('accent'));
       expect(underlineScaleX(control)).toBe(0);
 
-      await realUser.hover(control);
+      await realHover(control);
       expect(getComputedStyle(control).color).toBe(tokenColour('accent'));
       expect(underlineScaleX(control)).toBe(1);
       // The rule it draws is the same lavender — the one colour.
@@ -592,7 +618,7 @@ describe('TextButton — THE TONE’s paint, read from the real stylesheet', () 
       expect(underlineScaleX(readMore)).toBe(0);
 
       // …and under the pointer the menu button reaches exactly that ink.
-      await realUser.hover(menu);
+      await realHover(menu);
       expect(getComputedStyle(menu).color).toBe(
         getComputedStyle(readMore).color,
       );
@@ -672,7 +698,7 @@ describe('TextButton — asChild onto an <a> with NO href: the blog card’s pla
       expect(getComputedStyle(anchor).color).toBe(tokenColour('accent'));
       expect(underlineScaleX(anchor)).toBe(0);
 
-      await realUser.hover(anchor);
+      await realHover(anchor);
       expect(getComputedStyle(anchor).color).toBe(tokenColour('accent'));
       expect(underlineScaleX(anchor)).toBe(1);
     } finally {
@@ -843,7 +869,7 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
         expect(getComputedStyle(control).color, tone).toBe(tokenColour(tone));
         expect(underlineScaleX(control), tone).toBe(0);
 
-        await realUser.hover(words);
+        await realHover(words);
         // The pointer is on the area and NOT on the button…
         expect(area.matches(':hover'), tone).toBe(true);
         expect(control.matches(':hover'), tone).toBe(false);
@@ -854,19 +880,19 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
         expect(underlineScaleX(control), tone).toBe(1);
 
         // Off the card, back to rest.
-        await realUser.hover(outside);
+        await realHover(outside);
         expect(getComputedStyle(control).color, tone).toBe(tokenColour(tone));
         expect(underlineScaleX(control), tone).toBe(0);
 
         // The button's own hover is untouched: `area` widens it, never moves it.
-        await realUser.hover(control);
+        await realHover(control);
         expect(getComputedStyle(control).color, tone).toBe(
           tokenColour('accent'),
         );
         expect(underlineScaleX(control), tone).toBe(1);
 
         // Leave before the next tone renders in the same place.
-        await realUser.hover(outside);
+        await realHover(outside);
         unmount();
       }
     } finally {
@@ -886,12 +912,12 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
         const control = screen.getByRole('button', {
           name: 'Citește mai mult…',
         });
-        await realUser.hover(words);
+        await realHover(words);
         // The ancestor IS hovered — the rest below is not a missed pointer.
         expect(area.matches(':hover'), label).toBe(true);
         expect(getComputedStyle(control).color, label).toBe(tokenColour('ink'));
         expect(underlineScaleX(control), label).toBe(0);
-        await realUser.hover(outside);
+        await realHover(outside);
         unmount();
       }
     } finally {
@@ -913,7 +939,7 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
       const readMore = screen.getByRole('button', {
         name: 'Citește mai mult…',
       });
-      await realUser.hover(words);
+      await realHover(words);
       expect(getComputedStyle(menu).color).toBe(tokenColour('ink'));
       expect(underlineScaleX(menu)).toBe(0);
       expect(underlineScaleX(readMore)).toBe(1);
@@ -935,7 +961,7 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
         name: 'Citește mai mult…',
       });
       // The pointer in the OUTER area, outside the inner one…
-      await realUser.hover(words);
+      await realHover(words);
       expect(control.parentElement?.matches(':hover')).toBe(false);
       // …lights the button all the same.
       expect(underlineScaleX(control)).toBe(1);
@@ -958,12 +984,12 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
           name: 'Citește mai mult…',
         });
         expect(control, tone).toBeDisabled();
-        await realUser.hover(words);
+        await realHover(words);
         // The area IS hovered — the rest below is not a missed pointer.
         expect(area.matches(':hover'), tone).toBe(true);
         expect(getComputedStyle(control).color, tone).toBe(tokenColour(tone));
         expect(underlineScaleX(control), tone).toBe(0);
-        await realUser.hover(outside);
+        await realHover(outside);
         unmount();
       }
     } finally {
@@ -983,7 +1009,7 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
       );
       const anchor = screen.getByText('Citește mai mult…');
       expect(underlineScaleX(anchor)).toBe(0);
-      await realUser.hover(words);
+      await realHover(words);
       expect(anchor.matches(':hover')).toBe(false);
       expect(underlineScaleX(anchor)).toBe(1);
     } finally {

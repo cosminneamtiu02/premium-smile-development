@@ -75,11 +75,14 @@ import { cx } from '@/lib/cx/cx';
 // that VoiceOver's touch exploration lands on it — §15.23 round 5; the same
 // overlay is the lever here if this counter ever needs it.)
 //
-// ── THE ARROWS NEVER MOVE BETWEEN PAGES (measured in Chromium in the real
-// face, Source Serif 4's committed subset, at the counter's 16px — ui/Text's
-// `text-base`). The row stands at the grid's end edge on every page (THE ROW,
-// below), so its forward control never moves; the back control stands one row
-// width to its left, and holds still only while that width does.
+// ── THE ARROWS NEVER MOVE BETWEEN PAGES (measured in Chromium on macOS in
+// the real face, Source Serif 4's committed subset, at the counter's 16px —
+// ui/Text's `text-base`; the headless Chromium of CI's Linux runner advances
+// every glyph by whole pixels, so there a figure is 8px and the fractions
+// below 29, 37 and 45px — the same relations). The row stands at the grid's
+// end edge on every page (THE ROW, below), so its forward control never
+// moves; the back control stands one row width to its left, and holds still
+// only while that width does.
 //   · The face's DEFAULT figures already share one advance — each of the ten
 //     digits 8.313px (0.52em) — so „1 / 3", „2 / 3" and „3 / 3" are all
 //     29.547px and the row keeps one width on every page of a list.
@@ -105,7 +108,8 @@ import { cx } from '@/lib/cx/cx';
 // apart — the reviews deck's own gap between its two discs. MEASURED: 141.56 ×
 // 44px at any page of a list of three (44 + 12 + 29.56 + 12 + 44 — the
 // counter's cell rounds to layout's 1/64px), 158.19 × 44px at any page of a
-// list of twelve. The narrowest column a page hands it is 273px (a 320 window
+// list of twelve — on macOS; 141 and 157px on CI's Linux, whose glyphs land
+// on whole pixels. The narrowest column a page hands it is 273px (a 320 window
 // behind a classic scrollbar), so the row never meets an edge and needs no
 // step: the two-row shape that labels in words once required, and the
 // container query that chose it, left with the words.
@@ -121,12 +125,15 @@ import { cx } from '@/lib/cx/cx';
 // the scale `--spacing` is the theme's 0.25rem and the disc is 2.75rem, the
 // atom's own fallback to the pixel; inside it the disc is 44 design pixels
 // with a 20-design-pixel chevron, and the row is the 1401 design × s: 193.38 ×
-// 60.5px at a 1920 window, 115.25 × 35.67px at a 1140 one. Only the counter
-// strays, by the face's optical-size axis — set narrower per em as it grows,
-// 39.38px at 1920 where × s would give 40.66 — so the row stays within 0.7 %
-// of × s (Pagination.scale.test.tsx measures all of it). Like the map band's
-// discs, a window under the 1401 reference draws them under 44px (35.67px at
-// a 1140 window), still over SC 2.5.8's 24.
+// 60.5px at a 1920 window, 115.25 × 35.67px at a 1140 one (macOS). Only the
+// counter strays, by the face's optical-size axis — set narrower per em as it
+// grows, 39.38px at 1920 where × s would give 40.66 — so on macOS the row
+// stays within 0.7 % of × s. Pagination.scale.test.tsx measures all of it,
+// every text against the same text set by the same engine at the same size,
+// so it holds on CI's whole-pixel glyphs too (the counter 39px at the cap
+// there, 39.75 on macOS). Like the map band's discs, a window under the 1401
+// reference draws them under 44px (35.67px at a 1140 window), still over SC
+// 2.5.8's 24.
 //
 // ── THE BELT. The page builds the hrefs and the band refuses a set that
 // contradicts itself — a page number that is not a whole number from 1, a

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { cdp, page, server } from 'vitest/browser';
+import { page } from 'vitest/browser';
 // The REAL stylesheet, compiled by the site's own Tailwind pipeline — the
 // reason this file exists apart from PostList.test.tsx (the header below).
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
@@ -48,10 +48,22 @@ import {
 // ui/Heading's `hero` step reads it — beside the classic 15px scrollbar this
 // runner draws, the visual net's own geometry: a 768 window's column is
 // 599.4px here, 768 − 15 − 2 × 76.8):
-//   · THE REGIME: on at 1280, 1401, 1536, 1920 and 2560 (a fine pointer, a
-//     column past max(56rem, 896px)), off at 320, 390, 768, 1024 and 1100 and
-//     under a coarse pointer at 1600 and 1920 — and s, the design pixel,
-//     min(column, 96rem) / 1106 where it is on.
+//   · THE REGIME: on at 1280, 1401, 1536, 1920 and 2560, and at 1160 for
+//     every language's hero and the heading's reach at its limit (a fine
+//     pointer, a column past max(56rem, 896px)), off at 320, 390, 768, 1024
+//     and 1100 — and s, the design pixel, min(column, 96rem) / 1106 where it
+//     is on. Every case that expects it on checks its PREMISES first and
+//     names them (expectScaled): the runner's column against the step, then
+//     a fine pointer. The narrowest such window is 1160, not the regime's
+//     first (NARROWEST says why).
+//   · THE GATES, read from the compiled rules in the CSSOM: the band's own
+//     regime tokens — the stairway's line breaks, the heading's reach and
+//     its design size — style the page only behind `@supports (color:
+//     rgb(from red r g b))`, `@media (pointer: fine)` and both container
+//     steps, so a touch screen keeps the theme's natural wrapping. No case
+//     here emulates the device (THE GATES' case says why): the touch tablets
+//     are tests/e2e/band-scale.spec.ts's, 1180 and 1366, a fresh browser
+//     each.
 //   · THE HERO, in Romanian: the <h1>'s size — `hero`'s viewport clamp off
 //     the regime, the design's 65.04 × s on it (sections/DoctorIntro's
 //     name's class, restored on 2026-10-15) — and its LINES (PostList.tsx's
@@ -60,11 +72,11 @@ import {
 //     exactly the message file's segment, each
 //     narrower than the one above it by the stairway's steps, the heading's
 //     second line wider than the lead's first, and no line wider than its
-//     box; off the regime — at 1100 and 1024 on a mouse, on a coarse pointer
-//     at 1600 and 1920, at 768 and on a phone — the breaks are spaces and
-//     both blocks wrap as prose: neither block's lines are the copy's, and
-//     the heading takes more than the stairway's two (expectProse says why
-//     the lead's line COUNT is no part of it). No last line of either is ever
+//     box; off the regime — at 1100 and 1024 on a mouse, at 768 and on a
+//     phone — the breaks are spaces and both blocks wrap as prose: neither
+//     block's lines are the copy's, and the heading takes more than the
+//     stairway's two (expectProse says why the lead's line COUNT is no part
+//     of it). No last line of either is ever
 //     a single word, none starts with punctuation, no word is cut across two
 //     lines. Neither block hyphenates; both wrap `pretty` on a column under
 //     48rem and plainly from it, and keep their breaks only where the band is
@@ -86,7 +98,7 @@ import {
 //     first — one break in the heading, two in the lead, each between two
 //     words, and no other character that breaks a line (a carriage return,
 //     U+2028, U+2029); then the stairway and the heading's reach inside the
-//     scale at 1140, 1280, 1401, 1536, 1920 and 2560, its <h1> at 65.04 × s;
+//     scale at 1160, 1280, 1401, 1536, 1920 and 2560, its <h1> at 65.04 × s;
 //     and on the 320, 360, 375, 390, 393, 412, 430 and 440 phones and at 768
 //     — with no scrollbar, as on a phone or a tablet (`scrollbar-width: none`
 //     on the root, proved by the root's own box: as wide as the window), and
@@ -111,9 +123,9 @@ import {
 // hero's two BOXES do not: each hugs its longest line, a text measure that
 // Source Serif 4's optical size sets narrower per em as it grows — the
 // Romanian heading's 0.2 % and its lead's 6.4 % under × s between those two
-// windows); under the regime's step (1024 and 1100 windows on a mouse) and on
-// a coarse pointer nothing is remapped; past the cap (2560) the band is 96rem
-// wide and centred.
+// windows); under the regime's step (1024 and 1100 windows on a mouse)
+// nothing is remapped, and on a touch screen nothing can be (THE GATES); past
+// the cap (2560) the band is 96rem wide and centred.
 // THE SHARED RULES — the stairway's steps, the jump, the band's room and
 // gaps — the line reader and the <h1>'s name matcher are
 // PostList.fixtures.ts's, spelled once for this file and PostList.stories.tsx
@@ -132,6 +144,30 @@ import {
 const REFERENCE = 1106;
 const ROOT = 16;
 const CAP = 96 * ROOT;
+
+/** THE STEP, written out at the same root: the regime starts where
+ *  ui/Container's column reaches max(56rem, 896px) — the band scale's chain
+ *  `scalable:@4xl:@min-[896px]:`, a container query against that column. */
+const STEP = Math.max(56 * ROOT, 896);
+
+/** THE NARROWEST WINDOW THE CASES SCALE AT — 1160, whose column clears THE
+ *  STEP with room on any runner: 913px behind this Mac's classic 15px
+ *  scrollbar (1160 − 15 − 2 × 116 — the runner's 10vw counts the
+ *  scrollbar), 911 behind a 17px one, 928 with none. Not 1140, the regime's
+ *  first window here: its column is 897px, one pixel past the step — a
+ *  premise no case should stand on. (PR #166's first CI run, 2026-10-15,
+ *  failed every case that started at 1140, but not for that pixel: the
+ *  coarse-pointer case this file then had switched Chromium's touch
+ *  emulation on and off, and CI's Linux tab came back without a fine
+ *  pointer, every later case off the scale whatever its window — THE GATES
+ *  now reads that case's answer from the CSSOM.) The narrow end is still
+ *  the point: there the design pixel is smallest and Source Serif 4's
+ *  optical size sets the smaller type widest per em, so the copy's tightest
+ *  lines against their boxes are measured nearest the regime's start —
+ *  1160's design pixel is 1.8 % over 1140's (913 / 897). Every case that
+ *  expects the scale names its premises first (expectScaled), so a window
+ *  at the edge fails as the runner's column, never as a stairway rule. */
+const NARROWEST = 1160;
 
 /** The <h1>'s size in the scale, in design pixels: 16.26 spacing steps,
  *  65.04 — sections/DoctorIntro's name's, the `hero` step's value at the
@@ -303,6 +339,40 @@ const px = (element: Element, property: string): number =>
 const remapped = (element: Element): boolean =>
   getComputedStyle(element).getPropertyValue('--spacing') !==
   getComputedStyle(document.documentElement).getPropertyValue('--spacing');
+
+/** The primary pointer this runner reports now — what the regime's
+ *  `scalable:` variant asks of it (globals.css's THE SCALABLE VARIANT). */
+const pointerNow = (): string =>
+  (['fine', 'coarse', 'none'] as const).find(
+    (kind) => window.matchMedia(`(pointer: ${kind})`).matches,
+  ) ?? 'unknown';
+
+/** THE SCALE, EXPECTED ON — its PREMISES first, each named, so a case that
+ *  fails here reads as the runner's geometry or state, never as a stairway
+ *  or a reach rule: the column the runner lays out at this window
+ *  (ui/Container's box, the rhythm box's parent — the box the container
+ *  queries read) clears THE STEP; the primary pointer is fine — a tab left
+ *  without one turns every case after it off the scale, as Chromium's touch
+ *  emulation switched on and off did on CI's Linux (PR #166's first run,
+ *  2026-10-15; nothing in this folder emulates the device now); then the
+ *  regime itself, remapped. */
+const expectScaled = (rhythm: HTMLElement, where = ''): void => {
+  const column = box(
+    htmlElement(rhythm.parentElement, 'ui/Container column'),
+  ).width;
+  expect(
+    column,
+    `${where}the runner’s column is ${column}px — the regime starts at ${STEP}px`,
+  ).toBeGreaterThanOrEqual(STEP);
+  expect(
+    pointerNow(),
+    `${where}the runner’s primary pointer — the regime asks for a fine one`,
+  ).toBe('fine');
+  expect(
+    remapped(rhythm),
+    `${where}the regime is on — a ${column}px column, a fine pointer`,
+  ).toBe(true);
+};
 
 /** One `vw` of this window in px, read off a probe — what ui/Heading's
  *  `hero` clamp reads (DoctorIntro.scale.test.tsx's `vw`). */
@@ -513,14 +583,16 @@ const expectStairway = (hero: Hero, copy: HeroCopy, where = ''): void => {
  *       keeps them, or breaks written into the markup, which rule 1 cannot
  *       see;
  *    3. the heading in more lines than the stairway's two — the Romanian one
- *       in five at 320, four at 390, three from 768 to the regime's step and
- *       on a coarse pointer at 1600 and 1920 (this runner, behind its classic
- *       scrollbar), with margin: set on one line its words are longer than
- *       two of its boxes by 6.4 % on the coarse pointer (72px under the 1152
- *       cap), the tightest, 8.7 % at 1100, 11.9 % at 1024 and 26.9 % at 768.
+ *       in five at 320, four at 390 and three from 768 to the regime's step
+ *       (this runner, behind its classic scrollbar), with margin: set on one
+ *       line its words are longer than two of its boxes by 8.7 % at 1100, the
+ *       tightest here, 11.9 % at 1024 and 26.9 % at 768 — and by 6.4 % on a
+ *       coarse pointer at 1600 and 1920, 72px under the 1152 cap (measured in
+ *       this file before THE GATES replaced its touch-emulation case; the
+ *       device is tests/e2e/band-scale.spec.ts's now).
  *  NOT THE LEAD'S LINE COUNT (G2 react and typescript, 2026-10-15). Its
- *  Romanian lines here are 477.95, 430.14 and 58.45px at 1024, 1100 and on
- *  the coarse pointer: the last, „o vizită." (two words joined), would end
+ *  Romanian lines here are 477.95, 430.14 and 58.45px at 1024 and 1100 (on
+ *  that coarse pointer too): the last, „o vizită." (two words joined), would end
  *  the second line at 492.34px under a cap of 492, so the lead is three lines
  *  by a third of a pixel — and Linux's Chromium, where CI runs, sets Source
  *  Serif 4 a pixel or two apart from this Mac's (the repo's darwin and linux
@@ -822,7 +894,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       const band = renderBand();
       await document.fonts.ready;
 
-      expect(remapped(band.rhythm), 'the regime is on').toBe(true);
+      expectScaled(band.rhythm);
       const s = scaleOf(band);
       near(s, Math.min(box(band.column).width, CAP) / REFERENCE, 's', 0.0001);
       expectStairway(band, HEROES.ro);
@@ -847,6 +919,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       await page.viewport(width, height);
       const band = renderBand();
       await document.fonts.ready;
+      expectScaled(band.rhythm, `${width}: `);
       // The hero's two BOXES are left out: each hugs its longest line, a text
       // measure that Source Serif 4's optical size sets narrower per em as it
       // grows (the header's three facts) — their lines are THE STAIRWAY's,
@@ -883,7 +956,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     }
   });
 
-  it('draws nothing remapped under the regime’s step — a 1100 window on a mouse: two columns, the title on `hero`’s clamp, the hero wrapped as prose', async () => {
+  it('draws nothing remapped under the regime’s step — a 1100 window on a mouse: two columns, the title on `hero`’s clamp under its 6xl cap, the hero wrapped as prose', async () => {
     await page.viewport(1100, 800);
     const band = renderBand();
     await document.fonts.ready;
@@ -896,6 +969,10 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       'the title, `hero`’s clamp',
       0.01,
     );
+    // Off the scale the title keeps the 6xl container step as its cap, never
+    // the heading's reach (THE CAPS; THE GATES below reads why a touch screen
+    // keeps it too).
+    near(px(band.h1, 'max-width'), TITLE_CAP, 'the title’s cap', 0.01);
     expectProse(band, HEROES.ro);
     expectBand(band, 1, 2);
     band.unmount();
@@ -922,6 +999,8 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     const band = renderBand();
     await document.fonts.ready;
 
+    // The premises first: the cap is the band scale's too (`scalable:`).
+    expectScaled(band.rhythm);
     const column = box(band.column);
     const rhythm = box(band.rhythm);
     expect(column.width).toBeGreaterThan(CAP);
@@ -939,45 +1018,113 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     band.unmount();
   });
 
-  // Touch emulation goes through the Chrome DevTools Protocol, which only
-  // Chromium speaks — the components project's one engine.
-  it.skipIf(server.browser !== 'chromium')(
-    'keeps no stairway where the scale does not redraw the band — a coarse pointer at 1600 and 1920, the `hero` step at its 72px top under the 6xl cap, the hero wrapped as prose',
-    async () => {
-      // A touch screen as wide as a desktop: the regime's `scalable:` variant
-      // asks for a fine pointer, so the band stays in rem, the heading grows
-      // to 72px under its 1152px cap and the copy's breaks are spaces (THE
-      // STAIRWAY): the Romanian heading falls in three lines there, 1013.8,
-      // 1011.8 and 395.9px. Touch emulation makes the pointer coarse; it is
-      // switched off again whatever the outcome.
-      const session = cdp();
-      await session.send('Emulation.setTouchEmulationEnabled', {
-        enabled: true,
-        maxTouchPoints: 1,
-      });
-      try {
-        expect(
-          window.matchMedia('(pointer: coarse)').matches,
-          'a coarse pointer',
-        ).toBe(true);
-        for (const width of [1600, 1920]) {
-          await page.viewport(width, 1000);
-          const band = renderBand();
-          await document.fonts.ready;
-          expect(remapped(band.rhythm), 'nothing remapped').toBe(false);
-          near(px(band.h1, 'font-size'), 4.5 * ROOT, 'the title at 72px', 0.01);
-          near(px(band.h1, 'max-width'), TITLE_CAP, 'the title’s cap', 0.01);
-          expectProse(band, HEROES.ro);
-          expectBand(band, 1, 3);
-          band.unmount();
+  // THE GATES (PostList.tsx's THE BAND SCALE, THE STAIRWAY and THE HEADING'S
+  // REACH), read from the compiled rules in the CSSOM: the band's own regime
+  // tokens — the stairway's line breaks on the heading and on the lead, the
+  // heading's reach (its max-content width and its cap past the column) and
+  // its 16.26-step design size — style the page ONLY behind the band scale's
+  // whole chain: globals.css's THE SCALABLE VARIANT, `@supports (color:
+  // rgb(from red r g b))` and `@media (pointer: fine)`, then both container
+  // steps, 56rem and the 896px floor. So a touch screen as wide as a desktop
+  // keeps the theme's natural wrapping: the copy's breaks spaces, the `hero`
+  // clamp, the 6xl cap. (The rhythm box's two band-scale strings are
+  // ui/Container's, their gates DoctorShowcase.test.tsx's THE GATES.)
+  //   THE DEVICE ITSELF is driven end to end, a fresh browser per window:
+  // tests/e2e/band-scale.spec.ts's touch tablets on the blog, 1180 × 820 and
+  // 1366 × 1024, a coarse pointer. Never here: Chromium's touch emulation
+  // switched on and off inside this shared runner left CI's Linux tab
+  // without a fine pointer — every later case and file in that tab off the
+  // scale or without hover. This file's own coarse-pointer case did it on PR
+  // #166's first run (2026-10-15), as DoctorShowcase.test.tsx's THE GATES
+  // records for its band on 2026-10-01; this is its CSSOM walk, copied.
+  //   A token is chosen by the regime chain it carries — any of its three
+  // variants — never by its name, so the check reads whatever the band wears
+  // (and spells no class of its own, which Tailwind would compile into the
+  // site's stylesheet): a token that lost one link of the chain, its
+  // `scalable:` above all, is still chosen, and fails a gate below.
+  it('puts every rule of the band’s own regime tokens behind THE GATES in the real stylesheet — `@supports (color: rgb(from red r g b))`, `@media (pointer: fine)` and both container steps, 56rem and 896px — so a touch screen keeps the theme’s natural wrapping', () => {
+    const band = renderBand();
+    try {
+      const chain = ['scalable:', '@4xl:', '@min-[896px]:'];
+      const regimeTokens = (element: HTMLElement): string[] =>
+        [...element.classList].filter((token) =>
+          chain.some((variant) => token.includes(variant)),
+        );
+      // Four on the <h1> — the stairway, the reach's two, the size — and
+      // the stairway on the lead.
+      const title = regimeTokens(band.h1);
+      const lead = regimeTokens(band.lead);
+      expect(title, 'the title’s regime tokens').toHaveLength(4);
+      expect(lead, 'the lead’s regime tokens').toHaveLength(1);
+      const tokens = [...new Set([...title, ...lead])];
+
+      const found = new Map<string, string[][]>(
+        tokens.map((token) => [token, []]),
+      );
+      const walk = (rules: CSSRuleList, conditions: string[]): void => {
+        for (const rule of Array.from(rules)) {
+          if (rule instanceof CSSStyleRule) {
+            for (const token of tokens) {
+              if (rule.selectorText === `.${CSS.escape(token)}`) {
+                found.get(token)?.push(conditions);
+              }
+            }
+          } else if (rule instanceof CSSSupportsRule) {
+            walk(rule.cssRules, [
+              ...conditions,
+              `supports ${rule.conditionText}`,
+            ]);
+          } else if (rule instanceof CSSMediaRule) {
+            walk(rule.cssRules, [
+              ...conditions,
+              `media ${rule.media.mediaText}`,
+            ]);
+          } else if (rule instanceof CSSContainerRule) {
+            walk(rule.cssRules, [
+              ...conditions,
+              `container ${rule.conditionText}`,
+            ]);
+          } else if ('cssRules' in rule) {
+            walk((rule as CSSGroupingRule).cssRules, conditions);
+          }
         }
-      } finally {
-        await session.send('Emulation.setTouchEmulationEnabled', {
-          enabled: false,
-        });
+      };
+      for (const sheet of Array.from(document.styleSheets)) {
+        walk(sheet.cssRules, []);
       }
-    },
-  );
+
+      const gates = [
+        [
+          'the registration gate',
+          /^supports \(?color: rgb\(from red r g b\)\)?$/,
+        ],
+        ['a fine pointer', /^media \(pointer: fine\)$/],
+        [
+          'the 56rem container step',
+          /^container \((?:min-width: 56rem|width >= 56rem)\)$/,
+        ],
+        [
+          'the 896px container floor',
+          /^container \((?:min-width: 896px|width >= 896px)\)$/,
+        ],
+      ] as const;
+      for (const token of tokens) {
+        const rules = found.get(token) ?? [];
+        expect(rules.length, `${token}: compiled`).toBeGreaterThan(0);
+        for (const conditions of rules) {
+          const under = conditions.join(' › ') || 'no condition at all';
+          for (const [gate, pattern] of gates) {
+            expect(
+              conditions.some((condition) => pattern.test(condition)),
+              `${token}, under ${under}: ${gate}`,
+            ).toBe(true);
+          }
+        }
+      }
+    } finally {
+      band.unmount();
+    }
+  });
 
   // EVERY LANGUAGE (PostList.tsx's THE STAIRWAY and THE NO-BREAK SPACES): the
   // five message files' heroes, as shipped, held to the owner's rule — the
@@ -1027,16 +1174,14 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     );
 
     it.each(locales)(
-      'holds the %s hero to the stairway and the heading’s reach inside the scale — 1140, 1280, 1401, 1536, 1920 and 2560, the <h1> at 65.04 × s, its box centred on the column, never more than 100 design pixels past it, nothing sideways',
+      `holds the %s hero to the stairway and the heading’s reach inside the scale — ${NARROWEST}, 1280, 1401, 1536, 1920 and 2560, the <h1> at 65.04 × s, its box centred on the column, never more than 100 design pixels past it, nothing sideways`,
       async (locale) => {
         await sweep(
           locale,
-          [1140, 1280, 1401, 1536, 1920, 2560],
+          [NARROWEST, 1280, 1401, 1536, 1920, 2560],
           '',
           (hero, where) => {
-            expect(remapped(hero.rhythm), `${where}the regime is on`).toBe(
-              true,
-            );
+            expectScaled(hero.rhythm, where);
             expectStairway(hero, HEROES[locale], where);
             expectNoLoneWord(hero, where);
             expectWholeLines(hero, where);
@@ -1096,7 +1241,8 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
 
   // THE HEADING'S REACH AT ITS LIMIT (PostList.tsx's paragraph of that name):
   // the shipped first lines all fit the reach — 83.2 design pixels past the
-  // column at most, French's at a 1140 window — so the 100-pixel bound
+  // column at most, French's, measured at a 1140 window, the regime's first
+  // here (the cases start at NARROWEST, 1160) — so the 100-pixel bound
   // itself is reached only by a line longer than the reach: one built here,
   // and every language's heading under SC 1.4.12's text spacing, which makes
   // each first line outgrow it. Either way the box stops at the column plus
@@ -1110,7 +1256,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       hero: ReturnType<typeof renderHero>,
       where: string,
     ): void => {
-      expect(remapped(hero.rhythm), `${where}the regime is on`).toBe(true);
+      expectScaled(hero.rhythm, where);
       expectReach(hero, where);
       const s = px(hero.rhythm, '--scale-px');
       const width = box(hero.h1).width;
@@ -1129,14 +1275,14 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       }
     };
 
-    it('stops a first line longer than the reach at the column plus 100 design pixels a side — 1140, 1401, 1920 and 2560: the box centred, the line wrapped inside it, nothing sideways', async () => {
+    it(`stops a first line longer than the reach at the column plus 100 design pixels a side — ${NARROWEST}, 1401, 1920 and 2560: the box centred, the line wrapped inside it, nothing sideways`, async () => {
       // German's first line and Italian's end to end, over German's second:
       // some 2,400 design pixels on one line, wider than any reach.
       const [german = '', german2 = ''] = HEROES.de.title.split('\n');
       const [italian = ''] = HEROES.it.title.split('\n');
       await sweep(
         'de',
-        [1140, 1401, 1920, 2560],
+        [NARROWEST, 1401, 1920, 2560],
         ', an over-long first line',
         expectAtTheLimit,
         { title: `${german} ${italian}\n${german2}`, lead: HEROES.de.lead },
@@ -1144,7 +1290,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     });
 
     it.each(locales)(
-      'stops the %s heading at the reach under SC 1.4.12’s text spacing — 1140, 1401 and 1920: the box centred at its limit, the lines wrapped inside it, nothing sideways',
+      `stops the %s heading at the reach under SC 1.4.12’s text spacing — ${NARROWEST}, 1401 and 1920: the box centred at its limit, the lines wrapped inside it, nothing sideways`,
       async (locale) => {
         const spacing = document.createElement('style');
         spacing.textContent = TEXT_SPACING;
@@ -1152,7 +1298,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
         try {
           await sweep(
             locale,
-            [1140, 1401, 1920],
+            [NARROWEST, 1401, 1920],
             ', SC 1.4.12’s text spacing',
             expectAtTheLimit,
           );

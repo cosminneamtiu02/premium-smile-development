@@ -27,12 +27,13 @@ import { Pagination, type PaginationProps } from './Pagination';
 //
 // ── WHAT IS MEASURED.
 //   · AT THE THEME'S SIZE: the discs 44 × 44px with 20px chevrons, 12px
-//     between each disc and the counter, the counter at ui/Text's 16px, the
-//     row exactly as wide as its three cells and their two gaps; ONE width on
-//     every page of a list — of three and of twelve — and, mounted as
-//     sections/PostList mounts it (`self-end` in a flex column), both controls
-//     on the same x on every page; the disabled end at half opacity, deaf to
-//     the pointer; the row hugging its content in a wider block.
+//     between each disc and the counter, the counter at ui/Text's 16px and
+//     exactly as wide as its widest fraction, the row exactly as wide as its
+//     three cells and their two gaps; ONE width on every page of a list — of
+//     three and of twelve — and, mounted as sections/PostList mounts it
+//     (`self-end` in a flex column), both controls on the same x on every
+//     page; the disabled end at half opacity, deaf to the pointer; the row
+//     hugging its content in a wider block.
 //   · IN THE BAND SCALE: the row inside a box wearing ui/Container's two
 //     band-scale strings — sections/PostList's rhythm box — whose Container
 //     gets a column of exactly `width` px (the gutter read off a probe wearing
@@ -43,13 +44,29 @@ import { Pagination, type PaginationProps } from './Pagination';
 //     THE ONE LENGTH THAT IS NOT × s is the counter's WIDTH: Source Serif 4 is
 //     a variable face with an optical-size axis (`font-optical-sizing: auto`),
 //     so a larger counter is set a little narrower per em (§15.25 round 2's
-//     record (d)) — measured, 39.38px at a 1920 window's column where 29.56 ×
-//     s would give 40.66, and 24.47px at a 1140 one's where it would give
-//     23.98. So the row is held to the sum of its own cells, to within 1 % of
-//     the reference row × s (the drift measured −0.7 % to +0.4 %), and to
-//     one width on every page at its size.
-// Tolerance: a twentieth of a pixel on a box (layout rounds to 1/64px) and a
-// hundredth on a font size (a calc of px, never rounded).
+//     record (d)) — on macOS „3 / 3" set at a 1920 window's column is 39.36px
+//     where its 16px width × s would give 40.63, and at a 1140 one's 24.45px
+//     where it would give 23.96. So the counter is held to its widest fraction
+//     SET at 16 × s (THE TEXT, next), and the row to the design × s with that
+//     cell in it, and to one width on every page at its size.
+//
+// ── THE TEXT IS MEASURED HERE, NEVER WRITTEN DOWN. How wide a text is belongs
+// to the platform. Chromium on macOS advances each glyph by fractions of a
+// pixel — „1 / 3" is 29.547px at 16px, „9 / 12" 37.859, „12 / 12" 46.172 —
+// and the headless Chromium of CI's Linux runner by whole pixels: 29, 37 and
+// 45, every figure 8px (PR #166's run of 2026-10-15, in which the macOS
+// widths this file once wrote down failed eight cases). So a text-derived
+// expectation is THE REFERENCE TEXT: the same string set by the same engine,
+// in the real face named outright, at the counter's own step (`--text-base`,
+// read where the row stands — 16px, or 16 × s inside the scale), with tabular
+// figures and no break. The engine sets the two alike on either platform, so
+// they meet to layout's grid with no allowance for the platform at all — while
+// a counter in another face, at another size or with a padding still misses
+// its reference by what that adds. (An allowance of a pixel per text run, the
+// other road, would have let a face a pixel narrower pass on Linux.)
+// Tolerance: a twentieth of a pixel on a box (layout rounds to 1/64px), a
+// hundredth on a font size (a calc of px, never rounded), and ROW_ROUNDING on
+// a whole row.
 
 /** THE BAND SCALE's numbers, written out (ui/Container's THE BAND SCALE —
  *  their census is tests/unit/design-scale.test.ts): the REFERENCE column,
@@ -69,17 +86,13 @@ const CHEVRON = 20;
 const GAP = 12;
 const COUNTER_SIZE = 16;
 
-/** The counter's width at 16px in the committed face — every figure 8.313px
- *  (0.52em), measured: „1 / 3" and its twin „3 / 3" are 29.547px, „12 / 12"
- *  46.172px (the cell holding them rounds to layout's 1/64px: 29.5625 and
- *  46.1875). Read back below, so a face whose figures are not one width, or
- *  the fallback serif, fails by name. */
-const FRACTION_OF_THREE = 29.547;
-const FRACTION_OF_TWELVE = 46.172;
-
-/** The row of a list of three at the theme's size: two discs, two gaps and
- *  the counter — 141.56px measured. */
-const ROW_OF_THREE = 2 * DISC + 2 * GAP + FRACTION_OF_THREE;
+/** THE LAYOUT GRID on a whole row: the engine snaps each of the row's five
+ *  extents — two discs, two gaps and the counter's cell — to its 1/64px grid
+ *  on its own, so a row may land up to five steps of it from the exact sum of
+ *  their design values. Measured on macOS: −0.044px at the cap (each disc and
+ *  each gap a fraction of a step short), +0.016px at the theme's size (the
+ *  cell rounds its text up a step). The one allowance on a row, everywhere. */
+const ROW_ROUNDING = 5 / 64;
 
 const LABEL = 'Paginile articolelor';
 
@@ -228,6 +241,34 @@ const expectHugs = (row: Row): void => {
   near(box(row.nav).width, parts, 'the row hugs its cells');
 };
 
+/** THE REFERENCE TEXT (the header's THE TEXT IS MEASURED HERE): `text` set by
+ *  THIS engine the way the counter sets its fraction — the real face named
+ *  outright, the counter's step read where the row stands (`--text-base`),
+ *  tabular figures, no break — in a probe beside the row, out of its flow and
+ *  unseen. Its width; read while the row is mounted. */
+const referenceWidth = (text: string, row: Row): number => {
+  const probe = document.createElement('span');
+  probe.textContent = text;
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  probe.style.whiteSpace = 'nowrap';
+  probe.style.fontFamily = `'${FONT_FAMILY}'`;
+  probe.style.fontSize = 'var(--text-base)';
+  probe.style.fontVariantNumeric = 'tabular-nums';
+  htmlElement(row.nav.parentElement, 'parent of the row').append(probe);
+  try {
+    return box(probe).width;
+  } finally {
+    probe.remove();
+  }
+};
+
+/** THE ROW BY DESIGN at `s` CSS px to the design pixel: the two discs and the
+ *  two gaps at their theme lengths × s, exactly, and between them the
+ *  `widest` fraction as THE REFERENCE TEXT sets it where the row stands. */
+const designRow = (s: number, row: Row, widest: string): number =>
+  (2 * DISC + 2 * GAP) * s + referenceWidth(widest, row);
+
 describe('Pagination — the row at the theme’s size (the real stylesheet and face)', () => {
   it('stands on its premises: the real face, the 16px root', () => {
     expect(
@@ -248,8 +289,17 @@ describe('Pagination — the row at the theme’s size (the real stylesheet and 
       near(lengths[label] ?? Number.NaN, expected, label);
     }
     near(fontSize(row.counter), COUNTER_SIZE, 'the counter’s size', 0.01);
-    near(box(row.counter).width, FRACTION_OF_THREE, 'the counter’s width');
-    near(box(row.nav).width, ROW_OF_THREE, 'the row’s width');
+    near(
+      box(row.counter).width,
+      referenceWidth('3 / 3', row),
+      'the counter’s width',
+    );
+    near(
+      box(row.nav).width,
+      designRow(1, row, '3 / 3'),
+      'the row’s width',
+      ROW_ROUNDING,
+    );
     expectHugs(row);
     // One line: the counter's middle level with both discs' middles.
     const middle = (element: Element): number =>
@@ -259,11 +309,11 @@ describe('Pagination — the row at the theme’s size (the real stylesheet and 
   });
 
   it.each([
-    [3, [1, 2, 3], FRACTION_OF_THREE],
-    [12, [1, 2, 9, 10, 11, 12], FRACTION_OF_TWELVE],
+    [3, [1, 2, 3]],
+    [12, [1, 2, 9, 10, 11, 12]],
   ] as const)(
     'keeps ONE width on every page of a list of %i, and both controls on one x when mounted as PostList mounts it',
-    (total, pages, fraction) => {
+    (total, pages) => {
       const seen = pages.map((current) => {
         const { unmount } = render(
           // sections/PostList's group: a flex column, the pager `self-end`.
@@ -275,6 +325,8 @@ describe('Pagination — the row at the theme’s size (the real stylesheet and 
         const seenNow = {
           width: box(row.nav).width,
           counter: box(row.counter).width,
+          // The widest fraction this list prints — the twin's text.
+          widest: referenceWidth(`${total} / ${total}`, row),
           previous: box(row.previous).left,
           next: box(row.next).left,
         };
@@ -283,7 +335,7 @@ describe('Pagination — the row at the theme’s size (the real stylesheet and 
       });
       const [first] = seen;
       if (!first) throw new Error('no page was rendered');
-      near(first.counter, fraction, `the counter of a list of ${total}`);
+      near(first.counter, first.widest, `the counter of a list of ${total}`);
       for (const [index, now] of seen.entries()) {
         const label = `page ${pages[index]} of ${total}`;
         near(now.width, first.width, `${label}: the row’s width`, 0.001);
@@ -294,16 +346,22 @@ describe('Pagination — the row at the theme’s size (the real stylesheet and 
   );
 
   it('owes that one width, from page 10 of 12 on, to the invisible twin — the figures alone would step a figure wide', () => {
-    for (const [current, visible] of [
-      [9, 37.859],
-      [10, FRACTION_OF_TWELVE],
-    ] as const) {
+    for (const current of [9, 10]) {
       const { unmount } = render(<Pagination {...page(current, 12)} />);
       const row = rowOf();
       const fraction = screen.getByText(`${current} / 12`);
-      near(box(fraction).width, visible, `„${current} / 12" alone`);
+      // THE REFERENCE TEXT of the twin, „12 / 12", and of one figure (every
+      // figure is one width, tabular): alone, page 9's fraction is a figure
+      // narrower than the twin and page 10's as wide — the step it absorbs.
+      const twin = referenceWidth('12 / 12', row);
+      const figure = referenceWidth('0', row);
+      near(
+        box(fraction).width,
+        current === 9 ? twin - figure : twin,
+        `„${current} / 12" alone`,
+      );
       // The cell is the twin's width; the fraction is centred in it.
-      near(box(row.counter).width, FRACTION_OF_TWELVE, 'the counter’s cell');
+      near(box(row.counter).width, twin, 'the counter’s cell');
       near(
         box(fraction).left + box(fraction).width / 2,
         box(row.counter).left + box(row.counter).width / 2,
@@ -330,7 +388,12 @@ describe('Pagination — the row at the theme’s size (the real stylesheet and 
     );
     const row = rowOf();
 
-    near(box(row.nav).width, ROW_OF_THREE, 'the row’s width in a 640px block');
+    near(
+      box(row.nav).width,
+      designRow(1, row, '3 / 3'),
+      'the row’s width in a 640px block',
+      ROW_ROUNDING,
+    );
   });
 });
 
@@ -407,7 +470,11 @@ describe('Pagination — THE BAND SCALE, computed (sections/PostList draws the r
         near(lengths[label] ?? Number.NaN, expected, label);
       }
       near(fontSize(row.counter), COUNTER_SIZE, 'the counter’s size', 0.01);
-      near(box(row.counter).width, FRACTION_OF_THREE, 'the counter’s width');
+      near(
+        box(row.counter).width,
+        referenceWidth('3 / 3', row),
+        'the counter’s width',
+      );
       expectHugs(row);
       unmount();
     },
@@ -433,13 +500,20 @@ describe('Pagination — THE BAND SCALE, computed (sections/PostList draws the r
       }
       near(fontSize(row.counter), COUNTER_SIZE * s, 'the counter’s size', 0.01);
       expectHugs(row);
-      // The counter's optical size (the header's THE ONE LENGTH THAT IS NOT ×
-      // s) moves the row by under 1 % of the design × s.
+      // The counter is its widest fraction SET at 16 × s, never the 16px
+      // fraction × s (the header's THE ONE LENGTH THAT IS NOT × s): its
+      // reference is set where it stands, so the face's optical size and the
+      // platform's glyph advances are in both.
+      near(
+        box(row.counter).width,
+        referenceWidth('3 / 3', row),
+        'the counter’s cell',
+      );
       near(
         box(row.nav).width,
-        ROW_OF_THREE * s,
+        designRow(s, row, '3 / 3'),
         'the row against the design × s',
-        0.01 * ROW_OF_THREE * s,
+        ROW_ROUNDING,
       );
       unmount();
     },

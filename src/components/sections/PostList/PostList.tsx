@@ -338,6 +338,14 @@ import { cx } from '@/lib/cx/cx';
 //   heading line the widest gap, 2.8 design pixels, and French's the widest
 //   line in any engine, 1273.2 in Firefox). Off the scale the caps shape the
 //   prose as they always did.
+//   · THE TESTS' NARROWEST WINDOW IS 1160, not 1140 (PostList.scale.test.tsx's
+//     NARROWEST): behind the test runner's classic 15px scrollbar a 1140
+//     window's column is 897px, one pixel past the regime's 896px step — too
+//     thin a premise to stand a case on; 1160's column, 913px, clears the
+//     step with room on any runner (911 behind a 17px scrollbar, 928 with
+//     none), its design pixel 1.8 % over 1140's — still the narrow end,
+//     where the copy's lines run tightest. Every 1140 figure in this header
+//     is a measurement, taken before that change.
 //   · EVERY LANGUAGE inside the scale, the test runner's (its Chromium, its
 //     classic scrollbar), in design pixels at the owner's 1401 window — the
 //     heading's two lines, then the lead's three: Romanian 1183.5 / 1016.8,
@@ -350,7 +358,8 @@ import { cx } from '@/lib/cx/cx';
 //     (Romanian's, 0.774); the narrowest step from the heading into the lead
 //     is Italian's, 324.7 design pixels at 1290. PostList.scale.test.tsx
 //     holds every language's shipped copy to the stairway and to the
-//     heading's reach at 1140 / 1280 / 1401 / 1536 / 1920 / 2560.
+//     heading's reach at 1160 / 1280 / 1401 / 1536 / 1920 / 2560 (its
+//     narrowest window, under THE CAPS above).
 //   · OFF THE SCALE, the Romanian hero in the test runner, behind its classic
 //     scrollbar (PostList.scale.test.tsx's): the heading in five lines at
 //     320, four at 390 and three from 768 to the regime's step (1024, 1100)
@@ -374,7 +383,12 @@ import { cx } from '@/lib/cx/cx';
 //     no scrollbar) nor from 444 to 1136 (every other pixel, with no scrollbar
 //     and from 600 with a classic one), in any language — Chromium's sweep in
 //     the test runner, run again on the reviewed copy (2026-10-15);
-//     PostList.scale.test.tsx samples eight phones and 768.
+//     PostList.scale.test.tsx samples eight phones and 768. The coarse
+//     pointer's figures came from that file's touch-emulation case, gone
+//     since 2026-10-15 (it left CI's shared Linux tab without a fine
+//     pointer): a touch screen is now its THE GATES, which reads the
+//     compiled rules, and tests/e2e/band-scale.spec.ts's touch tablets,
+//     1180 and 1366, which drive the device.
 //
 // ── THE LIST: a <ul role="list"> — the role is load-bearing in WebKit
 // (eslint.config.mjs's list-role exception) — of one <li> per post, each

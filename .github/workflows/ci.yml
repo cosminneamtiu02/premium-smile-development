@@ -124,6 +124,19 @@ jobs:
           path: storybook-static
           retention-days: 3
 
+      - name: Upload test failure screenshots (debug artifact, 3 days)
+        # The components project saves a screenshot of each failing browser test
+        # under .vitest-attachments (vitest.config.ts's screenshotDirectory). A
+        # failure only Linux shows cannot be reproduced on a Mac, so CI keeps
+        # them (added 2026-10-15, after PR #166's Linux-only failures).
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-attachments
+          path: .vitest-attachments
+          retention-days: 3
+          if-no-files-found: ignore
+
   deploy-staging:
     name: Deploy staging (placeholder until host confirmed)
     # develop only: the `development` environment's deployment rule allows

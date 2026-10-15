@@ -5439,6 +5439,22 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     measured cards growing on hover, a gutter check that could never fail, sideways checks blind to 15px, the CMSR
     scan reading invisible characters and runs of whitespace, and the e2e blog block made able to see a lost stairway
     or a missing pager. EVIDENCE AT READY: see the lane's PR.
+    **THE PR'S FIRST CI RUN (#166, 2026-10-15) failed on Linux in three test files — the tests, not the site:** 26
+    cases. Pagination.scale's eight compared the counter with text widths measured on macOS and written into the test,
+    while CI's headless Chromium advances every glyph by whole pixels („1 / 3" 29px against 29.547); each width is now
+    measured against the same text set by the same engine at the same size (its THE TEXT IS MEASURED HERE). The other
+    eighteen — eleven PostList.scale cases and seven TextButton hover tests — all ran after PostList.scale's
+    coarse-pointer case, which turned Chromium's touch emulation on and off in the tab the browser projects' files
+    share: on CI's Linux the tab came back with no fine pointer and no hover (a Mac falls back to its trackpad), so
+    every later case was off the band scale and every hover rule dead — the lesson DoctorShowcase.test.tsx recorded on
+    2026-10-01. The case is gone: a touch screen is now PostList.scale's THE GATES, which reads the compiled rules from
+    the CSSOM, and tests/e2e/band-scale.spec.ts's two touch tablets, a fresh browser each; every case that expects the
+    scale names its premises first (the column past the step, a fine pointer), every TextButton hover read first checks
+    that the tab can hover, and the cases start at a 1160 window (behind the runner's 15px scrollbar a 1140 window's
+    column clears the 896px step by one pixel). NEW tests/unit/no-touch-emulation.test.ts refuses the two CDP
+    touch-emulation calls in any src test or story file — red on the committed case, tried — and ci.yml keeps the
+    browser tests' failure screenshots for three days (`.vitest-attachments`; a file name over Linux's 255 bytes is not
+    saved — 12 of that run's 26).
 
 ## 16. Build-time vs runtime contract
 

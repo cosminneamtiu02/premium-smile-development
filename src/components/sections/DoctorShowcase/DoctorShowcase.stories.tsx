@@ -1,16 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import type { PersonnelPhoto } from '@/components/sections/PersonnelCard/PersonnelCard';
+import {
+  linesOf,
+  namedAs,
+} from '@/components/sections/PageHero/PageHero.fixtures';
+import type {
+  PersonnelHeadingLevel,
+  PersonnelPhoto,
+} from '@/components/sections/PersonnelCard/PersonnelCard';
 import { Keyword } from '@/components/ui/Keyword/Keyword';
 import { LONG_QUOTE_DE } from '@/components/ui/Ribbon/Ribbon.fixtures';
-import { DoctorShowcase, type DoctorShowcaseDoctor } from './DoctorShowcase';
+import de from '@/messages/de.json';
+import ro from '@/messages/ro.json';
+import {
+  DoctorShowcase,
+  type DoctorShowcaseDoctor,
+  type DoctorShowcaseHero,
+} from './DoctorShowcase';
 
-// NINE stories: the everyday band at the laptop width, the phone, three
+// ELEVEN stories: the everyday band at the laptop width, the phone, three
 // doctors (the second card mirrored, the third the mirror of the mirror), six
 // doctors (the size of the clinic's real roster), German with a
 // ~1 200-character text on the first card, the narrowest window — and, since
 // THE SCALE (DoctorShowcase D10, 2026-10-01), the band at the notebook and
-// the desktop widths and in a container narrower than its page. The export
+// the desktop widths and in a container narrower than its page — and, since
+// D12 (2026-10-15), the band under its PAGE opener, the Team page's, in
+// Romanian and in German (`PageOpener`, `PageOpenerGerman`). The export
 // NAMES are load-bearing — each one names a baseline file
 // (`sections/doctorshowcase/default-…`, `…/three-doctors-…`), so renaming or
 // adding an export re-records pictures; this list IS the section's
@@ -81,11 +96,22 @@ import { DoctorShowcase, type DoctorShowcaseDoctor } from './DoctorShowcase';
 // promises (the CMSR rules for dental practices) — and German, DRAFTED, for
 // the stress story. The real doctors, in five languages, are the owner's to
 // author (§15.17).
+//
+// ── THE PAGE OPENER'S COPY IS THE PAGE'S OWN (D12): the hero's two strings
+// are read out of src/messages/{ro,de}.json — `team.hero`, the Team page's
+// keys — so these frames show the copy the page ships, its line breaks and
+// no-break spaces included (the PostList stories' precedent). The band reads
+// no message file itself (D1): the story hands it the finished strings, as
+// the page does.
 
 const EYEBROW_RO = 'Familia Premium Smile';
 const TITLE_RO = 'Specialiștii cu care ne mândrim';
 const EYEBROW_DE = 'Die Premium-Smile-Familie';
 const TITLE_DE = 'Spezialisten, auf die wir stolz sind';
+
+/** The Team page's hero, Romanian and German (D12) — the page's own keys. */
+const HERO_RO: DoctorShowcaseHero = ro.team.hero;
+const HERO_DE: DoctorShowcaseHero = de.team.hero;
 
 const CUTOUT_1: PersonnelPhoto = {
   src: '/images/demo/cutout-1.png',
@@ -339,6 +365,91 @@ const STEP_FLOOR = 896;
 const px = (element: Element, property: string): number =>
   parseFloat(getComputedStyle(element).getPropertyValue(property));
 
+/** Which opener a story draws (D12): the band's, an eyebrow over its <h2>,
+ *  or the page's, its <h1> over a lead. */
+type Opener = 'band' | 'page';
+
+/** Each opener's heading and its design size inside THE SCALE (D10, D12):
+ *  the band's <h2> on the `band` step, 36 design pixels; the page's <h1> on
+ *  PageHero's 16.26 spacing steps, 65.04. */
+const OPENER_HEADING: Record<
+  Opener,
+  Readonly<{ level: 1 | 2; design: number }>
+> = {
+  band: { level: 2, design: 36 },
+  page: { level: 1, design: 16.26 * 4 },
+};
+
+/** Each doctor's name, by opener (D6, D12): an <h3> under the band's <h2>,
+ *  an <h2> under the page's <h1>. */
+const NAME_LEVEL: Record<Opener, PersonnelHeadingLevel> = {
+  band: 3,
+  page: 2,
+};
+
+/** The band's two boxes under its <section> — ui/Container's column and the
+ *  rhythm box inside it — reached by structure: neither carries a role. */
+const boxesOf = (
+  band: HTMLElement,
+): Readonly<{ column: HTMLElement; rhythm: HTMLElement }> => {
+  const column = band.firstElementChild;
+  const rhythm = column?.firstElementChild;
+  if (!(column instanceof HTMLElement) || !(rhythm instanceof HTMLElement)) {
+    throw new Error('DoctorShowcase story: the band lost its column');
+  }
+  return { column, rhythm };
+};
+
+/** D10's three GATES, read where the play finds itself — never the pinned
+ *  window: a fine primary pointer, the relative colour syntax that rides
+ *  with registered custom properties, and a column of max(56rem, 896px). */
+const scalableAt = (column: HTMLElement): boolean =>
+  window.matchMedia('(pointer: fine)').matches &&
+  CSS.supports('color', 'rgb(from red r g b)') &&
+  column.getBoundingClientRect().width >=
+    Math.max(STEP_REM * rem(), STEP_FLOOR);
+
+/** A length within `within` of the expected one, the two named on a miss. */
+const near = async (
+  actual: number,
+  expected: number,
+  within: number,
+  label: string,
+): Promise<void> => {
+  await expect(
+    Math.abs(actual - expected),
+    `${label}: ${actual} against ${expected}`,
+  ).toBeLessThanOrEqual(within);
+};
+
+/** Nothing may require horizontal scrolling (§7, §9) — the page measured by
+ *  the root's own BOX, which ends where a reserved scrollbar gutter begins.
+ *  Never by `clientWidth`: in a Vitest runner's frame it is the whole window,
+ *  the 15px gutter included, so a check against it let 10px of real overflow
+ *  through (G2 React, measured — the reading of PageHero.stories.tsx's and
+ *  PostList.stories.tsx's expectNoSidewaysScroll). */
+const expectNoSidewaysScroll = async (): Promise<void> => {
+  const root = document.documentElement;
+  await expect(root.scrollWidth).toBeLessThanOrEqual(
+    Math.ceil(root.getBoundingClientRect().width),
+  );
+};
+
+/** The real faces of the hero's two blocks, asked for by their COMPUTED
+ *  fonts before a line is counted (PageHero.stories.tsx's loadFace):
+ *  Storybook loads the faces under their own family names, `font-display:
+ *  block`, and a line counted in a fallback face is another line. */
+const loadHeroFaces = async (hero: HTMLElement): Promise<void> => {
+  for (const element of hero.querySelectorAll<HTMLElement>('h1, p')) {
+    const style = getComputedStyle(element);
+    await document.fonts.load(
+      `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+      element.textContent ?? '',
+    );
+  }
+  await document.fonts.ready;
+};
+
 /**
  * THE SCALE (D10), asserted where the play finds itself — the column read
  * off ui/Container, the band's first box, never the pinned window, and the
@@ -348,33 +459,19 @@ const px = (element: Element, property: string): number =>
  * min(column, CAP) / REFERENCE with the cap in rem of the root — to a tenth of
  * a pixel for a font, half a pixel for a box; elsewhere the band declares
  * nothing: its design pixel is the registered 1px and the quote the theme's
- * `text-lg`.
+ * `text-lg`. Under the page opener (D12) the heading read is the <h1>, at its
+ * 65.04 design pixels, the names <h2>s, and the room above the hero the blog
+ * hero's 32 steps, 128 × s.
  */
-const expectScale = async (band: HTMLElement): Promise<void> => {
-  const column = band.firstElementChild;
-  const rhythm = column?.firstElementChild;
-  if (!(column instanceof HTMLElement) || !(rhythm instanceof HTMLElement)) {
-    throw new Error('DoctorShowcase story: the band lost its column');
-  }
-  const near = async (
-    actual: number,
-    expected: number,
-    within: number,
-    label: string,
-  ): Promise<void> => {
-    await expect(
-      Math.abs(actual - expected),
-      `${label}: ${actual} against ${expected}`,
-    ).toBeLessThanOrEqual(within);
-  };
+const expectScale = async (
+  band: HTMLElement,
+  opener: Opener = 'band',
+): Promise<void> => {
+  const { column, rhythm } = boxesOf(band);
   const width = column.getBoundingClientRect().width;
   const cards = within(band).getAllByRole('article');
-  const scalable =
-    window.matchMedia('(pointer: fine)').matches &&
-    CSS.supports('color', 'rgb(from red r g b)') &&
-    width >= Math.max(STEP_REM * rem(), STEP_FLOOR);
 
-  if (!scalable) {
+  if (!scalableAt(column)) {
     await expect(getComputedStyle(rhythm).getPropertyValue('--scale-px')).toBe(
       '1px',
     );
@@ -390,13 +487,22 @@ const expectScale = async (band: HTMLElement): Promise<void> => {
   }
 
   const s = Math.min(width, CAP_REM * rem()) / REFERENCE;
+  const heading = OPENER_HEADING[opener];
   await near(px(rhythm, '--scale-px'), s, 0.0001, 'the design pixel');
   await near(
-    px(within(band).getByRole('heading', { level: 2 }), 'font-size'),
-    36 * s,
+    px(
+      within(band).getByRole('heading', { level: heading.level }),
+      'font-size',
+    ),
+    heading.design * s,
     0.1,
     'the title',
   );
+  if (opener === 'page') {
+    // THE ROOM ABOVE (D12): the blog hero's `pt-32`, 32 steps — the regime's
+    // step lies past the 48rem one.
+    await near(px(rhythm, 'padding-top'), 128 * s, 0.5, 'the room above');
+  }
   for (const card of cards) {
     const image = card.querySelector('img');
     if (image === null) {
@@ -410,7 +516,10 @@ const expectScale = async (band: HTMLElement): Promise<void> => {
       'the quote',
     );
     await near(
-      px(within(card).getByRole('heading', { level: 3 }), 'font-size'),
+      px(
+        within(card).getByRole('heading', { level: NAME_LEVEL[opener] }),
+        'font-size',
+      ),
       36 * s,
       0.1,
       'the name',
@@ -429,6 +538,12 @@ const expectScale = async (band: HTMLElement): Promise<void> => {
 type Expected = Readonly<{
   eyebrow: string;
   title: string;
+  doctors: readonly DoctorShowcaseDoctor[];
+}>;
+
+/** What a PAGE OPENER story must show (D12): the hero and the doctors. */
+type ExpectedPage = Readonly<{
+  hero: DoctorShowcaseHero;
   doctors: readonly DoctorShowcaseDoctor[];
 }>;
 
@@ -453,6 +568,9 @@ type Expected = Readonly<{
  *   · THE SCALE (D10, `expectScale`): from the Container's step the band in
  *     its design pixel, below it the theme's own sizes;
  *   · nothing scrolls sideways (§7).
+ * Under the PAGE opener (D12, `expectPage`) the opener's half reads the
+ * page's <h1> over its lead instead, and the names are <h2>s; the column's
+ * half — the list, the ribbon, the sides — is the same (`expectColumn`).
  */
 const expectBand = async (
   canvasElement: HTMLElement,
@@ -467,19 +585,111 @@ const expectBand = async (
   ).toBeVisible();
   await expect(within(band).getByText(expected.eyebrow)).toBeVisible();
 
+  await expectColumn(band, expected.doctors, NAME_LEVEL.band);
+
+  await expectScale(band);
+
+  await expectNoSidewaysScroll();
+};
+
+/**
+ * THE PAGE OPENER, read off a SETTLED page (D12): ONE <h1> — the hero's
+ * title, found by its name with every run of whitespace collapsed
+ * (`namedAs`: the copy breaks it with a `\n`) — over its lead, both visible;
+ * the band an UNNAMED <section>, so no region on the page; every doctor's
+ * name an <h2> and none an <h3>; where the band is scaled, THE HERO INSIDE
+ * THE REAL BAND — the heading in TWO lines and the lead in THREE (PageHero's
+ * stairway, the copy's own breaks held), and the <h1>'s box centred on the
+ * rhythm box however far it reaches past the column; then the column's half
+ * (`expectColumn`), THE SCALE with the <h1>'s design size and the hero's
+ * room above, and nothing sideways (§7). Off the scale the copy's breaks are
+ * spaces, and no line count is asserted: the prose wraps where its column
+ * ends.
+ */
+const expectPage = async (
+  canvasElement: HTMLElement,
+  expected: ExpectedPage,
+): Promise<void> => {
+  await settled(canvasElement);
+  const canvas = within(canvasElement);
+
+  await expect(canvas.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  const title = canvas.getByRole('heading', {
+    level: 1,
+    name: namedAs(expected.hero.title),
+  });
+  await expect(title).toBeVisible();
+  const hero = title.parentElement;
+  const band = title.closest('section');
+  if (hero?.tagName !== 'HEADER' || !(band instanceof HTMLElement)) {
+    throw new Error('DoctorShowcase story: the page opener lost its hero');
+  }
+  const lead = hero.lastElementChild;
+  if (!(lead instanceof HTMLElement)) {
+    throw new Error('DoctorShowcase story: the page opener lost its lead');
+  }
+  await expect(lead.tagName).toBe('P');
+  await expect(lead.textContent).toBe(expected.hero.lead);
+  await expect(lead).toBeVisible();
+
+  await expect(canvas.queryAllByRole('region')).toHaveLength(0);
+  await expect(band).not.toHaveAttribute('aria-labelledby');
+  await expect(band).not.toHaveAttribute('aria-label');
+  await expect(within(band).queryAllByRole('heading', { level: 3 })).toEqual(
+    [],
+  );
+
+  const { column, rhythm } = boxesOf(band);
+  if (scalableAt(column)) {
+    // THE HERO INSIDE THE REAL BAND (PageHero's THE STAIRWAY and THE
+    // HEADING'S REACH), its real faces first: two lines of heading, three of
+    // lead, and the <h1> centred on the rhythm box — the reach itself is
+    // PageHero's number, never read here.
+    await loadHeroFaces(hero);
+    await expect(linesOf(title)).toHaveLength(2);
+    await expect(linesOf(lead)).toHaveLength(3);
+    const heading = title.getBoundingClientRect();
+    const box = rhythm.getBoundingClientRect();
+    await near(
+      heading.left + heading.width / 2,
+      box.left + box.width / 2,
+      0.5,
+      'the <h1> centred on the rhythm box',
+    );
+  }
+
+  await expectColumn(band, expected.doctors, NAME_LEVEL.page);
+
+  await expectScale(band, 'page');
+
+  await expectNoSidewaysScroll();
+};
+
+/**
+ * THE COLUMN'S HALF of every story (D3, D5, D6), under either opener: ONE
+ * list — the ribbon's root — with an item and a station per doctor, each card
+ * an <article> whose name is a heading at `level`; one sized canvas per card
+ * in the ribbon's aria-hidden layer, nothing focusable there; and the sides
+ * (`expectBand`'s list says how each branch is read).
+ */
+const expectColumn = async (
+  band: HTMLElement,
+  doctors: readonly DoctorShowcaseDoctor[],
+  level: PersonnelHeadingLevel,
+): Promise<void> => {
   const list = within(band).getByRole('list');
   await expect(within(list).getAllByRole('listitem')).toHaveLength(
-    expected.doctors.length,
+    doctors.length,
   );
   await expect(list.querySelectorAll('[data-ribbon-station]')).toHaveLength(
-    expected.doctors.length,
+    doctors.length,
   );
   const cards = within(list).getAllByRole('article');
   await expect(
     cards.map(
-      (card) => within(card).getByRole('heading', { level: 3 }).textContent,
+      (card) => within(card).getByRole('heading', { level }).textContent,
     ),
-  ).toEqual(expected.doctors.map((doctor) => doctor.name));
+  ).toEqual(doctors.map((doctor) => doctor.name));
 
   const layer = list.lastElementChild;
   if (!(layer instanceof HTMLElement)) {
@@ -487,10 +697,7 @@ const expectBand = async (
   }
   await expect(layer).toHaveAttribute('aria-hidden', 'true');
   await waitFor(
-    () =>
-      expect(layer.querySelectorAll('canvas')).toHaveLength(
-        expected.doctors.length,
-      ),
+    () => expect(layer.querySelectorAll('canvas')).toHaveLength(doctors.length),
     { timeout: 3_000 },
   );
   for (const tile of layer.querySelectorAll('canvas')) {
@@ -518,11 +725,11 @@ const expectBand = async (
       // round photo on the LEFT beside the name — on EVERY card, the odd,
       // mirrored ones too (D20's ONE SIDE ON A PHONE) — every line at the
       // same left edge, and the words under both.
-      const heading = within(card).getByRole('heading', { level: 3 });
+      const heading = within(card).getByRole('heading', { level });
       const name = heading.getBoundingClientRect();
       // The specialty is the eyebrow after the name in the DOM (PersonnelCard
       // D17's PAIR) — painted above it on a phone.
-      const eyebrow = card.querySelector('h3 + p');
+      const eyebrow = card.querySelector(`h${level} + p`);
       if (eyebrow === null) {
         throw new Error(
           `DoctorShowcase story: card ${index + 1} has no specialty`,
@@ -559,11 +766,6 @@ const expectBand = async (
       );
     }
   }
-
-  await expectScale(band);
-
-  const root = canvasElement.ownerDocument.documentElement;
-  await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
 };
 
 const meta = {
@@ -590,15 +792,20 @@ const meta = {
       description:
         'The band’s real <h2> and, through aria-labelledby, the region’s accessible name (D2)',
     },
+    hero: {
+      control: false,
+      description:
+        'THE PAGE OPENER (D12) — the Team page’s, in place of the eyebrow and the title, which it refuses: `{ title, lead }`, finished, the page’s <h1> with ONE line break where the stairway turns and its lead with TWO (sections/PageHero). The <section> is then unnamed — the page’s <main> is the landmark — every doctor’s name an <h2>, the room above the blog hero’s, and an empty list renders the hero alone. Home passes the band opener',
+    },
     doctors: {
       control: false,
       description:
-        'Every doctor, finished — name, specialty, the cutout, the quoted words (ui/Keyword fragments inside) and the ONE link to the doctor’s page, already locale-prefixed — in the page’s order, printed as given. Each becomes a doctor card (sections/PersonnelCard) whose name is an <h3> (D6), the sides alternating start, end, … by index (D5), all in one list the floss ribbon wraps (D3). EMPTY renders nothing at all (D7)',
+        'Every doctor, finished — name, specialty, the cutout, the quoted words (ui/Keyword fragments inside) and the ONE link to the doctor’s page, already locale-prefixed — in the page’s order, printed as given. Each becomes a doctor card (sections/PersonnelCard) whose name is an <h3> (D6) — an <h2> under the page opener (D12) — the sides alternating start, end, … by index (D5), all in one list the floss ribbon wraps (D3). EMPTY renders nothing at all (D7) — the hero alone under the page opener (D12)',
     },
     firstScreen: {
       control: false,
       description:
-        'True when the band is on the FIRST SCREEN of its page — the Team page, which it opens: the FIRST card’s picture, the page’s LCP element, then loads at once, at high fetch priority and with a preload link (D9, PersonnelCard D18), and every other card stays lazy. Default false — Home, where the band sits under the Hero. The PAGE says it; the band never guesses. Not a live control: it moves no pixel',
+        'True when the band is on the FIRST SCREEN of its page — the Team page, which it opens: the FIRST card’s picture then loads at once, at high fetch priority and with a preload link (D9, PersonnelCard D18), and every other card stays lazy. That picture stands in the Team page’s first screen at every window measured and IS its LCP element on a 768 tablet; at 390 × 844, 1280 × 800, 1401 × 1063, 1536 × 864 and 1920 × 1080 the hero’s <h1> is, and the preload is kept on purpose (D9). Default false — Home, where the band sits under the Hero. The PAGE says it; the band never guesses. Not a live control: it moves no pixel',
     },
     className: {
       control: false,
@@ -799,5 +1006,51 @@ export const NarrowContainer: Story = {
       title: TITLE_RO,
       doctors: DOCTORS_RO.slice(0, 2),
     });
+  },
+};
+
+/**
+ * THE PAGE OPENER (D12) — the Team page's band, Romanian, at the laptop
+ * width: in place of the eyebrow and the <h2>, the blog list's hero
+ * (sections/PageHero) — the page's <h1> over its lead, both centred, the
+ * heading's two lines and the lead's three stepping down like a stairway
+ * inside the band scale — then the three doctors, each name an <h2>, and the
+ * first card's picture preloaded as on the page (`firstScreen`, D9). The
+ * <section> names nothing: the page's <main> is the landmark. The meta's
+ * eyebrow and title are cleared, so the band is handed exactly what the page
+ * hands it.
+ */
+export const PageOpener: Story = {
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  args: {
+    eyebrow: undefined,
+    title: undefined,
+    hero: HERO_RO,
+    doctors: DOCTORS_RO,
+    firstScreen: true,
+  },
+  play: async ({ canvasElement }) => {
+    await expectPage(canvasElement, { hero: HERO_RO, doctors: DOCTORS_RO });
+  },
+};
+
+/**
+ * THE PAGE OPENER IN GERMAN (D12), the longest language (§8.4), at the laptop
+ * width: the Team page's German hero over the German doctors — the first
+ * with the ~1 200-character text, so its words run far taller than its
+ * picture (`GermanLongText`'s cards, under the page's own heading). The
+ * hero's copy and the doctors' words are DRAFTS (§15.17).
+ */
+export const PageOpenerGerman: Story = {
+  globals: { locale: 'de', viewport: { value: 'laptop' } },
+  args: {
+    eyebrow: undefined,
+    title: undefined,
+    hero: HERO_DE,
+    doctors: DOCTORS_DE,
+    firstScreen: true,
+  },
+  play: async ({ canvasElement }) => {
+    await expectPage(canvasElement, { hero: HERO_DE, doctors: DOCTORS_DE });
   },
 };

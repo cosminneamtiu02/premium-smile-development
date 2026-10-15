@@ -181,8 +181,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // a level-3 title skips a level (§9's "logical heading order"; axe's
 // heading-order rule fired on every roster story before the prop existed), so
 // that band passed 2 — until 2026-10-02, when its own <h2> put its tiles back
-// at the default. No band passes 2 since; the axis stays, additive and with
-// its default pinned, for the next page that puts cards straight under an h1.
+// at the default. Since 2026-10-15 the doctors band passes 2 under its PAGE
+// opener on the Team page (sections/DoctorShowcase D12): there the cards
+// stand straight under the hero's <h1>; Home's band opener keeps 3. The axis
+// stays additive, its default pinned.
 // A Record<PersonnelHeadingLevel, 'h2' | 'h3'> growth gate picks the element —
 // SectionHeading's ELEMENT precedent — so a widened union cannot compile until
 // it names its tag; a level BELOW 3 is not offered (a card under an h3
@@ -657,14 +659,16 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // doctor-showcase lane, 2026-09-30). A card does not know where it sits on a
 // page, so its picture loads LAZILY — §11's rule for everything below the
 // fold — unless the band that places it says otherwise. One band must: on the
-// Team page, which sections/DoctorShowcase opens, the FIRST doctor's cutout IS
-// the page's LCP element (§10.6) — MEASURED by the planner on the lane's built
-// export with Chromium's largest-contentful-paint entries: 226 × 302 on a 390
-// phone (since ui/Container's PHONE GUTTER of 2026-10-09: 276.6 × 368.8 on a
-// 390 phone, 262.7 × 350.2 at a 390 window behind a classic scrollbar — the
-// geometry the 226 × 302 was — still the LCP, re-measured), 288 × 384 at 1280
-// and 1920, still the LCP at 1366 × 633 — and it shipped `loading="lazy"`,
-// with no `fetchpriority` and no preload link. So
+// Team page, which sections/DoctorShowcase opens, the FIRST doctor's cutout
+// WAS the page's LCP element (§10.6) — MEASURED by the planner on the lane's
+// built export with Chromium's largest-contentful-paint entries: 226 × 302 on
+// a 390 phone (since ui/Container's PHONE GUTTER of 2026-10-09: 276.6 × 368.8
+// on a 390 phone, 262.7 × 350.2 at a 390 window behind a classic scrollbar —
+// the geometry the 226 × 302 was — still the LCP, re-measured), 288 × 384 at
+// 1280 and 1920, still the LCP at 1366 × 633 — and it shipped
+// `loading="lazy"`, with no `fetchpriority` and no preload link (the page's
+// <h1> has been its LCP since 2026-10-15, at all but one window — the last
+// paragraph of this decision). So
 // the doctor kind takes `preload` (default false), and when it is true
 // ui/Image receives the pair sections/DoctorIntro hands its own cutout (its IT
 // IS THE DOCTOR PAGE'S LCP ELEMENT paragraph), `preload` and
@@ -680,15 +684,26 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // bare ui/Image instead of trusting `preload={false}` to be a no-op. Typed
 // `never` on the auxiliary kind (D2): no page opens on a staff tile — the day
 // one does, the key joins that branch additively.
-// SINCE D20, ON A PHONE, THE CUTOUT IS NO LONGER THE LARGEST PAINT: the circle
-// shows 112 × 112px of it at a 390 phone (12 544px²), and the first card's
-// quote, ≈ 277 × 168px, outranks it — Chromium's largest-contentful-paint
-// entries on the Team page's story twin at a 390 phone name the cutout
-// first and then the <blockquote> (45 870px², 2026-10-10). The pair still
-// rides the first card's picture, unchanged (one image at high priority, its
-// preload link the same `sizes`); from the INSET's `@sm` up the cutout is the
-// page's LCP as measured above. Whether a phone should keep the preload is a
-// recorded lever, measured first on the built export.
+// FROM D20, ON A PHONE, THE CUTOUT WAS NO LONGER THE LARGEST PAINT: the
+// circle shows 112 × 112px of it at a 390 phone (12 544px²), and the first
+// card's quote, ≈ 277 × 168px, outranked it — Chromium's
+// largest-contentful-paint entries on the Team page's story twin at a 390
+// phone named the cutout first and then the <blockquote> (45 870px²,
+// 2026-10-10).
+// SINCE sections/DoctorShowcase's D12 (2026-10-15) THE PAGE'S OWN <h1> IS THE
+// LCP: the Team page opens with a hero (sections/PageHero) over the band, and
+// the G2 React review MEASURED, with the same entries on the built export in
+// Romanian and in German, the hero's <h1> at 390 × 844, 1280 × 800,
+// 1401 × 1063, 1536 × 864 and 1920 × 1080, and the first cutout only at
+// 768 × 1024. THE BAND STILL ASKS — the planner's decision of 2026-10-16
+// (DoctorShowcase D9): the first cutout stands in the first screen at every
+// one of those windows (its card's top at 538px on the 390 × 844 phone, 612px
+// at 1401 × 1063, 805px at 1920 × 1080), at 768 it IS the LCP, and the blog
+// list keeps the same arrangement (its first card's picture preloads while
+// its <h1> is the LCP on laptops). The pair rides the first card's picture
+// unchanged (one image at high priority, its preload link the same `sizes`).
+// Whether a page keeps the preload is its band's call, and the page's one
+// word (`firstScreen`, DoctorShowcase D9) is the lever.
 //
 // ── D19 · THE BAND'S SCALE (2026-10-01). The owner, verbatim: "i like how it
 // looks on phone and tablet and i want to keep that unchanged. but on laptop
@@ -918,8 +933,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     fits no phone column under a 302px INSET, so THE NAME'S BELT breaks it
 //     there — the story shows the belt at work, by design; the lever for a
 //     real doctor with such a surname is the photo's floor or the name's step.
-//   · On a phone the Team page's largest paint is the first card's quote, no
-//     longer its cutout (D18's last paragraph).
+//   · On a phone the Team page's largest paint is no longer the first card's
+//     cutout: from this decision (2026-10-10) it was the first card's quote,
+//     and since sections/DoctorShowcase's D12 (2026-10-15) it is the page
+//     hero's <h1>, the preload kept on purpose (D18's last paragraphs).
 //
 // ── D12–D14 live where they belong rather than here: the fixtures and the
 // stories in PersonnelCard.stories.tsx (synthetic portraits and cutouts, no
@@ -1020,7 +1037,9 @@ type DoctorProps = PersonnelCardBaseProps & {
    */
   side?: PersonnelSide;
   /**
-   * The picture is its PAGE'S LCP element: load it at once, at high fetch
+   * The picture stands in its PAGE'S FIRST SCREEN — the page's LCP element,
+   * or the one picture beside it (the Team page's first cutout, beside the
+   * hero's <h1>: D18's last paragraph): load it at once, at high fetch
    * priority, with a preload link — the pair DoctorIntro gives its own cutout.
    * The BAND says so, never the card, which cannot know where it sits (D18).
    * @default false

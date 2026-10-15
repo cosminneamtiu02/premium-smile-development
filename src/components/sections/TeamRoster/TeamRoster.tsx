@@ -27,8 +27,9 @@ import { cx } from '@/lib/cx/cx';
 // specialistii cu care ne mandrim familia premium smile." The doctors left
 // this band for one of their own, sections/DoctorShowcase — the same band on
 // Home and on Team, with its own eyebrow and title — and the page's title left
-// with them: the Team page's <h1> is a bare `sr-only` element in the PAGE's
-// markup now (the Services page's shape). So for two days this band printed
+// with them: the Team page's <h1> became a bare `sr-only` element in the
+// PAGE's markup (the Services page's shape) — and, since 2026-10-15, the
+// doctors band's visible hero (DoctorShowcase D12). So for two days this band printed
 // no title, held no doctor and alternated nothing; what stayed was the grid
 // the run built for the auxiliary staff — until the next paragraph.
 //
@@ -101,9 +102,11 @@ import { cx } from '@/lib/cx/cx';
 // tiles sat under the page's <h1> as siblings of the doctors band's <h2>
 // because no heading stood over them (D10, the owner's "as simple as
 // possible"); now the band's own <h2> does, and a person is filed under it.
-// The Team page's outline, one level at a time (§9): page h1 (sr-only) → the
-// doctors band's h2 → an h3 per doctor → THIS band's h2 → an h3 per tile →
-// the numbers band's h2 → the map's h2. The name keeps its look: since the same
+// The Team page's outline, one level at a time (§9) — since 2026-10-15: the
+// hero's h1 (the doctors band's page opener, DoctorShowcase D12) → an h2 per
+// doctor → THIS band's h2 → an h3 per tile → the numbers band's h2 → the
+// map's h2 (until then: an sr-only h1 → the doctors band's h2 → an h3 per
+// doctor → …). The name keeps its look: since the same
 // day PersonnelCard's NAME_STEP (its D4) dresses a level-3 auxiliary name in
 // `band`, and a tile's own container stays under that step's 28rem at every
 // width, so the name reads 30px — 30 design pixels inside the scale: the level

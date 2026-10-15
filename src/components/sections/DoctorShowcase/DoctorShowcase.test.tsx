@@ -20,8 +20,10 @@ import {
 // per-file import is the house pattern (Card, Ribbon, PersonnelCard …). The
 // STYLES note below says what it changes for the rest of the file: nothing.
 import '@/styles/globals.css';
+import { namedAs } from '@/components/sections/PageHero/PageHero.fixtures';
 import {
   PersonnelCard,
+  type PersonnelHeadingLevel,
   type PersonnelLink,
   type PersonnelPhoto,
   type PersonnelSide,
@@ -37,6 +39,7 @@ import { gaugeRule, lanes, UNIT_PX } from '@/lib/ribbon-model/ribbon-model';
 import {
   DoctorShowcase,
   type DoctorShowcaseDoctor,
+  type DoctorShowcaseHero,
   type DoctorShowcaseProps,
 } from './DoctorShowcase';
 import source from './DoctorShowcase.tsx?raw';
@@ -47,6 +50,12 @@ import source from './DoctorShowcase.tsx?raw';
 // its own <h2> (D2), ONE `list` whose items are the doctors (D3), one
 // `article` per doctor named by an <h3> (D6), one link per card — plus the one
 // loading decision it makes, the first card's picture on the first screen (D9).
+// And, since 2026-10-15, its SECOND OPENER, the Team page's (D12): the page's
+// <h1> over a lead in place of the eyebrow and the <h2>, the <section> named by
+// nothing and each doctor an <h2> — its own block, "the page opener", its type
+// pins beside the others, and two cases of its own in THE SCALE, measured.
+// Every other block renders the band opener, Home's, which the change left as
+// it was.
 //
 // ── NO NextIntlClientProvider, AND THE ABSENCE IS THE ASSERTION (the
 // DoctorCourses / PersonnelCard precedent). next-intl's hooks throw without
@@ -189,6 +198,19 @@ const TEXTS = [ELENA.text, ANDREI.text, CRISTINA.text];
 /** The side every card should face, by index (D5): start, end, start. */
 const SIDES: readonly PersonnelSide[] = ['start', 'end', 'start'];
 
+/** THE PAGE OPENER's two strings (D12) — a FIXTURE the page would have read
+ *  from its message files, the shape sections/PageHero asks for: the title
+ *  with ONE line break where the stairway turns, the lead with TWO. */
+const HERO: DoctorShowcaseHero = {
+  title: 'Echipa noastră: medicii clinicii\nși oamenii care te întâmpină',
+  lead: 'Aici îi cunoști pe cei care lucrează la clinică,\nca să știi pe cine întâlnești\nîncă dinainte de prima vizită.',
+};
+
+/** The lead as Testing Library's default normalizer reads a node's text —
+ *  every run of whitespace one space, the ends trimmed — so `getByText`
+ *  finds it whatever the line breaks of the copy. */
+const LEAD_TEXT = HERO.lead.replace(/\s+/g, ' ').trim();
+
 /** The band's OWN rhythm, written out byte for byte (D4): a flex column, the
  *  standard band top, and NO bottom padding and NO gap — the ribbon's own
  *  head and tail room are the band's air above the first card and under the
@@ -210,6 +232,16 @@ const BAND_RHYTHM =
  *  a second regime the next lever misses, and a bracketed declaration spelled
  *  any other way ships a CSS rule nobody wears (Tailwind reads tests too). */
 const RHYTHM_BOX = `${BAND_RHYTHM} ${bandColumnClasses} ${bandScaleClasses}`;
+
+/** The PAGE opener's own rhythm, written out byte for byte (D12): the band
+ *  opener's in every class but the room above — the blog hero's 4 / 6 / 8rem
+ *  on the column's steps in place of the band top — and the same two
+ *  band-scale strings, imported, after it. Every class here is one the
+ *  source already spells, so Tailwind (which reads tests too) ships no rule
+ *  for it that nothing wears. */
+const PAGE_RHYTHM =
+  'flex flex-col pt-16 @lg:pt-24 @3xl:pt-32 scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]';
+const PAGE_RHYTHM_BOX = `${PAGE_RHYTHM} ${bandColumnClasses} ${bandScaleClasses}`;
 
 const tokensOf = (element: Element): string[] =>
   (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
@@ -255,6 +287,22 @@ const renderOnScreen = (
     />,
   );
 
+/** The band under its PAGE opener (D12) — the Team page's: the hero, the
+ *  doctors and, where the page says so, the first screen. */
+const renderPage = (
+  placement: Placement = {},
+  doctors: readonly DoctorShowcaseDoctor[] = DOCTORS,
+  firstScreen?: boolean,
+) =>
+  render(
+    <DoctorShowcase
+      hero={HERO}
+      doctors={doctors}
+      firstScreen={firstScreen}
+      {...placement}
+    />,
+  );
+
 /** Each card's picture, in the page's order — reached through its card, so a
  *  picture is always read as THAT doctor's (decorative, so `presentation`). */
 const picturesOf = (container: HTMLElement): HTMLElement[] =>
@@ -280,18 +328,20 @@ const lookOf = (card: Element): string[] =>
 
 /**
  * The look of `doctor`'s card rendered ALONE, facing `side`, at the level
- * this band promises its names (D6) — read and unmounted inside the helper,
- * so nothing of it survives into the assertion's DOM. The expectation
- * follows sections/PersonnelCard wherever its lane takes the card.
+ * this band promises its names (D6 — an <h3> under the band opener, an <h2>
+ * under the page opener, D12) — read and unmounted inside the helper, so
+ * nothing of it survives into the assertion's DOM. The expectation follows
+ * sections/PersonnelCard wherever its lane takes the card.
  */
 const referenceLook = (
   doctor: DoctorShowcaseDoctor,
   side: PersonnelSide,
+  level: PersonnelHeadingLevel = 3,
 ): string[] => {
   const { container, unmount } = render(
     <PersonnelCard
       kind="doctor"
-      headingLevel={3}
+      headingLevel={level}
       side={side}
       name={doctor.name}
       position={doctor.position}
@@ -777,10 +827,11 @@ describe('DoctorShowcase — the first screen: ONE eager picture (D9)', () => {
     }
   });
 
-  it('preloads the FIRST card’s picture — and only it — on the first screen: the Team page’s LCP element', () => {
+  it('preloads the FIRST card’s picture — and only it — on the first screen: in the Team page’s first screen at every window measured, its LCP on a 768 tablet (D9)', () => {
     // PersonnelCard D18's pair on card 0: no lazy loading, a high fetch
     // priority. The second and the third wait for the scroll like any
-    // picture below the fold (§11).
+    // picture below the fold (§11). At the other windows measured the hero's
+    // <h1> is the page's LCP, and the preload was kept on purpose (D9).
     const { container } = renderOnScreen(true);
 
     const [first, ...others] = picturesOf(container);
@@ -794,9 +845,9 @@ describe('DoctorShowcase — the first screen: ONE eager picture (D9)', () => {
   });
 
   it('follows the ORDER, never the doctor — whoever the page puts first is the eager one', () => {
-    // Reversed, the third doctor opens the band and Elena closes it: the LCP
-    // is whichever card stands first, so the eager picture moves with the
-    // index, never with a person.
+    // Reversed, the third doctor opens the band and Elena closes it: the
+    // picture in the first screen is whichever card stands first, so the
+    // eager picture moves with the index, never with a person.
     const { container } = renderOnScreen(true, DOCTORS.toReversed());
 
     expect(within(container).getAllByRole('article')[0]).toHaveAccessibleName(
@@ -882,6 +933,270 @@ describe('DoctorShowcase — the static page (§16 rule 2, D8)', () => {
   });
 });
 
+describe('DoctorShowcase — the page opener (D12)', () => {
+  it('opens with the page’s ONE <h1> over its lead — no eyebrow and no <h2> opener', () => {
+    // sections/PageHero, whole: the heading and its lead, the two children of
+    // one <header>. The <h1> is found by its name with every run of
+    // whitespace collapsed (`namedAs`): the copy breaks it with a `\n`, which
+    // one accessible-name engine keeps and another reads as a space.
+    const { container } = renderPage();
+
+    const titles = screen.getAllByRole('heading', { level: 1 });
+    expect(titles).toHaveLength(1);
+    const title = screen.getByRole('heading', {
+      level: 1,
+      name: namedAs(HERO.title),
+    });
+    expect(title).toBe(titles[0]);
+    expect(title.tagName).toBe('H1');
+    // The copy whole, its line break kept for the stairway (PageHero).
+    expect(title.textContent).toBe(HERO.title);
+
+    const lead = within(bandOf(container)).getByText(LEAD_TEXT);
+    expect(lead.tagName).toBe('P');
+    expect(lead.textContent).toBe(HERO.lead);
+
+    // The heading and its lead and nothing else: no eyebrow over the <h1>.
+    const hero = title.parentElement;
+    expect(hero?.tagName).toBe('HEADER');
+    expect([...(hero?.children ?? [])]).toEqual([title, lead]);
+    // No <h2> opener: every level-2 heading is a doctor's name.
+    expect(
+      screen
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(DOCTORS.map((doctor) => doctor.name));
+  });
+
+  it('is an UNNAMED <section> — no region, no aria-labelledby, no aria-label: the page’s <main> is the landmark', () => {
+    // A region named by the page's <h1> would only repeat the page's name to
+    // a screen reader — the blog list's reasoning (D12's THE NAME).
+    const { container } = renderPage();
+
+    const band = bandOf(container);
+    expect(band.tagName).toBe('SECTION');
+    expect(band).not.toHaveAttribute('aria-labelledby');
+    expect(band).not.toHaveAttribute('aria-label');
+    expect(band).not.toHaveAttribute('role');
+    expect(band).not.toHaveAccessibleName();
+    expect(screen.queryByRole('region')).toBeNull();
+  });
+
+  it('stays unnamed when a caller WRITES a name pair in JSX — both reset after the spread (D2’s belt, D12)', () => {
+    // TypeScript exempts a hyphenated JSX attribute from its excess-property
+    // check, so both attributes below COMPILE despite the Omit; the band
+    // resets them after `{...rest}`, so neither lands.
+    const { container } = render(
+      <DoctorShowcase
+        hero={HERO}
+        doctors={DOCTORS}
+        aria-label="Echipa"
+        aria-labelledby="nowhere"
+      />,
+    );
+
+    const band = bandOf(container);
+    expect(band).not.toHaveAttribute('aria-label');
+    expect(band).not.toHaveAttribute('aria-labelledby');
+    expect(screen.queryByRole('region')).toBeNull();
+  });
+
+  it('draws the page opener wherever a hero is given — a smuggled eyebrow and title never show (one opener at a time)', () => {
+    // The types refuse the mix (the type pins below); a value assembled
+    // elsewhere could still carry it, so the cast is the probe (the
+    // `firstScreen` test's "smuggled" precedent).
+    const smuggled = {
+      hero: HERO,
+      eyebrow: EYEBROW,
+      title: TITLE,
+      doctors: DOCTORS,
+    } as unknown as DoctorShowcaseProps;
+    const { container } = render(<DoctorShowcase {...smuggled} />);
+
+    const band = bandOf(container);
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(within(band).queryByText(EYEBROW)).toBeNull();
+    expect(within(band).queryByText(TITLE)).toBeNull();
+    // `title` is an own prop, destructured: never the tooltip attribute.
+    expect(band.getAttributeNames()).toEqual(['class']);
+  });
+
+  it('draws the BAND opener for a null hero — plain JavaScript or a cast never reads a title off nothing (`== null`)', () => {
+    // The types refuse a null hero; a value assembled in plain JavaScript
+    // can still carry one. Tested with `== null`, it counts as no hero at
+    // all, and the band opener it rides beside is the one drawn.
+    const nullish = {
+      hero: null,
+      eyebrow: EYEBROW,
+      title: TITLE,
+      doctors: DOCTORS,
+    } as unknown as DoctorShowcaseProps;
+    const { container } = render(<DoctorShowcase {...nullish} />);
+
+    expect(screen.queryAllByRole('heading', { level: 1 })).toEqual([]);
+    expect(screen.getByRole('region', { name: TITLE })).toBe(bandOf(container));
+    expect(rhythmOf(container).className).toBe(RHYTHM_BOX);
+  });
+
+  it('stands on the page ground, merges the caller className LAST and takes ref — as under the band opener (§6.8)', () => {
+    const band = createRef<HTMLElement>();
+    const { container } = renderPage({ className: 'scroll-mt-10', ref: band });
+
+    expect(bandOf(container).className).toBe('bg-page scroll-mt-10');
+    expect(band.current).toBe(bandOf(container));
+    expect(columnOf(container).className).toBe(containerClasses);
+  });
+
+  it('opens its rhythm box with the hero FIRST and the ribbon SECOND — nothing between them, and no gap: the ribbon’s head room is the air (D4, D12)', () => {
+    const { container } = renderPage();
+    const rhythm = rhythmOf(container);
+
+    expect(rhythm.children).toHaveLength(2);
+    expect(rhythm.children[0].tagName).toBe('HEADER');
+    expect(rhythm.children[0]).toContainElement(
+      screen.getByRole('heading', { level: 1 }),
+    );
+    expect(rhythm.children[1]).toBe(screen.getByRole('list'));
+    // Named one by one, so a returning `py-*` or `gap-*` reads as itself.
+    expect(
+      tokensOf(rhythm).filter((token) =>
+        /(^|:)(pb|py|gap|gap-y|space-y)-/.test(token),
+      ),
+    ).toEqual([]);
+  });
+
+  it('wears the blog hero’s room above — 4 / 6 / 8rem on the column’s steps — and NOT the band top; every other class the band opener’s, byte for byte (D12)', () => {
+    const { container } = renderPage();
+    const tokens = tokensOf(rhythmOf(container));
+
+    expect(rhythmOf(container).className).toBe(PAGE_RHYTHM_BOX);
+    expect(tokens).toEqual(
+      expect.arrayContaining(['pt-16', '@lg:pt-24', '@3xl:pt-32']),
+    );
+    for (const top of ['pt-12', '@lg:pt-16', '@3xl:pt-20']) {
+      expect(tokens).not.toContain(top);
+    }
+    // Everything but the room is the band opener's, in the same order: the
+    // flex column, D11's width share and ui/Container's two strings.
+    const room = /^(@lg:|@3xl:)?pt-/;
+    const { container: banded } = renderBand();
+    expect(tokens.filter((token) => !room.test(token))).toEqual(
+      tokensOf(rhythmOf(banded)).filter((token) => !room.test(token)),
+    );
+  });
+
+  it('names every doctor by an <h2> — no <h3> — so the outline reads h1 → h2 × n, nothing skipped (D6, D12)', () => {
+    renderPage();
+
+    expect(screen.queryAllByRole('heading', { level: 3 })).toEqual([]);
+    expect(
+      screen
+        .getAllByRole('heading')
+        .map((heading) => Number(heading.tagName[1])),
+    ).toEqual([1, ...DOCTORS.map(() => 2)]);
+    screen.getAllByRole('article').forEach((card, index) => {
+      const { name } = DOCTORS[index];
+      expect(card).toHaveAccessibleName(name);
+      expect(
+        within(card).getByRole('heading', { level: 2, name }).tagName,
+      ).toBe('H2');
+    });
+  });
+
+  it('hands each card to PersonnelCard at level 2, the sides alternating as under the band opener (D5) — read off the card itself', () => {
+    const expected = DOCTORS.map((doctor, index) =>
+      referenceLook(doctor, SIDES[index], 2),
+    );
+    // Never vacuous: the level really is part of the look (the name's tag).
+    expect(referenceLook(DOCTORS[0], 'start', 2)).not.toEqual(
+      referenceLook(DOCTORS[0], 'start', 3),
+    );
+
+    renderPage();
+    const list = screen.getByRole('list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(DOCTORS.length);
+    screen.getAllByRole('article').forEach((card, index) => {
+      expect(lookOf(card), `card ${index + 1}`).toEqual(expected[index]);
+    });
+  });
+
+  it('never lets `hero` reach the DOM — the <section> carries its class and nothing else', () => {
+    const { container } = renderPage();
+
+    expect(bandOf(container).getAttributeNames()).toEqual(['class']);
+    expect(container.innerHTML).not.toMatch(/\shero=|\[object Object\]/);
+  });
+
+  it('preloads the FIRST card’s picture — and only it — on the first screen, under the hero as under the heading (D9)', () => {
+    const { container, unmount } = renderPage({}, DOCTORS, true);
+    const [first, ...others] = picturesOf(container);
+    expect(first).toHaveAttribute('fetchpriority', 'high');
+    expect(first).not.toHaveAttribute('loading', 'lazy');
+    expect(others).toHaveLength(DOCTORS.length - 1);
+    for (const picture of others) {
+      expect(picture).toHaveAttribute('loading', 'lazy');
+      expect(picture).not.toHaveAttribute('fetchpriority');
+    }
+    unmount();
+
+    // …and left off, every picture waits for the scroll.
+    const { container: lazy } = renderPage();
+    for (const picture of picturesOf(lazy)) {
+      expect(picture).toHaveAttribute('loading', 'lazy');
+      expect(picture).not.toHaveAttribute('fetchpriority');
+    }
+  });
+
+  it('renders the HERO ALONE for an empty list — the page keeps its <h1>: no list, no ribbon, no region (D12’s AN EMPTY LIST)', () => {
+    // Not D7's `null`: under the page opener the band IS the page's opener,
+    // and nothing at all would leave the page without its one <h1> (§9).
+    const { container } = renderPage({}, []);
+
+    expect(container).not.toBeEmptyDOMElement();
+    expect(bandOf(container).tagName).toBe('SECTION');
+    expect(
+      screen.getByRole('heading', { level: 1, name: namedAs(HERO.title) }),
+    ).toBeInTheDocument();
+    expect(within(bandOf(container)).getByText(LEAD_TEXT).tagName).toBe('P');
+    expect(rhythmOf(container).children).toHaveLength(1);
+    expect(screen.queryByRole('list')).toBeNull();
+    expect(screen.queryAllByRole('article')).toEqual([]);
+    expect(screen.queryByRole('region')).toBeNull();
+    expect(container.querySelector('[data-ribbon-station], canvas')).toBeNull();
+  });
+
+  it('compiles to static HTML: the <h1>, its lead and every card at level 2 — the section unnamed, no canvas, the first picture eager (§16 rule 2, D9)', () => {
+    // renderToString is the nearest a unit test gets to the export's HTML
+    // (the static page block's reason).
+    const html = renderToString(
+      <DoctorShowcase hero={HERO} doctors={DOCTORS} firstScreen />,
+    );
+    expect(html).not.toContain('<canvas');
+
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    // The <section>, sought by its tag: on the first screen React writes the
+    // first picture's preload <link> ahead of it in a bare server render.
+    const bands = host.querySelectorAll('section');
+    expect(bands).toHaveLength(1);
+    expect(bands[0].getAttributeNames()).toEqual(['class']);
+    expect(host.querySelectorAll('h1')).toHaveLength(1);
+    expect(host.querySelector('section header > h1')?.textContent).toBe(
+      HERO.title,
+    );
+    expect(host.querySelector('section header > p')?.textContent).toBe(
+      HERO.lead,
+    );
+    expect(host.querySelectorAll('article h2')).toHaveLength(DOCTORS.length);
+    expect(host.querySelectorAll('h3')).toHaveLength(0);
+    const [first, ...others] = [...host.querySelectorAll('article img')];
+    expect(first).toHaveAttribute('fetchpriority', 'high');
+    for (const picture of others) {
+      expect(picture).toHaveAttribute('loading', 'lazy');
+    }
+  });
+});
+
 describe('DoctorShowcase — the source (D1, D8)', () => {
   it('ships NO client directive and no state — the ribbon is the island, not this file (§16)', () => {
     expect(CODE).not.toMatch(/^\s*['"]use client['"]\s*;?\s*(\/\/.*)?$/m);
@@ -896,11 +1211,13 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
     expect(hooks).toEqual(['useId(']);
   });
 
-  it('imports react, PersonnelCard, SectionHeading, Container, Ribbon and lib/cx — nothing else', () => {
+  it('imports react, PageHero, PersonnelCard, SectionHeading, Container, Ribbon and lib/cx — nothing else', () => {
     // The import surface is the guard that sees what a regex cannot: a lib
     // DATA import would turn a DUMB band into a second populator (D1), and a
     // stateful composed child would hydrate the page without tripping the
-    // directive check (D8).
+    // directive check (D8). sections/PageHero joined on 2026-10-15, the page
+    // opener's (D12) — a Server Component too, composed through its public
+    // component alone (§4: section → section).
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -908,6 +1225,7 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
       .toSorted();
 
     expect(specifiers).toEqual([
+      '@/components/sections/PageHero/PageHero',
       '@/components/sections/PersonnelCard/PersonnelCard',
       '@/components/sections/SectionHeading/SectionHeading',
       '@/components/ui/Container/Container',
@@ -915,9 +1233,15 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
       '@/lib/cx/cx',
       'react',
     ]);
-    // The card's two shapes arrive as TYPES beside the component.
+    // The hero arrives as its component and, as a TYPE, its props — the two
+    // strings DoctorShowcaseHero picks from them (D12).
     expect(CODE).toMatch(
-      /^import \{[^}]*\bPersonnelCard\b[^}]*\btype PersonnelLink\b[^}]*\btype PersonnelPhoto\b[^}]*\} from '@\/components\/sections\/PersonnelCard\/PersonnelCard';$/m,
+      /^import \{[^}]*\bPageHero\b[^}]*\btype PageHeroProps\b[^}]*\} from '@\/components\/sections\/PageHero\/PageHero';$/m,
+    );
+    // The card's three shapes arrive as TYPES beside the component — its
+    // heading level among them since D12, the table of the two openers'.
+    expect(CODE).toMatch(
+      /^import \{[^}]*\bPersonnelCard\b[^}]*\btype PersonnelHeadingLevel\b[^}]*\btype PersonnelLink\b[^}]*\btype PersonnelPhoto\b[^}]*\} from '@\/components\/sections\/PersonnelCard\/PersonnelCard';$/m,
     );
     // No lib DATA and no locale at all: a DUMB band knows no team (D1).
     expect(CODE).not.toMatch(
@@ -969,6 +1293,15 @@ describe('DoctorShowcase — the source (D1, D8)', () => {
   });
 });
 
+/** Each opener's branch of the props (D12) — the union read one side at a
+ *  time: the band opener's is the one whose `eyebrow` is a string, the page
+ *  opener's the one that carries a hero. */
+type BandOpenerProps = Extract<DoctorShowcaseProps, { eyebrow: string }>;
+type PageOpenerProps = Extract<
+  DoctorShowcaseProps,
+  { hero: DoctorShowcaseHero }
+>;
+
 describe('DoctorShowcase — type-level pins', () => {
   it('pins the surface those negatives are read against', () => {
     // Never-vacuous guard (the ui/Card precedent): if the props type ever
@@ -979,8 +1312,12 @@ describe('DoctorShowcase — type-level pins', () => {
     expectTypeOf<DoctorShowcaseProps>().toHaveProperty('doctors');
     expectTypeOf<DoctorShowcaseProps>().toHaveProperty('className');
     expectTypeOf<DoctorShowcaseProps>().toHaveProperty('ref');
-    expectTypeOf<DoctorShowcaseProps['eyebrow']>().toEqualTypeOf<string>();
-    expectTypeOf<DoctorShowcaseProps['title']>().toEqualTypeOf<string>();
+    // Read on the BAND OPENER's branch since D12: each opener refuses the
+    // other's props, so on the whole union `eyebrow` and `title` read
+    // `string | undefined`, and only where the band opener stands are they
+    // its two strings.
+    expectTypeOf<BandOpenerProps['eyebrow']>().toEqualTypeOf<string>();
+    expectTypeOf<BandOpenerProps['title']>().toEqualTypeOf<string>();
     expectTypeOf<DoctorShowcaseProps['doctors']>().toEqualTypeOf<
       readonly DoctorShowcaseDoctor[]
     >();
@@ -1048,6 +1385,62 @@ describe('DoctorShowcase — type-level pins', () => {
       silent,
     ]).toHaveLength(8);
   });
+
+  it('pins the page opener’s surface — a hero of two strings, on its own branch (D12)', () => {
+    expectTypeOf<DoctorShowcaseProps>().toHaveProperty('hero');
+    expectTypeOf<PageOpenerProps['hero']>().toEqualTypeOf<DoctorShowcaseHero>();
+    expectTypeOf<DoctorShowcaseHero>().toEqualTypeOf<
+      Readonly<{ title: string; lead: string }>
+    >();
+    // Each branch refuses the other's props: one opener at a time.
+    expectTypeOf<BandOpenerProps['hero']>().toEqualTypeOf<undefined>();
+    expectTypeOf<PageOpenerProps['eyebrow']>().toEqualTypeOf<undefined>();
+    expectTypeOf<PageOpenerProps['title']>().toEqualTypeOf<undefined>();
+    // The page opener refuses the two names as the band opener does (D2).
+    expectTypeOf<PageOpenerProps>().not.toHaveProperty('aria-label');
+    expectTypeOf<PageOpenerProps>().not.toHaveProperty('aria-labelledby');
+    expectTypeOf<PageOpenerProps>().not.toHaveProperty('children');
+  });
+
+  it('refuses a mixed or a half opener — one opener at a time, each one whole (D12)', () => {
+    // Never rendered; the same one-line rule as the pins above. The two
+    // whole openers are assigned first, without a directive, so the
+    // refusals below can never pass because the props refuse everything.
+    // BAND and PAGE stay UNTYPED objects: spread from a value already typed
+    // as the union, a mistake would be read against the branch it fits.
+    const HALF = { title: TITLE };
+    const BAND = { eyebrow: EYEBROW, title: TITLE, doctors: DOCTORS };
+    const PAGE = { hero: HERO, doctors: DOCTORS };
+    const band: DoctorShowcaseProps = BAND;
+    const page: DoctorShowcaseProps = PAGE;
+
+    // @ts-expect-error — BOTH openers whole: Home's call with a hero added
+    const both: DoctorShowcaseProps = { ...BAND, hero: HERO };
+    // @ts-expect-error — one opener at a time: never a hero AND an eyebrow
+    const mixed: DoctorShowcaseProps = { ...PAGE, eyebrow: EYEBROW };
+    // @ts-expect-error — the page opener's heading is `hero.title`
+    const doubled: DoctorShowcaseProps = { ...PAGE, title: TITLE };
+    // @ts-expect-error — a title alone is no opener: the band's has an eyebrow
+    const orphan: DoctorShowcaseProps = { title: TITLE, doctors: DOCTORS };
+    // @ts-expect-error — an eyebrow alone is no opener: the band's has a title
+    const half: DoctorShowcaseProps = { eyebrow: EYEBROW, doctors: DOCTORS };
+    // @ts-expect-error — a hero is a title AND its lead (PageHero's shape)
+    const leadless: DoctorShowcaseProps = { hero: HALF, doctors: DOCTORS };
+    // @ts-expect-error — no opener at all is no band
+    const none: DoctorShowcaseProps = { doctors: DOCTORS };
+
+    expect([
+      band,
+      page,
+      both,
+      mixed,
+      doubled,
+      orphan,
+      half,
+      leadless,
+      none,
+    ]).toHaveLength(9);
+  });
 });
 
 // ── THE SCALE, MEASURED (D10) ─────────────────────────────────────────────
@@ -1070,7 +1463,8 @@ describe('DoctorShowcase — type-level pins', () => {
 // tolerance is the planner's, max(0.5px, 0.6 %), wherever a case does not
 // name its own. Last in the file on purpose: it parks the pointer and
 // changes the window, and puts both back when it ends; a case that injects a
-// root font or a touch screen takes it away again in its own `finally`.
+// root font or a touch screen, or opens a phone's window (the page opener's,
+// D12), takes it away again in its own `finally`.
 
 /** THE REAL TYPEFACES — ui/Ribbon's suite's pair, for ContactModal.test.tsx's
  *  reason: next/font does not run here, so the token chain would set every
@@ -1262,12 +1656,24 @@ const partsOf = (card: HTMLElement) => {
  * THE MEASURING HELPER every case below shares: the band on SCALE_DOCTORS in
  * a box that hands its Container a column of exactly `width` px — the
  * gutter read, never assumed — and the premise every number rests on,
- * checked before any is read.
+ * checked before any is read. Under the band opener unless a case asks for
+ * the page opener's (D12).
  */
-const renderColumn = (width: number): Scene => {
+const renderColumn = (
+  width: number,
+  opener: 'band' | 'page' = 'band',
+): Scene => {
   const { container, unmount } = render(
     <div style={{ width: `${width + 2 * gutter()}px` }}>
-      <DoctorShowcase eyebrow={EYEBROW} title={TITLE} doctors={SCALE_DOCTORS} />
+      {opener === 'band' ? (
+        <DoctorShowcase
+          eyebrow={EYEBROW}
+          title={TITLE}
+          doctors={SCALE_DOCTORS}
+        />
+      ) : (
+        <DoctorShowcase hero={HERO} doctors={SCALE_DOCTORS} />
+      )}
     </div>,
   );
   const section = container.firstElementChild?.firstElementChild;
@@ -1927,6 +2333,116 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
       warned.mock.calls.filter(([text]) => /not painted/.test(String(text))),
     ).toEqual([]);
     scene.unmount();
+  });
+
+  /**
+   * THE PAGE OPENER, MEASURED (D12) — where its <h1> stands, how large it is
+   * and how far its lead stands from the first card, read in one scene. The
+   * room above is the rhythm box's top padding, the <h1>'s box right under
+   * it; the air under the lead is the ribbon's own head room above the first
+   * card — `--ribbon-k` + 0.16 of the ribbon's unit, the gauge rule's k
+   * (lib/ribbon-model) at the column — with nothing between the hero and the
+   * ribbon's root. Returns that air, as laid out, for the record.
+   */
+  const expectPageOpener = async (
+    width: number,
+    expected: Readonly<{
+      scaled: boolean;
+      s: number;
+      room: number;
+      title: number;
+    }>,
+  ): Promise<number> => {
+    const warned = vi.spyOn(console, 'warn');
+    const scene = renderColumn(width, 'page');
+    try {
+      await settle(scene);
+      const { rhythm, ribbon, cards } = scene;
+      const title = within(rhythm).getByRole('heading', { level: 1 });
+      const hero = title.parentElement;
+      if (!(hero instanceof HTMLElement) || hero.tagName !== 'HEADER') {
+        throw new Error('THE SCALE: the page opener lost its hero');
+      }
+      const at = `${width}px column`;
+      expect(remapped(rhythm), `${at}: in the band scale`).toBe(
+        expected.scaled,
+      );
+      exact(lengthOf(rhythm, '--scale-px'), expected.s, `${at}: design pixel`);
+      exact(lengthOf(rhythm, 'padding-top'), expected.room, `${at}: room`);
+      exact(
+        hero.getBoundingClientRect().top - rhythm.getBoundingClientRect().top,
+        expected.room,
+        `${at}: the hero right under the room`,
+      );
+      exact(lengthOf(title, 'font-size'), expected.title, `${at}: the <h1>`);
+      // Nothing between the hero and the ribbon: no gap, no margin (D4).
+      exact(
+        ribbon.getBoundingClientRect().top,
+        hero.getBoundingClientRect().bottom,
+        `${at}: the ribbon right under the hero`,
+      );
+      const air =
+        cards[0].getBoundingClientRect().top -
+        hero.getBoundingClientRect().bottom;
+      near(
+        air,
+        (gaugeRule(width / expected.s / UNIT_PX) + 0.16) * UNIT_PX * expected.s,
+        `${at}: the lead to the first card — the ribbon's head room`,
+      );
+      // Every doctor's name an <h2> (D12's THE OUTLINE), none an <h3>.
+      expect(within(rhythm).getAllByRole('heading', { level: 2 })).toHaveLength(
+        SCALE_DOCTORS.length,
+      );
+      expect(within(rhythm).queryAllByRole('heading', { level: 3 })).toEqual(
+        [],
+      );
+      expect(
+        warned.mock.calls.filter(([text]) => /not painted/.test(String(text))),
+      ).toEqual([]);
+      return air;
+    } finally {
+      scene.unmount();
+    }
+  };
+
+  it('draws the PAGE OPENER at the REFERENCE column — the owner’s 1401 window: the room above its <h1> 128 design pixels, the <h1> 16.26 spacing steps (65.04), the lead to the first card the ribbon’s own head room (D12)', async () => {
+    // Inside the regime, past the 48rem step: the room is `pt-32`, 32 steps
+    // of the design pixel, and the <h1> takes PageHero's design size — the
+    // `hero` step reads the viewport, so its one gated class says it.
+    const air = await expectPageOpener(REFERENCE, {
+      scaled: true,
+      s: 1,
+      room: 128,
+      title: 16.26 * 4,
+    });
+    // MEASURED 103.7px at s = 1 (D12's THE AIR UNDER THE LEAD).
+    near(air, 103.7, 'the lead to the first card at the reference', 0.1);
+  });
+
+  it('draws the PAGE OPENER in a 390 phone’s column — no scale: the room above its <h1> 4rem, the <h1> the `hero` step’s 2rem floor, the lead to the first card the ribbon’s head room (D12)', async () => {
+    // A phone's own window, so the `hero` step — a VIEWPORT clamp, 2rem to
+    // 4.5rem through 1rem + 3.5vw — is the phone's: 32px at 390. The column
+    // is ui/Container's at that window (5vw a side — its PHONE GUTTER), and
+    // under its 32rem step the room is `pt-16`.
+    await page.viewport(390, 844);
+    try {
+      const rem = rootRem();
+      const width = 390 - 2 * gutter();
+      exact(width, 351, 'the 390 phone’s column');
+      const air = await expectPageOpener(width, {
+        scaled: false,
+        s: 1,
+        room: 4 * rem,
+        title: Math.min(
+          Math.max(2 * rem, rem + 0.035 * window.innerWidth),
+          4.5 * rem,
+        ),
+      });
+      // MEASURED 56.4px (D12's THE AIR UNDER THE LEAD).
+      near(air, 56.4, 'the lead to the first card on a phone', 0.1);
+    } finally {
+      await page.viewport(WINDOW.width, WINDOW.height);
+    }
   });
 
   it.each([1300, CAP])(

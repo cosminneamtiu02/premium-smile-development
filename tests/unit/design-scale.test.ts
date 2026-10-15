@@ -675,17 +675,18 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     // 30 % thinner (DoctorShowcase D11, §15.26 round 6), the doctor page's
     // name, whose `hero` step reads the viewport and so is the one size the
     // remap cannot redraw (DoctorIntro's THE BAND SCALE, §15.32 round 4), and
-    // the blog list's four (sections/PostList's THE STAIRWAY, THE HEADING'S
-    // REACH and THE BAND SCALE, CLAUDE.md §15.39): the pre-line white-space
-    // its two hero blocks wear, the <h1>'s max-content width and that
-    // width's cap, the column plus 100 design pixels a side, and the <h1>'s
-    // size, the doctor page's name's — spells the chain itself, because
+    // the page hero's four (sections/PageHero's THE STAIRWAY, THE HEADING'S
+    // REACH and THE <h1> — the blog list's hero, CLAUDE.md §15.39, shared
+    // with the Team page since 2026-10-15): the pre-line white-space its two
+    // blocks wear, the <h1>'s max-content width and that width's cap, the
+    // column plus 135 design pixels a side, and the <h1>'s size, the doctor
+    // page's name's — spells the chain itself, because
     // Tailwind reads class names from source text. Every such token must
     // carry the SAME chain, gate first, so a tile can never switch at another
     // width than the band (the doctor page's name reads a box capped at
     // 96rem, so for it that holds at any root of 9⅓px or more — DoctorIntro's
-    // THE NAME records the bound; the blog's four read ui/Container's own
-    // column, as the regime's classes on the band's rhythm box do). The gate
+    // THE NAME records the bound; the hero's four read ui/Container's own
+    // column, as the regime's classes on its band's rhythm box do). The gate
     // is looked for ANYWHERE in a chain (a reordered `@4xl:scalable:` is
     // caught as itself) and in backtick literals too (the Opus review's
     // census probe).
@@ -705,7 +706,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     ).toEqual([
       'components/sections/DoctorIntro/DoctorIntro.tsx',
       'components/sections/DoctorShowcase/DoctorShowcase.tsx',
-      'components/sections/PostList/PostList.tsx',
+      'components/sections/PageHero/PageHero.tsx',
       'components/sections/TeamRoster/TeamRoster.tsx',
       'components/ui/Container/Container.tsx',
     ]);
@@ -751,29 +752,36 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     ).toEqual([
       'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
     ]);
-    // The blog list's four (sections/PostList's THE BAND SCALE, THE STAIRWAY
-    // and THE HEADING'S REACH): both hero blocks keep the copy's own line
-    // breaks behind the chain (the pre-line white-space, spelled once, in
-    // PostList.tsx's STAIRWAY constant, and worn twice — on the <h1> and on
-    // the lead, which this census of source literals cannot see:
-    // PostList.test.tsx holds it, its own STAIRWAY constant the one
-    // white-space token on each block and the lead's one gated class), the
-    // <h1> as wide as its longest line up to the column's full width plus 50
-    // spacing steps — 100 design pixels a side — and its size, LAST, the
-    // doctor page's name's. The grid's three columns need no token of their
-    // own: they start at the Container's `@4xl`, the regime's own step.
-    const blog = gatedTokens
-      .filter(({ name }) => name.endsWith('PostList.tsx'))
+    // The page hero's four (sections/PageHero's THE <h1>, THE STAIRWAY and
+    // THE HEADING'S REACH — the blog list's hero until 2026-10-15, when it
+    // moved out of sections/PostList to open the Team page too): both hero
+    // blocks keep the copy's own line breaks behind the chain (the pre-line
+    // white-space, spelled once, in PageHero.tsx's STAIRWAY constant, and
+    // worn twice — on the <h1> and on the lead, which this census of source
+    // literals cannot see: PageHero.test.tsx holds it, the one white-space
+    // token on each block and the lead's one gated class), the <h1> as wide
+    // as its longest line up to the column's full width plus 67.5 spacing
+    // steps — 135 design pixels a side since 2026-10-16, 100 until then
+    // (PageHero's THE HEADING'S REACH: the fallback face's layout shift) — and
+    // its size, LAST, the doctor
+    // page's name's. The blog list's grid needs no token of its own: its
+    // three columns start at the Container's `@4xl`, the regime's own step —
+    // so sections/PostList itself spells none, nor does sections/DoctorShowcase
+    // for the hero it composes on the Team page (its one token above).
+    const hero = gatedTokens
+      .filter(({ name }) => name.endsWith('PageHero.tsx'))
       .map(({ variants, utility }) => [...variants, utility].join(':'));
-    expect(blog).toEqual([
+    expect(hero).toEqual([
       'scalable:@4xl:@min-[896px]:whitespace-pre-line',
       'scalable:@4xl:@min-[896px]:w-max',
-      'scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*50)]',
+      'scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*67.5)]',
       'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
     ]);
-    // KEEP IN SYNC, restored the same day: the blog's <h1> wears the doctor
-    // page's name's size class BYTE FOR BYTE. For a few hours of 2026-10-15
-    // it wore 14 steps of its own — the owner, asked how to make room for a
+    // KEEP IN SYNC, restored the same day: the hero's <h1> — the blog's then,
+    // the blog's and the Team page's since it moved into sections/PageHero —
+    // wears the doctor page's name's size class BYTE FOR BYTE: still a PAIR,
+    // ONE class in each of two files, however many pages wear the hero. For a
+    // few hours of 2026-10-15 the blog's <h1> wore 14 steps of its own — the owner, asked how to make room for a
     // heading a phrase longer in every language, had chosen "Heading a size
     // smaller" — and then he took it back, verbatim: "tbh i kinda liked it
     // how it looked before. so if it is larger but still fits in page and
@@ -786,9 +794,9 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
         .filter(({ name }) => name.endsWith(file))
         .filter(({ utility }) => utility.startsWith('text-[length:'))
         .map(({ variants, utility }) => [...variants, utility].join(':'));
-    expect(sizeOf('PostList.tsx')).toHaveLength(1);
-    expect(sizeOf('PostList.tsx')).toEqual(sizeOf('DoctorIntro.tsx'));
-    expect(blog.at(-1)).toBe(sizeOf('DoctorIntro.tsx')[0]);
+    expect(sizeOf('PageHero.tsx')).toHaveLength(1);
+    expect(sizeOf('PageHero.tsx')).toEqual(sizeOf('DoctorIntro.tsx'));
+    expect(hero.at(-1)).toBe(sizeOf('DoctorIntro.tsx')[0]);
   });
 
   it('has a gate-chain reader with teeth — a backtick class and a reordered chain are both seen', () => {

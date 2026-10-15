@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { PageHero } from '@/components/sections/PageHero/PageHero';
 import {
   Pagination,
   type PaginationProps,
@@ -12,8 +13,6 @@ import {
   bandColumnClasses,
   bandScaleClasses,
 } from '@/components/ui/Container/Container';
-import { Heading } from '@/components/ui/Heading/Heading';
-import { Text } from '@/components/ui/Text/Text';
 import { cx } from '@/lib/cx/cx';
 
 // sections/PostList — the blog list's band: a centred hero (the page's <h1>
@@ -40,11 +39,12 @@ import { cx } from '@/lib/cx/cx';
 // hook, no 'use client': a Server Component that compiles into the static
 // HTML of every blog page and ships no JavaScript of its own (§16) — ui/Image
 // brings its optimizer's small island with each picture, as on every page
-// with a photograph. It composes two sections through their public components
-// only (§4: sections/PostCard, sections/Pagination), three atoms (ui/Container
-// and its two band-scale strings, ui/Heading, ui/Text) and lib/cx.
-// PostList.test.tsx pins the directive's absence and the import surface from
-// the source text, because no runtime assertion can see either.
+// with a photograph. It composes three sections through their public
+// components only (§4: sections/PageHero, sections/PostCard,
+// sections/Pagination), one atom (ui/Container and its two band-scale
+// strings) and lib/cx. PostList.test.tsx pins the directive's absence and the
+// import surface from the source text, because no runtime assertion can see
+// either.
 //
 // ── THE BAND: ui/Container's PAGE-BAND RECIPE. The outer is an UNNAMED
 // <section> with no paint of its own — the 404 page's and the privacy
@@ -78,7 +78,8 @@ import { cx } from '@/lib/cx/cx';
 //     owns (the price list's lesson, §15.32 round 2: a rem literal keeps its
 //     pixels while its band scales);
 //   · INSIDE THE HERO, the heading and its lead 3rem apart, 48 — doubled on
-//     the second look (THE HERO, CENTRED);
+//     the second look: the hero's own gap (sections/PageHero's THE HERO,
+//     CENTRED);
 //   · UNDER THE PAGER, 2rem at every step. The bottom room no longer follows
 //     the top's steps: the band that follows on every blog page, the map
 //     (sections/ClinicLocation, the page's), opens on its own top step — 3rem,
@@ -100,15 +101,9 @@ import { cx } from '@/lib/cx/cx';
 // theme's rem (§7). The grid's third column needs no class of its own: it
 // starts at the Container's `@4xl`, the regime's own step, so every laptop
 // and desktop draws three across.
-//   THE ONE SIZE THE REMAP CANNOT REDRAW is the <h1>'s: ui/Heading's `hero`
-//   step is a VIEWPORT clamp. So inside the scale the title takes its design
-//   size by one class, the last on it, behind the band scale's own chain,
-//   which reads ui/Container's column as every regime class here does — and
-//   that class is sections/DoctorIntro's name's, byte for byte: the `hero`
-//   step's value at the owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as
-//   16.26 spacing steps, 65.04 design pixels. A KEEP-IN-SYNC pair, which
-//   tests/unit/design-scale.test.ts holds equal (a third consumer is the
-//   trigger for a sibling step in ui/Heading). For a few hours of 2026-10-15
+//   THE <h1>'S SIZE is the one the remap cannot redraw: 65.04 design pixels,
+//   sections/DoctorIntro's name's class byte for byte (sections/PageHero's
+//   THE ONE SIZE THE REMAP CANNOT REDRAW). For a few hours of 2026-10-15
 //   the blog's heading wore a size of its own, 56 design pixels: the owner,
 //   asked how to make room for the stairway's longer heading (at 65 the
 //   German first line needs 1,202 design pixels of a 1,106-pixel column), had
@@ -117,7 +112,7 @@ import { cx } from '@/lib/cx/cx';
 //   fits in page and looks good it should not be constrained by a div so
 //   that it has same space left and right as the articles seciton". So the
 //   size is the doctor page's again, and the room comes from the width
-//   instead (THE HEADING'S REACH, under THE HERO).
+//   instead (sections/PageHero's THE HEADING'S REACH).
 //   MEASURED (PostList.scale.test.tsx — Chromium, the real faces, a classic
 //   15px scrollbar, the Romanian page), between a 1280 and a 1920 window
 //   (s 0.912 → 1.375, × 1.507): the <h1> 59.3 → 89.4px and its box, which
@@ -145,109 +140,48 @@ import { cx } from '@/lib/cx/cx';
 //   were born (DoctorShowcase's D10, §15.25 round 2), and hold for this band
 //   as they do for Home's and the doctor page's (§15.32).
 //
-// ── THE HERO, CENTRED: the page's <h1> over a lead paragraph, the owner's
-// "2 rows of ehading … and with an eyebrow of text below it on 3 lines both
-// centered". The "eyebrow" is read as his second screenshot shows it — a
-// small grey sentence in the body face under the heading — and not as the
-// house's mono micro-label: three lines of uppercased, wide-tracked capitals
-// are hard reading for §1's older visitor (the planner's call, told to the
-// owner). The <header> centres the two boxes (`items-center`) and the
-// heading's lines (display text may inherit centring, §15.15 b), 3rem apart
-// — doubled on the owner's second look ("try doubling the space between
-// heading and this text") from the 1.5rem his first look had asked for ("a
-// little spacing between heading and text below heading", over the first
-// preview's 1rem); the lead centres its own lines ON THE ELEMENT, because
-// globals.css aligns every <p> to start and a rule that matches the element
-// beats an inherited value. DOM ORDER IS VISUAL ORDER: the <h1> first, so a
-// screen reader that lands on it reads the lead, then the articles.
+// ── THE HERO is sections/PageHero, the rhythm box's first child: the page's
+// <h1> over its lead, centred — the owner's "2 rows of ehading … and with an
+// eyebrow of text below it on 3 lines both centered" (the paragraph at the
+// top). Born here, inline, it became a shared composition of its own on
+// 2026-10-15, when the Team page took the same hero — the owner, verbatim:
+// "take the hero section of the blog page with all blog articles and
+// implement something similar instead of "FAMILIA PREMIUM SMILE /
+// Specialiștii cu care ne mândrim" on the echipa page". The band hands it
+// the two strings and nothing else — no className, no attribute — so every
+// blog page's markup is the inline hero's to the byte (PostList.test.tsx
+// renders PageHero alone beside the band and compares the two). Every
+// MECHANISM below is PageHero.tsx's now, recorded there with what it was
+// measured on and held by its suites (PageHero.scale.test.tsx measures every
+// hero copy that ships, the blog's five and the Team page's five); this band
+// keeps the BLOG's own: the owner's words for its hero, its copy and that
+// copy's measurements.
+//   THE HERO, CENTRED — sections/PageHero's paragraph of that name.
 //   THE STAIRWAY — the owner, 2026-10-15, verbatim: "add at the end of the
 //   heading like a "through our blog" so for german add a wie Sie es pflegen
 //   durch unser Blog and move Ihnen, to line above and do geenrally so so
 //   that it looks like a stairway downwards from title to text below" (his
 //   first preview's rule lives on inside it: "i want first row longer, second
-//   one shorter, same for text below it"). So on a laptop or a desktop the
-//   COPY breaks its own lines: each message carries a line break where the
-//   stairway turns — one in the heading, two in the lead — and both blocks
-//   wear the pre-line white-space behind the band scale's chain (STAIRWAY,
-//   spelled once), which keeps those breaks and still wraps a line too long
-//   for its box. The heading falls in TWO lines and the lead in THREE, each
-//   narrower than the one above it — the heading's second line at most nine
-//   tenths of its first, the lead's second at most nineteen twentieths of its
-//   first and its third at most nine tenths of its second — and the
-//   heading's second line is wider than the lead's first, so the steps run
-//   on from the heading into the lead. Everywhere else — a phone, a tablet, a
-//   touch screen, a window under the regime's step — the normal white-space
-//   makes each break a space (CSS's segment-break rule), and both blocks wrap
-//   as prose, as they always did (OFF THE SCALE, below).
+//   one shorter, same for text below it"). Its mechanism and its three step
+//   bounds: sections/PageHero's THE STAIRWAY.
 //   THE HEADING'S REACH — the owner, 2026-10-15, on the heading back at its
 //   old size (THE BAND SCALE: "… it should not be constrained by a div so
-//   that it has same space left and right as the articles seciton"). On a
-//   laptop or a desktop the <h1> is not held to the cards' column: inside THE
-//   BAND SCALE alone it is as wide as its longest line (REACH: a max-content
-//   width), at most the column's full width plus 50 spacing steps — 100
-//   design pixels a side, never more — and the hero's centring places it: a
-//   flex column centres an item wider than itself by letting it pass BOTH
-//   its edges by the same amount (Chromium, WebKit and Firefox alike,
-//   measured on 2026-10-15), so the heading stays on the column's centre
-//   line and its box passes the cards' left and right edges equally. Nothing
-//   on the way clips it — the band, ui/Container and the page's <main> set
-//   no overflow, and a size container does not clip — and the gutter is
-//   wider than those 100 design pixels at every window in the scale. At its
-//   narrowest, a 1140 window behind a classic scrollbar: 114px against 81.1
-//   in the test runner (PostList.scale.test.tsx's), whose 10vw is a tenth of
-//   the whole 1140; 112.5px on the built page (G2's reading, 2026-10-15), a
-//   tenth of the 1125 beside the scrollbar, against the 81.4 its 900px
-//   column makes of 100 design pixels. So the box never reaches the window's
-//   edge and the page never scrolls sideways. A line too long even for that
-//   box wraps inside it — the pre-line white-space wraps (THE STAIRWAY) —
-//   which is what SC 1.4.12's text spacing does to every first line: each
-//   outgrows the reach and the box stops at it. The LEAD stays in the column
-//   under its own cap (THE LEAD). Off the scale the heading keeps the column
-//   and its 6xl cap, as it always did.
-//   · MEASURED in the test runner (PostList.scale.test.tsx's Chromium, the
-//     real faces, its classic 15px scrollbar), how far the <h1>'s box passes
-//     each edge of the column, in design pixels, at a 1140 / 1401 / 1920
-//     window: Romanian 49.6 / 38.8 / 38.8, English 30.1 / 19.2 / 19.2, German
-//     58.9 / 47.7 / 47.7, French 83.2 / 71.9 / 72.0, Italian 69.0 / 57.8 /
-//     57.9 — the box centred on the column to 0.01px everywhere, and the
-//     page's edge 46.5px (French) to 89.6px (English) away from it at 1140,
-//     68.2 to 120.9 at 1401, 93.0 to 165.5 at 1920: the runner's pixels. On
-//     the built page the gutter is 1.5px narrower at 1140 (112.5 against
-//     114), so French's box stands about 45px from the edge there (computed
-//     from the runner's sweep at the built page's design pixel).
-//   · ON A SLOW FIRST LOAD — RECORDED, NOT FIXED (G2 react, 2026-10-15).
-//     Until Source Serif 4 arrives, next/font's swap display sets the heading
-//     in its fallback face, Arial at 101.16 % (the built stylesheet's own
-//     declaration), whose lines run 6 to 13 % wider, with no optical size to
-//     narrow them as they grow. Three first lines then outgrow the reach and
-//     wrap inside it: in the test runner, with that very declaration,
-//     French's (1369.4 design pixels, 131.7 past each edge of the column),
-//     Italian's (1341.9, 117.9 past) and Romanian's (1331.3, 112.6 past),
-//     while German's fits by 2.1 a side (97.9) and English's by 6.4 (93.6).
-//     French's joined them with the copy review's « nous tient à cœur » (THE
-//     COPY); G2 react, on the built page and the copy before that review,
-//     read German and Italian. The heading is then three lines, 197.8px tall
-//     against 131.9 at a 1140 window, 243.8 against 162.6 at 1401 and 335.4
-//     against 223.6 at 1920 (the runner's), and when the webfont lands the
-//     page below moves up by the difference, 65.9 to 111.8px — about 0.05 by
-//     G2's layout-shift arithmetic, under the 0.1 that counts as good. THE
-//     LEVER is a reach closer to the gutter: 132 design pixels a side would
-//     hold every language's first line in the fallback too, French's
-//     included, though only some 6 short of the gutter at its narrowest
-//     (138.3 design pixels on the built page at 1140, 139.6 to 140.6 in the
-//     runner); 120, the lever before the copy review, holds every first line
-//     but French's.
-//   ON A PHONE'S OR A TABLET'S COLUMN — under the Container's 48rem step,
-//   windows narrower than about 975px on the built page behind a classic
-//   scrollbar (979 in the test runner, whose 10vw counts the scrollbar; 960
-//   without one) — both wear the CSS `text-wrap: pretty` (`@max-3xl:`),
-//   which mends a short last line where it can. Never from the step up:
-//   WebKit's `pretty` re-balances a whole block (measured on the first copy,
-//   2026-10-14, when it evened the Romanian lead's three lines out at a
-//   laptop's widths), and the stairway wants its lines where the copy breaks
-//   them. `pretty` is no guarantee either: Chromium weighs a short last line
-//   against ragged ones and kept the first Italian draft's lone „cura" at
-//   744–900px — hence the no-break spaces below.
+//   that it has same space left and right as the articles seciton"). Its
+//   mechanism, the gutter it stays inside and its slow first load:
+//   sections/PageHero's THE HEADING'S REACH.
+//   · MEASURED in the test runner (its Chromium, the real faces, its classic
+//     15px scrollbar), how far the blog's <h1> box passes each edge of the
+//     column, in design pixels, at a 1140 / 1401 / 1920 window: Romanian
+//     49.6 / 38.8 / 38.8, English 30.1 / 19.2 / 19.2, German 58.9 / 47.7 /
+//     47.7, French 83.2 / 71.9 / 72.0, Italian 69.0 / 57.8 / 57.9 — the box
+//     centred on the column to 0.01px everywhere, and the page's edge 46.5px
+//     (French) to 89.6px (English) away from it at 1140, 68.2 to 120.9 at
+//     1401, 93.0 to 165.5 at 1920: the runner's pixels. On the built page the
+//     gutter is 1.5px narrower at 1140 (112.5 against 114), so French's box
+//     stands about 45px from the edge there (computed from the runner's sweep
+//     at the built page's design pixel).
+//   ON A PHONE'S OR A TABLET'S COLUMN — sections/PageHero's paragraph of that
+//   name.
 //   THE COPY, rewritten for the stairway on 2026-10-15 (Claude's drafts in
 //   five languages but the German heading, the owner's own words): every
 //   heading gained its last phrase — „prin blogul nostru", "through our
@@ -278,74 +212,39 @@ import { cx } from '@/lib/cx/cx';
 //   ends «ti mostriamo come / averne cura con il nostro blog». German's
 //   heading ends „wie Sie es pflegen, in unserem Blog", where „wie Sie es
 //   pflegen durch unser Blog" stood: the reviewer's fix, the owner's choice.
-//   THE NO-BREAK SPACES (U+00A0, in the message files — the copy carries
-//   them, never this band). A short word stays with its neighbour where a
-//   break between them reads badly: the clitic or the pronoun with its verb
-//   — Romanian's „ne pasă", „îți arătăm", „îți îngrijești" and „ne faci",
-//   Italian's „ci sta" and „ti mostriamo", French's „nous tient" and „en
-//   prendre", German's „Wir zeigen" and „es pflegen" — and the one-letter
+//   THE NO-BREAK SPACES — the blog's (U+00A0, in the message files: the copy
+//   carries them, never this band; the rules they follow are
+//   sections/PageHero's THE COPY'S RULES). The clitic or the pronoun with
+//   its verb: Romanian's „ne pasă", „îți arătăm", „îți îngrijești" and „ne
+//   faci", Italian's „ci sta" and „ti mostriamo", French's „nous tient" and
+//   „en prendre", German's „Wir zeigen" and „es pflegen"; the one-letter
 //   word with what it introduces: Romanian's „e bine" and „o vizită",
 //   Italian's „a cuore", „a casa" and „a trovare", French's „à cœur" and „à
-//   notre". Every language also joins the LAST TWO WORDS of each block — the
-//   headings' „blogul nostru", "our blog", „unserem Blog", « notre blog »,
-//   «nostro blog», the leads' „o vizită.", "visit us.", „sinnvoll ist.",
-//   « nous voir. », «a trovare.» — so neither can end on a single word at
-//   any width, measured or not (the owner's "no one-word last line
-//   anywhere"; the Romanian lead, left to measurement until 2026-10-15,
+//   notre"; and the LAST TWO WORDS of each block — the headings' „blogul
+//   nostru", "our blog", „unserem Blog", « notre blog », «nostro blog», the
+//   leads' „o vizită.", "visit us.", „sinnvoll ist.", « nous voir. », «a
+//   trovare.» (the Romanian lead, left to measurement until 2026-10-15,
 //   ended on a lone „vizită." from 960 to 1136px once its middle clause had
-//   gone). No line break ever stands beside one: a no-break space never
-//   collapses, so it would hang at the end of a line or open the next
-//   (PostList.scale.test.tsx holds the copy to it).
-//   French joins its colons to the word before them with U+202F, the narrow
-//   no-break space French typesetting puts there (a plain U+00A0 until the
-//   copy review of 2026-10-14): after a plain space Chromium broke before the
-//   colon (measured: „…tient à cœur | : voici" at 636–684px windows). A joined
-//   unit stays SHORT: a French candidate joined „comment l'entretenir", wider
-//   than a 320 phone's column, and the belt below then cut the word itself
-//   („l'entreteni | r", measured).
-//   THE <h1>: ui/Heading's `hero` step (§15.24's one h1 step) worn through
-//   `asChild` by a real <h1>, the page's one (§9), 65.04 design pixels
-//   inside the scale, the doctor page's name's size (THE BAND SCALE) —
-//   `hyphens-none`, so a word of the title never splits at a syllable
-//   (DoctorIntro's name, the numbers band's title); its belt `wrap-anywhere`,
-//   which breaks only a word too long for a line by itself (DoctorStats'
-//   TITLE paragraph) — and capped at the 6xl container step, 1152px, off the
-//   scale; inside it the heading's reach takes the cap's place (THE
-//   HEADING'S REACH).
-//   THE LEAD: ui/Text, muted — the screenshot's grey sentence — capped at 123
-//   spacing steps, 492px, 492 design pixels in the scale, and `hyphens-none`
-//   like the heading: the site's `hyphens: auto` (§15.14) lets Chromium's
-//   Romanian dictionary on macOS break words where no syllable ends
-//   („sfatur-ile", „med-icilor", „îng-rijești" — measured), and a word of
-//   the hero is never split. The heading's belt too, `wrap-anywhere` (G2
-//   a11y, 2026-10-14): `hyphens-none` alone would leave a word wider than the
-//   column — at a very large text size — pushing the page sideways; at an
-//   ordinary size it breaks nothing (every line in every language measured
-//   the same with and without it), and Chromium's `pretty` mends the same
-//   last lines under it.
-//   THE CAPS ARE LIMITS NOW. Inside the scale the copy chooses the lines, and
-//   each line must fit its box, or it would wrap into a line the stairway
-//   does not have: the heading's box reaches at most the column plus 100
-//   design pixels a side, 1306 (THE HEADING'S REACH — the 6xl cap, 1152,
-//   would be the narrower, so inside the scale the reach takes its place),
-//   the lead's its cap, 492. The tightest lines are measured at the regime's
-//   narrowest design pixel, a 1140 window, where the smaller type's optical
-//   size sets text widest: French's first heading line, 1272.4 of 1306, and
-//   English's first lead line, 469.3 of 492 — Chromium's numbers, the test
-//   runner's; WebKit and Firefox set every line within 0.23 % of them (each
-//   line alone on a page at the runner's 1140 sizes, in all three engines,
-//   measured again on 2026-10-15 for the reviewed copy; German's first
-//   heading line the widest gap, 2.8 design pixels, and French's the widest
-//   line in any engine, 1273.2 in Firefox). Off the scale the caps shape the
-//   prose as they always did.
-//   · THE TESTS' NARROWEST WINDOW IS 1160, not 1140 (PostList.scale.test.tsx's
-//     NARROWEST): behind the test runner's classic 15px scrollbar a 1140
-//     window's column is 897px, one pixel past the regime's 896px step — too
-//     thin a premise to stand a case on; 1160's column, 913px, clears the
-//     step with room on any runner (911 behind a 17px scrollbar, 928 with
-//     none), its design pixel 1.8 % over 1140's — still the narrow end,
-//     where the copy's lines run tightest. Every 1140 figure in this header
-//     is a measurement, taken before that change.
+//   gone). French's colons take U+202F (a plain U+00A0 until the copy review
+//   of 2026-10-14): after a plain space Chromium broke before the colon
+//   (measured: „…tient à cœur | : voici" at 636–684px windows). And a joined
+//   unit stays short: a French candidate joined „comment l'entretenir",
+//   wider than a 320 phone's column, and the hero's belt then cut the word
+//   itself („l'entreteni | r", measured).
+//   THE <h1> — sections/PageHero's paragraph of that name.
+//   THE LEAD — sections/PageHero's paragraph of that name.
+//   THE CAPS — sections/PageHero's paragraph of that name, and its THE TESTS'
+//   NARROWEST WINDOW. The blog copy's tightest lines, measured at the
+//   regime's narrowest design pixel, a 1140 window: French's first heading
+//   line, 1272.4 of the 1376 its box may reach (1306 until the reach grew
+//   from 100 to 135 design pixels a side), and English's first lead
+//   line, 469.3 of the lead's 492 — Chromium's numbers, the test runner's;
+//   WebKit and Firefox set every line within 0.23 % of them (each line alone
+//   on a page at the runner's 1140 sizes, in all three engines, measured
+//   again on 2026-10-15 for the reviewed copy; German's first heading line
+//   the widest gap, 2.8 design pixels, and French's the widest line in any
+//   engine, 1273.2 in Firefox). Every 1140 figure in this header is a
+//   measurement, taken before the tests' narrowest window moved to 1160.
 //   · EVERY LANGUAGE inside the scale, the test runner's (its Chromium, its
 //     classic scrollbar), in design pixels at the owner's 1401 window — the
 //     heading's two lines, then the lead's three: Romanian 1183.5 / 1016.8,
@@ -356,10 +255,10 @@ import { cx } from '@/lib/cx/cx';
 //     its first (Romanian's, 0.859), no lead's second line 0.86 of its first
 //     (Italian's, 0.855) and no lead's third line 0.78 of its second
 //     (Romanian's, 0.774); the narrowest step from the heading into the lead
-//     is Italian's, 324.7 design pixels at 1290. PostList.scale.test.tsx
-//     holds every language's shipped copy to the stairway and to the
-//     heading's reach at 1160 / 1280 / 1401 / 1536 / 1920 / 2560 (its
-//     narrowest window, under THE CAPS above).
+//     is Italian's, 324.7 design pixels at 1290. PageHero.scale.test.tsx
+//     holds every language's shipped copy — the blog's and the Team page's —
+//     to the stairway and to the heading's reach at 1160 / 1280 / 1401 /
+//     1536 / 1920 / 2560.
 //   · OFF THE SCALE, the Romanian hero in the test runner, behind its classic
 //     scrollbar (PostList.scale.test.tsx's): the heading in five lines at
 //     320, four at 390 and three from 768 to the regime's step (1024, 1100)
@@ -383,12 +282,13 @@ import { cx } from '@/lib/cx/cx';
 //     no scrollbar) nor from 444 to 1136 (every other pixel, with no scrollbar
 //     and from 600 with a classic one), in any language — Chromium's sweep in
 //     the test runner, run again on the reviewed copy (2026-10-15);
-//     PostList.scale.test.tsx samples eight phones and 768. The coarse
-//     pointer's figures came from that file's touch-emulation case, gone
-//     since 2026-10-15 (it left CI's shared Linux tab without a fine
-//     pointer): a touch screen is now its THE GATES, which reads the
-//     compiled rules, and tests/e2e/band-scale.spec.ts's touch tablets,
-//     1180 and 1366, which drive the device.
+//     PageHero.scale.test.tsx samples eight phones, 768 and the 1024 and 1100
+//     windows for every copy that ships. The coarse pointer's figures came
+//     from a touch-emulation case of PostList.scale.test.tsx's, gone since
+//     2026-10-15 (it left CI's shared Linux tab without a fine pointer): a
+//     touch screen is now that file's THE GATES, which reads the compiled
+//     rules, and tests/e2e/band-scale.spec.ts's touch tablets, 1180 and 1366,
+//     which drive the device.
 //
 // ── THE LIST: a <ul role="list"> — the role is load-bearing in WebKit
 // (eslint.config.mjs's list-role exception) — of one <li> per post, each
@@ -480,9 +380,11 @@ export type PostListProps = {
    * The page's <h1>, the hero's heading, finished text with ONE line break
    * where the stairway turns (e.g. „Pentru că ne pasă de zâmbetul tău, îți
    * arătăm" + `\n` + „cum să ai grijă de el prin blogul nostru"): the break
-   * holds inside the band scale and is a space everywhere else (the header's
-   * THE STAIRWAY). Measured in all five languages (THE CAPS); the copy carries
-   * its own no-break spaces (THE NO-BREAK SPACES).
+   * holds inside the band scale and is a space everywhere else
+   * (sections/PageHero's THE STAIRWAY — the band hands it to the hero as it
+   * is). Measured in all five languages (the header's THE CAPS and EVERY
+   * LANGUAGE); the copy carries its own no-break spaces (THE NO-BREAK
+   * SPACES).
    */
   title: string;
   /**
@@ -521,49 +423,6 @@ const RHYTHM = cx(
   bandScaleClasses,
 );
 
-/** THE HERO (the header's paragraph): both boxes centred, 3rem apart, and
- *  the heading's lines centred with them — the centring that also places a
- *  heading wider than the column on its centre line (THE HEADING'S REACH). */
-const HERO = 'flex flex-col items-center gap-12 text-center';
-
-/** THE STAIRWAY (the header's paragraph): inside THE BAND SCALE alone, the
- *  copy's own line breaks hold — the pre-line white-space, behind the band
- *  scale's own chain — so the heading's two lines and the lead's three fall
- *  where the message files break them. One spelling, worn by both blocks. */
-const STAIRWAY = 'scalable:@4xl:@min-[896px]:whitespace-pre-line';
-
-/** THE HEADING'S REACH (the header's paragraph): inside THE BAND SCALE alone,
- *  the <h1> is as wide as its longest line, up to the column's full width
- *  plus 50 spacing steps — 100 design pixels a side, never more; the hero's
- *  centring passes both of the column's edges by the same amount. Behind the
- *  band scale's own chain, like the stairway beside it. */
-const REACH =
-  'scalable:@4xl:@min-[896px]:w-max scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*50)]';
-
-/** THE <h1> (the header's THE HERO): capped at the 6xl step (THE CAPS),
- *  never split at a syllable, a belt for a word too long for a line, the
- *  `pretty` wrap on a phone's or a tablet's column, the stairway's line
- *  breaks and the heading's reach inside the band scale — and, LAST, its
- *  size there, behind the band scale's own chain: sections/DoctorIntro's
- *  name's class byte for byte, 16.26 spacing steps, 65.04 design pixels
- *  (THE BAND SCALE — KEEP IN SYNC, held by tests/unit/design-scale.test.ts). */
-const TITLE = cx(
-  'max-w-6xl hyphens-none wrap-anywhere @max-3xl:text-pretty',
-  STAIRWAY,
-  REACH,
-  'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
-);
-
-/** THE LEAD (the header's THE HERO): capped at 123 spacing steps, the limit
- *  every one of its lines fits (THE CAPS), never split at a syllable, a belt
- *  for a word too long for a line (the heading's own), centred ON THE
- *  ELEMENT (§15.15 b), the `pretty` wrap on a phone's or a tablet's column,
- *  and the stairway's line breaks inside the band scale. */
-const LEAD = cx(
-  'max-w-123 hyphens-none wrap-anywhere text-center @max-3xl:text-pretty',
-  STAIRWAY,
-);
-
 /** The cards and the pager under them (the header's THE PAGER): one 2rem gap
  *  — the grid's own — and the pager placed at the end edge by the band. */
 const GROUP = 'flex flex-col gap-8';
@@ -584,14 +443,9 @@ export function PostList({
     <section>
       <Container>
         <div className={RHYTHM}>
-          <header className={HERO}>
-            <Heading size="hero" asChild>
-              <h1 className={TITLE}>{title}</h1>
-            </Heading>
-            <Text tone="muted" className={LEAD}>
-              {lead}
-            </Text>
-          </header>
+          {/* THE HERO (sections/PageHero): the two strings and nothing
+              else — the band places nothing on it. */}
+          <PageHero title={title} lead={lead} />
           {posts.length > 0 ? (
             <div className={GROUP}>
               <ul role="list" className={GRID}>

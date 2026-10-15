@@ -91,10 +91,10 @@ import {
 // finished strings and one callback per walk are the seam both satisfy, and
 // this module needs neither a provider nor a mock to test.
 //
-// ── NO `TEAM_TITLE_ID` HERE, unlike the services populator. Since 2026-09-30
-// the Team page owns its <h1> the way that page does — a bare `sr-only`
-// element in the page's markup, the visible opener being the doctors band's
-// own <h2> — and on a doctor page the <h1> is DoctorIntro's. Both twins find
+// ── NO `TEAM_TITLE_ID` HERE, unlike the services populator. Since 2026-10-15
+// the Team page's <h1> is the doctors band's page opener (sections/PageHero,
+// DoctorShowcase D12; from 2026-09-30 until then a bare `sr-only` element in
+// the page's markup), and on a doctor page the <h1> is DoctorIntro's. Both twins find
 // the heading by role and name, which needs no handle and is the stronger
 // assertion anyway (§9, §13).
 //

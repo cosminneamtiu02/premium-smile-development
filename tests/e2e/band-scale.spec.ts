@@ -22,6 +22,11 @@ import { pageCount } from '../../src/lib/blog/blog';
 // included. Since 2026-10-14 the blog's list page draws in the scale too
 // (CLAUDE.md §15.39 round 2: its hero, its three-across grid, its pager, and
 // the map under them); the last block reads it beside Home the same way.
+// Since 2026-10-15 the Team page opens on that very hero (sections/PageHero,
+// the doctors band's page opener — the owner: "implement something similar
+// instead of FAMILIA PREMIUM SMILE / Specialiștii cu care ne mândrim on the
+// echipa page"): its doctors band has no eyebrow and <h2> any more, and the
+// page's blocks check its <h1> the way the blog's block checks the blog's.
 //
 // WHY THE BUILT EXPORT: the scale is real CSS — a registered custom property,
 // container queries, `@supports` and `(pointer: fine)` — resolved by the
@@ -63,11 +68,21 @@ const PAGES: readonly {
   readonly bands: number;
   readonly staff: boolean;
   readonly reviews: boolean;
+  /** Does the page open on the centred hero — its visible <h1> and lead,
+   *  sections/PageHero (the blog list's, the Team page's since 2026-10-15)? */
+  readonly hero: boolean;
 }[] = [
   // Home: the numbers, the doctors, the map, the reviews.
-  { path: (l) => `/${l}/`, bands: 4, staff: false, reviews: true },
-  // Team: the doctors, the staff, the numbers, the map.
-  { path: (l) => `/${l}/team/`, bands: 4, staff: true, reviews: false },
+  { path: (l) => `/${l}/`, bands: 4, staff: false, reviews: true, hero: false },
+  // Team: the hero over the doctors (no eyebrow and <h2> of their own since
+  // 2026-10-15), then the staff, the numbers, the map.
+  {
+    path: (l) => `/${l}/team/`,
+    bands: 3,
+    staff: true,
+    reviews: false,
+    hero: true,
+  },
 ];
 
 /** Laptop and desktop windows — the regime, on a mouse device. */
@@ -85,9 +100,17 @@ const LAPTOPS = [
  *  tile's four at 9/8, the map row's text and disc, the staff tile's width,
  *  and the `hero` step's value at the owner's 1401 window — 16 + 3.5 × 14.01
  *  = 65.035, as the 16.26 spacing steps the doctor page's name spells
- *  (DoctorIntro's THE BAND SCALE) and the blog list's <h1> wears byte for
- *  byte (sections/PostList's THE BAND SCALE — the pair restored on
- *  2026-10-15; tests/unit/design-scale.test.ts holds the two classes equal). */
+ *  (DoctorIntro's THE BAND SCALE) and the page hero's <h1> — the blog list's
+ *  and, since 2026-10-15, the Team page's — wears byte for byte
+ *  (sections/PageHero's THE <h1>; tests/unit/design-scale.test.ts holds the
+ *  two classes equal). */
+/** THE HEADING'S REACH (sections/PageHero's paragraph of that name), in
+ *  design pixels: how far the hero's <h1> may pass each edge of its column
+ *  inside the band scale — 67.5 spacing steps since 2026-10-16 (100 design
+ *  pixels until then; widened so the fallback face's first lines fit and the
+ *  heading never re-wraps when the webfont lands). */
+const REACH = 67.5 * 4;
+
 const DESIGN = {
   title: 36,
   eyebrow: 14,
@@ -143,6 +166,27 @@ interface PageShape {
     readonly name: number;
     readonly level: string;
   }[];
+  /** The page's FIRST <h1> and the <p> after it, read as the blog block
+   *  reads its hero — meaningful where the page opens on sections/PageHero
+   *  (PAGES' `hero`); on Home it is the page's `sr-only` <h1>, never checked. */
+  readonly hero: {
+    readonly size: number;
+    readonly left: number;
+    readonly right: number;
+    /** Its band's RHYTHM box — the column the hero centres on and the one
+     *  its reach is measured from: capped at 96rem and centred past a 1920
+     *  window, where ui/Container's own box runs wider (the TS review,
+     *  2026-10-15: measured against that box, the reach could never fail at
+     *  2560). */
+    readonly columnLeft: number;
+    readonly columnRight: number;
+    readonly pageRight: number;
+    /** One hundred `vw` off a probe box — what the `hero` clamp reads. */
+    readonly hundredVw: number;
+    readonly whiteSpace: { readonly h1: string; readonly lead: string };
+    readonly copyLines: { readonly h1: number; readonly lead: number };
+    readonly lines: { readonly h1: number; readonly lead: number };
+  };
 }
 
 /** The page as it is laid out right now. */
@@ -234,12 +278,39 @@ const readPage = (page: Page, staffTitle: string): Promise<PageShape> =>
     // said −10. PostList.scale.test.tsx's expectNoSideways measures the same
     // way; `scrollWidth` is whole pixels, so the box is rounded up to meet it.
     const root = document.documentElement;
+    // THE HERO (PAGES' `hero`): the first <h1> and its lead, the <p> after it.
+    const h1 = document.querySelector('main h1');
+    const heroLead = h1?.nextElementSibling;
+    // <h1> → PageHero's <header> → the band's rhythm box.
+    const heroColumn =
+      h1?.parentElement?.parentElement?.getBoundingClientRect();
+    const copyLinesOf = (element: Element | null | undefined): number =>
+      element ? (element.textContent ?? '').split('\n').length : NaN;
+    const renderedLinesOf = (element: Element | null | undefined): number => {
+      if (!element) return NaN;
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return new Set(
+        Array.from(range.getClientRects())
+          .filter((rect) => rect.width > 0)
+          .map((rect) => Math.round(rect.top)),
+      ).size;
+    };
+    const whiteSpaceOf = (element: Element | null | undefined): string =>
+      element ? getComputedStyle(element).whiteSpace : '';
+    // Nothing to scroll sideways is read BEFORE the probe enters the page.
+    const sideways =
+      root.scrollWidth - Math.ceil(root.getBoundingClientRect().width);
+    const probe = document.createElement('div');
+    probe.style.width = '100vw';
+    document.body.append(probe);
+    const hundredVw = probe.getBoundingClientRect().width;
+    probe.remove();
     return {
       gutter: window.innerWidth - document.body.getBoundingClientRect().width,
       pointerFine: matchMedia('(pointer: fine)').matches,
       column: openers[0]?.column ?? NaN,
-      sideways:
-        root.scrollWidth - Math.ceil(root.getBoundingClientRect().width),
+      sideways,
       openers,
       tiles,
       quote: quote ? size(quote) : null,
@@ -263,6 +334,21 @@ const readPage = (page: Page, staffTitle: string): Promise<PageShape> =>
         : null,
       reviewBody: reviewBody ? size(reviewBody) : null,
       staff,
+      hero: {
+        size: size(h1),
+        left: h1?.getBoundingClientRect().left ?? NaN,
+        right: h1?.getBoundingClientRect().right ?? NaN,
+        columnLeft: heroColumn?.left ?? NaN,
+        columnRight: heroColumn?.right ?? NaN,
+        pageRight: root.getBoundingClientRect().right,
+        hundredVw,
+        whiteSpace: { h1: whiteSpaceOf(h1), lead: whiteSpaceOf(heroLead) },
+        copyLines: { h1: copyLinesOf(h1), lead: copyLinesOf(heroLead) },
+        lines: {
+          h1: renderedLinesOf(h1),
+          lead: renderedLinesOf(heroLead),
+        },
+      },
     };
   }, staffTitle);
 
@@ -358,8 +444,83 @@ const expectSameBand = (
   }
 };
 
+/** THE HERO INSIDE THE SCALE (sections/PageHero — its THE <h1>, THE STAIRWAY
+ *  and THE HEADING'S REACH; the blog block below checks the blog's the same
+ *  way): the <h1> at the doctor page's name's 65.04 design pixels, both
+ *  blocks on the pre-line white-space and rendering exactly the copy's lines
+ *  — the <h1> two, the lead three — the <h1>'s box centred on its band's
+ *  column, never more than 135 design pixels past either edge, and inside
+ *  the window. */
+const expectHeroInTheScale = (
+  shape: PageShape,
+  s: number,
+  where: string,
+): void => {
+  const { hero } = shape;
+  expect(hero.size, `the hero’s <h1> at ${where}`).toBeCloseTo(
+    DESIGN.hero * s,
+    1,
+  );
+  expect(hero.whiteSpace.h1, `the <h1>’s white-space at ${where}`).toBe(
+    'pre-line',
+  );
+  expect(hero.whiteSpace.lead, `the lead’s white-space at ${where}`).toBe(
+    'pre-line',
+  );
+  expect(hero.copyLines.h1, `the copy’s <h1> lines at ${where}`).toBe(2);
+  expect(hero.copyLines.lead, `the copy’s lead lines at ${where}`).toBe(3);
+  expect(hero.lines.h1, `the <h1>’s rendered lines at ${where}`).toBe(2);
+  expect(hero.lines.lead, `the lead’s rendered lines at ${where}`).toBe(3);
+  expect(
+    (hero.left + hero.right) / 2,
+    `the <h1> centred on its column at ${where}`,
+  ).toBeCloseTo((hero.columnLeft + hero.columnRight) / 2, 0);
+  expect(
+    hero.columnLeft - hero.left,
+    `the <h1> past the column’s start at ${where}`,
+  ).toBeLessThanOrEqual(REACH * s + 0.1);
+  expect(
+    hero.right - hero.columnRight,
+    `the <h1> past the column’s end at ${where}`,
+  ).toBeLessThanOrEqual(REACH * s + 0.1);
+  expect(
+    hero.left,
+    `the <h1> inside the window at ${where}`,
+  ).toBeGreaterThanOrEqual(0);
+  expect(
+    hero.right,
+    `the <h1> inside the window at ${where}`,
+  ).toBeLessThanOrEqual(hero.pageRight);
+};
+
+/** THE HERO OFF THE SCALE: nothing declared — the <h1> on the `hero` clamp
+ *  itself (2rem, 1rem + 3.5vw, 4.5rem, its `vw` the page's own, measured),
+ *  both blocks on the normal white-space — the copy's line breaks a space,
+ *  as prose — and the <h1> inside its column. */
+const expectHeroOffTheScale = (shape: PageShape, where: string): void => {
+  const { hero } = shape;
+  expect(hero.size, `the hero’s <h1> at ${where}`).toBeCloseTo(
+    Math.min(72, Math.max(32, 16 + 0.035 * hero.hundredVw)),
+    1,
+  );
+  expect(hero.whiteSpace.h1, `the <h1>’s white-space at ${where}`).toBe(
+    'normal',
+  );
+  expect(hero.whiteSpace.lead, `the lead’s white-space at ${where}`).toBe(
+    'normal',
+  );
+  expect(
+    hero.left,
+    `the <h1> from its column’s start at ${where}`,
+  ).toBeGreaterThanOrEqual(hero.columnLeft - 0.1);
+  expect(
+    hero.right,
+    `the <h1> to its column’s end at ${where}`,
+  ).toBeLessThanOrEqual(hero.columnRight + 0.1);
+};
+
 for (const locale of ['ro', 'de'] as const) {
-  for (const { path, bands, staff, reviews } of PAGES) {
+  for (const { path, bands, staff, reviews, hero } of PAGES) {
     const at = path(locale);
     test.describe(`${at} — THE BAND SCALE on a laptop or desktop`, () => {
       test.use({ locale: BROWSER_LOCALE[locale] });
@@ -437,6 +598,7 @@ for (const locale of ['ro', 'de'] as const) {
             // The deck is untouched: its body text stays the theme's 16px.
             expect(shape.reviewBody).toBeCloseTo(16, 2);
           }
+          if (hero) expectHeroInTheScale(shape, s, `${viewport.width}`);
           if (staff) {
             // Three fixed tiles on one row, each 352 design px, names <h3>.
             expect(shape.staff).toHaveLength(3);
@@ -493,6 +655,7 @@ for (const locale of ['ro', 'de'] as const) {
           for (const tile of shape.tiles) expect(tile.sentence).toBe(16);
           expect(shape.map?.address).toBe(16);
           expect(shape.map?.disc).toBe(44);
+          if (hero) expectHeroOffTheScale(shape, `${viewport.width}`);
           if (staff) {
             // The staff tile's width under the step: the column's own under
             // the named `md` step, 28rem — a phone's (since 2026-10-09,
@@ -526,6 +689,7 @@ for (const locale of ['ro', 'de'] as const) {
             }
             for (const tile of shape.tiles) expect(tile.sentence).toBe(16);
             expect(shape.map?.address).toBe(16);
+            if (hero) expectHeroOffTheScale(shape, `${tablet.width}`);
             if (staff) {
               for (const tile of shape.staff) expect(tile.width).toBe(288);
             }
@@ -1034,7 +1198,7 @@ for (const locale of ['ro', 'de'] as const) {
       /** THE STAIRWAY, block by block: the computed white-space; the
        *  copy's own lines — its text split at its line breaks; and the lines
        *  the page renders — the block's text boxes grouped by their top, as
-       *  PostList.fixtures' `linesOf` reads a line. */
+       *  PageHero.fixtures' `linesOf` reads a line. */
       readonly whiteSpace: { readonly h1: string; readonly lead: string };
       readonly copyLines: { readonly h1: number; readonly lead: number };
       readonly lines: { readonly h1: number; readonly lead: number };
@@ -1235,11 +1399,11 @@ for (const locale of ['ro', 'de'] as const) {
           );
         }
 
-        // THE HEADING'S REACH (sections/PostList's paragraph of that name):
+        // THE HEADING'S REACH (sections/PageHero's paragraph of that name):
         // the <h1>'s box is not held to the grid — at 65.04 design pixels
         // every shipped first line is wider than the grid's 1106 (Romanian's
         // 1183.5, German's 1201.4 at 1401) — so it passes BOTH of the grid's
-        // edges, by the same amount, never by more than 100 design pixels,
+        // edges, by the same amount, never by more than REACH design pixels,
         // and stays inside the window. Wider by MORE than 10 design pixels:
         // a heading held to the grid is the grid's width give or take a 64th
         // of a pixel, which a bare "wider" would let through; the narrowest
@@ -1257,11 +1421,11 @@ for (const locale of ['ro', 'de'] as const) {
         expect(
           gridLeft - blog.h1Left,
           `the <h1> past the grid’s start at ${viewport.width}`,
-        ).toBeLessThanOrEqual(100 * s + 0.1);
+        ).toBeLessThanOrEqual(REACH * s + 0.1);
         expect(
           blog.h1Right - gridRight,
           `the <h1> past the grid’s end at ${viewport.width}`,
-        ).toBeLessThanOrEqual(100 * s + 0.1);
+        ).toBeLessThanOrEqual(REACH * s + 0.1);
         expect(
           blog.h1Left,
           `the <h1> inside the window at ${viewport.width}`,

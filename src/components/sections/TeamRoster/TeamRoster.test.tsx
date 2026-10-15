@@ -412,11 +412,11 @@ describe('TeamRoster — the staff tiles, fixed (D9)', () => {
   });
 
   it('files the tiles under its own <h2>: no <h1>, ONE <h2>, every tile an <h3>', () => {
-    // The <h1> is the PAGE's (sr-only, in its markup); the band's <h2> is the
-    // only one here, and every person is an <h3> under it, handed down through
-    // PersonnelCard's `headingLevel` (its D4) — the Team page's outline: h1 →
-    // the doctors band's h2 → an h3 per doctor → this band's h2 → an h3 per
-    // tile (the header's outline paragraph). Only the ELEMENT is asserted, never
+    // The <h1> is the PAGE's (the doctors band's hero since 2026-10-15); the
+    // band's <h2> is the only one here, and every person is an <h3> under it,
+    // handed down through PersonnelCard's `headingLevel` (its D4) — the Team
+    // page's outline: the hero's h1 → an h2 per doctor → this band's h2 → an
+    // h3 per tile (the header's outline paragraph). Only the ELEMENT is asserted, never
     // the name's size class: that look is PersonnelCard's NAME_STEP.
     renderRoster();
 

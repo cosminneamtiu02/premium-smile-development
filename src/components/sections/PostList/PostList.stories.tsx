@@ -1,5 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, getDefaultNormalizer, within } from 'storybook/test';
+import {
+  HERO_GAP_REM,
+  lineStrings,
+  linesOf,
+  namedAs,
+  segmentsOf,
+  stairwayViolations,
+  wrapStyleAt,
+} from '@/components/sections/PageHero/PageHero.fixtures';
 import { localeHref } from '@/i18n/href';
 import {
   blogPagePath,
@@ -17,19 +26,10 @@ import {
 } from './PostList';
 import {
   GRID_GAP_REM,
-  HERO_GAP_REM,
   JUMP,
-  LEAD_FIRST_STEP,
-  LEAD_STEP,
   ROOM_BELOW_REM,
-  TITLE_STEP,
   leadToCardsRem,
-  lineStrings,
-  linesOf,
-  namedAs,
   roomAboveRem,
-  segmentsOf,
-  wrapStyleAt,
 } from './PostList.fixtures';
 
 // Sections/PostList — the blog list's band. FIVE stories: the first page, the
@@ -55,14 +55,15 @@ import {
 // hero's two sentences are read out of src/messages/ro.json (blog.hero.*,
 // the PostCard stories' precedent), so the frames show the Romanian copy the
 // page ships, its line breaks included — one of the five PostList.tsx's
-// THE STAIRWAY records.
+// THE COPY records.
 //
 // ── EVERY STORY PINS ITS LANGUAGE (the preview decorator stamps <html lang>
 // from it, and `hyphens: auto` picks its dictionary there — §15.14): Romanian,
 // the house default (§13). The blog speaks five languages since round 3: the
-// hero's shape in each of them is PostList.scale.test.tsx's, which reads every
-// message file's copy, and the Pages/Blog twin renders the German page (its
-// words and links, not the hero's lines). Three pin a VIEWPORT for the Vitest
+// hero's shape in each of them is PageHero.scale.test.tsx's (the hero is
+// sections/PageHero since 2026-10-15), which reads every message file's
+// copy, and the Pages/Blog twin renders the German page (its words and
+// links, not the hero's lines). Three pin a VIEWPORT for the Vitest
 // storybook project — LastPage a phone's 390, ShortLastPage the laptop's
 // 1536, Narrowest the 320 stress width — while Default and Empty open at the
 // runner's own 1200, a laptop window inside the band scale. The visual net
@@ -84,9 +85,10 @@ import {
 // rides the <article> inside the <li>, and a child's transform never moves
 // its parent's box. The exact numbers at the six named windows — line counts,
 // track widths, the growth with the screen — are PostList.scale.test.tsx's;
-// the rules both files hold the band to (the stairway's steps, the jump, the
-// band's room and gaps), the line reader both use and the <h1>'s name matcher
-// are PostList.fixtures.ts's, spelled once (G2 typescript, 2026-10-15).
+// the rules both files hold the band to are spelled once (G2 typescript,
+// 2026-10-15): the stairway's steps, the heading-to-lead gap, the line reader
+// both use and the <h1>'s name matcher are the hero's (PageHero.fixtures.ts),
+// the jump and the band's room and gaps the band's (PostList.fixtures.ts).
 
 /** The blog's language, as the stories pin it. */
 const LOCALE = { locale: 'ro' } as const;
@@ -136,6 +138,11 @@ const pageArgs = (
 const rem = (n: number): number =>
   n * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
+/** THE REGIME'S STEP, written out: ui/Container's column at max(56rem, 896px)
+ *  — the band scale's chain `scalable:@4xl:@min-[896px]:`. */
+const STEP_REM = 56;
+const STEP_FLOOR = 896;
+
 const px = (element: Element, property: string): number =>
   parseFloat(getComputedStyle(element).getPropertyValue(property));
 
@@ -158,7 +165,7 @@ async function loadFaces(root: HTMLElement): Promise<void> {
 /** The middle of a box, across. */
 const across = (rect: DOMRect): number => rect.left + rect.width / 2;
 
-/** The words of an element's LAST line, as PostList.fixtures.ts's reader
+/** The words of an element's LAST line, as PageHero.fixtures.ts's reader
  *  sets them out (a hyphenated word counts once, on whichever line its tail
  *  falls; two joined by a no-break space are two). */
 const lastLineWords = (element: Element): string[] =>
@@ -200,18 +207,21 @@ async function expectNoSidewaysScroll(): Promise<void> {
 /**
  * THE HERO — the page's one <h1> over its lead, both centred line by line in
  * the column, 3rem apart (× s in the band scale), never split at a syllable.
- * Wherever the band is scaled — a laptop or a desktop — THE STAIRWAY
- * (PostList.tsx): the copy's own line breaks hold, the title in TWO lines,
- * the second at most 0.9 of the first, and the lead in THREE, its second at
- * most 0.95 of its first and its third at most 0.9 of its second, the
- * title's second line wider than the lead's first. Anywhere else the breaks
+ * The band is scaled exactly where the regime's premises hold (asserted).
+ * Wherever it is — a laptop or a desktop — THE STAIRWAY (sections/PageHero;
+ * its five rules read by PageHero.fixtures.ts's `stairwayViolations`): the
+ * copy's own line breaks hold, the title in TWO lines, the second at most 0.9
+ * of the first, and the lead in THREE, its second at most 0.95 of its first
+ * and its third at most 0.9 of its second, the title's second line wider
+ * than the lead's first. Anywhere else the breaks
  * are spaces and both wrap as prose — `pretty` on a phone's or a tablet's
  * column: neither block's lines are the copy's, and the title takes more
  * than two (never the lead's line COUNT, which a third of a pixel decides
  * at some widths — PostList.scale.test.tsx's expectProse); and never a last
  * line of one word. The band's room above the hero, under the header,
  * follows the column's own width: 4rem under 32rem of column, 6rem from it,
- * 8rem from 48rem (× s). Every step and length is PostList.fixtures.ts's.
+ * 8rem from 48rem (× s). Every step and length is the fixtures' — the hero's
+ * PageHero.fixtures.ts's, the band's PostList.fixtures.ts's.
  */
 async function expectHero(
   canvasElement: HTMLElement,
@@ -220,7 +230,7 @@ async function expectHero(
   const canvas = within(canvasElement);
   await expect(canvas.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   // By the name a screen reader hears — the copy's line break a space —
-  // whitespace collapsed (PostList.fixtures.ts's namedAs).
+  // whitespace collapsed (PageHero.fixtures.ts's namedAs).
   const h1 = canvas.getByRole('heading', {
     level: 1,
     name: namedAs(args.title),
@@ -234,6 +244,16 @@ async function expectHero(
   await expect(lead.previousElementSibling).toBe(h1);
   await expect(getComputedStyle(lead).textAlign).toBe('center');
   const { scaled, s } = scaleOf(rhythm);
+  // THE PREMISES (DoctorShowcase.stories.tsx's `scalable`): the band is
+  // scaled exactly where the regime's three conditions hold — asserted, so a
+  // regime that silently stopped applying can never leave the stairway's
+  // checks below standing on nothing (the G2 typescript review of
+  // PageHero.stories.tsx, the same weakness).
+  await expect(scaled).toBe(
+    window.matchMedia('(pointer: fine)').matches &&
+      CSS.supports('color', 'rgb(from red r g b)') &&
+      box(column).width >= Math.max(rem(STEP_REM), STEP_FLOOR),
+  );
 
   const middle = across(box(rhythm));
   const titleLines = linesOf(h1);
@@ -242,16 +262,8 @@ async function expectHero(
     await expect(Math.abs(across(line) - middle)).toBeLessThanOrEqual(1);
   }
   if (scaled) {
-    await expect(titleLines).toHaveLength(2);
-    await expect(leadLines).toHaveLength(3);
-    const [t1 = 0, t2 = Infinity] = titleLines.map(({ width }) => width);
-    const [l1 = 0, l2 = Infinity, l3 = Infinity] = leadLines.map(
-      ({ width }) => width,
-    );
-    await expect(t2).toBeLessThanOrEqual(TITLE_STEP * t1);
-    await expect(l2).toBeLessThanOrEqual(LEAD_FIRST_STEP * l1);
-    await expect(l3).toBeLessThanOrEqual(LEAD_STEP * l2);
-    await expect(t2).toBeGreaterThan(l1);
+    // THE STAIRWAY's five rules, read by PageHero.fixtures.ts's one reader.
+    await expect(stairwayViolations({ h1, lead }, args)).toEqual([]);
   } else {
     // PROSE: the laptop's breaks absent — neither block's rendered lines
     // the copy's segments — and the title in more than the stairway's two.
@@ -260,8 +272,9 @@ async function expectHero(
     await expect(titleLines.length).toBeGreaterThan(2);
   }
   // Whole words, the `pretty` wrap on a phone's or a tablet's column (under
-  // 48rem) alone — plainly from it (PostList.tsx's THE HERO) — and the copy's
-  // line breaks kept only where the band is scaled (THE STAIRWAY).
+  // 48rem) alone — plainly from it (sections/PageHero's ON A PHONE'S OR A
+  // TABLET'S COLUMN) — and the copy's line breaks kept only where the band is
+  // scaled (THE STAIRWAY).
   const wrap = wrapStyleAt(box(column).width / rem(1));
   for (const element of [h1, lead]) {
     await expect(lastLineWords(element).length).toBeGreaterThan(1);
@@ -411,7 +424,7 @@ const meta = {
     title: {
       control: 'text',
       description:
-        'The page’s one <h1>, the hero’s heading, on ui/Heading’s `hero` step (65.04 design pixels inside the band scale — the doctor page’s name’s size — and there as wide as its first line, up to 100 design pixels past the column a side) — finished text with ONE line break where the stairway turns: two lines on a laptop or desktop, the second the shorter; elsewhere the break is a space',
+        'The page’s one <h1>, the hero’s heading, on ui/Heading’s `hero` step (65.04 design pixels inside the band scale — the doctor page’s name’s size — and there as wide as its first line, up to 135 design pixels past the column a side) — finished text with ONE line break where the stairway turns: two lines on a laptop or desktop, the second the shorter; elsewhere the break is a space',
     },
     lead: {
       control: 'text',

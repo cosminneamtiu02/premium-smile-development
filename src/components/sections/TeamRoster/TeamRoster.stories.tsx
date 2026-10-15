@@ -28,7 +28,8 @@ import { TeamRoster, type TeamRosterMember } from './TeamRoster';
 //
 // ── THREE STORIES LEFT WITH THE DOCTORS (owner, 2026-09-30 — TeamRoster.tsx's
 // header quotes him): the doctors are a band of their own,
-// sections/DoctorShowcase, and the page title is the page's own sr-only <h1>.
+// sections/DoctorShowcase, and the page title is the page's own <h1> (sr-only
+// then; the doctors band's visible hero since 2026-10-15).
 // `DoctorsOnly` had nothing left to show. `MembersOnly` — the staff half on
 // its own — IS `Default` now, so keeping it would photograph the same pixels
 // twice. `PseudoLocale` transformed exactly the page title and the doctors'
@@ -251,7 +252,7 @@ type Expected = Readonly<{
 /**
  * The facts a picture cannot show, in one place: a region named by the band's
  * own <h2> — its title alone — with the eyebrow above it; no <h1> here (it is
- * the page's, sr-only, in the page's own markup); ONE list, the tiles in DOM
+ * the page's — the doctors band's hero since 2026-10-15); ONE list, the tiles in DOM
  * order, each an `article` named by its own <h3>, and no other heading; and
  * nothing to follow (PersonnelCard D2: an auxiliary tile brings no link).
  * Returns the band.

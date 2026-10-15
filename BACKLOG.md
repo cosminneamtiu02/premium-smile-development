@@ -451,3 +451,83 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   and the JSON-LD's `url` is built from it); translated URLs (entry 8 — once Google has indexed
   a URL, changing it needs a redirect); the share image (entry 8). Already done: the Footer's
   address and phone on every page (§10.5). Core Web Vitals (§10.6) are entry 6.
+
+## 11 · The threshold scroll steps against the „Echipa" dropdown — check them together
+
+- **Why it waits:** the owner, 2026-10-15: "add to backlog to check if a bug arrises from the 2
+  things that are right now being developed, a trashhold based scroll focus vs a take to doctor
+  card from top bar dropdown" — and: "just add it to the backlog, do not fix anything yet". Both
+  are lanes in flight — uncommitted, each branched from develop `bfadb0a`, neither aware of the
+  other — so the check needs a tree that has both: it belongs to whichever lane merges SECOND (it
+  rebases onto the first), or to develop once both are in, before the next promotion to main.
+  The entry leaves the list in the lane that runs it.
+- **The two pieces, as their code stood on 2026-10-15** (their records, CLAUDE.md §15.26 round 8
+  and §15.40, are not on develop yet, and either lane may still change):
+  - THE STEPS — `rework/doctor-scroll-steps`, NEW `src/lib/scroll-steps`: inside the doctors band
+    (on Home and on the Team page) the page stops scrolling; the wheel or a finger adds up as
+    intent and, past 140px of it, the page glides (650ms) to the next card, the card being left
+    first hurried to the end of its ribbon stretch (a scroll key counts as the whole 140px). A
+    card that fits the window under the top bar's 6rem strip rests CENTRED there; a taller one
+    with its top 1rem under that strip (112px). A page left BETWEEN two such resting places is
+    glided onto the nearer one by THE SETTLE — 140ms after the last scroll the steps did not
+    make, and only within 4s of a wheel, a touch, a pointer press or a scroll key; any focus
+    move, and any other key, cancels that window.
+  - THE DROPDOWN — `rework/nav-dropdowns`, NEW `src/lib/nav-sections`: the top bar's „Echipa"
+    opens on hover a card listing the six doctors — on a phone, a ⌄ list under „Echipa" in the
+    menu — each a plain link to `/{locale}/team/#{doctor id}`; each card's ribbon station wears
+    its doctor's id (DoctorShowcase's D13, THE ANCHOR), so the browser's own jump — smooth,
+    through the html's `scroll-behavior` — rests the card's top 136px down (the root's 6rem
+    `scroll-padding-top` and the station's 2.5rem `scroll-margin-top`).
+- **Where they may collide — read off both lanes' code, NOT measured:**
+  1. TWO RESTING PLACES FOR ONE CARD — 136px against centred, or 112px — so after a dropdown jump
+     the page rests BETWEEN two of the steps' resting places, and:
+     - THE SETTLE may move it again once the jump stops: a second, shorter glide onto the steps'
+       own place for that card. Whether it runs hangs on details neither lane has settled —
+       Chromium focuses a clicked link, which cancels the settle's window, and Safari does not;
+       whether the dropdown hands focus back to „Echipa" as it closes is not written yet;
+     - the FIRST NUDGE skips the threshold: from between two resting places THE DECISION enters
+       a card at once, so one wheel tick, a short swipe or one arrow key after the jump glides to
+       another doctor — DOWN to the next one where the card fits under the strip (every phone:
+       the cards are about 480–550px tall at 390×844), UP to the previous one's end where it is
+       taller (the steps' own header names 1366×633, 1536×730 and 1920×945) — where inside the
+       band a step takes 140px of intent;
+     - the steps do not learn where the jump went: their current step stays the one before it
+       (none after a page load), so the next step hurries the wrong card's ribbon stretch while
+       the jumped-to card's keeps drawing at its own pace.
+  2. A CLICK DURING A STEP. A step lasts about a second (its hurry, then the glide, which writes
+     the page's position every frame). A script scroll of the page during the browser's smooth
+     fragment glide CANCELS that glide (§15.20 round 6 measured it for `scrollIntoView`, in
+     Chromium and WebKit), and the steps' glide gives way only once something else has moved the
+     page more than 2px — so a dropdown click in that second may end on the step's card, or on
+     neither.
+  3. THE KEYS. The steps take the arrow keys, PageUp/PageDown and Space from the window unless the
+     key was already prevented (Space on a link or a button is left alone). So with focus inside
+     the open dropdown and the page resting in the band, an arrow key the dropdown does not
+     prevent moves the page a whole card behind it — wrong if the dropdown moves between its
+     entries with the arrows (it must then prevent them), a choice to confirm if it leaves the
+     arrows to the page.
+- **How to check:** on the built export with reduced motion OFF — the visual net runs every story
+  with `reducedMotion: 'reduce'` (playwright.config.ts), where the steps stand down and the jump
+  is instant, so it can never see this — in Chromium AND WebKit (case 1 differs between them; the
+  e2e suite is Chromium-only, §15.20 round 5), RO + DE, at 1366×633 (a doctor card taller than
+  the space under the strip), in a taller window where one fits, and on a phone through the
+  menu's ⌄ list (390×844, where the cards fit; the open menu freezes the page, which stands the
+  steps down until it closes). For each doctor, from the top of `/ro/team/` and from inside the
+  band: open „Echipa" and click — a second after the page stands still, the clicked doctor's card
+  is the one on screen and nothing moved again (or only onto that same card); then one small
+  scroll or swipe down, one up and one arrow key; then a click while a step glides; then the
+  arrow keys inside the open dropdown. Last, a cold load of
+  `/ro/team/#{id}` on a slowed connection: the steps move nothing at start, so it should land, but
+  §15.20 round 6 found fragment loads fragile. If `rework/team-hero` is in by then, measure with
+  it: it puts a hero above the band on the Team page and moves every card down.
+- **Levers, if it breaks (none is a decision, and nothing is built):**
+  - ONE RESTING PLACE — the price list's answer to "a click and a scroll cannot disagree" (§15.20
+    round 5): the steps write each station's planned resting place as its `scroll-margin-top`, so
+    the browser's own jump comes to rest ON a step. It costs `lib/scroll-steps` its "writes
+    nothing but the window's scroll position", and D13 its 2.5rem — a jumped-to doctor card would
+    no longer rest on the price cards' line;
+  - THE STEPS ADOPT A JUMP — on a `hashchange`, and at load when the URL names a station, they
+    take that card as the current step and its position as resting there (a second click on the
+    same doctor fires no `hashchange`, though the browser scrolls again);
+  - THE STEPS GIVE WAY TO A CLICK — a click on an in-page link ends a step under way at once, so
+    the browser's jump is the only movement left.

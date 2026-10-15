@@ -5,6 +5,7 @@ import { ContactModalProvider } from '@/components/sections/ContactModal/Contact
 import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
+import fr from '@/messages/fr.json';
 import ro from '@/messages/ro.json';
 import { Header } from './Header';
 
@@ -201,9 +202,11 @@ const expectMarkAtTopBarSize = async (bar: HTMLElement): Promise<void> => {
  *
  * Proves the whole contract in one frame at each sampled width: at 390 the
  * links are gone and the burger is the only control; at 1536 the full row is
- * on one line — brand, three links with Servicii underlined, the lilac
- * Contact button on its 10rem floor (44px, wider only) — and no burger. Both variants are in the HTML at both widths; the
- * container query decides which is drawn (the bar's step, §6.5).
+ * on one line — brand, four links with Servicii underlined (Blog last, back
+ * since the owner's word of 2026-10-14 and in every language since the same
+ * day), the lilac Contact button on its 10rem floor (44px, wider only) — and
+ * no burger. Both variants are in the HTML at both widths; the container
+ * query decides which is drawn (the bar's step, §6.5).
  *
  * The play function is the standing proof that the underline is REAL, i.e.
  * that the pathname → next-intl → `active` → `aria-current` chain still works
@@ -223,6 +226,16 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('link', { name: ro.common.nav.home }),
     ).not.toHaveAttribute('aria-current');
+    // The blog's link (owner, 2026-10-14: "don't forget … to give a clickable
+    // link to top bar for blog page"): last in the row, a real link to the
+    // list's page 1, and not the page you are on.
+    const blog = canvas.getByRole('link', { name: ro.common.nav.blog });
+    await expect(blog).toHaveAttribute('href', '/ro/blog/');
+    await expect(blog).not.toHaveAttribute('aria-current');
+    const row = canvas.getByRole('navigation', {
+      name: ro.common.nav.ariaLabel,
+    });
+    await expect(within(row).getAllByRole('link').at(-1)).toBe(blog);
     // The brand corner is the home link too (owner, 2026-10-02 —
     // Wordmark.tsx's D9): named by `common.brand.ariaLabel` with the clinic's
     // name, the visible text first, and pointing at the Romanian home.
@@ -289,8 +302,16 @@ export const MenuOpen: Story = {
       await userEvent.click(burger);
     }
     // findBy* waits — the panel mounts and animates in over 300ms.
-    await canvas.findByRole('navigation', { name: ro.common.menu.label });
+    const panel = await canvas.findByRole('navigation', {
+      name: ro.common.menu.label,
+    });
     await expect(burger).toHaveAttribute('aria-expanded', 'true');
+    // On a phone the panel is the ONLY way to the blog (owner, 2026-10-14):
+    // its fourth and last link, the list's page 1.
+    const links = within(panel).getAllByRole('link');
+    await expect(links).toHaveLength(4);
+    await expect(links.at(-1)).toHaveAccessibleName(ro.common.nav.blog);
+    await expect(links.at(-1)).toHaveAttribute('href', '/ro/blog/');
     // The bar keeps its brand while the panel is open (BRAND + ✕) — and at
     // this story's phone width that brand is past the Wordmark's tighten step.
     await expectMarkAtTopBarSize(canvas.getByRole('banner'));
@@ -298,17 +319,20 @@ export const MenuOpen: Story = {
 };
 
 /**
- * English, on `/en/services` — the story that proves the BLOG LINK IS GONE.
+ * English, on `/en/services` — the story that proves the BLOG LINK IS IN
+ * EVERY LANGUAGE.
  *
- * The blog is Romanian-only (§5), so `/en/blog` must never be offered. Three
- * links here — and, while lib/routes hides the blog row (owner 2026-09-20,
- * "drop it for now"), three in the Romanian stories too.
+ * Until 2026-10-14 this story proved the opposite: the blog was Romanian-only
+ * (§5), so `/en/blog` was never generated and never offered. The owner's
+ * "internationalise and add that blog on eveyer language" took the `locale`
+ * off lib/routes' blog row, so the English row carries the same four links as
+ * the Romanian one, in English, the last to `/en/blog/`.
  *
- * Scope, stated exactly: the play function proves the absence in the BAR ROW,
- * which is the whole of what this story renders (the panel is closed, so
- * asserting its contents from here would assert nothing). The panel's own
- * ro-only rule is covered in Header.test.tsx, which opens the menu in both
- * locales and queries within() it.
+ * Scope, stated exactly: the play function proves the row in the BAR, which
+ * is the whole of what this story renders (the panel is closed, so asserting
+ * its contents from here would assert nothing). The panel's own list is
+ * covered in Header.test.tsx, which opens the menu in all five languages and
+ * queries within() it.
  */
 export const NonRomanianLocale: Story = {
   globals: { locale: 'en', viewport: { value: 'notebook' } },
@@ -316,9 +340,18 @@ export const NonRomanianLocale: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/en/services' } },
   },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.queryByRole('link', { name: en.common.nav.blog }),
-    ).toBeNull();
+    const row = canvas.getByRole('navigation', {
+      name: en.common.nav.ariaLabel,
+    });
+    const links = within(row).getAllByRole('link');
+    await expect(links.map((link) => link.textContent)).toEqual([
+      en.common.nav.home,
+      en.common.nav.services,
+      en.common.nav.team,
+      en.common.nav.blog,
+    ]);
+    await expect(links.at(-1)).toHaveAttribute('href', '/en/blog/');
+    await expect(links.at(-1)).not.toHaveAttribute('aria-current');
     await expect(
       canvas.getByRole('link', { name: en.common.nav.services }),
     ).toHaveAttribute('aria-current', 'page');
@@ -326,17 +359,20 @@ export const NonRomanianLocale: Story = {
 };
 
 /**
- * German, on `/de/services` — the calibration language at the laptop width.
+ * German, on `/de/services` — the longest language at the laptop width.
  *
- * German runs ~30–35% longer than English (§8.4), so GERMAN is what decides
- * where the breakpoint sits: "Startseite · Leistungen · Team" (Blog hidden
- * for now; it never shipped on `de` anyway) plus
- * "Kontakt" is the longest this row ever gets. At 1536 it must sit on one line
- * with room to spare, and nothing may wrap, clip or push the CTA off the edge.
- * This is the proof far from the step; AtTheStep below is the proof AT it.
- * If German ever stops fitting there, the number moves (Header.tsx carries
- * the arithmetic that put it at 62rem) — never the architecture, and never
- * without the planning loop.
+ * German runs ~30–35% longer than English (§8.4), and its row is the widest
+ * of the five since the blog's link joined every language (2026-10-14):
+ * „Start · Leistungen · Team · Blog", 301.5px, plus „Kontakt" — „Start" since
+ * that day, where „Startseite" stood, so that the four-link row still fits
+ * the step (Header.tsx's THE FIVE ROWS GREW). The widest row leaves the
+ * narrowest gap; the language nearest its own floor is French, which is why
+ * AtTheStep below is French. At 1536 this row must sit on one line with room
+ * to spare, and nothing may wrap, clip or push the CTA off the edge. This is
+ * the proof far from the step; AtTheStep is the proof AT it. If a row ever
+ * stops fitting there, the number moves (Header.tsx carries the arithmetic
+ * that put it at 62rem) — never the architecture, and never without the
+ * planning loop.
  */
 export const GermanStress: Story = {
   // laptop = 1536, the sampled width far past the bar's step.
@@ -360,22 +396,27 @@ export const GermanStress: Story = {
 };
 
 /**
- * German, on `/de/services`, with the bar's content box held at 62rem + 4px —
+ * French, on `/fr/services`, with the bar's content box held at 62rem + 4px —
  * THE PROOF AT THE FLIP (header-nav-gap lane, the owner's ask, 2026-09-26:
  * "it should maintain at least a little space between 'premium smile' and
  * first button of menu, like idk, 70% of the width of the menu button …").
  *
- * The narrowest bar that ever shows the row, in the language that makes the
- * row widest: this is where the brand-to-first-link gap sits at its FLOOR.
- * Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block puts the step at
- * 62rem so that German keeps ≥ 4rem (64px — ~70% of the 94px "Startseite")
- * there; at this story's 996px bar the expected gap is
- * (964 − 279.3) / 2 − 270.1 ≈ 72.2px (row = bar − the `px-4`; nav 279.3;
- * the brand at the owner's sizes of 2026-10-01, 270.1). At the old 60rem
- * step (a 964px bar) it was ≈ 67.85px with the demo cat's 258.5px brand,
- * ≈ 104.4px with the clinic's mark at the full row and ≈ 56.25px at the
- * owner's sizes — under the floor, which is why the step moved (Header.tsx,
- * THE BRAND GREW).
+ * The narrowest bar that ever shows the row, in the language whose gap sits
+ * nearest its floor: this is where the brand-to-first-link gap is TIGHTEST
+ * against what the owner asked for. The floor is 70 % of each row's FIRST
+ * link, and since every row has four links (2026-10-14) French's „Accueil",
+ * 77.4px, is the widest first link — the highest floor: at a bar of exactly
+ * 62rem French keeps 65.5px against 54.2, 11.3px over it, where the other
+ * four keep 19–25px over their own (Header.tsx's THE FIVE ROWS GREW has the
+ * table). The story was German until that day, „Startseite" then the widest
+ * first link; German's „Start · Leistungen · Team · Blog" is still the widest
+ * row and leaves the narrowest gap (59.1px, against a floor of 38.8). At this
+ * story's 996px bar the expected gap is (964 − 288.8) / 2 − 270.1 ≈ 67.5px
+ * (row = bar − the `px-4`; the French row 288.8; the brand at the owner's
+ * sizes of 2026-10-01, 270.1). At the old 60rem step (a 964px bar) German's
+ * three-link row had ≈ 67.85px with the demo cat's 258.5px brand, ≈ 104.4px
+ * with the clinic's mark at the full row and ≈ 56.25px at the owner's sizes —
+ * under its floor, which is why the step moved (Header.tsx, THE BRAND GREW).
  *
  * HOW THE FRAME REACHES THE STEP at any window width: the pill's side margins
  * are ui/Container's `containerClasses`, `clamp(1rem, 10vw, 12.5rem)` each
@@ -393,19 +434,20 @@ export const GermanStress: Story = {
  *
  * The play measures, it does not read classes back: the row is drawn (the
  * current link is reachable by role, which a display:none row is not), the
- * bar really is at the step, the gap is within [4rem, 7rem] — the owner's
- * floor, and a ceiling that proves this frame is AT the step and not past
- * it (set for the clinic's mark at the full row, ≈ 104.4px here, a wider bar
- * adding a pixel of gap for every two of bar; 5rem was the ceiling for the
- * demo cat's 67.85; ≈ 72.2px is expected at the owner's sizes and this 62rem
- * frame) — the bar never scrolls sideways, and the nav still sits on the
- * bar's centre line: at the step each side track is ≥ 340px against the
- * 270.1px brand, so exact centring holds here too.
+ * bar really is at the step, the gap is at least 70 % of the first link the
+ * play measures — the owner's floor, read in the language at hand — and at
+ * most 5rem, a ceiling that proves this frame is AT the step and not past it
+ * (≈ 67.5px expected, a wider bar adding a pixel of gap for every two of bar;
+ * the ceiling was 7rem while German's three-link row stood here at ≈ 72.2px,
+ * and the floor a flat 4rem, German's 70 % of „Startseite" rounded down) —
+ * the bar never scrolls sideways, and the nav still sits on the bar's centre
+ * line: at the step each side track is ≥ 329px against the 270.1px brand, so
+ * exact centring holds here too.
  */
 export const AtTheStep: Story = {
-  globals: { locale: 'de', viewport: { value: 'notebook' } },
+  globals: { locale: 'fr', viewport: { value: 'notebook' } },
   parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/de/services' } },
+    nextjs: { appDirectory: true, navigation: { pathname: '/fr/services' } },
   },
   render: () => (
     <Ground>
@@ -417,7 +459,7 @@ export const AtTheStep: Story = {
   play: async ({ canvas }) => {
     // Widths below are text widths: measure only once the fonts have landed —
     // and ASSERT that they did. `fonts.ready` resolves on a load FAILURE too,
-    // and the gap has ~4px of headroom over its floor, so a 404'd subset (a CI
+    // and the gap has ~13px of headroom over its floor, so a 404'd subset (a CI
     // container, a `staticDirs` edit) would otherwise fail below with a bare
     // number that reads as "the step moved". ContactModal.test.tsx's idiom:
     // load() REJECTS on a 404, a non-empty result proves .storybook/
@@ -428,7 +470,7 @@ export const AtTheStep: Story = {
     await expect(document.fonts.check(FONT)).toBe(true);
 
     await expect(
-      canvas.getByRole('link', { name: de.common.nav.services }),
+      canvas.getByRole('link', { name: fr.common.nav.services }),
     ).toHaveAttribute('aria-current', 'page');
 
     const bar = canvas.getByRole('banner');
@@ -468,16 +510,18 @@ export const AtTheStep: Story = {
       ...Array.from(brand.children, (c) => c.getBoundingClientRect().right),
     );
     const nav = canvas.getByRole('navigation', {
-      name: de.common.nav.ariaLabel,
+      name: fr.common.nav.ariaLabel,
     });
     const [first] = within(nav).getAllByRole('link');
-    const gap = first.getBoundingClientRect().left - brandRight;
-    // ≥ 4rem is the owner's floor; ≤ 7rem proves this frame really is AT the
-    // step rather than comfortably past it (the doc comment has the
-    // arithmetic: ≈ 72.2px at the owner's sizes since the step moved to
-    // 62rem, 2026-10-01; 5rem was the ceiling for the demo cat's ≈ 67.85px).
-    await expect(gap).toBeGreaterThanOrEqual(4 * rem);
-    await expect(gap).toBeLessThanOrEqual(7 * rem);
+    const firstBox = first.getBoundingClientRect();
+    const gap = firstBox.left - brandRight;
+    // ≥ 70 % of the first link — „Accueil", the widest first link of the five
+    // — is the owner's floor, read per language since every row has four
+    // links (2026-10-14); ≤ 5rem proves this frame really is AT the step
+    // rather than comfortably past it (the doc comment has the arithmetic:
+    // ≈ 67.5px expected against a floor of ≈ 54.2).
+    await expect(gap).toBeGreaterThanOrEqual(0.7 * firstBox.width);
+    await expect(gap).toBeLessThanOrEqual(5 * rem);
 
     // §7 — nothing may require horizontal scrolling.
     await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth);

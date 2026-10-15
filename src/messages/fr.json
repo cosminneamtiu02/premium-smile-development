@@ -121,12 +121,20 @@
   "blog": {
     "title": "Articles et actualités",
     "pageTitle": "{title}, page {page}",
+    "hero": {
+      "title": "Votre sourire nous tient à cœur : voici comment\nen prendre soin grâce à notre blog",
+      "lead": "Les actualités de la clinique et les conseils de nos dentistes :\ncomment entretenir dents et gencives chez vous\net quand venir nous voir."
+    },
     "tags": "Catégories",
+    "card": {
+      "readMore": "Lire la suite…",
+      "readingTime": "{minutes, number} min de lecture"
+    },
     "pagination": {
       "label": "Pages des articles",
       "status": "Page {page} sur {total}",
-      "previous": "Précédent",
-      "next": "Suivant"
+      "previous": "Page précédente",
+      "next": "Page suivante"
     }
   },
   "contact": {

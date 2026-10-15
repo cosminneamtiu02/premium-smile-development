@@ -54,9 +54,10 @@ import { slotClone } from '../slot';
 //     (`house` | `soft`, THE CORNER AXIS below): the premise "one value for
 //     the whole site" fell on the owner's word — "i want that rounded corner
 //     effect that the doctor card from old webpage has" — and the personnel
-//     card wears the old site's 1rem corner while every other card keeps the
-//     6px default (§15.29). A row joins that lookup by decision, never a
-//     `radius={…}` prop.
+//     card and, since 2026-10-14, the blog's article card wear the old site's
+//     1rem corner while every other card keeps the 6px default (§15.29,
+//     §15.39). A row joins that lookup by decision, never a `radius={…}`
+//     prop.
 //   · TEXT COLOUR — ink is inherited from the body, so a card reads the same
 //     wherever it lands and a section can still tone individual lines through
 //     ui/Text (§6.1: closed system, no styling of other people's insides).
@@ -475,8 +476,9 @@ type CardOwnProps = {
   aura?: CardAura;
   /** WHICH CORNER this card wears — chosen per card KIND in its section, like `aura`:
    *  `house` = the 6px default every card wears · `soft` = the old site's 1rem card corner
-   *  (owner 2026-10-01: sections/PersonnelCard, both kinds; the Header pill, ui/TextButton
-   *  and ui/Modal wear the same token, §15.29). @default 'house' */
+   *  (owner 2026-10-01: sections/PersonnelCard, both kinds; 2026-10-14: sections/PostCard,
+   *  the blog's article card; the Header pill, ui/TextButton and ui/Modal wear the same
+   *  token, §15.29). @default 'house' */
   corners?: CardCorners;
   /** THE MARK `aura="current"` answers to, when a client component renders it
    *  as a prop: the EMPTY STRING while the card is current, `undefined`
@@ -510,13 +512,16 @@ const cardGeometry = '@container flex flex-col gap-3';
 // `rounded-2xl` its doctor, staff and review cards wore, imported as the ONE
 // token `--radius-soft` (1rem, globals.css) that the Header pill, NavMenu's
 // panel, ui/TextButton and ui/Modal wear too, so the four cannot drift. A
-// section chooses per card KIND (sections/PersonnelCard passes `soft` for
-// both of its kinds); no other card wears it until a decision says so — and
-// one decision went the other way the same evening: the services page's
-// menu and category cards wore it for an hour ("apply to all cards on
-// services page too") and lost it on the owner's "i liked card from before
-// better for services. it looked perfect." A card KIND's corner is taste,
-// chosen per kind and recorded (§15.29), never inferred from a neighbour.
+// section chooses per card KIND: sections/PersonnelCard passes `soft` for
+// both of its kinds, and, since 2026-10-14, sections/PostCard for the blog's
+// article card — the owner: "this is the card styling with the same border
+// and corners and edges that will be used" (CLAUDE.md §15.39). No other card
+// wears it until a decision says so — and one decision went the other way on
+// the corner's first evening, 2026-10-01: the services page's menu and
+// category cards wore it for an hour ("apply to all cards on services page
+// too") and lost it on the owner's "i liked card from before better for
+// services. it looked perfect." A card KIND's corner is taste, chosen per
+// kind and recorded (§15.29), never inferred from a neighbour.
 // Emitted right after the geometry, where `rounded-md` always stood, so every
 // card that does not ask keeps its class string byte for byte — the
 // consumers' pins (ReviewCard, CategoryCard, CredoCard) never

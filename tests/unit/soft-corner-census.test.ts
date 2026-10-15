@@ -103,6 +103,10 @@ const ASKERS = [
   // before better for services. it looked perfect.") — a taste decision,
   // §15.29; adding them back is one word on each call site and one row here.
   'components/sections/PersonnelCard/PersonnelCard.tsx',
+  // The blog's article card (CLAUDE.md §15.39 round 2, 2026-10-14) — the
+  // owner, verbatim: "this card border, style that i already have with a
+  // border in the doctor cards … the same border and corners and edges".
+  'components/sections/PostCard/PostCard.tsx',
 ];
 const ASK = /corners=(?:"soft"|\{'soft'\}|\{"soft"\})/g;
 

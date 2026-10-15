@@ -82,11 +82,12 @@ import { toStatTiles } from '../stat-tiles';
 // 2026-09-25: "very important … note it somewhere" · "it will sit above map
 // section"). A band linking THIS doctor's blog posts will stand above the map
 // — since 2026-10-13 between the biography-and-courses band and the map. It
-// is NOT built, because the blog it would link to is not built (§5's blog
-// routes are Romanian-only and still a stub). The JSX below carries a comment
-// at the exact spot; when the band lands it is a DUMB band populated from
-// here like the three above, and ./Doctor.stories.tsx gains it in the same
-// change.
+// is NOT built, because there is nothing for it to link to yet: the blog's
+// LIST exists in every language since 2026-10-14 (/{locale}/blog/, CLAUDE.md
+// §15.39), but no article page does — its cards link nowhere until they land.
+// The JSX below carries a comment at the exact spot; when the band lands it
+// is a DUMB band populated from here like the three above, and
+// ./Doctor.stories.tsx gains it in the same change.
 //
 // ── THE ROUTE IS A DATA LIST, AND THE GRID IS BUILT BY MULTIPLICATION. Next
 // runs a CHILD segment's `generateStaticParams` once per combination its
@@ -312,7 +313,8 @@ export default async function DoctorPage({
           somewhere" · "it will sit above map section", run ledger D19): a band
           linking THIS doctor's blog articles goes HERE — above ClinicLocation,
           and since 2026-10-13 under the biography and the courses. Not built:
-          the blog (§5) is not built. When it lands it is a DUMB band populated
+          the blog's list exists in every language (CLAUDE.md §15.39), its
+          article pages do not yet. When it lands it is a DUMB band populated
           from here, like the three above, and ./Doctor.stories.tsx follows in
           the same change. */}
       {/* The map closes every page of this run — the owner's „add at the end

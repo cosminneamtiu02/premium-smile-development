@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, userEvent } from 'storybook/test';
-import { PillButton } from './PillButton';
+import { expect, userEvent, within } from 'storybook/test';
+import { PillButton, type PillButtonKind } from './PillButton';
 
 // One story per meaningful state (§13). Demo values are Romanian with
-// diacritics — the price page's own category names (§15.7); the German stress
-// label and the row carry the 'stress-320' tag, so the visual net also samples
-// them at the 320px accessibility width (§13 UI-tier opt-in), where a chip that
-// cannot wrap must still never push the page sideways. Hrefs are placeholders:
-// the price strip nests a plain <a href="#…"> through `asChild`.
+// diacritics — the price page's own category names for the controls and the
+// blog's own categories for the tags (§15.7); the German stress label and the
+// row carry the 'stress-320' tag, so the visual net also samples them at the
+// 320px accessibility width (§13 UI-tier opt-in), where a chip that cannot
+// wrap must still never push the page sideways. Hrefs are placeholders: the
+// price strip nests a plain <a href="#…"> through `asChild`.
 //
 // THE PLAYS READ THE PAINT, not only the classes: the chip's 44px floor, its
 // half-circle ends and each state's colours, from the real stylesheet the
@@ -15,23 +16,39 @@ import { PillButton } from './PillButton';
 // hold in the canvas the pixel net photographs. Nothing here waits for a fade:
 // a story renders its state from the first frame, so no transition runs.
 
+// THE KIND RADIO offers EVERY kind: its options are the keys of a record
+// keyed by PillButtonKind, so a third kind is a compile error here until the
+// radio offers it (G2 typescript N2) — where a plain list would let it slip
+// past.
+const KIND_OPTIONS = Object.keys({
+  control: true,
+  tag: true,
+} satisfies Record<PillButtonKind, true>);
+
 const meta = {
   title: 'UI/PillButton',
   component: PillButton,
   args: {
     children: 'Consultații',
+    kind: 'control',
     active: false,
   },
   argTypes: {
+    kind: {
+      control: 'radio',
+      options: KIND_OPTIONS,
+      description:
+        'What the chip is — control, a button or link that answers a hover and may be current (every price-strip chip; the default) / tag, a label: the hover face held still, never current, worn by a child that is no control through asChild (the blog card’s categories, owner 2026-10-14 — see Tag and TagList). Picked here, on a story that hands the chip no child, a tag falls back to a <span> — never a <button>',
+    },
     active: {
       control: 'boolean',
       description:
-        'The current choice — the lavender face, white label, and aria-current="page" (an explicit aria-current wins)',
+        'The current choice — the lavender face, white label, and aria-current="page" (an explicit aria-current wins). A control’s alone: beside kind="tag" it does not compile, and a tag ignores it',
     },
     asChild: {
       control: false,
       description:
-        'Render no <button> of its own — the single child element becomes the control (see Row)',
+        'Render no element of its own — the single child element wears the chip: a control’s becomes the control (see Row), a tag’s stays a label (see Tag and TagList). Required for a tag',
     },
     children: {
       control: 'text',
@@ -63,7 +80,7 @@ const expectPill = async (chip: HTMLElement): Promise<void> => {
     parseFloat(style.borderBottomRightRadius),
   ).toBeGreaterThanOrEqual(box.height / 2);
   await expect(style.borderTopWidth).toBe('2px');
-  // The glow is worn in both states.
+  // The glow is worn in every face.
   await expect(style.boxShadow).not.toBe('none');
 };
 
@@ -90,6 +107,18 @@ const expectActive = async (chip: HTMLElement): Promise<void> => {
   await expect(style.backgroundColor).toBe('rgb(116, 104, 148)');
   await expect(style.borderTopColor).toBe('rgb(116, 104, 148)');
   await expect(style.color).toBe('rgb(255, 255, 255)');
+};
+
+/** A tag's paint: the lavender edge and label on the white face — the very
+ *  colours a resting control takes under a hover — whether or not a pointer
+ *  rests on it (it has no hover), and never current. */
+const expectTag = async (chip: HTMLElement): Promise<void> => {
+  const { style } = measure(chip);
+  await expect(style.backgroundColor).toBe('rgb(255, 255, 255)');
+  await expect(style.borderTopColor).toBe('rgb(116, 104, 148)');
+  await expect(style.color).toBe('rgb(116, 104, 148)');
+  await expect(chip).not.toHaveAttribute('aria-current');
+  await expect(chip).not.toHaveAttribute('kind');
 };
 
 /** At rest: a white chip, ink label, the doctor card's lavender edge, the
@@ -172,13 +201,16 @@ export const GermanLongest: Story = {
 /**
  * The consumption shape — a ROW of chips in a horizontal scroller, the third
  * one current, each an <a href> through `asChild` (the price strip's own
- * markup, in miniature). The scroller is the story's, not the atom's: its
- * padding leaves the glow its 14px above, 30px below and 22px sideways, which
- * is the room any scroller that clips must leave round a row of chips.
+ * markup, in miniature). The markup is the story's whole subject, so no arg
+ * reaches it and its controls are off. The scroller is the story's, not the
+ * atom's: its padding leaves the glow its 14px above, 30px below and 22px
+ * sideways, which is the room any scroller that clips must leave round a row
+ * of chips.
  */
 export const Row: Story = {
   tags: ['stress-320'],
-  render: (args) => (
+  parameters: { controls: { disable: true } },
+  render: () => (
     <ul className="flex items-center gap-3 overflow-x-auto px-6 pt-4 pb-8">
       {[
         'Consultații',
@@ -190,7 +222,6 @@ export const Row: Story = {
       ].map((name, index) => (
         <li key={name}>
           <PillButton
-            {...args}
             asChild
             active={index === 2}
             aria-current={index === 2 ? 'location' : undefined}
@@ -216,5 +247,74 @@ export const Row: Story = {
     // The row scrolls sideways inside its own box — never the page.
     const root = canvasElement.ownerDocument.documentElement;
     await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+  },
+};
+
+/**
+ * A TAG (owner 2026-10-14 — the atom's THE TAG): a label, not a control — the
+ * resting chip's hover face held still, the lavender edge and label on the
+ * white face — never current, and never a <button>: a tag requires `asChild`,
+ * so here it rides a <span> (on the blog card, an <li> — TagList). The label
+ * is the one live control; the others would move nothing. Nothing changes
+ * under a pointer either: the tag's face carries no `hover:` utility, and
+ * PillButton.test.tsx reads its paint under a real one.
+ */
+export const Tag: Story = {
+  argTypes: {
+    kind: { control: false },
+    active: { control: false },
+    disabled: { control: false },
+  },
+  args: { children: 'igienă' },
+  render: ({ children }) => (
+    <PillButton kind="tag" asChild>
+      <span>{children}</span>
+    </PillButton>
+  ),
+  play: async ({ canvas }) => {
+    const chip = canvas.getByText('igienă');
+    await expect(chip.tagName).toBe('SPAN');
+    await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
+    await expectPill(chip);
+    await expectTag(chip);
+  },
+};
+
+/**
+ * The consumption shape — the blog card's categories in miniature: a list
+ * named by its label, each tag an <li> through `asChild` (sections/PostCard's
+ * THE TAGS). So the tags take no focus and are read as the items of a list,
+ * never as buttons — PillButton.test.tsx steps over them with the browser's
+ * own Tab. The markup is the story's whole subject, so its controls are off.
+ * The list's padding is the story's, leaving the glow its room, as Row's does.
+ */
+export const TagList: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <ul
+      role="list"
+      aria-label="Categorii"
+      className="flex flex-wrap items-center gap-3 px-6 pt-4 pb-8"
+    >
+      {['igienă', 'prevenție', 'sfaturi'].map((tag) => (
+        <PillButton key={tag} kind="tag" asChild>
+          <li>{tag}</li>
+        </PillButton>
+      ))}
+    </ul>
+  ),
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole('list', { name: 'Categorii' });
+    const tags = within(list).getAllByRole('listitem');
+    await expect(tags).toHaveLength(3);
+    for (const tag of tags) {
+      await expectPill(tag);
+      await expectTag(tag);
+      // Not a focus target, by script — the keyboard's proof is the unit
+      // test's real Tab (a play's Tab is user-event's simulation of one).
+      tag.focus();
+      await expect(tag).not.toHaveFocus();
+    }
+    await expect(canvas.queryByRole('button')).not.toBeInTheDocument();
   },
 };

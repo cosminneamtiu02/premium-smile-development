@@ -121,12 +121,20 @@
   "blog": {
     "title": "Articoli e novità",
     "pageTitle": "{title}, pagina {page}",
+    "hero": {
+      "title": "Il tuo sorriso ci sta a cuore: ti mostriamo come\naverne cura con il nostro blog",
+      "lead": "Qui trovi le novità della clinica e i consigli dei nostri dentisti:\ncome prenderti cura dei denti e delle gengive a casa\ne quando venirci a trovare."
+    },
     "tags": "Categorie",
+    "card": {
+      "readMore": "Leggi di più…",
+      "readingTime": "{minutes, number} min di lettura"
+    },
     "pagination": {
       "label": "Pagine degli articoli",
       "status": "Pagina {page} di {total}",
-      "previous": "Precedente",
-      "next": "Successivo"
+      "previous": "Pagina precedente",
+      "next": "Pagina successiva"
     }
   },
   "contact": {

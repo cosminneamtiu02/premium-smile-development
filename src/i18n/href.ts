@@ -28,11 +28,11 @@
 // flips, this function and tests/unit/href.test.ts flip in the same commit.
 //
 // `locale: string` and not the Locale union, deliberately: useLocale() hands
-// back a plain string, and lib/routes/routes.ts already made this exact call for
-// primaryRoutes(locale: string) — the union does its work on the DATA side,
-// where a rename must not go unnoticed. The PATH is typed the other way round:
-// `/${string}` costs nothing at runtime and refuses 'services' at compile time,
-// which the old `string` signature silently shipped as '/roservices/'.
+// back a plain string, and the union does its work on the DATA side (the
+// locale manifest and the records keyed by it), where a rename must not go
+// unnoticed. The PATH is typed the other way round: `/${string}` costs nothing
+// at runtime and refuses 'services' at compile time, which the old `string`
+// signature silently shipped as '/roservices/'.
 //
 // The one import is RELATIVE and `.ts`-suffixed on purpose: the root-redirect
 // tool loads this file under plain Node's type stripping, which resolves no
@@ -68,7 +68,7 @@ export function localeHref(locale: string, path: `/${string}`): string {
  *
  * The trailing slash is preserved exactly as given rather than normalised: with
  * `trailingSlash: true` a real address bar reads '/ro/services/', and
- * useNavItems' isActive already matches a route plus its descendants.
+ * lib/routes' `matchesRoute` already matches a route plus its descendants.
  */
 export function stripLocale(
   pathname: `/${string}`,
@@ -79,7 +79,7 @@ export function stripLocale(
   // A SEGMENT, not a text prefix. The slash in the test is what tells '/ro/…'
   // apart from '/robot': a bare startsWith('/ro') would let the latter into the
   // branch below and hand back a mangled path for a page that is not Romanian
-  // at all — the same trap useNavItems' isActive spells out for '/'.
+  // at all — the same trap lib/routes' `matchesRoute` spells out for '/'.
   if (!pathname.startsWith(`${prefix}/`)) return pathname;
 
   // Cut the segment AND its slash, then put one back — that is what keeps the

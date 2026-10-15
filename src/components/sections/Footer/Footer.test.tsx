@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import { localeHref } from '@/i18n/href';
-import type { Locale } from '@/i18n/locales';
+import { type Locale, locales } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic/clinic';
 import { LEGAL_ROUTES, PRIVACY_PATH } from '@/lib/routes/routes';
 import { formatHoursRows } from '@/lib/hours/hours';
@@ -289,36 +289,38 @@ describe('Footer — row 2, the contact column', () => {
 });
 
 describe('Footer — row 2, the nav column', () => {
-  it('links the three OFFERED primary routes in Romanian, locale-prefixed — the blog row is hidden for now (owner, 2026-09-20)', () => {
-    const { messages } = mount('ro');
+  it.each(locales)(
+    'links all four primary routes in %s, locale-prefixed, the blog last (owner, 2026-10-14)',
+    (locale) => {
+      const { footer, messages } = mount(locale);
 
-    // The exact strings the export serves: /{locale} because localePrefix is
-    // 'always' (§5), and the trailing slash because `trailingSlash: true`
-    // writes out/ro/services/index.html — so a visitor pays no redirect hop.
-    // Both come from src/i18n/href.ts, the only place that spells them
-    // (§15.13); the base path is '' in this runner (vitest.config.ts).
-    for (const [label, href] of [
-      [messages.nav.home, '/ro/'],
-      [messages.nav.services, '/ro/services/'],
-      [messages.nav.team, '/ro/team/'],
-    ] as const) {
-      expect(screen.getByRole('link', { name: label })).toHaveAttribute(
-        'href',
-        href,
-      );
-    }
-    expect(screen.queryByRole('link', { name: messages.nav.blog })).toBeNull();
-  });
-
-  it('drops Blog on non-Romanian locales — the blog is `ro`-only (§5)', () => {
-    const { messages } = mount('de');
-
-    expect(screen.queryByRole('link', { name: messages.nav.blog })).toBeNull();
-    // The other three still ship, in German.
-    expect(
-      screen.getByRole('link', { name: messages.nav.services }),
-    ).toHaveAttribute('href', '/de/services/');
-  });
+      // The exact strings the export serves: /{locale} because localePrefix
+      // is 'always' (§5), and the trailing slash because `trailingSlash: true`
+      // writes out/ro/services/index.html — so a visitor pays no redirect
+      // hop. Both come from src/i18n/href.ts, the only place that spells them
+      // (§15.13); the base path is '' in this runner (vitest.config.ts). The
+      // WHOLE site map, in the bar's order: the blog's link, offered nowhere
+      // from 2026-09-20, came back on Romanian pages ("don't forget … to give
+      // a clickable link to top bar for blog page") and joined every language
+      // with the blog itself ("internationalise and add that blog on eveyer
+      // language") — the same list feeds this column, so it is here too.
+      // Until that day this file also held the opposite, off Romanian: the
+      // blog was `ro`-only (§5) and `/de/blog` never existed.
+      const siteMap = within(footer()).getByRole('navigation', {
+        name: clinic.name,
+      });
+      expect(
+        within(siteMap)
+          .getAllByRole('link')
+          .map((link) => [link.textContent, link.getAttribute('href')]),
+      ).toEqual([
+        [messages.nav.home, `/${locale}/`],
+        [messages.nav.services, `/${locale}/services/`],
+        [messages.nav.team, `/${locale}/team/`],
+        [messages.nav.blog, `/${locale}/blog/`],
+      ]);
+    },
+  );
 
   it('marks NO footer link as the current page', () => {
     // A footer link list is a site map, not a "you are here" indicator — and

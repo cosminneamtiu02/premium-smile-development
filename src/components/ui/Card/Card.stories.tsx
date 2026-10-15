@@ -119,7 +119,7 @@ const meta = {
       control: 'inline-radio',
       options: Object.values(CORNER_OPTIONS),
       description:
-        'WHICH CORNER the card wears — a situation, like tone: house = §15.1’s 6px default (rounded-md), every card on the site · soft = the old site’s card corner, its doctor card’s rounded-2xl, 1rem — the ONE token --radius-soft the Header pill, ui/TextButton and ui/Modal wear as well (owner 2026-10-01, §15.29). Chosen per card KIND in the section that composes it: sections/PersonnelCard passes soft for both of its kinds, and no other card wears it until a decision says so (the services page’s cards tried it for an hour and went back to house on the owner’s taste)',
+        'WHICH CORNER the card wears — a situation, like tone: house = §15.1’s 6px default (rounded-md), every card on the site · soft = the old site’s card corner, its doctor card’s rounded-2xl, 1rem — the ONE token --radius-soft the Header pill, ui/TextButton and ui/Modal wear as well (owner 2026-10-01, §15.29). Chosen per card KIND in the section that composes it: sections/PersonnelCard passes soft for both of its kinds and sections/PostCard for the blog’s article card (owner 2026-10-14, §15.39), and no other card wears it until a decision says so (the services page’s cards tried it for an hour and went back to house on the owner’s taste)',
     },
     aura: {
       control: 'boolean',
@@ -409,9 +409,11 @@ export const WithAura: Story = {
  * THE SOFT CORNER (owner 2026-10-01, §15.29): the old site's card radius — its
  * doctor card's `rounded-2xl`, 1rem — as the atom's second corner situation,
  * shown on the `framed` tone because that pairing IS the personnel card
- * (sections/PersonnelCard passes both). Every other card on the site keeps the
- * 6px `house` corner; the Header pill, ui/TextButton and ui/Modal wear the same
- * token, so this frame is also what the contact dialog's corners look like.
+ * (sections/PersonnelCard passes both) and, since 2026-10-14, the blog's
+ * article card (sections/PostCard — the owner's "same border and corners").
+ * Every other card on the site keeps the 6px `house` corner; the Header pill,
+ * ui/TextButton and ui/Modal wear the same token, so this frame is also what
+ * the contact dialog's corners look like.
  */
 export const SoftCorners: Story = {
   args: { tone: 'framed', corners: 'soft' },

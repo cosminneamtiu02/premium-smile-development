@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { userEvent as browserUser } from 'vitest/browser';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
-import type { Locale } from '@/i18n/locales';
+import { type Locale, locales } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
@@ -718,10 +718,12 @@ describe('Header — the panel hangs off the bar and survives a short screen', (
   });
 
   it('caps its height at the dynamic viewport and scrolls internally (B2)', async () => {
-    // ~356px of content vs a 320px-tall landscape phone: the PANEL scrolls,
-    // the page behind it stays frozen. dvh, not vh — mobile URL bars change
-    // the viewport height as you scroll. Asserted here because the visual
-    // harness samples widths only.
+    // 272px of content in every language (four links since 2026-10-14),
+    // against the 216px a 568×320 landscape phone leaves under the cap
+    // (NavMenu.tsx's B2, measured): the PANEL scrolls, the page behind it
+    // stays frozen. dvh, not vh — mobile URL bars change the viewport height
+    // as you scroll. Asserted here because the visual harness samples widths
+    // only.
     // 6.5rem = the pill's reach (top-4 + h-20) + the panel's own `mt-2` gap.
     // It was 5.5rem until the owner's 2026-09-04 uniform bar height took the
     // burger widths from h-16 to h-20 — NavMenu's cap comment records why that
@@ -831,16 +833,30 @@ describe('Header — the nav row, the panel list, and the current page', () => {
     ).not.toHaveAttribute('aria-current');
   });
 
-  it('marks NOTHING on a blog page while the Blog item is hidden (owner, 2026-09-20)', () => {
-    // The section rule (a nested route reports as its section) still holds
-    // in lib/routes; it simply has no Blog item to mark while that row wears
-    // `hidden`. Delete the flag and this test's twin — one current item,
-    // reading Blog — is what returns.
-    nav.pathname = '/blog/coroane-ceramice';
-    const { container } = mount();
+  it.each(['/blog/', '/blog/page/2/', '/blog/coroane-ceramice/'])(
+    'marks Blog on %s, in every language — every page of the blog is the Blog section (owner, 2026-10-14)',
+    (pathname) => {
+      // The link is back in the bar ("don't forget … to give a clickable link
+      // to top bar for blog page") and in every language with the blog itself
+      // ("internationalise and add that blog on eveyer language"), and the
+      // section rule marks it on the list's page 1 (/{locale}/blog/), on its
+      // later pages (/{locale}/blog/page/n/) and on an article to come — the
+      // pathname arrives locale-stripped. Each pass unmounts first, since RTL
+      // leaves every render in the document.
+      nav.pathname = pathname;
+      for (const locale of locales) {
+        const { container, barNav, messages, unmount } = mount(locale);
+        const current = container.querySelectorAll('[aria-current="page"]');
 
-    expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(0);
-  });
+        expect(current, locale).toHaveLength(1);
+        expect(current[0]).toBe(
+          within(barNav()).getByRole('link', { name: messages.nav.blog }),
+        );
+        expect(current[0]).toHaveAttribute('href', `/${locale}/blog/`);
+        unmount();
+      }
+    },
+  );
 
   it('does NOT mark a route whose path merely starts with another one', () => {
     // The boundary the section rule turns on: a sibling route may share a
@@ -870,84 +886,72 @@ describe('Header — the nav row, the panel list, and the current page', () => {
     // asserted here or nowhere. The base path is empty in this runner
     // (vitest.config.ts inlines the unset PAGES_BASE_PATH as ''), which is the
     // root-serving host's shape; the prefixed one is tests/unit/href.test.ts.
-    // Both locales in ONE test because the locale is half of the string under
+    // Every locale in ONE test because the locale is half of the string under
     // test — and each pass unmounts first, since RTL leaves every render in the
     // document and a second bar would double every query below.
     const user = userEvent.setup();
 
-    for (const locale of ['ro', 'de'] as const) {
+    for (const locale of locales) {
       const { burger, panel, barNav, messages, unmount } = mount(locale);
+      // The same four in every language, the blog last: hidden on every
+      // locale from 2026-09-20, offered on Romanian pages again on the
+      // owner's 2026-10-14 word and in every language the same day, when the
+      // blog itself joined all five (lib/routes' row lost its `locale`).
       const expected: Array<[string, string]> = [
         [messages.nav.home, `/${locale}/`],
         [messages.nav.services, `/${locale}/services/`],
         [messages.nav.team, `/${locale}/team/`],
+        [messages.nav.blog, `/${locale}/blog/`],
       ];
-      // Romanian alone carried the blog (§5) — and since 2026-09-20 the row
-      // is hidden on `ro` too (owner: "drop it for now"), so NO locale offers
-      // it; the absence is asserted below for both.
 
       await user.click(burger());
-      for (const [label, href] of expected) {
-        // Both call sites: the bar row and the panel render the same hook's
-        // rows, and both are what a visitor actually taps (board §5·B7 — no
-        // stylesheet here, so both are queryable and must be scoped).
-        for (const scope of [barNav(), panel() as HTMLElement]) {
-          const link = within(scope).getByRole('link', { name: label });
+      // Both call sites: the bar row and the panel render the same hook's
+      // rows, and both are what a visitor actually taps (board §5·B7 — no
+      // stylesheet here, so both are queryable and must be scoped). The
+      // WHOLE list, in bar order: a stray or a missing entry fails here.
+      for (const scope of [barNav(), panel() as HTMLElement]) {
+        const links = within(scope).getAllByRole('link');
+        expect(
+          links.map((link) => [link.textContent, link.getAttribute('href')]),
+          locale,
+        ).toEqual(expected);
+        for (const link of links) {
           // A plain <a>, not something that renders one: no click handler, no
           // prefetch observer — the browser does the navigating (§15.13).
           expect(link.tagName).toBe('A');
-          expect(link).toHaveAttribute('href', href);
         }
-      }
-
-      for (const scope of [barNav(), panel() as HTMLElement]) {
-        expect(
-          within(scope).queryByRole('link', { name: messages.nav.blog }),
-        ).toBeNull();
       }
       unmount();
     }
   });
 
-  it('offers NO Blog on `ro` either — in the bar row or the panel — while the row is hidden (owner, 2026-09-20)', async () => {
-    const user = userEvent.setup();
-    const { burger, panel, barNav, messages } = mount('ro');
+  it.each(locales)(
+    'offers Blog on `%s` — in the bar row AND the panel, unmarked off the blog (owner, 2026-10-14)',
+    async (locale) => {
+      // "don't forget … to give a clickable link to top bar for blog page",
+      // then "internationalise and add that blog on eveyer language": a real
+      // link to the list's page 1 in the visitor's own language, in both
+      // places a visitor taps — the row from the bar's step up, the panel
+      // below it — and, on a page that is not the blog (/services here), not
+      // the current one. Until 2026-10-14 this case asserted the OPPOSITE off
+      // Romanian: the blog was `ro`-only (§5) and `/en/blog` never existed.
+      const user = userEvent.setup();
+      const { burger, panel, barNav, messages } = mount(locale);
 
-    expect(
-      within(barNav()).queryByRole('link', { name: messages.nav.blog }),
-    ).toBeNull();
-    // The other three still ship.
-    expect(
-      within(barNav()).getByRole('link', { name: messages.nav.team }),
-    ).toBeInTheDocument();
-
-    await user.click(burger());
-    expect(
-      within(panel() as HTMLElement).queryByRole('link', {
+      const inBar = within(barNav()).getByRole('link', {
         name: messages.nav.blog,
-      }),
-    ).toBeNull();
-  });
+      });
+      expect(inBar).toHaveAttribute('href', `/${locale}/blog/`);
+      expect(inBar).not.toHaveAttribute('aria-current');
 
-  it('drops Blog off Romanian — the blog is `ro`-only (§5)', async () => {
-    const user = userEvent.setup();
-    const { burger, panel, barNav, messages } = mount('en');
-
-    expect(
-      within(barNav()).queryByRole('link', { name: messages.nav.blog }),
-    ).toBeNull();
-    // The other three still ship, in English.
-    expect(
-      within(barNav()).getByRole('link', { name: messages.nav.services }),
-    ).toBeInTheDocument();
-
-    await user.click(burger());
-    expect(
-      within(panel() as HTMLElement).queryByRole('link', {
-        name: messages.nav.blog,
-      }),
-    ).toBeNull();
-  });
+      await user.click(burger());
+      expect(
+        within(panel() as HTMLElement).getByRole('link', {
+          name: messages.nav.blog,
+        }),
+      ).toHaveAttribute('href', `/${locale}/blog/`);
+    },
+  );
 });
 
 describe('Header — the brand and the two Contact links', () => {

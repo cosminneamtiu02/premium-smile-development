@@ -72,9 +72,9 @@ export const LOCALE_COOKIE_MAX_AGE_S = 31_536_000;
  *
  * `locale: string`, not the `Locale` union, deliberately: `useLocale()` hands
  * back a plain string and both callers pass one straight through — the
- * `localeHref` / `primaryRoutes(locale: string)` precedent. The union does its
- * work on the DATA side (locales, nativeNames), where a rename must not go
- * unnoticed; here the value is on its way OUT of the program.
+ * `localeHref(locale: string, …)` precedent. The union does its work on the
+ * DATA side (locales, nativeNames), where a rename must not go unnoticed; here
+ * the value is on its way OUT of the program.
  *
  * Recorded and deliberately not "fixed": Safari's ITP caps any JS-written
  * cookie at ~7 days whatever `max-age` says, so the choice simply re-asks

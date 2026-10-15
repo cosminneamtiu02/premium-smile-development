@@ -38,21 +38,23 @@ export function HeaderNav(): ReactElement {
     // in the HTML at every width and CSS decides which is drawn. The step is a
     // MEASURED container step, 62rem of bar since 2026-10-01 (60rem from the
     // header-nav-gap lane, the owner's ask, 2026-09-26 — Tailwind's named
-    // `@3xl`, 48rem, before): the smallest
-    // whole rem at which German, the longest row, keeps 4rem of air between
-    // the brand and its first link. Header.tsx's "THE BREAKPOINT IS A
-    // CONTAINER STEP" block carries the arithmetic; the number is spelled in
-    // exactly three files, and Header.test.tsx pins that they agree. It
-    // measures the BAR, not the viewport (§6.5), so the row behaves correctly
-    // wherever the section is placed and can be tested at any width in
-    // Storybook.
+    // `@3xl`, 48rem, before), at which every language keeps 70 % of its
+    // first link as air between the brand and that link — the owner's floor,
+    // read per language since every row has four links (2026-10-14; French,
+    // with the widest first link, sits nearest it — Header.tsx's THE FIVE ROWS
+    // GREW, which also records the lower step that arithmetic would now allow,
+    // not taken). Header.tsx's "THE BREAKPOINT IS A CONTAINER STEP" block
+    // carries the arithmetic; the number is spelled in exactly three files,
+    // and Header.test.tsx pins that they agree. It measures the BAR, not the
+    // viewport (§6.5), so the row behaves correctly wherever the section is
+    // placed and can be tested at any width in Storybook.
     // aria-label names the landmark: "Navigare principală, navigation" instead
     // of a bare "navigation" once the Footer adds a second nav.
     //
     // The third class is the single-menu rule (owner, fb-164/166): while the
     // panel is open this row disappears at every width, because the panel
-    // already carries these exact four links and showing both reads as two
-    // menus at once. Zero JS — the panel exists in the bar's subtree exactly
+    // already carries these exact links and showing both reads as two menus
+    // at once. Zero JS — the panel exists in the bar's subtree exactly
     // while it is open, so `:has()` on the named `group/bar` root (Header.tsx)
     // is the whole mechanism, and the state never crosses a component
     // boundary. It outranks the step's `flex` by specificity (an id inside
@@ -84,6 +86,7 @@ export function HeaderNav(): ReactElement {
       className="hidden @min-[62rem]:col-start-2 @min-[62rem]:flex @min-[62rem]:justify-self-center group-has-[#header-menu]/bar:hidden"
     >
       {/* A list, because it IS one: screen readers announce "list, 4 items"
+          — in every language since the blog joined all five (2026-10-14) —
           and offer item-by-item navigation. The section owns the spacing
           (§6.4) — gap here, no margins on the atoms. */}
       <ul className="flex items-center gap-2">

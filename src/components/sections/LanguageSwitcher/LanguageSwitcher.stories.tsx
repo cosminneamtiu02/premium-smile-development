@@ -257,8 +257,8 @@ const openPlay: NonNullable<Story['play']> = async ({ canvas, userEvent }) => {
  * not to this section.
  *
  * The play function is the standing proof that the REAL chain works end to end
- * — Next's pathname → stripLocale → equivalentPath → localeHref — with the
- * actual message files and the actual locale manifest. The interaction suite
+ * — Next's pathname → stripLocale → localeHref — with the actual message
+ * files and the actual locale manifest. The interaction suite
  * mocks that module boundary, so this is the half it cannot cover.
  */
 export const Default: Story = {

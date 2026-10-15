@@ -62,7 +62,7 @@ import {
 // exactly what the section consumes, one call frame closer — and since §15.13
 // that module has ONE export: usePathname, handing back the LOCALE-STRIPPED
 // pathname ('/ro/services/' → '/services/'). Everything downstream of it runs
-// for real: localeHref, equivalentPath and nativeNames are the shipping code,
+// for real: localeHref and nativeNames are the shipping code,
 // so the hrefs asserted below are the strings a visitor's browser receives.
 // The REAL chain (next/navigation → stripLocale) is exercised one tier up, in
 // LanguageSwitcher.stories.tsx, through parameters.nextjs.navigation.
@@ -357,11 +357,11 @@ describe('LanguageSwitcher — closed: one control, four crawlable alternates', 
   });
 });
 
-describe('LanguageSwitcher — the hrefs are the equivalent page (§5, §15.13)', () => {
+describe('LanguageSwitcher — the hrefs are the same page over there (§5, §15.13)', () => {
   it('points at the SAME page under each other prefix, on /services/', () => {
-    // Literal strings on purpose, not localeHref(target, equivalentPath(…)):
-    // deriving the expectation from the code under test would make a broken
-    // rule agree with itself. lib/routes/routes.test.ts pins the composition; this is
+    // Literal strings on purpose, not localeHref(target, …): deriving the
+    // expectation from the code under test would make a broken rule agree
+    // with itself. tests/unit/href.test.ts pins localeHref itself; this is
     // what the DOM must contain. (basePath is '' in this runner — pinned by
     // vitest.config's define.)
     const { container } = mount();
@@ -391,19 +391,69 @@ describe('LanguageSwitcher — the hrefs are the equivalent page (§5, §15.13)'
     ).toEqual(['/en/team/', '/de/team/', '/fr/team/', '/it/team/']);
   });
 
-  it.each(['/blog/', '/blog/un-articol/'] as const)(
-    'sends every alternate HOME from %s — the blog is Romanian-only (§5)',
-    (pathname) => {
-      // /de/blog is never generated, so linking to it would be a 404 in four
-      // languages. equivalentPath is what knows that, matchesRoute is what
-      // makes the article count as "under /blog".
+  it.each([
+    ['/blog/', ['/en/blog/', '/de/blog/', '/fr/blog/', '/it/blog/']],
+    [
+      '/blog/page/2/',
+      [
+        '/en/blog/page/2/',
+        '/de/blog/page/2/',
+        '/fr/blog/page/2/',
+        '/it/blog/page/2/',
+      ],
+    ],
+    [
+      '/blog/un-articol/',
+      [
+        '/en/blog/un-articol/',
+        '/de/blog/un-articol/',
+        '/fr/blog/un-articol/',
+        '/it/blog/un-articol/',
+      ],
+    ],
+  ] as const)(
+    'keeps %s in every other language — the blog exists in all five (2026-10-14)',
+    (pathname, hrefs) => {
+      // Until 2026-10-14 every alternate went HOME from a blog page: the blog
+      // was Romanian-only (§5) and /de/blog was never generated. Since the
+      // owner's "internationalise and add that blog on eveyer language" the
+      // list's page 1, its later pages and an article to come keep their
+      // path in every language, like every other page — the per-locale scope
+      // that sent them home was deleted the same day (lib/routes' AND THE
+      // PER-LOCALE HALF LEFT).
       nav.pathname = pathname;
       const { container } = mount();
       expect(
         alternates(container).map((link) => link.getAttribute('href')),
-      ).toEqual(['/en/', '/de/', '/fr/', '/it/']);
+      ).toEqual(hrefs);
     },
   );
+
+  it('keeps a page the route list never names — the policy, /privacy/ — in every other language', () => {
+    // The privacy page has no row in the primary list (it is LEGAL_ROUTES'),
+    // and no page needs one to be offered: the dial reads no list at all, so
+    // a page added before any row — the policy, a 404 — keeps its path too.
+    nav.pathname = '/privacy/';
+    const { container } = mount();
+    expect(
+      alternates(container).map((link) => link.getAttribute('href')),
+    ).toEqual(['/en/privacy/', '/de/privacy/', '/fr/privacy/', '/it/privacy/']);
+  });
+
+  it('keeps page 2 of the blog from a German page too — /de/blog/page/2/ ↔ /fr/blog/page/2/', () => {
+    // The other direction, off Romanian: a German reader of the list's second
+    // page is offered that very page in the four other languages.
+    nav.pathname = '/blog/page/2/';
+    const { container } = mount('de');
+    expect(
+      alternates(container).map((link) => link.getAttribute('href')),
+    ).toEqual([
+      '/ro/blog/page/2/',
+      '/en/blog/page/2/',
+      '/fr/blog/page/2/',
+      '/it/blog/page/2/',
+    ]);
+  });
 });
 
 describe('LanguageSwitcher — every locale names itself (§8.5, D15)', () => {

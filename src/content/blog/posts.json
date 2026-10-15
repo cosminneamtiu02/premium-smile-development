@@ -1,146 +1,494 @@
 [
   {
     "slug": "cum-iti-alegi-periuta-de-dinti",
-    "title": "Cum îți alegi periuța de dinți",
-    "summary": "Periuța potrivită depinde de gingiile tale, de lucrările pe care le ai în gură și de cât de ușor o mânuiești. Îți spunem ce să cauți pe ambalaj și de ce e bine s-o schimbi la fiecare trei luni.",
     "date": "2026-09-29",
     "author": "Dr. Nicu Elena Alina",
     "image": {
-      "src": "/images/hero/lobby.jpg",
-      "alt": ""
+      "src": "/images/hero/lobby.jpg"
     },
-    "tags": ["igienă", "sfaturi"]
+    "readingMinutes": 4,
+    "words": {
+      "ro": {
+        "title": "Cum îți alegi periuța de dinți",
+        "summary": "Periuța potrivită depinde de gingiile tale, de lucrările pe care le ai în gură și de cât de ușor o mânuiești. Îți spunem ce să cauți pe ambalaj și de ce e bine s-o schimbi la fiecare trei luni.",
+        "tags": ["igienă", "sfaturi"],
+        "alt": ""
+      },
+      "en": {
+        "title": "How to choose your toothbrush",
+        "summary": "The right toothbrush depends on your gums, the dental work in your mouth and how easily you can handle it. We tell you what to look for on the packaging and why it is a good idea to replace your brush every three months.",
+        "tags": ["hygiene", "tips"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Wie Sie Ihre Zahnbürste auswählen",
+        "summary": "Welche Zahnbürste zu Ihnen passt, hängt von Ihrem Zahnfleisch, von den zahnärztlichen Arbeiten in Ihrem Mund und davon ab, wie gut sie Ihnen in der Hand liegt. Wir sagen Ihnen, worauf Sie beim Kauf achten sollten und warum Sie die Zahnbürste alle drei Monate wechseln sollten.",
+        "tags": ["Mundhygiene", "Tipps"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Comment choisir votre brosse à dents",
+        "summary": "La bonne brosse à dents dépend de vos gencives, des travaux dentaires que vous avez en bouche et de la facilité avec laquelle vous la manipulez. Nous vous disons ce qu’il faut regarder sur l’emballage et pourquoi il vaut mieux la changer tous les trois mois.",
+        "tags": ["hygiène", "conseils"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Come scegliere il tuo spazzolino",
+        "summary": "Lo spazzolino giusto dipende dalle tue gengive, dai lavori odontoiatrici che hai in bocca e da quanto ti è facile usarlo. Ti diciamo cosa cercare sulla confezione e perché è bene cambiarlo ogni tre mesi.",
+        "tags": ["igiene", "consigli"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "ce-este-tartrul",
-    "title": "Ce este tartrul și de ce se formează",
-    "summary": "Tartrul este placa bacteriană întărită pe dinți, pe care periajul de acasă nu o mai poate îndepărta. Află cum se formează, ce probleme le aduce gingiilor și cât de des e bine să faci o igienizare profesională.",
     "date": "2026-09-15",
     "author": "Dr. Malea (Sabău) Oana Bianca",
     "image": {
-      "src": "/images/hero/treatment-room.jpg",
-      "alt": ""
+      "src": "/images/hero/treatment-room.jpg"
     },
-    "tags": ["prevenție", "igienă"]
+    "readingMinutes": 5,
+    "words": {
+      "ro": {
+        "title": "Ce este tartrul și de ce se formează",
+        "summary": "Tartrul este placa bacteriană întărită pe dinți, pe care periajul de acasă nu o mai poate îndepărta. Află cum se formează, ce probleme le aduce gingiilor și cât de des e bine să faci o igienizare profesională.",
+        "tags": ["prevenție", "igienă"],
+        "alt": ""
+      },
+      "en": {
+        "title": "What tartar is and why it forms",
+        "summary": "Tartar is bacterial plaque that has hardened on the teeth, and brushing at home can no longer remove it. Find out how it forms, what problems it causes for the gums and how often it is a good idea to have a professional cleaning.",
+        "tags": ["prevention", "hygiene"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Was Zahnstein ist und warum er entsteht",
+        "summary": "Zahnstein ist bakterieller Zahnbelag, der auf den Zähnen verhärtet ist und sich beim Zähneputzen zu Hause nicht mehr entfernen lässt. Erfahren Sie, wie er entsteht, welche Probleme er dem Zahnfleisch bereitet und wie oft eine professionelle Zahnreinigung sinnvoll ist.",
+        "tags": ["Vorsorge", "Mundhygiene"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Ce qu’est le tartre et pourquoi il se forme",
+        "summary": "Le tartre est de la plaque bactérienne durcie sur les dents, que le brossage à la maison ne peut plus éliminer. Découvrez comment il se forme, quels problèmes il cause aux gencives et à quelle fréquence il est bon de faire un détartrage professionnel.",
+        "tags": ["prévention", "hygiène"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Che cos’è il tartaro e perché si forma",
+        "summary": "Il tartaro è placca batterica indurita sui denti, che lo spazzolamento a casa non può più rimuovere. Scopri come si forma, quali problemi causa alle gengive e ogni quanto è bene fare una seduta di igiene professionale.",
+        "tags": ["prevenzione", "igiene"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "prima-vizita-a-copilului-la-dentist",
-    "title": "Prima vizită a copilului la dentist",
-    "summary": "O primă vizită liniștită îl ajută pe copil să se obișnuiască cu cabinetul. Câteva idei despre cum îl pregătești acasă, la ce vârstă e potrivit să vină și ce se întâmplă în timpul consultației.",
     "date": "2026-08-30",
     "author": "Dr. Ivașcu-Zugravu Cătălina",
     "image": {
-      "src": "/images/hero/instruments.jpg",
-      "alt": ""
+      "src": "/images/hero/instruments.jpg"
     },
-    "tags": ["copii", "sfaturi"]
+    "readingMinutes": 6,
+    "words": {
+      "ro": {
+        "title": "Prima vizită a copilului la dentist",
+        "summary": "O primă vizită liniștită îl ajută pe copil să se obișnuiască cu cabinetul. Câteva idei despre cum îl pregătești acasă, la ce vârstă e potrivit să vină și ce se întâmplă în timpul consultației.",
+        "tags": ["copii", "sfaturi"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Your child’s first visit to the dentist",
+        "summary": "A calm first visit helps your child get used to the clinic. A few ideas on how to prepare them at home, at what age to bring them and what happens during the consultation.",
+        "tags": ["children", "tips"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Der erste Zahnarztbesuch Ihres Kindes",
+        "summary": "Ein ruhiger erster Besuch hilft Ihrem Kind, sich an die Praxis zu gewöhnen. Ein paar Ideen, wie Sie es zu Hause darauf vorbereiten, in welchem Alter es kommen sollte und was bei der Untersuchung geschieht.",
+        "tags": ["Kinder", "Tipps"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "La première visite de votre enfant chez le dentiste",
+        "summary": "Une première visite sereine aide votre enfant à s’habituer au cabinet. Quelques idées pour le préparer à la maison, savoir à quel âge l’amener et comprendre ce qui se passe pendant la consultation.",
+        "tags": ["enfants", "conseils"],
+        "alt": ""
+      },
+      "it": {
+        "title": "La prima visita del bambino dal dentista",
+        "summary": "Una prima visita tranquilla aiuta il bambino ad abituarsi allo studio. Qualche idea su come prepararlo a casa, a che età portarlo e che cosa succede durante la visita.",
+        "tags": ["bambini", "consigli"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "aparatul-dentar-la-adulti",
-    "title": "Aparatul dentar la adulți: ce trebuie să știi",
-    "summary": "Dinții se pot alinia și la vârsta adultă. Îți explicăm cum decurge tratamentul ortodontic, cât durează de obicei și cum îți îngrijești dinții cât timp porți aparatul.",
     "date": "2026-08-12",
     "author": "Dr. Ivașcu-Zugravu Cătălina",
     "image": {
-      "src": "/images/hero/lobby.jpg",
-      "alt": ""
+      "src": "/images/hero/lobby.jpg"
     },
-    "tags": ["ortodonție"]
+    "readingMinutes": 7,
+    "words": {
+      "ro": {
+        "title": "Aparatul dentar la adulți: ce trebuie să știi",
+        "summary": "Dinții se pot alinia și la vârsta adultă. Îți explicăm cum decurge tratamentul ortodontic, cât durează de obicei și cum îți îngrijești dinții cât timp porți aparatul.",
+        "tags": ["ortodonție"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Braces for adults: what you need to know",
+        "summary": "Teeth can be aligned in adulthood too. We explain how orthodontic treatment works, how long it usually takes and how to look after your teeth while you wear braces.",
+        "tags": ["orthodontics"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Zahnspange für Erwachsene: was Sie wissen sollten",
+        "summary": "Zähne lassen sich auch im Erwachsenenalter ausrichten. Wir erklären Ihnen, wie eine kieferorthopädische Behandlung abläuft, wie lange sie meist dauert und wie Sie Ihre Zähne pflegen, solange Sie die Spange tragen.",
+        "tags": ["Kieferorthopädie"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "L’appareil dentaire à l’âge adulte : ce qu’il faut savoir",
+        "summary": "Les dents peuvent aussi être alignées à l’âge adulte. Nous vous expliquons comment se déroule un traitement orthodontique, combien de temps il dure en général et comment prendre soin de vos dents pendant que vous portez l’appareil.",
+        "tags": ["orthodontie"],
+        "alt": ""
+      },
+      "it": {
+        "title": "L’apparecchio dentale negli adulti: cosa devi sapere",
+        "summary": "I denti si possono allineare anche in età adulta. Ti spieghiamo come si svolge il trattamento ortodontico, quanto dura di solito e come prenderti cura dei denti mentre porti l’apparecchio.",
+        "tags": ["ortodonzia"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "gingiile-care-sangereaza-la-periaj",
-    "title": "Gingiile care sângerează la periaj",
-    "summary": "Sângerarea la periaj este adesea primul semn al unei inflamații a gingiilor. Află ce o poate provoca, ce poți face acasă și când e momentul să ceri un consult.",
     "date": "2026-07-28",
     "author": "Dr. Nicu Elena Alina",
     "image": {
-      "src": "/images/hero/treatment-room.jpg",
-      "alt": ""
+      "src": "/images/hero/treatment-room.jpg"
     },
-    "tags": ["parodontologie", "prevenție"]
+    "readingMinutes": 5,
+    "words": {
+      "ro": {
+        "title": "Gingiile care sângerează la periaj",
+        "summary": "Sângerarea la periaj este adesea primul semn al unei inflamații a gingiilor. Află ce o poate provoca, ce poți face acasă și când e momentul să ceri un consult.",
+        "tags": ["parodontologie", "prevenție"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Gums that bleed when you brush",
+        "summary": "Bleeding when you brush is often the first sign of inflamed gums. Find out what can cause it, what you can do at home and when it is time to book an appointment.",
+        "tags": ["periodontics", "prevention"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Wenn das Zahnfleisch beim Putzen blutet",
+        "summary": "Zahnfleischbluten beim Zähneputzen ist oft das erste Anzeichen einer Zahnfleischentzündung. Erfahren Sie, was es auslösen kann, was Sie zu Hause tun können und wann es Zeit ist, einen Termin zu vereinbaren.",
+        "tags": ["Parodontologie", "Vorsorge"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Des gencives qui saignent au brossage",
+        "summary": "Le saignement au brossage est souvent le premier signe d’une inflammation des gencives. Découvrez ce qui peut le provoquer, ce que vous pouvez faire à la maison et quand il est temps de demander une consultation.",
+        "tags": ["parodontologie", "prévention"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Gengive che sanguinano quando ti lavi i denti",
+        "summary": "Il sanguinamento quando ti lavi i denti è spesso il primo segno di un’infiammazione delle gengive. Scopri che cosa può provocarlo, cosa puoi fare a casa e quando è il momento di chiedere una visita.",
+        "tags": ["parodontologia", "prevenzione"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "implantul-dentar-pas-cu-pas",
-    "title": "Implantul dentar, pas cu pas",
-    "summary": "De la prima consultație și radiografie până la coroana finală, un implant se face în mai multe etape. Le luăm pe rând, ca să știi la ce să te aștepți la fiecare vizită.",
     "date": "2026-07-10",
     "author": "Dr. Bozdog Horațiu",
     "image": {
-      "src": "/images/hero/instruments.jpg",
-      "alt": ""
+      "src": "/images/hero/instruments.jpg"
     },
-    "tags": ["implantologie"]
+    "readingMinutes": 8,
+    "words": {
+      "ro": {
+        "title": "Implantul dentar, pas cu pas",
+        "summary": "De la prima consultație și radiografie până la coroana finală, un implant se face în mai multe etape. Le luăm pe rând, ca să știi la ce să te aștepți la fiecare vizită.",
+        "tags": ["implantologie"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Dental implants, step by step",
+        "summary": "From the first consultation and X-ray to the final crown, an implant is completed in several stages. We go through them one by one, so you know what to expect at each visit.",
+        "tags": ["implantology"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Das Zahnimplantat, Schritt für Schritt",
+        "summary": "Von der ersten Beratung und dem Röntgenbild bis zur endgültigen Krone entsteht ein Implantat in mehreren Schritten. Wir gehen sie der Reihe nach durch, damit Sie wissen, was Sie bei jedem Termin erwartet.",
+        "tags": ["Implantologie"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "L’implant dentaire, étape par étape",
+        "summary": "De la première consultation et de la radiographie jusqu’à la couronne définitive, un implant se fait en plusieurs étapes. Nous les passons en revue une à une, pour que vous sachiez à quoi vous attendre à chaque rendez-vous.",
+        "tags": ["implantologie"],
+        "alt": ""
+      },
+      "it": {
+        "title": "L’impianto dentale, passo dopo passo",
+        "summary": "Dalla prima visita e dalla radiografia fino alla corona definitiva, un impianto si fa in più fasi. Le vediamo una per una, così sai cosa aspettarti a ogni appuntamento.",
+        "tags": ["implantologia"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "durere-de-masea-in-weekend",
-    "title": "Ce faci când te doare o măsea în weekend",
-    "summary": "Câteva lucruri simple care te ajută până la programare: ce poți face pentru durere, ce e bine să eviți și ce semne îți spun că trebuie să suni la clinică imediat ce se deschide.",
     "date": "2026-06-24",
     "author": "Dr. Toma Lucian",
     "image": {
-      "src": "/images/hero/lobby.jpg",
-      "alt": ""
+      "src": "/images/hero/lobby.jpg"
     },
-    "tags": ["urgențe", "sfaturi"]
+    "readingMinutes": 3,
+    "words": {
+      "ro": {
+        "title": "Ce faci când te doare o măsea în weekend",
+        "summary": "Câteva lucruri simple care te ajută până la programare: ce poți face pentru durere, ce e bine să eviți și ce semne îți spun că trebuie să suni la clinică imediat ce se deschide.",
+        "tags": ["urgențe", "sfaturi"],
+        "alt": ""
+      },
+      "en": {
+        "title": "What to do when a tooth hurts at the weekend",
+        "summary": "A few simple things that help until your appointment: what you can do about the pain, what you should avoid and which signs tell you to call the clinic as soon as it opens.",
+        "tags": ["emergencies", "tips"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Was tun, wenn am Wochenende ein Zahn schmerzt",
+        "summary": "Ein paar einfache Dinge, die Ihnen bis zum Termin helfen: was Sie gegen die Schmerzen tun können, was Sie besser vermeiden und an welchen Anzeichen Sie erkennen, dass Sie die Klinik anrufen sollten, sobald sie öffnet.",
+        "tags": ["Notfälle", "Tipps"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Que faire quand une dent fait mal le week-end",
+        "summary": "Quelques gestes simples qui vous aident jusqu’au rendez-vous : ce que vous pouvez faire contre la douleur, ce qu’il vaut mieux éviter et quels signes vous indiquent qu’il faut appeler la clinique dès son ouverture.",
+        "tags": ["urgences", "conseils"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Cosa fare se ti fa male un dente nel weekend",
+        "summary": "Qualche accorgimento semplice che ti aiuta fino all’appuntamento: cosa puoi fare per il dolore, cosa è meglio evitare e quali segnali ti dicono di chiamare la clinica appena apre.",
+        "tags": ["urgenze", "consigli"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "albirea-dentara-intrebari-frecvente",
-    "title": "Albirea dentară: întrebări frecvente",
-    "summary": "Cât timp ține efectul, ce sensibilitate poate apărea și cine nu ar trebui să-și albească dinții. Răspunsuri scurte la întrebările pe care le auzim des în cabinet.",
     "date": "2026-06-05",
     "author": "Dr. Malea (Sabău) Oana Bianca",
     "image": {
-      "src": "/images/hero/treatment-room.jpg",
-      "alt": ""
+      "src": "/images/hero/treatment-room.jpg"
     },
-    "tags": ["estetică"]
+    "readingMinutes": 6,
+    "words": {
+      "ro": {
+        "title": "Albirea dentară: întrebări frecvente",
+        "summary": "Cât timp ține efectul, ce sensibilitate poate apărea și cine nu ar trebui să-și albească dinții. Răspunsuri scurte la întrebările pe care le auzim des în cabinet.",
+        "tags": ["estetică"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Teeth whitening: frequently asked questions",
+        "summary": "How long the effect lasts, what sensitivity can occur and who should not whiten their teeth. Short answers to the questions we often hear at the clinic.",
+        "tags": ["aesthetics"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Zahnaufhellung: häufige Fragen",
+        "summary": "Wie lange die Wirkung anhält, welche Empfindlichkeit auftreten kann und wer sich die Zähne nicht aufhellen lassen sollte. Kurze Antworten auf die Fragen, die wir in der Praxis oft hören.",
+        "tags": ["Ästhetik"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Le blanchiment dentaire : questions fréquentes",
+        "summary": "Combien de temps dure l’effet, quelle sensibilité peut apparaître et qui ne devrait pas se faire blanchir les dents. Des réponses courtes aux questions que nous entendons souvent au cabinet.",
+        "tags": ["esthétique"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Lo sbiancamento dei denti: domande frequenti",
+        "summary": "Quanto dura l’effetto, quale sensibilità può comparire e chi non dovrebbe sbiancare i denti. Risposte brevi alle domande che sentiamo spesso in studio.",
+        "tags": ["estetica"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "ata-dentara-si-periutele-interdentare",
-    "title": "Ața dentară și periuțele interdentare",
-    "summary": "Periuța curăță suprafețele dinților, dar nu ajunge între ei. Îți arătăm cum folosești ața dentară și periuțele interdentare și cum alegi mărimea potrivită pentru tine.",
     "date": "2026-05-20",
     "author": "Dr. Nicu Elena Alina",
     "image": {
-      "src": "/images/hero/instruments.jpg",
-      "alt": ""
+      "src": "/images/hero/instruments.jpg"
     },
-    "tags": ["igienă"]
+    "readingMinutes": 4,
+    "words": {
+      "ro": {
+        "title": "Ața dentară și periuțele interdentare",
+        "summary": "Periuța curăță suprafețele dinților, dar nu ajunge între ei. Îți arătăm cum folosești ața dentară și periuțele interdentare și cum alegi mărimea potrivită pentru tine.",
+        "tags": ["igienă"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Dental floss and interdental brushes",
+        "summary": "A toothbrush cleans the surfaces of your teeth but does not reach between them. We show you how to use dental floss and interdental brushes and how to choose the right size for you.",
+        "tags": ["hygiene"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Zahnseide und Bürstchen für die Zwischenräume",
+        "summary": "Die Zahnbürste reinigt die Oberflächen der Zähne, erreicht aber nicht die Zwischenräume. Wir zeigen Ihnen, wie Sie Zahnseide und Interdentalbürsten benutzen und wie Sie die passende Größe finden.",
+        "tags": ["Mundhygiene"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Le fil dentaire et les brossettes interdentaires",
+        "summary": "La brosse à dents nettoie la surface des dents, mais n’atteint pas les espaces entre elles. Nous vous montrons comment utiliser le fil dentaire et les brossettes interdentaires et comment choisir la taille qui vous convient.",
+        "tags": ["hygiène"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Il filo interdentale e gli scovolini",
+        "summary": "Lo spazzolino pulisce le superfici dei denti, ma non arriva tra un dente e l’altro. Ti mostriamo come usare il filo interdentale e gli scovolini e come scegliere la misura giusta per te.",
+        "tags": ["igiene"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "coroane-si-punti-dentare",
-    "title": "Coroane și punți dentare: care e diferența",
-    "summary": "Când un dinte e prea afectat pentru o plombă, medicul poate propune o coroană; când lipsește, o punte sau un implant. Iată cum diferă aceste lucrări și cum le îngrijești.",
     "date": "2026-04-30",
     "author": "Dr. Toma Lucian",
     "image": {
-      "src": "/images/hero/lobby.jpg",
-      "alt": ""
+      "src": "/images/hero/lobby.jpg"
     },
-    "tags": ["protetică"]
+    "readingMinutes": 7,
+    "words": {
+      "ro": {
+        "title": "Coroane și punți dentare: care e diferența",
+        "summary": "Când un dinte e prea afectat pentru o plombă, medicul poate propune o coroană; când lipsește, o punte sau un implant. Iată cum diferă aceste lucrări și cum le îngrijești.",
+        "tags": ["protetică"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Dental crowns and bridges: how they differ",
+        "summary": "When a tooth is too damaged for a filling, your dentist may suggest a crown; when a tooth is missing, a bridge or an implant. Here is how these restorations differ and how to look after them.",
+        "tags": ["prosthodontics"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Kronen und Brücken: worin der Unterschied liegt",
+        "summary": "Ist ein Zahn für eine Füllung zu stark geschädigt, kann eine Krone infrage kommen; fehlt ein Zahn, eine Brücke oder ein Implantat. Hier erfahren Sie, wie sich diese Arbeiten unterscheiden und wie Sie sie pflegen.",
+        "tags": ["Prothetik"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Couronnes et bridges dentaires : ce qui les distingue",
+        "summary": "Quand une dent est trop abîmée pour une obturation, votre dentiste peut proposer une couronne ; quand elle manque, un bridge ou un implant. Voici en quoi ces travaux diffèrent et comment les entretenir.",
+        "tags": ["prothèses"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Corone e ponti dentali: come si distinguono",
+        "summary": "Quando un dente è troppo danneggiato per un’otturazione, si può ricorrere a una corona; quando manca, a un ponte o a un impianto. Ecco in cosa si differenziano questi lavori e come prendertene cura.",
+        "tags": ["protesi"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "sensibilitatea-dentara-la-rece-si-cald",
-    "title": "Sensibilitatea dentară la rece și cald",
-    "summary": "Senzația scurtă și neplăcută la băuturi reci sau calde poate avea mai multe cauze, de la gingii retrase la carii. Află ce o declanșează și ce poți face ca s-o reduci.",
     "date": "2026-04-08",
     "author": "Dr. Opriș Mircea",
     "image": {
-      "src": "/images/hero/treatment-room.jpg",
-      "alt": ""
+      "src": "/images/hero/treatment-room.jpg"
     },
-    "tags": ["prevenție", "sfaturi"]
+    "readingMinutes": 5,
+    "words": {
+      "ro": {
+        "title": "Sensibilitatea dentară la rece și cald",
+        "summary": "Senzația scurtă și neplăcută la băuturi reci sau calde poate avea mai multe cauze, de la gingii retrase la carii. Află ce o declanșează și ce poți face ca s-o reduci.",
+        "tags": ["prevenție", "sfaturi"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Tooth sensitivity to cold and heat",
+        "summary": "That short, unpleasant twinge from cold or hot drinks can have several causes, from receding gums to cavities. Find out what triggers it and what you can do to reduce it.",
+        "tags": ["prevention", "tips"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Empfindliche Zähne bei Kälte und Wärme",
+        "summary": "Das kurze, unangenehme Ziehen bei kalten oder heißen Getränken kann mehrere Ursachen haben, von zurückgehendem Zahnfleisch bis zu Karies. Erfahren Sie, was es auslöst und was Sie tun können, um es zu verringern.",
+        "tags": ["Vorsorge", "Tipps"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "La sensibilité dentaire au froid et au chaud",
+        "summary": "La sensation brève et désagréable au contact d’une boisson froide ou chaude peut avoir plusieurs causes, de la rétraction des gencives aux caries. Découvrez ce qui la déclenche et ce que vous pouvez faire pour la réduire.",
+        "tags": ["prévention", "conseils"],
+        "alt": ""
+      },
+      "it": {
+        "title": "La sensibilità dei denti al freddo e al caldo",
+        "summary": "La sensazione breve e fastidiosa con le bevande fredde o calde può avere diverse cause, dalle gengive ritirate alle carie. Scopri che cosa la scatena e cosa puoi fare per ridurla.",
+        "tags": ["prevenzione", "consigli"],
+        "alt": ""
+      }
+    }
   },
   {
     "slug": "de-ce-conteaza-controlul-la-sase-luni",
-    "title": "De ce contează controlul la șase luni",
-    "summary": "Un control regulat descoperă problemele mici înainte să devină mari. Îți explicăm ce verifică medicul la fiecare vizită și de ce igienizarea face parte din ea.",
     "date": "2026-03-17",
     "author": "Dr. Opriș Mircea",
     "image": {
-      "src": "/images/hero/instruments.jpg",
-      "alt": ""
+      "src": "/images/hero/instruments.jpg"
     },
-    "tags": ["prevenție"]
+    "readingMinutes": 4,
+    "words": {
+      "ro": {
+        "title": "De ce contează controlul la șase luni",
+        "summary": "Un control regulat poate descoperi problemele mici înainte să devină mari. Îți explicăm ce verifică medicul la fiecare vizită și de ce igienizarea face parte din ea.",
+        "tags": ["prevenție"],
+        "alt": ""
+      },
+      "en": {
+        "title": "Why the six-monthly check-up matters",
+        "summary": "A regular check-up can catch small problems before they become big ones. We explain what your dentist looks at during each visit and why a professional cleaning is part of it.",
+        "tags": ["prevention"],
+        "alt": ""
+      },
+      "de": {
+        "title": "Warum die Kontrolle alle sechs Monate wichtig ist",
+        "summary": "Eine regelmäßige Kontrolle kann kleine Probleme erkennen, bevor sie groß werden. Wir erklären Ihnen, was bei jedem Besuch untersucht wird und warum die professionelle Zahnreinigung dazugehört.",
+        "tags": ["Vorsorge"],
+        "alt": ""
+      },
+      "fr": {
+        "title": "Pourquoi le contrôle tous les six mois est important",
+        "summary": "Un contrôle régulier permet souvent de repérer les petits problèmes avant qu’ils ne s’aggravent. Nous vous expliquons ce que votre dentiste vérifie à chaque visite et pourquoi le détartrage en fait partie.",
+        "tags": ["prévention"],
+        "alt": ""
+      },
+      "it": {
+        "title": "Perché è importante il controllo ogni sei mesi",
+        "summary": "Un controllo regolare può scoprire i piccoli problemi prima che si aggravino. Ti spieghiamo che cosa si verifica a ogni visita e perché l’igiene professionale ne fa parte.",
+        "tags": ["prevenzione"],
+        "alt": ""
+      }
+    }
   }
 ]

@@ -1,22 +1,27 @@
+import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { ChevronLeft } from '@/assets/glyphs/ChevronLeft';
+import { ChevronRight } from '@/assets/glyphs/ChevronRight';
+import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
 import { Pagination, type PaginationProps } from './Pagination';
 import source from './Pagination.tsx?raw';
 
 // sections/Pagination — the interaction suite. Role-based queries on purpose
 // (§9, §13): a passing suite doubles as proof of accessible markup. Every
-// fixture is Romanian with diacritics (§15.7) and every visible word is a
-// PROP — the band holds no message key — so the sweep in the last block
-// proves it adds no word of its own (§17.4).
+// fixture is Romanian with diacritics (§15.7) and every word is a PROP — the
+// band holds no message key — so the sweep in the last block proves it adds
+// no word of its own (§17.4).
 //
-// Styles are NOT loaded in this project (tests/setup/components.ts imports no
+// Styles are NOT loaded in this file (tests/setup/components.ts imports no
 // stylesheet), so the utility TOKENS are the layout's contract here, the
-// convention every component suite in this repo follows. What only real CSS
-// can prove — that the row holds at 320px, one row from the nav's 20rem and
-// two below it, the counter on the centre line, the disabled face greyed —
-// is measured in Pagination.stories.tsx's plays, where globals.css is loaded.
+// convention every component suite in this repo follows. What only the real
+// sheet and the real face can prove — the 44px discs 12px apart, the row's
+// width the same on every page, the row drawn in THE BAND SCALE — is computed
+// in Pagination.scale.test.tsx, and the row as a page mounts it in
+// Pagination.stories.tsx's plays.
 //
 // NOTHING IS MOCKED: no router, no message provider, no clock. A dumb band
 // needs none of them, which is the point of the shape.
@@ -24,6 +29,12 @@ import source from './Pagination.tsx?raw';
 /** The landmark's name in the shipped words — ro.json's
  *  `blog.pagination.label` (G2 react, 2026-10-14). */
 const LABEL = 'Paginile articolelor';
+
+/** The controls' names in the shipped words — ro.json's
+ *  `blog.pagination.previous` / `.next` since the round of 2026-10-14, which
+ *  made them names, never shown (Pagination.tsx's GLYPH-ONLY paragraph). */
+const PREVIOUS = 'Pagina anterioară';
+const NEXT = 'Pagina următoare';
 
 /** The page's own addresses (the planner's routes): page 1 at the blog's
  *  root, page n under /page/n/. */
@@ -37,8 +48,8 @@ const page = (current: number, total = 3): PaginationProps => ({
   current,
   total,
   status: `Pagina ${current} din ${total}`,
-  previousLabel: 'Anterior',
-  nextLabel: 'Următor',
+  previousLabel: PREVIOUS,
+  nextLabel: NEXT,
   ...(current > 1 ? { previousHref: hrefOf(current - 1) } : {}),
   ...(current < total ? { nextHref: hrefOf(current + 1) } : {}),
 });
@@ -54,6 +65,26 @@ const without = (
 };
 
 const nav = (): HTMLElement => screen.getByRole('navigation', { name: LABEL });
+
+/** An element's class tokens, as a sorted list (order is cx's business). */
+const tokensOf = (element: Element): string[] =>
+  element.className.split(/\s+/).filter(Boolean).sort();
+
+/** What ui/GlyphButton draws for `variant="outline" tone="accent"` and nothing
+ *  else — the props sections/ReviewsCarousel/ReviewsDeck.tsx passes its two
+ *  discs: the face this band wears, read off the atom itself. */
+const deckFace = (): string[] => {
+  const { container, unmount } = render(
+    <GlyphButton variant="outline" tone="accent" aria-label="Referință">
+      <ChevronLeft />
+    </GlyphButton>,
+  );
+  const button = container.querySelector('button');
+  if (!button) throw new Error('the reference disc rendered no <button>');
+  const tokens = tokensOf(button);
+  unmount();
+  return tokens;
+};
 
 describe('Pagination — the landmark', () => {
   it('is a navigation landmark named by `label`', () => {
@@ -84,25 +115,29 @@ describe('Pagination — the landmark', () => {
   });
 
   it('passes native props through and merges className last, for placement', () => {
-    // `mt-8`, a class the site already ships: Tailwind turns every class-like
-    // word in a scanned file into a rule, tests included, so a class spelled
-    // only here would ship as dead CSS.
+    // `self-end`, the placement sections/PostList passes (Pagination.tsx's
+    // THE ROW) — a class the site wears, so naming it here ships no dead rule.
     render(
-      <Pagination {...page(2)} id="paginare" data-slot="x" className="mt-8" />,
+      <Pagination
+        {...page(2)}
+        id="paginare"
+        data-slot="x"
+        className="self-end"
+      />,
     );
 
     expect(nav()).toHaveAttribute('id', 'paginare');
     expect(nav()).toHaveAttribute('data-slot', 'x');
-    expect(nav().className.split(/\s+/).at(-1)).toBe('mt-8');
+    expect(nav().className.split(/\s+/).at(-1)).toBe('self-end');
   });
 });
 
 describe('Pagination — the links (§15.13)', () => {
-  it('links both neighbours on a middle page: plain <a href> with rel prev and next', () => {
+  it('links both neighbours on a middle page: plain <a href> with rel prev and next, named by the labels', () => {
     render(<Pagination {...page(2)} />);
 
-    const previous = within(nav()).getByRole('link', { name: 'Anterior' });
-    const next = within(nav()).getByRole('link', { name: 'Următor' });
+    const previous = within(nav()).getByRole('link', { name: PREVIOUS });
+    const next = within(nav()).getByRole('link', { name: NEXT });
     expect(previous).toHaveAttribute('href', '/ro/blog/');
     expect(previous).toHaveAttribute('rel', 'prev');
     expect(next).toHaveAttribute('href', '/ro/blog/page/3/');
@@ -117,9 +152,9 @@ describe('Pagination — the links (§15.13)', () => {
     render(<Pagination {...page(2)} />);
 
     await user.tab();
-    expect(within(nav()).getByRole('link', { name: 'Anterior' })).toHaveFocus();
+    expect(within(nav()).getByRole('link', { name: PREVIOUS })).toHaveFocus();
     await user.tab();
-    expect(within(nav()).getByRole('link', { name: 'Următor' })).toHaveFocus();
+    expect(within(nav()).getByRole('link', { name: NEXT })).toHaveFocus();
   });
 });
 
@@ -128,47 +163,121 @@ describe('Pagination — the ends are disabled buttons, never links', () => {
     const user = userEvent.setup();
     render(<Pagination {...page(1)} />);
 
-    const previous = within(nav()).getByRole('button', { name: 'Anterior' });
+    const previous = within(nav()).getByRole('button', { name: PREVIOUS });
     expect(previous).toBeDisabled();
     expect(previous).toHaveAttribute('type', 'button');
-    expect(within(nav()).queryByRole('link', { name: 'Anterior' })).toBeNull();
-    expect(
-      within(nav()).getByRole('link', { name: 'Următor' }),
-    ).toHaveAttribute('href', '/ro/blog/page/2/');
+    expect(within(nav()).queryByRole('link', { name: PREVIOUS })).toBeNull();
+    expect(within(nav()).getByRole('link', { name: NEXT })).toHaveAttribute(
+      'href',
+      '/ro/blog/page/2/',
+    );
 
+    // The first Tab passes the disabled control by and lands on forward.
     await user.tab();
-    expect(within(nav()).getByRole('link', { name: 'Următor' })).toHaveFocus();
+    expect(within(nav()).getByRole('link', { name: NEXT })).toHaveFocus();
   });
 
-  it('on the last page, the forward control is a disabled <button>', () => {
+  it('on the last page, the forward control is a disabled <button> and the keyboard skips it', async () => {
+    const user = userEvent.setup();
     render(<Pagination {...page(3)} />);
 
-    const next = within(nav()).getByRole('button', { name: 'Următor' });
+    const next = within(nav()).getByRole('button', { name: NEXT });
     expect(next).toBeDisabled();
     expect(next).toHaveAttribute('type', 'button');
-    expect(within(nav()).queryByRole('link', { name: 'Următor' })).toBeNull();
-    expect(
-      within(nav()).getByRole('link', { name: 'Anterior' }),
-    ).toHaveAttribute('href', '/ro/blog/page/2/');
+    expect(within(nav()).queryByRole('link', { name: NEXT })).toBeNull();
+    expect(within(nav()).getByRole('link', { name: PREVIOUS })).toHaveAttribute(
+      'href',
+      '/ro/blog/page/2/',
+    );
+
+    // Back is the one stop: the next Tab leaves the navigation.
+    await user.tab();
+    expect(within(nav()).getByRole('link', { name: PREVIOUS })).toHaveFocus();
+    await user.tab();
+    expect(nav()).not.toContainElement(
+      document.activeElement as HTMLElement | null,
+    );
   });
 
-  it('on a page of two, page 1 and page 2 each disable their own end', () => {
+  it('on a list of two, page 1 and page 2 each disable their own end', () => {
     const { unmount } = render(<Pagination {...page(1, 2)} />);
     expect(
-      within(nav()).getByRole('button', { name: 'Anterior' }),
+      within(nav()).getByRole('button', { name: PREVIOUS }),
     ).toBeDisabled();
-    expect(
-      within(nav()).getByRole('link', { name: 'Următor' }),
-    ).toBeInTheDocument();
+    expect(within(nav()).getByRole('link', { name: NEXT })).toBeInTheDocument();
     unmount();
 
     render(<Pagination {...page(2, 2)} />);
     expect(
-      within(nav()).getByRole('link', { name: 'Anterior' }),
+      within(nav()).getByRole('link', { name: PREVIOUS }),
     ).toBeInTheDocument();
-    expect(
-      within(nav()).getByRole('button', { name: 'Următor' }),
-    ).toBeDisabled();
+    expect(within(nav()).getByRole('button', { name: NEXT })).toBeDisabled();
+  });
+});
+
+describe('Pagination — the face: the reviews deck’s discs', () => {
+  it('dresses a link and a disabled button alike in ui/GlyphButton’s outline lavender disc — the deck’s, with no jump', () => {
+    // Page 1: one end of each kind.
+    render(<Pagination {...page(1)} />);
+    const face = deckFace();
+
+    const controls = [
+      within(nav()).getByRole('button', { name: PREVIOUS }),
+      within(nav()).getByRole('link', { name: NEXT }),
+    ];
+    for (const control of controls) {
+      // EXACTLY the atom's own face: a change of variant, tone, size, shape or
+      // motion here — or a class added beside it — turns this red.
+      expect(tokensOf(control)).toEqual(face);
+      // …which is, for the reader: the outline circle in the lavender family.
+      expect(control).toHaveClass(
+        'rounded-full',
+        'border',
+        'border-accent',
+        'bg-surface',
+        'text-accent',
+      );
+      // No green token, and nothing that grows on hover (jump-census).
+      expect(
+        tokensOf(control).filter((token) => token.includes('cta')),
+      ).toEqual([]);
+      expect(
+        tokensOf(control).filter((token) => token.includes('scale')),
+      ).toEqual([]);
+      expect(control).not.toHaveAttribute('tone');
+      expect(control).not.toHaveAttribute('variant');
+    }
+  });
+
+  it('holds its chevron and nothing else — the label is the NAME, never shown', () => {
+    render(<Pagination {...page(2)} />);
+
+    const glyph = (chevron: ReactElement): string =>
+      renderToStaticMarkup(chevron);
+    const previous = within(nav()).getByRole('link', { name: PREVIOUS });
+    const next = within(nav()).getByRole('link', { name: NEXT });
+
+    // The atom's glyph, exactly — Lucide's chevron, decorative by default.
+    expect(previous.innerHTML).toBe(glyph(<ChevronLeft />));
+    expect(next.innerHTML).toBe(glyph(<ChevronRight />));
+    expect(previous.querySelector('svg')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+    expect(next.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    // No text in the control: the words live in its accessible name alone.
+    expect(previous.textContent).toBe('');
+    expect(next.textContent).toBe('');
+    expect(previous).toHaveAttribute('aria-label', PREVIOUS);
+    expect(next).toHaveAttribute('aria-label', NEXT);
+  });
+
+  it('keeps the disabled end’s chevron and name too', () => {
+    render(<Pagination {...page(3)} />);
+
+    const next = within(nav()).getByRole('button', { name: NEXT });
+    expect(next.innerHTML).toBe(renderToStaticMarkup(<ChevronRight />));
+    expect(next.textContent).toBe('');
   });
 });
 
@@ -177,33 +286,95 @@ describe('Pagination — the counter speaks a sentence', () => {
     render(<Pagination {...page(2)} />);
 
     const fraction = within(nav()).getByText('2 / 3');
-    expect(fraction).toHaveAttribute('aria-hidden', 'true');
+    const eye = fraction.parentElement;
+    expect(eye).toHaveAttribute('aria-hidden', 'true');
     const sentence = within(nav()).getByText('Pagina 2 din 3');
     expect(sentence).toHaveClass('sr-only');
     expect(sentence).not.toHaveAttribute('aria-hidden');
-    // Twins in one paragraph, the paragraph centred on the element (§15.15 b).
-    expect(fraction.parentElement).toBe(sentence.parentElement);
-    expect(fraction.parentElement?.tagName).toBe('P');
-    expect(fraction.parentElement).toHaveClass('text-center');
+    expect(sentence.closest('[aria-hidden]')).toBeNull();
+    // Twins in one paragraph.
+    expect(eye?.parentElement).toBe(sentence.parentElement);
+    expect(sentence.parentElement?.tagName).toBe('P');
   });
 
   it('keeps the reading order back → counter → forward in the DOM', () => {
-    render(<Pagination {...page(2)} />);
+    const { unmount } = render(<Pagination {...page(2)} />);
+    expect([...nav().children].map((cell) => cell.tagName)).toEqual([
+      'A',
+      'P',
+      'A',
+    ]);
+    expect(nav().children[0]).toHaveAccessibleName(PREVIOUS);
+    expect(nav().children[2]).toHaveAccessibleName(NEXT);
+    unmount();
 
-    const cells = [...(nav().firstElementChild?.children ?? [])];
-    expect(cells.map((cell) => cell.tagName)).toEqual(['A', 'P', 'A']);
-    expect(cells[0]).toHaveAccessibleName('Anterior');
-    expect(cells[2]).toHaveAccessibleName('Următor');
+    // …and the ends keep their places when one is a disabled button.
+    render(<Pagination {...page(1)} />);
+    expect([...nav().children].map((cell) => cell.tagName)).toEqual([
+      'BUTTON',
+      'P',
+      'A',
+    ]);
+  });
+
+  it('holds the widest fraction’s place with an invisible twin inside the hidden span', () => {
+    // Pagination.tsx's THE ARROWS NEVER MOVE BETWEEN PAGES: on page 2 of 12
+    // the twin is „12 / 12", sharing the fraction's cell.
+    render(<Pagination {...page(2, 12)} />);
+
+    const fraction = within(nav()).getByText('2 / 12');
+    const eye = fraction.parentElement;
+    if (!eye) throw new Error('the fraction has no parent');
+    expect(eye).toHaveAttribute('aria-hidden', 'true');
+    expect([...eye.children]).toHaveLength(2);
+    const twin = eye.children[1];
+    expect(twin).toBe(within(nav()).getByText('12 / 12'));
+    expect(tokensOf(twin as Element)).toEqual(['invisible']);
+    // One cell for both, the fraction centred in it.
+    expect(eye).toHaveClass(
+      'grid',
+      'justify-items-center',
+      '*:col-start-1',
+      '*:row-start-1',
+    );
+    // Figures of one width, and never a break inside the fraction.
+    expect(eye.parentElement).toHaveClass('whitespace-nowrap', 'tabular-nums');
   });
 
   it('prints a two-digit counter as it is', () => {
     render(<Pagination {...page(10, 12)} />);
 
-    expect(within(nav()).getByText('10 / 12')).toHaveAttribute(
+    expect(within(nav()).getByText('10 / 12').parentElement).toHaveAttribute(
       'aria-hidden',
       'true',
     );
     expect(within(nav()).getByText('Pagina 10 din 12')).toHaveClass('sr-only');
+  });
+});
+
+describe('Pagination — the row contract (tokens)', () => {
+  it('is ONE flex line hugging its content, 12px between the cells, the discs sized in spacing steps', () => {
+    render(<Pagination {...page(2)} />);
+
+    expect(nav()).toHaveClass(
+      'flex',
+      'w-fit',
+      'items-center',
+      'gap-3',
+      // sections/ClinicLocation's DISC_SIZE, byte for byte (THE BAND SCALE).
+      '[--disc-size:calc(var(--spacing)*11)]',
+    );
+  });
+
+  it('carries no container query and no step anywhere — the two-row shape is gone', () => {
+    render(<Pagination {...page(2)} />);
+
+    for (const element of [nav(), ...nav().querySelectorAll('*')]) {
+      for (const token of element.getAttribute('class')?.split(/\s+/) ?? []) {
+        expect(token, `${element.tagName}: ${token}`).not.toMatch(/^@/);
+        expect(token, `${element.tagName}: ${token}`).not.toBe('w-full');
+      }
+    }
   });
 });
 
@@ -213,68 +384,6 @@ describe('Pagination — one page', () => {
 
     expect(container).toBeEmptyDOMElement();
     expect(screen.queryByRole('navigation')).toBeNull();
-  });
-});
-
-describe('Pagination — the face and the layout contract (tokens)', () => {
-  it('dresses both kinds of control in ui/Button’s lavender solid md face, with no jump', () => {
-    render(<Pagination {...page(1)} />);
-
-    const controls = [
-      within(nav()).getByRole('button', { name: 'Anterior' }),
-      within(nav()).getByRole('link', { name: 'Următor' }),
-    ];
-    for (const control of controls) {
-      const tokens = control.className.split(/\s+/);
-      // The lavender solid family (§15.30) at the md box (min-h-11 = 44px,
-      // the §9 target).
-      expect(tokens).toEqual(
-        expect.arrayContaining([
-          'bg-accent',
-          'text-ink-inverse',
-          'hover:bg-surface',
-          'hover:text-accent',
-          'min-h-11',
-        ]),
-      );
-      // No green token, and nothing that moves on hover (jump-census).
-      expect(tokens.filter((token) => token.includes('cta'))).toEqual([]);
-      expect(tokens.filter((token) => token.includes('scale'))).toEqual([]);
-      expect(control).not.toHaveAttribute('tone');
-    }
-  });
-
-  it('lays out a row that measures the nav: two lines under its 20rem, three tracks from it', () => {
-    render(<Pagination {...page(2)} />);
-
-    // The nav is the size container the row reads.
-    expect(nav()).toHaveClass('@container', 'w-full');
-    const row = nav().firstElementChild;
-    expect(row).toHaveClass(
-      'flex',
-      'flex-wrap',
-      'items-center',
-      'gap-4',
-      '@xs:grid',
-      '@xs:grid-cols-[1fr_auto_1fr]',
-    );
-    // Each control shares its line at its narrowest and is never wider than
-    // its label; the forward one is pushed to the end.
-    expect(within(nav()).getByRole('link', { name: 'Anterior' })).toHaveClass(
-      'flex-1',
-      'max-w-max',
-    );
-    expect(within(nav()).getByRole('link', { name: 'Următor' })).toHaveClass(
-      'ms-auto',
-      'flex-1',
-      'max-w-max',
-    );
-    // The counter a line of its own under the step, the middle track from it.
-    expect(within(nav()).getByText('2 / 3').parentElement).toHaveClass(
-      'order-last',
-      'basis-full',
-      '@xs:order-none',
-    );
   });
 });
 
@@ -402,8 +511,14 @@ describe('Pagination — a dumb Server Component', () => {
     const props = page(2);
     render(<Pagination {...props} />);
 
-    expect(nav().textContent).toBe(
-      `${props.previousLabel}2 / 3${props.status}${props.nextLabel}`,
-    );
+    // The visible fraction, its invisible twin, the sentence — and no other
+    // text: the two labels reach the page as names alone.
+    expect(nav().textContent).toBe(`2 / 33 / 3${props.status}`);
+    expect(
+      within(nav()).getByRole('link', { name: props.previousLabel }),
+    ).toBeInTheDocument();
+    expect(
+      within(nav()).getByRole('link', { name: props.nextLabel }),
+    ).toBeInTheDocument();
   });
 });

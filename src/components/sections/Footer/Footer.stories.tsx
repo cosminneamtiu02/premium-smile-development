@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { clinic } from '@/lib/clinic/clinic';
 import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
@@ -149,8 +149,10 @@ const expectLockupChain = async (
  * The everyday picture, Romanian, on the laptop width the §13 matrix samples.
  *
  * This is the story that shows the FOUR-COLUMN row: contact with the phone
- * link · the site map (three links — Blog hidden for now, owner 2026-09-20) · the ANPC/SAL badge · the
- * opening hours with the closed weekend dimmed. Above it the centred brand line, below it
+ * link · the site map (four links — Blog last, back since the owner's word of
+ * 2026-10-14 and in every language since the same day) · the ANPC/SAL badge ·
+ * the opening hours with the closed weekend dimmed. Above it the centred brand
+ * line, below it
  * the three-part legal strip — copyright left, back-to-top centred, the
  * four-disc contact row right (Instagram · TikTok · WhatsApp · phone, the
  * owner's fb-334 order).
@@ -167,14 +169,14 @@ export const Default: Story = {
     const phone = canvas.getByRole('link', { name: clinic.phoneDisplay });
 
     await expect(phone).toHaveAttribute('href', `tel:${clinic.phone}`);
-    // The blog row is hidden for now (lib/routes' `hidden`, owner
-    // 2026-09-20): no Blog link on `ro` either.
-    await expect(
-      canvas.queryByRole('link', { name: ro.common.nav.blog }),
-    ).toBeNull();
-    await expect(
-      canvas.getByRole('link', { name: ro.common.nav.team }),
-    ).toBeInTheDocument();
+    // The blog's link (owner, 2026-10-14: "don't forget … to give a clickable
+    // link to top bar for blog page") — the Header's one list feeds this
+    // column too, so the site map's last link is the list's page 1.
+    const siteMap = canvas.getByRole('navigation', { name: clinic.name });
+    const links = within(siteMap).getAllByRole('link');
+    await expect(links).toHaveLength(4);
+    await expect(links.at(-1)).toHaveAccessibleName(ro.common.nav.blog);
+    await expect(links.at(-1)).toHaveAttribute('href', '/ro/blog/');
     // The strip's two contact discs act DIRECTLY (board D1/D2): the WhatsApp
     // one opens the clinic's own chat, the phone one dials — never a modal.
     await expect(
@@ -275,29 +277,29 @@ export const GermanStress: Story = {
 };
 
 /**
- * German on the phone — the §5 proof: NO Blog link.
+ * German on the phone — the blog in every language (2026-10-14).
  *
- * The blog is Romanian-only, so `/de/blog` is never generated and must never be
- * offered. Three links in the site-map column here, four in the Romanian ones —
- * and the difference comes from lib/routes/routes.ts, the same module the Header's row
- * and panel filter, so this story fails the moment the two disagree.
+ * Until that day this story was the §5 proof of the opposite: the blog was
+ * Romanian-only, `/de/blog` was never generated, and the German site map
+ * carried three links. The owner's "internationalise and add that blog on
+ * eveyer language" took the `locale` off lib/routes/routes.ts' blog row, so
+ * the German column carries the same four links as the Romanian one, in
+ * German — „Start" first since the same day — the last to `/de/blog/`. The
+ * list comes from the module the Header's row and panel read too, so this
+ * story fails the moment the two disagree.
  */
 export const NonRomanianLocale: Story = {
   globals: { locale: 'de', viewport: { value: 'smartphone' } },
   play: async ({ canvas }) => {
-    await expect(
-      canvas.queryByRole('link', { name: de.common.nav.blog }),
-    ).toBeNull();
-    // …while the other three ship, in German.
-    for (const label of [
+    const siteMap = canvas.getByRole('navigation', { name: clinic.name });
+    const links = within(siteMap).getAllByRole('link');
+    await expect(links.map((link) => link.textContent)).toEqual([
       de.common.nav.home,
       de.common.nav.services,
       de.common.nav.team,
-    ]) {
-      await expect(
-        canvas.getByRole('link', { name: label }),
-      ).toBeInTheDocument();
-    }
+      de.common.nav.blog,
+    ]);
+    await expect(links.at(-1)).toHaveAttribute('href', '/de/blog/');
     await expectNoSidewaysScroll(canvas.getByRole('contentinfo'));
   },
 };

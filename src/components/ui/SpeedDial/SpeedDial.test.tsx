@@ -32,6 +32,7 @@ import {
   type SpeedDialSize,
   type SpeedDialTone,
 } from './SpeedDial';
+import source from './SpeedDial.tsx?raw';
 
 // Role-based queries on purpose (§3, §9): a passing test doubles as proof of
 // accessible markup — getByRole('button', { name }) only finds a control the
@@ -186,6 +187,20 @@ const open = async (name = RO_LABEL) => {
   await userEvent.click(bulbOf(name));
   return bulbOf(name);
 };
+
+/**
+ * The atom's source with its PROSE removed, in ONE LEFT-TO-RIGHT PASS —
+ * PriceList.test.tsx's `stripComments` (PillButton.test.tsx carries the same
+ * copy): string literals are stepped over whole, and a `//` comment (opening
+ * only at a line's start or after whitespace) is consumed before a block
+ * opener inside it can run on and hide code. The source pin in the D11 suite
+ * polices CODE, so a comment can neither trip it nor satisfy it.
+ */
+const stripComments = (code: string): string =>
+  code.replace(
+    /('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/gm,
+    (match: string, literal: string | undefined) => literal ?? ' ',
+  );
 
 // Test environment, not product styling: unlayered author CSS beats Tailwind's
 // @layer utilities without !important. The stencil sweep and the 60ms stagger
@@ -674,6 +689,27 @@ describe('SpeedDial — every way it closes (D11)', () => {
       new PageTransitionEvent('pageshow', { persisted: false }),
     );
     expect(bulbOf()).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('takes Esc and the bfcache close from lib/overlay-dismiss — no keydown, pagehide or pageshow listener of its own (§15.15’s trigger, §15.40)', () => {
+    // A SOURCE PIN. The Esc and page-lifecycle cases above prove the
+    // behaviour; this one proves where it lives — ONE implementation for the
+    // three stateful overlays (NavMenu, this dial, the top bar's dropdowns), so
+    // a hand-written listener creeping back in here would be the KEEP-IN-SYNC
+    // pair §15.15's trigger retired.
+    const code = stripComments(source);
+    expect(code).toMatch(
+      /from\s*['"]@\/lib\/overlay-dismiss\/overlay-dismiss['"]/,
+    );
+    expect(code).toMatch(/\blistenForEscape\(\s*close\s*\)/);
+    expect(code).toMatch(/\blistenForPageExit\(/);
+    expect(code).not.toMatch(
+      /addEventListener\(\s*['"`](?:keydown|pagehide|pageshow)['"`]/,
+    );
+    // TEETH: the outside-pointerdown listener is still the atom's own, so the
+    // stripped text still holds real listener code — the absence above is a
+    // finding about the code, never an artefact of a stripper that ate it.
+    expect(code).toMatch(/addEventListener\(\s*['"]pointerdown['"]/);
   });
 });
 

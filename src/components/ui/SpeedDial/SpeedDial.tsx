@@ -22,6 +22,12 @@ import {
 import { flushSync } from 'react-dom';
 import { makeAttachRef } from '../attach-ref';
 import { cx } from '@/lib/cx/cx';
+// `ui/` may import lib MECHANICS (CLAUDE.md §4): the second overlay helper an
+// atom takes from lib/, after the precedent §4 names — ui/Modal's scroll-lock.
+import {
+  listenForEscape,
+  listenForPageExit,
+} from '@/lib/overlay-dismiss/overlay-dismiss';
 import { discBase, discBox } from '../disc';
 
 // ui/SpeedDial — a chooser shaped like a mercury thermometer: one filled disc
@@ -59,7 +65,9 @@ import { discBase, discBox } from '../disc';
 // NOT copied from NavMenu, on purpose: the page freeze, the scroll lock and the
 // dimming sheet. A five-disc popover blocks nothing, so it takes that file's
 // MANNERS (Esc, focus return after the commit, bfcache close) and none of its
-// heavy machinery. No portal either: the stem is positioned against the bulb.
+// heavy machinery — Esc and the bfcache close since 2026-10-15 from ONE
+// implementation both files import, lib/overlay-dismiss (CLAUDE.md §15.40).
+// No portal either: the stem is positioned against the bulb.
 // It has since grown one manner NavMenu deliberately does not share — opening
 // on hover and closing on hover-away (see the two clocks below).
 //
@@ -650,9 +658,10 @@ const toneClasses: Record<SpeedDialTone, string> = {
 //
 // NOT MIRRORED TO NavMenu, and the asymmetry is the decision: the burger opens
 // a full-page panel over the document, and a panel that unfolds because a mouse
-// crossed it ambushes the reader. Esc and the bfcache close ARE twins across
-// those two files; this manner belongs to a five-disc corner popover and to
-// nothing else, so there is nothing to keep in sync.
+// crossed it ambushes the reader. Esc and the bfcache close are ONE
+// implementation those two files share (lib/overlay-dismiss); this manner
+// belongs to the corner popover and not to the burger, so between those two
+// files there is nothing to keep in sync.
 //
 // ALWAYS ON, with a named trigger: no opt-out prop ships today because no
 // consumer wants one. The first host that must NOT hover-open — a dial in a
@@ -946,10 +955,13 @@ export function SpeedDial<V extends string = string>({
     // KEEP-IN-SYNC (fb-44) — and this pointer names ONE option, `preventScroll`:
     // NavMenu's focus-return effect took it in the same edit, and that half of
     // the twins' shape stays identical. The `focusWasInside` guard above is
-    // deliberately NOT mirrored: it exists to answer hover-open, which lives in
-    // this file alone. A burger opens only on a click or a key press, so focus
+    // deliberately NOT mirrored: it exists to answer hover-open, which NavMenu
+    // does not have — a burger opens only on a click or a key press, so focus
     // is always inside it at close time and NavMenu's unconditional return is
-    // still the correct code there. Divergence by argument, not by drift.
+    // still the correct code there. Divergence by argument, not by drift — and
+    // the reason this manner stayed OUT of lib/overlay-dismiss when Esc and the
+    // bfcache close moved in (§15.40): divergent by design, each overlay hands
+    // focus back to its own toggle, behind its own guards.
     const button = bulbRef.current;
     if (button && button.offsetParent !== null) {
       button.focus({ preventScroll: true });
@@ -958,19 +970,13 @@ export function SpeedDial<V extends string = string>({
 
   // Esc closes (§9). Bound to the document, not the root, because focus may
   // legitimately have moved elsewhere while the stem is open.
-  // KEEP-IN-SYNC (fb-44): NavMenu's own "Esc closes (§9)" effect is this
-  // manner's twin — the two files stay independent on purpose, so a change to
-  // the SHAPE here (the document binding, the close-on-Escape semantics)
-  // belongs on both sides in the same edit, never on one.
+  // ONE IMPLEMENTATION: lib/overlay-dismiss's `listenForEscape`, shared with
+  // NavMenu and the top bar's dropdowns — the third stateful overlay, which
+  // fired CLAUDE.md §15.15's trigger (§15.40) and retired the fb-44
+  // KEEP-IN-SYNC pair this effect used to be. The module's header argues it.
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-    };
+    return listenForEscape(close);
   }, [open, close]);
 
   // A pointer press anywhere else dismisses it — the popover manner NavMenu
@@ -993,31 +999,20 @@ export function SpeedDial<V extends string = string>({
 
   // ── BACK, WITH THE DIAL STILL OPEN — the bfcache (NavMenu's D1, same shape).
   // Browsers keep the document you LEAVE frozen in memory and restore it whole
-  // on Back, state included. `pagehide` fires on every departure and only on
-  // departures, so closing there means the SNAPSHOT itself is clean;
-  // `flushSync` is what applies that close now rather than scheduling it for a
-  // turn that may never come on a page about to be frozen. `pageshow` with
-  // persisted=true is the belt to those braces, for engines that freeze without
-  // delivering pagehide first. Both live only while open, like every other
-  // listener here.
-  // KEEP-IN-SYNC (fb-44): NavMenu's "BACK, WITH THE MENU STILL OPEN" block
-  // (D1) is the twin — same pagehide/flushSync + pageshow-persisted pair, and
-  // the reasoning is argued in full there. A change to the shape belongs on
-  // both sides.
+  // on Back, state included, so the dial closes on every departure ('leave')
+  // and again on a cache restore ('restore'). ONE IMPLEMENTATION:
+  // lib/overlay-dismiss's `listenForPageExit` says which exit happened — its
+  // header argues the pair in full, and the fb-44 KEEP-IN-SYNC twin it replaced
+  // is retired with the Esc one above (§15.40). React's step stays HERE:
+  // `flushSync` applies a 'leave' now, so the frozen snapshot is already clean,
+  // rather than scheduling it for a turn that may never come on a page about
+  // to be frozen. Live only while open, like every other listener here.
   useEffect(() => {
     if (!open) return;
-    const onPageHide = () => {
-      flushSync(() => close());
-    };
-    const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) close();
-    };
-    window.addEventListener('pagehide', onPageHide);
-    window.addEventListener('pageshow', onPageShow);
-    return () => {
-      window.removeEventListener('pagehide', onPageHide);
-      window.removeEventListener('pageshow', onPageShow);
-    };
+    return listenForPageExit((exit) => {
+      if (exit === 'leave') flushSync(() => close());
+      else close();
+    });
   }, [open, close]);
 
   /**

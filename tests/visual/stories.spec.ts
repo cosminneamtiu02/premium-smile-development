@@ -17,6 +17,15 @@ import { expect, type Page, test } from '@playwright/test';
 //   pin-open        → open the first disclosure and wait for what it controls
 //   pin-open-hover  → the same open, then a real hover on the first disc INSIDE
 //                     it (never combine with pin-open — this tag includes it)
+//   pin-dropdown    → a real mouse resting on the FIRST of the top bar's
+//                     dropdown words (`[data-nav-dropdown]` — Servicii), held
+//                     there until its card reports `data-state="open"`: the
+//                     hover IS the state photographed (sections/Header,
+//                     CLAUDE.md §15.40). Only where the bar's row is drawn —
+//                     from its 62rem step up; at a phone's width the row is
+//                     display:none and the frame is the closed bar, a repeat
+//                     the net tolerates (AtTheStep's precedent)
+//   pin-dropdown-last → the same on the LAST dropdown word (Echipa)
 //   no-visual       → never photographed: a story whose frame MOVES by design
 //                     (Sections/Hero's Rotating — the band running at its own
 //                     rhythm for the eye, hero lane round 2, 2026-09-20). Its
@@ -77,7 +86,17 @@ async function openDisclosure(
   story: string,
 ): Promise<string> {
   await page.setViewportSize({ width: 390, height });
-  const toggle = page.locator('#storybook-root [aria-expanded]').first();
+  // The first VISIBLE toggle: since the top bar's dropdowns (CLAUDE.md
+  // §15.40) the Header's row carries ⌄ toggles of its own, with
+  // aria-expanded, BEFORE the burger in the DOM — and at this phone width the
+  // row is display:none, so they are not visible and the burger is the first
+  // that is. (A ⌄ in a DRAWN row would count as visible — it is a transparent
+  // 24 × 44 box with no glyph of its own since round 3: this only holds
+  // because the row is not drawn at 390.)
+  const toggle = page
+    .locator('#storybook-root [aria-expanded]')
+    .filter({ visible: true })
+    .first();
   await toggle.waitFor();
   await expect
     .poll(async () => {
@@ -87,11 +106,13 @@ async function openDisclosure(
       return toggle.getAttribute('aria-expanded');
     })
     .toBe('true');
+  // The panel's id comes from the toggle itself, so any disclosure that wears
+  // aria-controls works without editing this spec. Read HERE, at the phone
+  // width where the toggle was chosen — the locator re-resolves on every read,
+  // and at the project's own width another toggle may be the first visible.
+  const controls = await toggle.getAttribute('aria-controls');
   await page.mouse.move(0, 0);
   await page.setViewportSize({ width, height });
-  // The panel's id comes from the toggle itself, so any disclosure that wears
-  // aria-controls works without editing this spec.
-  const controls = await toggle.getAttribute('aria-controls');
   if (!controls) {
     throw new Error(
       `${story}: the disclosure this story pins open has no aria-controls, so ` +
@@ -175,6 +196,31 @@ for (const story of entries) {
       // href-less discs, D2 = B′) is just as hoverable, and an `a`-only
       // selector would hang for 30s on one.
       await page.locator(`#${controls} :is(a, button)`).first().hover();
+    }
+    // 'pin-dropdown' / 'pin-dropdown-last' snapshot a top-bar dropdown OPEN
+    // under a REAL mouse resting on its word (sections/Header's NavDropdown,
+    // CLAUDE.md §15.40): a synthetic event cannot move :hover, and the card
+    // opens on a hover's intent. The item is found by its stable hook,
+    // `data-nav-dropdown`, after waiting for it to EXIST (the story chunk
+    // mounts lazily); it is hovered only where it is drawn — from the bar's
+    // 62rem step up — and the shot waits for its card's `data-state="open"`.
+    // The mouse stays on the word: its hover is the state photographed.
+    const dropdownTag = story.tags?.includes('pin-dropdown-last')
+      ? 'last'
+      : story.tags?.includes('pin-dropdown')
+        ? 'first'
+        : null;
+    if (dropdownTag) {
+      const items = page.locator('#storybook-root [data-nav-dropdown]');
+      await items.first().waitFor({ state: 'attached' });
+      const item = dropdownTag === 'last' ? items.last() : items.first();
+      if (await item.isVisible()) {
+        await item.locator(':scope > a').hover();
+        await expect(item.locator(':scope > [data-state]')).toHaveAttribute(
+          'data-state',
+          'open',
+        );
+      }
     }
     // Baselines are organised by tier/component folders derived from the
     // story title (owner decision 2026-08-03): UI/Button › German Longest

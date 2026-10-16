@@ -25,8 +25,9 @@ import { LanguageBannerCard } from './LanguageBanner';
 // ── THE §15.15 VERDICT THIS LANE OPENED WITH lives in LanguageBanner.tsx's
 // header, dated 2026-09-04: the banner is NOT the third stateful overlay, the
 // overlay-manners consolidation does not fire, and the trigger stays armed for
-// the ClinicGallery lightbox. Nothing in these stories opens, traps or closes
-// anything, which is that verdict seen from the outside.
+// the ClinicGallery lightbox (it fired on 2026-10-15 with the top bar's
+// dropdowns instead — CLAUDE.md §15.40). Nothing in these stories opens, traps
+// or closes anything, which is that verdict seen from the outside.
 //
 // ── TWO STORIES, NOT THREE — the one place this file reads the board's §8
 // story list differently, recorded here rather than discovered in review. That

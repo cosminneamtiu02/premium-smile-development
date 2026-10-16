@@ -18,6 +18,11 @@ import navSource from './HeaderNav.tsx?raw';
 import menuSource from './NavMenu.tsx?raw';
 import burgerSource from './BurgerToggle.tsx?raw';
 import itemSource from './NavItem.tsx?raw';
+import dropdownSource from './NavDropdown.tsx?raw';
+import accordionSource from './NavAccordion.tsx?raw';
+import entrySource from './NavSectionEntry.tsx?raw';
+import dropdownStateSource from './useNavDropdowns.ts?raw';
+import linksSource from './navSectionLinks.ts?raw';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
@@ -218,11 +223,140 @@ const STEP_FILES = {
   'NavMenu.tsx': stripComments(menuSource),
 } as const;
 
-/** The folder's other two components, which spell no container step at all. */
+/** The folder's other files, which spell no container step at all — the
+ *  dropdowns' five among them since 2026-10-15 (§15.40). */
 const STEPLESS_FILES = {
   'NavItem.tsx': stripComments(itemSource),
   'BurgerToggle.tsx': stripComments(burgerSource),
+  'NavDropdown.tsx': stripComments(dropdownSource),
+  'NavAccordion.tsx': stripComments(accordionSource),
+  'NavSectionEntry.tsx': stripComments(entrySource),
+  'useNavDropdowns.ts': stripComments(dropdownStateSource),
+  'navSectionLinks.ts': stripComments(linksSource),
 } as const;
+
+/**
+ * EVERY source file in src — the tests, the stories and the declarations
+ * aside — read raw through Vite's glob, for the client-import fence at the
+ * bottom. A build-time Vite transform (page-twins.test.ts' precedent), so a
+ * file added later is in the record without an edit here; typed `unknown`
+ * per file by Next's declaration, so each is checked to be text where it is
+ * read. Keys are root-absolute, '/src/…'.
+ */
+const SRC_SOURCES = import.meta.glob(
+  [
+    '/src/**/*.{ts,tsx}',
+    '!/src/**/*.test.{ts,tsx}',
+    '!/src/**/*.stories.tsx',
+    '!/src/**/*.d.ts',
+  ],
+  { query: '?raw', import: 'default', eager: true },
+);
+
+/**
+ * Source with its PROSE removed, in ONE LEFT-TO-RIGHT PASS — the stripper
+ * ui/SpeedDial's suite uses (PriceList.test.tsx's and PillButton.test.tsx's
+ * too): string literals are stepped over whole, and a `//` comment (opening
+ * only at a line's start or after whitespace) is consumed before a block
+ * opener inside it — a line comment naming `src/messages/` and a glob star —
+ * can run on to the next block closer and hide the code between. The client-import fence reads CODE only.
+ */
+const stripProse = (code: string): string =>
+  code.replace(
+    /('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/gm,
+    (match: string, literal: string | undefined) => literal ?? ' ',
+  );
+
+/** Is an import or re-export CLAUSE type-only — `type X` / `type { … }`,
+ *  or braces whose every name says `type`? A default, a namespace, `*` or
+ *  one plain name in the braces is a VALUE. */
+const isTypeOnlyClause = (clause: string): boolean => {
+  const trimmed = clause.trim();
+  if (/^type\b/.test(trimmed)) return true;
+  const braces = /^\{([^}]*)\}$/.exec(trimmed);
+  if (!braces) return false;
+  const names = braces[1]
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+  return names.length > 0 && names.every((name) => /^type\s/.test(name));
+};
+
+/**
+ * Every module a (stripped) source names, and whether the naming is
+ * TYPE-ONLY — the four forms tests/unit/lib-react-free.test.ts's
+ * `importSpecifiers` reads: static imports, side-effect imports
+ * (`import 'x'`), re-exports (`export … from 'x'`) and dynamic
+ * `import('x')`. A clause never crosses a `;`, so one statement cannot
+ * borrow the next one's `from`.
+ */
+const importUses = (
+  code: string,
+): ReadonlyArray<Readonly<{ specifier: string; typeOnly: boolean }>> => {
+  const uses: Array<{ specifier: string; typeOnly: boolean }> = [];
+  for (const [, clause, specifier] of code.matchAll(
+    /\bimport\s+([^'";]*?)\s*from\s*['"]([^'"]+)['"]/g,
+  )) {
+    uses.push({ specifier, typeOnly: isTypeOnlyClause(clause) });
+  }
+  for (const [, specifier] of code.matchAll(/\bimport\s*['"]([^'"]+)['"]/g)) {
+    uses.push({ specifier, typeOnly: false });
+  }
+  for (const [, clause, specifier] of code.matchAll(
+    /\bexport\s+([^'";]*?)\s*from\s*['"]([^'"]+)['"]/g,
+  )) {
+    uses.push({ specifier, typeOnly: isTypeOnlyClause(clause) });
+  }
+  for (const [, specifier] of code.matchAll(
+    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+  )) {
+    uses.push({ specifier, typeOnly: false });
+  }
+  return uses;
+};
+
+/** A specifier as the module it names, src-relative and extension-less:
+ *  `@/…` unprefixed, a relative path joined to the importing `file`'s
+ *  folder, a package left as it is. */
+const resolveSpecifier = (file: string, specifier: string): string => {
+  let path = specifier;
+  if (specifier.startsWith('@/')) {
+    path = specifier.slice(2);
+  } else if (specifier.startsWith('.')) {
+    const parts = file.split('/').slice(0, -1);
+    for (const segment of specifier.split('/')) {
+      if (segment === '' || segment === '.') continue;
+      if (segment === '..') parts.pop();
+      else parts.push(segment);
+    }
+    path = parts.join('/');
+  }
+  return path.replace(/\.(?:tsx?|jsx?)$/, '');
+};
+
+/** The dropdowns' data: the three lib modules and the links module that
+ *  reads them (THE FENCE, at the bottom). */
+const DATA_MODULE =
+  /^(?:lib\/(?:nav-sections|prices|team)\/|components\/sections\/Header\/navSectionLinks$)/;
+
+/**
+ * THE FENCE'S ONE READING — and its teeth test's: every VALUE naming of the
+ * dropdowns' data in `source`, the module `file` (src-relative), as
+ * "file → specifier". A type-only naming is erased before the bundler sees it
+ * and is never listed.
+ */
+const dataValueImports = (file: string, source: string): string[] =>
+  importUses(stripProse(source))
+    .filter(
+      (use) =>
+        !use.typeOnly &&
+        DATA_MODULE.test(resolveSpecifier(file, use.specifier)),
+    )
+    .map((use) => `${file} → ${use.specifier}`);
+
+/** Does this source open with the 'use client' directive (prose aside)? */
+const isClientModule = (source: string): boolean =>
+  /^['"]use client['"]/.test(stripProse(source).trimStart());
 
 describe('Header — the burger toggles the panel (disclosure, not a dialog)', () => {
   it('flips aria-expanded false → true → false and mounts/unmounts the panel', async () => {
@@ -909,18 +1043,45 @@ describe('Header — the nav row, the panel list, and the current page', () => {
       // rows, and both are what a visitor actually taps (board §5·B7 — no
       // stylesheet here, so both are queryable and must be scoped). The
       // WHOLE list, in bar order: a stray or a missing entry fails here.
-      for (const scope of [barNav(), panel() as HTMLElement]) {
-        const links = within(scope).getAllByRole('link');
-        expect(
-          links.map((link) => [link.textContent, link.getAttribute('href')]),
-          locale,
-        ).toEqual(expected);
-        for (const link of links) {
-          // A plain <a>, not something that renders one: no click handler, no
-          // prefetch observer — the browser does the navigating (§15.13).
-          expect(link.tagName).toBe('A');
-        }
+      // Each scope's own WORDS — a direct child of their <li>: since the
+      // dropdowns (2026-10-15, §15.40) both navs also hold the Servicii and
+      // Echipa entries, which Header.dropdowns.test.tsx holds, and with no
+      // stylesheet here a closed list is as queryable as an open one.
+      const links = Array.from(
+        barNav().querySelectorAll<HTMLElement>(':scope > ul > li > a'),
+      );
+      expect(
+        links.map((link) => [link.textContent, link.getAttribute('href')]),
+        locale,
+      ).toEqual(expected);
+      for (const link of links) {
+        // A plain <a>, not something that renders one: no click handler, no
+        // prefetch observer — the browser does the navigating (§15.13).
+        expect(link.tagName).toBe('A');
       }
+      // THE PANEL, since 2026-10-16: Acasă and Blog are the same links, while
+      // the words Servicii and Echipa OPEN THEIR LISTS (the owner: "on phone
+      // on click of servicii it has to open it's respective dropdown") — a
+      // <button> each, its label and no href (NavAccordion.tsx's THE WORD
+      // OPENS THE LIST; Header.dropdowns.test.tsx holds what it opens).
+      const rows = Array.from(
+        (panel() as HTMLElement).querySelectorAll<HTMLElement>(
+          ':scope > ul > li > :is(a, button)',
+        ),
+      );
+      expect(
+        rows.map((row) => [
+          row.tagName,
+          row.textContent,
+          row.getAttribute('href'),
+        ]),
+        locale,
+      ).toEqual([
+        ['A', ...expected[0]],
+        ['BUTTON', messages.nav.services, null],
+        ['BUTTON', messages.nav.team, null],
+        ['A', ...expected[3]],
+      ]);
       unmount();
     }
   });
@@ -1315,6 +1476,152 @@ describe("Header — the bar's step is ONE number in three files", () => {
     }
     for (const [file, code] of Object.entries(STEPLESS_FILES)) {
       expect(code.match(containerVariant) ?? [], file).toEqual([]);
+    }
+  });
+});
+
+describe('Header — the bar’s arrow and the phone row’s ⌄ turn on ONE clock (KEEP-IN-SYNC, §15.40)', () => {
+  it('spells `glyphMotion` byte-equal in NavDropdown.tsx and NavAccordion.tsx', () => {
+    // The word's arrow on the bar (NavDropdown's THE ARROW, 2026-10-16) and
+    // the ⌄ inside the phone panel's row (NavAccordion's THE ⌄ IS DECORATION
+    // INSIDE IT) are one gesture in two places — each file points at the
+    // other's constant; this reads both, so a retimed turn in one of them
+    // fails here instead of drifting quietly.
+    const turn = (code: string, file: string): string => {
+      const found = /const glyphMotion =\s*'([^']*)';/.exec(code);
+      if (!found) throw new Error(`${file}: no glyphMotion constant`);
+      return found[1];
+    };
+    const bar = turn(dropdownSource, 'NavDropdown.tsx');
+    expect(turn(accordionSource, 'NavAccordion.tsx')).toBe(bar);
+    // Never vacuous: the constant times a transform and stills it under
+    // reduced motion.
+    expect(bar.split(' ')).toEqual(
+      expect.arrayContaining([
+        'transition-transform',
+        'motion-reduce:transition-none',
+      ]),
+    );
+  });
+});
+
+describe('Header — the islands never import the dropdowns’ data (§15.40, §16)', () => {
+  // THE FENCE (2026-10-15). The dropdowns list the tariff's eleven
+  // categories and the six doctors; lib/nav-sections reads the WHOLE tariff
+  // (lib/prices) and the WHOLE team (lib/team) to name them. Read on the
+  // server, that costs a visitor nothing: Header.tsx builds the finished links
+  // (navSectionLinks.ts) and hands the islands a prop. Named as a VALUE by ONE
+  // client module — in any import form — every page's JavaScript would carry
+  // both data files. A type-only naming is erased before the bundler sees it,
+  // and is allowed. Read as source, prose stripped in one pass: no runtime
+  // assertion can see what a bundle includes.
+
+  /** src-relative path → source text, from the glob. */
+  const sources = new Map(
+    Object.entries(SRC_SOURCES).map(([key, source]) => {
+      if (typeof source !== 'string') {
+        throw new Error(`${key}: the glob did not answer the file's text`);
+      }
+      return [key.replace(/^\/src\//, ''), source] as const;
+    }),
+  );
+  const HEADER = 'components/sections/Header/';
+  // The two Header files the SERVER alone runs.
+  const SERVER_FILES = [`${HEADER}Header.tsx`, `${HEADER}navSectionLinks.ts`];
+
+  /** EVERY client module in src — each 'use client' file — and, read wide,
+   *  every directive-less leaf of the Header's islands (NavItem,
+   *  NavSectionEntry, BurgerToggle), which compiles into an island's bundle
+   *  all the same. */
+  const clients = [...sources.keys()]
+    .filter(
+      (file) =>
+        isClientModule(sources.get(file) ?? '') ||
+        (file.startsWith(HEADER) && !SERVER_FILES.includes(file)),
+    )
+    .sort();
+
+  it('lets no client module in src name lib/nav-sections, lib/prices, lib/team or navSectionLinks as a VALUE', () => {
+    expect(
+      clients.flatMap((file) =>
+        dataValueImports(file, sources.get(file) ?? ''),
+      ),
+    ).toEqual([]);
+    // Never vacuous: the whole tree is read — the Header's islands and leaves
+    // AND the islands elsewhere in src.
+    expect(sources.size).toBeGreaterThan(100);
+    expect(clients).toEqual(
+      expect.arrayContaining([
+        `${HEADER}BurgerToggle.tsx`,
+        `${HEADER}HeaderNav.tsx`,
+        `${HEADER}NavAccordion.tsx`,
+        `${HEADER}NavDropdown.tsx`,
+        `${HEADER}NavItem.tsx`,
+        `${HEADER}NavMenu.tsx`,
+        `${HEADER}NavSectionEntry.tsx`,
+        `${HEADER}useNavDropdowns.ts`,
+        `${HEADER}useNavItems.ts`,
+        'components/sections/PriceList/PriceMenu.tsx',
+        'components/ui/SpeedDial/SpeedDial.tsx',
+        'i18n/navigation.ts',
+      ]),
+    );
+  });
+
+  it('keeps Header.tsx and navSectionLinks.ts SERVER modules — the two that read the data', () => {
+    for (const file of SERVER_FILES) {
+      expect(sources.has(file), file).toBe(true);
+      expect(isClientModule(sources.get(file) ?? ''), file).toBe(false);
+    }
+    expect(isClientModule(headerSource)).toBe(false);
+    // The reader reads: the links module's own value import IS found.
+    expect(dataValueImports(SERVER_FILES[1], linksSource)).toEqual([
+      `${SERVER_FILES[1]} → @/lib/nav-sections/nav-sections`,
+    ]);
+  });
+
+  it('has teeth — the fence’s own reading refuses every VALUE form and passes every type-only one', () => {
+    const file = `${HEADER}HeaderNav.tsx`;
+    // HeaderNav with the `type` keyword dropped.
+    const valueImport = navSource.replace(
+      "import type { NavSectionsByPath, SectionedPath } from './navSectionLinks';",
+      "import { NavSectionsByPath, SectionedPath } from './navSectionLinks';",
+    );
+    expect(valueImport).not.toBe(navSource);
+    expect(dataValueImports(file, navSource)).toEqual([]);
+    expect(dataValueImports(file, valueImport)).toEqual([
+      `${file} → ./navSectionLinks`,
+    ]);
+    // Every other value form, each refused.
+    const refused: Record<string, string> = {
+      'a mixed import':
+        "import { type NavSectionsByPath, SectionedPath } from './navSectionLinks';",
+      'a side-effect import': "import '@/lib/prices/prices';",
+      'a re-export':
+        "export { navSections } from '@/lib/nav-sections/nav-sections';",
+      'a star re-export': "export * from '@/lib/team/team';",
+      'a dynamic import':
+        "const team = await import('../../../lib/team/team');",
+      'a default import, relative':
+        "import prices from '../../../lib/prices/prices.ts';",
+      'a namespace import':
+        "import * as links from '@/components/sections/Header/navSectionLinks';",
+      'code after a // comment holding a block opener':
+        "// read src/messages/*.json for the words\nimport { doctors } from '@/lib/team/team';\n// */",
+    };
+    for (const [form, code] of Object.entries(refused)) {
+      expect(dataValueImports(file, code), form).toHaveLength(1);
+    }
+    // Every type-only form, each allowed.
+    const allowed = [
+      "import type { NavSectionLink } from './navSectionLinks';",
+      "import { type NavSectionLink, type SectionedPath } from './navSectionLinks';",
+      "export type { SectionedPath } from '@/lib/nav-sections/nav-sections';",
+      "import type * as Team from '@/lib/team/team';",
+      "import { cx } from '@/lib/cx/cx';",
+    ];
+    for (const code of allowed) {
+      expect(dataValueImports(file, code), code).toEqual([]);
     }
   });
 });

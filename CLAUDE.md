@@ -103,6 +103,8 @@ src/
     routes/routes.ts     # THE route list + matchesRoute (one list, all consumers; every row in every language, so the switcher keeps the path)
     hours/hours.ts       # schedule → printable rows (deterministic reference week)
     scroll-lock/scroll-lock.ts  # THE page scroll freeze (React-free mechanics)
+    overlay-dismiss/overlay-dismiss.ts  # THE two ways an open overlay closes by itself — Escape anywhere, and the page being left or restored from the back/forward cache — ONE implementation for the phone menu, the language dial and the top bar's dropdowns; each keeps its own focus return (React-free; §15.15's consolidation, fired 2026-10-15 by the dropdowns, §15.40)
+    nav-sections/nav-sections.ts  # THE top bar's dropdown entries: Servicii → the eleven price categories, Echipa → the six doctors, each `{ id, label }` — the id the target page prints as the card's DOM id, the label in the visitor's language; read on the SERVER only, by sections/Header (it imports lib/prices and lib/team, which must never ride into a client island) (§15.40)
     scroll-spy/scroll-spy.ts  # THE "which target am I in" mechanic, on ONE of two lines: the landing line (the default — where a fragment jump rests) or THE READING LINE (`line: 'reading'` — the price menu, 2026-09-29: the middle of the CLEAR area, bent at both ends of the page so every target has a turn, every target's landing planned by lib/reading-line and WRITTEN as its `scroll-margin-top`, the module's one write) + bottom rule + the first target until one has reached the line + click pin, which judges only a page that has stopped (THE START GRACE, 2026-09-29) (React-free; price-list pack round 2, 2026-09-14). ONE consumer, the price menu, since the doctor page's year timeline left on 2026-10-13 with the two options built for it — the viewport's centre (`line: 'middle'`) and `topFallback: 'none'` (§15.23 round 7)
     reading-line/reading-line.ts  # THE arithmetic of the reading line: where a jump to each target comes to rest (centred when it fits the clear area, on its old ceiling when it does not), landings kept inside the page and apart by a share of each target's size, and the probe the walk measures — numbers in, numbers out, no DOM (price-list round 5, 2026-09-29)
     sticky-rail/sticky-rail.ts  # THE "where does a sticky rail taller than the window pin" mechanic: fits · top · bottom · travel, direction-aware, a link the KEYBOARD focused reveals its edge — a pointer's focus is never answered, 2026-09-29 (React-free; price-menu-pin lane, 2026-09-18)
@@ -456,7 +458,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Blog (every locale since 2026-10-14, §15.39 round 3; ro only until then) | **PostList** (the index, built 2026-10-11 on the blog branch and reshaped 2026-10-14, §15.39 round 2: a centred hero — **PageHero** since 2026-10-15, moved out of the band when the Team page took it (§15.25 round 4) — the page's `<h1>` „Pentru că ne pasă de zâmbetul tău, îți arătăm cum să ai grijă de el prin blogul nostru", two lines from a laptop up over a three-line lead, every line shorter than the one above it (a stairway, set line by line, its `<h1>` the `hero` step's 65.04 design px and free to run past the cards' column on a laptop — §15.39 round 3 (7)) —, then the posts THREE to a row and SIX a page (one column on a phone, two on a tablet held upright, three on one held sideways) as **PostCard**s — the doctor card's frame (ui/Card `framed`, the soft corner), a 3:2 picture flush across the top with the categories floating over its top-right corner as ui/PillButton TAGS (the lavender face, still — never a button), the title (an `<h2>` on `band`), the author on the eyebrow line, the summary and ONE footer row: the reading time and „Citește mai mult…" (ui/TextButton's lilac `accent` tone, a placeholder link until the articles exist); the whole card JUMPS on hover like a button — then **Pagination** under the grid's right end: the reviews deck's round lilac arrows with „1 / 2" between them, plain links between pages built ahead of time, the ends disabled. The whole band in THE BAND SCALE on a laptop or desktop. A DUMB props-in band the page populates from `src/content/blog/posts.json` through `lib/blog`; zero client JavaScript) · **ClinicLocation** (`scaled`, Home's map, on every page of the list) · PostPage (MDX, not built) | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
 | Privacy & cookies (`/privacy`, 2026-10-10 — §15.38) | **PrivacyPolicy** (the whole page, one band wired to site data: the `<h1>`, „Pe scurt" in the deck's idle frame, then nine parts, each an `<h2>` on a plain `<section>` with an English id — who runs the clinic, the visit, the one cookie as a definition list, the Google map (`#map`), contact, the patients' reviews, links out, rights, changes; zero client JavaScript; the clinic's legal facts placeholders until supplied) | its own files, `messages/privacy/*.json` |
-| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher) · Footer (the logo, the same link + **full NAP** + hours + the policy link, built 2026-10-10 — „Confidențialitate și cookie-uri" under the copyright, `LEGAL_ROUTES`, §15.38) | `common` |
+| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher; since 2026-10-15 a card drops down under „Servicii" — the eleven price categories — and under „Echipa" — the six doctors — on hover or by a ⌄ the keyboard reaches, each entry a link to its card on the page, a small down arrow after each of the two words, the open item's word held lit and the card pointing up at it with a small notch (since 2026-10-16); on a phone a tap on „Servicii" or „Echipa" itself opens the same list in the burger panel (the word no longer a link there since 2026-10-16), one at a time; never on „Acasă" or „Blog" — §15.40) · Footer (the logo, the same link + **full NAP** + hours + the policy link, built 2026-10-10 — „Confidențialitate și cookie-uri" under the copyright, `LEGAL_ROUTES`, §15.38) | `common` |
 
 ## 15. Parked decisions — ASK before deciding, do not improvise
 
@@ -765,6 +767,15 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
       scope forever (owner, 2026-09-02)** — never a trigger, never built; §14's `FAQ (opt)`
       entries are void. If no third overlay ever ships, the two copies stay — a final,
       correct state; nothing is owed.
+      **FIRED 2026-10-15 (§15.40):** the top bar's hover dropdowns under „Servicii" and „Echipa"
+      are the third stateful overlay. The two manners that were byte-identical — Escape closes,
+      the page being left (or restored from the back/forward cache) closes — are ONE React-free
+      module, `lib/overlay-dismiss`, adopted by the phone menu, the language dial and the
+      dropdowns in the same lane; the FOCUS RETURN stays in each consumer, divergent by design
+      (NavMenu's display:none fallback, SpeedDial's hover-open guard, the dropdowns' ⌄), and so
+      does each one's warnOnce. The doctors are listed under „Echipa" — but as links to their
+      CARDS on the Team page, on the owner's word, so the SC 2.4.5 "second way to a doctor page"
+      this candidate was recorded for stays as §15.23 left it (the doctor page one tap further).
     - **Two pre-page boards (SEQUENCING):** BEFORE the first Phase-4 page lane
       (Hero/ServicesIntro), run (a) the **Container/gutter board — DECIDED
       (owner, board `container-gutter.plan.md`, fb-343, 2026-09-04):**
@@ -5600,6 +5611,233 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     browser tests' failure screenshots for three days (`.vitest-attachments`; a file name over Linux's 255 bytes is not
     saved — 12 of that run's 26).
 
+40. **The top bar's dropdowns — ON THE OWNER'S WORD (2026-10-15, verbatim: "i want to implement a navigation dropdown on
+    hover JUST ON THE TOP BAR ELEMNTS which drops down smoothly with sections of that particular page . i want this just on
+    the pages with servicii where it takes you to the card of prices adjacend with what you click, so for insance you click
+    profilaxie it takes you directly to profilaxie. on echipa it take you directly to a doctor card and so on. on phone it
+    should open up a dropdown with the adjacent subsections and on click of subsection same thing. if you click on another
+    section with other subsections and another section is open it should close the other open one and open this one. the
+    buttons in this subsection should look and behacve identically like the ones from top bar, but on hover they should not
+    get underlined but rather just light up lilla on hover and back to normal on unhover and all current fucntionality
+    hsould stay." · "apple.com as an idea of opening animation with hover and unhover of top bar element, but it should
+    open an adjacent card. for phone you have as example dentestet.ro and for desktop it too but do it with one of my cards,
+    the appple site is for the opening hover animation speed so that it looks smooth" · "blog and home should not have
+    this"; and, asked, four answers: a doctor goes to their CARD on the Team page, not to their page; ONLY the six doctors;
+    on a phone the WORD still opens the page and a ⌄ beside it opens the list; the desktop card is ui/Card with the soft
+    corner and the aura; lane `rework/nav-dropdowns`, Opus builders, one folder each):** (1) **THE REFERENCES, MEASURED**
+    (headless Chromium on the live sites): apple.com's panel starts ~0.15 s after the pointer arrives and grows over
+    ~290 ms on a decelerating curve (43 / 72 / 94 % done at a quarter / half / three quarters of its time — easeOutQuad),
+    its links fading in and drifting 4 px down ~50 ms later, lightly staggered; moving to the next word swaps the contents
+    instantly; leaving, the links fade first (~150 ms) and the panel shrinks (~185 ms); a keyboard reaches the link „Mac",
+    then a small ⌄ button (22 × 44, "Mac menu") visible only to the keyboard, Enter opens, Escape returns to it.
+    dentestet.ro: the card hangs under the hovered word, left edges aligned, a long list in two columns; on a phone the
+    word navigates, a ⌄ at the row's end opens its list, opening another closes the first. (2) **THE DATA** — NEW
+    `lib/nav-sections` (`SECTIONED_PATHS` = '/services' and '/team'; `navSections(locale)` → each entry's `{ id, label }`,
+    the id the target page prints, the label in the visitor's language): read on the SERVER only — sections/Header is a
+    Server Component and hands its two islands seventeen finished `{ href, label }` links (its `navSectionLinks.ts`), so
+    lib/prices and lib/team never ride into a browser bundle (a source pin refuses a value import in every client file of
+    the folder). The hrefs are plain links (§15.13): `/ro/services/#prophylaxis` — the price cards' own ids — and
+    `/ro/team/#toma-lucian` — sections/DoctorShowcase's stations wear their doctor's id since this lane (its D13), with the
+    price cards' stylesheet air (`scroll-mt-[2.5rem]`), so a doctor card lands 136 px down, under the pill, and a price
+    card where the price list's reading line plans it (centred under the bar when it fits — §15.20 round 5; 136 px only
+    without JavaScript). No tabindex on a station: the jump moves the keyboard's starting point there by itself, while a
+    focusable station would draw the ring on every arrival (a fresh load with a fragment matches `:focus-visible` in
+    Chromium and WebKit) unless it also wore the price cards' keyboard-only rule — that pair is the lever for a screen
+    reader's cursor to land on the doctor too (the accessibility review's L1, recorded). THE KEYBOARD'S RING ON A PRICE
+    CARD: round 5 kept the ring for a keyboard arrival, but only the price menu's own links stamped one, so a keyboard
+    user jumping from the dropdown on /services/ landed with focus and no ring (both reviewers, measured); PriceMenu now
+    listens on the document for any plain, keyboard-activated link to one of its cards on the same page and stamps it the
+    same way. A jump from ANOTHER page is a fresh load — round 5's pasted-link case, no ring, its recorded lever (stamp on
+    the first key pressed while the card holds focus) unchanged.
+    (3) **THE DESKTOP CARD** (the bar's row, at and past its 62rem step): each item spans the row's full height and keeps
+    its word exactly where it was (the row's width did not change by a pixel — Header.step.test.tsx holds every language);
+    the card hangs under the word, its labels on the word's left edge, 8 px under the pill (the phone panel's own gap), a
+    transparent BRIDGE between so the pointer never leaves the item; ui/Card with the soft corner and the aura as its
+    backdrop — a content-sized ui/Card collapses (its container mark ignores its content's width), so the card is a grid
+    cell the list sizes and the Card fills behind it; eleven categories in two columns read down then across, the six
+    doctors in one; each entry the top bar's own control, ui/TextButton with its NEW `underline="none"` (lilac on hover,
+    back on unhover, no rule in any state; the default byte-identical, 1,152 combinations rendered — removed again in
+    round 4, below). MOTION, Apple's
+    numbers: a 120 ms INTENT before a first card opens (a pointer only passing opens nothing); a 300 ms top-down reveal
+    on the measured curve, the entries fading in and drifting 4 px over 240 ms, 50 ms + 20 ms × their order later;
+    closing, the entries fade in 150 ms and the card folds up in 200 ms after 80 ms; a 250 ms GRACE before a card the
+    pointer has left closes; reduced motion — nothing moves. THE SWAP is instant, as on apple.com, but only when the
+    pointer is on the other WORD: the Servicii card is two columns wide and reaches under „Echipa", which Apple's
+    full-width panel never has to handle, so a diagonal from „Servicii" into the card's right column through the strip
+    under „Echipa" keeps the Servicii card (real-pointer tests pin both halves). Mouse pointers only: a tap on a touch
+    screen still just navigates, and iOS Safari's "content changed on hover" heuristic never swallows it. THE KEYBOARD'S
+    WAY IN is Apple's: a ⌄ right after „Servicii" and „Echipa" (24 × 44, named „Submeniul Servicii" — `common.nav.submenu`
+    ×5, Claude's drafts), invisible and click-through until the keyboard is in the item (since round 3 it draws nothing:
+    the visible arrow is the word's — below); Enter opens the card PINNED (a
+    pointer leaving does not close it), Tab walks its entries, Escape closes and returns focus to the ⌄, focus leaving the
+    item closes it, a press outside or a change of the window's width closes any card. The static HTML prints both cards
+    CLOSED with all seventeen links — invisible and inert, so unreachable until opened (§16 rule 2). (4) **THE PHONE**
+    (the burger's panel): „Servicii" and „Echipa" gain a ⌄ at the row's right end (ui/GlyphButton ghost square, the
+    burger's own control) — the centred word untouched and still a link; the ⌄ opens the list under it (the same entries,
+    centred like every row, framed by a hairline above and below — never a tint: the lilac label needs 4.5:1), one list at
+    a time, the same reveal; a tap on an entry closes the menu at once (synchronously, so a same-page jump runs on an
+    unlocked, un-inert page) without pulling focus to the burger, and the browser follows the link. *(Since round 2,
+    2026-10-16, the WORD is the toggle and no longer a link there — below.)* (5) **THE THIRD
+    OVERLAY** — §15.15's WAIT trigger FIRED: Escape and the page being left (or restored from the back/forward cache) are
+    ONE React-free module, NEW `lib/overlay-dismiss`, adopted by the phone menu, the language dial (ui/SpeedDial) and the
+    dropdowns; each keeps its own focus return. (6) **THE HARNESS**: the visual spec's `pin-open` now picks the first
+    VISIBLE toggle (the desktop ⌄s come before the burger in the DOM and are hidden at 390), and two NEW tags,
+    `pin-dropdown` and `pin-dropdown-last`, hover the first or last dropdown word at the project's width.
+    **RECORDED — the owner's calls:** touch-only wide screens (a 13″ iPad held sideways shows the row) get no dropdown —
+    the word navigates; showing the ⌄ on coarse pointers is the lever. SC 2.4.5's "second way to a doctor page" stays
+    open (§15.23 round 2s): the doctors are listed, but as their cards. The entries never mark the current section (no
+    `aria-current`): with no underline, colour alone would carry it, 2.93:1 against the ink — under the 3:1 a colour-only
+    difference needs (SC 1.4.1). Three lanes touched the same ground. team-hero (sections/DoctorShowcase, its D12)
+    merged first (#168), and this lane is REBASED onto it — develop 33dd897, 2026-10-16, on the owner's word ("bring
+    latest develop here too"): the anchor rides develop's new markup (each station inside its empty-list guard, D13
+    beside D12), its test mounts both openers, and on the Team page, under the page's new hero, a doctor picked from
+    „Echipa" still rests 136px down (the e2e, both windows); the evidence below is the rebased tree's. blog-article
+    (ui/TextButton's header comment) and doctor-scroll-steps (the doctors band's threshold scroll steps, which rest a
+    card where a jump from the „Echipa" dropdown may not: BACKLOG.md entry 11, which the lane that merges SECOND
+    discharges on the combined tree) are still in flight — the second to merge rebases.
+    **EVIDENCE AT READY:** prettier · eslint (0 errors; develop's one warning) · tsc clean; vitest 178 files / 4 880
+    passed + 2 skipped with the optimizer variants hidden (CI's condition); build-storybook and `next build` green (69
+    pages); the link check 711 links / 63 pages / 0 broken; e2e 551 passed / 419 skipped / 0 failed; no client JavaScript
+    chunk of the export carries a category, a price or a doctor's name. G2 — react-reviewer, typescript-reviewer and
+    a11y-architect, all on Opus: APPROVE WITH CHANGES twice and one REQUEST CHANGES for a test the planner's own last
+    polish had left stale; 0 critical, no WCAG 2.2 AA failure; every MEDIUM and the cheap LOWs folded in ONE round (the
+    client-import guard reading every import form across src, the route paths typed, the ⌄'s ring inside its box, list
+    semantics, focus returned on every close, plain clicks only, the opening card above a closing one, PriceMenu's
+    keyboard stamp). VISUAL: not shot here (this Mac draws overlay scrollbars); the darwin cells are the owner's, under
+    classic scrollbars — NEW the Header's DropdownServices, DropdownTeam, DropdownGerman, KeyboardToggle and
+    MenuOpenAccordion and ui/TextButton's NoUnderline and NoUnderlineHover (gone with the option in round 4), MOVED
+    MenuOpen at 390 and 1536 (the ⌄s);
+    the linux set is CI's (`visual-baseline.yml`), before the next promotion.
+    **Round 2 (owner, 2026-10-16, verbatim: "ok, so on phone on click of servicii it has to open it's respective
+    dropdown. if a dropdown is being clicked or hovered it has to light up lilla nad trigger animation and leave it on
+    auntil card or section unfocus or change. so also while button triggered cards is open, button must behave as if
+    focused. also there should also be an top roiented bump that point to which category the card opened to, like an
+    isoscel traingle with pretty sharp left and right corenrs and broad top angle tyhat is part of the card and it's
+    bottom is not drawn and lateral sides are just part of the card and triangle who's top should just point to category
+    it opened to, so for insance on hover of servicii it should point to beneath animation line of servicii but top of
+    triangle still on top bar as if it is on a z higher that the top bar"; the same lane, rebased onto develop 33dd897
+    that morning):** (1) **THE HELD LOOK** — ui/TextButton gains `held`: the hover's END values held while what the
+    button opens stays open — `active`'s row, the lavender label and the full rule, WITHOUT `active`'s aria-current and
+    with no ARIA of its own; its caller switches it at run time, so the hover's two clocks play it in and out (the label
+    200ms, the rule 300ms; at once under reduced motion). NavItem passes it through; the bar's word wears it while ITS
+    card is open — opened by the hover or pinned by the ⌄ — so it stays lit with the pointer down in the card, lets go
+    when the card closes, and a swap hands it to the next word; the phone row wears it while its list is open. "Behave as
+    if focused" read as this selected look, never the keyboard's ring. (2) **THE POINTER** — the desktop card points up
+    at its word: an inline `aria-hidden` SVG, a direct child of the item, drawn only while the card is open (the server
+    prints none), 68 × 20 (4.25rem × 1.25rem), centred on the word, its white fill covering the card's top border between
+    the base corners — no line along its base — its two sides the card's 1px `line-subtle` frame (a non-scaling stroke),
+    base angles ≈ 29°, apex ≈ 122°; its tip 8px under the word's underline and 10px inside the bar, painted over the
+    bar's bottom border (a positioned descendant paints over its ancestor's border), above the open card
+    (`data-[state=open]:z-1`) and under the ⌄ (`z-10`). It appears and goes AT ONCE with the card — a fading pointer
+    would let the card's top border show through its base, and the card's own top edge is revealed within ~15ms of its
+    300ms clip — jumps to the next word on a swap, and is hidden in forced colours; KEEP-IN-SYNC with the bridge's 0.5rem
+    + 1px and ui/Card's 1px frame. MEASURED in all five languages (Chromium, the real face): centred within 0.008px, its
+    base exactly on the card's top border (106 → 107px at 1366 × 768), its left base corner 12.28px (fr „Soins", the
+    shortest word, 60.58px) to 36.03px (de „Leistungen") in from the card's left edge, where the 16px corner curve is
+    under 1px deep — the test's bound, which a word under ~56.9px would cross. (3) **ON A PHONE THE WORD OPENS ITS
+    LIST** — round 1's pick (dentestet.ro's: the word navigates, a ⌄ opens) reversed: the row is ONE ui/TextButton
+    <button> named by its label, `aria-expanded` and `aria-controls` its list, the ⌄ a decorative box inside it, turned
+    by React and lavender with the label, the hover look held while the list is open; the current page's row keeps
+    `aria-current="page"` (orientation); the old ⌄ GlyphButton left the row, and `common.nav.submenu` is the desktop
+    ⌄'s alone. THE CONSEQUENCE, recorded: on a phone the menu no longer links the Services and Team pages themselves —
+    every entry lands on its page (a category on the price list, a doctor's card on the Team page) and the footer's site
+    map links both; a first entry per list („Toate serviciile" / „Toată echipa", keys ×5) is the lever, not built. ON
+    THE BAR A CLICK STILL OPENS THE PAGE — the owner's "clicked" read as the phone's tap and the ⌄. Built by one Opus
+    builder (sections/Header) beside the planner's atom, e2e and records; no reviewer round (the owner's look first).
+    **EVIDENCE:** prettier · eslint (0 errors; develop's one warning) · tsc clean; vitest 178 files / 4 911 passed + 2
+    skipped with the optimizer variants hidden; `next build` 69 pages, the static HTML with no pointer; e2e 554 passed /
+    419 skipped / 1 failed — every dropdown test green on both laptop windows and the phone, the one failure
+    price-strip's WebKit SLOW LOAD deep link (#endodontics 976px off its plan), which failed identically on a build of
+    round 1 (#restorative 748px) while the Mac was under heavy load (load average ≈ 8) and had passed on that same
+    round-1 code on the idle machine earlier the same day — the timing race §15.20 round 6 records as refused, not this
+    round's; to re-run on an idle machine. VISUAL: the owner's darwin cells — NEW ui/TextButton's Held; MOVED the
+    Header's DropdownServices, DropdownTeam, DropdownGerman and KeyboardToggle (the pointer, the held word) and MenuOpen
+    and MenuOpenAccordion at 390 and 1536 (the phone row's ⌄ inside its button).
+    **Round 3 (owner, the same day, on round 2's preview, verbatim: "triangle is too wide. i have exagerated with the
+    lateral angles of the traingle. make the traingle way smaller, like in attatched screenshot. and place an svg on the
+    right side of thext with an arrow pointing downwards. hinting it is a dropdown menu. i have attatched a ss of how it
+    should relativley look the traingle above card pointing to option" — his screenshot a small white notch above a white
+    card, its tip a right angle):** (1) **THE POINTER, A NOTCH** — round 2's 68 × 20 triangle is history: the same
+    drawing at 20 × 10, a right-angled tip (base angles 45°), in a 22 × 11 box (the 1px row its fill lays over the card's
+    top border), every other rule round 2's. MEASURED (Chromium, the real face, 1366 × 768): the box spans y 96–107, its
+    sides meet at 96.5 — on the bar's bottom border, 1px inside the bar and 17px under the underline — centred on all ten
+    words within 0.01px, its left base corner 35.28px (fr „Soins") to 59.03px (de „Leistungen") in from the card's left
+    edge, past the 16px corner curve entirely. (2) **THE ARROW** — a visible ⌄ after „Servicii" and „Echipa" on the bar:
+    the chevron glyph at its small size (a 16px box; the drawn chevron 8 × 4px), drawn INSIDE the word's link through
+    NavItem's NEW `trailing` slot, absolutely placed so the row keeps its width to the hundredth of a pixel in all five
+    languages (the bar's 62rem step untouched) — its box from the text's end over the word's 8px right padding and the
+    row's 8px gap, ending at the next word's box; the drawn chevron 4px after the text and 12px before the next word's.
+    It points down at rest and up while the card is open (the phone row's own turn, 300ms, at once under reduced
+    motion), `aria-hidden`, and as part of the link it takes the label's ink — lavender with the hover and the held look
+    (4.52:1 on the glass floor, a graphic's 3:1 met) — and is the word to the pointer: a hover on it is the word's, a
+    click follows the link. The keyboard's ⌄ keeps its place and its job but DRAWS NOTHING now — one arrow, never two
+    — its focus ring around the arrow. RECORDED, the builder's two consequences: while the keyboard is in the item, or
+    the card is pinned, the ⌄ takes the pointer over the arrow, so a mouse click there toggles the card instead of
+    following the link; and a touch screen wide enough to show the row now sees the arrow, a tap on it opening the page
+    (§15.40's `pointer-coarse:` lever would make it open the card). Built by one Opus builder (sections/Header, five
+    mutations each turned the intended tests red); no reviewer round. VISUAL, the owner's darwin cells: every frame that
+    draws the bar row moves — Sections/Header's Default, NonRomanianLocale, GermanStress, AtTheStep, the three Dropdown
+    stories and KeyboardToggle at 1536, Sections/Hero at 1536 (its stories mount the Header) and Pages/Home at 1280,
+    1536 and 1920 in both languages. THE LOAD RACE, found by the planner's e2e and fixed the same evening: on about one
+    load in three (fresh Chromium pages, 1366 × 633 and 1920 × 945), both arrows turned on their own as the page came up
+    — 0° → 90° over the turn's 300ms — and slid 8px: the svg is in the HTML before the stylesheet applies, a style
+    computed in that window (any script reading the layout) gave it no turn and no centring offset, and the sheet's
+    values then arrived with their transition, which CSS animates. The turn is now an inline style the server prints
+    into the HTML (`rotate`, 90° at rest, −90° open) and the arrow is centred by auto margins, which no transition
+    watches — its first style is its rest; a test replays the race in a fresh frame and requires that no transition
+    starts (red on the first build). FOUND, NOT THIS LANE'S (older, site-wide, the atom's to route): in the same race
+    every ui/TextButton link starts its 200ms colour transition from the browser's own link blue to the ink — a reference
+    read in its tail was 1 level off the token in the e2e. **EVIDENCE:** prettier · eslint (0 errors; develop's one
+    warning) · tsc clean; vitest 178 files / 4 934 passed + 2 skipped with the optimizer variants hidden; `next build`
+    69 pages, the arrow's rest turn in the HTML; the whole e2e suite 556 passed / 419 skipped / 1 failed — this spec's
+    lit-word reference, read in that colour race: the spec now waits for the bar to be at rest before reading any
+    reference, and its swap clock starts when the PAGE sees the pointer on the word (started before the runner's
+    `hover()` it also counted the runner's own waits — 186ms on a loaded machine); then this spec and the step spec
+    three times over, 135 passed / 0 failed, at a load average of 8. The two WebKit price-strip tests that failed in
+    round 2's and round 3's first runs passed here; the keyboard walk through the chips failed identically on a clean
+    build of develop 33dd897 (2 of 2) under the same load — neither is this lane's.
+    **Round 4 (owner, the same evening, verbatim: "maybe on hover of a element of a dropdown also add underline
+    animation as on top bar buttons?"):** the entries wear the menu button's default look again — round 1's no-rule
+    look (his "on hover they should not get underlined") reversed by his own word: on hover the lavender label and the
+    2px rule swept in from the left, both back on unhover, in the desktop card and the phone lists alike (a touch screen
+    draws neither — the atom's hover values compile under hover: hover); no entry is ever current, so no rule stands at
+    rest. One prop left NavSectionEntry. ui/TextButton's `underline` axis, round 1's, had NO CONSUMER then — and on his
+    "looks good" the same night it LEFT with its last reader (his standing "i want no dead code"): the atom is develop's
+    own plus round 2's `held`, its NoUnderline and NoUnderlineHover stories and their tests gone with it. The Header suite's entry test pins the new look (every rule generated and swept
+    away at rest; under a real pointer the hovered entry's drawn and lavender, the others' not), and the e2e's open-card
+    test asserts the hovered entry paints exactly as the current page's word. No visual cell moves: no story pins an
+    entry's hover (the dropdown tags hover the WORD). EVIDENCE: prettier · eslint · tsc clean; vitest 178 files / 4 933
+    passed + 3 skipped with the optimizer variants hidden (the third the diagonal test standing down on the loaded
+    machine — alone, the Header suite 115 / 115 with it run); `next build` 69 pages; this spec and the step spec twice
+    over, 90 passed / 0 failed at a load average of 9.
+    **THE SEAL'S REVIEW (G2, on the owner's "looks good, run reviewers and pr", the same night — three Opus reviewers
+    over the whole lane, rounds 2–4 weighed):** react-reviewer APPROVE, typescript-reviewer and a11y-architect APPROVE
+    WITH CHANGES; 0 critical / high / medium, no WCAG 2.2 AA failure. FOLDED: (1) A HOVER NEVER SWAPS A PINNED CARD
+    (a11y LOW-1, react NIT-4) — a card the keyboard opened with the ⌄'s Enter was taken by the mouse merely crossing
+    the other word, leaving focus on a collapsed ⌄; the swap now returns for a pinned card (useNavDropdowns' THE SWAP),
+    a test red on the old code. (2) A WIDTH CHANGE UNDER THE STEP HANDS FOCUS TO THE BURGER (react LOW-1) — MEASURED:
+    Chromium drops the focus of a control that stops being drawn ~10ms BEFORE the resize event, so the row records such
+    a drop while a card is open, and the resize returns focus to the ⌄ while it is drawn and to the burger (NavMenu's
+    exported PANEL_ID) once it is not — tests with focus on an entry and on the ⌄ at an 1100px window. (3) THE TESTS —
+    the e2e's held word read once AFTER the entry's 300ms sweep (a poll could pass on a fade's first frame); the ⌄'s
+    ring and pointer in place of an opacity no rule sets since round 3; the sideways test waiting for a real card; the
+    passing-pointer test timed in the page and standing down past the 120ms intent on a stalled machine; a vacuous
+    menu check dropped; the Held story's play reading the held classes; three viewport restores in `finally`.
+    (4) STALE WORDS — the stories' entries, "NavDropdown's way", the panel id's places (eight, listed),
+    lib/overlay-dismiss's `@returns`, the visual spec's ⌄. RECORDED in NavDropdown.tsx, the owner's: the word's own
+    focus ring crosses the tip of its arrow (cosmetic; SC 2.4.7 met); on its own page a word wears the current-page look
+    while the OTHER item's card is open beside it, two lit words (aria-current tells them apart; 2.4.8 is AAA); the card
+    has no height cap (a window ≥ ~1261px wide and under ~410px tall cannot scroll its last entries into view — a
+    max-height with its own scroll is the lever); `open` and `pinned` are two booleans where one state would do.
+    BACKLOG.md entry 2 gains the dropdowns' screen-reader passes (NVDA and JAWS browse mode, an iPad held sideways
+    under VoiceOver's touch exploration; tools that click by screen position land on the word's link). **EVIDENCE AT
+    THE SEAL:** prettier · eslint (0 errors; develop's one warning) · tsc clean; vitest 178 files / 4 925 passed + 2
+    skipped with the optimizer variants hidden; `next build` 69 pages; the link check 711 links / 63 pages / 0 broken;
+    the WHOLE e2e suite 557 passed / 419 skipped / 0 failed (the two WebKit price-strip tests green on a quieter
+    machine). VISUAL: this Mac draws overlay scrollbars (a 0px gutter, probed), so the darwin cells listed in rounds 1
+    to 3 are the owner's, under classic scrollbars; the linux set is CI's (`visual-baseline.yml`), before the next
+    promotion.
+
 ## 16. Build-time vs runtime contract
 
 **Decision rule: identical for every visitor — compiled at build. Depends on this visitor —
@@ -5619,7 +5857,11 @@ middle layer: `output: 'export'` means no server exists; the host serves files.
 - JS bundles for the client islands only.
 
 **Runtime, in the visitor's browser:**
-- Hydration of the client islands **only**: ContactModal, LanguageSwitcher, mobile nav,
+- Hydration of the client islands **only**: ContactModal, LanguageSwitcher, mobile nav (since
+  2026-10-15 also the open/closed state of its two section lists, §15.40), the bar's link row
+  (HeaderNav — an island from the start, to mark the current page; since 2026-10-15 also the
+  open card under „Servicii" or „Echipa": the static HTML prints both cards CLOSED with all their
+  links, and only after mount does a hover, the ⌄ or a key open one — §15.40),
   language-suggestion banner, root `/` redirect script, and the reviews rotator
   (`sections/ReviewsCarousel/ReviewsDeck` on `lib/rotation` — added by its own lane per
   §15.18, 2026-09-12; ui/Avatar's picture→letters fallback rides inside it), and the price

@@ -96,8 +96,15 @@ const readBar = (page: Page): Promise<Bar> =>
           )
         : null;
     const nav = header.querySelector('nav') as HTMLElement;
-    const links = [...nav.querySelectorAll<HTMLAnchorElement>('a[href]')];
-    const burger = header.querySelector('button[aria-expanded]');
+    // The row's own WORDS only — each a direct child of its <li>. Since the
+    // dropdowns (CLAUDE.md §15.40) the nav also holds the cards' links, laid
+    // out under the bar while closed, and the ⌄ toggles, which carry
+    // aria-expanded too; neither belongs to the row's geometry or to "the
+    // burger", which is the one toggle that controls the panel.
+    const links = [
+      ...nav.querySelectorAll<HTMLAnchorElement>(':scope > ul > li > a[href]'),
+    ];
+    const burger = header.querySelector('button[aria-controls="header-menu"]');
     // The bar's Contact trigger sits in a section-owned wrapper box that
     // carries the breakpoint (Header.tsx: "WHY THE VISIBILITY LIVES ON A
     // WRAPPER AND NOT ON THE BUTTON").

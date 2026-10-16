@@ -85,6 +85,14 @@ const WEARERS: Readonly<
     bottom: 0,
     part: 'the pill’s panel, matching it',
   },
+  // The bar row's ⌄ (CLAUDE.md §15.40, 2026-10-15): a plain button the
+  // keyboard reaches after „Servicii" and „Echipa", its focus ring on the
+  // TEXT button's own corner — the row's controls ring alike.
+  'components/sections/Header/NavDropdown.tsx': {
+    whole: 1,
+    bottom: 0,
+    part: 'the dropdown ⌄’s box — its focus ring, the TEXT button’s corner',
+  },
   'components/ui/Modal/Modal.tsx': {
     whole: 1,
     bottom: 1,
@@ -107,6 +115,10 @@ const ASKERS = [
   // owner, verbatim: "this card border, style that i already have with a
   // border in the doctor cards … the same border and corners and edges".
   'components/sections/PostCard/PostCard.tsx',
+  // The top bar's dropdown card under „Servicii" and „Echipa" (CLAUDE.md
+  // §15.40, 2026-10-15) — the owner chose "Soft card + aura": the pill's and
+  // the phone panel's own corner, so it reads as the bar's own dropdown.
+  'components/sections/Header/NavDropdown.tsx',
 ];
 const ASK = /corners=(?:"soft"|\{'soft'\}|\{"soft"\})/g;
 

@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
   type MouseEvent,
   type ReactElement,
+  type RefObject,
 } from 'react';
 import { Card, CARD_CURRENT_ATTRIBUTE } from '@/components/ui/Card/Card';
 import { Heading } from '@/components/ui/Heading/Heading';
@@ -407,8 +408,50 @@ import type { PriceCategoryProps } from './CategoryCard';
 // by React and never in the server's bytes — THE CARD THE VISITOR IS AT's WHY
 // A DOM WRITE, the same nodes, the same reason. And because it feeds no render
 // it is neither a store nor state: a small closure (createArrivalStamp below),
-// made when the island mounts, lifted when it unmounts, and reached from the
-// click through a ref.
+// made when the island mounts, lifted when it unmounts, and reached through a
+// ref from the clicks that decide it — the menu's own and, since 2026-10-15,
+// the document's (the next paragraph).
+//
+// ── A LINK FROM OUTSIDE THE MENU STAMPS TOO (CLAUDE.md §15.40; the owner,
+// 2026-10-15: "on the pages with servicii where it takes you to the card of
+// prices adjacend with what you click … all current fucntionality hsould
+// stay"). Since that day the top bar's dropdown under „Servicii" lists the
+// eleven categories as plain links to `/{locale}/services/#{id}` — the cards'
+// own ids — and on THIS page a keyboard visitor who opened it and pressed
+// Enter on „Endodonție" landed on the card with focus and `:focus-visible`
+// but no ring: no click of this file's had stamped the card, so its quiet
+// ring hid the outline (the G2 reviewers, measured on the built export,
+// Chromium 1366×900; through the menu's own link, with the same keys, the
+// ring showed). The rule above is the ARRIVAL's, not the menu's, so the
+// island now hears every click on the page: ONE `click` listener on the
+// document, in the CAPTURE phase, for the island's life (watchOutsideLinks
+// below). A plain left click — isPlainLeftClick, the menu's own question — on
+// a link whose URL is this page with a category's `#id` decides the stamp
+// exactly as the menu's click does: `detail` 0 stamps, a counted click lifts.
+// "This page" is the browser's own rule for a jump that stays in the
+// document: the same origin, path and query, the fragment alone differing.
+// The menu's own links are skipped: onItemClick answers them, and a second
+// stamp would hand the card a second blur listener.
+//   · WHY THE DOCUMENT. The dropdown is another section's island
+//     (sections/Header), and §4 forbids either section importing the other's
+//     internals: the Header cannot call this stamp, and this file cannot
+//     reach into the Header's entries. What the two share is the page itself
+//     — a link, its URL and the click on it — so the listener sits where every
+//     click arrives, whoever rendered the link: the top bar's card, the phone
+//     panel's list (the burger's, the same entries), a link in the copy one
+//     day.
+//   · WHY THE CAPTURE PHASE. The document's capture listeners run before any
+//     handler on the way down to the link — the dropdown's own and the phone
+//     panel's, which close their lists on that very click — so nothing there
+//     can stop the click before the island hears it; and, like every
+//     listener, it runs before the browser's jump focuses the card, the moment
+//     the stamp must already be there (createArrivalStamp waits for the blur
+//     that ends that focus). Passive: it never cancels a click.
+//   · WHAT IT DOES NOT SEE: an entry chosen on ANOTHER page — the Team page's
+//     top bar, say — loads this page afresh, an arrival no click on this page
+//     made (CategoryCard.tsx's THE GAP THAT IS THE OWNER'S CALL). And the spy
+//     needs no word from it: a jump that changes the URL's fragment fires
+//     `hashchange`, which pins it (ONLY A PLAIN LEFT CLICK PINS).
 //
 // ── THE TWO PRESENTATIONS (owner 2026-10-09, verbatim: "i need a complete
 // refactor on the price page on the menu that takes you to price lists on
@@ -738,8 +781,18 @@ export type PriceMenuProps = Readonly<{
   items: readonly PriceMenuItem[];
 }>;
 
-/** A click that navigates THIS tab: the primary button, no modifier held. */
-function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+/** A click that navigates THIS tab: the primary button, no modifier held.
+ *  It reads the five fields React's event and the browser's own share, so the
+ *  menu's links and the document's listener (watchOutsideLinks) ask one
+ *  question. */
+function isPlainLeftClick(
+  event: Readonly<
+    Pick<
+      globalThis.MouseEvent,
+      'button' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey'
+    >
+  >,
+): boolean {
   return (
     event.button === 0 &&
     !event.metaKey &&
@@ -806,6 +859,72 @@ function createArrivalStamp(): ArrivalStamp {
   }
 
   return { stamp, lift };
+}
+
+/** THE CAPTURE PHASE, passively (the header's A LINK FROM OUTSIDE THE MENU
+ *  STAMPS TOO): the document hears a click before any handler on the way down
+ *  to its link, and this listener never cancels one. */
+const CAPTURE = { capture: true, passive: true } as const;
+
+/** What the outside-link listener reads: the menu's own address — its links
+ *  are onItemClick's — the categories it lists, and the stamp holder, read at
+ *  the click as onItemClick reads it. */
+type OutsideLinks = Readonly<{
+  menuId: string;
+  categoryIds: ReadonlySet<string>;
+  arrival: RefObject<ArrivalStamp | null>;
+}>;
+
+/**
+ * A LINK FROM OUTSIDE THE MENU STAMPS TOO (the header): ONE `click` listener
+ * on the document, in the capture phase, for the island's life — its whole
+ * state in this closure, like watchPresentation's. A plain left click on a
+ * link elsewhere on the page whose URL is this page with a category's
+ * fragment decides the keyboard's stamp as the menu's own click does.
+ * @returns the clean-up: the listener.
+ */
+function watchOutsideLinks({
+  menuId,
+  categoryIds,
+  arrival,
+}: OutsideLinks): () => void {
+  function onClick(event: globalThis.MouseEvent): void {
+    if (!isPlainLeftClick(event)) return;
+    const link =
+      event.target instanceof Element ? event.target.closest('a[href]') : null;
+    // HTML's own link, whose URL is parsed already; an SVG one has none of
+    // the properties read below.
+    if (!(link instanceof HTMLAnchorElement)) return;
+    // The menu's own links are onItemClick's: a second stamp would hand the
+    // card a second blur listener.
+    if (document.getElementById(menuId)?.contains(link)) return;
+    // THIS page — the browser's own rule for a jump that stays in the
+    // document: the same origin, path and query. Read off the link's own
+    // parsed URL, the very one the browser is about to follow, so an
+    // unparseable href reads as no page at all instead of throwing in a
+    // listener every click on the page passes through.
+    if (
+      link.origin !== window.location.origin ||
+      link.pathname !== window.location.pathname ||
+      link.search !== window.location.search
+    ) {
+      return;
+    }
+    // A bare `slice(1)`, lib/scroll-spy's own reading of a fragment: every
+    // fragment id in this repo is ASCII English by owner decision (fb-461).
+    const target = link.hash.slice(1);
+    if (!categoryIds.has(target)) return;
+    // THE RING IS THE KEYBOARD'S: `detail` is the click count — 0 when the
+    // keyboard made the click — and the last arrival decides.
+    if (event.detail === 0) {
+      arrival.current?.stamp(target);
+    } else {
+      arrival.current?.lift();
+    }
+  }
+
+  document.addEventListener('click', onClick, CAPTURE);
+  return () => document.removeEventListener('click', onClick, CAPTURE);
 }
 
 /**
@@ -957,9 +1076,16 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
   );
   const [rail] = useState(() => createStickyRail({ id }));
   const [follower] = useState(() => createStripFollow({ id: stripId }));
+  // A LINK FROM OUTSIDE THE MENU STAMPS TOO (the header): the fragments a link
+  // elsewhere on the page may name — built once, from the ids at mount, as
+  // the spy is (THE LIST IS STATIC).
+  const [categoryIds] = useState<ReadonlySet<string>>(
+    () => new Set(items.map((item) => item.id)),
+  );
   // THE RING IS THE KEYBOARD'S (the header): the holder is made when the
   // island mounts and lifted when it leaves — Strict Mode's rehearsal
-  // included — and only the click reads it.
+  // included — and only the clicks read it: the menu's own and the
+  // document's (A LINK FROM OUTSIDE THE MENU STAMPS TOO).
   const arrival = useRef<ArrivalStamp | null>(null);
   // The presentation watcher's two boxes (the consumption idiom's one ref use).
   const railBoxRef = useRef<HTMLDivElement>(null);
@@ -1012,6 +1138,14 @@ export function PriceMenu({ id, title, items }: PriceMenuProps): ReactElement {
       arrival.current = null;
     };
   }, []);
+
+  // A LINK FROM OUTSIDE THE MENU STAMPS TOO (the header): the document's
+  // clicks, heard in the capture phase for the island's life and decided
+  // against the same holder as the menu's own.
+  useEffect(
+    () => watchOutsideLinks({ menuId: id, categoryIds, arrival }),
+    [id, categoryIds],
+  );
 
   // THE MARK ON THE CARD — the header's THE CARD THE VISITOR IS AT. The
   // element is held in the closure, so the cleanup takes the mark off the

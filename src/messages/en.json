@@ -7,7 +7,8 @@
       "services": "Services",
       "team": "Team",
       "blog": "Blog",
-      "ariaLabel": "Main navigation"
+      "ariaLabel": "Main navigation",
+      "submenu": "{label} submenu"
     },
     "actions": {
       "call": "Call now",

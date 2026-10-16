@@ -36,8 +36,9 @@ import { cx } from '@/lib/cx/cx';
 // the direction of specialistii cu care ne mandrim familia premium smile."
 // The decision numbers below are that contract's D1–D8 — and D9, the first
 // screen's eager picture, added the same day, D10, THE SCALE, on 2026-10-01,
-// D11, THE SLIMMER RIBBON, on 2026-10-02, and D12, THE PAGE OPENER, on
-// 2026-10-15 — and are the anchors other files cite (§17.7 — never a line
+// D11, THE SLIMMER RIBBON, on 2026-10-02, D12, THE PAGE OPENER, on
+// 2026-10-15, and D13, THE ANCHOR, the same day — and are the anchors other
+// files cite (§17.7 — never a line
 // number; D10's GATES among them, and since 2026-10-02 ui/Container's THE BAND
 // SCALE, which holds the regime D10 invented and cites D10 for its numbers
 // and for what it trades).
@@ -562,6 +563,28 @@ import { cx } from '@/lib/cx/cx';
 // (D9 has the measurements and the reasons). Home passes the band opener and
 // nothing of it moved.
 //
+// ── D13 · THE ANCHOR (2026-10-15, CLAUDE.md §15.40). The owner, verbatim: "on
+// echipa it take you directly to a doctor card" — the top bar's „Echipa"
+// dropdown lists the doctors, and each entry is a plain link to
+// `/{locale}/team/#{doctor id}` (lib/nav-sections). So each STATION wears its
+// doctor's id as its DOM id: the station wraps exactly one card and adds no
+// padding of its own, so its top IS the card's top, and the browser's own
+// fragment jump lands the card under the top bar — the root's
+// `scroll-padding-top` (6rem, the pill's reach) plus this station's
+// `scroll-mt-[2.5rem]`, the price cards' stylesheet air (sections/PriceList's
+// CategoryCard — with JavaScript the price list's reading line rests ITS cards
+// centred under the bar instead, §15.20 round 5), so a jumped-to doctor card
+// rests 136px down. A rem LITERAL, not a spacing step, for the price cards'
+// reason: the pill it clears does not scale with the band (D10). The same id
+// prints on Home too, where the band also stands — harmless, and a link to it
+// works. No tabIndex, on purpose: a fragment jump moves the keyboard's
+// starting point to the station by itself (the next Tab reaches the card's
+// link), and a focusable station would draw the ring on EVERY arrival — a
+// fresh load with a fragment matches :focus-visible in Chromium and WebKit
+// alike — unless it also wore the price cards' keyboard-only rule. That pair
+// (tabIndex -1 + the quiet ring) is the lever for a screen reader's cursor to
+// land on the doctor too (CLAUDE.md §15.40, recorded).
+//
 // ── FIDELITY (§6.8). The remaining native props and `ref` land on the
 // <section>; a caller's className merges LAST (placement only). The band owns
 // no outer margin (§6.4) — the page owns the rhythm BETWEEN bands. Its own
@@ -576,7 +599,10 @@ import { cx } from '@/lib/cx/cx';
  * band's decision (D5).
  */
 export type DoctorShowcaseDoctor = Readonly<{
-  /** The React key, nothing else — lib/team's id. */
+  /**
+   * lib/team's id — the React key AND, since 2026-10-15, the station's DOM id:
+   * the fragment the top bar's „Echipa" dropdown links to (D13).
+   */
   id: string;
   /** The full name, finished text — an <h3> under the band opener, an <h2>
    *  under the page opener (D6, D12). */
@@ -782,12 +808,18 @@ export function DoctorShowcase({
           )}
           {/* THE RIBBON, ROUTE B (D3): the root is the list, each station a
               wrapper item holding ONE card, the sides alternating (D5) and,
-              on the first screen, the first card's picture eager (D9). None
+              on the first screen, the first card's picture eager (D9), each
+              station its doctor's id, the top bar's anchor (D13). None
               under the page opener with no doctor (D12). */}
           {doctors.length > 0 ? (
             <Ribbon role="list">
               {doctors.map((doctor, index) => (
-                <RibbonStation key={doctor.id} role="listitem">
+                <RibbonStation
+                  key={doctor.id}
+                  role="listitem"
+                  id={doctor.id}
+                  className="scroll-mt-[2.5rem]"
+                >
                   <PersonnelCard
                     kind="doctor"
                     headingLevel={HEADING_LEVEL[opener]}

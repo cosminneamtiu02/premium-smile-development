@@ -28,6 +28,7 @@ const meta = {
   args: {
     children: 'Servicii',
     active: false,
+    held: false,
     tone: 'ink',
     hoverArea: 'self',
   },
@@ -36,6 +37,11 @@ const meta = {
       control: 'boolean',
       description:
         'The current page — aria-current="page" + a STATIC full-width underline (never animated in), whatever the tone',
+    },
+    held: {
+      control: 'boolean',
+      description:
+        'The hover look HELD while what this button opens stays open — the active look without aria-current, switched at run time so the hover’s own clocks sweep it in and out (the top bar’s dropdown words, owner 2026-10-16) — see Held',
     },
     tone: {
       control: 'radio',
@@ -294,5 +300,25 @@ export const HoverEndArea: Story = {
     );
     await expect(first.contains(spot)).toBe(true);
     await expect(readMore.contains(spot)).toBe(false);
+  },
+};
+
+/**
+ * THE HELD LOOK (owner, 2026-10-16: "it has to light up lilla and trigger
+ * animation and leave it on until card or section unfocus or change"): the
+ * hover look kept while what the button opens stays open — the top bar's word
+ * while its card is open, the phone panel's row while its list is. Active's
+ * paint, lavender and the full rule, with NO aria-current: the play reads its
+ * CLASSES — a pointer resting on the canvas lights the paint but adds no class,
+ * so the row it finds is the held one.
+ */
+export const Held: Story = {
+  args: { held: true, children: 'Servicii' },
+  play: async ({ canvas }) => {
+    const control = canvas.getByRole('button', { name: 'Servicii' });
+    await expect(control).not.toHaveAttribute('aria-current');
+    await expect(control.classList.contains('text-accent')).toBe(true);
+    await expect(control.classList.contains('after:scale-x-100')).toBe(true);
+    await expect(control.classList.contains('after:scale-x-0')).toBe(false);
   },
 };

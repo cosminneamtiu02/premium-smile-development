@@ -694,7 +694,7 @@ const meta = {
     preload: {
       control: false,
       description:
-        'THE EAGER PATH (D18) — default false: the picture loads lazily, like every picture below the fold (§11). `true` hands ui/Image the pair DoctorIntro gives its own cutout — `preload` and `fetchPriority="high"`: no lazy loading, a high fetch priority and a preload link — for a doctor card whose picture is its page’s LCP element (§10.6). A BAND decides it, never the card: sections/DoctorShowcase asks it of its first card on the Team page. Refused on the auxiliary kind. Not a live control: it moves no pixel, and on this meta’s auxiliary card it would build the shape the TYPES refuse',
+        'THE EAGER PATH (D18) — default false: the picture loads lazily, like every picture below the fold (§11). `true` hands ui/Image the pair DoctorIntro gives its own cutout — `preload` and `fetchPriority="high"`: no lazy loading, a high fetch priority and a preload link — for a doctor card whose picture stands in its page’s first screen. A BAND decides it, never the card: sections/DoctorShowcase asks it of its first card on the Team page, where that picture is in the first screen at every window measured and IS the LCP element (§10.6) on a 768 tablet, while the hero’s <h1> is the LCP at 390 × 844, 1280 × 800, 1401 × 1063, 1536 × 864 and 1920 × 1080 — the preload kept on purpose (DoctorShowcase D9, D18). Refused on the auxiliary kind. Not a live control: it moves no pixel, and on this meta’s auxiliary card it would build the shape the TYPES refuse',
     },
     className: {
       control: false,

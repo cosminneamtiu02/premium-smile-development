@@ -14,13 +14,14 @@ import {
 } from './populate';
 import { toStatTiles } from './stat-tiles';
 
-// THE TEAM PAGE — „Echipa noastră": the doctors band first (its eyebrow and
-// title, every doctor as a card under the ribbon), the auxiliary staff as a
-// grid of tiles, the clinic's numbers (since 2026-10-01 — the Home page's
-// „în cifre" band, prop for prop: the owner, "same component as on main page
-// with the stats on the team page between map and helping staff"), the map
-// last. It replaced the interim stub that existed only so the shell's nav had
-// a resolvable target (PR #69, the link check).
+// THE TEAM PAGE — „Echipa noastră": the doctors band first (since 2026-10-15
+// opened by the page's own centred hero, then every doctor as a card under
+// the ribbon), the auxiliary staff as a grid of tiles, the clinic's numbers
+// (since 2026-10-01 — the Home page's „în cifre" band, prop for prop: the
+// owner, "same component as on main page with the stats on the team page
+// between map and helping staff"), the map last. It replaced the interim stub
+// that existed only so the shell's nav had a resolvable target (PR #69, the
+// link check).
 //
 // ── THE DOCTORS ARE A BAND OF THEIR OWN since 2026-09-30 (owner, verbatim:
 // "make this the official dr card under personell card … integrate it in the
@@ -37,34 +38,46 @@ import { toStatTiles } from './stat-tiles';
 // pages' precedent). The three bands are DUMB: they hold no message key, import
 // no data, format nothing and do not know what a `Locale` is — they receive
 // finished people and lay them out. So everything that has to KNOW happens
-// here — the language, the band's eyebrow and title, the button's words, the
+// here — the language, the hero's heading and lead, the button's words, the
 // URLs — and ./populate.ts does the walks (its header argues why it is neither
 // in lib/team nor inline here). ClinicLocation is the exception that proves
 // the rule: it is a page BAND wired to site data (lib/clinic, §10.1) and takes
 // nothing from this file.
 //
-// ── THE <h1> IS THE PAGE'S, AND `sr-only` — the Services page's shape, since
-// 2026-09-30. Until then „Echipa noastră" was the visible opener, painted by
-// TeamRoster; now the visible opener is the doctors band's own eyebrow and
-// <h2> („Familia Premium Smile" / „Specialiștii cu care ne mândrim"), two
-// stacked titles would say the same thing twice, and the band must read the
-// same on Home, where it cannot be an <h1>. §9's one outline root and the SEO
-// lane's outline still need the element, so it stays, in the page's markup,
-// with the words the tab title shows: h1 (the page) → h2 (the band) → h3 (each
-// doctor) → h2 (the staff band, since 2026-10-02) → h3 (each staff tile) → h2
-// (the numbers) → h3 (each tile) → h2 (the map).
+// ── THE <h1> IS THE HERO'S, VISIBLE, since 2026-10-15 — the owner, verbatim:
+// "take the hero section of the blog page with all blog articles and
+// implement something similar instead of "FAMILIA PREMIUM SMILE /
+// Specialiștii cu care ne mândrim" on the echipa page" and "this must take
+// place only on the echipa page". So the doctors band opens HERE with its
+// PAGE opener (sections/DoctorShowcase's D12): sections/PageHero — the blog
+// list's centred hero, moved into a shared composition the same day — whose
+// <h1> and lead are `team.hero.*`, Claude's drafts in all five languages,
+// flagged for the owner (§15.17), each heading opening on the page's own
+// name („Echipa noastră:", "Our team:", „Unser Team:", « Notre équipe : »,
+// «Il nostro team:») and keeping the owner's „specialiștii cu care ne
+// mândrim" in the heading. „familia" is NOWHERE in the hero, on purpose: the
+// owner asked for „Familia Premium Smile" to be replaced (BACKLOG.md entry 4,
+// "sounds particularly toxic") — never put it back here.
+// Home keeps the band opener, its eyebrow and <h2>. From 2026-09-30 until
+// that day the page's <h1> was `sr-only` here, in the page's markup (the
+// Services page's shape), under the band's eyebrow and <h2>; before that,
+// TeamRoster painted „Echipa noastră" itself. The outline: h1 (the hero) →
+// h2 (each doctor — the cards' level under a page opener) → h2 (the staff
+// band, since 2026-10-02) → h3 (each staff tile) → h2 (the numbers) → h3
+// (each tile) → h2 (the map). The TAB TITLE stays `team.title` (below), the
+// page's short name, which every language's heading now opens on.
 //
 // ── EVERY BAND DRAWS IN ONE SCALE, AND THE STAFF HAVE A TITLE (2026-10-02,
 // CLAUDE.md §15.32 — owner, verbatim: "the other page you have to implement
 // the same thing once done is the team page. there you have little work. you
 // hav eto create an eyebrow and headline for the 3 cars with helping staff").
 // On a laptop or desktop all four bands draw in ui/Container's THE BAND SCALE,
-// so every eyebrow and <h2> on the page is one size and one offset: the
-// doctors band always, the staff band always (its one page), the numbers and
-// the map because this page passes `scaled` (the doctor page mounts both:
-// since 2026-10-13 it passes the flag to the map — one map on every page,
-// §15.32 round 3 — and leaves it off the numbers band until its own bands
-// scale). The staff band's eyebrow and title are `team.roster.*` — Claude's
+// so every eyebrow and <h2> on the page is one size and one offset — and the
+// hero's <h1>, since 2026-10-15, the blog list's own 65.04 design pixels
+// (sections/PageHero): the doctors band always, the staff band always (its one
+// page), the numbers and the map because this page passes `scaled` (the
+// doctor page passes it to both since 2026-10-13, §15.32 rounds 3 and 4).
+// The staff band's eyebrow and title are `team.roster.*` — Claude's
 // drafts in all five languages, flagged for the owner (§15.17) — and its
 // tiles keep one width: the column's own on a phone (§15.35), 18rem on
 // tablets, a third of the scaled column on a laptop or desktop
@@ -90,12 +103,15 @@ import { toStatTiles } from './stat-tiles';
 // still the SEO lane's (PHASE4_SEO_PLAN.md), and this is deliberately not it.
 // What could not wait is SC 2.4.2 Page Titled, a LEVEL A criterion sitting
 // inside this site's AA bar (§9). The title is the 404 page's own idiom,
-// `title — siteName` on the ` — ` join, and it is built from the SAME
-// `team.title` key the <h1> prints, so the tab and the outline root can never
-// disagree. Zero hardcoded user-facing strings live in this file (§17.4) —
-// `team.title`, `team.showcase.*` and the numbers band's three
-// `team.doctor.stats.*` keys are the owner's, in src/messages/*.json, and
-// every name, position, number and sentence is a fact from lib/team.
+// `title — siteName` on the ` — ` join, built from `team.title`, the page's
+// short name — the words the hero's <h1> opens on in every language (THE <h1>
+// IS THE HERO'S, above), so the tab and the outline root say the same page;
+// until 2026-10-15 the <h1> printed `team.title` itself. Zero hardcoded
+// user-facing strings live in this file (§17.4) — `team.title`, `team.hero.*`,
+// `team.showcase.profile` (the cards' link; the band opener's
+// `team.showcase.eyebrow` and `.title` are Home's now), `team.roster.*` and the
+// numbers band's three `team.doctor.stats.*` keys live in src/messages/*.json,
+// and every name, position, number and sentence is a fact from lib/team.
 //
 // ── KEEP-IN-SYNC with ./Team.stories.tsx: this page is an async Server
 // Component (getTranslations/getLocale from next-intl/server), which no browser
@@ -136,19 +152,19 @@ export default async function TeamPage() {
     (segments) => <Keywords segments={segments} />,
   );
 
+  // THE PAGE OPENER's words (the band's D12): the hero's <h1> and its lead,
+  // `team.hero.*` — one line break in the heading, two in the lead.
+  const hero = { title: t('hero.title'), lead: t('hero.lead') };
+
   return (
     <>
-      <h1 className="sr-only">{t('title')}</h1>
-      {/* `firstScreen`: on THIS page the band opens the first screen, and the
-          first doctor's picture is its largest paint (measured — the band's
-          D9), so that one picture preloads. Home mounts the same band under
-          the Hero and leaves the prop off. */}
-      <DoctorShowcase
-        firstScreen
-        eyebrow={t('showcase.eyebrow')}
-        title={t('showcase.title')}
-        doctors={doctors}
-      />
+      {/* THE PAGE OPENER (the band's D12, the header's THE <h1> IS THE
+          HERO'S): the page's one <h1> and its lead, centred over the cards;
+          Home mounts the same band with its eyebrow and <h2> instead.
+          `firstScreen`: the band opens the first screen here, and its first
+          doctor's picture preloads (the band's D9) — the blog list's first
+          card's precedent, now that the hero's heading stands above it. */}
+      <DoctorShowcase firstScreen hero={hero} doctors={doctors} />
       {/* THE STAFF, titled since 2026-10-02 (the header's ONE SCALE
           paragraph): the band's own eyebrow and <h2>, the tiles <h3>s. */}
       <TeamRoster

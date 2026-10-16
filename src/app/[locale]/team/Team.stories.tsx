@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
+import { namedAs } from '@/components/sections/PageHero/PageHero.fixtures';
 import { TeamRoster } from '@/components/sections/TeamRoster/TeamRoster';
 import { Keywords } from '@/components/ui/Keyword/Keyword';
 import { isLocale, type Locale } from '@/i18n/locales';
@@ -28,10 +29,12 @@ import { toStatTiles } from './stat-tiles';
 // doctors band's and the numbers band's props equal — change the JSX in one
 // and that test names it.
 //
-// ── THE PAGE SINCE 2026-09-30 (the owner's dispatch, quoted in page.tsx): an
-// `sr-only` <h1> in the page's own markup, then the DOCTORS band
-// (sections/DoctorShowcase — eyebrow, <h2>, every doctor as a card under the
-// ribbon), then the staff tiles (sections/TeamRoster), then — since
+// ── THE PAGE SINCE 2026-10-15 (the owner's dispatch, quoted in page.tsx): the
+// DOCTORS band (sections/DoctorShowcase) opened by its PAGE opener — the
+// page's visible <h1> and lead, sections/PageHero, `team.hero.*` — then every
+// doctor as a card under the ribbon, each name an <h2> (until then an
+// `sr-only` <h1> in the page's own markup over the band's eyebrow and <h2>,
+// since 2026-09-30), then the staff tiles (sections/TeamRoster), then — since
 // 2026-10-01 (owner: "same component as on main page with the stats on the
 // team page between map and helping staff") — the clinic's NUMBERS
 // (sections/DoctorStats on the page ground, the Home page's band prop for
@@ -70,15 +73,13 @@ function TeamPageBands(): ReactElement {
     (segments) => <Keywords segments={segments} />,
   );
 
+  // THE PAGE OPENER's words (the band's D12): the hero's <h1> and its lead,
+  // `team.hero.*` — one line break in the heading, two in the lead.
+  const hero = { title: t('hero.title'), lead: t('hero.lead') };
+
   return (
     <>
-      <h1 className="sr-only">{t('title')}</h1>
-      <DoctorShowcase
-        firstScreen
-        eyebrow={t('showcase.eyebrow')}
-        title={t('showcase.title')}
-        doctors={cards}
-      />
+      <DoctorShowcase firstScreen hero={hero} doctors={cards} />
       <TeamRoster
         eyebrow={t('roster.eyebrow')}
         title={t('roster.title')}
@@ -262,9 +263,9 @@ const expectFirstCard = async (card: HTMLElement): Promise<void> => {
 const playPage =
   (
     words: {
-      title: string;
-      eyebrow: string;
-      showcase: string;
+      /** The page opener — `team.hero.*`: the <h1> (one line break) and its
+       *  lead (two). */
+      hero: { title: string; lead: string };
       profile: string;
       location: string;
       /** The numbers band's opener — the doctor page's `team.doctor.stats.*`
@@ -278,9 +279,11 @@ const playPage =
   async ({ canvas, canvasElement }) => {
     // HOW EVERY PICTURE SHIPS — read BEFORE `settled` asks for them all. The
     // page's first picture is the first doctor's, and it PRELOADS: the band
-    // opens the first screen here and that picture is its largest paint (the
-    // band's D9, the page's `firstScreen`). Every later one — the other
-    // doctors', the staff tiles' — is lazy.
+    // opens the first screen here and that picture is on it at every width
+    // (the band's D9, the page's `firstScreen`) — the page's largest paint at
+    // a 768 tablet, the hero's <h1> everywhere else since 2026-10-15, the
+    // blog list's arrangement. Every later one — the other doctors', the
+    // staff tiles' — is lazy.
     const [firstPicture, ...laterPictures] = Array.from(
       canvasElement.querySelectorAll('img'),
     );
@@ -301,16 +304,35 @@ const playPage =
       doctors.length + auxiliaries.length,
     );
 
-    // THE OUTLINE ROOT: one <h1>, the page's own — sr-only, outside every band.
-    const title = canvas.getByRole('heading', { level: 1, name: words.title });
+    // THE OUTLINE ROOT: one <h1>, VISIBLE — the hero's (the band's page
+    // opener, D12), found by the name a screen reader hears: the copy's line
+    // break a space (PageHero.fixtures' `namedAs`).
+    const title = canvas.getByRole('heading', {
+      level: 1,
+      name: namedAs(words.hero.title),
+    });
     await expect(canvas.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    await expect(title).toHaveClass('sr-only');
-    await expect(title.closest('section')).toBeNull();
+    await expect(title).toBeVisible();
+    await expect(title).not.toHaveClass('sr-only');
+    // …its lead right after it, in the hero's <header>, as the copy holds it.
+    const hero = title.parentElement;
+    if (!(hero instanceof HTMLElement) || hero.tagName !== 'HEADER')
+      throw new Error('team story: the <h1> is not in the hero’s <header>');
+    await expect(hero.children).toHaveLength(2);
+    await expect(hero.children[1]?.textContent).toBe(words.hero.lead);
 
-    // THE DOCTORS BAND: a region named by its own <h2>, its eyebrow above.
-    const band = canvas.getByRole('region', { name: words.showcase });
-    await expect(within(band).getByText(words.eyebrow)).toBeVisible();
+    // THE DOCTORS BAND: the hero's own band — an UNNAMED <section> (the
+    // band's D12: a region named by the page's <h1> would repeat the page's
+    // name), no eyebrow and no <h2> opener; the hero first, the ribbon next.
+    const band = title.closest('section');
+    if (!(band instanceof HTMLElement))
+      throw new Error('team story: the hero is not inside the doctors band');
+    await expect(band).not.toHaveAttribute('aria-labelledby');
+    await expect(
+      within(band).queryAllByRole('heading', { level: 3 }),
+    ).toHaveLength(0);
     const list = within(band).getByRole('list');
+    await expect(precedes(hero, list)).toBe(true);
     await expect(within(list).getAllByRole('listitem')).toHaveLength(
       doctors.length,
     );
@@ -432,9 +454,8 @@ const playPage =
         .getAllByRole('heading')
         .map((element) => Number(element.tagName[1])),
     ).toEqual([
-      1, // the page's own, sr-only
-      2, // the doctors band
-      ...doctors.map(() => 3), // one per doctor card
+      1, // the hero's, the page's one (since 2026-10-15)
+      ...doctors.map(() => 2), // one per doctor card, under the page opener
       2, // the staff band, since 2026-10-02 (§15.32)
       ...auxiliaries.map(() => 3), // one per staff tile
       2, // the numbers band
@@ -442,17 +463,23 @@ const playPage =
       2, // the map
     ]);
 
+    // Nothing to scroll sideways, measured by the root's own BOX, which ends
+    // where a reserved scrollbar gutter begins — never by `clientWidth`,
+    // which in a Vitest runner's frame is the whole window, the 15px gutter
+    // included, and would let 15px of overflow through (PostList.stories.tsx's
+    // expectNoSidewaysScroll and its reason; the verify review, 2026-10-16:
+    // this is the one story that renders the real page with the hero's reach).
     const root = canvasElement.ownerDocument.documentElement;
-    await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+    await expect(root.scrollWidth).toBeLessThanOrEqual(
+      Math.ceil(root.getBoundingClientRect().width),
+    );
   };
 
 export const Romanian: Story = {
   globals: { locale: 'ro', viewport: { value: 'laptop' } },
   play: playPage(
     {
-      title: ro.team.title,
-      eyebrow: ro.team.showcase.eyebrow,
-      showcase: ro.team.showcase.title,
+      hero: ro.team.hero,
       profile: ro.team.showcase.profile,
       location: ro.home.location.title,
       numbers: ro.team.doctor.stats,
@@ -473,9 +500,7 @@ export const German: Story = {
   play: async (context) => {
     await playPage(
       {
-        title: de.team.title,
-        eyebrow: de.team.showcase.eyebrow,
-        showcase: de.team.showcase.title,
+        hero: de.team.hero,
         profile: de.team.showcase.profile,
         location: de.home.location.title,
         numbers: de.team.doctor.stats,

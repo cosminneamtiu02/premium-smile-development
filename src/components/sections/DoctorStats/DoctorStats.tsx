@@ -338,8 +338,9 @@ import { StatNumber, type CountFrames } from './StatNumber';
 //     hyphens-none`: a title breaks between words, never inside one (the
 //     §15.14 rider's reasoning for control labels, applied to a one- or
 //     two-word heading). The outline: page <h1> (the doctor's name on his
-//     page; the page's own `sr-only` <h1> on Home and Team) → this band's
-//     <h2> → one <h3> per tile, no gaps (§9).
+//     page; the page's own `sr-only` <h1> on Home; the doctors band's hero
+//     on Team since 2026-10-15) → this band's <h2> → one <h3> per tile, no
+//     gaps (§9).
 //   · THE DESCRIPTION — ui/Text `tone="muted"` (a <p> on its `text-base`,
 //     16px — 18 design pixels inside THE BAND SCALE, a doctor card's quote),
 //     `text-center` through the className merge (§6.8: it lands on the host

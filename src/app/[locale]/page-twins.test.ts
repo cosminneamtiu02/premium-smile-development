@@ -20,7 +20,7 @@ import ro from '../../messages/ro.json';
 // keeps a KEEP-IN-SYNC twin beside it (Team.stories.tsx, Home.stories.tsx,
 // [slug]/Doctor.stories.tsx) that re-spells its JSX through the isomorphic
 // hooks. The twins' plays pin the TWIN. Nothing pinned the PAGE: delete
-// `firstScreen` from the Team page — its largest paint goes lazy again — and
+// `firstScreen` from the Team page — its first-screen picture goes lazy — and
 // tsc, eslint, every Vitest project and both builds stayed green, and the pixel
 // net cannot see a prop that moves no pixel. (tests/e2e/doctor-showcase.spec.ts
 // does read the built pages, but the e2e suite runs in no workflow and no hook.)
@@ -31,8 +31,11 @@ import ro from '../../messages/ro.json';
 //   · THE BANDS, IN ORDER — the elements each page returns, and its twin's;
 //   · THE DOCTORS BAND'S PROPS — by NAME: the Team page says `firstScreen`
 //     (the band opens its first screen — DoctorShowcase D9), Home does not
-//     (the band sits below the Hero and the numbers), and each twin says
-//     what its page says;
+//     (the band sits below the Hero and the numbers); and since 2026-10-15
+//     the Team page opens the band with its PAGE opener, `hero` (D12 — the
+//     blog list's centred hero, sections/PageHero, the page's one <h1>),
+//     where Home keeps the band opener's `eyebrow` and `title` — and each
+//     twin says what its page says;
 //   · THE NUMBERS BAND'S PROPS (sections/DoctorStats, since 2026-10-01) — by
 //     NAME too, on all three pages that carry it: Home and the Team page
 //     say `ground` and `align` and no `lead` (the owner: "without that
@@ -137,19 +140,27 @@ const returned = (source: string, functionName: string): string => {
 const bandsOf = (jsx: string): string[] =>
   Array.from(jsx.matchAll(/<([A-Za-z][A-Za-z0-9]*)/g), (match) => match[1]);
 
-/** The prop NAMES one element is given, sorted. */
-const propsOf = (jsx: string, element: string): string[] => {
+/** One self-closing element's attribute source — everything between
+ *  `<Element` and its `/>` — the slice every reader below takes (the verify
+ *  review, 2026-10-16: an assertion on the whole block would let ANOTHER
+ *  element's attribute stand in for this one's). Throws by name when the
+ *  element is missing, so a renamed band fails HERE and not as an empty
+ *  comparison. */
+const tagOf = (jsx: string, element: string): string => {
   const start = jsx.indexOf(`<${element}`);
   const end = jsx.indexOf('/>', start);
   if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
-  return jsx
-    .slice(start + element.length + 1, end)
+  return jsx.slice(start + element.length + 1, end);
+};
+
+/** The prop NAMES one element is given, sorted. */
+const propsOf = (jsx: string, element: string): string[] =>
+  tagOf(jsx, element)
     .replace(/=\{[^{}]*\}/g, '')
     .replace(/="[^"]*"/g, '')
     .split(/\s+/)
     .filter((name) => /^[A-Za-z][\w-]*$/.test(name))
     .toSorted();
-};
 
 /**
  * The STRING-LITERAL attributes one element is given, exactly as written —
@@ -159,17 +170,11 @@ const propsOf = (jsx: string, element: string): string[] => {
  * read, never an expression's inside: a page and its twin spell those
  * through different hooks, and the names test above already holds them.
  */
-const literalsOf = (jsx: string, element: string): string[] => {
-  const start = jsx.indexOf(`<${element}`);
-  const end = jsx.indexOf('/>', start);
-  if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
-  return Array.from(
-    jsx
-      .slice(start + element.length + 1, end)
-      .matchAll(/(?<![\w-])[A-Za-z][\w-]*="[^"]*"/g),
+const literalsOf = (jsx: string, element: string): string[] =>
+  Array.from(
+    tagOf(jsx, element).matchAll(/(?<![\w-])[A-Za-z][\w-]*="[^"]*"/g),
     (match) => match[0],
   ).toSorted();
-};
 
 /**
  * The BARE boolean attributes one element is given — written with no `=` at
@@ -177,18 +182,13 @@ const literalsOf = (jsx: string, element: string): string[] => {
  * value, so `scaled={false}` reads as `scaled` there and would pass while the
  * page ships an unscaled band; this reader sees only the bare spelling.
  */
-const flagsOf = (jsx: string, element: string): string[] => {
-  const start = jsx.indexOf(`<${element}`);
-  const end = jsx.indexOf('/>', start);
-  if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
-  return jsx
-    .slice(start + element.length + 1, end)
+const flagsOf = (jsx: string, element: string): string[] =>
+  tagOf(jsx, element)
     .replace(/=\{[^{}]*\}/g, '=VALUE')
     .replace(/="[^"]*"/g, '=VALUE')
     .split(/\s+/)
     .filter((name) => /^[A-Za-z][\w-]*$/.test(name))
     .toSorted();
-};
 
 /** The numbers band's two settings as Home and the Team page write them. */
 const PAGE_GROUND_AT_THE_START = ['align="start"', 'ground="page"'];
@@ -237,9 +237,10 @@ const CLINIC_NUMBERS = [
 ];
 
 describe('the Team page and its story twin — read off their source', () => {
-  it('returns the same bands in the same order: h1 → doctors → staff → numbers → map', () => {
+  it('returns the same bands in the same order: doctors (the hero’s <h1> inside) → staff → numbers → map', () => {
+    // No <h1> of the page's own since 2026-10-15: the doctors band's page
+    // opener holds it (D12); until then an `sr-only` one opened this list.
     expect(bandsOf(TEAM.page)).toEqual([
-      'h1',
       'DoctorShowcase',
       'TeamRoster',
       'DoctorStats',
@@ -265,17 +266,50 @@ describe('the Team page and its story twin — read off their source', () => {
   });
 
   it('tells the doctors band it opens the FIRST SCREEN — page and twin alike (D9)', () => {
-    // The band then preloads its first picture, this page's largest paint.
-    // Losing the prop breaks nothing visible: this line is what notices.
+    // The band then preloads its first picture, on this page's first screen
+    // at every width (its largest paint at a 768 tablet; the hero's <h1> is
+    // elsewhere since 2026-10-15 — DoctorShowcase D9). Losing the prop breaks
+    // nothing visible: this line is what notices.
     expect(propsOf(TEAM.page, 'DoctorShowcase')).toEqual([
       'doctors',
-      'eyebrow',
       'firstScreen',
-      'title',
+      'hero',
     ]);
     expect(propsOf(TEAM.twin, 'DoctorShowcase')).toEqual(
       propsOf(TEAM.page, 'DoctorShowcase'),
     );
+  });
+
+  it('opens the doctors band with its PAGE opener — `hero`, the words `team.hero.title` and `team.hero.lead` — and never the band opener’s eyebrow and title, page and twin alike (2026-10-15, D12)', () => {
+    // The owner: "implement something similar instead of \"FAMILIA PREMIUM
+    // SMILE / Specialiștii cu care ne mândrim\" on the echipa page" — "this
+    // must take place only on the echipa page". Home's band keeps its eyebrow
+    // and title (its own case below).
+    for (const [name, source] of [
+      ['page', teamPage],
+      ['twin', teamTwin],
+    ] as const) {
+      // The object may be written on one line or across several (prettier
+      // keeps either), its last property with or without a comma.
+      expect(stripComments(source), name).toMatch(
+        /const hero = \{\s*title: t\('hero\.title'\),\s*lead: t\('hero\.lead'\),?\s*\};/,
+      );
+    }
+    for (const jsx of [TEAM.page, TEAM.twin]) {
+      // …and THAT `hero` is the one the band gets: `propsOf` reads names
+      // alone, so another object under the same name would pass it (the TS
+      // review, 2026-10-15) — read on the band's own tag, so another
+      // element's `hero={hero}` cannot stand in for it (the verify review,
+      // 2026-10-16).
+      expect(tagOf(jsx, 'DoctorShowcase')).toMatch(/\bhero=\{hero\}/);
+      expect(propsOf(jsx, 'DoctorShowcase')).not.toContain('eyebrow');
+      expect(propsOf(jsx, 'DoctorShowcase')).not.toContain('title');
+    }
+    // …and both keys exist: next-intl would only log a miss and print the
+    // key path as the page's <h1>. The other four files are held to the same
+    // keys by tests/unit/translation-parity.test.ts.
+    expect(typeof ro.team.hero.title).toBe('string');
+    expect(typeof ro.team.hero.lead).toBe('string');
   });
 
   it('titles the staff band — its eyebrow, its title and its members — page and twin alike (owner, 2026-10-02)', () => {

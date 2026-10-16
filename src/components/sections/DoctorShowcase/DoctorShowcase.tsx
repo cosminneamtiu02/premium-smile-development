@@ -5,7 +5,12 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  PageHero,
+  type PageHeroProps,
+} from '@/components/sections/PageHero/PageHero';
+import {
   PersonnelCard,
+  type PersonnelHeadingLevel,
   type PersonnelLink,
   type PersonnelPhoto,
 } from '@/components/sections/PersonnelCard/PersonnelCard';
@@ -18,26 +23,29 @@ import {
 import { Ribbon, RibbonStation } from '@/components/ui/Ribbon/Ribbon';
 import { cx } from '@/lib/cx/cx';
 
-// sections/DoctorShowcase — the clinic's doctors as a band: an eyebrow over an
-// <h2>, then every doctor as the doctor card (sections/PersonnelCard, its D17)
-// in one column that the floss ribbon wraps (ui/Ribbon, CLAUDE.md §15.26). The
-// SAME band on two pages — the Home page, under the Hero, and the Team page,
-// which it opens. Built to the /new-section composition contract of
-// 2026-09-30 on the owner's dispatch, verbatim: "ok. make this the official dr
-// card under personell card and i'll keep working on it. integrate it in the
-// page and crete it as a section in the home page and in the personell page
-// with heading and eyebrow smth in the direction of specialistii cu care ne
-// mandrim familia premium smile." The decision numbers below are that
-// contract's D1–D8 — and D9, the first screen's eager picture, added the same
-// day, D10, THE SCALE, on 2026-10-01, and D11, THE SLIMMER RIBBON, on
-// 2026-10-02 — and are the anchors other files cite (§17.7 — never a line
+// sections/DoctorShowcase — the clinic's doctors as a band: an opener, then
+// every doctor as the doctor card (sections/PersonnelCard, its D17) in one
+// column that the floss ribbon wraps (ui/Ribbon, CLAUDE.md §15.26). The SAME
+// band on two pages — the Home page, under the Hero, where it opens with an
+// eyebrow over its own <h2>, and the Team page, which it opens, since
+// 2026-10-15 with the page's own <h1> over a lead (D12). Built to the
+// /new-section composition contract of 2026-09-30 on the owner's dispatch,
+// verbatim: "ok. make this the official dr card under personell card and i'll
+// keep working on it. integrate it in the page and crete it as a section in
+// the home page and in the personell page with heading and eyebrow smth in
+// the direction of specialistii cu care ne mandrim familia premium smile."
+// The decision numbers below are that contract's D1–D8 — and D9, the first
+// screen's eager picture, added the same day, D10, THE SCALE, on 2026-10-01,
+// D11, THE SLIMMER RIBBON, on 2026-10-02, and D12, THE PAGE OPENER, on
+// 2026-10-15 — and are the anchors other files cite (§17.7 — never a line
 // number; D10's GATES among them, and since 2026-10-02 ui/Container's THE BAND
 // SCALE, which holds the regime D10 invented and cites D10 for its numbers
 // and for what it trades).
 //
 // ── D1 · DUMB, PROPS-IN, ZERO KEYS — the PriceList / Hero / DoctorIntro shape.
-// Every string that arrives here is FINISHED: the eyebrow, the title, each
-// doctor's name, specialty and words, the link's label and its href — already
+// Every string that arrives here is FINISHED: the eyebrow, the title (or,
+// under the page opener, the hero's title and lead — D12), each doctor's
+// name, specialty and words, the link's label and its href — already
 // locale-prefixed by the page's localeHref(). No t(), no message key, no
 // import of lib DATA and no `Locale`: the PAGE is the populator — both pages,
 // through app/[locale]/team/populate.ts's one walk — and this file could not
@@ -54,7 +62,8 @@ import { cx } from '@/lib/cx/cx';
 // Omit refuses a typed object, but TypeScript exempts a hyphenated attribute
 // WRITTEN IN JSX from its excess-property check, so `aria-labelledby="…"` on
 // the band compiles — and then loses to the band's own, which rides after
-// the spread (G2 typescript, 2026-09-30).
+// the spread (G2 typescript, 2026-09-30). Under the page opener the <section>
+// names nothing at all — D12's THE NAME.
 //
 // ── D3 · THE RIBBON, ROUTE B (SC 1.3.1; ui/Ribbon's THE COLUMN AS A LIST). A
 // column of doctors is a list, and it stays one inside the ribbon:
@@ -86,6 +95,8 @@ import { cx } from '@/lib/cx/cx';
 // own size (the DoctorProfile / ClinicLocation spelling, ui/Container's recipe
 // rule 3) — and inside the regime it is drawn in the band's design pixel like
 // every other length (D10): the box that remaps the step is the box it sits on.
+// Under the page opener the top is the blog hero's room instead, and the rest
+// of this paragraph holds as written — D12's THE ROOM ABOVE.
 //
 // ── D5 · SIDES ALTERNATE BY INDEX — `start`, `end`, `start`, … — because the
 // ribbon mirrors every second card and its long side wave runs down the side
@@ -102,47 +113,57 @@ import { cx } from '@/lib/cx/cx';
 // ── D6 · HEADING LEVELS. The band's title is an <h2> (SectionHeading's
 // default level, at its `band` step), each doctor's name an <h3>
 // (`headingLevel={3}`) — the outline reads page <h1> → this band's <h2> → one
-// <h3> per doctor, one level at a time on both pages (§9). The card keeps one
-// size for the name at both levels — ui/Heading's `name` step since
-// 2026-10-10, `band` from the card's 24rem up and 24px beside the phone
-// header's round photo (PersonnelCard D4, D20) — so the level is the
-// outline's and never the look's.
+// <h3> per doctor, one level at a time (§9): Home's, under the band opener.
+// Under the page opener, the Team page's, the page's <h1> is PageHero's and
+// every name an <h2> — D12's THE OUTLINE. The card keeps one size for the
+// name at both levels — ui/Heading's `name` step since 2026-10-10, `band`
+// from the card's 24rem up and 24px beside the phone header's round photo
+// (PersonnelCard D4, D20) — so the level is the outline's and never the
+// look's.
 //
 // ── D7 · EMPTY RENDERS NOTHING — `null`: no landmark, no heading, no ribbon.
 // A titled band with no card is a promise with nothing behind it. The early
 // return sits AFTER useId(), never before it: hooks run in the same order on
-// every render (the Rules of Hooks).
+// every render (the Rules of Hooks). Under the page opener an empty list
+// renders the hero alone — D12's AN EMPTY LIST.
 //
 // ── D8 · ISLANDS (§16). No 'use client' in this file, no state, no handler:
 // useId is the only hook, and it is server-safe. The <section>, its name, the
-// eyebrow, the <h2> and every card compile into the page's static HTML. The
-// ONE island it mounts is ui/Ribbon — an effect starts the drawing after
-// mount, and the server HTML carries the ribbon's empty layer and no canvas —
-// plus ui/Image's optimizer island under each picture (PersonnelCard D11),
-// which every page with a photograph already pays. The cards are
+// eyebrow, the <h2> (under the page opener, PageHero's <h1> and lead — a
+// Server Component too, D12) and every card compile into the page's static
+// HTML. The ONE island it mounts is ui/Ribbon — an effect starts the drawing
+// after mount, and the server HTML carries the ribbon's empty layer and no
+// canvas — plus ui/Image's optimizer island under each picture (PersonnelCard
+// D11), which every page with a photograph already pays. The cards are
 // server-rendered children handed THROUGH the ribbon, never re-rendered by it.
 // DoctorShowcase.test.tsx pins the directive's absence, the one hook and the
 // whole import surface from the source text, because no runtime assertion can
 // see any of them.
 //
-// ── D9 · THE FIRST SCREEN — the page tells the band, the band tells ONE card
-// (2026-09-30, MEASURED by the planner on this lane's built export with
-// Chromium's largest-contentful-paint entries). On the Team page, which this
-// band opens, the FIRST doctor's cutout is the page's LCP element (§10.6) —
-// 226 × 302 on a 390 phone (since ui/Container's PHONE GUTTER of 2026-10-09:
-// 276.6 × 368.8 on a 390 phone, 262.7 × 350.2 at a 390 window behind a
-// classic scrollbar — the geometry the 226 × 302 was — still the LCP,
-// re-measured), 288 × 384 at 1280 and 1920, still the LCP at 1366 × 633 —
-// and it shipped lazy, with no `fetchpriority` and no preload link. (Since
-// PersonnelCard's D20 of 2026-10-10 a PHONE draws that cutout in a 112px
-// circle, and there the page's largest paint is the first card's quote —
-// measured at 390: 45,870px² of quote against 12,544 of photo; every tablet,
-// laptop and desktop keeps the cutout as the LCP. The preload stays: the
-// circle is on the phone's first screen too, and the page cannot know the
-// card's width before it is laid out — a phone `sizes` entry is D20's
-// recorded lever.) On Home
-// the band sits under the Hero and, since 2026-10-01, under the clinic's
-// numbers too (the owner's order), the first cutout at y ≈ 1655 at a
+// ── D9 · THE FIRST SCREEN — the page tells the band, the band tells ONE card.
+// THE FIRST MEASUREMENT (2026-09-30, the planner, on this lane's built export
+// with Chromium's largest-contentful-paint entries): on the Team page, which
+// this band opens, the FIRST doctor's cutout was the page's LCP element
+// (§10.6) — 226 × 302 on a 390 phone (since ui/Container's PHONE GUTTER of
+// 2026-10-09: 276.6 × 368.8 on a 390 phone, 262.7 × 350.2 at a 390 window
+// behind a classic scrollbar — the geometry the 226 × 302 was — still the
+// LCP, re-measured), 288 × 384 at 1280 and 1920, still the LCP at 1366 × 633
+// — and it shipped lazy, with no `fetchpriority` and no preload link. (From
+// PersonnelCard's D20 of 2026-10-10 a PHONE drew that cutout in a 112px
+// circle, and there the page's largest paint was the first card's quote —
+// measured at 390: 45,870px² of quote against 12,544 of photo.)
+// SINCE D12 (2026-10-15) THE HERO'S <h1> IS THE TEAM PAGE'S LCP — MEASURED
+// by the G2 React review with the same entries on the built export, in
+// Romanian and in German: the page opener's heading at 390 × 844,
+// 1280 × 800, 1401 × 1063, 1536 × 864 and 1920 × 1080, and the first cutout
+// only at 768 × 1024. DECISION (the planner, 2026-10-16): the Team page KEEPS
+// `firstScreen`. The first cutout stands in the first screen at every one of
+// those windows — its card's top at 538px on the 390 × 844 phone, 612px at
+// 1401 × 1063, 805px at 1920 × 1080 — at 768 it IS the LCP, and the blog
+// list keeps the same arrangement (its first card's picture preloads while
+// its <h1> is the LCP on laptops). The page's one word is the lever.
+// On Home the band sits under the Hero and, since 2026-10-01, under the
+// clinic's numbers too (the owner's order), the first cutout at y ≈ 1655 at a
 // 1280 × 800 window (≈ 1103 right under the Hero, before the band scaled),
 // and the hero's picture is the LCP: lazy is RIGHT there (§11 — "lazy-loading
 // below the fold, eager + high-priority for the hero"). The band cannot tell
@@ -151,10 +172,12 @@ import { cx } from '@/lib/cx/cx';
 // browser's preload scanner reads before any script runs (§16). So the PAGE
 // says it, with `firstScreen` (default false), and when it is true the card
 // at index 0 — and no other — takes PersonnelCard's `preload` (its D18), the
-// pair sections/DoctorIntro gives its own cutout. ONE card: a page has one
-// LCP element, and a second eager picture would only compete with it for the
-// first bytes. `firstScreen` is destructured before `{...rest}`, so it never
-// reaches the <section>.
+// pair sections/DoctorIntro gives its own cutout. ONE card: a second eager
+// picture would only compete with the first, and with the hero, for the
+// first bytes. The preload holds on a phone too, where the circle stands in
+// the first screen and the page cannot know the card's width before it is
+// laid out — a phone `sizes` entry is D20's recorded lever. `firstScreen` is
+// destructured before `{...rest}`, so it never reaches the <section>.
 //
 // ── D10 · THE SCALE (2026-10-01). The owner, verbatim: "so about the doctors
 // component with the line. i like how it looks on phone and tablet and i want
@@ -444,8 +467,9 @@ import { cx } from '@/lib/cx/cx';
 //
 // ── D11 · THE SLIMMER RIBBON (2026-10-02). The owner, verbatim: "AND very
 // important on desktop, laptops whatever screen larger than tablet make it
-// 30% thinner. on tablet phone etc, the width is fine." RHYTHM's OWN string
-// declares `--ribbon-width-share: 0.7` under the regime's very variant chain —
+// 30% thinner. on tablet phone etc, the width is fine." The rhythm box's OWN
+// classes (SHARE, below, worn under either opener — D12) declare
+// `--ribbon-width-share: 0.7` under the regime's very variant chain —
 // a mouse or trackpad, an engine that registers custom properties, a column of
 // at least max(56rem, 896px) — and ui/Ribbon's drawing reads it off its root
 // (lib/ribbon-draw, THE WIDTH SHARE): the ribbon is drawn at 70 % of its
@@ -469,6 +493,75 @@ import { cx } from '@/lib/cx/cx';
 // window's 1.375 (tests/e2e/doctor-showcase.spec.ts measures the painted
 // width). One class, one number: the lever.
 //
+// ── D12 · THE PAGE OPENER (2026-10-15). The owner, verbatim: "take the hero
+// section of the blog page with all blog articles and implement something
+// similar instead of "FAMILIA PREMIUM SMILE / Specialiștii cu care ne
+// mândrim" on the echipa page" — and "this must take place only on the
+// echipa page". So the band takes ONE of two openers, a discriminated pair of
+// props that the types keep apart (one opener at a time, and each whole):
+//   · THE BAND OPENER — `eyebrow` and `title`, `hero` refused: Home's, the
+//     band as it stood, every byte of its output as before (D2, D4, D6 and D7
+//     as written);
+//   · THE PAGE OPENER — `hero: { title, lead }`, `eyebrow` and `title`
+//     refused: the Team page's. The blog list's centred hero, moved the same
+//     day into the shared composition sections/PageHero, opens the band: the
+//     page's <h1> on ui/Heading's `hero` step over a muted lead, both
+//     centred, the copy's own line breaks — the stairway — and the heading's
+//     reach past the column inside the band scale (PageHero's header has the
+//     record). Both strings arrive finished, each with its line breaks (D1);
+//     the PAGE reads them from its message files. Wherever a `hero` is given
+//     the page opener is the one drawn; a null one counts as none (`== null`,
+//     so plain JavaScript or a cast can never read a title off nothing).
+// What the page opener changes, each for a stated reason:
+//   · THE NAME — none. The <section> is UNNAMED: no `aria-labelledby` and no
+//     `aria-label`, both reset to undefined after `{...rest}` (D2's belt, so a
+//     smuggled one never lands). The page's <main> is the landmark, and a
+//     region named by the page's <h1> would only repeat the page's name to a
+//     screen reader — the blog list's reasoning (sections/PostList's THE BAND),
+//     the 404 page's and the privacy policy's before it. useId is still called,
+//     first and unconditionally (D7's Rules of Hooks), and simply unused.
+//   · THE ROOM ABOVE — the blog hero's, `pt-16 @lg:pt-24 @3xl:pt-32`: 64 / 96 /
+//     128 on the column's own steps, 128 × s inside the band scale (whose
+//     step lies past the 48rem one), in place of the band top (D4) — the room
+//     a page's <h1> stands in under the sticky header. Everything else on the
+//     rhythm box is the band opener's to the class: the flex column, no
+//     bottom padding and no gap (D4), D11's width share and ui/Container's two
+//     strings (ROOM and RHYTHM, below).
+//   · THE AIR UNDER THE LEAD — the ribbon's own head room above the first
+//     card, exactly as under the band opener's heading (D4): `--ribbon-k` +
+//     0.16 of the ribbon's unit. MEASURED (DoctorShowcase.test.tsx, THE SCALE,
+//     measured — the real stylesheet and faces): 56.4px from the lead to the
+//     first card in a 390 phone's 351px column, and 103.7px at the owner's
+//     reference column — the 1401 window, a design pixel of one — so 103.7 × s
+//     on every laptop and desktop. The blog's lead stands 76.8px above its
+//     cards on a column under 48rem and 96 × s from it — so the Team page's
+//     first card sits ≈ 20px NEARER its lead on a phone, ≈ 5px nearer on a 768
+//     tablet (72.2 against 76.8) and ≈ 8 design pixels FURTHER on a laptop or
+//     a desktop. A KNOWN DIFFERENCE AND A LEVER: a gap on the rhythm box would
+//     ADD to the head room (D4's reason it has none), so matching the blog
+//     means a gap of the difference, per step, on the page opener alone — not
+//     taken: the ribbon's head room is the band's air under either opener.
+//   · THE OUTLINE — the page's <h1> (PageHero's), then each doctor's name an
+//     <h2> (`headingLevel={2}`, HEADING_LEVEL below): one level at a time
+//     (§9), nothing skipped. PersonnelCard keeps ONE name step at both levels
+//     (its D4), so no card looks any different for it (D6).
+//   · AN EMPTY LIST renders the hero alone — the <section>, the <h1> and the
+//     lead, no ribbon. D7's `null` stays the band opener's: there the band is a
+//     band WITHIN a page, and a titled band over nothing is a promise with
+//     nothing behind it. Under the page opener the band IS the page's opener,
+//     and `null` would leave the page without its one <h1> (§9) — the blog
+//     list's THE EMPTY STATE, the same reasoning. A state the shipped site
+//     never reaches — tests/unit/team-data.test.ts fails CI on an empty
+//     doctors list ("ships both lists with rows") — kept so that the band
+//     never drops the page's heading for a story, a test or any caller that
+//     hands it none.
+// `firstScreen` (D9) is the same under both: the Team page passes it, and the
+// first card's picture preloads under the hero exactly as it did under the
+// heading — though the hero's <h1> is now that page's LCP at every window
+// measured but a 768 tablet's, and the planner kept the preload on purpose
+// (D9 has the measurements and the reasons). Home passes the band opener and
+// nothing of it moved.
+//
 // ── FIDELITY (§6.8). The remaining native props and `ref` land on the
 // <section>; a caller's className merges LAST (placement only). The band owns
 // no outer margin (§6.4) — the page owns the rhythm BETWEEN bands. Its own
@@ -485,7 +578,8 @@ import { cx } from '@/lib/cx/cx';
 export type DoctorShowcaseDoctor = Readonly<{
   /** The React key, nothing else — lib/team's id. */
   id: string;
-  /** The full name, finished text — the card's <h3> (D6). */
+  /** The full name, finished text — an <h3> under the band opener, an <h2>
+   *  under the page opener (D6, D12). */
   name: string;
   /** The specialty, finished text — the card's eyebrow. */
   position: string;
@@ -497,35 +591,103 @@ export type DoctorShowcaseDoctor = Readonly<{
   profile: PersonnelLink;
 }>;
 
-type DoctorShowcaseOwnProps = Readonly<{
+/**
+ * THE PAGE OPENER's two strings (D12) — sections/PageHero's own `title` and
+ * `lead`, picked from its props so the two can never drift apart: the page's
+ * <h1> with ONE line break where the stairway turns and its lead with TWO,
+ * finished. The page reads both from its message files and hands them over
+ * whole.
+ */
+export type DoctorShowcaseHero = Readonly<
+  Pick<PageHeroProps, 'title' | 'lead'>
+>;
+
+/** THE BAND OPENER (Home — D2, D6): an eyebrow over the band's own <h2>,
+ *  which names the region. */
+type DoctorShowcaseBandOpener = Readonly<{
   /** The mono micro-label over the title, finished text (§8.1). */
   eyebrow: string;
   /** The band's <h2> — and, through aria-labelledby, the region's name (D2). */
   title: string;
+  /** Refused here: one opener at a time (D12). */
+  hero?: never;
+}>;
+
+/** THE PAGE OPENER (the Team page — D12): the page's <h1> over its lead,
+ *  through sections/PageHero; the <section> names nothing. */
+type DoctorShowcasePageOpener = Readonly<{
+  /** The page's <h1> and its lead — the hero (D12). */
+  hero: DoctorShowcaseHero;
+  /** Refused here: the page opener has no eyebrow (D12). */
+  eyebrow?: never;
+  /** Refused here: the page opener's heading is `hero.title` (D12). */
+  title?: never;
+}>;
+
+/** What both openers share: the doctors and the first-screen flag. */
+type DoctorShowcaseColumnProps = Readonly<{
   /**
    * Every doctor, in the page's order, printed as given. EMPTY renders
-   * nothing at all: no region, no heading, no ribbon (D7).
+   * nothing at all under the band opener — no region, no heading, no ribbon
+   * (D7) — and the hero alone under the page opener (D12).
    */
   doctors: readonly DoctorShowcaseDoctor[];
   /**
    * True when the band is on the FIRST SCREEN of its page — the Team page,
-   * which it opens: the FIRST card's picture then preloads at high priority,
-   * because it is the page's LCP element (D9). Home mounts the band under the
-   * Hero and leaves it off.
+   * which it opens: the FIRST card's picture then preloads at high priority.
+   * It stands in the first screen at every window measured, and it IS the
+   * page's LCP element on a 768 tablet; at the other windows the hero's <h1>
+   * is, and the preload was kept on purpose (D9). Home mounts the band under
+   * the Hero and leaves it off.
    * @default false
    */
   firstScreen?: boolean;
 }>;
 
+type DoctorShowcaseOwnProps = (
+  DoctorShowcaseBandOpener | DoctorShowcasePageOpener
+) &
+  DoctorShowcaseColumnProps;
+
+/** Every own key, both openers' included — the names the native surface
+ *  gives up (DoctorShowcaseProps). */
+type DoctorShowcaseOwnKey =
+  | keyof DoctorShowcaseBandOpener
+  | keyof DoctorShowcasePageOpener
+  | keyof DoctorShowcaseColumnProps;
+
+/** Which opener a render draws (D12): the page opener wherever `hero` is
+ *  given, the band opener otherwise. */
+type Opener = 'band' | 'page';
+
+/** THE ROOM ABOVE, by opener (D4, D12) — the band top under the band
+ *  opener's heading, the blog hero's room above the page opener's <h1>. A
+ *  table of whole classes: Tailwind reads class names from source text. */
+const ROOM: Record<Opener, string> = {
+  band: 'pt-12 @lg:pt-16 @3xl:pt-20',
+  page: 'pt-16 @lg:pt-24 @3xl:pt-32',
+};
+
+/** THE RIBBON'S WIDTH SHARE (D11) — 0.7 under the regime's very chain, worn
+ *  under either opener: the one class of the band's own the regime decides,
+ *  spelled once. */
+const SHARE = 'scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]';
+
+/** The rhythm box's classes for one opener (RHYTHM, below). */
+const rhythmOf = (opener: Opener): string =>
+  cx('flex flex-col', ROOM[opener], SHARE, bandColumnClasses, bandScaleClasses);
+
 /**
- * THE RHYTHM BOX (D4, D10) — the band's own rhythm, then ui/Container's two
- * band-scale strings (D10's THE PROMOTION; ui/Container's THE BAND SCALE and
- * its recipe rule 5, §15.32), composed once, here, at module scope. Tailwind
- * reads class names from source text, so every class stands whole inside a
- * string literal: the band's own in this file, the scale's in Container.tsx.
- *   · THE BAND'S OWN: a flex column, the band top and nothing below it (D4),
- *     and the ribbon drawn at 0.7 of its width under the regime's chain
- *     (D11) — the one class of the band's own that the regime decides.
+ * THE RHYTHM BOX (D4, D10, D12) — the band's own rhythm, then ui/Container's
+ * two band-scale strings (D10's THE PROMOTION; ui/Container's THE BAND SCALE
+ * and its recipe rule 5, §15.32), composed once per opener, here, at module
+ * scope. Tailwind reads class names from source text, so every class stands
+ * whole inside a string literal: the band's own in this file, the scale's in
+ * Container.tsx.
+ *   · THE BAND'S OWN: a flex column, the opener's room above (ROOM) and
+ *     nothing below it (D4), and the ribbon drawn at 0.7 of its width under
+ *     the regime's chain (SHARE, D11) — the one class of the band's own that
+ *     the regime decides.
  *   · `bandColumnClasses`: `mx-auto` and `w-full`, and THE CAP behind
  *     `scalable:` — the first two of D10's GATES, a mouse or trackpad in an
  *     engine that registers custom properties — on the box's maximum width,
@@ -537,81 +699,110 @@ type DoctorShowcaseOwnProps = Readonly<{
  *     design pixel, min(column, CAP) / REFERENCE times `--band-zoom` (1:
  *     nothing in this band sets it), declared on this box, and every theme
  *     length on this box and inside it measured in it (`design-scale`).
- * The band spells none of the regime's strings: tests/unit/design-scale.test.ts
- * holds the two to their one spelling in Container.tsx (the cap twice there,
- * KEEP IN SYNC), and D11's class — the chain re-spelled once, here — to that
- * same chain; DoctorShowcase.test.tsx holds this composition byte for byte. The classes this box wore until 2026-10-02, in a new order (an
- * attribute's order never decides a style), plus `w-full` and the zoom
- * factor — and neither moves a pixel.
+ * The two openers' boxes differ in their room above and in nothing else
+ * (D12). The band spells none of the regime's strings:
+ * tests/unit/design-scale.test.ts holds the two to their one spelling in
+ * Container.tsx (the cap twice there, KEEP IN SYNC), and D11's class — the
+ * chain re-spelled once, here — to that same chain; DoctorShowcase.test.tsx
+ * holds the band opener's composition byte for byte. The classes the band
+ * opener's box wore until 2026-10-02, in a new order (an attribute's order
+ * never decides a style), plus `w-full` and the zoom factor — and neither
+ * moves a pixel.
  */
-const RHYTHM = cx(
-  'flex flex-col pt-12 @lg:pt-16 @3xl:pt-20 scalable:@4xl:@min-[896px]:[--ribbon-width-share:0.7]',
-  bandColumnClasses,
-  bandScaleClasses,
-);
+const RHYTHM: Record<Opener, string> = {
+  band: rhythmOf('band'),
+  page: rhythmOf('page'),
+};
+
+/** Each doctor's name, by opener (D6, D12): an <h3> under the band's <h2>,
+ *  an <h2> under the page's <h1> — the outline's level, never the look's. */
+const HEADING_LEVEL: Record<Opener, PersonnelHeadingLevel> = {
+  band: 3,
+  page: 2,
+};
 
 export type DoctorShowcaseProps = DoctorShowcaseOwnProps &
-  // The native <section> surface, minus the band's own names and minus
-  // `children` (content arrives as `doctors`; without the Omit a caller could
-  // nest something, type-check, and watch it vanish — the SectionHeading
-  // precedent). `title` leaves with the own props: it is a real HTML
-  // attribute (a tooltip), and the two meanings would otherwise intersect.
-  // The two ARIA naming attributes leave too (D2). React 19 carries `ref`
-  // inside these props (§6.8).
+  // The native <section> surface, minus the band's own names — both
+  // openers' — and minus `children` (content arrives as `doctors`; without
+  // the Omit a caller could nest something, type-check, and watch it vanish
+  // — the SectionHeading precedent). `title` leaves with the own props: it
+  // is a real HTML attribute (a tooltip), and the two meanings would
+  // otherwise intersect. The two ARIA naming attributes leave too (D2, D12).
+  // React 19 carries `ref` inside these props (§6.8).
   Omit<
     ComponentPropsWithRef<'section'>,
-    keyof DoctorShowcaseOwnProps | 'children' | 'aria-label' | 'aria-labelledby'
+    DoctorShowcaseOwnKey | 'children' | 'aria-label' | 'aria-labelledby'
   >;
 
 export function DoctorShowcase({
   eyebrow,
   title,
+  hero,
   doctors,
   firstScreen = false,
   className,
   ...rest
 }: DoctorShowcaseProps): ReactElement | null {
-  // Hooks first, the early return after (D7).
+  // Hooks first, the early return after (D7) — useId is called under either
+  // opener, and the page opener simply leaves it unused (D12). The hero is
+  // tested with `== null`, so a null from plain JavaScript or a cast draws
+  // the band opener instead of reading a title off nothing.
   const headingId = useId();
+  const opener: Opener = hero == null ? 'band' : 'page';
 
-  if (doctors.length === 0) return null;
+  // EMPTY: nothing under the band opener (D7), the hero alone under the page
+  // opener (D12's AN EMPTY LIST).
+  if (opener === 'band' && doctors.length === 0) return null;
+
+  // THE NAME (D2, D12): the band opener's region is named by its <h2>; the
+  // page opener's <section> names nothing, a smuggled pair reset.
+  const naming =
+    opener === 'band'
+      ? { 'aria-labelledby': headingId }
+      : { 'aria-label': undefined, 'aria-labelledby': undefined };
 
   return (
     // BAND OUTER: the semantic element, full-bleed, owning the paint and
     // nothing else. `{...rest}` rides FIRST so a caller's stray attribute can
     // never replace the name pair; className is merged caller-last (§6.8).
-    <section
-      {...rest}
-      aria-labelledby={headingId}
-      className={cx('bg-page', className)}
-    >
+    <section {...rest} {...naming} className={cx('bg-page', className)}>
       <Container>
-        {/* The rhythm box — the band top and nothing below: the ribbon's own
-            head and tail room are the band's air (D4) — and, wherever D10's
-            three GATES hold, the band's scale: ui/Container's THE BAND SCALE,
-            which every band of Home and Team wears (D10's THE PROMOTION). */}
-        <div className={RHYTHM}>
-          <SectionHeading eyebrow={eyebrow} title={title} id={headingId} />
+        {/* The rhythm box — the opener's room above and nothing below: the
+            ribbon's own head and tail room are the band's air (D4, D12) —
+            and, wherever D10's three GATES hold, the band's scale:
+            ui/Container's THE BAND SCALE, which every band of Home and Team
+            wears (D10's THE PROMOTION). */}
+        <div className={RHYTHM[opener]}>
+          {/* THE OPENER — the eyebrow over the band's <h2> (D2), or the
+              page's <h1> over its lead (D12). */}
+          {hero == null ? (
+            <SectionHeading eyebrow={eyebrow} title={title} id={headingId} />
+          ) : (
+            <PageHero title={hero.title} lead={hero.lead} />
+          )}
           {/* THE RIBBON, ROUTE B (D3): the root is the list, each station a
               wrapper item holding ONE card, the sides alternating (D5) and,
-              on the first screen, the first card's picture eager (D9). */}
-          <Ribbon role="list">
-            {doctors.map((doctor, index) => (
-              <RibbonStation key={doctor.id} role="listitem">
-                <PersonnelCard
-                  kind="doctor"
-                  headingLevel={3}
-                  side={index % 2 === 0 ? 'start' : 'end'}
-                  preload={firstScreen && index === 0}
-                  name={doctor.name}
-                  position={doctor.position}
-                  photo={doctor.photo}
-                  about={doctor.about}
-                  profile={doctor.profile}
-                />
-              </RibbonStation>
-            ))}
-          </Ribbon>
+              on the first screen, the first card's picture eager (D9). None
+              under the page opener with no doctor (D12). */}
+          {doctors.length > 0 ? (
+            <Ribbon role="list">
+              {doctors.map((doctor, index) => (
+                <RibbonStation key={doctor.id} role="listitem">
+                  <PersonnelCard
+                    kind="doctor"
+                    headingLevel={HEADING_LEVEL[opener]}
+                    side={index % 2 === 0 ? 'start' : 'end'}
+                    preload={firstScreen && index === 0}
+                    name={doctor.name}
+                    position={doctor.position}
+                    photo={doctor.photo}
+                    about={doctor.about}
+                    profile={doctor.profile}
+                  />
+                </RibbonStation>
+              ))}
+            </Ribbon>
+          ) : null}
         </div>
       </Container>
     </section>

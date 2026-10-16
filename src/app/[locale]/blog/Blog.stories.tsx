@@ -4,7 +4,7 @@ import { expect } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { PostList } from '@/components/sections/PostList/PostList';
-import { namedAs } from '@/components/sections/PostList/PostList.fixtures';
+import { namedAs } from '@/components/sections/PageHero/PageHero.fixtures';
 import { blogPagePath, pageCount, postsIn, postsOnPage } from '@/lib/blog/blog';
 import { localeHref } from '@/i18n/href';
 import { isLocale, type Locale } from '@/i18n/locales';
@@ -87,8 +87,8 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
  * The page's hero and its cards in `locale`: the <h1> is that language's
  * heading, and every card on the page is named by that language's title of its
  * post, in the list's order — so the words came from the story's language and
- * not from another. The heading is found by `namedAs` (PostList.fixtures), the
- * name the PostList folder's own suites use: the copy breaks it with a line
+ * not from another. The heading is found by `namedAs` (PageHero.fixtures), the
+ * name the hero's own suites use: the copy breaks it with a line
  * break and joins words with no-break spaces, and whitespace is collapsed on
  * both sides of the comparison — never matched raw, which held only because
  * dom-accessibility-api happens to keep the one line break (Chromium's own

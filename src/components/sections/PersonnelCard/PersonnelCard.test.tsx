@@ -668,9 +668,10 @@ describe('PersonnelCard — the portrait, decorative by construction (D3)', () =
   });
 
   it('loads lazily — a team grid sits below the fold (§11)', () => {
-    // Never `preload`: that is the LCP element's privilege (§10.6), and a page
-    // of portraits fetched eagerly would compete with it — since D18 the types
-    // refuse it on this kind outright.
+    // Never `preload`: that privilege is the first screen's — the LCP element
+    // (§10.6), or the one doctor picture beside it (D18). A page of portraits
+    // fetched eagerly would compete with it, and since D18 the types refuse
+    // it on this kind outright.
     const { container } = renderAuxiliary();
 
     expect(within(container).getByRole('presentation')).toHaveAttribute(
@@ -1793,7 +1794,7 @@ describe('PersonnelCard — doctor: eager only when the band asks (D18)', () => 
     }
   });
 
-  it('preloads at high priority when the band asks — the page’s LCP element (§10.6)', () => {
+  it('preloads at high priority when the band asks — the first screen’s picture (§10.6)', () => {
     // sections/DoctorIntro's pair, one band over. `preload` reaches next/image
     // only through ExportedImage's `...rest` (the Hero suite's note), so the
     // ABSENCE of lazy is what proves the optimizer did not swallow it.
@@ -1817,8 +1818,8 @@ describe('PersonnelCard — doctor: eager only when the band asks (D18)', () => 
     expect(link).toBeInstanceOf(HTMLLinkElement);
     // The SAME `sizes` as the <img> — D19's CUTOUT_SIZES, its pointer
     // condition and the scaled cell's 21vw included — or the preload would
-    // fetch a variant the <img> does not pick, and the page's largest paint
-    // would download twice.
+    // fetch a variant the <img> does not pick, and the first screen's
+    // picture would download twice.
     expect(link).toHaveAttribute('imagesizes', CUTOUT_SIZES);
     expect(link?.getAttribute('imagesizes')).toBe(cutout.getAttribute('sizes'));
     expect(link).toHaveAttribute('fetchpriority', 'high');

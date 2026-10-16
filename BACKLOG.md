@@ -108,7 +108,10 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     headings list announce the WHOLE heading — its second line, which ends on „prin blogul nostru",
     is what says the page is the blog — and that arrowing reads both heading lines and the lead's
     three (Chromium's accessible name has a space at the break, measured; the tests' library keeps
-    the break, so only a real screen reader proves it);
+    the break, so only a real screen reader proves it) — and the same on the Team page
+    (`/ro/team/`, `/de/team/`), whose `<h1>` and lead carry the same breaks since 2026-10-15
+    (CLAUDE.md §15.25 round 4): there the heading's second line, „și oamenii care te întâmpină la
+    clinică", is half of what it says;
   - the map — the corner buttons over Google's zoom controls at 320 and 390px, and the Tab order
     through Google's frame (COOKIES.md §7);
   - SC 2.4.11 Focus Not Obscured under the language banner — an ACCEPTED gap (the owner, 2026-10-03,
@@ -249,18 +252,21 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
 - **Today:** `team.showcase.eyebrow` — RO „Familia Premium Smile", EN "The Premium Smile family",
   DE „Die Premium-Smile-Familie", FR « La famille Premium Smile », IT «La famiglia Premium Smile»
   (the last four Claude's drafts) — the small mono label above „Specialiștii cu care ne mândrim"
-  in the doctors band (`sections/DoctorShowcase`), on Home and on the Team page. The title stays
-  unless the owner widens this entry.
+  in the doctors band (`sections/DoctorShowcase`), on Home ONLY since 2026-10-15: the Team page now
+  opens on the blog list's centred hero instead (CLAUDE.md §15.25 round 4), whose words —
+  `team.hero.*`, Claude's drafts — were written without „familia" on this entry's word. The title
+  stays unless the owner widens this entry.
 - **The work:** the five values in `src/messages/*.json` — the CMSR scan (CLAUDE.md §13) reads
   every `team.*` value, so a new label passes it or fails CI; the band's own fixtures that quote
   today's Romanian, `EYEBROW_RO` in DoctorShowcase.stories.tsx and `EYEBROW` in
   DoctorShowcase.test.tsx (the page twins read the key and follow by themselves; the e2e spells
   only the title); the records that quote it — CLAUDE.md §14's Home and Team rows and §15.25's
-  **Words**; and the screenshots that show it — Pages/Home, Pages/Team, and Sections/DoctorShowcase
-  if its fixtures follow.
+  **Words**; and the screenshots that show it — Pages/Home, and Sections/DoctorShowcase if its
+  fixtures follow (Pages/Team no longer shows it, since 2026-10-15).
 - **Directions, if useful when the time comes (drafts, not decisions):** a plain name for the
-  people — „Echipa medicală", „Medicii noștri"; not „Echipa noastră", which is already the Team
-  page's own `<h1>` (hidden, but read by screen readers just before this band).
+  people — „Echipa medicală", „Medicii noștri"; not „Echipa noastră", the words the Team page's
+  visible `<h1>` opens on since 2026-10-15 (until then that page's `sr-only` `<h1>`, read by
+  screen readers just before this band).
 
 ## 6 · Re-optimise the site for all its static content
 
@@ -320,6 +326,11 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   carry `TODO(owner): verify against the printed sheet` (§15.20).
 - **`src/lib/hero-slides/hero-slides.ts`:** the Home opener's three slogans and their picture
   descriptions are Claude's drafts in all five languages (§15.21 round 11) — to confirm or rewrite.
+- **The Team page's hero** (`team.hero.title` and `team.hero.lead` in `src/messages/*.json`, since
+  2026-10-15, CLAUDE.md §15.25 round 4): the heading „Echipa noastră: specialiștii cu care ne mândrim /
+  și oamenii care te întâmpină la clinică" and its three-line lead are Claude's drafts in all five
+  languages, each measured to step down like the blog's — to confirm or rewrite (a new wording must
+  pass the same measurements: the hero's scale test reads the message files).
 - **`src/content/blog/posts.json`** (the blog's list page, §15.39 — added 2026-10-11): the twelve
   posts are Claude's placeholder drafts — titles, summaries, dates and tags written so the blog
   page can be seen, attributed to the clinic's real doctors and illustrated with the clinic's own

@@ -88,6 +88,10 @@
   },
   "team": {
     "title": "Notre équipe",
+    "hero": {
+      "title": "Notre équipe : nos spécialistes, notre fierté,\net les personnes qui vous accueillent",
+      "lead": "Découvrez celles et ceux qui font vivre Premium Smile,\npour savoir, avant même votre première visite,\nqui vous attendra chez nous."
+    },
     "showcase": {
       "eyebrow": "La famille Premium Smile",
       "title": "Les spécialistes dont nous sommes fiers",

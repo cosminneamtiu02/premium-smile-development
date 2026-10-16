@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import de from '../../src/messages/de.json';
+import ro from '../../src/messages/ro.json';
 
 // THE DOCTORS BAND AND THE RIBBON'S FIRST MOUNT, against the built export
 // (owner, 2026-09-30 — "make this the official dr card under personell card …
@@ -37,7 +39,10 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 // doctors is in flight), and a spec that spelled two names would go red for
 // the wrong reason. The band's WORDS are spelled below, never imported —
 // they are this lane's message keys, and a silent rename should fail here
-// (the price specs' idiom).
+// (the price specs' idiom) — all but ONE: the Team page's hero heading
+// (HERO_TITLE), a draft of Claude's awaiting the owner, is read from the
+// message files, so a rewording never leaves a second copy behind here (the
+// TS and React reviews, 2026-10-15).
 //
 // THE BROWSER SPEAKS THE PAGE'S LANGUAGE (`locale` below): headless Chromium
 // reports en-US, which makes the shell's language-suggestion toast appear on
@@ -50,10 +55,22 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 
 type Locale = 'ro' | 'de';
 
-/** The band's `<h2>` — and, through aria-labelledby, its region's name. */
+/** The band's `<h2>` on HOME — and, through aria-labelledby, its region's
+ *  name: the band opener (DoctorShowcase D12). The Team page opens the band
+ *  with the page opener instead since 2026-10-15 — HERO_TITLE, below. */
 const BAND_TITLE: Record<Locale, string> = {
   ro: 'Specialiștii cu care ne mândrim',
   de: 'Spezialisten, auf die wir stolz sind',
+};
+
+/** The Team page's <h1>, the doctors band's page opener (sections/PageHero,
+ *  `team.hero.title`), READ from the message files: the copy's line break and
+ *  its no-break spaces are plain spaces to the accessible name, so every run
+ *  of whitespace is one space here. */
+const spoken = (text: string): string => text.replace(/\s+/g, ' ').trim();
+const HERO_TITLE: Record<Locale, string> = {
+  ro: spoken(ro.team.hero.title),
+  de: spoken(de.team.hero.title),
 };
 
 /** The card's one link, as it is painted. */
@@ -118,8 +135,12 @@ const readRibbon = (page: Page): Promise<RibbonState> =>
     [STATION, LAYER] as const,
   );
 
-const band = (page: Page, locale: Locale): Locator =>
-  page.getByRole('region', { name: BAND_TITLE[locale] });
+/** The doctors band: the one <section> that holds the ribbon's stations —
+ *  on Home a region named by its own <h2> (the band opener), on the Team page
+ *  unnamed since 2026-10-15 (the page opener, DoctorShowcase D12) — so it is
+ *  found by what it holds, never by a name; the name is checked apart (E). */
+const band = (page: Page): Locator =>
+  page.locator('main section', { has: page.locator(STATION) });
 
 /** Load a page and wait for the band's cards — `attached`, because the band
  *  sits below the fold on Home. */
@@ -200,7 +221,7 @@ test.describe('the band as the server sends it — no JavaScript', () => {
       page,
     }) => {
       await open(page, path);
-      const region = band(page, 'ro');
+      const region = band(page);
       const stations = region.locator(STATION);
       const count = await stations.count();
       expect(count).toBeGreaterThan(0);
@@ -244,10 +265,12 @@ test.describe('the band as the server sends it — no JavaScript', () => {
   test('on the Team page the FIRST picture is eager and preloaded, the rest lazy', async ({
     page,
   }) => {
-    // The band opens this page, and its first picture is the page's largest
-    // paint (measured — DoctorShowcase D9, PersonnelCard D18).
+    // The band opens this page, and its first picture is on the first screen
+    // at every width — the page's largest paint at a 768 tablet, the hero's
+    // <h1> elsewhere since 2026-10-15 (measured — DoctorShowcase D9,
+    // PersonnelCard D18).
     await open(page, '/ro/team/');
-    const pictures = band(page, 'ro').locator(`${STATION} img`);
+    const pictures = band(page).locator(`${STATION} img`);
     const count = await pictures.count();
     expect(count).toBeGreaterThan(0);
 
@@ -284,7 +307,7 @@ test.describe('the band as the server sends it — no JavaScript', () => {
   }) => {
     // Home's largest paint is the hero's photograph; the band is below it.
     await open(page, '/ro/');
-    const pictures = band(page, 'ro').locator(`${STATION} img`);
+    const pictures = band(page).locator(`${STATION} img`);
     const count = await pictures.count();
     expect(count).toBeGreaterThan(0);
 
@@ -308,7 +331,7 @@ test.describe('the band as the server sends it — no JavaScript', () => {
     page,
   }) => {
     await open(page, '/ro/team/');
-    const station = band(page, 'ro').locator(STATION).first();
+    const station = band(page).locator(STATION).first();
     const name = await station.getByRole('heading').innerText();
     const link = station.getByRole('link');
     const href = await link.getAttribute('href');
@@ -356,7 +379,7 @@ for (const [locale, path] of [
       await expectDrawn(page);
       expect(problems).toEqual([]);
 
-      const layer = band(page, locale).locator(LAYER);
+      const layer = band(page).locator(LAYER);
       await expect(layer).toHaveAttribute('aria-hidden', 'true');
       expect(
         await layer.evaluate((box) => getComputedStyle(box).pointerEvents),
@@ -431,7 +454,7 @@ test.describe('/ro/team/ — the ribbon never takes a click, a colour scheme or 
     await open(page, '/ro/team/');
     await expectDrawn(page);
 
-    const links = band(page, 'ro').getByRole('link');
+    const links = band(page).getByRole('link');
     const count = await links.count();
     for (let i = 0; i < count; i += 1) {
       const reached = await links.nth(i).evaluate((link) => {
@@ -446,7 +469,7 @@ test.describe('/ro/team/ — the ribbon never takes a click, a colour scheme or 
       expect(reached, `link ${i + 1} is under something`).toBe(true);
     }
 
-    const station = band(page, 'ro').locator(STATION).first();
+    const station = band(page).locator(STATION).first();
     const name = await station.getByRole('heading').innerText();
     const link = station.getByRole('link');
     const href = await link.getAttribute('href');
@@ -462,7 +485,7 @@ test.describe('/ro/team/ — the ribbon never takes a click, a colour scheme or 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await open(page, '/ro/team/');
     await expectDrawn(page);
-    const region = band(page, 'ro');
+    const region = band(page);
     const layer = region.locator(LAYER);
     const display = (): Promise<string> =>
       layer.evaluate((box) => getComputedStyle(box).display);
@@ -488,7 +511,7 @@ test.describe('/ro/team/ — the ribbon never takes a click, a colour scheme or 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await open(page, '/ro/team/');
     await expectDrawn(page);
-    const region = band(page, 'ro');
+    const region = band(page);
     const layer = region.locator(LAYER);
     const display = (): Promise<string> =>
       layer.evaluate((box) => getComputedStyle(box).display);
@@ -553,8 +576,12 @@ for (const locale of ['ro', 'de'] as const) {
     }) => {
       await open(page, `/${locale}/team/`);
 
-      // ONE outline root — the page's own, read and never seen.
+      // ONE outline root — the hero's, SEEN since 2026-10-15 (the doctors
+      // band's page opener; until then the page's own, `sr-only`).
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+      await expect(
+        page.getByRole('heading', { level: 1, name: HERO_TITLE[locale] }),
+      ).toBeVisible();
 
       // No level is skipped on the way down the page.
       const levels = await page
@@ -570,12 +597,22 @@ for (const locale of ['ro', 'de'] as const) {
         ).toBeLessThanOrEqual((levels[i - 1] ?? 0) + 1);
       }
 
-      // The band is a region named by its own title, each doctor's name a
-      // level-3 heading inside it.
-      const region = band(page, locale);
+      // The band OPENS the page: the hero's <h1> inside it, the <section>
+      // unnamed (a region named by the page's <h1> would repeat the page's
+      // name), no <h2> of the band's own, each doctor's name a level-2
+      // heading inside it (DoctorShowcase D12).
+      const region = band(page);
       await expect(
-        region.getByRole('heading', { level: 2, name: BAND_TITLE[locale] }),
+        region.getByRole('heading', { level: 1, name: HERO_TITLE[locale] }),
       ).toBeVisible();
+      await expect(region).not.toHaveAttribute('aria-labelledby');
+      await expect(region).not.toHaveAttribute('aria-label');
+      // EXACT: Playwright matches a name as a case-insensitive substring by
+      // default, and the Romanian hero's heading CONTAINS the old title
+      // („Echipa noastră: specialiștii cu care ne mândrim …").
+      await expect(
+        page.getByRole('heading', { name: BAND_TITLE[locale], exact: true }),
+      ).toHaveCount(0);
 
       // A links list reads "More about me" once per doctor; the accessible
       // name therefore carries the person: the visible label FIRST (SC
@@ -586,7 +623,7 @@ for (const locale of ['ro', 'de'] as const) {
       for (let i = 0; i < count; i += 1) {
         const station = stations.nth(i);
         const name = await station
-          .getByRole('heading', { level: 3 })
+          .getByRole('heading', { level: 2 })
           .innerText();
         const link = station.getByRole('link');
         await expect(link).toHaveText(PROFILE_LABEL[locale]);
@@ -598,6 +635,33 @@ for (const locale of ['ro', 'de'] as const) {
     });
   });
 }
+
+test.describe('/ro/ — Home keeps the band opener (DoctorShowcase D12)', () => {
+  test('the band is a region named by its own <h2>, its eyebrow above it, each doctor an <h3>', async ({
+    page,
+  }) => {
+    // The owner: "this must take place only on the echipa page" — Home's
+    // band opens as it always did.
+    await open(page, '/ro/');
+    const region = band(page);
+    await expect(region).toHaveAttribute('aria-labelledby');
+    await expect(page.getByRole('region', { name: BAND_TITLE.ro })).toHaveCount(
+      1,
+    );
+    await expect(
+      region.getByRole('heading', { level: 2, name: BAND_TITLE.ro }),
+    ).toBeAttached();
+    await expect(region.getByText('Familia Premium Smile')).toBeAttached();
+    const stations = region.locator(STATION);
+    const count = await stations.count();
+    expect(count).toBeGreaterThan(0);
+    for (let i = 0; i < count; i += 1) {
+      await expect(
+        stations.nth(i).getByRole('heading', { level: 3 }),
+      ).toHaveCount(1);
+    }
+  });
+});
 
 // ── F · THE SCALE (DoctorShowcase D10) ─────────────────────────────────────
 // The owner, 2026-10-01: "i like how it looks on phone and tablet and i want
@@ -727,8 +791,8 @@ interface BandShape {
 }
 
 /** The band as the page lays it out right now. */
-const readShape = (page: Page, locale: Locale): Promise<BandShape> =>
-  band(page, locale).evaluate((section) => {
+const readShape = (page: Page): Promise<BandShape> =>
+  band(page).evaluate((section) => {
     const column = section.firstElementChild as HTMLElement;
     const rhythm = column.firstElementChild as HTMLElement;
     const size = (element: Element | null): number =>
@@ -759,8 +823,8 @@ const readShape = (page: Page, locale: Locale): Promise<BandShape> =>
           const style = getComputedStyle(inset);
           // The specialty is the eyebrow beside the name (PersonnelCard D17's
           // PAIR): the name first in the DOM, the specialty after it.
-          const heading = card.querySelector('h3');
-          const specialty = card.querySelector('h3 + p');
+          const heading = card.querySelector('h2, h3');
+          const specialty = card.querySelector(':is(h2, h3) + p');
           const contentLeft =
             inset.getBoundingClientRect().left + parseFloat(style.paddingLeft);
           return {
@@ -1028,7 +1092,7 @@ for (const [locale, path] of [
     }, testInfo) => {
       test.setTimeout(180_000);
       await openAt(page, path, OWNER_WINDOW.width, OWNER_WINDOW.height);
-      const reference = await readShape(page, locale);
+      const reference = await readShape(page);
       const at1401 = `${path} at ${OWNER_WINDOW.width}px`;
       expectRegime(reference, at1401, false);
       // REFERENCE is the owner's window's column: 1401 less two 10vw margins
@@ -1055,7 +1119,7 @@ for (const [locale, path] of [
       const held: string[] = [];
       for (const { width, capped } of ROUND_THE_OWNER) {
         await openAt(page, path, width, OWNER_WINDOW.height);
-        const shape = await readShape(page, locale);
+        const shape = await readShape(page);
         const at = `${path} at ${width}px`;
         expectRegime(shape, at, capped);
         expect(shape.cards).toHaveLength(reference.cards.length);
@@ -1117,7 +1181,7 @@ for (const [locale, path] of [
       test.setTimeout(120_000);
       for (const width of BELOW_STEP) {
         await openAt(page, path, width, 900);
-        const shape = await readShape(page, locale);
+        const shape = await readShape(page);
         expect(shape.column, `${width}px: under the step`).toBeLessThan(
           STEP_FLOOR,
         );
@@ -1132,7 +1196,7 @@ for (const [locale, path] of [
     }) => {
       await defaultFont(page, 12);
       await openAt(page, path, 1024, 900);
-      const shape = await readShape(page, locale);
+      const shape = await readShape(page);
       const at = `${path} at 1024px, a 12px root`;
       expect(shape.rem, at).toBe(12);
       // Past 56rem — the rem half of the step alone would scale this column,
@@ -1151,7 +1215,7 @@ for (const [locale, path] of [
       // of 1344px. In rem the step and the cap keep their ratio.
       await defaultFont(page, 28);
       await openAt(page, path, 2560, 1063);
-      const shape = await readShape(page, locale);
+      const shape = await readShape(page);
       const at = `${path} at 2560px, a 28px root`;
       expect(shape.rem, at).toBe(28);
       expectRegime(shape, at, false);
@@ -1189,7 +1253,7 @@ for (const [locale, path] of [
             'a touch screen',
           ).toEqual({ coarse: true, hoverNone: true });
           await openAt(page, path, tablet.width, tablet.height);
-          const shape = await readShape(page, locale);
+          const shape = await readShape(page);
           const at = `${path} on a ${tablet.width}px touch tablet`;
           // The window a MOUSE would scale — the column past the step…
           expect(shape.column, at).toBeGreaterThanOrEqual(STEP_FLOOR);

@@ -6,36 +6,29 @@ import { page } from 'vitest/browser';
 // tests/setup/components.ts loads no CSS globally; the per-file import is the
 // house pattern (DoctorIntro, PriceList, Pagination).
 import '@/styles/globals.css';
-import { locales, type Locale } from '@/i18n/locales';
+import {
+  HERO_GAP_REM,
+  lineStrings,
+  linesOf,
+  namedAs,
+  segmentsOf,
+  stairwayViolations,
+} from '@/components/sections/PageHero/PageHero.fixtures';
 import { postsIn, postsOnPage, type BlogPost } from '@/lib/blog/blog';
-import de from '@/messages/de.json';
-import en from '@/messages/en.json';
-import fr from '@/messages/fr.json';
-import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
 import { PostList, type PostListItem, type PostListProps } from './PostList';
 import {
   GRID_GAP_REM,
-  HERO_GAP_REM,
   JUMP,
-  LEAD_FIRST_STEP,
-  LEAD_STEP,
   ROOM_BELOW_REM,
-  TITLE_STEP,
   leadToCardsRem,
-  lineStrings,
-  lineTexts,
-  linesOf,
-  namedAs,
   roomAboveRem,
-  segmentsOf,
-  wrapStyleAt,
 } from './PostList.fixtures';
 
 // sections/PostList — THE BAND, COMPUTED: the hero, the grid and the pager at
 // the six named windows (§7) and the owner's 1401 reference, with the real
 // stylesheet and the real faces (PostList.tsx's paragraphs THE BAND, THE BAND
-// SCALE, THE HERO, THE CAPS, THE LIST and THE PAGER).
+// SCALE, THE HERO, THE LIST and THE PAGER).
 //
 // ── WHY A FILE OF ITS OWN. PostList.test.tsx pins the band's class TOKENS
 // with no stylesheet loaded — its one premise, which every component suite in
@@ -44,66 +37,48 @@ import {
 // and the hero's lines need the real FACE, because a fallback serif sets
 // other widths. One premise per file (DoctorIntro.scale.test.tsx's split).
 //
+// ── THE HERO IS sections/PageHero's (since 2026-10-15). Every hero copy that
+// ships — the blog's in five languages and the Team page's in five — is held
+// to the stairway, the heading's reach, whole lines, no lone last word and
+// the computed wrap by PageHero.scale.test.tsx, in a test band of this band's
+// shape, at every window it samples. This file measures the hero IN THIS
+// BAND, with the blog's Romanian copy: where it sits (the room above it, the
+// gap to its lead and to the cards, its lines centred on the column), its
+// size in the regime and out of it, and its stairway or its prose at the
+// band's own windows.
+//
 // ── WHAT IS MEASURED, per window (the runner's own viewport, set per case —
 // ui/Heading's `hero` step reads it — beside the classic 15px scrollbar this
 // runner draws, the visual net's own geometry: a 768 window's column is
 // 599.4px here, 768 − 15 − 2 × 76.8):
-//   · THE REGIME: on at 1280, 1401, 1536, 1920 and 2560, and at 1160 for
-//     every language's hero and the heading's reach at its limit (a fine
-//     pointer, a column past max(56rem, 896px)), off at 320, 390, 768, 1024
-//     and 1100 — and s, the design pixel, min(column, 96rem) / 1106 where it
-//     is on. Every case that expects it on checks its PREMISES first and
-//     names them (expectScaled): the runner's column against the step, then
-//     a fine pointer. The narrowest such window is 1160, not the regime's
-//     first (NARROWEST says why).
-//   · THE GATES, read from the compiled rules in the CSSOM: the band's own
-//     regime tokens — the stairway's line breaks, the heading's reach and
-//     its design size — style the page only behind `@supports (color:
-//     rgb(from red r g b))`, `@media (pointer: fine)` and both container
-//     steps, so a touch screen keeps the theme's natural wrapping. No case
-//     here emulates the device (THE GATES' case says why): the touch tablets
-//     are tests/e2e/band-scale.spec.ts's, 1180 and 1366, a fresh browser
-//     each.
-//   · THE HERO, in Romanian: the <h1>'s size — `hero`'s viewport clamp off
-//     the regime, the design's 65.04 × s on it (sections/DoctorIntro's
-//     name's class, restored on 2026-10-15) — and its LINES (PostList.tsx's
-//     THE STAIRWAY): inside the scale the copy's own line breaks hold, so
-//     the heading falls in TWO lines and the lead in THREE, each line
-//     exactly the message file's segment, each
-//     narrower than the one above it by the stairway's steps, the heading's
-//     second line wider than the lead's first, and no line wider than its
-//     box; off the regime — at 1100 and 1024 on a mouse, at 768 and on a
-//     phone — the breaks are spaces and both blocks wrap as prose: neither
-//     block's lines are the copy's, and the heading takes more than the
-//     stairway's two (expectProse says why the lead's line COUNT is no part
-//     of it). No last line of either is ever
-//     a single word, none starts with punctuation, no word is cut across two
-//     lines. Neither block hyphenates; both wrap `pretty` on a column under
-//     48rem and plainly from it, and keep their breaks only where the band is
-//     scaled (the computed white-space). Every line centred on the column;
-//     48 × s between the two — the hero's computed gap and the distance laid
-//     out alike.
-//   · THE HEADING'S REACH (PostList.tsx's paragraph of that name): inside the
-//     scale the <h1>'s box is centred on the column's centre line, passes
-//     neither of its edges by more than 100 design pixels and stays inside
-//     the page, nothing to scroll sideways — the page measured by its own box,
-//     not by `clientWidth`, which in this runner counts the reserved 15px
-//     scrollbar gutter as page and would let 15px of overflow through; off
-//     the scale the box stays inside the column. At its LIMIT — a first line
-//     longer than the reach, and every language's heading under SC 1.4.12's
-//     text spacing — the box is exactly the column plus 100 design pixels a
-//     side and the line wraps inside it.
-//   · EVERY LANGUAGE'S HERO, as src/messages ships it (PostList.tsx's THE
-//     STAIRWAY and THE NO-BREAK SPACES), alone on the page: the copy itself
-//     first — one break in the heading, two in the lead, each between two
-//     words, and no other character that breaks a line (a carriage return,
-//     U+2028, U+2029); then the stairway and the heading's reach inside the
-//     scale at 1160, 1280, 1401, 1536, 1920 and 2560, its <h1> at 65.04 × s;
-//     and on the 320, 360, 375, 390, 393, 412, 430 and 440 phones and at 768
-//     — with no scrollbar, as on a phone or a tablet (`scrollbar-width: none`
-//     on the root, proved by the root's own box: as wide as the window), and
-//     768 once more behind the classic one — no last line one word, none
-//     starting with punctuation, no word cut, the heading inside the column.
+//   · THE REGIME: on at 1280, 1401, 1536, 1920 and 2560 (a fine pointer, a
+//     column past max(56rem, 896px)), off at 320, 390, 768, 1024 and 1100 —
+//     and s, the design pixel, min(column, 96rem) / 1106 where it is on.
+//     Every case that expects it on checks its PREMISES first and names them
+//     (expectScaled): the runner's column against the step, then a fine
+//     pointer.
+//   · THE GATES, read from the compiled rules in the CSSOM: the hero's own
+//     regime tokens, as this band wears them — the stairway's line breaks,
+//     the heading's reach and its design size, sections/PageHero's — style
+//     the page only behind `@supports (color: rgb(from red r g b))`, `@media
+//     (pointer: fine)` and both container steps, so a touch screen keeps the
+//     theme's natural wrapping. No case here emulates the device (THE GATES'
+//     case says why): the touch tablets are tests/e2e/band-scale.spec.ts's,
+//     1180 and 1366, a fresh browser each.
+//   · THE HERO IN THIS BAND, its Romanian copy: the <h1>'s size — `hero`'s
+//     viewport clamp off the regime, the design's 65.04 × s on it
+//     (sections/PageHero's THE ONE SIZE THE REMAP CANNOT REDRAW) — and its
+//     LINES (sections/PageHero's THE STAIRWAY): inside the scale the copy's
+//     own line breaks hold, so the heading falls in TWO lines and the lead in
+//     THREE, each line exactly the message file's segment, each narrower than
+//     the one above it by the stairway's steps, the heading's second line
+//     wider than the lead's first, and no line wider than its box; off the
+//     regime — at 1100 and 1024 on a mouse, at 768 and on a phone — the
+//     breaks are spaces and both blocks wrap as prose: neither block's lines
+//     are the copy's, and the heading takes more than the stairway's two
+//     (expectProse says why the lead's line COUNT is no part of it). Every
+//     line centred on the column; 48 × s between the two — the hero's
+//     computed gap and the distance laid out alike.
 //   · THE ROOM (PostList.tsx's THE BAND): above the hero 64, 96 from a 32rem
 //     column and 128 from 48rem; from the lead to the cards 76.8, then 96
 //     from 48rem — the rhythm box's computed gap and the distance laid out
@@ -117,7 +92,7 @@ import {
 //     grows into — between rows, beside a neighbour, above the pager.
 //   · NO SIDEWAYS SCROLL — the page measured by the root's own box, never by
 //     its `clientWidth`, which in this runner is the whole window, the
-//     reserved 15px scrollbar gutter included (expectReach's reading).
+//     reserved 15px scrollbar gutter included (expectNoSideways' reading).
 // And three facts of the scale: between 1280 and 1920 the hero's sizes and
 // gaps, the cards and the pager grow by the SAME factor, s1920 / s1280 (the
 // hero's two BOXES do not: each hugs its longest line, a text measure that
@@ -126,14 +101,15 @@ import {
 // windows); under the regime's step (1024 and 1100 windows on a mouse)
 // nothing is remapped, and on a touch screen nothing can be (THE GATES); past
 // the cap (2560) the band is 96rem wide and centred.
-// THE SHARED RULES — the stairway's steps, the jump, the band's room and
-// gaps — the line reader and the <h1>'s name matcher are
-// PostList.fixtures.ts's, spelled once for this file and PostList.stories.tsx
-// (G2 typescript, 2026-10-15).
+// THE SHARED RULES — spelled once for this file and PostList.stories.tsx (G2
+// typescript, 2026-10-15): the stairway's steps, the heading-to-lead gap, the
+// line reader and the <h1>'s name matcher are the hero's
+// (PageHero.fixtures.ts), the jump and the band's room and gaps the band's
+// (PostList.fixtures.ts).
 // THE POSTS are the blog's own first page in Romanian (lib/blog's
 // postsIn('ro') — a test of the band may read the data the band never does),
-// each reading time worded as the page words it; the heroes are read out of
-// the five message files, so the copy measured here is the copy that ships,
+// each reading time worded as the page words it; the hero is read out of the
+// Romanian message file, so the copy measured here is the copy that ships,
 // no-break spaces included. Tolerances: a twentieth of a pixel on a box
 // (layout rounds to 1/64px), a hundredth on a font size, half a pixel on a
 // centre.
@@ -150,46 +126,22 @@ const CAP = 96 * ROOT;
  *  `scalable:@4xl:@min-[896px]:`, a container query against that column. */
 const STEP = Math.max(56 * ROOT, 896);
 
-/** THE NARROWEST WINDOW THE CASES SCALE AT — 1160, whose column clears THE
- *  STEP with room on any runner: 913px behind this Mac's classic 15px
- *  scrollbar (1160 − 15 − 2 × 116 — the runner's 10vw counts the
- *  scrollbar), 911 behind a 17px one, 928 with none. Not 1140, the regime's
- *  first window here: its column is 897px, one pixel past the step — a
- *  premise no case should stand on. (PR #166's first CI run, 2026-10-15,
- *  failed every case that started at 1140, but not for that pixel: the
- *  coarse-pointer case this file then had switched Chromium's touch
- *  emulation on and off, and CI's Linux tab came back without a fine
- *  pointer, every later case off the scale whatever its window — THE GATES
- *  now reads that case's answer from the CSSOM.) The narrow end is still
- *  the point: there the design pixel is smallest and Source Serif 4's
- *  optical size sets the smaller type widest per em, so the copy's tightest
- *  lines against their boxes are measured nearest the regime's start —
- *  1160's design pixel is 1.8 % over 1140's (913 / 897). Every case that
- *  expects the scale names its premises first (expectScaled), so a window
- *  at the edge fails as the runner's column, never as a stairway rule. */
-const NARROWEST = 1160;
-
 /** The <h1>'s size in the scale, in design pixels: 16.26 spacing steps,
  *  65.04 — sections/DoctorIntro's name's, the `hero` step's value at the
- *  owner's 1401 window (PostList.tsx's THE BAND SCALE: the KEEP-IN-SYNC pair,
- *  restored on 2026-10-15). */
+ *  owner's 1401 window (sections/PageHero's THE ONE SIZE THE REMAP CANNOT
+ *  REDRAW: the KEEP-IN-SYNC pair, restored on 2026-10-15). */
 const TITLE_DESIGN = 16.26 * 4;
 
-/** THE HEADING'S REACH (PostList.tsx's paragraph of that name), in design
- *  pixels: how far the <h1>'s box may pass each edge of the column inside
- *  the scale — 25 spacing steps. */
-const REACH_DESIGN = 25 * 4;
-
-/** The two caps, in design pixels (PostList.tsx's THE CAPS): the title's 6xl
- *  container step — off the scale; inside it the heading's reach takes its
- *  place — and the lead's 123 spacing steps. */
+/** The two caps, in design pixels (sections/PageHero's THE CAPS): the
+ *  title's 6xl container step — off the scale; inside it the heading's reach
+ *  takes its place — and the lead's 123 spacing steps. */
 const TITLE_CAP = 1152;
 const LEAD_CAP = 123 * 4;
 
-/** The band's own design lengths (PostList.fixtures.ts's rem, at this
- *  runner's 16px root), in px at s = 1: the title-to-lead gap, 48, the
- *  grid's and the pager's gap, 32, and the room under the pager, 32 — the
- *  same at every width. */
+/** The band's design lengths (the fixtures' rem, at this runner's 16px
+ *  root), in px at s = 1: the title-to-lead gap, 48 — the hero's own
+ *  (PageHero.fixtures.ts) — the grid's and the pager's gap, 32, and the
+ *  room under the pager, 32 — the same at every width (PostList.fixtures.ts). */
 const HERO_GAP = HERO_GAP_REM * ROOT;
 const GRID_GAP = GRID_GAP_REM * ROOT;
 const ROOM_BELOW = ROOM_BELOW_REM * ROOT;
@@ -206,21 +158,13 @@ const leadToCards = (column: number): number =>
 /** A hero's copy, as a message file holds it. */
 type HeroCopy = { title: string; lead: string };
 
-/** Every language's hero as the message files ship it — the copy
- *  PostList.tsx's THE STAIRWAY records (its line breaks and no-break spaces
- *  included) — one row per locale of src/i18n/locales, which the cases
- *  below iterate: a sixth language without a row here fails to compile. */
-const HEROES = {
-  ro: ro.blog.hero,
-  en: en.blog.hero,
-  de: de.blog.hero,
-  fr: fr.blog.hero,
-  it: it_.blog.hero,
-} as const satisfies Record<Locale, HeroCopy>;
-
-/** The Romanian page's hero, which the band's other cases render. */
-const TITLE = HEROES.ro.title;
-const LEAD = HEROES.ro.lead;
+/** The Romanian page's hero, as the message file ships it (PostList.tsx's
+ *  THE COPY — its line breaks and no-break spaces included), which every
+ *  case renders. Every language's, and the Team page's, are
+ *  PageHero.scale.test.tsx's. */
+const HERO: HeroCopy = ro.blog.hero;
+const TITLE = HERO.title;
+const LEAD = HERO.lead;
 const NAV_LABEL = 'Paginile articolelor';
 
 /** A post as the page hands it to the band (app/[locale]/blog/populate.ts):
@@ -279,14 +223,6 @@ const INJECTED_CSS = `
 }
 :root { --font-source-serif: '${SERIF}'; --font-jetbrains-mono: '${MONO}'; }
 *, *::before, *::after { transition: none; }
-`;
-/** SC 1.4.12's text spacing as its Understanding document sets it — line
- *  height 1.5, letter spacing 0.12em, word spacing 0.16em, paragraph spacing
- *  2em — every one `!important`, as a reader's own style sheet would be
- *  (THE HEADING'S REACH at its limit). */
-const TEXT_SPACING = `
-* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }
-p { margin-bottom: 2em !important; }
 `;
 let injected: HTMLStyleElement | null = null;
 let window0 = { width: 0, height: 0 };
@@ -407,7 +343,7 @@ const near = (
 const renderBand = () => {
   const { unmount } = render(<PostList {...PROPS} />);
   // By the name a screen reader hears — the copy's line break a space —
-  // whitespace collapsed (PostList.fixtures.ts's namedAs).
+  // whitespace collapsed (PageHero.fixtures.ts's namedAs).
   const h1 = screen.getByRole('heading', { level: 1, name: namedAs(TITLE) });
   const hero = htmlElement(h1.parentElement, 'hero');
   const lead = htmlElement(hero.children[1], 'lead');
@@ -424,56 +360,11 @@ const renderBand = () => {
 
 type Band = ReturnType<typeof renderBand>;
 
-/** One language's hero alone — its shipped copy, or a copy of a case's own
- *  in that language — no cards, so a sweep of windows stays quick: the
- *  column, the regime and the hero's boxes are the band's either way
- *  (globals.css reserves the scrollbar's gutter whatever the page's height —
- *  `scrollbar-gutter: stable`). The page sets <html lang>; so does this. */
-const renderHero = (locale: Locale, copy: HeroCopy = HEROES[locale]) => {
-  const { title, lead } = copy;
-  document.documentElement.lang = locale;
-  const { unmount } = render(
-    <PostList {...PROPS} title={title} lead={lead} posts={[]} />,
-  );
-  const h1 = screen.getByRole('heading', { level: 1 });
-  const hero = htmlElement(h1.parentElement, 'hero');
-  return {
-    unmount: () => {
-      unmount();
-      document.documentElement.lang = 'ro';
-    },
-    h1,
-    lead: htmlElement(hero.children[1], 'lead'),
-    rhythm: htmlElement(hero.parentElement, 'rhythm box'),
-  };
-};
-
-/** Renders `locale`'s hero — its shipped copy, or `copy` — at each window and
- *  runs `check` on it. */
-const sweep = async (
-  locale: Locale,
-  windows: readonly number[],
-  label: string,
-  check: (hero: ReturnType<typeof renderHero>, where: string) => void,
-  copy: HeroCopy = HEROES[locale],
-): Promise<void> => {
-  for (const width of windows) {
-    await page.viewport(width, 900);
-    const hero = renderHero(locale, copy);
-    try {
-      await document.fonts.ready;
-      check(hero, `${locale} at ${width}${label}: `);
-    } finally {
-      hero.unmount();
-    }
-  }
-};
-
 /** The design pixel this band is drawn in: 1 off the regime. */
 const scaleOf = (band: Band): number =>
   remapped(band.rhythm) ? px(band.rhythm, '--scale-px') : 1;
 
-/** A hero's two blocks — the band's, or one language's alone (renderHero). */
+/** The band's hero — its two blocks. */
 type Hero = { h1: HTMLElement; lead: HTMLElement };
 
 /** The two blocks, named for the failure messages. */
@@ -483,101 +374,12 @@ const blocksOf = (hero: Hero) =>
     ['the lead', hero.lead],
   ] as const;
 
-/** Whole words in a text, as the eye counts them: two joined by a no-break
- *  space are two (`\s` matches U+00A0). */
-const wordCount = (text: string): number =>
-  text.split(/\s+/).filter(Boolean).length;
-
-/** NO LONE LAST WORD (PostList.tsx's THE CAPS): the last line of the title
- *  and of the lead always holds at least two words. */
-const expectNoLoneWord = (hero: Hero, where = ''): void => {
-  for (const [name, element] of blocksOf(hero)) {
-    const last = (lineTexts(element).at(-1) ?? '').trim();
-    expect(
-      wordCount(last),
-      `${where}${name}’s last line, „${last}”`,
-    ).toBeGreaterThan(1);
-  }
-};
-
-/** EVERY LINE WHOLE (PostList.tsx's THE NO-BREAK SPACES): no line starts
- *  with punctuation — French joins its colon to the word before it — and no
- *  word is cut across two lines, which the belt does to a joined unit wider
- *  than the column. A line may end on a word's own hyphen („rendez-vous"
- *  breaks after it, as typesetting allows): only a cut without one counts. */
-const expectWholeLines = (hero: Hero, where = ''): void => {
-  for (const [name, element] of blocksOf(hero)) {
-    const lines = lineTexts(element).map((line) => line.trim());
-    for (const [index, line] of lines.entries()) {
-      expect(line, `${where}${name}’s line ${index + 1}`).not.toMatch(
-        /^[:;!?.,»)]/,
-      );
-    }
-    expect(
-      wordCount(lines.join('\n').replaceAll('-\n', '-')),
-      `${where}${name}: the words its lines hold`,
-    ).toBe(wordCount(element.textContent ?? ''));
-  }
-};
-
-/** THE STAIRWAY (PostList.tsx's paragraph of that name), wherever the band
- *  is scaled — each rule its own assertion, in this order, so a failure names
- *  the rule it broke:
- *    1. no line wider than its box — the white-space wraps a line too long
- *       for its box, never lets it spill;
- *    2. the heading in exactly TWO lines and the lead in exactly THREE;
- *    3. each line exactly its segment of the copy — the breaks are the copy's,
- *       not the wrap's;
- *    4. the steps (PostList.fixtures.ts's): the heading's second line at
- *       most 0.9 of its first, the lead's second at most 0.95 of its first
- *       and its third at most 0.9 of its second;
- *    5. the stair runs on into the lead: the heading's second line wider
- *       than the lead's first. */
-const expectStairway = (hero: Hero, copy: HeroCopy, where = ''): void => {
-  for (const [name, element] of blocksOf(hero)) {
-    const width = box(element).width;
-    for (const [index, line] of linesOf(element).entries()) {
-      expect(
-        line.width,
-        `${where}${name}’s line ${index + 1} inside its ${width}px box`,
-      ).toBeLessThanOrEqual(width + 0.5);
-    }
-  }
-  const title = linesOf(hero.h1).map(({ width }) => width);
-  const lead = linesOf(hero.lead).map(({ width }) => width);
-  expect(title, `${where}the title’s lines`).toHaveLength(2);
-  expect(lead, `${where}the lead’s lines`).toHaveLength(3);
-  expect(lineStrings(hero.h1), `${where}the title’s lines, as text`).toEqual(
-    segmentsOf(copy.title),
-  );
-  expect(lineStrings(hero.lead), `${where}the lead’s lines, as text`).toEqual(
-    segmentsOf(copy.lead),
-  );
-  const [t1 = 0, t2 = Infinity] = title;
-  const [l1 = 0, l2 = Infinity, l3 = Infinity] = lead;
-  expect(
-    t2,
-    `${where}the title’s second line against its first`,
-  ).toBeLessThanOrEqual(TITLE_STEP * t1);
-  expect(
-    l2,
-    `${where}the lead’s second line against its first`,
-  ).toBeLessThanOrEqual(LEAD_FIRST_STEP * l1);
-  expect(
-    l3,
-    `${where}the lead’s third line against its second`,
-  ).toBeLessThanOrEqual(LEAD_STEP * l2);
-  expect(
-    t2,
-    `${where}the title’s second line against the lead’s first`,
-  ).toBeGreaterThan(l1);
-};
-
-/** OFF THE REGIME both blocks are PROSE (PostList.tsx's THE STAIRWAY), held
- *  by what makes them prose — each rule its own assertion, in this order, so
- *  a failure names the rule it broke:
+/** OFF THE REGIME both blocks are PROSE (sections/PageHero's THE STAIRWAY),
+ *  held by what makes them prose — each rule its own assertion, in this
+ *  order, so a failure names the rule it broke:
  *    1. the computed white-space `normal` on both — the copy's line breaks
- *       collapse into spaces (expectBand reads it at every window too);
+ *       collapse into spaces (PageHero.scale.test.tsx reads it for every
+ *       copy that ships, at every window it samples);
  *    2. neither block's rendered lines are the copy's segments — the
  *       laptop's breaks are absent, whatever the cause: a white-space that
  *       keeps them, or breaks written into the markup, which rule 1 cannot
@@ -638,58 +440,6 @@ const expectNoSideways = (where = ''): void => {
   ).toBeLessThanOrEqual(Math.ceil(page));
 };
 
-/** THE HEADING'S REACH (PostList.tsx's paragraph of that name), each rule
- *  its own assertion — the column being the rhythm box, the band's own
- *  (capped and centred at 96rem past a 1920 window):
- *    · wherever the band is scaled, the <h1>'s box CENTRED on the column's
- *      centre line (± 0.5px), passing NEITHER of its edges by more than 100
- *      design pixels, and inside the PAGE with nothing to scroll sideways
- *      (expectNoSideways: the page measured by the root's own box);
- *    · anywhere else, the box INSIDE the column. */
-const expectReach = (
-  hero: { h1: HTMLElement; rhythm: HTMLElement },
-  where = '',
-): void => {
-  const column = box(hero.rhythm);
-  const heading = box(hero.h1);
-  if (!remapped(hero.rhythm)) {
-    expect(
-      heading.left,
-      `${where}the title’s box from the column’s start`,
-    ).toBeGreaterThanOrEqual(column.left - 0.05);
-    expect(
-      heading.right,
-      `${where}the title’s box to the column’s end`,
-    ).toBeLessThanOrEqual(column.right + 0.05);
-    return;
-  }
-  const reach = REACH_DESIGN * px(hero.rhythm, '--scale-px');
-  near(
-    heading.left + heading.width / 2,
-    column.left + column.width / 2,
-    `${where}the title’s box centred on the column`,
-    0.5,
-  );
-  expect(
-    column.left - heading.left,
-    `${where}the title’s box past the column’s start (${reach}px allowed)`,
-  ).toBeLessThanOrEqual(reach + 0.05);
-  expect(
-    heading.right - column.right,
-    `${where}the title’s box past the column’s end (${reach}px allowed)`,
-  ).toBeLessThanOrEqual(reach + 0.05);
-  const page = box(document.documentElement);
-  expect(
-    heading.left,
-    `${where}the title’s box from the page’s start`,
-  ).toBeGreaterThanOrEqual(page.left);
-  expect(
-    heading.right,
-    `${where}the title’s box to the page’s end`,
-  ).toBeLessThanOrEqual(page.right);
-  expectNoSideways(where);
-};
-
 /** The grid's rows: its items grouped by their top. */
 const rowsOf = (band: Band): HTMLElement[][] => {
   const rows = new Map<number, HTMLElement[]>();
@@ -701,9 +451,11 @@ const rowsOf = (band: Band): HTMLElement[][] => {
 };
 
 /** Every fact of the header's list that holds at any window: the hero
- *  centred, the band's room and gaps, the grid's tracks and rows, the pager
- *  under the grid's end edge, the jump under every gap, no lone last word,
- *  nothing sideways. */
+ *  centred on the column, the band's room and gaps, the grid's tracks and
+ *  rows, the pager under the grid's end edge, the jump under every gap,
+ *  nothing sideways. The hero's own rules — whole words, no lone last word,
+ *  the heading's reach, the computed wrap — are PageHero.scale.test.tsx's,
+ *  for every copy that ships. */
 const expectBand = (band: Band, s: number, columns: number): void => {
   const { h1, hero, lead, rhythm, column, group, list, nav, items } = band;
   const middle = box(rhythm).left + box(rhythm).width / 2;
@@ -719,34 +471,6 @@ const expectBand = (band: Band, s: number, columns: number): void => {
         0.5,
       );
     }
-  }
-  expectNoLoneWord(band);
-  expectWholeLines(band);
-  // THE HEADING'S REACH: past the column inside the scale, centred and
-  // bounded; inside it everywhere else.
-  expectReach(band);
-
-  // THE WRAP (THE HERO): neither block hyphenates, and both wrap `pretty` on
-  // a column under 48rem — a phone's or a tablet's — and plainly from it;
-  // THE STAIRWAY: both keep the copy's own line breaks where the band is
-  // scaled and nowhere else (the pre-line white-space preserves them, the
-  // normal one makes each a space).
-  const wrap = wrapStyleAt(box(column).width / ROOT);
-  const scaled = remapped(rhythm);
-  for (const [name, element] of [
-    ['the title', h1],
-    ['the lead', lead],
-  ] as const) {
-    const style = getComputedStyle(element);
-    expect(style.hyphens, `${name}’s hyphens`).toBe('none');
-    expect(
-      style.getPropertyValue('text-wrap-style'),
-      `${name}’s wrap at a ${box(column).width}px column`,
-    ).toBe(wrap);
-    expect(
-      style.whiteSpace,
-      `${name}’s line breaks, the band ${scaled ? '' : 'not '}scaled`,
-    ).toBe(scaled ? 'pre-line' : 'normal');
   }
 
   // THE ROOM AND THE GAPS (THE BAND): above the hero on the column's steps,
@@ -876,7 +600,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       // A phone and a tablet keep no stairway: the copy's breaks are spaces
       // there (THE STAIRWAY), and the Romanian heading takes three lines at
       // 768, four at 390, five at 320.
-      expectProse(band, HEROES.ro);
+      expectProse(band, HERO);
       expectBand(band, 1, columns);
       band.unmount();
     },
@@ -897,11 +621,12 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       expectScaled(band.rhythm);
       const s = scaleOf(band);
       near(s, Math.min(box(band.column).width, CAP) / REFERENCE, 's', 0.0001);
-      expectStairway(band, HEROES.ro);
+      expect(stairwayViolations(band, HERO), 'the stairway').toEqual([]);
       near(px(band.h1, 'font-size'), TITLE_DESIGN * s, 'the title', 0.01);
       near(px(band.lead, 'font-size'), 16 * s, 'the lead', 0.01);
       // The lead's cap, in design pixels (THE CAPS); the title's limit inside
-      // the scale is its reach, which expectBand holds (THE HEADING'S REACH).
+      // the scale is its reach, which PageHero.scale.test.tsx's expectReach
+      // holds (THE HEADING'S REACH).
       near(px(band.lead, 'max-width'), LEAD_CAP * s, 'the lead’s cap', 0.01);
       // Not held to the column: the Romanian first line, 1183.5 design
       // pixels at 1401, is wider than the column's 1106 at every window here.
@@ -923,7 +648,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       // The hero's two BOXES are left out: each hugs its longest line, a text
       // measure that Source Serif 4's optical size sets narrower per em as it
       // grows (the header's three facts) — their lines are THE STAIRWAY's,
-      // held in design pixels by expectStairway.
+      // held by PageHero.fixtures.ts's stairwayViolations.
       const seen = {
         s: scaleOf(band),
         'the title’s size': px(band.h1, 'font-size'),
@@ -973,7 +698,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     // the heading's reach (THE CAPS; THE GATES below reads why a touch screen
     // keeps it too).
     near(px(band.h1, 'max-width'), TITLE_CAP, 'the title’s cap', 0.01);
-    expectProse(band, HEROES.ro);
+    expectProse(band, HERO);
     expectBand(band, 1, 2);
     band.unmount();
   });
@@ -987,9 +712,9 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     // The Romanian heading in three lines here, its 51.8px type in an
     // 804.2px column behind this runner's classic scrollbar; the lead's first
     // line runs on past the copy's colon to „cum să" under its 492px cap
-    // (PostList.tsx's THE STAIRWAY: off the regime the copy's breaks are
-    // spaces).
-    expectProse(band, HEROES.ro);
+    // (sections/PageHero's THE STAIRWAY: off the regime the copy's breaks
+    // are spaces).
+    expectProse(band, HERO);
     expectBand(band, 1, 2);
     band.unmount();
   });
@@ -1012,23 +737,25 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     );
     const s = scaleOf(band);
     near(s, CAP / REFERENCE, 's at the cap', 0.0001);
-    expectStairway(band, HEROES.ro);
+    expect(stairwayViolations(band, HERO), 'the stairway').toEqual([]);
     near(px(band.h1, 'font-size'), TITLE_DESIGN * s, 'the title', 0.01);
     expectBand(band, s, 3);
     band.unmount();
   });
 
-  // THE GATES (PostList.tsx's THE BAND SCALE, THE STAIRWAY and THE HEADING'S
-  // REACH), read from the compiled rules in the CSSOM: the band's own regime
-  // tokens — the stairway's line breaks on the heading and on the lead, the
-  // heading's reach (its max-content width and its cap past the column) and
-  // its 16.26-step design size — style the page ONLY behind the band scale's
-  // whole chain: globals.css's THE SCALABLE VARIANT, `@supports (color:
-  // rgb(from red r g b))` and `@media (pointer: fine)`, then both container
-  // steps, 56rem and the 896px floor. So a touch screen as wide as a desktop
-  // keeps the theme's natural wrapping: the copy's breaks spaces, the `hero`
-  // clamp, the 6xl cap. (The rhythm box's two band-scale strings are
-  // ui/Container's, their gates DoctorShowcase.test.tsx's THE GATES.)
+  // THE GATES (PostList.tsx's THE BAND SCALE; sections/PageHero's THE
+  // STAIRWAY and THE HEADING'S REACH), read from the compiled rules in the
+  // CSSOM: the regime tokens of the band's hero — sections/PageHero's, worn
+  // here as the page wears them: the stairway's line breaks on the heading
+  // and on the lead, the heading's reach (its max-content width and its cap
+  // past the column) and its 16.26-step design size — style the page ONLY
+  // behind the band scale's whole chain: globals.css's THE SCALABLE VARIANT,
+  // `@supports (color: rgb(from red r g b))` and `@media (pointer: fine)`,
+  // then both container steps, 56rem and the 896px floor. So a touch screen
+  // as wide as a desktop keeps the theme's natural wrapping: the copy's
+  // breaks spaces, the `hero` clamp, the 6xl cap. (The rhythm box's two
+  // band-scale strings are ui/Container's, their gates
+  // DoctorShowcase.test.tsx's THE GATES.)
   //   THE DEVICE ITSELF is driven end to end, a fresh browser per window:
   // tests/e2e/band-scale.spec.ts's touch tablets on the blog, 1180 × 820 and
   // 1366 × 1024, a coarse pointer. Never here: Chromium's touch emulation
@@ -1042,7 +769,7 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
   // (and spells no class of its own, which Tailwind would compile into the
   // site's stylesheet): a token that lost one link of the chain, its
   // `scalable:` above all, is still chosen, and fails a gate below.
-  it('puts every rule of the band’s own regime tokens behind THE GATES in the real stylesheet — `@supports (color: rgb(from red r g b))`, `@media (pointer: fine)` and both container steps, 56rem and 896px — so a touch screen keeps the theme’s natural wrapping', () => {
+  it('puts every rule of the regime tokens its hero wears behind THE GATES in the real stylesheet — `@supports (color: rgb(from red r g b))`, `@media (pointer: fine)` and both container steps, 56rem and 896px — so a touch screen keeps the theme’s natural wrapping', () => {
     const band = renderBand();
     try {
       const chain = ['scalable:', '@4xl:', '@min-[896px]:'];
@@ -1124,188 +851,5 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
     } finally {
       band.unmount();
     }
-  });
-
-  // EVERY LANGUAGE (PostList.tsx's THE STAIRWAY and THE NO-BREAK SPACES): the
-  // five message files' heroes, as shipped, held to the owner's rule — the
-  // copy breaks its heading once and its lead twice; inside the scale those
-  // breaks hold, the stairway falls from the heading's first line to the
-  // lead's last and the <h1> is 65.04 × s; and on every phone and at 768 no
-  // last line of either block one word, no line starting with punctuation, no
-  // word cut across two lines. One case per locale of src/i18n/locales.
-  // Chromium alone, the components project's one engine; WebKit and Firefox
-  // were measured for PostList.tsx's record.
-  describe('every language’s hero, as the message files ship it', () => {
-    it.each(locales)(
-      'breaks the %s copy where the stairway turns — ONE line break in the heading, TWO in the lead, each between two words, and no other character that breaks a line',
-      (locale) => {
-        const { title, lead } = HEROES[locale];
-        expect(
-          title.split('\n'),
-          `${locale}: the heading’s lines`,
-        ).toHaveLength(2);
-        expect(lead.split('\n'), `${locale}: the lead’s lines`).toHaveLength(3);
-        for (const [name, text] of [
-          ['the heading', title],
-          ['the lead', lead],
-        ] as const) {
-          // The `\n` is the ONE break the stairway reads (the pre-line
-          // white-space keeps it, segmentsOf splits on it). Its look-alikes
-          // are refused: a carriage return is a space to CSS (and a CRLF copy
-          // would hang one beside every break), and U+2028 and U+2029 —
-          // mandatory breaks to Unicode's line-breaking rules — break no line
-          // in Chromium under either white-space (measured, 2026-10-15): a
-          // turn written with any of the three would not turn where the
-          // stairway counts one, nor alike in every engine.
-          expect(
-            text,
-            `${locale}: ${name}, a line break other than the \\n`,
-          ).not.toMatch(/[\r\u2028\u2029]/);
-          // A space beside a break — U+00A0 included, which never collapses —
-          // would hang at a line's end or open the next one, and no break may
-          // open or close the block.
-          expect(
-            text,
-            `${locale}: ${name}, a space beside a break`,
-          ).not.toMatch(/\s\n|\n\s/);
-          expect(text, `${locale}: ${name}, its ends`).not.toMatch(/^\s|\s$/);
-        }
-      },
-    );
-
-    it.each(locales)(
-      `holds the %s hero to the stairway and the heading’s reach inside the scale — ${NARROWEST}, 1280, 1401, 1536, 1920 and 2560, the <h1> at 65.04 × s, its box centred on the column, never more than 100 design pixels past it, nothing sideways`,
-      async (locale) => {
-        await sweep(
-          locale,
-          [NARROWEST, 1280, 1401, 1536, 1920, 2560],
-          '',
-          (hero, where) => {
-            expectScaled(hero.rhythm, where);
-            expectStairway(hero, HEROES[locale], where);
-            expectNoLoneWord(hero, where);
-            expectWholeLines(hero, where);
-            expectReach(hero, where);
-            near(
-              px(hero.h1, 'font-size'),
-              TITLE_DESIGN * px(hero.rhythm, '--scale-px'),
-              `${where}the title`,
-              0.01,
-            );
-          },
-        );
-      },
-    );
-
-    it.each(locales)(
-      'never ends the %s hero on a lone word and keeps its heading inside the column — eight phones and a 768 tablet with no scrollbar, a 768 window with one',
-      async (locale) => {
-        const root = document.documentElement;
-        // A phone's and a tablet's scrollbar takes no room: `none` here, so
-        // the column is the device's (a 390 phone's 351px).
-        root.style.setProperty('scrollbar-width', 'none');
-        try {
-          await sweep(
-            locale,
-            [320, 360, 375, 390, 393, 412, 430, 440, 768],
-            ', no scrollbar',
-            (hero, where) => {
-              // …proved by the root's own BOX, as wide as the window. Never by
-              // `clientWidth`: in this runner it is the window's width with
-              // the 15px gutter reserved or not (expectNoSideways), so a
-              // check against it could never fail (G2 typescript).
-              near(
-                box(root).width,
-                window.innerWidth,
-                `${where}no gutter — the root’s box as wide as the window`,
-              );
-              expect(remapped(hero.rhythm), `${where}nothing remapped`).toBe(
-                false,
-              );
-              expectNoLoneWord(hero, where);
-              expectWholeLines(hero, where);
-              expectReach(hero, where);
-            },
-          );
-        } finally {
-          root.style.removeProperty('scrollbar-width');
-        }
-        await sweep(locale, [768], ', a classic scrollbar', (hero, where) => {
-          expectNoLoneWord(hero, where);
-          expectWholeLines(hero, where);
-          expectReach(hero, where);
-        });
-      },
-    );
-  });
-
-  // THE HEADING'S REACH AT ITS LIMIT (PostList.tsx's paragraph of that name):
-  // the shipped first lines all fit the reach — 83.2 design pixels past the
-  // column at most, French's, measured at a 1140 window, the regime's first
-  // here (the cases start at NARROWEST, 1160) — so the 100-pixel bound
-  // itself is reached only by a line longer than the reach: one built here,
-  // and every language's heading under SC 1.4.12's text spacing, which makes
-  // each first line outgrow it. Either way the box stops at the column plus
-  // 100 design pixels a side, centred, and the line wraps inside it.
-  describe('the heading’s reach at its limit', () => {
-    /** Every rule of expectReach — centred, never more than 100 design
-     *  pixels past either edge, inside the page — then the box AT ITS LIMIT,
-     *  exactly the column plus 100 design pixels a side, and the heading's
-     *  lines wrapped inside it, more than the stairway's two. */
-    const expectAtTheLimit = (
-      hero: ReturnType<typeof renderHero>,
-      where: string,
-    ): void => {
-      expectScaled(hero.rhythm, where);
-      expectReach(hero, where);
-      const s = px(hero.rhythm, '--scale-px');
-      const width = box(hero.h1).width;
-      near(
-        width,
-        box(hero.rhythm).width + 2 * REACH_DESIGN * s,
-        `${where}the title’s box at its limit`,
-      );
-      const lines = linesOf(hero.h1);
-      expect(lines.length, `${where}the title’s lines`).toBeGreaterThan(2);
-      for (const [index, line] of lines.entries()) {
-        expect(
-          line.width,
-          `${where}the title’s line ${index + 1} inside its ${width}px box`,
-        ).toBeLessThanOrEqual(width + 0.5);
-      }
-    };
-
-    it(`stops a first line longer than the reach at the column plus 100 design pixels a side — ${NARROWEST}, 1401, 1920 and 2560: the box centred, the line wrapped inside it, nothing sideways`, async () => {
-      // German's first line and Italian's end to end, over German's second:
-      // some 2,400 design pixels on one line, wider than any reach.
-      const [german = '', german2 = ''] = HEROES.de.title.split('\n');
-      const [italian = ''] = HEROES.it.title.split('\n');
-      await sweep(
-        'de',
-        [NARROWEST, 1401, 1920, 2560],
-        ', an over-long first line',
-        expectAtTheLimit,
-        { title: `${german} ${italian}\n${german2}`, lead: HEROES.de.lead },
-      );
-    });
-
-    it.each(locales)(
-      `stops the %s heading at the reach under SC 1.4.12’s text spacing — ${NARROWEST}, 1401 and 1920: the box centred at its limit, the lines wrapped inside it, nothing sideways`,
-      async (locale) => {
-        const spacing = document.createElement('style');
-        spacing.textContent = TEXT_SPACING;
-        document.head.append(spacing);
-        try {
-          await sweep(
-            locale,
-            [NARROWEST, 1401, 1920],
-            ', SC 1.4.12’s text spacing',
-            expectAtTheLimit,
-          );
-        } finally {
-          spacing.remove();
-        }
-      },
-    );
   });
 });

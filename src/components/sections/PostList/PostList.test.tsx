@@ -5,6 +5,8 @@ import {
   within,
 } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
+import { PageHero } from '@/components/sections/PageHero/PageHero';
+import { namedAs } from '@/components/sections/PageHero/PageHero.fixtures';
 import type { PaginationProps } from '@/components/sections/Pagination/Pagination';
 import type { PostCardContent } from '@/components/sections/PostCard/PostCard';
 import {
@@ -19,7 +21,6 @@ import {
   type PostListPagination,
   type PostListProps,
 } from './PostList';
-import { namedAs } from './PostList.fixtures';
 import source from './PostList.tsx?raw';
 
 // sections/PostList — the interaction suite. Role-based queries wherever a
@@ -40,16 +41,23 @@ import source from './PostList.tsx?raw';
 // compared rather than retyped: ui/Container's two band-scale strings
 // (imported — a hand-typed copy would be a second spelling of the regime,
 // which tests/unit/design-scale.test.ts forbids in spirit). What the real
-// stylesheet and the real faces do with all of it — the stairway's two and
-// three lines, the grid's columns, the pager under the grid's corner, the
-// scale — is PostList.scale.test.tsx's business and PostList.stories.tsx's.
+// stylesheet and the real faces do with all of it — the grid's columns, the
+// pager under the grid's corner, the scale — is PostList.scale.test.tsx's
+// business and PostList.stories.tsx's.
 //
-// ── THE COPY CARRIES LINE BREAKS (PostList.tsx's THE STAIRWAY): the hero's
+// ── THE HERO IS sections/PageHero's (since 2026-10-15): its tokens — the
+// `hero` step, the stairway, the reach, the caps, the wrap — are
+// PageHero.test.tsx's, its lines in every language PageHero.scale.test.tsx's.
+// This suite holds the COMPOSITION: PageHero's <header> first in the rhythm
+// box, the page's only <h1>, and the two strings handed over and nothing else
+// — the band's hero is PageHero rendered alone, byte for byte.
+//
+// ── THE COPY CARRIES LINE BREAKS (PageHero.tsx's THE STAIRWAY): the hero's
 // two strings hold a `\n` where the stairway turns. A role query names the
 // heading by its accessible name, and the two engines that compute one
 // disagree on that `\n`: dom-accessibility-api, which Testing Library uses,
 // keeps it, while Chromium's own name — what a screen reader speaks — reads
-// it as a space. So the <h1> is found by PostList.fixtures.ts's `namedAs`,
+// it as a space. So the <h1> is found by PageHero.fixtures.ts's `namedAs`,
 // whitespace collapsed on both sides (G2 react and typescript, 2026-10-15),
 // so no query leans on the `\n` one engine happens to keep. A TEXT query
 // collapses the element's whitespace by default, so the lead is found with
@@ -108,8 +116,8 @@ const POSTS = [
 ] as const satisfies readonly PostListItem[];
 
 /** The hero's two strings — the shipped Romanian copy, read out of the
- *  message file (PostList.tsx's THE STAIRWAY was measured on it), its line
- *  breaks and no-break spaces included. */
+ *  message file (PostList.tsx's THE COPY), its line breaks and no-break
+ *  spaces included. */
 const TITLE = ro.blog.hero.title;
 const LEAD = ro.blog.hero.lead;
 const TAGS_LABEL = 'Categorii';
@@ -155,51 +163,6 @@ const RHYTHM_OWN = [
   '@3xl:pt-32',
   'pb-8',
 ];
-/** The hero: both boxes centred, 3rem apart, the heading's lines centred. */
-const HERO = ['flex', 'flex-col', 'items-center', 'gap-12', 'text-center'];
-/** ui/Heading's `hero` step — THE h1 step (§15.24) — on its default ink. */
-const HERO_STEP = [
-  'font-display',
-  'text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight',
-  'text-ink-strong',
-];
-/** The one wrap style the hero's two blocks wear: `pretty` on a phone's or a
- *  tablet's column alone, under the Container's 48rem step (THE HERO). */
-const PHONE_PRETTY = '@max-3xl:text-pretty';
-/** THE STAIRWAY: the copy's own line breaks held inside THE BAND SCALE alone
- *  — the pre-line white-space behind the band scale's chain, worn by both
- *  blocks. */
-const STAIRWAY = 'scalable:@4xl:@min-[896px]:whitespace-pre-line';
-/** THE HEADING'S REACH: inside the band scale alone the <h1> is as wide as
- *  its longest line, up to the column's full width plus 50 spacing steps —
- *  100 design pixels a side — behind the band scale's chain (the owner,
- *  2026-10-15: "it should not be constrained by a div"). */
-const REACH = [
-  'scalable:@4xl:@min-[896px]:w-max',
-  'scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*50)]',
-];
-/** The <h1>'s size inside the band scale: 16.26 spacing steps, 65.04 design
- *  pixels — sections/DoctorIntro's name's class byte for byte, the KEEP-IN-
- *  SYNC pair restored on the owner's word of 2026-10-15 ("tbh i kinda liked
- *  it how it looked before"). */
-const SIZE_IN_SCALE =
-  'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]';
-/** The <h1>'s own classes before its gated ones: the 6xl cap (THE CAPS),
- *  whole words, the belt, and the phone's `pretty` wrap. */
-const TITLE_OWN = ['max-w-6xl', 'hyphens-none', 'wrap-anywhere', PHONE_PRETTY];
-/** ui/Text's muted recipe, then the lead's own: the cap of 123 spacing steps
- *  (THE CAPS), whole words, the heading's belt for a word too long for a
- *  line, centred ON THE ELEMENT, the phone's `pretty`, the stairway. */
-const LEAD_TOKENS = [
-  'text-base',
-  'text-ink-muted',
-  'max-w-123',
-  'hyphens-none',
-  'wrap-anywhere',
-  'text-center',
-  PHONE_PRETTY,
-  STAIRWAY,
-];
 /** The cards and the pager: one 2rem gap (THE PAGER). */
 const GROUP = ['flex', 'flex-col', 'gap-8'];
 /** One column, two from 36rem, three from 56rem, 2rem apart (THE LIST). */
@@ -231,14 +194,6 @@ const variantsOf = (token: string): string[] => {
     }
   }
   return parts;
-};
-
-/** A token's utility — what follows its variant chain. */
-const utilityOf = (token: string): string => {
-  const variants = variantsOf(token);
-  return variants.length === 0
-    ? token
-    : token.slice(variants.join(':').length + 1);
 };
 
 const renderList = (overrides: Partial<PostListProps> = {}) =>
@@ -305,16 +260,6 @@ const stripComments = (code: string): string =>
 
 const CODE = stripComments(source);
 
-/** The band scale's variant chain — the gate first — as ui/Container spells
- *  it, read off its regime string (one chain, or a throw that says so). */
-const SCALE_CHAIN = (() => {
-  const chains = new Set(
-    bandScaleClasses.split(' ').map(variantsOf).map(String),
-  );
-  if (chains.size !== 1) throw new Error('ui/Container: not one chain');
-  return [...chains][0];
-})();
-
 /** The lead, found by its text with the line breaks KEPT — the default
  *  normalizer would collapse them into spaces and never match the copy. */
 const leadIn = (hero: HTMLElement): HTMLElement =>
@@ -322,132 +267,37 @@ const leadIn = (hero: HTMLElement): HTMLElement =>
     normalizer: getDefaultNormalizer({ collapseWhitespace: false }),
   });
 
-describe('PostList — the hero: the page’s one <h1> over a lead', () => {
-  it('renders exactly ONE <h1>, the title, on ui/Heading’s `hero` step — whole words, belted and capped', () => {
+describe('PostList — the hero: sections/PageHero, first in the rhythm box', () => {
+  it('puts PageHero’s <header> first in the rhythm box — the page’s only <h1>, the title as given, over the lead as given', () => {
     renderList();
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     const h1 = pageTitle();
-    expect(h1.tagName).toBe('H1');
-    expect(tokensOf(h1)).toEqual([
-      ...HERO_STEP,
-      ...TITLE_OWN,
-      STAIRWAY,
-      ...REACH,
-      SIZE_IN_SCALE,
-    ]);
-  });
-
-  it('is found by the name a screen reader hears — the copy’s line break a space, whitespace collapsed on both sides, whichever engine computes the name', () => {
-    renderList();
-
-    const h1 = pageTitle();
-    // Chromium's own accessible name reads the copy's line break as a space
-    // (its accessibility tree through the DevTools protocol, 2026-10-15):
-    // that name finds the very heading the suite's query does…
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: namedAs(TITLE.replaceAll('\n', ' ')),
-      }),
-    ).toBe(h1);
-    // …the raw `\n` that dom-accessibility-api keeps matches as well, and the
-    // heading's text with one word changed matches nothing.
-    expect(namedAs(TITLE)(TITLE)).toBe(true);
-    expect(namedAs(TITLE)(TITLE.replace('blogul', 'jurnalul'))).toBe(false);
-  });
-
-  it('wears, LAST, the doctor page’s name’s size in the band scale — 16.26 spacing steps, 65.04 design pixels — behind the band scale’s chain, the stairway and the heading’s reach beside it', () => {
-    renderList();
-
-    // The `hero` step reads the viewport, the one size the remap cannot
-    // redraw (THE BAND SCALE): inside the scale the title takes sections/
-    // DoctorIntro's name's design size, 65.04 (tests/unit/design-scale.test.ts
-    // holds the two classes equal), and the room for every language's two
-    // lines comes from the heading's reach, not from a smaller size.
-    const tokens = tokensOf(pageTitle());
-    expect(tokens.at(-1)).toBe(SIZE_IN_SCALE);
-    // …behind the band scale's own chain, the gate first, and nothing else on
-    // the heading gated but the stairway and the reach.
-    for (const token of [STAIRWAY, ...REACH, SIZE_IN_SCALE]) {
-      expect(String(variantsOf(token)), token).toBe(SCALE_CHAIN);
-    }
-    expect(
-      tokens.filter((token) => variantsOf(token).includes('scalable')),
-    ).toEqual([STAIRWAY, ...REACH, SIZE_IN_SCALE]);
-    // …so the reach is never worn ungated: off the scale a max-content width
-    // would lay the whole heading on one line wider than a phone (the full
-    // token list above admits no other width on the heading; the ungated
-    // forms are not spelled in this file, which Tailwind scans too).
-  });
-
-  it('puts the lead right after the title — a ui/Text <p>, muted, whole words, centred ON THE ELEMENT (§15.15 b), capped, on the stairway', () => {
-    renderList();
-
-    const h1 = pageTitle();
-    const { hero } = partsOf(h1);
+    const { hero, rhythm } = partsOf(h1);
+    expect(hero.tagName).toBe('HEADER');
+    expect(rhythm.firstElementChild).toBe(hero);
+    expect(h1.textContent).toBe(TITLE);
     const lead = leadIn(hero);
-    expect(lead.tagName).toBe('P');
-    expect(tokensOf(lead)).toEqual(LEAD_TOKENS);
-    // DOM order is visual order: the title, then the lead, nothing else — no
-    // eyebrow (THE HERO: the owner's "eyebrow of text" is this sentence).
+    expect(lead.textContent).toBe(LEAD);
     expect([...hero.children]).toEqual([h1, lead]);
   });
 
-  it('keeps the copy’s line breaks inside THE BAND SCALE alone — ONE white-space token on each block, the stairway behind the band scale’s chain, none on the boxes around them', () => {
-    renderList();
+  it('hands the hero the two strings and nothing else — the band’s hero is PageHero rendered alone, byte for byte: no className, no attribute of the band’s', () => {
+    const { container } = renderList();
+    const band = partsOf(pageTitle()).hero.outerHTML;
 
-    // The white-space utilities, built from their values so this file spells
-    // no class nothing wears (Tailwind scans tests too).
-    const whiteSpaces = new Set(
-      ['normal', 'nowrap', 'pre', 'pre-line', 'pre-wrap', 'break-spaces'].map(
-        (value) => `whitespace-${value}`,
-      ),
-    );
-    const whiteSpaceTokensOf = (element: Element): string[] =>
-      tokensOf(element).filter((token) => whiteSpaces.has(utilityOf(token)));
-    const h1 = pageTitle();
-    const { hero, rhythm } = partsOf(h1);
-    expect(whiteSpaceTokensOf(h1)).toEqual([STAIRWAY]);
-    expect(whiteSpaceTokensOf(leadIn(hero))).toEqual([STAIRWAY]);
-    expect(whiteSpaceTokensOf(hero)).toEqual([]);
-    expect(whiteSpaceTokensOf(rhythm)).toEqual([]);
-    // …and the copy's breaks reach the DOM as written: one in the heading,
-    // two in the lead.
-    expect(h1.textContent).toBe(TITLE);
-    expect(TITLE.split('\n')).toHaveLength(2);
-    expect(LEAD.split('\n')).toHaveLength(3);
-  });
-
-  it('centres both boxes and the title’s lines through its <header>', () => {
-    renderList();
-
-    const { hero } = partsOf(pageTitle());
-    expect(hero.tagName).toBe('HEADER');
-    expect(tokensOf(hero)).toEqual(HERO);
-  });
-
-  it('wraps the title and the lead as prose falls from the 48rem step up, `pretty` only on a phone’s or a tablet’s column — ONE wrap token on each, none on the boxes around them', () => {
-    renderList();
-
-    // The wrap style INHERITS, so a wrap utility on the hero or the rhythm box
-    // would reshape both blocks. Of Tailwind's four `text-*` wrap utilities,
-    // under any variant, the title and the lead wear exactly one —
-    // `@max-3xl:text-pretty` (THE HERO) — and every other is refused: a
-    // balanced wrap, a `pretty` at every width, a `nowrap`. (The four are
-    // built from their style names, so this file spells no class nothing
-    // wears — Tailwind scans tests too.)
-    const wrapUtilities = new Set(
-      ['wrap', 'nowrap', 'balance', 'pretty'].map((style) => `text-${style}`),
-    );
-    const wrapTokensOf = (element: Element): string[] =>
-      tokensOf(element).filter((token) => wrapUtilities.has(utilityOf(token)));
-    const h1 = pageTitle();
-    const { hero, rhythm } = partsOf(h1);
-    expect(wrapTokensOf(h1)).toEqual([PHONE_PRETTY]);
-    expect(wrapTokensOf(leadIn(hero))).toEqual([PHONE_PRETTY]);
-    expect(wrapTokensOf(hero)).toEqual([]);
-    expect(wrapTokensOf(rhythm)).toEqual([]);
+    // The same two strings to PageHero alone, in a container of its own.
+    const alone = document.createElement('div');
+    document.body.append(alone);
+    try {
+      render(<PageHero title={TITLE} lead={LEAD} />, { container: alone });
+      expect(band).toBe(alone.innerHTML);
+    } finally {
+      alone.remove();
+    }
+    // …and the band is the one source of the page's <h1>: nothing else in
+    // it is a heading of level 1.
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
   });
 });
 
@@ -469,12 +319,10 @@ describe('PostList — the band: ui/Container’s page-band recipe and THE BAND 
     );
   });
 
-  it('gates nothing but the rhythm box’s two strings, the title’s four classes and the lead’s one', () => {
+  it('gates nothing of its own but the rhythm box’s two strings — the hero’s gated classes are sections/PageHero’s', () => {
     const { container } = renderList();
 
-    const h1 = pageTitle();
-    const { hero, rhythm } = partsOf(h1);
-    const lead = leadIn(hero);
+    const { rhythm } = partsOf(pageTitle());
     const fromTheScale = [
       ...bandColumnClasses.split(' '),
       ...bandScaleClasses.split(' '),
@@ -485,12 +333,11 @@ describe('PostList — the band: ui/Container’s page-band recipe and THE BAND 
         variantsOf(token).includes('scalable'),
       );
       if (element === rhythm) expect(gated).toEqual(fromTheScale);
-      else if (element === h1)
-        expect(gated).toEqual([STAIRWAY, ...REACH, SIZE_IN_SCALE]);
-      else if (element === lead) expect(gated).toEqual([STAIRWAY]);
-      // The pager's discs and the cards follow the band's pixel by
-      // inheritance; the section's own children wear no gate of their own.
-      else if (element.closest('article, nav') === null)
+      // The hero's title and lead wear their own gated classes
+      // (PageHero.test.tsx holds them); the pager's discs and the cards
+      // follow the band's pixel by inheritance; the band's own boxes wear no
+      // gate of their own.
+      else if (element.closest('header, article, nav') === null)
         expect(gated).toEqual([]);
     }
     // The regime is ui/Container's: the band spells none of it.
@@ -518,22 +365,13 @@ describe('PostList — the band: ui/Container’s page-band recipe and THE BAND 
     // ui/Container is left out on purpose: its side margins ARE the gutter,
     // the atom's own product (its header's §6.4 nuance), never the band's;
     // and the band-scale column's `mx-auto` is the cap's centring
-    // (bandColumnClasses), not a margin of the band's.
-    const { hero, rhythm, section } = partsOf(pageTitle());
+    // (bandColumnClasses), not a margin of the band's. The hero's boxes are
+    // sections/PageHero's, and its suite holds them to the same rule.
+    const { rhythm, section } = partsOf(pageTitle());
     const list = articleList();
-    const lead = leadIn(hero);
     const own = (element: Element): string[] =>
       element === rhythm ? RHYTHM_OWN : tokensOf(element);
-    for (const box of [
-      section,
-      rhythm,
-      hero,
-      pageTitle(),
-      lead,
-      groupOf(),
-      list,
-      ...list.children,
-    ]) {
+    for (const box of [section, rhythm, groupOf(), list, ...list.children]) {
       for (const token of own(box)) {
         expect(token).not.toMatch(/(^|:)-?m[trblxyse]?-/);
       }
@@ -730,10 +568,11 @@ describe('PostList — zero islands, zero message keys, zero data', () => {
     expect(CODE).not.toMatch(/\bon[A-Z]\w*=/);
   });
 
-  it('imports EXACTLY the two sections, three atoms and one helper it composes — and no data', () => {
+  it('imports EXACTLY the three sections, one atom and one helper it composes — and no data', () => {
     // The import surface is the guard a regex on directives cannot be: an
     // import of lib/blog would make the band its own populator, and a
-    // section with state would hydrate the whole index.
+    // section with state would hydrate the whole index. The hero's atoms —
+    // ui/Heading, ui/Text — are sections/PageHero's now, never the band's.
     const specifiers = [
       ...CODE.matchAll(/^import\s[^'"]*from\s*['"]([^'"]+)['"]/gm),
     ]
@@ -741,15 +580,21 @@ describe('PostList — zero islands, zero message keys, zero data', () => {
       .toSorted();
 
     expect(specifiers).toEqual([
+      '@/components/sections/PageHero/PageHero',
       '@/components/sections/Pagination/Pagination',
       '@/components/sections/PostCard/PostCard',
       '@/components/ui/Container/Container',
-      '@/components/ui/Heading/Heading',
-      '@/components/ui/Text/Text',
       '@/lib/cx/cx',
       'react',
     ]);
     expect(CODE).toMatch(/^import type \{ ReactElement \} from 'react';$/m);
+    // From ui/Container, the component and its two band-scale strings.
+    expect(CODE).toMatch(
+      /^import \{\s*Container,\s*bandColumnClasses,\s*bandScaleClasses,\s*\} from '@\/components\/ui\/Container\/Container';$/m,
+    );
+    expect(CODE).toMatch(
+      /^import \{ PageHero \} from '@\/components\/sections\/PageHero\/PageHero';$/m,
+    );
     expect(CODE).not.toMatch(/^import\s*['"]/m);
   });
 

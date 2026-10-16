@@ -73,6 +73,17 @@ type TextButtonOwnProps = {
    */
   active?: boolean;
   /**
+   * The hover look, HELD — the lavender label and the full underline — for
+   * as long as what this button opens stays open
+   * (the top bar's dropdowns: the word of the open card, the phone panel's
+   * row of the open list). Its caller switches it at run time, so it plays
+   * the hover's own two clocks in and out; under reduced motion, at once.
+   * VISUAL ONLY: it adds no ARIA — the control that opens the section says
+   * so itself (`aria-expanded`). With `active`, it is `active` (THE HELD
+   * LOOK, below). @default false
+   */
+  held?: boolean;
+  /**
    * Render no <button> of TextButton's own — the single child element you
    * nest (an <a href> built by localeHref(), an <a href="#top">) BECOMES the
    * control and wears these classes on top of its own. An <a> with no href —
@@ -195,6 +206,24 @@ export type TextButtonProps = TextButtonOwnProps &
 // call, recorded with the card's own jump (§15.39), until the article link
 // lands.
 //
+// THE HELD LOOK (owner, 2026-10-16, on the top bar's dropdowns: "if a
+// dropdown is being clicked or hovered it has to light up lilla and trigger
+// animation and leave it on until card or section unfocus or change. so also
+// while button triggered cards is open, button must behave as if focused"):
+// `held` wears the hover's END values while what the button opens stays open
+// — the pointer may have left the word for the card long ago. It IS
+// `active`'s row, `activeClasses` below — the lavender label and the full rule —
+// without `active`'s aria-current: the look of a selection, nothing said. The
+// difference is time. `active` is there on first paint and never animates in
+// (§9: state is never told by motion); `held` is switched on and off by its
+// caller at run time, so the two clocks above play — the label over 200ms,
+// the rule's sweep over 300ms, and the way back when it lets go — exactly as
+// a hover does, and the same two `motion-reduce` resets make both instant.
+// The state itself is the caller's to announce, on the control that opens
+// the section (`aria-expanded`): the phone panel's row is that button; on the
+// bar, the word is a link and its ⌄ beside it is. `active` and `held`
+// together are `active`.
+//
 // The underline is a PSEUDO-ELEMENT, not a nested <span>, because asChild
 // leaves no element of TextButton's own in the DOM — the whole look has to
 // travel as classes on the caller's child element. RECORDED, not changed
@@ -302,6 +331,7 @@ function hoverAreaClasses(area: TextButtonHoverArea): string {
 
 export function TextButton({
   active = false,
+  held = false,
   hoverArea = 'self',
   tone = 'ink',
   asChild = false,
@@ -313,7 +343,8 @@ export function TextButton({
 }: TextButtonProps): ReactElement {
   const ownClasses = cx(
     base,
-    active ? activeClasses : restingClasses(tone),
+    // THE HELD LOOK is the active row, aria-current aside (below).
+    active || held ? activeClasses : restingClasses(tone),
     hoverAreaClasses(hoverArea),
     className,
   );
@@ -321,8 +352,8 @@ export function TextButton({
   // `active` is sugar for the ARIA state, so an explicitly passed
   // aria-current still wins (§6.8 native-element fidelity): a caller marking a
   // step/location keeps their word, and nothing but this attribute leaks —
-  // `active`, `tone`, `hoverArea` and `asChild` themselves never reach the
-  // DOM.
+  // `active`, `held`, `tone`, `hoverArea` and `asChild` themselves never
+  // reach the DOM. `held` says nothing at all.
   const rootProps = {
     ...rest,
     'aria-current': ariaCurrent ?? (active ? 'page' : undefined),

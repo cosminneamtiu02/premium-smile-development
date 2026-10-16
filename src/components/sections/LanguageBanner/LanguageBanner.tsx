@@ -69,6 +69,11 @@ import { usePathname } from '@/i18n/navigation';
 // uses none of it as written — the wrong-abstraction the rule-of-three exists
 // to prevent (three ALIKE things, not three things). NOTHING MERGES FROM THIS
 // LANE.
+// FIRED SINCE (2026-10-15, CLAUDE.md §15.40): the top bar's dropdowns under
+// „Servicii" and „Echipa" were the third overlay, and the two manners that
+// were truly alike — document-bound Esc and the page-exit close — are ONE
+// module now, lib/overlay-dismiss. This card still uses neither, for the four
+// reasons above.
 //
 // ── TWO EXPORTS, ONE FILE, AND WHY THE SPLIT EXISTS (board §5).
 //   · `LanguageBanner` — the MOUNT API. The shell renders exactly one of these

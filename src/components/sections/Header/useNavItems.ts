@@ -3,7 +3,11 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { localeHref } from '@/i18n/href';
 import { usePathname } from '@/i18n/navigation';
-import { matchesRoute, PRIMARY_ROUTES } from '@/lib/routes/routes';
+import {
+  matchesRoute,
+  PRIMARY_ROUTES,
+  type PrimaryRoute,
+} from '@/lib/routes/routes';
 import type { NavRoute } from './NavItem';
 
 // sections/Header — the hook that turns the site's route list into the bar's
@@ -55,6 +59,19 @@ import type { NavRoute } from './NavItem';
 //
 // §8.1 holds: t() is called HERE, in the section tier, and the atoms below
 // NavItem receive finished strings. They never see a key.
+//
+// ── AND EACH ENTRY CARRIES ITS PATH (the top bar's dropdowns, 2026-10-15,
+// CLAUDE.md §15.40). Servicii and Echipa drop a card of their page's sections;
+// the islands find a row's entries by the row's locale-less path — the key
+// Header.tsx's finished links are filed under (navSectionLinks.ts) — so the
+// path rides along beside the href. It is a LOOKUP KEY, never markup: NavItem
+// prints href, label and active alone and spreads nothing onto the DOM, and
+// both islands take the path off before they render one.
+
+/** One bar entry: what NavItem prints, plus the path its dropdown is filed
+ *  under (lib/routes' PrimaryRoute['path'] — '/', '/services', '/team',
+ *  '/blog'). */
+export type NavEntry = NavRoute & Readonly<{ path: PrimaryRoute['path'] }>;
 
 /**
  * The primary routes in bar order, each already translated, already told
@@ -72,7 +89,7 @@ import type { NavRoute } from './NavItem';
  * any more: since D9 it is ours and it absorbs the no-router case itself,
  * always returning a path.
  */
-export function useNavItems(): NavRoute[] {
+export function useNavItems(): NavEntry[] {
   const t = useTranslations('common');
   const locale = useLocale();
   const pathname = usePathname();
@@ -81,5 +98,6 @@ export function useNavItems(): NavRoute[] {
     href: localeHref(locale, route.path),
     label: t(route.key),
     active: matchesRoute(pathname, route.path),
+    path: route.path,
   }));
 }

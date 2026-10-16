@@ -195,6 +195,14 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     does; past it a 200 % zoom grows the price rows ×1.45 on a 1920 screen and ×1.44 on 2560
     (develop ×2), the 110 and 125 % steps leave them unchanged on 1920 and the 175 % step on 2560,
     and twice the 100 % size arrives at ≈ 275 %.
+  - THE TOP BAR'S DROPDOWNS (CLAUDE.md §15.40; the accessibility review of 2026-10-16): an NVDA
+    browse-mode pass and a JAWS one over „Servicii" and „Echipa" — the word a link, then its ⌄ named
+    „Submeniul …" (aria-expanded), which a mouse cannot press at rest (it lets the pointer through to the
+    word's arrow) — and an iPad held sideways under VoiceOver's touch exploration, where WebKit may skip that
+    click-through ⌄. Tools that click by SCREEN POSITION (JAWS's mouse routing, Dragon's MouseGrid) land on
+    the word's link and follow it, never the ⌄ — expected, to confirm. On a phone, VoiceOver and TalkBack
+    on the menu's two section rows: „Servicii, button, collapsed" (with „current page" on its own page) and
+    the list under it.
 
 ## 3 · The privacy and cookie policy page
 

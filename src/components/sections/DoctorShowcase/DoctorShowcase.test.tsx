@@ -675,7 +675,9 @@ describe('DoctorShowcase — the doctors, ONE list under the ribbon (D3, D5, D6)
       expect(station.tagName).toBe('DIV');
       expect(station).toHaveAttribute('data-ribbon-station', '');
       expect(station).toHaveAttribute('role', 'listitem');
-      expect(station).not.toHaveAttribute('class');
+      // One class and only that: the anchor's landing air (D13) — no paint,
+      // no box, nothing the ribbon measures.
+      expect(station).toHaveAttribute('class', 'scroll-mt-[2.5rem]');
     }
     const layer = list.lastElementChild;
     expect(layer).toHaveAttribute('aria-hidden', 'true');
@@ -783,6 +785,35 @@ describe('DoctorShowcase — the doctors, ONE list under the ribbon (D3, D5, D6)
     );
 
     expect(screen.getByRole('article', { name: DOCTORS[0].name })).toBe(elena);
+  });
+
+  it('anchors every station by its doctor’s id, landing 2.5rem under the top bar — the „Echipa" dropdown’s targets, under either opener (D13, D12)', () => {
+    // The top bar's dropdown links to `/{locale}/team/#{doctor id}`
+    // (lib/nav-sections) — the Team page, whose band opens on the PAGE
+    // opener (D12); Home's band opener prints the same ids. So the id IS the
+    // fragment: on the station, whose top is its card's top, beside the price
+    // cards' own 40px of air. No tab stop on purpose — a focusable target
+    // draws the ring on every arrival.
+    for (const mount of [() => renderBand(), () => renderPage()]) {
+      const { container, unmount } = mount();
+      const stations = Array.from(
+        container.querySelectorAll<HTMLElement>(
+          '[role="list"] [data-ribbon-station]',
+        ),
+      );
+
+      expect(stations.map((station) => station.id)).toEqual(
+        DOCTORS.map((doctor) => doctor.id),
+      );
+      for (const station of stations) {
+        expect(getComputedStyle(station).scrollMarginTop).toBe('40px');
+        expect(station.hasAttribute('tabindex')).toBe(false);
+        expect(station.getBoundingClientRect().top).toBe(
+          station.firstElementChild?.getBoundingClientRect().top,
+        );
+      }
+      unmount();
+    }
   });
 
   it('prints the doctors exactly as given — the band never sorts', () => {

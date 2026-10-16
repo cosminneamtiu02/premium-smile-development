@@ -250,6 +250,117 @@ describe('TextButton — active = the current page', () => {
   });
 });
 
+describe('TextButton — THE HELD LOOK: the hover look held while its section is open (owner, 2026-10-16)', () => {
+  it('is the active row without aria-current — the lavender label and the full rule, nothing announced', () => {
+    expect(classOf(<TextButton held>Servicii</TextButton>)).toBe(
+      classOf(<TextButton active>Servicii</TextButton>),
+    );
+    render(<TextButton held>Servicii</TextButton>);
+    expect(
+      screen.getByRole('button', { name: 'Servicii' }),
+    ).not.toHaveAttribute('aria-current');
+  });
+
+  it('omitted or false, it is the menu buttons’ string, byte for byte', () => {
+    expect(classOf(<TextButton>Servicii</TextButton>)).toBe(
+      MENU_BUTTON_CLASSES,
+    );
+    expect(classOf(<TextButton held={false}>Servicii</TextButton>)).toBe(
+      MENU_BUTTON_CLASSES,
+    );
+  });
+
+  it('with active, it is active — aria-current="page" and one string', () => {
+    expect(
+      classOf(
+        <TextButton active held>
+          Acasă
+        </TextButton>,
+      ),
+    ).toBe(classOf(<TextButton active>Acasă</TextButton>));
+    render(
+      <TextButton active held>
+        Acasă
+      </TextButton>,
+    );
+    expect(screen.getByRole('button')).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('wears the active row in either tone — the tone is a REST ink, and held is no rest', () => {
+    for (const tone of TONES) {
+      const held = classOf(
+        <TextButton held tone={tone}>
+          Servicii
+        </TextButton>,
+      );
+      expect(held).toBe(
+        classOf(
+          <TextButton active tone={tone}>
+            Servicii
+          </TextButton>,
+        ),
+      );
+      expect(held.split(/\s+/)).toContain('text-accent');
+    }
+  });
+
+  it('keeps both clocks unconditional, so a switch at run time plays the hover’s sweep in and out — and the reduced-motion resets make it instant', () => {
+    const tokens = classOf(<TextButton held>Servicii</TextButton>).split(/\s+/);
+    expect(tokens).toEqual(
+      expect.arrayContaining([
+        'transition-[color]',
+        'duration-200',
+        'ease-out',
+        'after:transition-transform',
+        'after:duration-300',
+        'after:ease-out',
+        'motion-reduce:transition-none',
+        'motion-reduce:after:transition-none',
+      ]),
+    );
+  });
+
+  it('never reaches the DOM — on the <button>, or on the child an asChild render clones — and adds no ARIA of its own', () => {
+    render(
+      <>
+        <TextButton held>Servicii</TextButton>
+        <TextButton held asChild>
+          <a href="/ro/team/">Echipa</a>
+        </TextButton>
+      </>,
+    );
+    for (const element of [
+      screen.getByRole('button', { name: 'Servicii' }),
+      screen.getByRole('link', { name: 'Echipa' }),
+    ]) {
+      expect(element).not.toHaveAttribute('held');
+      expect(element).not.toHaveAttribute('aria-current');
+      expect(element).not.toHaveAttribute('aria-expanded');
+      expect(element).not.toHaveAttribute('aria-pressed');
+    }
+  });
+
+  it('paints it: the --accent label and the full rule while held, the ink and no rule once released — the pointer parked away', async () => {
+    const unpark = await parkPointer();
+    try {
+      const { rerender } = render(<TextButton held>Servicii</TextButton>);
+      const button = screen.getByRole('button', { name: 'Servicii' });
+      expect(getComputedStyle(button).color).toBe(tokenColour('accent'));
+      expect(underlineScaleX(button)).toBe(1);
+
+      rerender(<TextButton>Servicii</TextButton>);
+      expect(getComputedStyle(button).color).toBe(tokenColour('ink'));
+      expect(underlineScaleX(button)).toBe(0);
+
+      rerender(<TextButton held>Servicii</TextButton>);
+      expect(getComputedStyle(button).color).toBe(tokenColour('accent'));
+      expect(underlineScaleX(button)).toBe(1);
+    } finally {
+      unpark();
+    }
+  });
+});
+
 describe('TextButton — §6.8 native-element fidelity', () => {
   it('merges the parent className instead of replacing its own', () => {
     render(<TextButton className="justify-self-start">Servicii</TextButton>);

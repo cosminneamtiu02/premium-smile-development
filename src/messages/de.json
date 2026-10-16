@@ -7,7 +7,8 @@
       "services": "Leistungen",
       "team": "Team",
       "blog": "Blog",
-      "ariaLabel": "Hauptnavigation"
+      "ariaLabel": "Hauptnavigation",
+      "submenu": "Untermenü {label}"
     },
     "actions": {
       "call": "Jetzt anrufen",

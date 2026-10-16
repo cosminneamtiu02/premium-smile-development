@@ -588,8 +588,9 @@ describe('Footer — row 3, the legal strip', () => {
 
   it('opens the clinic chat directly — the WhatsApp disc is a wa.me link', () => {
     // Board D2: the disc opens the WhatsApp conversation itself. A "WhatsApp
-    // modal" is banned — it would be the third stateful overlay §15.15 keeps
-    // WAITing on, bought for nothing.
+    // modal" is banned — it would have been a stateful overlay (§15.15) bought
+    // for nothing; the third arrived on its own, the top bar's dropdowns
+    // (§15.40).
     const { messages } = mount();
     const disc = screen.getByRole('link', {
       name: fill(messages.footer.contactWhatsapp, { name: clinic.name }),

@@ -197,12 +197,19 @@ const mountAt = (locale: Locale, barPx: number) => {
     header.querySelector('button[aria-haspopup="dialog"]'),
     'Contact button',
   );
+  // The burger is the one toggle that controls the PANEL, and the row's links
+  // are its own WORDS, each a direct child of its <li>: since the dropdowns
+  // (2026-10-15, CLAUDE.md §15.40) the row also holds the ⌄ toggles, which
+  // carry aria-expanded too and come first in the DOM, and the cards' links,
+  // laid out under the bar while closed — neither belongs to the row's
+  // geometry (tests/e2e/header-step.spec.ts reads the bar the same way).
   const burger = htmlElement(
-    header.querySelector('button[aria-expanded]'),
+    header.querySelector('button[aria-controls="header-menu"]'),
     'burger',
   );
-  const links = Array.from(nav.querySelectorAll('a[href]'), (link) =>
-    htmlElement(link, 'nav link'),
+  const links = Array.from(
+    nav.querySelectorAll(':scope > ul > li > a[href]'),
+    (link) => htmlElement(link, 'nav link'),
   );
   // No unmount: tests/setup/components.ts cleans up after every case.
   return { header, nav, brand, cta, burger, links };

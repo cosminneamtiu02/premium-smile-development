@@ -1,17 +1,21 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import { clinic } from '@/lib/clinic/clinic';
+import { priceCategories } from '@/lib/prices/prices';
+import { doctors } from '@/lib/team/team';
 import de from '@/messages/de.json';
 import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
 import ro from '@/messages/ro.json';
 import { Header } from './Header';
 
-// The Header's five stories, built to the owner-approved N2 contract board
+// The Header's stories, built to the owner-approved N2 contract board
 // .claude/plans/header-n2-contract.plan.md §6 — the fifth, AtTheStep, added by
-// the header-nav-gap lane (the owner's ask, 2026-09-26).
+// the header-nav-gap lane (the owner's ask, 2026-09-26), and five more for the
+// top bar's dropdowns (2026-10-15, CLAUDE.md §15.40 — THE DROPDOWNS, at the
+// foot of this file).
 //
 // TWO mechanics here would otherwise fail SILENTLY, so both are spelled out:
 //
@@ -218,9 +222,13 @@ export const Default: Story = {
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/ro/services' } },
   },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, canvasElement }) => {
     const current = canvas.getByRole('link', { name: ro.common.nav.services });
     await expect(current).toHaveAttribute('aria-current', 'page');
+    // The two dropdown words carry their arrow at rest (NavDropdown.tsx's
+    // THE ARROW) — the current page's „Servicii" too — and the link is still
+    // named by its word alone, as the query above proves.
+    await expectArrowsAtRest(canvasElement);
     // Only the page you are on is marked — the home link is the trap, since
     // '/' prefixes every path.
     await expect(
@@ -266,9 +274,10 @@ export const Default: Story = {
  *
  * The `pin-open` tag is what carries this state into the VISUAL runner (the
  * sibling of the existing `pin-hover` pattern): the spec clicks the burger and
- * waits for `#header-menu` before shooting. The play function below does the
- * same job for the two in-browser gates — per-story axe, which must see the
- * OPEN panel, and the interaction runner. It is written idempotently (it
+ * waits for the panel its `aria-controls` names before shooting. The play
+ * function below does the same job for the two in-browser gates — per-story
+ * axe, which must see the OPEN panel, and the interaction runner. It is
+ * written idempotently (it
  * returns early if the panel is already open) so the two openers can never
  * cancel each other into a closed baseline.
  *
@@ -307,11 +316,21 @@ export const MenuOpen: Story = {
     });
     await expect(burger).toHaveAttribute('aria-expanded', 'true');
     // On a phone the panel is the ONLY way to the blog (owner, 2026-10-14):
-    // its fourth and last link, the list's page 1.
+    // its last link, the list's page 1. Since 2026-10-16 the words Servicii
+    // and Echipa OPEN THEIR LISTS (the owner: "on phone on click of servicii
+    // it has to open it's respective dropdown") — a button each — so the
+    // panel's links are its two plain words, Acasă and Blog.
     const links = within(panel).getAllByRole('link');
-    await expect(links).toHaveLength(4);
-    await expect(links.at(-1)).toHaveAccessibleName(ro.common.nav.blog);
+    await expect(links.map((link) => link.textContent)).toEqual([
+      ro.common.nav.home,
+      ro.common.nav.blog,
+    ]);
     await expect(links.at(-1)).toHaveAttribute('href', '/ro/blog/');
+    for (const label of [ro.common.nav.services, ro.common.nav.team]) {
+      await expect(
+        within(panel).getByRole('button', { name: label }),
+      ).toHaveAttribute('aria-expanded', 'false');
+    }
     // The bar keeps its brand while the panel is open (BRAND + ✕) — and at
     // this story's phone width that brand is past the Wordmark's tighten step.
     await expectMarkAtTopBarSize(canvas.getByRole('banner'));
@@ -532,5 +551,336 @@ export const AtTheStep: Story = {
     await expect(
       Math.abs((n.left + n.right) / 2 - (b.left + b.right) / 2),
     ).toBeLessThanOrEqual(1);
+  },
+};
+
+// ── THE DROPDOWNS (2026-10-15, CLAUDE.md §15.40 — the owner: "a navigation
+// dropdown on hover JUST ON THE TOP BAR ELEMNTS which drops down smoothly with
+// sections of that particular page … on phone it should open up a dropdown
+// with the adjacent subsections"). Five stories: a card open under each of the
+// two words, the German card (the longest labels), the keyboard's way in, and
+// the phone panel with a list open. Of the dropdowns, every closed story above
+// shows exactly one thing: the small arrow after „Servicii" and „Echipa"
+// (2026-10-16, the owner: "place an svg on the right side of the text with an
+// arrow pointing downwards. hinting it is a dropdown menu" — NavDropdown.tsx's
+// THE ARROW), wherever the row is drawn. A closed card is invisible and
+// clipped to nothing, and the ⌄ draws nothing of its own.
+//
+// THE OPEN CARD IN THE VISUAL NET: a card opens on a hover, and only a REAL
+// mouse moves :hover, so the three Dropdown stories wear `pin-dropdown` (the
+// first dropdown word, Servicii) or `pin-dropdown-last` (the last, Echipa):
+// tests/visual/stories.spec.ts rests a real mouse on the word and waits for
+// the card. Their plays hover with the play's own pointer for the two
+// in-browser gates — per-story axe must see the OPEN card — and either opener
+// converges on the same open card. The laptop pin is the play's requirement
+// (the row exists from the bar's step up); the net ignores it, so at 390 the
+// frames are the closed phone bar, a repeat the net tolerates (AtTheStep's).
+
+/** The bar row's dropdown item for `path` — the hook the visual net's
+ *  `pin-dropdown` tags use too. */
+const dropdownItem = (root: HTMLElement, path: string): HTMLElement => {
+  const item = root.querySelector<HTMLElement>(`[data-nav-dropdown="${path}"]`);
+  if (!item) {
+    throw new Error(
+      `the bar row has no dropdown item for ${path} — HeaderNav renders ` +
+        'Servicii and Echipa through NavDropdown',
+    );
+  }
+  return item;
+};
+
+/** The item's word, its ⌄ and the card the ⌄ controls. */
+const partsOf = (item: HTMLElement) => {
+  const word = item.querySelector<HTMLElement>(':scope > a');
+  const toggle = item.querySelector<HTMLButtonElement>(':scope > button');
+  const card = document.getElementById(
+    toggle?.getAttribute('aria-controls') ?? '',
+  );
+  if (!word || !toggle || !card) {
+    throw new Error('a dropdown item without its word, its ⌄ or its card');
+  }
+  return { word, toggle, card };
+};
+
+/** Hover the word with the play's pointer and wait out the intent. */
+const openByHover = async (
+  item: HTMLElement,
+  userEvent: { hover: (element: Element) => Promise<void> },
+) => {
+  const parts = partsOf(item);
+  await userEvent.hover(parts.word);
+  await waitFor(() => expect(parts.card).toHaveAttribute('data-state', 'open'));
+  return parts;
+};
+
+/** THE ARROW of a dropdown word — the one <svg> inside its link
+ *  (NavDropdown.tsx's THE ARROW; the ⌄ beside the word draws none). */
+const arrowOf = (word: HTMLElement): SVGSVGElement => {
+  const arrow = word.querySelector<SVGSVGElement>(':scope > svg');
+  if (!arrow) {
+    throw new Error(
+      'a dropdown word without its arrow — NavDropdown.tsx hands NavItem ' +
+        'the ChevronRight through its `trailing` slot',
+    );
+  }
+  return arrow;
+};
+
+/**
+ * THE ARROWS AT REST: after both dropdown words, inside the link, decoration
+ * pointing DOWN; none after Acasă or Blog; none drawn by the ⌄s. The turn
+ * transitions, so the rest is waited for — a card closing a moment ago turns
+ * its arrow back over 300ms.
+ */
+const expectArrowsAtRest = async (root: HTMLElement) => {
+  for (const path of ['/services', '/team']) {
+    const { word, toggle } = partsOf(dropdownItem(root, path));
+    const arrow = arrowOf(word);
+    await expect(word.querySelectorAll('svg')).toHaveLength(1);
+    await expect(arrow).toHaveAttribute('aria-hidden', 'true');
+    await waitFor(() => expect(getComputedStyle(arrow).rotate).toBe('90deg'));
+    await expect(toggle.querySelector('svg')).toBeNull();
+  }
+  const row = root.querySelector('header nav');
+  const plain = row?.querySelectorAll(
+    ':scope > ul > li:not([data-nav-dropdown]) > a',
+  );
+  await expect(plain).toHaveLength(2);
+  for (const link of Array.from(plain ?? [])) {
+    await expect(link.querySelector('svg')).toBeNull();
+  }
+};
+
+/**
+ * THE HELD LOOK, THE ARROW and THE POINTER under an open card (owner,
+ * 2026-10-16: "while button triggered cards is open, button must behave as if
+ * focused … the traingle above card pointing to option" — NavDropdown.tsx's
+ * THE WORD, THE ARROW and THE POINTER). The word wears ui/TextButton's held
+ * row — the lavender label and the full rule, never `aria-current`: the
+ * stories below sit on a home page, so the word is never the current one —
+ * its arrow points UP, and the pointer, a direct child of the item — the
+ * small notch, 22 × 11 at the default root — stands centred under the word,
+ * its base one pixel into the card, its tip under the word's rule.
+ */
+const expectHeldAndPointer = async (item: HTMLElement) => {
+  const { word, card } = partsOf(item);
+  await expect(word).toHaveClass('text-accent', 'after:scale-x-100');
+  await expect(word).not.toHaveAttribute('aria-current');
+  const arrow = arrowOf(word);
+  await waitFor(() => expect(getComputedStyle(arrow).rotate).toBe('-90deg'));
+  const pointer = item.querySelector<SVGSVGElement>(':scope > svg');
+  const backdrop = card.querySelector<HTMLElement>(':scope > .grid > div');
+  if (!pointer || !backdrop) {
+    throw new Error(
+      'an open card without its pointer or its ui/Card backdrop — ' +
+        'NavDropdown.tsx draws both while open',
+    );
+  }
+  await expect(pointer).toHaveAttribute('aria-hidden', 'true');
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const p = pointer.getBoundingClientRect();
+  const w = word.getBoundingClientRect();
+  const b = backdrop.getBoundingClientRect();
+  await expect(p.width).toBeCloseTo(1.375 * rem, 1);
+  await expect(p.height).toBeCloseTo(0.6875 * rem, 1);
+  await expect(
+    Math.abs(p.left + p.width / 2 - (w.left + w.width / 2)),
+  ).toBeLessThanOrEqual(0.5);
+  await expect(Math.abs(p.bottom - (b.top + 1))).toBeLessThanOrEqual(0.5);
+  await expect(p.top).toBeGreaterThan(w.bottom);
+};
+
+/**
+ * Servicii's card, open under a mouse resting on the word, on the Romanian
+ * home page: the eleven price categories in two columns (six and five, read
+ * down then across), the white card on the soft corner with the lilac aura,
+ * each entry the top bar's own quiet button — its underline sweeping in on
+ * hover since §15.40's round 4, none standing at rest. The word
+ * holds its lavender look and full rule while the card is open, its arrow
+ * turned up, and the card's pointer — a small white notch on its top edge —
+ * reaches the bar's edge under it (2026-10-16). The ⌄ draws nothing of its
+ * own — the arrow a mouse user sees is the word's.
+ */
+export const DropdownServices: Story = {
+  tags: ['pin-dropdown'],
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/ro' } },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const item = dropdownItem(canvasElement, '/services');
+    const { toggle, card } = await openByHover(item, userEvent);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    // The word held, its arrow up, the pointer under it — and under no other
+    // word, whose arrow still points down.
+    await expectHeldAndPointer(item);
+    const team = dropdownItem(canvasElement, '/team');
+    await expect(team.querySelector(':scope > svg')).toBeNull();
+    await expect(partsOf(team).word).not.toHaveClass('text-accent');
+    await expect(getComputedStyle(arrowOf(partsOf(team).word)).rotate).toBe(
+      '90deg',
+    );
+    const links = within(card).getAllByRole('link');
+    await expect(links.map((link) => link.textContent)).toEqual(
+      priceCategories.map((category) => category.name.ro),
+    );
+    // „profilaxie it takes you directly to profilaxie": the card's own id.
+    const prophylaxis = priceCategories.find((c) => c.id === 'prophylaxis');
+    await expect(
+      within(card).getByRole('link', { name: prophylaxis?.name.ro }),
+    ).toHaveAttribute('href', '/ro/services/#prophylaxis');
+    // Opened by the MOUSE: the ⌄ draws nothing and stays click-through — the
+    // arrow under it is the word's.
+    await expect(toggle.childElementCount).toBe(0);
+    await expect(getComputedStyle(toggle).pointerEvents).toBe('none');
+  },
+};
+
+/**
+ * Echipa's card: the six doctors, one column, each a link to the doctor's
+ * CARD on the Team page (the owner's pick: "on echipa it take you directly to
+ * a doctor card").
+ */
+export const DropdownTeam: Story = {
+  tags: ['pin-dropdown-last'],
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/ro' } },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const item = dropdownItem(canvasElement, '/team');
+    const { card } = await openByHover(item, userEvent);
+    await expectHeldAndPointer(item);
+    const links = within(card).getAllByRole('link');
+    await expect(links.map((link) => link.getAttribute('href'))).toEqual(
+      doctors.map((doctor) => `/ro/team/#${doctor.id}`),
+    );
+    await expect(links.map((link) => link.textContent)).toEqual(
+      doctors.map((doctor) => doctor.words.ro.name),
+    );
+  },
+};
+
+/**
+ * German, the longest labels (§8.4): Leistungen's card with „Kieferorthopädie"
+ * and „Zahnerhaltung" — the card is as wide as its longest entry, nothing
+ * wraps or clips, and the page never scrolls sideways.
+ */
+export const DropdownGerman: Story = {
+  tags: ['pin-dropdown'],
+  globals: { locale: 'de', viewport: { value: 'laptop' } },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/de' } },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const item = dropdownItem(canvasElement, '/services');
+    const { word, card } = await openByHover(item, userEvent);
+    await expect(word).toHaveTextContent(de.common.nav.services);
+    await expectHeldAndPointer(item);
+    const links = within(card).getAllByRole('link');
+    await expect(links.map((link) => link.textContent)).toEqual(
+      priceCategories.map((category) => category.name.de),
+    );
+    // Each label on one line: a 44px box, its own min height.
+    for (const link of links) {
+      await expect(link.getBoundingClientRect().height).toBeLessThan(50);
+    }
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+      document.documentElement.clientWidth,
+    );
+  },
+};
+
+/**
+ * The keyboard's way in — Apple's: Tab reaches the word, the NEXT Tab the ⌄
+ * after it (drawing nothing but its ring, round the word's arrow), Enter opens
+ * the card PINNED — the pointer leaving does not close it — and the word's
+ * arrow points up while it is.
+ */
+export const KeyboardToggle: Story = {
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/ro' } },
+  },
+  play: async ({ canvasElement, userEvent }) => {
+    const { word, toggle, card } = partsOf(
+      dropdownItem(canvasElement, '/services'),
+    );
+    for (let i = 0; i < 8 && document.activeElement !== word; i += 1) {
+      await userEvent.tab();
+    }
+    await expect(word).toHaveFocus();
+    await userEvent.tab();
+    await expect(toggle).toHaveFocus();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.keyboard('{Enter}');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(card).toHaveAttribute('data-state', 'open');
+    await expect(within(card).getAllByRole('link')).toHaveLength(
+      priceCategories.length,
+    );
+    // The pointer's while its card is pinned open — whatever the focus
+    // heuristics — and still no glyph of its own: the arrow is the word's.
+    await expect(getComputedStyle(toggle).pointerEvents).toBe('auto');
+    await expect(toggle.querySelector('svg')).toBeNull();
+    // Pinned by the keyboard, the word holds its look, its arrow points up
+    // and the pointer stands under it, as for a hover.
+    await expectHeldAndPointer(dropdownItem(canvasElement, '/services'));
+  },
+};
+
+/**
+ * The phone panel with Servicii's list open under its row: the WORD opens the
+ * list (owner, 2026-10-16: "on phone on click of servicii it has to open it's
+ * respective dropdown" — until then dentestet.ro's way, the word a link and a
+ * ⌄ at the row's end the list's button), the eleven categories beneath it
+ * between two hairlines, the ⌄ at the row's end turned up, the other rows
+ * moved down. One list at a time. On this route Servicii is also the current
+ * page, so its row wears the current-page mark — the same lavender label and
+ * full rule as THE HELD LOOK an open list holds on any other row.
+ *
+ * `pin-open` and the phone pin for MenuOpen's reasons (its doc comment): the
+ * runner opens the panel at 390, and the play opens it and the list — both
+ * idempotently, so the two can never close each other.
+ */
+export const MenuOpenAccordion: Story = {
+  tags: ['pin-open'],
+  globals: { locale: 'ro', viewport: { value: 'smartphone' } },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/ro/services' } },
+  },
+  play: async ({ canvas, userEvent }) => {
+    const burger = canvas.getByRole('button', { name: ro.common.menu.label });
+    if (burger.getAttribute('aria-expanded') !== 'true') {
+      await userEvent.click(burger);
+    }
+    const panel = await canvas.findByRole('navigation', {
+      name: ro.common.menu.label,
+    });
+    // The row IS the word: a button named by its label alone.
+    const row = within(panel).getByRole('button', {
+      name: ro.common.nav.services,
+    });
+    if (row.getAttribute('aria-expanded') !== 'true') {
+      await userEvent.click(row);
+    }
+    await expect(row).toHaveAttribute('aria-expanded', 'true');
+    // The current page keeps its mark on the button that opens its list.
+    await expect(row).toHaveAttribute('aria-current', 'page');
+    const list = document.getElementById(
+      row.getAttribute('aria-controls') ?? '',
+    );
+    if (!list) throw new Error('the row controls no list');
+    await waitFor(() =>
+      expect(within(list).getAllByRole('link')).toHaveLength(
+        priceCategories.length,
+      ),
+    );
+    // Echipa's list stays shut beside it, and its word holds nothing.
+    const team = within(panel).getByRole('button', {
+      name: ro.common.nav.team,
+    });
+    await expect(team).toHaveAttribute('aria-expanded', 'false');
+    await expect(team).not.toHaveClass('text-accent');
   },
 };

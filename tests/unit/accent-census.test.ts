@@ -204,6 +204,18 @@ const RENDERERS: Readonly<Record<string, string>> = {
   // 2026-10-14): the `accent` tone, lavender at rest, in the card's footer row.
   'components/sections/PostCard/PostCard.tsx':
     'bg-surface — the blog card, ui/Card framed: 5.06:1',
+  // The top bar's dropdown entries (CLAUDE.md §15.40, 2026-10-15): the
+  // menu buttons' own look since round 4, 2026-10-16 (the rule swept in on
+  // hover; `none` until then) — lilac on hover — in the desktop card and
+  // in the phone panel's lists.
+  'components/sections/Header/NavSectionEntry.tsx':
+    'bg-surface — the dropdown card, ui/Card: 5.06:1; bg-surface/95 — the phone panel’s lists, the glass floor: 4.52:1',
+  // The phone panel's two section rows (CLAUDE.md §15.40 round 2,
+  // 2026-10-16): the word itself is the <button> that opens its list, its
+  // hover look held while the list is open (ui/TextButton's THE HELD LOOK) —
+  // NavItem's ground, in the same panel.
+  'components/sections/Header/NavAccordion.tsx':
+    'bg-surface/95 — the NavMenu panel, the glass floor: 4.52:1',
 };
 
 /**

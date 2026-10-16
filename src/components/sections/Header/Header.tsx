@@ -4,10 +4,12 @@ import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactM
 import { Wordmark } from '@/components/sections/Wordmark/Wordmark';
 import { containerClasses } from '@/components/ui/Container/Container';
 import { localeHref } from '@/i18n/href';
+import { isLocale } from '@/i18n/locales';
 import { clinic } from '@/lib/clinic/clinic';
 import { cx } from '@/lib/cx/cx';
 import { HeaderNav } from './HeaderNav';
 import { NavMenu } from './NavMenu';
+import { navSectionLinks } from './navSectionLinks';
 
 // sections/Header — the strip across the top of every page: brand · nav row ·
 // Contact CTA · burger. Built to the owner-approved N2 contract board
@@ -52,9 +54,24 @@ import { NavMenu } from './NavMenu';
 // was TWO until the ContactModal wiring gave the bar's Contact a reason to
 // hydrate; it reads the shared switch through a context and presses it):
 //   the bar and the brand      no JS at all
-//   HeaderNav                  must know which page you are on
-//   NavMenu                    holds the `open` boolean
+//   HeaderNav                  must know which page you are on — and, since
+//                              2026-10-15, which card is open (§15.40)
+//   NavMenu                    holds the `open` boolean — and which row's
+//                              list is open
 //   the bar's Contact trigger  opens the one dialog the provider renders
+//
+// ── THE DROPDOWNS' ENTRIES ARE BUILT HERE, ON THE SERVER (2026-10-15,
+// CLAUDE.md §15.40 — the owner: "a navigation dropdown on hover JUST ON THE
+// TOP BAR ELEMNTS which drops down smoothly with sections of that particular
+// page … on echipa it take you directly to a doctor card … blog and home
+// should not have this"). Servicii lists the tariff's eleven categories,
+// Echipa the six doctors, each a link to its card on its page. That list is
+// lib/nav-sections', which reads the whole tariff and the whole team — data
+// no visitor's phone should download to draw seventeen labels — so THIS
+// Server Component turns it into finished links (./navSectionLinks: an href
+// and a label each) and hands the two islands that plain prop; neither
+// imports a data module. The locale is narrowed first (`isLocale` — the
+// pages' idiom, a named throw on a locale the manifest does not know).
 //
 // ── THE BREAKPOINT IS A CONTAINER STEP, never a media query (§6.5), and
 // since 2026-09-26 a MEASURED one — `@min-[60rem]:` then, `@min-[62rem]:`
@@ -201,8 +218,11 @@ import { NavMenu } from './NavMenu';
 //   the class strings    this file (the row's grid, the brand cell, the right
 //                        cell, the CTA box), HeaderNav.tsx (the <nav>),
 //                        NavMenu.tsx (the burger's hide-rule) — the ONLY
-//                        three files that spell it; NavItem.tsx and
-//                        BurgerToggle.tsx spell no container step at all;
+//                        three files that spell it; NavItem.tsx,
+//                        BurgerToggle.tsx and the dropdowns' files
+//                        (NavDropdown, NavAccordion, NavSectionEntry,
+//                        useNavDropdowns, navSectionLinks — 2026-10-15)
+//                        spell no container step at all;
 //   Header.test.tsx      `STEP` — the constant the token tests and "the bar's
 //                        step is ONE number in three files" fence read;
 //   Header.stories.tsx   AtTheStep — its wrapper's `calc(62rem+6px+…)` and
@@ -262,6 +282,10 @@ import { NavMenu } from './NavMenu';
 export function Header(): ReactElement {
   const t = useTranslations('common');
   const locale = useLocale();
+  if (!isLocale(locale)) throw new Error(`Header: unknown locale "${locale}"`);
+  // The dropdowns' entries, finished (the file header's THE DROPDOWNS'
+  // ENTRIES ARE BUILT HERE) — one object, handed to both islands.
+  const sections = navSectionLinks(locale);
 
   return (
     // ── THE FLOATING PILL (owner, 2026-08-16 — restore the old top-bar's
@@ -599,8 +623,10 @@ export function Header(): ReactElement {
             placement within this grid); below the bar's step that element is
             `display:none`, which removes it as a grid item entirely, and the
             auto track collapses to zero — leaving brand-left / burger-right,
-            pixel-identical to the flex layout it replaced. */}
-        <HeaderNav />
+            pixel-identical to the flex layout it replaced. Since 2026-10-15
+            it also hangs the Servicii and Echipa cards under the row
+            (§15.40) — absolutely placed, so the cell is as wide as it was. */}
+        <HeaderNav sections={sections} />
 
         {/* The bar CTA — the site's one conversion goal (§1). Since the
             ContactModal wiring it is a real <button> that summons the site's
@@ -701,7 +727,7 @@ export function Header(): ReactElement {
             </ContactModalTrigger>
           </div>
 
-          <NavMenu />
+          <NavMenu sections={sections} />
         </div>
       </div>
     </header>

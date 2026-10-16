@@ -11,9 +11,15 @@ import { createPortal, flushSync } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { ContactModalTrigger } from '@/components/sections/ContactModal/ContactModalTrigger';
 import { GlyphButton } from '@/components/ui/GlyphButton/GlyphButton';
+import {
+  listenForEscape,
+  listenForPageExit,
+} from '@/lib/overlay-dismiss/overlay-dismiss';
 import { lockScroll } from '@/lib/scroll-lock/scroll-lock';
 import { BurgerToggle } from './BurgerToggle';
+import { NavAccordion } from './NavAccordion';
 import { NavItem } from './NavItem';
+import type { NavSectionsByPath, SectionedPath } from './navSectionLinks';
 import { useNavItems } from './useNavItems';
 
 // sections/Header — the burger, the dropdown panel and the dimming sheet: the
@@ -56,7 +62,8 @@ import { useNavItems } from './useNavItems';
 // includes the bar and therefore the ✕ — and the ✕ must stay reachable. It is
 // honestly a DISCLOSURE: a button that opens and closes a thing, wearing
 // aria-expanded + aria-controls. With everything below the bar inert, the
-// browser's OWN Tab order is the brand link → ✕ → Contact → the links — the
+// browser's OWN Tab order is the brand link → ✕ → Contact → the rows (the
+// links, and Servicii's and Echipa's list buttons since 2026-10-16) — the
 // brand corner is sections/Wordmark's home link again since 2026-10-02 (its
 // D9), and it sits in the bar, which is never frozen, so it is a live stop in
 // the cycle too — page content is unreachable, and there is NO JavaScript
@@ -66,21 +73,47 @@ import { useNavItems } from './useNavItems';
 // open, and display:none is unfocusable — so the wide screen now walks the
 // same cycle the phone always did, and the Contact in it is the panel's own
 // (the classes live in Header.tsx and HeaderNav.tsx).
+//
+// ── TWO ROWS OPEN A LIST (2026-10-15, CLAUDE.md §15.40 — the owner: "on phone
+// it should open up a dropdown with the adjacent subsections … if you click
+// on another section with other subsections and another section is open it
+// should close the other open one"). Servicii and Echipa are ./NavAccordion
+// rows, and since 2026-10-16 the WORD itself opens the list of the page's
+// sections under it (the owner: "on phone on click of servicii it has to open
+// it's respective dropdown") — one button per row, holding the hover's
+// lavender look while its list is open; the ⌄ at the row's end is its
+// decoration, and the word no longer opens the page (that file's THE WORD
+// OPENS THE LIST records what this costs and the lever). ONE list at a time —
+// `expandedPath`, the second variable of this file, which every close of the
+// menu resets — and an entry tapped closes the whole menu BEFORE the browser
+// follows it (the `closeForJump` paragraph below). The entries arrive
+// finished from Header.tsx (`sections`, built on the server by
+// ./navSectionLinks, whose TYPES alone this file imports).
 
 /**
- * The panel's id, hard-coded rather than useId: FIVE places must agree on the
- * literal (count amended per org-review F7, fb-169). `aria-controls` on the
- * burger names it, the visual runner waits for it (`pin-open`), and the
- * interaction tests query it — and since the single-menu rule (fb-164/165/166)
- * the string also appears INSIDE two class selectors,
- * `group-has-[#header-menu]/bar:hidden` in Header.tsx and HeaderNav.tsx, where
- * Tailwind's build-time scanner reads class text literally and cannot
- * interpolate a JS constant. Exactly one Header exists per page (it is the
- * shell's bar), so a generated id would only make five places harder to keep
+ * The panel's id, hard-coded rather than useId. EIGHT files spell the
+ * literal and must agree on it (recounted on 2026-10-16, §15.40 — the count
+ * had said seven since org-review F7, fb-169, while naming eight places and
+ * missing one):
+ *   1. this file — the constant, which the burger's `aria-controls` and the
+ *      panel's `id` read, and which ./useNavDropdowns imports to find the
+ *      burger (a width change under the bar's step hands it focus);
+ *   2–3. Header.tsx and HeaderNav.tsx, INSIDE a class selector —
+ *      `group-has-[#header-menu]/bar:hidden`, the single-menu rule
+ *      (fb-164/165/166) — where Tailwind's build-time scanner reads class
+ *      text literally and cannot interpolate a JS constant;
+ *   4–5. Header.test.tsx and Header.dropdowns.test.tsx, which query it;
+ *   6. Header.step.test.tsx and 7. tests/e2e/header-step.spec.ts, which find
+ *      the burger BY it, `button[aria-controls="header-menu"]` — the row's ⌄s
+ *      carry aria-expanded too, before the burger in the DOM (§15.40);
+ *   8. src/app/[locale]/shell.test.tsx, which queries a button inside it.
+ * The visual runner spells it nowhere: `pin-open` reads the id off the
+ * toggle's `aria-controls`. Exactly one Header exists per page (it is the
+ * shell's bar), so a generated id would only make eight files harder to keep
  * in step; Header.test.tsx pins both the id and the class token, so a drift
  * fails loudly.
  */
-const PANEL_ID = 'header-menu';
+export const PANEL_ID = 'header-menu';
 
 /**
  * Marks the portaled sheet so the freeze below can skip it. Without this the
@@ -187,12 +220,22 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // box.) Since the bar became a floating pill (owner, 2026-08-16 —
 // Header.tsx tells that story) the panel is a SECOND glass card: `mt-2` of
 // dimmed page between the two, and the same soft corner + full border +
-// static-blur chrome the bar wears.
+// static-blur chrome the bar wears. KEEP-IN-SYNC with ./NavDropdown's THE
+// BRIDGE (2026-10-15, §15.40): the bar row's cards hang under the pill by
+// this gap too — `pt-[calc(0.5rem+1px)]` there, from the row's bottom, the
+// pill's padding edge, the 1px spanning its border. (Exactly: this panel's
+// `top-full` is that same padding edge, so the panel's border starts 0.5rem
+// below it and the card's 0.5rem below the pill's OUTER edge — one pixel
+// apart, the gap the eye reads the same.)
 // B2 · the panel can be taller than the room a landscape phone leaves under
 // the bar — its content is 272px in every language (four links since the
 // blog joined all five, 2026-10-14), against the 216px a 568×320 screen
 // leaves it (measured, Chromium) — so it caps itself and scrolls
-// INTERNALLY: the panel scrolls, the page behind it stays frozen. `dvh`, not
+// INTERNALLY: the panel scrolls, the page behind it stays frozen. Since
+// 2026-10-15 a row's list can open inside it (./NavAccordion, §15.40) and
+// make it far taller still — Servicii's eleven entries — and the same cap
+// holds; an opened list is brought into view by scrolling THIS box, never the
+// page (NavAccordion's THE REVEAL). `dvh`, not
 // `vh`, because mobile URL bars change the viewport height as you scroll;
 // 6.5rem is the panel's own top edge — the pill's reach plus the gap, top-4 +
 // h-20 + mt-2 — i.e. everything below the hanging panel and nothing more.
@@ -249,16 +292,31 @@ const panelClasses =
 // wrapper between that root and the bars (Header.tsx keeps its own group
 // named `group/bar`; Header.test.tsx asserts the seam).
 
-export function NavMenu(): ReactElement {
+export type NavMenuProps = Readonly<{
+  /** Every row list's finished entries, keyed by its row's path. */
+  sections: NavSectionsByPath;
+}>;
+
+export function NavMenu({ sections }: NavMenuProps): ReactElement {
   const t = useTranslations('common');
   const items = useNavItems();
+  // THE ONE NARROWING, where a row's path meets the sections map (HeaderNav
+  // makes the same): a path the map holds is a SectionedPath, the type
+  // `expandedPath` is kept in.
+  const isSectioned = (path: string): path is SectionedPath =>
+    Object.hasOwn(sections, path);
 
   // The one variable the whole file turns on. `{open && …}` renders NOTHING
   // when false, so while the menu is closed neither the panel nor the sheet
   // exists in the document — the pre-built HTML contains no menu and nothing
   // can flicker during hydration (§16).
   const [open, setOpen] = useState(false);
+  // Which row's list is open inside the panel, if any — ONE at a time, so
+  // opening one closes the other (both animate). Every close of the menu
+  // resets it: a panel always opens with its lists shut.
+  const [expandedPath, setExpandedPath] = useState<SectionedPath | null>(null);
   const burgerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
 
   // Set by close(), consumed by the focus-return effect below: it records
   // "this close came from the USER". That is also what tells a real close apart
@@ -280,6 +338,25 @@ export function NavMenu(): ReactElement {
   const close = useCallback(() => {
     returningFocus.current = true;
     setOpen(false);
+    setExpandedPath(null);
+  }, []);
+
+  // ── AN ENTRY OF A ROW'S LIST WAS TAPPED (2026-10-15, §15.40). The menu
+  // closes NOW — flushSync applies the close, its freeze's cleanup included,
+  // before the click handler returns (the DEPARTURE paragraph below has the
+  // tool) — and only then does the browser follow the link. The order is the
+  // point: a link to a section of THIS page is a fragment jump, and it must
+  // run on a page that is unlocked and no longer `inert`, or it scrolls a
+  // frozen root and lands nowhere a visitor can use; a link to another page
+  // loses nothing by it. The navigation is never prevented. And the focus
+  // return is NOT armed (setOpen, never close()): the jump decides where the
+  // keyboard continues — the fragment's own target, or the next document —
+  // and putting focus back on the burger would undo it.
+  const closeForJump = useCallback(() => {
+    flushSync(() => {
+      setOpen(false);
+      setExpandedPath(null);
+    });
   }, []);
 
   // The focus return runs AFTER the close has been committed, not inside
@@ -341,106 +418,46 @@ export function NavMenu(): ReactElement {
   // Esc closes (§9). Bound to the document, not the panel, because focus may
   // legitimately sit on the ✕ or on the brand link — outside the panel and
   // live, since the bar is never frozen (the brand corner is a home link again
-  // since 2026-10-02, Wordmark's D9).
-  //
-  // KEEP-IN-SYNC with ui/SpeedDial's own "Esc closes (§9)" effect
-  // (src/components/ui/SpeedDial/SpeedDial.tsx): same key check, same document
-  // binding, same reason — focus may legitimately sit outside the popup while
-  // it is open. The two are independent BY CONSTRUCTION, not by neglect: §4
-  // forbids the atom from importing a section's internals and neither owns the
-  // other, so this is a fb-44-style KEEP-IN-SYNC pair rather than a promotion
-  // candidate. A change to the dismissal rule is a change to both files.
-  // SpeedDial's reciprocal pointer back here rides the org-hygiene lane, not
-  // this one (§17.3 — one component per commit).
+  // since 2026-10-02, Wordmark's D9). The listener is lib/overlay-dismiss's
+  // `listenForEscape` since 2026-10-15 — ONE implementation for the three
+  // stateful overlays, this menu, ui/SpeedDial's dial and the bar row's
+  // dropdowns (CLAUDE.md §15.15's consolidation, fired by the dropdowns,
+  // §15.40); the module's header carries the reasoning. close(), not
+  // setOpen(false): it is the path that arms the focus return above.
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-    };
+    return listenForEscape(close);
   }, [open, close]);
 
   // ── BACK, WITH THE MENU STILL OPEN — the bfcache (G2 review D1).
-  // The back/forward cache: browsers keep the document you LEAVE frozen in
-  // memory — DOM, React state, scroll position — and restore it whole on Back,
-  // instantly, without re-running anything. That is a gift on a static site and
-  // the reason §7 counts it as an upside of full-document navigation; it is
-  // also the one case where the shell's state DOES persist across a
-  // "navigation". Tap a panel link, land on the new document, press Back: the
-  // frozen document comes back with the panel open over a page that is still
-  // `inert` and still scroll-locked, because no code ran to close it. Under
-  // soft navigation the deleted B1 (close-on-route-change) covered this by
-  // accident; a restore is not a route change, so nothing covers it now. This
-  // effect IS B1's full-document replacement — the same guarantee ("a
-  // navigation leaves no open menu behind"), rebuilt out of the two page
-  // lifecycle events §15.13 left us instead of a router callback.
-  //
-  // ── DEPARTURE — `pagehide`, and why the close must be flushed.
-  // Closing on the way IN (below) is a repair: the browser paints the frozen
-  // snapshot first, and only then does our listener ask React to re-render, so
-  // one frame (~16ms) of restored page can still show the open panel. The cure
-  // is to leave with the menu already closed, so the snapshot itself is clean.
-  // `pagehide` is the one event that fires on EVERY departure — a navigation
-  // away, or entry into the bfcache — and ONLY on departures, which is what
-  // makes it the right place to change what the snapshot will contain.
-  // `visibilitychange` also fires on tab and app switches, where closing the
-  // menu would be visitor-noticeable, and `unload` must not be used at all —
-  // merely listening for it disqualifies the page from the bfcache. Hence the
-  // pre-close, and hence flushSync: React normally SCHEDULES a commit for its
-  // next turn, and that turn may never come on a page that is about to be
-  // frozen. flushSync is React's documented tool for exactly this — "apply
-  // this update now, do not schedule it" — so the DOM is mutated synchronously
-  // inside the handler, before the event returns. Its cost (a forced
-  // synchronous render) is the reason it is a last resort in normal code and
-  // a non-issue here: it runs once, at page exit, on a document nobody will
-  // interact with again.
-  // Deliberately UNCONDITIONAL — no `event.persisted` check, unlike below.
-  // Closing a menu on a page the visitor is leaving is harmless whether or not
-  // the browser then caches it (the document is either frozen or gone), and the
-  // flag at that moment is an INTENTION, not a fact: `persisted: true` says the
-  // browser INTENDS to cache the page, and other factors may still prevent it —
-  // in every engine, not one vendor's quirk. Branching on it could only ever
-  // skip a close we wanted.
-  //
-  // ── RESTORE — `pageshow`, kept as the fallback.
-  // `pageshow` fires on EVERY show of the document, first paint included;
-  // `persisted` is true only for a bfcache restore, which is the only case
-  // worth acting on there. It is a no-op whenever the pre-close ran — this
-  // effect is gated on `open`, so a restored-already-closed document has no
-  // listener attached at all — and it still covers any browser that freezes
-  // without delivering `pagehide` first. Cheap belt to the braces.
-  //
-  // Both handlers call close(), not setOpen(false): the visitor's finger was
-  // last on the ✕, so focus belongs on the burger, and close() is the one path
-  // that arms the focus-return effect above. Listening only while open keeps
-  // both listeners' lifetime the same as every other effect in this file — and
-  // the document is frozen mid-open, so they are attached exactly when the
-  // departure and the restore need them.
-  //
-  // KEEP-IN-SYNC with ui/SpeedDial's "── BACK, WITH THE DIAL STILL OPEN — the
-  // bfcache (NavMenu's D1, same shape)" block
-  // (src/components/ui/SpeedDial/SpeedDial.tsx): same pair of listeners, the
-  // same flushSync pre-close, the same persisted-only restore, both gated on
-  // `open`. That block already names THIS one as the shape it copied; the
-  // pointer back rides the org-hygiene lane, not this one (§17.3 — one
-  // component per commit).
+  // Tap a panel link, land on the new document, press Back: the back/forward
+  // cache hands back the document you left, frozen whole — the panel open
+  // over a page still `inert` and still scroll-locked, because no code ran to
+  // close it. This effect is B1's full-document replacement (the deleted
+  // close-on-route-change): "a navigation leaves no open menu behind", built
+  // from the two page lifecycle events §15.13 left us. Since 2026-10-15 the
+  // listeners are lib/overlay-dismiss's `listenForPageExit` (the same
+  // consolidation as Escape above), whose header argues every choice — why
+  // `pagehide` and never `visibilitychange` or `unload`, why no
+  // `persisted` check on the way out, why `pageshow` stays as the belt.
+  // ── DEPARTURE — `'leave'`, applied with flushSync: React normally
+  // SCHEDULES a commit for its next turn, and that turn may never come on a
+  // page about to be frozen, so the close is committed synchronously inside
+  // the handler and the snapshot the cache keeps is already closed. Its cost
+  // (a forced synchronous render) is why it is a last resort in normal code
+  // and a non-issue here: once, at page exit, on a document nobody will touch
+  // again. (closeForJump above leans on the same tool.)
+  // ── RESTORE — `'restore'`, the fallback for an engine that freezes without
+  // delivering `pagehide` first.
+  // Both call close(), not setOpen(false): the visitor's finger was last on
+  // the ✕, so focus belongs on the burger. Listening only while open keeps
+  // both listeners' lifetime the same as every other effect in this file.
   useEffect(() => {
     if (!open) return;
-    const onPageHide = () => {
-      flushSync(() => close());
-    };
-    const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) close();
-    };
-    window.addEventListener('pagehide', onPageHide);
-    window.addEventListener('pageshow', onPageShow);
-    return () => {
-      window.removeEventListener('pagehide', onPageHide);
-      window.removeEventListener('pageshow', onPageShow);
-    };
+    return listenForPageExit((exit) => {
+      if (exit === 'leave') flushSync(() => close());
+      else close();
+    });
   }, [open, close]);
 
   // ── THE FREEZE (board §5·A1) — and a KNOWING §6 BOUNDARY CROSSING (B5).
@@ -541,6 +558,7 @@ export function NavMenu(): ReactElement {
         // the burger carries, so the panel announces as the thing that button
         // opened. NO role="dialog", NO aria-modal (board §5·A1).
         <nav
+          ref={panelRef}
           id={PANEL_ID}
           aria-label={t('menu.label')}
           className={panelClasses}
@@ -604,16 +622,40 @@ export function NavMenu(): ReactElement {
           </ContactModalTrigger>
 
           <ul className="flex flex-col gap-1">
-            {items.map((item) => (
-              <li key={item.href}>
-                {/* Same component, same list, same active rule as the bar row
-                    — one source rendered twice, never two that can drift.
-                    min-h-11 inside TextButton keeps every row a §9 touch
-                    target; w-full is this section handing NavItem its layout
-                    (§6.4) so the whole panel width is tappable. */}
-                <NavItem {...item} className="w-full" />
-              </li>
-            ))}
+            {items.map(({ path, ...route }) => {
+              // Servicii and Echipa: the row — the word, a button that opens
+              // its list — and the list (./NavAccordion), one list open at a
+              // time. An empty list draws the plain row: the word, a link.
+              if (isSectioned(path) && sections[path].length > 0) {
+                return (
+                  <NavAccordion
+                    key={route.href}
+                    label={route.label}
+                    active={route.active}
+                    links={sections[path]}
+                    expanded={expandedPath === path}
+                    onToggle={() =>
+                      setExpandedPath((current) =>
+                        current === path ? null : path,
+                      )
+                    }
+                    onEntryActivate={closeForJump}
+                    panelRef={panelRef}
+                  />
+                );
+              }
+              return (
+                <li key={route.href}>
+                  {/* Same component, same list, same active rule as the bar
+                      row — one source rendered twice, never two that can
+                      drift. min-h-11 inside TextButton keeps every row a §9
+                      touch target; w-full is this section handing NavItem
+                      its layout (§6.4) so the whole panel width is
+                      tappable. */}
+                  <NavItem {...route} className="w-full" />
+                </li>
+              );
+            })}
           </ul>
         </nav>
       )}

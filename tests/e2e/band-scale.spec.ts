@@ -105,11 +105,13 @@ const LAPTOPS = [
  *  (sections/PageHero's THE <h1>; tests/unit/design-scale.test.ts holds the
  *  two classes equal). */
 /** THE HEADING'S REACH (sections/PageHero's paragraph of that name), in
- *  design pixels: how far the hero's <h1> may pass each edge of its column
- *  inside the band scale — 67.5 spacing steps since 2026-10-16 (100 design
- *  pixels until then; widened so the fallback face's first lines fit and the
- *  heading never re-wraps when the webfont lands). */
-const REACH = 67.5 * 4;
+ *  design pixels: how far the hero's <h1> may pass EACH edge of its column
+ *  inside the band scale — 135 since 2026-10-16, HALF the 67.5 spacing steps
+ *  its max-width adds to the column, the box being centred (100 a side until
+ *  then; widened so the fallback face's first lines fit and the heading never
+ *  re-wraps when the webfont lands). The whole 67.5 × 4 as a per-edge bound
+ *  let a box twice as wide through (the verify review, 2026-10-16). */
+const REACH = (67.5 / 2) * 4;
 
 const DESIGN = {
   title: 36,
@@ -1153,8 +1155,9 @@ for (const locale of ['ro', 'de'] as const) {
     // the one size the remap cannot redraw, and — the owner, 2026-10-15: "it
     // should not be constrained by a div so that it has same space left and
     // right as the articles seciton" — its box not held to the grid: as wide
-    // as its first line, centred on the grid, never more than 100 design
-    // pixels past either edge, inside the window (THE HEADING'S REACH); the
+    // as its first line, centred on the grid, never more than REACH design
+    // pixels past either edge (135 since 2026-10-16), inside the window (THE
+    // HEADING'S REACH); the
     // copy's own line breaks kept, the <h1> in exactly its two lines and the
     // lead in its three (THE STAIRWAY); the lead on the theme's base text
     // step, 16 design pixels — ui/Text's, not the site's body size, 18

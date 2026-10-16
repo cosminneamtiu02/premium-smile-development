@@ -499,7 +499,7 @@ const expectScale = async (
     'the title',
   );
   if (opener === 'page') {
-    // THE ROOM ABOVE (D12): the blog hero's `pt-32`, 32 steps — the regime's
+    // THE ROOM ABOVE (D12): the blog hero's `@3xl:pt-32`, 32 steps — the regime's
     // step lies past the 48rem one.
     await near(px(rhythm, 'padding-top'), 128 * s, 0.5, 'the room above');
   }

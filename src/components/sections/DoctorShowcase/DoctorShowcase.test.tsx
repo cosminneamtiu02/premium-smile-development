@@ -2406,7 +2406,7 @@ describe('DoctorShowcase — THE SCALE, measured (D10 — real stylesheet, real 
   };
 
   it('draws the PAGE OPENER at the REFERENCE column — the owner’s 1401 window: the room above its <h1> 128 design pixels, the <h1> 16.26 spacing steps (65.04), the lead to the first card the ribbon’s own head room (D12)', async () => {
-    // Inside the regime, past the 48rem step: the room is `pt-32`, 32 steps
+    // Inside the regime, past the 48rem step: the room is `@3xl:pt-32`, 32 steps
     // of the design pixel, and the <h1> takes PageHero's design size — the
     // `hero` step reads the viewport, so its one gated class says it.
     const air = await expectPageOpener(REFERENCE, {

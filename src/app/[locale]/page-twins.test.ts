@@ -140,19 +140,27 @@ const returned = (source: string, functionName: string): string => {
 const bandsOf = (jsx: string): string[] =>
   Array.from(jsx.matchAll(/<([A-Za-z][A-Za-z0-9]*)/g), (match) => match[1]);
 
-/** The prop NAMES one element is given, sorted. */
-const propsOf = (jsx: string, element: string): string[] => {
+/** One self-closing element's attribute source — everything between
+ *  `<Element` and its `/>` — the slice every reader below takes (the verify
+ *  review, 2026-10-16: an assertion on the whole block would let ANOTHER
+ *  element's attribute stand in for this one's). Throws by name when the
+ *  element is missing, so a renamed band fails HERE and not as an empty
+ *  comparison. */
+const tagOf = (jsx: string, element: string): string => {
   const start = jsx.indexOf(`<${element}`);
   const end = jsx.indexOf('/>', start);
   if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
-  return jsx
-    .slice(start + element.length + 1, end)
+  return jsx.slice(start + element.length + 1, end);
+};
+
+/** The prop NAMES one element is given, sorted. */
+const propsOf = (jsx: string, element: string): string[] =>
+  tagOf(jsx, element)
     .replace(/=\{[^{}]*\}/g, '')
     .replace(/="[^"]*"/g, '')
     .split(/\s+/)
     .filter((name) => /^[A-Za-z][\w-]*$/.test(name))
     .toSorted();
-};
 
 /**
  * The STRING-LITERAL attributes one element is given, exactly as written —
@@ -162,17 +170,11 @@ const propsOf = (jsx: string, element: string): string[] => {
  * read, never an expression's inside: a page and its twin spell those
  * through different hooks, and the names test above already holds them.
  */
-const literalsOf = (jsx: string, element: string): string[] => {
-  const start = jsx.indexOf(`<${element}`);
-  const end = jsx.indexOf('/>', start);
-  if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
-  return Array.from(
-    jsx
-      .slice(start + element.length + 1, end)
-      .matchAll(/(?<![\w-])[A-Za-z][\w-]*="[^"]*"/g),
+const literalsOf = (jsx: string, element: string): string[] =>
+  Array.from(
+    tagOf(jsx, element).matchAll(/(?<![\w-])[A-Za-z][\w-]*="[^"]*"/g),
     (match) => match[0],
   ).toSorted();
-};
 
 /**
  * The BARE boolean attributes one element is given — written with no `=` at
@@ -180,18 +182,13 @@ const literalsOf = (jsx: string, element: string): string[] => {
  * value, so `scaled={false}` reads as `scaled` there and would pass while the
  * page ships an unscaled band; this reader sees only the bare spelling.
  */
-const flagsOf = (jsx: string, element: string): string[] => {
-  const start = jsx.indexOf(`<${element}`);
-  const end = jsx.indexOf('/>', start);
-  if (start < 0 || end < 0) throw new Error(`no self-closing <${element}>`);
-  return jsx
-    .slice(start + element.length + 1, end)
+const flagsOf = (jsx: string, element: string): string[] =>
+  tagOf(jsx, element)
     .replace(/=\{[^{}]*\}/g, '=VALUE')
     .replace(/="[^"]*"/g, '=VALUE')
     .split(/\s+/)
     .filter((name) => /^[A-Za-z][\w-]*$/.test(name))
     .toSorted();
-};
 
 /** The numbers band's two settings as Home and the Team page write them. */
 const PAGE_GROUND_AT_THE_START = ['align="start"', 'ground="page"'];
@@ -301,8 +298,10 @@ describe('the Team page and its story twin — read off their source', () => {
     for (const jsx of [TEAM.page, TEAM.twin]) {
       // …and THAT `hero` is the one the band gets: `propsOf` reads names
       // alone, so another object under the same name would pass it (the TS
-      // review, 2026-10-15).
-      expect(jsx).toMatch(/\bhero=\{hero\}/);
+      // review, 2026-10-15) — read on the band's own tag, so another
+      // element's `hero={hero}` cannot stand in for it (the verify review,
+      // 2026-10-16).
+      expect(tagOf(jsx, 'DoctorShowcase')).toMatch(/\bhero=\{hero\}/);
       expect(propsOf(jsx, 'DoctorShowcase')).not.toContain('eyebrow');
       expect(propsOf(jsx, 'DoctorShowcase')).not.toContain('title');
     }

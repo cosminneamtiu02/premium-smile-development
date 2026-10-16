@@ -420,6 +420,29 @@ describe('PageHero — the native <header> surface (§6.8)', () => {
     expect(hero.tagName).toBe('HEADER');
     expect(hero).not.toHaveAttribute('role');
   });
+
+  it('is named by nothing but its <h1> — a written `aria-label` or `aria-labelledby` is reset after the spread (the verify review, 2026-10-16)', () => {
+    // Inside <main> or a <section> — every hero's place — a <header> is a
+    // GENERIC element, which ARIA forbids to name (axe's
+    // aria-prohibited-attr). The props type Omits both (the type pins
+    // below), but TypeScript checks no hyphenated JSX attribute against a
+    // props type that lacks it, so a written one still compiles — which is
+    // why the reset after the spread is the belt that holds.
+    render(
+      <main>
+        <PageHero
+          title={TITLE}
+          lead={LEAD}
+          aria-label="Eroul paginii"
+          aria-labelledby="altundeva"
+        />
+      </main>,
+    );
+
+    const hero = heroOf(pageTitle());
+    expect(hero).not.toHaveAttribute('aria-label');
+    expect(hero).not.toHaveAttribute('aria-labelledby');
+  });
 });
 
 describe('PageHero — zero islands, zero message keys, zero data', () => {
@@ -483,6 +506,12 @@ describe('PageHero — type-level pins', () => {
     // rendered.
     expectTypeOf<PageHeroProps>().not.toHaveProperty('role');
     expectTypeOf<PageHeroProps>().not.toHaveProperty('dangerouslySetInnerHTML');
+    // Nor a name for the generic <header> (the verify review, 2026-10-16):
+    // pinned on the props TYPE, because a written hyphenated attribute
+    // compiles whatever the type says — the runtime reset holds that one (the
+    // native surface's test above).
+    expectTypeOf<PageHeroProps>().not.toHaveProperty('aria-label');
+    expectTypeOf<PageHeroProps>().not.toHaveProperty('aria-labelledby');
     const refused = [
       <PageHero
         key="role"

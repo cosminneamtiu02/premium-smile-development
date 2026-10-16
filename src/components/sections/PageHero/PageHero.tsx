@@ -139,6 +139,18 @@ import { cx } from '@/lib/cx/cx';
 //     line, or a platform whose Arial sets it wider, puts it back on three
 //     lines in the fallback — the lever then a shorter first line, the reach
 //     being 3.25 design pixels from the gutter.
+//     NOT CURED HERE — MEASURED in the verify review (2026-10-16, the
+//     webfonts held until 800 ms after the page's load): the heading's box
+//     hugs its text, so on a laptop it still narrows as the webfont lands,
+//     its centred edges moving in the frame the first card reflows —
+//     /de/team/ 0.074 to 0.082 up to a 1300 window, 0.096 to 0.100 with the
+//     language banner on screen (develop 0.033 to 0.042) — and on a PHONE,
+//     where the reach does not apply, the German heading takes four lines in
+//     the fallback and three in the webfont (/de/team/ 0.182 at 430, develop
+//     0.061) and the Italian first card's reflow moves the ribbon (0.179 to
+//     0.206 at 412–430); at 360 both are better than develop. The levers are
+//     site-wide and the owner's — next/font's fallback metrics or its
+//     optional display — CLAUDE.md §15.25 round 4 (7).
 //   ON A PHONE'S OR A TABLET'S COLUMN — under the Container's 48rem step,
 //   windows narrower than about 975px on the built page behind a classic
 //   scrollbar (979 in the test runner, whose 10vw counts the scrollbar; 960
@@ -240,8 +252,8 @@ import { cx } from '@/lib/cx/cx';
 // classic 15px scrollbar) on the copy as the lane leaves it: at the owner's
 // 1401 window, the heading's two lines then the lead's three, in design
 // pixels — Romanian 1251.1 / 999.1, 392.7 / 279.9 / 182.7; English 1071.9 /
-// 874.4, 402.3 / 252.4 / 201.9; German 1189.7 / 933.1, 435.2 / 259.1 /
-// 222.4; French 1131.5 / 960.1, 408.8 / 346.5 / 211.8; Italian 1196.0 /
+// 874.4, 402.3 / 293.9 / 201.9; German 1189.7 / 933.1, 435.2 / 290.6 /
+// 186.1; French 1131.5 / 960.1, 408.8 / 346.5 / 211.8; Italian 1196.0 /
 // 1010.3, 340.5 / 232.6 / 191.0. Its <h1> passes the column by at most 83.9
 // design pixels a side (Romanian, at a 1140 window), well inside the reach's
 // 135 (English's stays inside the column, 7.1 short of its edges); its widest
@@ -275,13 +287,22 @@ export type PageHeroProps = Readonly<{
   // The native <header> surface, minus `title` (a real HTML attribute — a
   // tooltip — whose meaning would otherwise intersect the heading's),
   // `children` and `dangerouslySetInnerHTML` (the content arrives as the two
-  // strings, and React throws on markup set beside children) and `role` (a
+  // strings, and React throws on markup set beside children), `role` (a
   // `role="banner"` would make the hero a second banner landmark beside the
-  // shell's header; it is reset after the spread too — THE NATIVE SURFACE,
-  // below). React 19 carries `ref` inside these props (§6.8).
+  // shell's header) and `aria-label` / `aria-labelledby` (inside <main> or a
+  // <section> — every hero's place — a <header> is a GENERIC element, which
+  // ARIA forbids to name, axe's aria-prohibited-attr; the hero says what it
+  // is through its own <h1> — the verify review, 2026-10-16). The last three
+  // are reset after the spread too (THE NATIVE SURFACE, below). React 19
+  // carries `ref` inside these props (§6.8).
   Omit<
     ComponentPropsWithRef<'header'>,
-    'title' | 'children' | 'dangerouslySetInnerHTML' | 'role'
+    | 'title'
+    | 'children'
+    | 'dangerouslySetInnerHTML'
+    | 'role'
+    | 'aria-label'
+    | 'aria-labelledby'
   >;
 
 /** THE HERO: both boxes centred, 3rem apart, and the heading's lines centred
@@ -335,11 +356,18 @@ export function PageHero({
 }: PageHeroProps): ReactElement {
   return (
     // THE NATIVE SURFACE: the caller's native props ride FIRST; then a `role`
-    // that slipped past the Omit in the spread of a wider object is reset —
-    // a hero is never a landmark of its own (sections/PostCard's belt, the
-    // same refusal); then the hero's own classes, merged with a caller's
-    // className LAST (placement only, §6.8).
-    <header {...rest} role={undefined} className={cx(HERO, className)}>
+    // or a name that slipped past the Omit in the spread of a wider object is
+    // reset — a hero is never a landmark of its own and is named by nothing
+    // but its <h1> (sections/PostCard's belt, the same refusal); then the
+    // hero's own classes, merged with a caller's className LAST (placement
+    // only, §6.8).
+    <header
+      {...rest}
+      role={undefined}
+      aria-label={undefined}
+      aria-labelledby={undefined}
+      className={cx(HERO, className)}
+    >
       <Heading size="hero" asChild>
         <h1 className={TITLE}>{title}</h1>
       </Heading>

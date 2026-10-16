@@ -625,7 +625,8 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
       near(px(band.h1, 'font-size'), TITLE_DESIGN * s, 'the title', 0.01);
       near(px(band.lead, 'font-size'), 16 * s, 'the lead', 0.01);
       // The lead's cap, in design pixels (THE CAPS); the title's limit inside
-      // the scale is its reach, which expectBand holds (THE HEADING'S REACH).
+      // the scale is its reach, which PageHero.scale.test.tsx's expectReach
+      // holds (THE HEADING'S REACH).
       near(px(band.lead, 'max-width'), LEAD_CAP * s, 'the lead’s cap', 0.01);
       // Not held to the column: the Romanian first line, 1183.5 design
       // pixels at 1401, is wider than the column's 1106 at every window here.

@@ -463,8 +463,16 @@ const playPage =
       2, // the map
     ]);
 
+    // Nothing to scroll sideways, measured by the root's own BOX, which ends
+    // where a reserved scrollbar gutter begins — never by `clientWidth`,
+    // which in a Vitest runner's frame is the whole window, the 15px gutter
+    // included, and would let 15px of overflow through (PostList.stories.tsx's
+    // expectNoSidewaysScroll and its reason; the verify review, 2026-10-16:
+    // this is the one story that renders the real page with the hero's reach).
     const root = canvasElement.ownerDocument.documentElement;
-    await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+    await expect(root.scrollWidth).toBeLessThanOrEqual(
+      Math.ceil(root.getBoundingClientRect().width),
+    );
   };
 
 export const Romanian: Story = {

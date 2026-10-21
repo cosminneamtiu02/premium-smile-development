@@ -131,15 +131,18 @@ import {
 //    (never from idleReason, which also carries reduced motion).
 //    OWNER EXCEPTION, RECORDED (2026-09-12, the reviews deck): the owner
 //    struck the button from that deck ("absolutely no pause button"). What
-//    stands in for it there — pointer hover suspends, keyboard entry is the
+//    stood in for it there — pointer hover suspends, keyboard entry is the
 //    sticky pause, and a HAND NAVIGATION (prev/next) calls pause() so the
 //    first tap stops the rotation for good (the touch-reachable stop;
 //    Swiper's `disableOnInteraction` default) — is written up in
 //    sections/ReviewsCarousel/ReviewsDeck.tsx's NO ROTATION CONTROL
 //    paragraph. This bullet stays the law for every OTHER rotator: a consumer
-//    omits the control only on the owner's word, per consumer, with that
-//    paragraph's four mechanisms in place (ui/use-rotation's handNavigation
-//    is those mechanisms' stop-for-good, written once). The Hero frame
+//    omits the control only on the owner's word, per consumer, and writes in
+//    its own header what stands in for it and what SC 2.2.2 costs — as that
+//    paragraph does (it has described the deck's LATER manners, below, since
+//    2026-09-20) and as the records below do. ui/use-rotation's
+//    handNavigation is the 2026-09-12 stand-ins' stop-for-good, written once.
+//    The Hero frame
 //    (2026-09-19) took the same exception on the same word — and then, on
 //    the owner's pack feedback of 2026-09-20, went further: NO POINTER HOLD
 //    AT ALL (a band that fills the whole first screen would stand still under
@@ -154,15 +157,74 @@ import {
 //    have no stop). THE DECK FOLLOWED the same evening on the owner's word
 //    ("not autoscrolling like … the slides"): the 2026-09-12 stand-ins named
 //    at the top of this bullet are history, both rotators share the Hero's
-//    manners and the Hero's 5.5 s rhythm, and `handNavigation` has no
-//    consumer. A THIRD rotator (2026-10-13, the doctor page's course timeline,
+//    manners and the Hero's 5.5 s rhythm, and `handNavigation` had no
+//    consumer until the fourth rotator (sections/CardCarousel, 2026-10-17,
+//    below). A THIRD rotator (2026-10-13, the doctor page's course timeline,
 //    sections/DoctorCourses/CourseTimeline) HIDES NOTHING: every idea stays
 //    on screen and readable, and the ring only says which one is lit — so it
 //    is not the carousel this law's markup duties are written for (no
 //    control, no prev/next, no live region, no `inert`, no roledescription).
 //    It holds while off screen (lib/clock's `'offscreen'` cause) and for
 //    nobody else, on the owner's same "it always moves on"; its header and
-//    CLAUDE.md §15.23 round 7 carry the SC 2.2.2 record.
+//    CLAUDE.md §15.23 round 7 carry the SC 2.2.2 record. A FOURTH rotator
+//    (2026-10-14, sections/CardCarousel — cards laid out on a ring like the
+//    reviews deck's: `signedOffset` below moved here for it), mounted by a
+//    blog article's gallery (sections/PostGallery) and, since 2026-10-17, by
+//    the Home page's articles band (sections/BlogCarousel), IS a carousel
+//    again. WHAT IT KEEPS of the duties below: the named region with the
+//    localized roledescription; every card a group with the slide
+//    roledescription and its own "{index} of {total}" name; previous, next
+//    and the dots before the cards in the DOM, all of them real <button>s;
+//    `inert` on every card but the centre one (aria-hidden its belt); the
+//    cards' container as the live region, liveRegion(status); the dots as
+//    BUTTONS with aria-current="true", each named by its card's string.
+//    WHERE IT DEPARTS (argued in CardCarousel.tsx — the reading time here,
+//    on its CARD_CAROUSEL_INTERVAL_MS and in BACKLOG.md entry 2):
+//      · NO ROTATION CONTROL, the owner's ("no stop button no speed") — the
+//        deck's exception, taken a third time;
+//      · previous and next are plain <button>s round a tall chevron drawn in
+//        that file (its THE ARROWS), not the NAVIGATION bullet's
+//        ui/GlyphButton — strips as tall as the cards' row, never under 24px
+//        wide;
+//      · not the FOCUS bullet's sticky keyboard pause, nor THE HOVER
+//        WRAPPER: the focus pair alone, with `keyboardEntry: 'suspend'` and
+//        `pointerEntry: 'none'` (the Hero's manners) — keyboard focus inside
+//        HOLDS it only while it stays, and no pointer at rest holds it;
+//      · eight dots in an article's gallery and twelve on Home: the
+//        NAVIGATION bullet's six-dot trigger FIRED, and was NOT taken (the
+//        owner asked for the Hero's dots; its THE BEADS and BACKLOG.md entry
+//        2 carry the lever);
+//      · READING TIME, the rider every dossier answers, has no answer here:
+//        it runs 5.5 s (CARD_CAROUSEL_INTERVAL_MS — the Hero's and the
+//        deck's rhythm) while a slide on Home is a whole blog card. The
+//        newest post's is the longest in German and ties for the longest in
+//        Romanian: its title and summary alone are 45 words in Romanian, 18 s
+//        at the rider's ~150 wpm, and 51 in German, 20.4 s. OPEN, the
+//        owner's question: the Hero's 5.5 s is his word (Hero.tsx's
+//        ROTATION), but no record shows him choosing it for these cards with
+//        these numbers in front of him, and the deck's own record calls its
+//        reading-time question OPEN (ReviewsCarousel.tsx's
+//        REVIEWS_INTERVAL_MS). The gallery's captions, two to four words, fit
+//        (1.6 s at most). The levers: the constant, or a dwell per card from
+//        its own word count.
+//    Its own two additions: the off-screen hold and a hand PRESSING it —
+//    from the moment a primary press lands to its end, a drag included
+//    (lib/clock's `'drag'` cause; until 2026-10-20 only a press that had
+//    become a drag held it). Its prev/next are always-visible tall
+//    chevrons at its stage's two edges since 2026-10-17, with the Hero's
+//    progress dots under its cards (for one day before, prev/next were the
+//    keyboard's alone). SC 2.2.2, the owner's "OPTION 1": EVERY ACTIVATION,
+//    by hand or by key — an enabled arrow, a dot, a drag, a tap on the stage
+//    or on a card — stops it for good (the deck's first manner,
+//    ui/use-rotation's `handNavigation`); a 'bounded' list's disabled end
+//    arrow runs no handler and stops nothing. What that leaves open: nothing
+//    visible or audible SAYS that a press stops it, and a screen reader's
+//    reading cursor is not a press — the card it reads is still swapped,
+//    with the live region 'off' while it runs (CardCarousel.tsx's "SC 2.2.2
+//    — THE OWNER'S OPTION 1" paragraph, BACKLOG.md entry 2). Its `bounded`
+//    mode runs this ring too: a ring of 2(N − 1) steps read as a list that
+//    turns round at each end (sections/CardCarousel/track.ts), no change to
+//    this module.
 //    The hover-wrapper and focus bullets below stay the law for every other
 //    rotator. `rotationControl()` below is untouched and waits for the first
 //    rotator that renders the control — unnamed today.
@@ -197,10 +259,16 @@ import {
 //    The interaction test only a real browser driving real focus can make —
 //    "keyboard focus entering STOPS the rotation; a Tab within the region is
 //    not a second entry" — was discharged by the first consumer
-//    (sections/ReviewsCarousel/ReviewsDeck.test.tsx, 2026-09-12). Its "play,
-//    then Tab within: still running" form waits for the first rotator that
-//    renders the control — neither the reviews deck nor the Hero frame has a
-//    play button to press (the owner exception above, taken twice).
+//    (sections/ReviewsCarousel/ReviewsDeck.test.tsx) on 2026-09-12 — and
+//    that deck no longer STOPS: since 2026-09-20 keyboard focus entering
+//    only HOLDS it while focus stays (`keyboardEntry: 'suspend'`, the Hero's
+//    manner), and the same real-Tab tests now assert that hold, the Tab
+//    within it and the release on leaving. No rotator takes the
+//    keyboard-entry pause today: it waits again, with its "play, then Tab
+//    within: still running" form, for the first rotator that renders the
+//    control — neither the reviews deck, the Hero frame nor the card
+//    carousel has a play button to press (the owner exception above, taken
+//    three times).
 //
 //  · NAVIGATION: prev and next as native buttons (ui/GlyphButton, labels from
 //    the messages, ≥24×24 px and aiming at 44 — §9) calling rotation.prev /
@@ -211,7 +279,9 @@ import {
 //    name is a rule here). Buttons with aria-current rather than the APG's
 //    tablist variant because every dot is a Tab stop either way and the
 //    grouped form needs no roving focus; re-open that choice if a picker ever
-//    exceeds about six dots. Do NOT port the old repo's
+//    exceeds about six dots — FIRED 2026-10-17 by sections/CardCarousel
+//    (eight dots in an article's gallery, twelve on Home) and NOT taken: its
+//    THE BEADS paragraph carries the lever. Do NOT port the old repo's
 //    focusable region with ArrowLeft/ArrowRight — a tabIndex={0} div with key
 //    handlers is a widget the APG does not ask for and screen readers do not
 //    announce. If a deck ever adds swipe or drag, these buttons are its SC
@@ -251,7 +321,8 @@ import {
 //  · READING TIME (the rider every dossier answers): justify `intervalMs`
 //    against the LONGEST slide at ~150 words per minute, the rate an older
 //    audience reads at (§9). The old deck's 6 s cannot carry a 40-word review;
-//    a photo-only frame is the only ≤6 s case. `startDelayMs` exists to
+//    a frame of a few words at most — a photo, a caption — is the only ≤6 s
+//    case. `startDelayMs` exists to
 //    LENGTHEN the first dwell — shorter is allowed, but it is not the point.
 //
 //  · AA GATES A HERO-STYLE CONSUMER MUST NAME: a focus ring that survives a
@@ -273,10 +344,10 @@ import {
 export type RotationStatus = ClockStatus;
 
 /**
- * The three transient-pause causes — hover, focus and, since 2026-10-13, the
- * widget being off screen (lib/clock's SuspendCause doc) — re-exported so a
- * consumer typing its own handlers never has to import from lib/clock (the
- * ring is the tier they know).
+ * The four transient-pause causes — hover, focus, since 2026-10-13 the widget
+ * being off screen and since 2026-10-14 a hand pressing or dragging it
+ * (lib/clock's SuspendCause doc) — re-exported so a consumer typing its own handlers never
+ * has to import from lib/clock (the ring is the tier they know).
  */
 export type { SuspendCause };
 
@@ -392,6 +463,51 @@ export function wrapIndex(index: number, count: number): number {
   return ((index % count) + count) % count;
 }
 
+/**
+ * Where item `index` sits relative to the item being shown, on a ring of
+ * `count`: 0 is the shown one, negative is before it (the left), positive
+ * after it (the right), and the ring is split as evenly as it divides — with
+ * six items the offsets are 0, ±1, ±2 and one +3 (the one beyond the stage's
+ * right edge).
+ *
+ * `wrapIndex` above is the modular half; the comparison is what turns "five
+ * steps forward on a ring of six" into "one step back", which is the
+ * difference between a card sliding one place and a card flying across the
+ * whole stage.
+ *
+ * `shown` may be FRACTIONAL, and that is the second consumer's reason to be
+ * here: a ring under a dragging hand stands BETWEEN two items
+ * (sections/CardCarousel), and the same arithmetic then gives every item a
+ * continuous position — an item crosses from one end of the ring to the other
+ * only where it is furthest from the one shown, half a ring away. With an
+ * integer `shown` the answer is the integer the first consumer always had.
+ *
+ * MOVED HERE on 2026-10-14 from sections/ReviewsCarousel/ReviewsDeck, the
+ * §15.19 round-3 STANDING TRIGGER ("`signedOffset` → lib/rotation at the
+ * second ring-laid-out rotator") fired by sections/CardCarousel: the body was
+ * the deck's, byte for byte, so the deck's fan is unchanged. One line has
+ * joined it since — the guard (2026-10-20, found in review), which changes
+ * nothing for a positive count — see @returns.
+ *
+ * @returns 0 for an empty (or nonsensical) ring, never NaN; otherwise a value
+ * in the half-open (−count/2, count/2], the tie at half a ring going to the
+ * right. The guard is this function's own, not wrapIndex's alone: wrapIndex
+ * answers 0 for a NEGATIVE ring too, and the comparison after it then turned
+ * that 0 into −count — 5 for a ring of −5, Infinity for one of −Infinity.
+ */
+export function signedOffset(
+  index: number,
+  shown: number,
+  count: number,
+): number {
+  // `!(count > 0)`, wrapIndex's spelling. Its job here is a NEGATIVE count:
+  // wrapIndex answers 0 for one, and `0 > count / 2` would then hand back
+  // −count. (NaN would come back as 0 without it — wrapIndex's own guard.)
+  if (!(count > 0)) return 0;
+  const distance = wrapIndex(index - shown, count);
+  return distance > count / 2 ? distance - count : distance;
+}
+
 /** A ring length: whole, never negative, never NaN. */
 function normalizeCount(count: number): number {
   // Infinity is not a length: it would enable the clock (`Infinity >= 2`)
@@ -495,7 +611,10 @@ function withinRegion(event: FocusLike): boolean {
  * comes back when there is no element to ask, and when `matches` throws:
  * engines without :focus-visible (Safari/iOS < 15.4) throw a SyntaxError on the
  * selector, and treating that as "pointer" would leave a rotation moving under
- * keyboard focus.
+ * keyboard focus. No rotator takes the sticky pause today either: the Hero,
+ * the reviews deck and sections/CardCarousel pass ui/use-rotation's
+ * `keyboardEntry: 'suspend'`, a hold that lifts when focus leaves (the
+ * courses' timeline wires no focus manners at all).
  *
  * 'pointer' — Chrome and Firefox focus a button when it is CLICKED, and
  * :focus-visible is the browser's own verdict on which kind of focus this was.
@@ -505,7 +624,9 @@ function withinRegion(event: FocusLike): boolean {
  * on prev/next leaves focus on the button, so the rotation stays suspended
  * until the visitor clicks or tabs elsewhere (G2 react note, reviews-deck
  * run 2026-09-10 — an inherited manner of the recipe, recorded here so the
- * first consumer's behaviour reads as intended).
+ * recipe's behaviour reads as intended). No rotator takes it today: the
+ * Hero, the reviews deck (since 2026-09-20) and sections/CardCarousel pass
+ * ui/use-rotation's `pointerEntry: 'none'`, so a click's focus holds nothing.
  */
 export function classifyFocusEntry(event: FocusLike): FocusEntry {
   if (withinRegion(event)) return 'within';

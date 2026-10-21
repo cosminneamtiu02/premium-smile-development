@@ -60,7 +60,16 @@
       "slide": "Image {index} sur {total}",
       "contact": "Prendre rendez-vous",
       "services": "Voir nos services",
-      "picker": "Choisir une image (arrête le défilement)"
+      "picker": "Choisir une image"
+    },
+    "articles": {
+      "eyebrow": "Blog",
+      "title": "Les conseils de notre cabinet",
+      "region": "Articles du blog",
+      "previous": "Article précédent",
+      "next": "Article suivant",
+      "picker": "Choisir un article",
+      "slide": "Article {index} sur {total}"
     },
     "location": {
       "eyebrow": "Nous trouver",
@@ -124,6 +133,32 @@
     }
   },
   "blog": {
+    "article": {
+      "byline": "par {author}",
+      "note": "Note : {note}",
+      "gallery": {
+        "region": "Galerie photo",
+        "regionNumbered": "Galerie photo {index} sur {total}",
+        "previous": "Photo précédente",
+        "next": "Photo suivante",
+        "slide": "Photo {index} sur {total}",
+        "picker": "Choisir une photo"
+      },
+      "share": {
+        "label": "Partager l’article",
+        "facebook": "Facebook",
+        "facebookName": "Facebook, partager l’article",
+        "whatsapp": "WhatsApp",
+        "whatsappName": "WhatsApp, envoyer l’article",
+        "email": "E-mail",
+        "emailName": "E-mail, envoyer l’article",
+        "copy": "Copier le lien",
+        "copied": "Lien copié",
+        "copyFailed": "Le lien n’a pas pu être copié",
+        "message": "Découvrez cet article de {site} : {title}",
+        "subject": "Un article de {site} : {title}"
+      }
+    },
     "title": "Articles et actualités",
     "pageTitle": "{title}, page {page}",
     "hero": {
@@ -131,9 +166,9 @@
       "lead": "Les actualités de la clinique et les conseils de nos dentistes :\ncomment entretenir dents et gencives chez vous\net quand venir nous voir."
     },
     "tags": "Catégories",
+    "readingTime": "{minutes, number} min de lecture",
     "card": {
-      "readMore": "Lire la suite…",
-      "readingTime": "{minutes, number} min de lecture"
+      "readMore": "Lire la suite…"
     },
     "pagination": {
       "label": "Pages des articles",

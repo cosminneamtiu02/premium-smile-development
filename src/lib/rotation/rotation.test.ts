@@ -6,6 +6,7 @@ import {
   leavesRegion,
   liveRegion,
   rotationControl,
+  signedOffset,
   wrapIndex,
 } from './rotation.ts';
 import type { FocusLike } from './rotation.ts';
@@ -90,6 +91,103 @@ describe('wrapIndex — the ring arithmetic', () => {
     expect(wrapIndex(Number.NaN, 3)).toBe(0);
     expect(wrapIndex(Number.POSITIVE_INFINITY, 3)).toBe(0);
     expect(wrapIndex(Number.NEGATIVE_INFINITY, 3)).toBe(0);
+  });
+});
+
+describe('signedOffset — where an item sits beside the one shown (moved from the reviews deck, 2026-10-14)', () => {
+  it('splits the ring as evenly as it divides — the deck’s fan, unchanged', () => {
+    // Five: two either side. Six: two either side and ONE far card on the
+    // right (+3, beyond the stage). Three: one either side.
+    expect([0, 1, 2, 3, 4].map((index) => signedOffset(index, 0, 5))).toEqual([
+      0, 1, 2, -2, -1,
+    ]);
+    expect(
+      [0, 1, 2, 3, 4, 5].map((index) => signedOffset(index, 0, 6)),
+    ).toEqual([0, 1, 2, 3, -2, -1]);
+    expect([0, 1, 2].map((index) => signedOffset(index, 0, 3))).toEqual([
+      0, 1, -1,
+    ]);
+  });
+
+  it('measures from whichever item is shown, wrapping both ways', () => {
+    // Shown = the last of six: the first item is its right neighbour.
+    expect(
+      [0, 1, 2, 3, 4, 5].map((index) => signedOffset(index, 5, 6)),
+    ).toEqual([1, 2, 3, -2, -1, 0]);
+    // "Five steps forward on a ring of six" is one step back.
+    expect(signedOffset(5, 0, 6)).toBe(-1);
+  });
+
+  it('gives a FRACTIONAL position for a ring a hand is dragging between two items', () => {
+    // A ring of seven dragged a third of a step towards the next item: every
+    // item has moved a third of a step to the left, continuously.
+    const positions = [0, 1, 2, 3, 4, 5, 6].map((index) =>
+      signedOffset(index, 1 / 3, 7),
+    );
+    const expected = [-1 / 3, 2 / 3, 5 / 3, 8 / 3, -10 / 3, -7 / 3, -4 / 3];
+    positions.forEach((position, index) => {
+      expect(position).toBeCloseTo(expected[index], 10);
+    });
+  });
+
+  it('crosses an item from one end to the other only half a ring away from the one shown', () => {
+    // Seven items: item 3 sits at +3 with item 0 shown, and as the ring is
+    // dragged back past half a ring from it, it reappears at the far left.
+    expect(signedOffset(3, -0.4, 7)).toBeCloseTo(3.4, 10);
+    expect(signedOffset(3, -0.6, 7)).toBeCloseTo(-3.4, 10);
+    // EXACTLY half a ring away — a FRACTIONAL tie, which only a hand standing
+    // between two items makes on an odd ring — the item is still on the right.
+    expect(signedOffset(3, -0.5, 7)).toBe(3.5);
+    // …and no position ever lies further than half the ring from the shown
+    // one. No tolerance on either bound: whenever `distance - count` is taken
+    // it is exact (the two lie within a factor of two of each other —
+    // Sterbenz's lemma), so −3.5 itself must never come back.
+    for (let shown = 0; shown < 7; shown += 0.05) {
+      for (let index = 0; index < 7; index++) {
+        const position = signedOffset(index, shown, 7);
+        expect(position).toBeGreaterThan(-3.5);
+        expect(position).toBeLessThanOrEqual(3.5);
+      }
+    }
+  });
+
+  it('on every ring of one to eight, at every quarter step, is the item’s own place in (−n/2, n/2] — exactly', () => {
+    // Exhaustive over the small rings: both parities, every whole tie (an
+    // even ring) and every half tie (an odd ring under a dragging hand), with
+    // `shown` on every quarter step over three laps. The answer is congruent
+    // to index − shown modulo the ring, and it lies in the half-open
+    // (−n/2, n/2]: the tie at half a ring always goes to the RIGHT. Quarters
+    // are exact in binary, so neither check needs a tolerance. Up to sixteen:
+    // Home's articles band already runs a ring of twelve, and it grows with
+    // every post.
+    for (let count = 1; count <= 16; count++) {
+      for (let shown = -count; shown <= 2 * count; shown += 0.25) {
+        for (let index = 0; index < count; index++) {
+          const offset = signedOffset(index, shown, count);
+          const at = `signedOffset(${index}, ${shown}, ${count}) = ${offset}`;
+          expect(Number.isInteger((offset - (index - shown)) / count), at).toBe(
+            true,
+          );
+          expect(offset, at).toBeGreaterThan(-count / 2);
+          expect(offset, at).toBeLessThanOrEqual(count / 2);
+        }
+      }
+    }
+  });
+
+  it('answers 0 for an empty or nonsensical ring — a NEGATIVE one included', () => {
+    expect(signedOffset(2, 0, 0)).toBe(0);
+    expect(signedOffset(2, 0, Number.NaN)).toBe(0);
+    expect(signedOffset(Number.NaN, 0, 5)).toBe(0);
+    expect(signedOffset(1, Number.POSITIVE_INFINITY, 5)).toBe(0);
+    expect(signedOffset(2, 0, Number.POSITIVE_INFINITY)).toBe(0);
+    // wrapIndex answers 0 for a negative ring as well, and the comparison
+    // after it used to turn that 0 into −count — 5 for a ring of −5, Infinity
+    // for one of −Infinity (found in review, 2026-10-20). The guard is now
+    // signedOffset's own first line.
+    expect(signedOffset(2, 0, -5)).toBe(0);
+    expect(signedOffset(0, 0.5, -1)).toBe(0);
+    expect(signedOffset(2, 0, Number.NEGATIVE_INFINITY)).toBe(0);
   });
 });
 
@@ -580,9 +678,11 @@ describe('classifyFocusEntry / leavesRegion — the APG focus manners, as code',
   //
   // What is NOT pinned here: the browser's own :focus-visible verdict — whether
   // THIS focus came from the keyboard or from a click. Producing that needs a
-  // real Tab and a real press, which is the first consumer lane's interaction
-  // test ("play, then Tab within the region: still running"). These cases stub
-  // the verdict and pin the three branches around it.
+  // real Tab and a real press, which the consumers' own suites drive
+  // (sections/ReviewsCarousel/ReviewsDeck.test.tsx's real-Tab hold and
+  // release); the law's "play, then Tab within: still running" form waits for
+  // the first rotator with a play button. These cases stub the verdict and pin
+  // the three branches around it.
 
   let region: HTMLElement;
   let inside: HTMLButtonElement;

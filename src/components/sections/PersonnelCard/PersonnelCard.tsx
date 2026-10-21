@@ -1174,7 +1174,10 @@ const PICTURE = 'w-72 max-w-full';
  *  grey should it ever vanish, never to transparent) and the light
  *  `line-subtle` grey where it cannot, and `relative`, the containing block
  *  the cropped picture is placed in. KEEP IN SYNC with ui/Card's ONE TINT,
- *  which names this circle as the variable's third reader (§4). */
+ *  which names this circle as the variable's third reader (§4). And with
+ *  sections/PostConclusion's CIRCLE, the blog article's signature, which wears
+ *  this tint, clip and `relative` to the token (its size its own) — its
+ *  PostConclusion.test.tsx reads this constant and holds every one of them. */
 const CIRCLE =
   '@min-[12.5rem]:@max-sm:relative @min-[12.5rem]:@max-sm:size-[clamp(4.5rem,calc(100cqi_-_10rem),7rem)] @min-[12.5rem]:@max-sm:overflow-hidden @min-[12.5rem]:@max-sm:rounded-full @min-[12.5rem]:@max-sm:bg-line-subtle @min-[12.5rem]:@max-sm:supports-[color:color-mix(in_lab,red,red)]:bg-[var(--card-tint,var(--color-line-subtle))]';
 
@@ -1200,7 +1203,10 @@ const PHONE: Record<'photo' | 'name' | 'eyebrow', string> = {
  *  to the byte — and, on a phone, THE CROP: 165 % of the circle's width,
  *  32.5 % of it out to the left and 18 % above, so the circle shows the
  *  900 × 1200 file's square (177, 98)–(723, 643) — head and shoulders. KEEP IN
- *  SYNC with ui/Image's `artwork` row, which points back here. */
+ *  SYNC with ui/Image's `artwork` row, which points back here. And with
+ *  sections/PostConclusion's CROP, which crops the signature's photo with
+ *  these phone tokens unconditionally — its PostConclusion.test.tsx reads this
+ *  constant and holds the two crops equal. */
 const FIGURE =
   'h-auto max-w-full object-contain @min-[12.5rem]:@max-sm:absolute @min-[12.5rem]:@max-sm:left-[-32.5%] @min-[12.5rem]:@max-sm:top-[-18%] @min-[12.5rem]:@max-sm:w-[165%] @min-[12.5rem]:@max-sm:max-w-none';
 

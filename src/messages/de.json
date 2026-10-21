@@ -60,7 +60,16 @@
       "slide": "Bild {index} von {total}",
       "contact": "Beratungstermin vereinbaren",
       "services": "Unsere Leistungen ansehen",
-      "picker": "Bild wählen (stoppt den Wechsel)"
+      "picker": "Bild auswählen"
+    },
+    "articles": {
+      "eyebrow": "Blog",
+      "title": "Tipps aus unserer Praxis",
+      "region": "Blogartikel",
+      "previous": "Vorheriger Artikel",
+      "next": "Nächster Artikel",
+      "picker": "Artikel auswählen",
+      "slide": "Artikel {index} von {total}"
     },
     "location": {
       "eyebrow": "So finden Sie uns",
@@ -124,6 +133,32 @@
     }
   },
   "blog": {
+    "article": {
+      "byline": "von {author}",
+      "note": "Hinweis: {note}",
+      "gallery": {
+        "region": "Fotogalerie",
+        "regionNumbered": "Fotogalerie {index} von {total}",
+        "previous": "Vorheriges Foto",
+        "next": "Nächstes Foto",
+        "slide": "Foto {index} von {total}",
+        "picker": "Foto auswählen"
+      },
+      "share": {
+        "label": "Artikel teilen",
+        "facebook": "Facebook",
+        "facebookName": "Facebook, Artikel teilen",
+        "whatsapp": "WhatsApp",
+        "whatsappName": "WhatsApp, Artikel senden",
+        "email": "E-Mail",
+        "emailName": "E-Mail, Artikel senden",
+        "copy": "Link kopieren",
+        "copied": "Link kopiert",
+        "copyFailed": "Der Link konnte nicht kopiert werden",
+        "message": "Lesetipp von {site}: {title}",
+        "subject": "Ein Artikel von {site}: {title}"
+      }
+    },
     "title": "Artikel & Neuigkeiten",
     "pageTitle": "{title}, Seite {page}",
     "hero": {
@@ -131,9 +166,9 @@
       "lead": "Neues aus der Klinik und Tipps unseres Zahnärzteteams:\nwie Sie Zähne und Zahnfleisch zu Hause pflegen\nund wann ein Besuch sinnvoll ist."
     },
     "tags": "Kategorien",
+    "readingTime": "{minutes, number} Min. Lesezeit",
     "card": {
-      "readMore": "Weiterlesen…",
-      "readingTime": "{minutes, number} Min. Lesezeit"
+      "readMore": "Weiterlesen…"
     },
     "pagination": {
       "label": "Artikelseiten",

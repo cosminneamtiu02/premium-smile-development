@@ -98,6 +98,14 @@ const WEARERS: Readonly<
     bottom: 1,
     part: 'the contact dialog’s box, and the body that reaches its bottom edge',
   },
+  // The blog article's gallery card (2026-10-14, §15.29's amendment and
+  // §15.39 round 4): the owner's screenshot of rounded portrait cards — "i
+  // want it to have about the same design as the one in the screenshot".
+  'components/sections/PostGallery/GalleryCard.tsx': {
+    whole: 1,
+    bottom: 0,
+    part: 'the blog gallery’s provisional photo card — the screenshot’s round corner',
+  },
 };
 
 /** The sections that ASK ui/Card for the soft corner: the atom wears the

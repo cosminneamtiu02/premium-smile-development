@@ -189,21 +189,21 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   overlay-scrollbar window the wrong one — a lever, not taken.
 //
 // ── THE HEADING IS THE PAGE'S <h1>, AND THIS BAND OWNS IT. A doctor page has
-// exactly one outline root and it is the doctor's name; the Team page's
-// roster owns its own, and the two never share a page. `Heading size="hero"`
-// is the step — one fluid clamp, 32px at the 320 stress width up to the old
-// site's 72px from 1600px on (the atom's own header) — worn through `asChild`
-// onto a REAL <h1>, because the atom answers "how big is this title" and
-// never "which element is it". On a laptop or a desktop the name is the
-// clamp's value at the owner's 1401 window instead, drawn in the design
-// pixel (THE BAND SCALE, THE NAME). The position goes through ui/Eyebrow, the
-// only consumer of the §3 mono token, so the uppercase is CSS and the string stays
-// sentence case (Ș/Ț case mapping is the browser's job, §8.2/§8.8) —
-// PersonnelCard's D5 recipe, its `text-center` included BELOW THE STEP only:
-// stacked, the pair stands centred ABOVE the picture (D51c), and beside it
-// the words are start-aligned against the picture again — `@3xl:text-start`
-// on each of the two elements, §15.15 b's per-element re-assertion (never
-// `text-left`, never a wrapper blanket).
+// exactly one outline root and it is the doctor's name; the Team page's is
+// its hero's (sections/PageHero), and the two never share a page. `Heading
+// size="hero-scaled"` is the step — `hero`'s one fluid clamp, 32px at the 320
+// stress width up to the old site's 72px from 1600px on (the atom's own
+// header), and on a laptop or a desktop the clamp's value at the owner's 1401
+// window, drawn in the design pixel (THE BAND SCALE, THE NAME) — worn
+// through `asChild` onto a REAL <h1>, because the atom answers "how big is
+// this title" and never "which element is it". The position goes through
+// ui/Eyebrow, the only consumer of the §3 mono token, so the uppercase is CSS
+// and the string stays sentence case (Ș/Ț case mapping is the browser's job,
+// §8.2/§8.8) — PersonnelCard's D5 recipe, its `text-center` included BELOW
+// THE STEP only: stacked, the pair stands centred ABOVE the picture (D51c),
+// and beside it the words are start-aligned against the picture again —
+// `@3xl:text-start` on each of the two elements, §15.15 b's per-element
+// re-assertion (never `text-left`, never a wrapper blanket).
 // `hyphens-none` on both lines: the site-wide `hyphens: auto` (§15.14) is for
 // PROSE, and neither a person's name nor a medical title may break at a
 // syllable — they wrap between words or not at all.
@@ -214,8 +214,8 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 // (Sabău) Oana" — and a two-line specialty does not end on one word. A name
 // that fits keeps its one line: balancing only chooses WHERE a wrap falls,
 // never whether one happens. The `@3xl:` prefix keeps the stacked branch's
-// wrapping exactly what it was. An engine without `text-wrap: balance`
-// (Safari before 17.5) simply wraps greedily.
+// wrapping exactly what it was. An engine without balanced wrapping (Safari
+// before 17.5) simply wraps greedily.
 //   THE <h1> COMES FIRST IN THE DOM, and the eyebrow paints above it through
 //   `flex-col-reverse` on the pair (G2 a11y, 2026-09-21 — this SUPERSEDES the
 //   contract's DOM sketch, which had the eyebrow first in both orders). The
@@ -674,29 +674,37 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   pixel width (a cap against enlarging the picture past its pixels, no
 //   length of the design), and the cutout's `max-w-[140%]`, a share.
 //   THE NAME: `hero` is a VIEWPORT clamp, clamp(2rem, 1rem + 3.5vw, 4.5rem),
-//   which no remap reaches — so inside the scale the <h1> takes the design's
-//   size by one class of its own, the LAST on it: the clamp's value at the
-//   owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26 spacing steps
-//   (65.04 design pixels), behind THE BAND SCALE's own gate chain spelled
-//   out, because Tailwind reads a class only whole. Its queries read THIS
-//   box, which is the column below the cap and the 96rem cap above it, so it
-//   opens where the band's pixel does WHILE 96rem IS AT LEAST THE 896px
-//   FLOOR, i.e. a root of 9⅓px or more (G2 typescript and react, LOW-1,
-//   measured): under a smaller default font — Chrome's "Very small", 9px —
-//   the box caps at 864px, the name's gate stays shut while the band's
-//   opens, and the name keeps the clamp's 40.5px where 50.8 is due, the rest
-//   of the opener scaled. Recorded, not cured: the cure is a NAMED container
-//   on ui/Container read by name here, an atom change for a setting this
-//   page's readers turn the other way; it sets the font
-//   SIZE alone (the `length:` hint) and the atom's `/tight` line height, a
-//   ratio, follows. A size passed to ui/Heading by className is a recorded
-//   departure: Wordmark passes `@max-md:text-xl` the same way, while
-//   ContactModal's ornament chose a plain <p> to keep §6.8's letter, and
-//   ui/Heading's own header says a consumer's className positions an atom
-//   and never re-sizes one. The lever is a step of the atom's own whose
-//   regime half is spelled in the design pixel — an atom lane, the
-//   planner's call. tests/unit/design-scale.test.ts holds the chain to the
-//   regime's.
+//   which no remap reaches — so the <h1> wears ui/Heading's `hero-scaled`
+//   step (2026-10-15): `hero`'s row byte for byte, plus ONE class behind THE
+//   BAND SCALE's own gate chain that sets, inside the scale, the clamp's
+//   value at the owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26
+//   spacing steps (65.04 design pixels) — the font SIZE alone (the
+//   `length:` hint), the step's `/tight` line height, a ratio, following it.
+//   The step is spelled ONCE, in the atom (its header's 'hero-scaled'
+//   JOINED); this band asks for it and spells no size of its own, and
+//   tests/unit/design-scale.test.ts holds the size to that one file and the
+//   chain to the regime's. Until that day the class rode the <h1>'s own
+//   className, LAST — a size passed to ui/Heading by className, a recorded
+//   departure from §6.8 (a consumer's className positions an atom and never
+//   re-sizes one; Wordmark still passes `@max-md:text-xl` that way, while
+//   ContactModal's ornament chose a plain <p> to keep the letter) whose lever
+//   this paragraph named: a step of the atom's own. The blog list's heading
+//   and an article's title took the same class, and the third consumer was
+//   the trigger the census had booked for the step.
+//   THE BOUND, recorded here and with the step (ui/Heading's THE BOUND
+//   DoctorIntro records): the step's queries read the NEAREST size container
+//   above the <h1> — for the name, THIS band's own box, the column below the
+//   cap and the 96rem cap above it — so the size opens where the band's
+//   pixel does WHILE 96rem IS AT LEAST THE 896px FLOOR, i.e. a root of 9⅓px
+//   or more (G2 typescript and react, LOW-1, measured): under a smaller
+//   default font — Chrome's "Very small", 9px — the box caps at 864px, the
+//   name's gate stays shut while the band's opens, and the name keeps the
+//   clamp's 40.5px where 50.8 is due, the rest of the opener scaled (measured
+//   again on 2026-10-15, the step worn: 40.5px, where the blog's two titles,
+//   whose gate reads ui/Container's column, draw 50.81). Recorded, not
+//   cured: the cure is a NAMED container on ui/Container that the step reads
+//   by name — an atom change on both sides, for a setting this page's
+//   readers turn the other way.
 //   MEASURED on the story plays (Chromium, a mouse, a classic 15px
 //   scrollbar, the demo doctor), at 1280 / 1536 / 1920 — s = 0.912 / 1.097 /
 //   1.375: the name 59.3 / 71.4 / 89.4px (the clamp's 60.8 / 69.8 / 72
@@ -737,7 +745,11 @@ import { CredoCard, type DoctorIntroCredo } from './CredoCard';
 //   opener's text the size it was until the zoomed column falls under the
 //   step (SC 1.4.4's F94 pattern), and inside the regime the user's default
 //   font size is not followed — now true of the doctor page's name and
-//   specialty, as of every heading of Home.
+//   specialty, as of every heading of Home. The band's trade was accepted
+//   for this page on 2026-10-13 ("Accept, like Home"), on the body's and the
+//   eyebrows' numbers; the NAME's is a separate one, still OPEN — its step,
+//   `hero-scaled`, draws a size a zoom moves even less (ui/Heading's THE ZOOM
+//   TRADE, BACKLOG.md entry 2, item (a)).
 //
 // ── D43c · TWO EYEBROWS, ONE SIZE — MEASURED, NOT ASSUMED. The owner asked
 // (2026-09-26) why „În cuvintele mele" reads larger than „Medic specialist
@@ -959,14 +971,15 @@ export function DoctorIntro({
                 picture in the stack, `items-center` centres its two boxes
                 there, and each line centres its own text ON THE ELEMENT
                 (§15.15 b), back to `start` — and balanced — beside the
-                picture. The name's LAST class is the band's one re-spelled
-                gate chain: inside the scale, the `hero` step's value at the
+                picture. The name's SIZE is ui/Heading's `hero-scaled` step:
+                `hero`, and inside the scale the `hero` step's value at the
                 owner's 1401 window, drawn in the design pixel (the header's
-                THE BAND SCALE, THE NAME). */}
+                THE BAND SCALE, THE NAME) — the band spells no size of its
+                own. */}
             <div className="contents @3xl:relative @3xl:flex @3xl:flex-col @3xl:ps-6 @3xl:pt-[calc(100cqi/9)]">
               <div className="-order-1 flex flex-col-reverse items-center gap-2 @3xl:order-none @3xl:items-start">
-                <Heading size="hero" asChild>
-                  <h1 className="text-center hyphens-none @3xl:text-start @3xl:text-balance scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]">
+                <Heading size="hero-scaled" asChild>
+                  <h1 className="text-center hyphens-none @3xl:text-start @3xl:text-balance">
                     {name}
                   </h1>
                 </Heading>

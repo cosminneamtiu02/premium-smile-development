@@ -1,6 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createTranslator } from 'next-intl';
+import { locales } from '@/i18n/locales';
+import { posts as SITE_POSTS, postsIn } from '@/lib/blog/blog';
 import { heroSlides, type HeroSlideEntry } from '@/lib/hero-slides/hero-slides';
-import { populateHero } from './populate';
+import de from '@/messages/de.json';
+import ro from '@/messages/ro.json';
+import { postCard } from '../blog/populate';
+import {
+  blogCarouselWordsFrom,
+  populateBlogCarousel,
+  populateHero,
+} from './populate';
 
 // populate — the page's whole arithmetic for the Hero, tested without
 // rendering anything (the services page's ./populate.test.ts shape). The
@@ -93,5 +103,98 @@ describe('populateHero — against the real ring', () => {
     expect(slides.at(-1)?.label).toBe(
       `${heroSlides.length}/${heroSlides.length}`,
     );
+  });
+});
+
+// ── THE ARTICLES BAND — the walk from the blog's posts to sections/
+// BlogCarousel's props, and the ONE mapping of its words (./populate.ts' THE
+// ARTICLES BAND). Against the REAL posts and the REAL message files: the band
+// shows every post, newest first, as the blog's own card, and every word it
+// says exists in the language it is said in.
+
+describe('blogCarouselWordsFrom — the band’s words through the REAL messages', () => {
+  const wordsIn = (locale: 'ro' | 'de') => {
+    const messages = locale === 'ro' ? ro : de;
+    return blogCarouselWordsFrom(
+      createTranslator({ locale, messages, namespace: 'home' }),
+      createTranslator({ locale, messages, namespace: 'blog' }),
+      createTranslator({ locale, messages, namespace: 'common' }),
+    );
+  };
+
+  it('speaks Romanian — the band’s own words, the cards’ blog words and the site’s carousel roles', () => {
+    const words = wordsIn('ro');
+    expect(words.eyebrow).toBe(ro.home.articles.eyebrow);
+    expect(words.title).toBe(ro.home.articles.title);
+    expect(words.region).toBe(ro.home.articles.region);
+    expect(words.previous).toBe(ro.home.articles.previous);
+    expect(words.next).toBe(ro.home.articles.next);
+    expect(words.picker).toBe(ro.home.articles.picker);
+    expect(words.role).toBe(ro.common.carousel.role);
+    expect(words.slideRole).toBe(ro.common.carousel.slideRole);
+    expect(words.tags).toBe(ro.blog.tags);
+    expect(words.readMore).toBe(ro.blog.card.readMore);
+    expect(words.slide(3, 12)).toBe('Articolul 3 din 12');
+    expect(words.readingTime(4)).toBe('4 min de citit');
+  });
+
+  it('speaks German too — every sentence its own', () => {
+    const words = wordsIn('de');
+    expect(words.title).toBe(de.home.articles.title);
+    expect(words.slide(3, 12)).toBe('Artikel 3 von 12');
+    expect(words.readingTime(4)).toBe('4 Min. Lesezeit');
+  });
+});
+
+describe('populateBlogCarousel — every post, newest first, as the blog’s own card', () => {
+  const words = blogCarouselWordsFrom(
+    createTranslator({ locale: 'ro', messages: ro, namespace: 'home' }),
+    createTranslator({ locale: 'ro', messages: ro, namespace: 'blog' }),
+    createTranslator({ locale: 'ro', messages: ro, namespace: 'common' }),
+  );
+
+  it.each(locales)(
+    '%s: hands the band every post in that language, in the list’s order, each the card the blog’s list prints',
+    (locale) => {
+      const band = populateBlogCarousel(locale, words);
+      const posts = postsIn(locale, SITE_POSTS);
+      expect(band.posts).toEqual(
+        posts.map((post) => postCard(locale, post, words.readingTime)),
+      );
+      expect(band.posts.map((card) => card.slug)).toEqual(
+        posts.map((post) => post.slug),
+      );
+    },
+  );
+
+  it('names every card — and its progress dot — „Articolul n din N", in order', () => {
+    const band = populateBlogCarousel('ro', words);
+    const total = band.posts.length;
+    expect(total).toBeGreaterThan(1);
+    expect(band.slideLabels).toEqual(
+      band.posts.map((_, index) => `Articolul ${index + 1} din ${total}`),
+    );
+  });
+
+  it('hands the band its words and the carousel its six labels', () => {
+    const band = populateBlogCarousel('ro', words);
+    expect(band.eyebrow).toBe(ro.home.articles.eyebrow);
+    expect(band.title).toBe(ro.home.articles.title);
+    expect(band.labels).toEqual({
+      region: ro.home.articles.region,
+      role: ro.common.carousel.role,
+      slideRole: ro.common.carousel.slideRole,
+      previous: ro.home.articles.previous,
+      next: ro.home.articles.next,
+      picker: ro.home.articles.picker,
+    });
+    expect(band.tagsLabel).toBe(ro.blog.tags);
+    expect(band.readMore).toBe(ro.blog.card.readMore);
+  });
+
+  it('walks the list it is handed — an empty blog hands the band no posts', () => {
+    const band = populateBlogCarousel('ro', words, []);
+    expect(band.posts).toEqual([]);
+    expect(band.slideLabels).toEqual([]);
   });
 });

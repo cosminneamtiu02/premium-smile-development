@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { BlogCarousel } from '@/components/sections/BlogCarousel/BlogCarousel';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
@@ -10,7 +11,11 @@ import { isLocale } from '@/i18n/locales';
 import { clinicStats } from '@/lib/team/team';
 import { populateDoctorShowcase, populateStats } from '../team/populate';
 import { toStatTiles } from '../team/stat-tiles';
-import { populateHero } from './populate';
+import {
+  blogCarouselWordsFrom,
+  populateBlogCarousel,
+  populateHero,
+} from './populate';
 
 // Home lives at /{locale} itself — never /{locale}/home (brief §5).
 // FIVE real bands so far, and the two bands added on 2026-09-30 and
@@ -90,12 +95,20 @@ export default async function HomePage() {
   const t = await getTranslations('home');
   const tc = await getTranslations('common');
   const tt = await getTranslations('team');
+  const tb = await getTranslations('blog');
   const locale = await getLocale();
   if (!isLocale(locale))
     throw new Error(`home page: unknown locale "${locale}"`);
 
   const slides = populateHero(locale, (index, total) =>
     t('hero.slide', { index, total }),
+  );
+
+  // The articles band — every post in this language as the blog's own card
+  // (./populate.ts' THE ARTICLES BAND).
+  const articles = populateBlogCarousel(
+    locale,
+    blogCarouselWordsFrom(t, tb, tc),
   );
 
   // The doctors band's cards — the Team page's own walk and the Team page's
@@ -140,6 +153,11 @@ export default async function HomePage() {
         tiles={toStatTiles(populateStats(locale, clinicStats))}
         format={new Intl.NumberFormat(locale).format}
       />
+      {/* THE ARTICLES BAND (owner, 2026-10-17: "place it below th in numbers
+          category and above "Specialiștii cu care ne mândrim"" — "on main
+          screen make it as wide as the screen"): the blog's article cards in
+          the card carousel's five-card window, circular, edge to edge. */}
+      <BlogCarousel {...articles} />
       <DoctorShowcase
         eyebrow={tt('showcase.eyebrow')}
         title={tt('showcase.title')}

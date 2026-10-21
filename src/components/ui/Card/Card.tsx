@@ -412,6 +412,14 @@ import { slotClone } from '../slot';
 // mix or its gate (globals.css's THE CARD TINT since the promotion) moves
 // that circle, and PersonnelCard.test.tsx measures the circle's ground EQUAL
 // to the doctor card's frame, which this file paints from the same role.
+// A SECOND CIRCLE since 2026-10-14: sections/PostConclusion, the blog
+// article's closing quote, draws the author's photo in a circle with the same
+// tint, clip and crop (the owner: "the circle with photo of doctor like in
+// phone mode at the docotr cards"; its size is its own), KEEP-IN-SYNC with
+// PersonnelCard's CIRCLE and pinned to it by PostConclusion.test.tsx — so a
+// change to the role (globals.css's THE CARD TINT: its name or its mix) moves
+// both circles. Each circle spells its own gate, which only those two tests
+// hold, so a change to globals.css's gate must be copied into both.
 // THE MIX IS OPAQUE, AND SAYS SO TWICE (G2 a11y HIGH ×2, reviews-deck run,
 // 2026-09-10 — the reasoning outlived the value). A wash over TRANSPARENT
 // (the `/20` opacity spelling) would let a deck's neighbouring cards show
@@ -427,12 +435,15 @@ import { slotClone } from '../slot';
 // `bg-surface` base under its own gated tint ground — so an old engine paints
 // a solid-lavender FRAME (harmless) and a WHITE ground, never lavender under
 // text (1.57:1 for muted body copy). Modern engines paint the tint on both.
-// Measured on the tint: muted body text 5.8:1, the mono eyebrow the same,
+// Measured on the tint: muted body text 5.7:1 (on today's mix, rgb(228 226
+// 235); 5.8:1 was the old site's rgb(229 228 236)), the mono eyebrow the same,
 // display ink above 10:1 — every text role on the selected card clears AA
 // with room.
 // The 20% is the ONE number to move if the frame should ever read heavier:
 // 30% still clears AA for muted text (5.1:1); 40% does not (4.4:1) — and
-// since the promotion it moves ui/PillButton's resting border with it.
+// since the promotion it moves ui/PillButton's resting border with it, and
+// since 2026-10-10 and 2026-10-14 the two photo circles above (decoration
+// behind a photo: no text sits on either).
 //
 /** Named SITUATIONS — which look, never which CSS. */
 export type CardTone = 'surface' | 'tinted' | 'emphasized' | 'framed';

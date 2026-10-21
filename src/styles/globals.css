@@ -242,10 +242,13 @@
    their declaration) — plus
    the one additional accent-decorative role, and the floss ribbon's colour
    and its shadow's, --ribbon and --ribbon-shadow (§15.26): raw values read
-   by lib/ribbon-draw for its canvases, so they get NO utility name in the
-   `@theme inline` block below — nothing paints with a class — and, since
-   2026-10-09, ONE DERIVED role, --card-tint (its THE CARD TINT block below
-   the theme): a mix of accent-decorative, not a 23rd colour.
+   by lib/ribbon-draw for its canvases, so they get NO theme utility — the
+   `@theme inline` block below names neither — while --ribbon has had two
+   arbitrary-value readers since 2026-10-14, the blog article's quote mark
+   and its line (the record on its declaration;
+   tests/unit/ribbon-tint-sync.test.ts counts them) — and, since 2026-10-09,
+   ONE DERIVED role, --card-tint (its THE CARD TINT block below the theme): a
+   mix of accent-decorative, not a 23rd colour.
 
    `::backdrop` is in the selector list on purpose (Modal board D2·A′): the
    modal's scrim IS the backdrop pseudo-element, `backdrop:bg-scrim` compiles to
@@ -282,9 +285,12 @@
      PersonnelCard's <blockquote> and sections/DoctorIntro's CredoCard <p> —
      and, since 2026-10-13, the THIRD-PERSON BIOGRAPHY beside the courses
      (sections/DoctorProfile's paragraphs, on --page: the owner's "like the
-     text at [the credo quote] … so gary-ish er"; CLAUDE.md §15.23 round 7),
-     which alone gives the full ink back under prefers-contrast: more — and
-     the
+     text at [the credo quote] … so gary-ish er"; CLAUDE.md §15.23 round 7)
+     — and, since 2026-10-15, the NOTE UNDER A BLOG PHOTO
+     (sections/PostPhoto's <p>, on --page: the owner's "abosultley no
+     emphasis here, jsut the gray text", pointing at a doctor card's quote),
+     the biography and the note alone giving the full ink back under
+     prefers-contrast: more — and the
      STAND-IN of the first in ui/Ribbon's stories (Ribbon.fixtures.tsx,
      §15.26): a stand-in judged beside the ribbon must wear the card's own
      ink, on the same white ground. Every other quiet text keeps --ink-muted.
@@ -297,7 +303,13 @@
      NOT FOR THE TINT: 3.24:1 on sections/TintedBand's 30% lilac ground
      (#d4cfdc), under 4.5:1 — prose on the lilac band keeps --ink or
      --ink-muted. Dark grounds are outside the charter: 3.24:1 on
-     --inverse-surface. */
+     --inverse-surface. ONE GRAPHIC USE (2026-10-17): the card carousel's
+     idle progress dots (sections/CardCarousel) — each idle dot is the only
+     visible part of its dot <button>, so SC 1.4.11's
+     user-interface-component clause applies, its 3:1 the bar: 4.70:1 on the
+     page, 4.94:1 on white. tests/unit/ink-faint-census.test.ts names every
+     wearer with its ground and its kind, text or graphic, and measures each
+     pair. */
   --ink-faint: #766f69;
   --ink-inverse: #ffffff;
   /* lines */
@@ -433,7 +445,14 @@
      face of the ribbon turned to the viewer SHOWS — lib/ribbon-paint's THE ANCHORED LIGHT brightens it where
      the ribbon turns to the light and dims it where it turns away. Until that day the ribbon wore the old
      site's lavender #8377a3, which its light showed at about rgb(97 87 114). Its shadow keeps the old
-     palette's dark mauve, the colour of the ribbon's second face until 2026-09-30: */
+     palette's dark mauve, the colour of the ribbon's second face until 2026-09-30.
+     TWO CSS READERS since 2026-10-14 (the blog article page, CLAUDE.md §15.39 round 4), on the owner's
+     word — "that faint quote which will be the color of the thread that extends on the page as you scroll
+     the doctor cards": sections/PostConclusion's quote mark and THE LINE that sections/PostConclusion and
+     sections/BeforeAfter share, read as `text-(--ribbon)` / `bg-(--ribbon)`, so they follow the thread when
+     it changes. Decorations, never ink: 1.45:1 on --page, 1.53:1 on white (exempt from SC 1.4.11).
+     tests/unit/ribbon-tint-sync.test.ts holds the readers to those two files — three spellings — and
+     a third names itself there first. */
   --ribbon: #d4cfdc;
   --ribbon-shadow: #2d263c; /* old `--bg-inverse` rgb(45 38 60) — the same hue at 19% lightness */
   /* THE BRAND'S TWO COLOURS (owner, 2026-10-01, with the clinic's real mark:

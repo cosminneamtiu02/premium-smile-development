@@ -154,8 +154,8 @@ import { cx } from '@/lib/cx/cx';
 //   ON A PHONE'S OR A TABLET'S COLUMN — under the Container's 48rem step,
 //   windows narrower than about 975px on the built page behind a classic
 //   scrollbar (979 in the test runner, whose 10vw counts the scrollbar; 960
-//   without one) — both blocks wear the CSS `text-wrap: pretty`
-//   (`@max-3xl:`), which mends a short last line where it can. Never from the
+//   without one) — both blocks wear CSS pretty wrapping (`@max-3xl:`),
+//   which mends a short last line where it can. Never from the
 //   step up: WebKit's `pretty` re-balances a whole block (measured on the
 //   blog's first copy, 2026-10-14, when it evened the Romanian lead's three
 //   lines out at a laptop's widths), and the stairway wants its lines where
@@ -163,9 +163,10 @@ import { cx } from '@/lib/cx/cx';
 //   short last line against ragged ones and kept the blog's first Italian
 //   draft's lone „cura" at 744–900px — hence the no-break spaces every copy
 //   carries (THE COPY'S RULES).
-//   THE <h1>: ui/Heading's `hero` step (§15.24's one h1 step) worn through
-//   `asChild` by a real <h1>, the page's one (§9), 65.04 design pixels
-//   inside the scale (THE ONE SIZE THE REMAP CANNOT REDRAW, next) —
+//   THE <h1>: ui/Heading's `hero-scaled` step — §15.24's one h1 step,
+//   `hero`, as it reads in a band that scales — worn through `asChild` by a
+//   real <h1>, the page's one (§9), 65.04 design pixels inside the scale
+//   (THE ONE SIZE THE REMAP CANNOT REDRAW, next) —
 //   `hyphens-none`, so a word of the title never splits at a syllable
 //   (DoctorIntro's name, the numbers band's title); its belt `wrap-anywhere`,
 //   which breaks only a word too long for a line by itself (DoctorStats'
@@ -173,18 +174,25 @@ import { cx } from '@/lib/cx/cx';
 //   scale; inside it the heading's reach takes the cap's place (THE
 //   HEADING'S REACH).
 //   THE ONE SIZE THE REMAP CANNOT REDRAW is the <h1>'s: ui/Heading's `hero`
-//   step is a VIEWPORT clamp. So inside the scale the title takes its design
-//   size by one class, the last on it, behind the band scale's own chain,
-//   which reads ui/Container's column as every regime class here does — and
-//   that class is sections/DoctorIntro's name's, byte for byte: the `hero`
-//   step's value at the owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as
-//   16.26 spacing steps, 65.04 design pixels. A KEEP-IN-SYNC pair, which
-//   tests/unit/design-scale.test.ts holds equal; a third consumer of this
-//   class is the trigger for a sibling step in ui/Heading. The Team page is
-//   no third: it wears the class through this file, so the class is still
-//   spelled in two files, DoctorIntro.tsx and this one. (sections/PostList's
-//   THE BAND SCALE records the few hours of 2026-10-15 when the blog's
-//   heading wore 56 design pixels of its own.)
+//   step is a VIEWPORT clamp. So the title wears ui/Heading's `hero-scaled`
+//   step: `hero`'s row, and inside the scale `hero`'s value at the owner's
+//   1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26 spacing steps, 65.04
+//   design pixels — sections/DoctorIntro's doctor's name's size, and
+//   sections/PostHeader's article title's — behind the band scale's own
+//   chain, which for this <h1> reads ui/Container's column as every regime
+//   class here does. The step is spelled ONCE, in the atom (its header's
+//   'hero-scaled' JOINED): tests/unit/design-scale.test.ts holds the size to
+//   that one file and the three <h1>s that ask for it, this one among them,
+//   to the step, and this hero spells no size. What browser zoom does to that
+//   size is the step's own trade, still OPEN and the owner's (ui/Heading's
+//   THE ZOOM TRADE, BACKLOG.md entry 2, item (a)). The hero once spelled the
+//   class itself, LAST on its <h1> (the blog list's since 2026-10-14), a
+//   KEEP-IN-SYNC pair with the doctor's name; an article's title was its
+//   third consumer, the trigger the census had booked for the step, which
+//   joined on 2026-10-15. The Team page, which wears the hero through this
+//   file, is no fourth: one file asks, however many pages wear it.
+//   (sections/PostList's THE BAND SCALE records the few hours of 2026-10-15
+//   when the blog's heading wore 56 design pixels of its own.)
 //   THE LEAD: ui/Text, muted — the grey sentence of the owner's screenshot —
 //   capped at 123 spacing steps, 492px, 492 design pixels in the scale, and
 //   `hyphens-none` like the heading: the site's `hyphens: auto` (§15.14) lets
@@ -324,18 +332,16 @@ const STAIRWAY = 'scalable:@4xl:@min-[896px]:whitespace-pre-line';
 const REACH =
   'scalable:@4xl:@min-[896px]:w-max scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*67.5)]';
 
-/** THE <h1>: capped at the 6xl step (THE CAPS), never split at a syllable, a
- *  belt for a word too long for a line, the `pretty` wrap on a phone's or a
- *  tablet's column, the stairway's line breaks and the heading's reach inside
- *  the band scale — and, LAST, its size there, behind the band scale's own
- *  chain: sections/DoctorIntro's name's class byte for byte, 16.26 spacing
- *  steps, 65.04 design pixels (THE ONE SIZE THE REMAP CANNOT REDRAW — KEEP IN
- *  SYNC, held by tests/unit/design-scale.test.ts). */
+/** THE <h1>'s own classes: capped at the 6xl step (THE CAPS), never split
+ *  at a syllable, a belt for a word too long for a line, the `pretty` wrap on
+ *  a phone's or a tablet's column, and the stairway's line breaks and the
+ *  heading's reach inside the band scale. NO SIZE: its size there is
+ *  ui/Heading's `hero-scaled` step's, 65.04 design pixels (THE ONE SIZE THE
+ *  REMAP CANNOT REDRAW — held by tests/unit/design-scale.test.ts). */
 const TITLE = cx(
   'max-w-6xl hyphens-none wrap-anywhere @max-3xl:text-pretty',
   STAIRWAY,
   REACH,
-  'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
 );
 
 /** THE LEAD: capped at 123 spacing steps, the limit every one of its lines
@@ -368,7 +374,7 @@ export function PageHero({
       aria-labelledby={undefined}
       className={cx(HERO, className)}
     >
-      <Heading size="hero" asChild>
+      <Heading size="hero-scaled" asChild>
         <h1 className={TITLE}>{title}</h1>
       </Heading>
       <Text tone="muted" className={LEAD}>

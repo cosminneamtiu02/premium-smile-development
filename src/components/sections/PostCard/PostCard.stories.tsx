@@ -7,19 +7,34 @@ import {
   bandColumnClasses,
   bandScaleClasses,
 } from '@/components/ui/Container/Container';
-import { postsIn, type BlogPost } from '@/lib/blog/blog';
+import { Eyebrow } from '@/components/ui/Eyebrow/Eyebrow';
+import { localeHref } from '@/i18n/href';
+import {
+  STAND_IN_ARTICLE,
+  articleAuthor,
+  articleSlugFor,
+} from '@/lib/blog-article/blog-article';
+import { articlePath, postsIn, type BlogPost } from '@/lib/blog/blog';
 import { cx } from '@/lib/cx/cx';
 import { heroSlides } from '@/lib/hero-slides/hero-slides';
 import type { ImagePath } from '@/lib/image-path/image-path';
 import de from '@/messages/de.json';
 import it from '@/messages/it.json';
 import ro from '@/messages/ro.json';
-import { PostCard, type PostCardContent } from './PostCard';
+import {
+  PostCard,
+  type PostCardContent,
+  type PostCardHeadingLevel,
+} from './PostCard';
 import { unitsAcrossLines } from './PostCard.fixtures';
 
-// SIX stories, and the count is the honest one: the everyday card, a post
+// EIGHT stories, and the count is the honest one: the everyday card, a post
 // with no categories, the long-word stress, the German stress, the Italian
-// footer row, and the hover jump the pixel net cannot photograph. The export
+// footer row, the hover jump the pixel net cannot photograph, and the Home
+// band's MINIATURE beside its full card, in Romanian and in German
+// (2026-10-17 — they replace the same day's two narrow-card stories, which
+// left with the title's narrow steps: PostCard's THE NARROW STEPS, REMOVED).
+// The export
 // NAMES are load-bearing — each names a baseline file
 // (`sections/post-card/default-…`) — so this list IS the section's
 // contribution to a lane's visual manifest. `Sections/*` routes every story to
@@ -60,13 +75,14 @@ import { unitsAcrossLines } from './PostCard.fixtures';
 // from it, and the summary's `hyphens: auto` picks its dictionary there —
 // §15.14; the title never splits a word, PostCard's THE TITLE NEVER SPLITS A
 // WORD, which LongWords and GermanStress lay out), and the
-// frame's two neighbours follow it; four pin a VIEWPORT, for the Vitest
+// frame's two neighbours follow it; six pin a VIEWPORT, for the Vitest
 // storybook project: NoTags and Italian at the laptop's 1536 — three cards to
-// a row, in the band scale — GermanStress at the phone's 390, and LongWords
-// at the 320 stress width — one column, the footer row wrapped. The visual
-// net ignores the pins (it sets its own page size per project), which is why
-// every play DERIVES what it expects from the boxes it measures, never from
-// the pinned width.
+// a row, in the band scale — Miniature at the laptop's 1536 too, so the
+// pair stands in the band's design pixel, GermanStress and MiniatureGerman at
+// the phone's 390, in the theme's, and LongWords at the 320 stress width —
+// one column, the footer row wrapped. The visual net ignores the pins (it sets its own page
+// size per project), which is why every play DERIVES what it expects from the
+// boxes it measures, never from the pinned width.
 //
 // ── THE FRAME IS THE PAGE'S (sections/PostList — the lane contract's D9 and
 // D12): a full-bleed <section> that paints, a ui/Container that measures the
@@ -83,6 +99,23 @@ import { unitsAcrossLines } from './PostCard.fixtures';
 // card must sit in a width-giving parent, and `h-full` (args) is the page's
 // placement — the card fills the <li> its row stretches.
 // `layout: 'fullscreen'` keeps Storybook's own padding out of the band.
+// THE MINIATURE FRAME (`parameters.frame: 'miniature'`, 2026-10-17) is the
+// Home band's comparison instead (PostCard's THE MINIATURE): the page's band
+// — the same Container and band scale — holding two labelled STAND-IN slots
+// side by side, wrapping where the column cannot hold both: the blog list's
+// three-across card at the owner's 1401 window, (1106 − 64) / 3 = 347.333
+// design px, and the Home band's slot, the share of it — 225.767 design px at
+// 0.65. Their widths are written in the band's own spacing step (inline
+// styles: Tailwind reads stories too), so on a laptop both stand in the band's
+// design pixel and on a phone in the theme's. The FULL card is the story's
+// args with the share taken off, at the list's <h2>, its own picture hint;
+// the MINIATURE is the story itself — what the Home band passes: the share,
+// `headingLevel` 3 (its <h3> under the band's <h2>, PostCard's THE TITLE'S
+// LEVEL) and a picture hint of its own, MINIATURE_SIZES (THE `sizes`,
+// OVERRIDDEN). Their plays measure the share: each text at it, the picture
+// and the content box to the px residuals PostCard records, the frame in CSS
+// px. No carousel is rendered: the frame shows the pair, and
+// sections/BlogCarousel's stories show the band.
 //
 // ── WHAT THE PLAYS READ, AND WHAT THEY CANNOT. Every geometry number below is
 // a LAYOUT value — a computed size, an offset, or a rectangle taken relative
@@ -137,7 +170,7 @@ const labelsOf = (
 /** A reading time, finished as the page finishes it: the language's ICU
  *  sentence with the number formatted in it. */
 const readingTime = (language: Language, minutes: number): string =>
-  BLOG[language]('card.readingTime', { minutes });
+  BLOG[language]('readingTime', { minutes });
 
 /** A picture of the clinic's own three — its path, and the alt lib/hero-slides
  *  gives it in `language`, the opener's own words for it: a story card's
@@ -166,10 +199,21 @@ const postOf = (language: Language, slug: string): BlogPost => {
   return post;
 };
 
+/** The article a card opens, as the page builds its address (src/app/
+ *  [locale]/blog/populate.ts): the post's own article, or lib/blog-article's
+ *  STAND-IN while it has none — today the blog's one article — in the
+ *  story's language. The stories' own posts, which the JSON does not hold,
+ *  open the stand-in. */
+const articleHref = (
+  language: Language,
+  slug: string = STAND_IN_ARTICLE,
+): string => localeHref(language, articlePath(articleSlugFor(slug)));
+
 /** A post as the page hands it to the card (src/app/[locale]/blog/
- *  populate.ts): its words in `language` and its reading time worded by the
- *  page's ICU sentence — its picture as the JSON gives it, decorative (every
- *  post's alt is empty, lib/blog's PLACEHOLDERS), unless `described`, when the
+ *  populate.ts): the article it opens, its words in `language`, its author's
+ *  name as lib/team spells it there and its reading time worded by the page's
+ *  ICU sentence — its picture as the JSON gives it, decorative (every post's
+ *  alt is empty, lib/blog's PLACEHOLDERS), unless `described`, when the
  *  opener's alt describes it (`pictureOf`). */
 const contentOf = (
   language: Language,
@@ -178,9 +222,10 @@ const contentOf = (
 ): PostCardContent => {
   const post = postOf(language, slug);
   return {
+    href: articleHref(language, slug),
     title: post.title,
     summary: post.summary,
-    author: post.author,
+    author: articleAuthor(post).words[language].name,
     readingTime: readingTime(language, post.readingMinutes),
     image: described ? pictureOf(language, post.image.src) : post.image,
     tags: post.tags,
@@ -197,6 +242,7 @@ const TOOTHBRUSH = contentOf('ro', EVERYDAY, { described: true });
 /** A post with NO categories — the card renders no list at all. The stories'
  *  own words: every post in the JSON lists at least one category. */
 const FIRST_VISIT = {
+  href: articleHref('ro'),
   title: 'Ce se întâmplă la prima consultație',
   summary:
     'Pe scurt, cum decurge prima vizită: discuția despre ce te supără, examinarea, radiografia, dacă e nevoie, și planul pe care îl stabilim împreună.',
@@ -211,6 +257,7 @@ const FIRST_VISIT = {
  *  single-word categories — so the chips wrap over the picture. The stories'
  *  own words, written for the stress. */
 const LONG_WORDS = {
+  href: articleHref('ro'),
   title:
     'Parodontopatia și întreținerea gingiilor după detartraj: recomandări pentru îngrijirea zilnică',
   summary:
@@ -286,16 +333,118 @@ const Frame = ({
   </section>
 );
 
+/** THE MINIATURE FRAME's full slot (the header), in the band's spacing step:
+ *  the blog list's three-across card at the owner's 1401 window — the band's
+ *  1106-design-px column less two 32-design-px gaps, a third: (1106 − 64) / 3
+ *  design px, 1042 / 12 steps — never wider than the frame's own row
+ *  (`100cqw`, the row a query container): on a phone's column, 336 to 351px,
+ *  the list's card is the column, and a slot wider than the row would shrink
+ *  under its flex item and part from the miniature's share of it. The
+ *  miniature's slot is this times the share. */
+const FULL_SLOT = 'min(calc(var(--spacing) * 1042 / 12), 100cqw)';
+
+/** The Home band's share (the owner's 65 %) — the stories' default. */
+const SHARE = 0.65;
+
+/** THE MINIATURE FRAME's picture hint (PostCard's THE `sizes`, OVERRIDDEN):
+ *  its widest picture is the slot at the band scale's cap, 225.767 × 1.389 =
+ *  313.5px less the 3px frame a side, 307.5px, and 20rem asks for 320. A
+ *  stand-in's estimate — the Home band derives its own. */
+const MINIATURE_SIZES = '20rem';
+
+/** One slot of THE MINIATURE FRAME: a label over the card, `width` wide and
+ *  never shrunk. Inline styles, never classes: Tailwind reads stories too,
+ *  and a class only this frame wore would ship as a rule. */
+const Slot = ({
+  slot,
+  label,
+  width,
+  children,
+}: {
+  slot: 'full' | 'miniature';
+  label: string;
+  width: string;
+  children: ReactNode;
+}): ReactElement => (
+  <div data-slot={slot} style={{ width, flexShrink: 0 }}>
+    <Eyebrow>{label}</Eyebrow>
+    <div style={{ marginTop: 'calc(var(--spacing) * 3)' }}>{children}</div>
+  </div>
+);
+
+/** THE MINIATURE FRAME (the header): the page's band and its scale, the
+ *  blog list's full card — the args, the share taken off, at the list's
+ *  level and hint — beside the story's miniature, each in its stand-in
+ *  slot; the two wrap where the column cannot hold both. */
+const MiniatureFrame = ({
+  args,
+  children,
+}: {
+  args: CardArgs;
+  children: ReactNode;
+}): ReactElement => {
+  const share = args.miniature ?? SHARE;
+  return (
+    <section className="bg-page">
+      <Container>
+        <div className={cx(bandColumnClasses, bandScaleClasses, 'py-10')}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'flex-start',
+              gap: 'calc(var(--spacing) * 8)',
+              containerType: 'inline-size',
+            }}
+          >
+            <Slot
+              slot="full"
+              label="Lista blogului: cardul întreg"
+              width={FULL_SLOT}
+            >
+              <PostCard
+                {...args}
+                miniature={undefined}
+                headingLevel={undefined}
+                sizes={undefined}
+                className={undefined}
+              />
+            </Slot>
+            <Slot
+              slot="miniature"
+              label={`Pagina principală: miniatura, ${Math.round(share * 100)}%`}
+              width={`calc(${FULL_SLOT} * ${share})`}
+            >
+              {children}
+            </Slot>
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+};
+
 /** The story's pinned language, for its neighbours — Romanian for any other
  *  the toolbar may flip to (the frame's languages are the stories'). */
 const languageOf = (locale: unknown): Language =>
   locale === 'de' || locale === 'it' ? locale : 'ro';
 
-const withFrame: Decorator = (Story, { globals }) => (
-  <Frame language={languageOf(globals.locale)}>
-    <Story />
-  </Frame>
-);
+/** The frame a story asks for (`parameters.frame`): the blog list's page,
+ *  unless it names THE MINIATURE FRAME. Typed to the args a play reads
+ *  (CardArgs), so the miniature frame takes them with no cast. */
+const withFrame: Decorator<CardArgs> = (
+  Story,
+  { args, globals, parameters },
+) =>
+  parameters.frame === 'miniature' ? (
+    <MiniatureFrame args={args}>
+      <Story />
+    </MiniatureFrame>
+  ) : (
+    <Frame language={languageOf(globals.locale)}>
+      <Story />
+    </Frame>
+  );
 
 const px = (value: string): number => parseFloat(value);
 
@@ -322,12 +471,18 @@ const GUARD = 'supports-[width:1cqw]:';
  * THE CHIPS' OWN PIXEL, as the stylesheet computes it: the larger of the
  * floor — FLOOR rem over DIVISOR — and the card's content width over the
  * owner's reference, the three numbers read off the list's own class (its
- * declaration behind the guard). The pattern is built from strings, so no
- * bracketed declaration stands in this file's text (the header's THE CHIPS
- * ARE MEASURED AGAINST THEIR CARD). Throws by name when the declaration is
- * missing or its shape moved.
+ * declaration behind the guard) — the floor × `share` on a miniature, whose
+ * tag list carries CHIP_SCALE's formula so, inline (PostCard's THE
+ * MINIATURE). The pattern is built from strings, so no bracketed declaration
+ * stands in this file's text (the header's THE CHIPS ARE MEASURED AGAINST
+ * THEIR CARD). Throws by name when the declaration is missing or its shape
+ * moved.
  */
-const chipPixelOf = (list: Element, contentWidth: number): number => {
+const chipPixelOf = (
+  list: Element,
+  contentWidth: number,
+  share = 1,
+): number => {
   const open = '[';
   const declaration = (list.getAttribute('class') ?? '')
     .split(/\s+/)
@@ -343,10 +498,30 @@ const chipPixelOf = (list: Element, contentWidth: number): number => {
     );
   }
   return Math.max(
-    (Number(shape[1]) * rem()) / Number(shape[2]),
+    (share * Number(shape[1]) * rem()) / Number(shape[2]),
     contentWidth / Number(shape[3]),
   );
 };
+
+/** globals.css's remap, the band scale's own utility — which THE MINIATURE'S
+ *  WRAPPER wears and ui/Card never does (`isMiniature`). */
+const REMAP = 'design-scale';
+
+/** Whether a card is a MINIATURE — decided by THE MINIATURE'S WRAPPER, the
+ *  one element only a miniature draws (PostCard's THE MINIATURE): the
+ *  <article>'s one child wears the remap, which ui/Card never does. Never by
+ *  the share inline on the <article>, which a caller's own style can set on
+ *  a full card too; and never by the share's number either: 1 is a share THE
+ *  MINIATURE draws, its wrapper and all (the control's range ends there). */
+const isMiniature = (article: HTMLElement): boolean =>
+  article.firstElementChild?.classList.contains(REMAP) ?? false;
+
+/** A card's share — the number a miniature carries inline on its <article>,
+ *  1 on a full card: what its chips' floor is multiplied by. */
+const shareOf = (article: HTMLElement): number =>
+  isMiniature(article)
+    ? Number(article.style.getPropertyValue('--miniature'))
+    : 1;
 
 /** The face an element's text is laid out in, loaded before anything is
  *  measured (the DoctorIntro / Hero / PersonnelCard idiom). */
@@ -378,7 +553,12 @@ const part = (
  *  carries a role: ui/Card, the picture's cell and the words inside it, the
  *  author second in the words, the footer row last. */
 const partsOf = (article: HTMLElement) => {
-  const card = part(article.firstElementChild, 'card (ui/Card)');
+  // ui/Card: the article's one child, or — on a miniature — the one child of
+  // THE MINIATURE'S WRAPPER, the plain <div> the article holds in between.
+  const child = part(article.firstElementChild, 'article’s one child');
+  const card = isMiniature(article)
+    ? part(child.firstElementChild, 'card (ui/Card) in the wrapper')
+    : child;
   const cell = part(card.children[0], 'picture’s cell');
   const words = part(card.children[1], 'words');
   const footer = part(words.lastElementChild, 'footer row');
@@ -389,7 +569,8 @@ const partsOf = (article: HTMLElement) => {
     footer,
     author: part(words.children[1], 'author'),
     readingTime: part(footer.children[0], 'reading time'),
-    readMore: part(footer.children[1], 'read-more'),
+    link: part(footer.children[1], 'link'),
+    readMore: part(footer.children[1]?.firstElementChild, 'read-more’s label'),
   };
 };
 
@@ -406,7 +587,7 @@ const gridOf = (article: HTMLElement): HTMLElement =>
  * which no transform touches. At rest the factor is 1.
  */
 const layoutOf = (card: HTMLElement) => {
-  const article = part(card.parentElement, 'article');
+  const article = part(card.closest('article'), 'article');
   const factor =
     article.getBoundingClientRect().width / px(getComputedStyle(article).width);
   const origin = card.getBoundingClientRect();
@@ -454,21 +635,35 @@ const expectNoSidewaysScroll = async (article: HTMLElement): Promise<void> => {
   await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth);
 };
 
-/** The facts every card owes whatever its width: named by its title, the
- *  author on the eyebrow line and no date, the tags a named list — or none —
- *  the footer row's two ends, and the read-more no link. Loads the faces. */
-const expectNamedParts = async (
-  canvasElement: HTMLElement,
-  args: PostCardContent & { tagsLabel: string; readMore: string },
-): Promise<HTMLElement> => {
-  const canvas = within(canvasElement);
-  const article = canvas.getByRole('article', { name: args.title });
-  for (const element of article.querySelectorAll('h2, p, li, a')) {
+/** What a play reads of a story's args: the card's content, its two labels,
+ *  and the level and picture hint a page may name. */
+type CardArgs = PostCardContent & {
+  tagsLabel: string;
+  readMore: string;
+  headingLevel?: PostCardHeadingLevel;
+  sizes?: string;
+  miniature?: number;
+};
+
+/** The facts every card owes whatever its width: named by its title — at
+ *  the level the story names, the list's <h2> unless told — the author on
+ *  the eyebrow line and no date, the tags a named list — or none — the
+ *  footer row's two ends, and the read-more the card's ONE link, to the
+ *  page's href, named by its label and the title (PostCard's THE LINK).
+ *  Loads the faces. */
+const expectArticleParts = async (
+  article: HTMLElement,
+  args: CardArgs,
+): Promise<void> => {
+  for (const element of article.querySelectorAll('h2, h3, p, li, a')) {
     await loadFace(element);
   }
   const { words, author, readingTime, readMore } = partsOf(article);
   await expect(words.firstElementChild).toBe(
-    within(article).getByRole('heading', { level: 2, name: args.title }),
+    within(article).getByRole('heading', {
+      level: args.headingLevel ?? 2,
+      name: args.title,
+    }),
   );
   await expect(author.textContent).toBe(args.author);
   await expect(getComputedStyle(author).textTransform).toBe('uppercase');
@@ -483,8 +678,22 @@ const expectNamedParts = async (
   }
   await expect(readingTime.textContent).toBe(args.readingTime);
   await expect(readMore.textContent).toBe(args.readMore);
-  await expect(readMore).not.toHaveAttribute('href');
-  await expect(within(article).queryByRole('link')).toBeNull();
+  const link = within(article).getByRole('link');
+  await expect(link).toBe(partsOf(article).link);
+  await expect(link).toHaveAttribute('href', args.href);
+  await expect(link).toHaveAccessibleName(`${args.readMore} ${args.title}`);
+};
+
+/** The one card of a page frame, named by its title — and the facts it owes
+ *  (`expectArticleParts`). */
+const expectNamedParts = async (
+  canvasElement: HTMLElement,
+  args: CardArgs,
+): Promise<HTMLElement> => {
+  const article = within(canvasElement).getByRole('article', {
+    name: args.title,
+  });
+  await expectArticleParts(article, args);
   return article;
 };
 
@@ -529,7 +738,11 @@ const expectChipsOverPicture = async (article: HTMLElement): Promise<void> => {
   const accent = tokenRgb('accent');
   const surface = tokenRgb('surface');
   const { card, cell } = partsOf(article);
-  const pixel = chipPixelOf(list, edgesOf(card).content.width);
+  const pixel = chipPixelOf(
+    list,
+    edgesOf(card).content.width,
+    shareOf(article),
+  );
   const listStyle = getComputedStyle(list);
   await expect(px(listStyle.getPropertyValue(PIXEL))).toBeCloseTo(pixel, 4);
   await expect(px(listStyle.columnGap)).toBeCloseTo(12 * pixel, 2);
@@ -582,24 +795,27 @@ const expectChipsOverPicture = async (article: HTMLElement): Promise<void> => {
 const expectFooterRow = async (
   article: HTMLElement,
 ): Promise<'one line' | 'wrapped'> => {
-  const { card, footer, readingTime, readMore } = partsOf(article);
+  const { card, footer, readingTime, link, readMore } = partsOf(article);
   const { content } = edgesOf(card);
   const layout = layoutOf(card);
   const time = layout(readingTime);
-  const more = layout(readMore);
-  const moreStyle = getComputedStyle(readMore);
+  // The LINK is the row's flex item and carries the placement; its box is
+  // the label's exactly (PostCard's THE LINK), whose padding the placement
+  // takes back.
+  const more = layout(link);
+  const label = getComputedStyle(readMore);
   await expect(Math.abs(layout(footer).bottom - content.bottom)).toBeLessThan(
     0.5,
   );
   await expect(
-    Math.abs(more.right - px(moreStyle.paddingRight) - content.right),
+    Math.abs(more.right - px(label.paddingRight) - content.right),
   ).toBeLessThan(0.5);
   await expect(Math.abs(time.left - content.left)).toBeLessThan(0.5);
   const need =
     time.width +
     px(getComputedStyle(footer).columnGap) +
     more.width +
-    px(moreStyle.marginInlineEnd);
+    px(getComputedStyle(link).marginInlineEnd);
   if (need <= content.width) {
     await expect(
       Math.abs(time.top + time.height / 2 - (more.top + more.height / 2)),
@@ -656,11 +872,107 @@ const expectLanguage = async (language: Language): Promise<void> => {
  *  both, so a failure shows each: the words split where the engine
  *  hyphenates the language, the computed value wherever the class is gone. */
 const expectTitleWordsWhole = async (article: HTMLElement): Promise<void> => {
-  const title = within(article).getByRole('heading', { level: 2 });
+  // The card's one heading, at whatever level the story names.
+  const title = within(article).getByRole('heading');
   await expect({
     hyphens: getComputedStyle(title).hyphens,
     split: unitsAcrossLines(title),
   }).toEqual({ hyphens: 'none', split: [] });
+};
+
+/** The six texts a card sets, each its computed size in px — the chips' as
+ *  their label. */
+const textSizesOf = (article: HTMLElement) => {
+  const { author, readingTime, readMore } = partsOf(article);
+  const chip = within(article).queryAllByRole('listitem')[0];
+  const size = (element: Element) => px(getComputedStyle(element).fontSize);
+  return {
+    title: size(within(article).getByRole('heading')),
+    author: size(author),
+    summary: size(
+      part(readingTime.parentElement?.previousElementSibling, 'summary'),
+    ),
+    readingTime: size(readingTime),
+    readMore: size(readMore),
+    chip: chip ? size(chip) : Number.NaN,
+  };
+};
+
+/**
+ * THE MINIATURE FRAME, MEASURED (the header): the full card in its slot and
+ * the miniature in the share of it, in `language`; each owes every fact a
+ * card owes (`expectArticleParts` — the full card at the list's <h2>, the
+ * miniature at the story's level), its picture flush, its chips on it in
+ * their own pixel, its footer row and every title word whole; and between the
+ * two, PostCard's THE MINIATURE: every text at the share (to 0.01), the 3px
+ * frame on both, the picture the share of the full card's less 4 × (1 −
+ * share) px and the content box the share less 2 × (1 − share) px (PostCard's
+ * residuals, to half a pixel — every length here layout, never paint), and
+ * the story's picture hint on the miniature's <img>, never less than the
+ * picture it draws. Nothing pushes the page sideways.
+ */
+const expectMiniature = async (
+  canvasElement: HTMLElement,
+  args: CardArgs,
+  language: Language,
+): Promise<void> => {
+  await expectLanguage(language);
+  const slot = (name: 'full' | 'miniature'): HTMLElement =>
+    part(
+      canvasElement.querySelector(`[data-slot="${name}"] article`),
+      `${name} card`,
+    );
+  const full = slot('full');
+  const mini = slot('miniature');
+  const share = args.miniature ?? SHARE;
+  await expect(isMiniature(full)).toBe(false);
+  await expect(isMiniature(mini)).toBe(true);
+  await expect(shareOf(mini)).toBe(share);
+  await expectArticleParts(full, {
+    ...args,
+    headingLevel: undefined,
+    sizes: undefined,
+  });
+  await expectArticleParts(mini, args);
+  for (const article of [full, mini]) {
+    await expectPictureFlush(article);
+    await expectChipsOverPicture(article);
+    await expectFooterRow(article);
+    await expectTitleWordsWhole(article);
+  }
+  // Every text at the share.
+  const [a, b] = [textSizesOf(full), textSizesOf(mini)];
+  for (const name of Object.keys(a) as (keyof typeof a)[]) {
+    await expect(
+      Math.abs(b[name] / a[name] - share),
+      `the ${name}: ${b[name]} against ${a[name]}`,
+    ).toBeLessThanOrEqual(0.01);
+  }
+  // The px parts in px, and the residuals they leave.
+  const [cardA, cardB] = [partsOf(full).card, partsOf(mini).card];
+  const [edgesA, edgesB] = [edgesOf(cardA), edgesOf(cardB)];
+  await expect(edgesA.frame).toBe(3);
+  await expect(edgesB.frame).toBe(3);
+  await expect(
+    Math.abs(
+      edgesB.content.width - (share * edgesA.content.width - 2 * (1 - share)),
+    ),
+  ).toBeLessThan(0.5);
+  const [cellA, cellB] = [partsOf(full).cell, partsOf(mini).cell];
+  await expect(
+    Math.abs(
+      px(getComputedStyle(cellB).height) -
+        (share * px(getComputedStyle(cellA).height) - 4 * (1 - share)),
+    ),
+  ).toBeLessThan(0.5);
+  // THE `sizes`, OVERRIDDEN: the story's hint reaches the miniature's <img>
+  // verbatim, and it asks for no less than the picture this frame draws.
+  const picture = part(mini.querySelector('img'), 'picture');
+  await expect(picture).toHaveAttribute('sizes', args.sizes ?? '');
+  await expect(px(getComputedStyle(cellB).width)).toBeLessThanOrEqual(
+    px(args.sizes ?? '') * rem(),
+  );
+  await expectNoSidewaysScroll(full);
 };
 
 const meta = {
@@ -674,10 +986,15 @@ const meta = {
     className: 'h-full',
   },
   argTypes: {
+    href: {
+      control: 'text',
+      description:
+        'The article the card opens, finished by the page through localeHref — the whole card is its link (for now every card opens the blog’s one article)',
+    },
     title: {
       control: 'text',
       description:
-        'The post’s title — the card’s heading (always the page’s <h2>) and the article’s accessible name',
+        'The post’s title — the card’s heading (an <h2> on the blog’s list, an <h3> in the Home page’s articles band — `headingLevel`) and the article’s accessible name',
     },
     summary: {
       control: 'text',
@@ -710,12 +1027,28 @@ const meta = {
     readMore: {
       control: 'text',
       description:
-        'The read-more’s label, e.g. „Citește mai mult…” — ui/TextButton’s accent tone on a placeholder <a> without href',
+        'The read-more’s label, e.g. „Citește mai mult…” — ui/TextButton’s accent tone inside the card’s link, which it names with the title',
     },
     preload: {
       control: 'boolean',
       description:
         'The page’s FIRST card: load the picture at once, at high priority, with a preload link (a likely LCP)',
+    },
+    headingLevel: {
+      control: 'inline-radio',
+      options: [2, 3],
+      description:
+        'The title’s level in the page’s outline — 2 under a page’s <h1> (the blog list, the default), 3 under a band’s own <h2> (the Home band); the look never follows it',
+    },
+    sizes: {
+      control: 'text',
+      description:
+        'The picture’s `sizes` hint, for a page that draws the card at other widths than the blog list’s grid — the list’s own when left out',
+    },
+    miniature: {
+      control: { type: 'range', min: 0.3, max: 1, step: 0.05 },
+      description:
+        'THE MINIATURE: the card drawn as a copy of itself at this share — every theme length at the share of the design pixel it inherits, the chips with it; a share in (0, 1], the Home band’s 0.65. Unset, the blog list’s card',
     },
     className: {
       control: false,
@@ -888,6 +1221,71 @@ export const Italian: Story = {
       await expect(shape).toBe('one line');
     }
     await expectNoSidewaysScroll(article);
+  },
+};
+
+/**
+ * THE HOME BAND'S MINIATURE, IN ROMANIAN — the owner's "Miniature (all 65%)"
+ * (2026-10-17): the everyday post as the blog list draws it, its full card in
+ * the list's three-across slot, beside the Home band's miniature in the share
+ * of it (THE MINIATURE FRAME) — the share, the band's <h3> and the band's
+ * own picture hint. Pinned to the laptop (1536px), so the pair stands in the
+ * band's design pixel: every text at 0.65 of its full card's, the frame and
+ * the ring in CSS px, the picture and the content box to the residuals
+ * PostCard records.
+ */
+export const Miniature: Story = {
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  parameters: { frame: 'miniature' },
+  args: {
+    miniature: SHARE,
+    headingLevel: 3,
+    sizes: MINIATURE_SIZES,
+  },
+  play: async ({ args, canvasElement }) => {
+    await expectMiniature(canvasElement, args, 'ro');
+    if (window.innerWidth === 1536) {
+      // THE PREMISE the pin buys: the pair stands in the BAND's design pixel
+      // — over 1px at 1536 — and the full card is the list's three-across
+      // card in it, (1106 − 64) / 3 design px.
+      const full = part(
+        canvasElement.querySelector('[data-slot="full"] article'),
+        'full card',
+      );
+      const band = part(
+        full.closest('[data-slot]')?.parentElement?.parentElement,
+        'band',
+      );
+      const pixel = px(getComputedStyle(band).getPropertyValue(PIXEL));
+      await expect(pixel).toBeGreaterThan(1);
+      await expect(px(getComputedStyle(full).width)).toBeCloseTo(
+        (pixel * (1106 - 64)) / 3,
+        1,
+      );
+    }
+  },
+};
+
+/**
+ * THE HOME BAND'S MINIATURE, IN GERMAN — the house's stress language (§13)
+ * on the phone width, in the theme's own pixel: the everyday post's German
+ * words with the three widest German tags (GermanStress's), so the chips wrap
+ * over a picture the share of the full card's and the German title and
+ * summary run longest. What the miniature's lines do across every post the
+ * blog ships is PostCard.miniature.test.tsx's.
+ */
+export const MiniatureGerman: Story = {
+  globals: { locale: 'de', viewport: { value: 'smartphone' } },
+  parameters: { frame: 'miniature' },
+  args: {
+    ...GERMAN_STRESS,
+    ...labelsOf('de'),
+    miniature: SHARE,
+    headingLevel: 3,
+    sizes: MINIATURE_SIZES,
+  },
+  play: async ({ args, canvasElement }) => {
+    await expectMiniature(canvasElement, args, 'de');
   },
 };
 

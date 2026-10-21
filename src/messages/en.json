@@ -60,7 +60,16 @@
       "slide": "Image {index} of {total}",
       "contact": "Book a consultation",
       "services": "See our services",
-      "picker": "Choose an image (stops the slideshow)"
+      "picker": "Choose an image"
+    },
+    "articles": {
+      "eyebrow": "Blog",
+      "title": "Advice from our dentists",
+      "region": "Blog articles",
+      "previous": "Previous article",
+      "next": "Next article",
+      "picker": "Choose an article",
+      "slide": "Article {index} of {total}"
     },
     "location": {
       "eyebrow": "Find us",
@@ -124,6 +133,32 @@
     }
   },
   "blog": {
+    "article": {
+      "byline": "by {author}",
+      "note": "Note: {note}",
+      "gallery": {
+        "region": "Photo gallery",
+        "regionNumbered": "Photo gallery {index} of {total}",
+        "previous": "Previous photo",
+        "next": "Next photo",
+        "slide": "Photo {index} of {total}",
+        "picker": "Choose a photo"
+      },
+      "share": {
+        "label": "Share this article",
+        "facebook": "Facebook",
+        "facebookName": "Facebook, share the article",
+        "whatsapp": "WhatsApp",
+        "whatsappName": "WhatsApp, send the article",
+        "email": "Email",
+        "emailName": "Email, send the article",
+        "copy": "Copy link",
+        "copied": "Link copied",
+        "copyFailed": "The link could not be copied",
+        "message": "Check out this article from {site}: {title}",
+        "subject": "An article from {site}: {title}"
+      }
+    },
     "title": "Articles & news",
     "pageTitle": "{title}, page {page}",
     "hero": {
@@ -131,9 +166,9 @@
       "lead": "Here you’ll find news from the clinic and our dentists’ advice:\nhow to care for your teeth and gums at home\nand when to visit us."
     },
     "tags": "Categories",
+    "readingTime": "{minutes, number} min read",
     "card": {
-      "readMore": "Read more…",
-      "readingTime": "{minutes, number} min read"
+      "readMore": "Read more…"
     },
     "pagination": {
       "label": "Article pages",

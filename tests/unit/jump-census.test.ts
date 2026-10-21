@@ -141,13 +141,18 @@ describe('the jump — who wears it (owner, 2026-10-01)', () => {
 // the `ease-out` KEYWORD (Tailwind's `ease-out` utility is another curve),
 // 105% and still under reduced motion — so the card and the buttons cannot
 // drift (KEEP-IN-SYNC, §4).
-const HOVER_SCALE = /\bhover:scale-/;
+const HOVER_SCALE = /\bhover:(?:\*:)?scale-/;
 
 /** The files whose CODE spells a hover scale: the two button atoms and the named cards. */
 const SPELLS_A_HOVER_SCALE = [
   'components/ui/Button/Button.tsx',
   'components/ui/GlyphButton/GlyphButton.tsx',
   'components/sections/PostCard/PostCard.tsx', // the blog card, 2026-10-11
+  // The card carousel's tall chevrons (2026-10-17, the owner: "on hover it
+  // gets a bit larger and lilla"): the CHEVRON inside each previous / next
+  // button grows to 110 % on the jump clock — the button's own box never
+  // scales, so its invisible strip cannot reach past the screen's edge.
+  'components/sections/CardCarousel/CardCarousel.tsx',
 ];
 
 /**

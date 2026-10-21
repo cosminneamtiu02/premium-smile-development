@@ -99,11 +99,11 @@ const LAPTOPS = [
 /** The design sizes, in design pixels (§15.32): the opener's two steps, the
  *  tile's four at 9/8, the map row's text and disc, the staff tile's width,
  *  and the `hero` step's value at the owner's 1401 window — 16 + 3.5 × 14.01
- *  = 65.035, as the 16.26 spacing steps the doctor page's name spells
- *  (DoctorIntro's THE BAND SCALE) and the page hero's <h1> — the blog list's
- *  and, since 2026-10-15, the Team page's — wears byte for byte
- *  (sections/PageHero's THE <h1>; tests/unit/design-scale.test.ts holds the
- *  two classes equal). */
+ *  = 65.035, as 16.26 spacing steps: ui/Heading's `hero-scaled` step, which
+ *  the doctor page's name, the page hero's <h1> — the blog list's and, since
+ *  2026-10-15, the Team page's — and an article's title ask for (its
+ *  header's 'hero-scaled' JOINED; tests/unit/design-scale.test.ts holds the
+ *  size to that one file). */
 /** THE HEADING'S REACH (sections/PageHero's paragraph of that name), in
  *  design pixels: how far the hero's <h1> may pass EACH edge of its column
  *  inside the band scale — 135 since 2026-10-16, HALF the 67.5 spacing steps

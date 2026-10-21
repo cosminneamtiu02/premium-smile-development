@@ -371,7 +371,8 @@ type Opener = 'band' | 'page';
 
 /** Each opener's heading and its design size inside THE SCALE (D10, D12):
  *  the band's <h2> on the `band` step, 36 design pixels; the page's <h1> on
- *  PageHero's 16.26 spacing steps, 65.04. */
+ *  ui/Heading's `hero-scaled` step through PageHero, 16.26 spacing steps,
+ *  65.04. */
 const OPENER_HEADING: Record<
   Opener,
   Readonly<{ level: 1 | 2; design: number }>

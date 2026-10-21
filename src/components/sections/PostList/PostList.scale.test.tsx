@@ -127,9 +127,10 @@ const CAP = 96 * ROOT;
 const STEP = Math.max(56 * ROOT, 896);
 
 /** The <h1>'s size in the scale, in design pixels: 16.26 spacing steps,
- *  65.04 — sections/DoctorIntro's name's, the `hero` step's value at the
- *  owner's 1401 window (sections/PageHero's THE ONE SIZE THE REMAP CANNOT
- *  REDRAW: the KEEP-IN-SYNC pair, restored on 2026-10-15). */
+ *  65.04 — ui/Heading's `hero-scaled` step's, the `hero` step's value at
+ *  the owner's 1401 window, which sections/DoctorIntro's name wears too
+ *  (sections/PageHero's THE ONE SIZE THE REMAP CANNOT REDRAW: the doctor's
+ *  name's size, restored on 2026-10-15, and the step's since). */
 const TITLE_DESIGN = 16.26 * 4;
 
 /** The two caps, in design pixels (sections/PageHero's THE CAPS): the
@@ -167,10 +168,17 @@ const TITLE = HERO.title;
 const LEAD = HERO.lead;
 const NAV_LABEL = 'Paginile articolelor';
 
-/** A post as the page hands it to the band (app/[locale]/blog/populate.ts):
- *  the reading time worded, the rest as the data holds it. */
+/** A post as the band's item: the reading time worded as the page words it
+ *  (app/[locale]/blog/populate.ts), the rest as the data holds it in
+ *  Romanian — and a PLACEHOLDER address of its own, `/ro/blog/<slug>/`. It is
+ *  not the address the page hands over (today every card opens the blog's
+ *  one article — the populator's, pinned by its own test), and for five of
+ *  page 1's six posts not a page the export writes at all: the layout reads
+ *  no href — no rule of the site's stylesheet selects on one — so the band
+ *  is laid out alike whatever the address. */
 const itemOf = (post: BlogPost): PostListItem => ({
   slug: post.slug,
+  href: `/ro/blog/${post.slug}/`,
   title: post.title,
   summary: post.summary,
   author: post.author,
@@ -748,8 +756,9 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
   // CSSOM: the regime tokens of the band's hero — sections/PageHero's, worn
   // here as the page wears them: the stairway's line breaks on the heading
   // and on the lead, the heading's reach (its max-content width and its cap
-  // past the column) and its 16.26-step design size — style the page ONLY
-  // behind the band scale's whole chain: globals.css's THE SCALABLE VARIANT,
+  // past the column) and its 16.26-step design size, which the <h1> wears
+  // through ui/Heading's `hero-scaled` step — style the page ONLY behind
+  // the band scale's whole chain: globals.css's THE SCALABLE VARIANT,
   // `@supports (color: rgb(from red r g b))` and `@media (pointer: fine)`,
   // then both container steps, 56rem and the 896px floor. So a touch screen
   // as wide as a desktop keeps the theme's natural wrapping: the copy's
@@ -777,8 +786,8 @@ describe('PostList — the band, computed (the real stylesheet and faces)', () =
         [...element.classList].filter((token) =>
           chain.some((variant) => token.includes(variant)),
         );
-      // Four on the <h1> — the stairway, the reach's two, the size — and
-      // the stairway on the lead.
+      // Four on the <h1> — the stairway, the reach's two and the size, its
+      // `hero-scaled` step's — and the stairway on the lead.
       const title = regimeTokens(band.h1);
       const lead = regimeTokens(band.lead);
       expect(title, 'the title’s regime tokens').toHaveLength(4);

@@ -11,7 +11,7 @@ import { cx } from '@/lib/cx/cx';
 import type { ImagePath } from '@/lib/image-path/image-path';
 import type { Initials } from '@/lib/initials/initials';
 import type { Rating } from '@/lib/rating/rating';
-import { liveRegion, wrapIndex } from '@/lib/rotation/rotation';
+import { liveRegion, signedOffset } from '@/lib/rotation/rotation';
 import type { IsoDate } from '@/lib/time-ago/time-ago';
 
 // sections/ReviewsCarousel/ReviewsDeck — THE ISLAND: the fanned deck of review
@@ -42,8 +42,10 @@ import type { IsoDate } from '@/lib/time-ago/time-ago';
 // owner-decided departure, the rotation control, which this deck does not
 // render (the NO ROTATION CONTROL paragraph below carries the decision and
 // what stands in for it — since 2026-09-20 the Hero's manners, nothing that
-// stops for good; `handNavigation` in the hook waits for a consumer). Two riders
-// that law hands its FIRST consumer, both discharged here:
+// stops for good; `handNavigation` in the hook is sections/CardCarousel's
+// since 2026-10-17 — the owner's "OPTION 1": a press of any kind there, by a
+// pointer or a key, stops that carousel for good). Two riders that law hands
+// its FIRST consumer, both discharged here:
 //   · the keyboard-entry interaction test driven by a real browser
 //     (ReviewsDeck.test.tsx — only a trusted Tab sets the keyboard modality
 //     :focus-visible reports);
@@ -345,22 +347,6 @@ export type ReviewsDeckProps = Readonly<{
 }>;
 
 /**
- * Where a slide sits relative to the selected one: 0 is the centre, negative
- * is left, positive is right, and the ring is split as evenly as it divides —
- * with six slides the offsets are 0, ±1, ±2 and one +3 (the one beyond the
- * stage's right edge).
- *
- * `wrapIndex` (lib/rotation) is the modular half; the comparison is what turns
- * "five steps forward on a ring of six" into "one step back", which is the
- * difference between a card sliding one place and a card flying across the
- * whole stage.
- */
-function signedOffset(index: number, shown: number, count: number): number {
-  const distance = wrapIndex(index - shown, count);
-  return distance > count / 2 ? distance - count : distance;
-}
-
-/**
  * Which slides JUMPED between two arrangements — more than one step, i.e. the
  * ring wrapped underneath them (see the header's wrap-around note). A
  * module-level pure function, so the render body reads as one comparison.
@@ -562,9 +548,14 @@ export function ReviewsDeck({
         </div>
       )}
       {/* THE SLIDES CONTAINER — 'off' while the deck moves on its own
-          (announcing a review every half minute would talk over whatever the
-          visitor is reading) and 'polite' the moment it stops, because from
-          then on a change means somebody asked for one. */}
+          (announcing a review every 5.5 seconds would talk over whatever the
+          visitor is reading) and 'polite' while keyboard focus holds it, or
+          under reduced motion, when a change means somebody asked for one.
+          While the deck runs, a press on previous or next that does not come
+          with keyboard focus is NOT announced — above all a screen reader's
+          double-tap (VoiceOver, TalkBack), which arrives as a click: the
+          deck moves on (the Hero's manners since 2026-09-20), so its status
+          stays 'running' and the region 'off' (BACKLOG.md entry 2). */}
       <div
         aria-live={isCarousel ? liveRegion(status) : undefined}
         className={cx(stageClasses, isCarousel ? stageDropRoom : 'pb-2')}
@@ -586,8 +577,10 @@ export function ReviewsDeck({
               // `inert` removes a slide from the accessibility tree AND from
               // the Tab order, so the cards stacked behind the centre never
               // hand a visitor a link they cannot see. Un-inerting the new
-              // one is exactly the change the polite live region announces
-              // after a hand navigation.
+              // one is the change the live region announces while it is
+              // polite — keyboard focus holding the deck, or reduced motion;
+              // while it runs, a press without keyboard focus is not
+              // announced (THE SLIDES CONTAINER).
               inert={offset !== 0 || undefined}
               // The belt (G2 a11y, item D): `inert` is unsupported before
               // Safari 15.5, where a stacked card would otherwise stay in the

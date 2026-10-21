@@ -102,7 +102,8 @@ import { cx } from '@/lib/cx/cx';
 // starts at the Container's `@4xl`, the regime's own step, so every laptop
 // and desktop draws three across.
 //   THE <h1>'S SIZE is the one the remap cannot redraw: 65.04 design pixels,
-//   sections/DoctorIntro's name's class byte for byte (sections/PageHero's
+//   ui/Heading's `hero-scaled` step, which sections/DoctorIntro's name and
+//   sections/PostHeader's article title ask for too (sections/PageHero's
 //   THE ONE SIZE THE REMAP CANNOT REDRAW). For a few hours of 2026-10-15
 //   the blog's heading wore a size of its own, 56 design pixels: the owner,
 //   asked how to make room for the stairway's longer heading (at 65 the
@@ -111,8 +112,8 @@ import { cx } from '@/lib/cx/cx';
 //   "tbh i kinda liked it how it looked before. so if it is larger but still
 //   fits in page and looks good it should not be constrained by a div so
 //   that it has same space left and right as the articles seciton". So the
-//   size is the doctor page's again, and the room comes from the width
-//   instead (sections/PageHero's THE HEADING'S REACH).
+//   size is the doctor page's again — the step's since — and the room comes
+//   from the width instead (sections/PageHero's THE HEADING'S REACH).
 //   MEASURED (PostList.scale.test.tsx — Chromium, the real faces, a classic
 //   15px scrollbar, the Romanian page), between a 1280 and a 1920 window
 //   (s 0.912 → 1.375, × 1.507): the <h1> 59.3 → 89.4px and its box, which
@@ -148,9 +149,13 @@ import { cx } from '@/lib/cx/cx';
 // "take the hero section of the blog page with all blog articles and
 // implement something similar instead of "FAMILIA PREMIUM SMILE /
 // Specialiștii cu care ne mândrim" on the echipa page". The band hands it
-// the two strings and nothing else — no className, no attribute — so every
-// blog page's markup is the inline hero's to the byte (PostList.test.tsx
-// renders PageHero alone beside the band and compares the two). Every
+// the two strings and nothing else — no className, no attribute — so the
+// band's hero is PageHero's own markup, byte for byte (PostList.test.tsx
+// renders PageHero alone beside the band and compares the two). At the move
+// that markup was the inline hero's to the byte; it has drifted twice
+// since, both times in PageHero: the heading's reach grew from 100 to 135
+// design pixels a side (2026-10-16), and the <h1>'s size class, now
+// ui/Heading's `hero-scaled` step's, stands earlier among its classes. Every
 // MECHANISM below is PageHero.tsx's now, recorded there with what it was
 // measured on and held by its suites (PageHero.scale.test.tsx measures every
 // hero copy that ships, the blog's five and the Team page's five); this band
@@ -320,9 +325,12 @@ import { cx } from '@/lib/cx/cx';
 //     still asked for first.
 //   · EVERY CARD PROP BY NAME, AND NOTHING ELSE: PostCard spreads every prop
 //     it does not know onto its <article>, so the band hands it the content's
-//     six fields one by one and never spreads an item (G2 typescript,
+//     seven fields one by one and never spreads an item (G2 typescript,
 //     2026-10-14) — a field the page adds to an item (a `date`, the `slug`)
-//     can never print as an attribute. The slug is the React key.
+//     can never print as an attribute. The slug is the React key; the
+//     `href`, the page's, is the article the card opens — the whole card is
+//     its link (PostCard's THE LINK; for now every card opens the blog's one
+//     article, the owner's "dummy" of 2026-10-15).
 //
 // ── THE PAGER, UNDER THE GRID'S CORNER: the owner's "below the last item's
 // bottom right corner". sections/Pagination's row hugs its content and places
@@ -359,7 +367,12 @@ import { cx } from '@/lib/cx/cx';
 // is a word, and a finished `empty` prop from the page is the lever if one is
 // ever wanted.
 
-/** One card's content plus its slug — the React key, and the article's address once articles exist. */
+/** One card's content plus its slug — the React key (the article the card
+ *  opens is its `href`, the page's). Read beyond this band: it types
+ *  sections/BlogCarousel's `posts`, and the blog populator's `postCard`
+ *  (src/app/[locale]/blog/populate.ts) — the one card mapping, the list's
+ *  and Home's — returns it, so a field added for the list alone becomes the
+ *  carousel's input too. */
 export type PostListItem = PostCardContent & { slug: string };
 
 /** The navigation's data — PaginationProps without the native <nav> props. */
@@ -449,11 +462,12 @@ export function PostList({
           {posts.length > 0 ? (
             <div className={GROUP}>
               <ul role="list" className={GRID}>
-                {/* Each card's six props BY NAME (THE LIST: nothing else of
+                {/* Each item's seven fields BY NAME (THE LIST: nothing else of
                     an item reaches the card's <article>). */}
                 {posts.map((post, index) => (
                   <li key={post.slug}>
                     <PostCard
+                      href={post.href}
                       title={post.title}
                       summary={post.summary}
                       author={post.author}

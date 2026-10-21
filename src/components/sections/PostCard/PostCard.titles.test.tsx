@@ -118,6 +118,14 @@ import postListSource from '@/components/sections/PostList/PostList.tsx?raw';
 // transition is off (its THE STILLNESS RULE, in the sheet this file
 // injects), so no reading depends on where the pointer rests. The last block
 // proves it with the pointer resting ON a card, grown to 105 %.
+//
+// ── THE NARROW CARDS LEFT (2026-10-17). From that morning to its evening a
+// block here measured the title's two narrow steps on the Home band's narrow
+// carousel cards; the band took the MINIATURE instead and the steps left the
+// card (PostCard's THE NARROW STEPS, REMOVED). The 222px line above is again
+// the narrowest a title is drawn on at its own size. A miniature's titles are
+// PostCard.miniature.test.tsx's: its words at the share of its full card's,
+// on a line the share less 0.7px, every word whole.
 
 /** The no-break spaces, by name — never typed raw into a test. */
 const NBSP = String.fromCodePoint(0xa0);
@@ -175,6 +183,7 @@ const pageGrid = (() => {
 /** Everything but the title, in Romanian with diacritics (§13): one short
  *  card, no tags, a decorative picture. */
 const CARD: Omit<PostCardContent, 'title'> = {
+  href: '/ro/blog/cum-iti-alegi-periuta-de-dinti/',
   summary: 'Un rezumat scurt, ca să se vadă cartea întreagă.',
   author: 'Dr. Nicu Elena Alina',
   readingTime: '4 min de citit',
@@ -247,6 +256,19 @@ afterAll(() => {
   else document.documentElement.lang = lang0;
 });
 
+/** The faces the titles are set in, at the size each computes, loaded with
+ *  their own text before anything is read. */
+const loadFaces = async (headings: readonly HTMLElement[]): Promise<void> => {
+  for (const heading of headings) {
+    const style = getComputedStyle(heading);
+    await document.fonts.load(
+      `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+      heading.textContent ?? '',
+    );
+  }
+  await document.fonts.ready;
+};
+
 /** The frame (the header), one card per title, under `locale`'s `lang`, its
  *  query container `width` wide — the narrowest line's column unless told;
  *  its titles once the face has them. */
@@ -274,14 +296,7 @@ const renderFrame = async (
     </div>,
   );
   const headings = [...container.querySelectorAll('h2')];
-  for (const heading of headings) {
-    const style = getComputedStyle(heading);
-    await document.fonts.load(
-      `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
-      heading.textContent ?? '',
-    );
-  }
-  await document.fonts.ready;
+  await loadFaces(headings);
   return headings;
 };
 

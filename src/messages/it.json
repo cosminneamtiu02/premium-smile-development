@@ -60,7 +60,16 @@
       "slide": "Immagine {index} di {total}",
       "contact": "Prenota una visita",
       "services": "Scopri i servizi",
-      "picker": "Scegli un’immagine (ferma lo scorrimento)"
+      "picker": "Scegli un’immagine"
+    },
+    "articles": {
+      "eyebrow": "Blog",
+      "title": "I consigli del nostro studio",
+      "region": "Articoli del blog",
+      "previous": "Articolo precedente",
+      "next": "Articolo successivo",
+      "picker": "Scegli un articolo",
+      "slide": "Articolo {index} di {total}"
     },
     "location": {
       "eyebrow": "Dove siamo",
@@ -124,6 +133,32 @@
     }
   },
   "blog": {
+    "article": {
+      "byline": "di {author}",
+      "note": "Nota: {note}",
+      "gallery": {
+        "region": "Galleria fotografica",
+        "regionNumbered": "Galleria fotografica {index} di {total}",
+        "previous": "Foto precedente",
+        "next": "Foto successiva",
+        "slide": "Foto {index} di {total}",
+        "picker": "Scegli una foto"
+      },
+      "share": {
+        "label": "Condividi l’articolo",
+        "facebook": "Facebook",
+        "facebookName": "Facebook, condividi l’articolo",
+        "whatsapp": "WhatsApp",
+        "whatsappName": "WhatsApp, invia l’articolo",
+        "email": "E-mail",
+        "emailName": "E-mail, invia l’articolo",
+        "copy": "Copia il link",
+        "copied": "Link copiato",
+        "copyFailed": "Non è stato possibile copiare il link",
+        "message": "Leggi questo articolo di {site}: {title}",
+        "subject": "Un articolo di {site}: {title}"
+      }
+    },
     "title": "Articoli e novità",
     "pageTitle": "{title}, pagina {page}",
     "hero": {
@@ -131,9 +166,9 @@
       "lead": "Qui trovi le novità della clinica e i consigli dei nostri dentisti:\ncome prenderti cura dei denti e delle gengive a casa\ne quando venirci a trovare."
     },
     "tags": "Categorie",
+    "readingTime": "{minutes, number} min di lettura",
     "card": {
-      "readMore": "Leggi di più…",
-      "readingTime": "{minutes, number} min di lettura"
+      "readMore": "Leggi di più…"
     },
     "pagination": {
       "label": "Pagine degli articoli",

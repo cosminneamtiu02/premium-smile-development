@@ -1,12 +1,17 @@
 import { Burger } from './Burger';
 import { CalendarCheck } from './CalendarCheck';
+import { Check } from './Check';
 import { ChevronLeft } from './ChevronLeft';
 import { ChevronRight } from './ChevronRight';
 import { Close } from './Close';
+import { Facebook } from './Facebook';
 import { Instagram } from './Instagram';
+import { Link } from './Link';
+import { Mail } from './Mail';
 import { People } from './People';
 import { Phone } from './Phone';
 import { Pin } from './Pin';
+import { QuoteMark } from './QuoteMark';
 import { Star } from './Star';
 import { Tiktok } from './Tiktok';
 import { ToothCheck } from './ToothCheck';
@@ -23,13 +28,18 @@ import { Whatsapp } from './Whatsapp';
 export const ALL_GLYPHS = [
   ['Burger', Burger],
   ['CalendarCheck', CalendarCheck],
+  ['Check', Check],
   ['ChevronLeft', ChevronLeft],
   ['ChevronRight', ChevronRight],
   ['Close', Close],
+  ['Facebook', Facebook],
   ['Instagram', Instagram],
+  ['Link', Link],
+  ['Mail', Mail],
   ['People', People],
   ['Phone', Phone],
   ['Pin', Pin],
+  ['QuoteMark', QuoteMark],
   ['Star', Star],
   ['Tiktok', Tiktok],
   ['ToothCheck', ToothCheck],

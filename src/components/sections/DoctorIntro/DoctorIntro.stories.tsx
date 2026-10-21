@@ -230,7 +230,7 @@ const meta = {
     name: {
       control: 'text',
       description:
-        'The doctor’s full name, finished and already translated (§8.1) — becomes the PAGE’s one real `<h1>` at ui/Heading’s fluid `hero` step. Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
+        'The doctor’s full name, finished and already translated (§8.1) — becomes the PAGE’s one real `<h1>` at ui/Heading’s `hero-scaled` step: the fluid `hero` clamp, and on a laptop or a desktop (THE BAND SCALE) its 1401-window value, 65.04 design pixels. Never hyphenates: a person’s name wraps between words or not at all (§15.14’s rider)',
     },
     position: {
       control: 'text',
@@ -452,11 +452,12 @@ const scaleOf = async (
 };
 
 /**
- * THE NAME'S SIZE (DoctorIntro.tsx's THE BAND SCALE, THE NAME): inside the
- * regime the `hero` step's value at the owner's 1401 window — 16 + 3.5 ×
- * 14.01 = 65.035px, spelled as 16.26 spacing steps, 65.04 design pixels —
- * times s; outside it ui/Heading's `hero` clamp itself, clamp(2rem, 1rem +
- * 3.5vw, 4.5rem) of THIS window, exactly as before the scale.
+ * THE NAME'S SIZE (DoctorIntro.tsx's THE BAND SCALE, THE NAME) — ui/Heading's
+ * `hero-scaled` step, measured: inside the regime the `hero` step's value at
+ * the owner's 1401 window — 16 + 3.5 × 14.01 = 65.035px, spelled in the step
+ * as 16.26 spacing steps, 65.04 design pixels — times s; outside it the
+ * step is `hero` itself, the clamp clamp(2rem, 1rem + 3.5vw, 4.5rem) of THIS
+ * window, exactly as before the scale.
  */
 const expectNameSize = async (
   name: HTMLElement,
@@ -708,8 +709,9 @@ const expectArrangement = async (
   await expect(philosophy.firstElementChild).toBe(credo);
   await expect(credoBox.top).toBeGreaterThanOrEqual(nameBox.bottom);
 
-  // THE NAME'S SIZE — the design's inside the scale, the `hero` clamp
-  // outside it (DoctorIntro.tsx's THE BAND SCALE, THE NAME).
+  // THE NAME'S SIZE — ui/Heading's `hero-scaled` step: the design's inside
+  // the scale, the `hero` clamp outside it (DoctorIntro.tsx's THE BAND
+  // SCALE, THE NAME).
   await expectNameSize(name, regime, unit);
   // THE CARD'S WORDS AND TITLE, in the same unit: the quote on `text-xl`, 20
   // design pixels (CredoCard's D43b), and the title on the `band` step,

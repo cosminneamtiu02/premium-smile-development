@@ -1,4 +1,10 @@
-import { createRef, type ReactElement, type ReactNode, type Ref } from 'react';
+import {
+  createRef,
+  useId,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -750,84 +756,135 @@ describe('TextButton — THE TONE’s paint, read from the real stylesheet', () 
   });
 });
 
-describe('TextButton — asChild onto an <a> with NO href: the blog card’s placeholder link', () => {
-  // Until the article pages exist, the card's „Citește mai mult…" is HTML's
-  // placeholder link: an <a> without href. It must look and hover exactly
-  // like the link it will become, and be nothing to a keyboard or a screen
-  // reader meanwhile — no role, no tab stop.
-  const placeholder = (
-    <TextButton tone="accent" asChild>
-      {/* jsx-a11y/anchor-is-valid is right that this is no working link —
-          that is the case under test (the Wordmark D9 precedent). */}
-      {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-      <a>Citește mai mult…</a>
-    </TextButton>
-  );
+describe('TextButton — asChild onto a <span>: the LABEL of a link its caller owns (sections/PostCard’s THE LINK)', () => {
+  // The shape the blog card ships since 2026-10-15: the card's <a href> is
+  // the control — ONE tab stop, its name read off the label through
+  // `aria-labelledby` — and the atom dresses the <span> inside it, which
+  // wears the whole look and is no control at all.
 
-  it('is no link and no button — HTML gives an <a> without href no role — yet wears the accent look, byte for byte', () => {
-    const look = classOf(
-      <TextButton tone="accent">Citește mai mult…</TextButton>,
+  /** The blog card's read-more cut to the label and its link — the
+   *  AsLinkLabel story's markup: the caller's <a href> wears the area and
+   *  owns the name, read off the label by `aria-labelledby` (an id from
+   *  useId, as the card's are); the atom dresses the <span> inside it as the
+   *  card asks, `tone="accent"` and `hoverArea="area"`. */
+  function LabelInLink(): ReactElement {
+    const labelId = useId();
+    return (
+      <a
+        href="/ro/blog/cum-iti-alegi-periuta-de-dinti/"
+        aria-labelledby={labelId}
+        className={TEXT_BUTTON_HOVER_AREA}
+      >
+        <TextButton tone="accent" hoverArea="area" asChild>
+          <span id={labelId}>Citește mai mult…</span>
+        </TextButton>
+      </a>
     );
-    render(placeholder);
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  }
+
+  it('is ONE control, the caller’s link, named by the label’s words — and the label none: the clone itself, a <span> with no role, href, tabindex or aria-current, wearing the accent look byte for byte', () => {
+    const look = classOf(
+      <TextButton tone="accent" hoverArea="area">
+        Citește mai mult…
+      </TextButton>,
+    );
+    render(<LabelInLink />);
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    const link = screen.getByRole('link', { name: 'Citește mai mult…' });
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    const anchor = screen.getByText('Citește mai mult…');
-    expect(anchor.tagName).toBe('A');
-    expect(anchor.className).toBe(look);
-    // …and the atom adds nothing that would make it a control.
+    const label = screen.getByText('Citește mai mult…');
+    // The CLONE itself — the link's own child, no <button> drawn round it
+    // (which getByText would find just the same, by the words inside it).
+    expect(label.tagName).toBe('SPAN');
+    expect(label.closest('button')).toBeNull();
+    expect(label.parentElement).toBe(link);
+    expect(label.className).toBe(look);
+    // …its own id kept through the merge (the child wins), the id the
+    // link's name reads…
+    expect(label.id).not.toBe('');
+    expect(link).toHaveAttribute('aria-labelledby', label.id);
+    // …and nothing added that would make it a control.
     for (const attribute of ['href', 'role', 'tabindex', 'aria-current']) {
-      expect(anchor).not.toHaveAttribute(attribute);
+      expect(label).not.toHaveAttribute(attribute);
     }
   });
 
-  it('takes no focus — not by script, and a real Tab steps over it both ways', async () => {
+  it('takes no focus of its own: a script’s focus() passes it by, and a real Tab stops ONCE, on the link, both ways — so the atom’s ring never draws on the label', async () => {
     render(
       <>
         <button type="button">Înainte</button>
-        {placeholder}
+        <LabelInLink />
         <button type="button">După</button>
       </>,
     );
-    const anchor = screen.getByText('Citește mai mult…');
-    // Not `tabIndex`: Chromium reports 0 for an <a> without href (measured)
-    // although it never takes focus — the behaviour is the evidence.
-    anchor.focus();
-    expect(anchor).not.toHaveFocus();
+    const link = screen.getByRole('link', { name: 'Citește mai mult…' });
+    const label = screen.getByText('Citește mai mult…');
+    label.focus();
+    expect(label).not.toHaveFocus();
 
     await realUser.click(screen.getByRole('button', { name: 'Înainte' }));
     await realUser.tab();
+    expect(link).toHaveFocus();
+    // The ring answers :focus-visible, which the label — never focused —
+    // cannot match while its link holds the keyboard's focus.
+    expect(link.matches(':focus-visible')).toBe(true);
+    expect(label.matches(':focus-visible')).toBe(false);
+    expect(getComputedStyle(label).outlineStyle).toBe('none');
+    await realUser.tab();
     expect(screen.getByRole('button', { name: 'După' })).toHaveFocus();
+    await realUser.tab({ shift: true });
+    expect(link).toHaveFocus();
     await realUser.tab({ shift: true });
     expect(screen.getByRole('button', { name: 'Înainte' })).toHaveFocus();
   });
 
-  it('still draws the underline under a real pointer — the hover the owner asked for', async () => {
+  it('draws the underline under a real pointer on its link and sweeps it away at rest — the accent ink throughout (THE TONE)', async () => {
     const unpark = await parkPointer();
     try {
-      render(placeholder);
-      const anchor = screen.getByText('Citește mai mult…');
-      expect(getComputedStyle(anchor).color).toBe(tokenColour('accent'));
-      expect(underlineScaleX(anchor)).toBe(0);
+      render(
+        <>
+          <LabelInLink />
+          <p>În afara linkului.</p>
+        </>,
+      );
+      const link = screen.getByRole('link', { name: 'Citește mai mult…' });
+      const label = screen.getByText('Citește mai mult…');
+      expect(getComputedStyle(label).color).toBe(tokenColour('accent'));
+      expect(underlineScaleX(label)).toBe(0);
 
-      await realHover(anchor);
-      expect(getComputedStyle(anchor).color).toBe(tokenColour('accent'));
-      expect(underlineScaleX(anchor)).toBe(1);
+      // Where a press opens the link, the label lights: its box IS the
+      // link's.
+      await realHover(link);
+      expect(label.matches(':hover')).toBe(true);
+      expect(getComputedStyle(label).color).toBe(tokenColour('accent'));
+      expect(underlineScaleX(label)).toBe(1);
+
+      // Off the link, back to rest.
+      await realHover(screen.getByText('În afara linkului.'));
+      expect(link.matches(':hover')).toBe(false);
+      expect(getComputedStyle(label).color).toBe(tokenColour('accent'));
+      expect(underlineScaleX(label)).toBe(0);
     } finally {
       unpark();
     }
   });
 
-  it('lays out exactly as the accent <button> — the same box, the same words in the same place', () => {
-    // The measurement the AsPlaceholderLink story's 'no-visual' tag stands
-    // on: its frame would only repeat the Accent story's pixels. Both render
-    // in one face, whichever the runner has, so the face cannot tell them
-    // apart.
+  it('lays out exactly as the accent <button> — the same box, the same words in the same place — and its link paints nothing round it', () => {
+    // The measurement the AsLinkLabel story's 'no-visual' tag stands on: its
+    // frame would only repeat the Accent story's pixels. Both render in one
+    // face, whichever the runner has, so the face cannot tell them apart;
+    // the place is read from each render's own container, so the link round
+    // the label is measured too — it moves the label by nothing.
     const geometry = (element: Element) => {
       const box = element.getBoundingClientRect();
+      const frame = element.closest('div')?.getBoundingClientRect();
+      if (!frame) throw new Error('the render container is missing');
       const range = document.createRange();
       range.selectNodeContents(element);
       const words = range.getBoundingClientRect();
       return {
+        left: box.left - frame.left,
+        top: box.top - frame.top,
         width: box.width,
         height: box.height,
         wordsLeft: words.left - box.left,
@@ -837,12 +894,24 @@ describe('TextButton — asChild onto an <a> with NO href: the blog card’s pla
       };
     };
     const { unmount } = render(
-      <TextButton tone="accent">Citește mai mult…</TextButton>,
+      <TextButton tone="accent" hoverArea="area">
+        Citește mai mult…
+      </TextButton>,
     );
     const button = geometry(screen.getByRole('button'));
     unmount();
-    render(placeholder);
+    render(<LabelInLink />);
     expect(geometry(screen.getByText('Citește mai mult…'))).toEqual(button);
+    // The link round it: no ground, no border, no outline and no
+    // decoration of its own at rest — it draws nothing a frame could see.
+    // (Its border style is preflight's `0 solid`: the width is what draws.)
+    const link = getComputedStyle(screen.getByRole('link'));
+    expect(link.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
+      expect(link[`border${side}Width`], side).toBe('0px');
+    }
+    expect(link.outlineStyle).toBe('none');
+    expect(link.textDecorationLine).toBe('none');
   });
 });
 
@@ -1108,21 +1177,31 @@ describe('TextButton — THE HOVER AREA: the card’s hover draws its read-more 
     }
   });
 
-  it('lights the blog card’s own element, the hrefless <a> — which is never disabled, so asking not-disabled lights it where asking “enabled” never would', async () => {
+  it('lights the blog card’s own element, the LABEL <span> inside the card’s link — never disabled, so asking not-disabled lights it where asking “enabled” never would', async () => {
+    // A MECHANISM test: the pointer rests on words OUTSIDE the link, which
+    // THE PRECONDITION forbids a real caller (the card's link layer covers
+    // its whole area) — here it isolates the `not-disabled:` half alone.
     const unpark = await parkPointer();
     try {
       const { words } = renderArea(
         TEXT_BUTTON_HOVER_AREA,
-        <TextButton tone="accent" hoverArea="area" asChild>
-          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-          <a>Citește mai mult…</a>
-        </TextButton>,
+        <a href="/ro/blog/cum-iti-alegi-periuta-de-dinti/">
+          <TextButton tone="accent" hoverArea="area" asChild>
+            <span>Citește mai mult…</span>
+          </TextButton>
+        </a>,
       );
-      const anchor = screen.getByText('Citește mai mult…');
-      expect(underlineScaleX(anchor)).toBe(0);
+      const label = screen.getByText('Citește mai mult…');
+      // The CLONE itself, the link's own child: had asChild been ignored,
+      // getByText would still find a <span> — the one inside a <button>.
+      expect(label.closest('button')).toBeNull();
+      expect(label.parentElement).toBe(
+        screen.getByRole('link', { name: 'Citește mai mult…' }),
+      );
+      expect(underlineScaleX(label)).toBe(0);
       await realHover(words);
-      expect(anchor.matches(':hover')).toBe(false);
-      expect(underlineScaleX(anchor)).toBe(1);
+      expect(label.matches(':hover')).toBe(false);
+      expect(underlineScaleX(label)).toBe(1);
     } finally {
       unpark();
     }

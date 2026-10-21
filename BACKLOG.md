@@ -76,17 +76,153 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   for "a manual keyboard walkthrough and a screen-reader pass (NVDA or VoiceOver) before launch".
   Every lane has tested its own part; nobody has yet walked the whole site as built.
 - **The work, on the built export, on every page type (Home, Services, Team, a doctor page, the
-  blog's list, the 404, the contact dialog, the language banner), in Romanian and in German:**
+  blog's list, a blog article, the 404, the contact dialog, the language banner), in Romanian and
+  in German:**
   - automated: the per-story axe run (CI already has it) plus an axe or Lighthouse pass over the
     built pages;
   - keyboard only: Tab and Shift+Tab through every page — focus always visible, nothing trapped,
     Escape closes the dialog and focus returns to its opener;
   - screen readers: VoiceOver on macOS and on an iPhone, NVDA with Firefox on Windows;
   - reflow at 320px and at 200% zoom with no sideways scroll; Windows High Contrast (forced
-    colours); reduced motion.
+    colours); reduced motion;
+  - a blog article's e-mail share link in an older classic Outlook on Windows: the `mailto:` is
+    UTF-8 throughout, as RFC 6068 asks, but a mail client that decodes it with the system code
+    page would show „CiteÈ™te" (a Western Windows) or „CiteČ™te" (a Romanian one) for „Citește"
+    (reported, not measured — lib/share's header); the article's Copy link is the visitor's way
+    round it;
+  - a blog article's WhatsApp share on an iPhone and on an Android phone, each with the app
+    installed: the link opens the app with the article's sentence intact — French's narrow space
+    before its colon included — which no phone has confirmed yet (lib/share's header reads it off
+    WhatsApp's own app-link files and a desktop request alone).
 - **Open records to confirm or re-open in that pass:**
-  - SC 2.2.2 on the three rotators — no stop for mouse or touch, and no hold while a screen reader's
-    reading cursor is on a review (CLAUDE.md §15.19 round 4, §15.21 round 3); the third, since
+  - SC 2.2.2 on the blog article's photo gallery and the Home page's articles band (both
+    sections/CardCarousel, 2026-10-17): both modes move by themselves every 5.5 seconds, and every
+    activation — one of its tall previous / next arrows, one of its progress dots, a swipe, a tap
+    on the cards — stops the movement for good, the owner's pick among three ("OPTION 1").
+    That is a control that stops the moving content, but NOTHING VISIBLE SAYS SO, so an
+    auditor may still ask for an explicit pause button (lib/rotation's `rotationControl` is the
+    way to one). Nor anything audible — the owner's option for that half: the words the Hero's
+    beads carried until 2026-10-20 (dropped there because a press no longer stops the Hero) are
+    TRUE here, so the two dot groups could be named „Alege articolul (oprește derularea)" and
+    „Alege fotografia (oprește derularea)" — `home.articles.picker` and
+    `blog.article.gallery.picker`, one string ×5 each (the phase-3 accessibility reviews,
+    2026-10-20; not changed: new words on his site). A screen reader's reading cursor is not a press: the card it reads is still
+    swapped every 5.5 seconds until something stops the carousel. AND THE DWELL, AN OPEN
+    QUESTION FOR THE OWNER: the 5.5 seconds are the Hero's and the reviews deck's rhythm, and
+    they are shorter than the Home band's cards take to read — each slide there is a whole blog
+    card; the newest post's title and summary are 45 words in Romanian and 51 in German, 18 and 20
+    seconds at the ~150 words a minute of lib/rotation's reading-time rider (the gallery's
+    captions, two to four words, fit). No record shows him choosing 5.5 seconds for these cards
+    with those numbers in front of him (the deck's own record calls its reading-time question
+    OPEN, ReviewsCarousel.tsx's REVIEWS_INTERVAL_MS); the levers are the constant
+    (`CARD_CAROUSEL_INTERVAL_MS`) or a dwell per card from its own word count. SC 2.5.1 / 2.5.7 (a single-pointer
+    way to move it) are met by the visible arrows and dots since the same day. The dots are BUTTONS,
+    like the Hero's (the owner asked for the Hero's): eight in an article gallery and twelve on the
+    Home page's articles band are 10–14 Tab stops per carousel — the lever, not taken, is one Tab
+    stop for the row (a roving-tabindex toolbar, arrow keys between the dots).
+  - The Home page's articles band draws the blog's cards as 65 % MINIATURES (the owner's pick,
+    2026-10-17, „Miniature (all 65%)"; sections/BlogCarousel, sections/PostCard's `miniature`): on
+    every phone and tablet and on laptops up to a 1401px window the centre card's title reads
+    19.5px, its read-more 11.7, its summary and reading time 10.4, its author 9.1 and its category
+    tags 7.8px (on a 1920 desktop the text ×1.375, the tags ×1.19, 9.3px). No AA criterion sets a
+    minimum text size, and zoom still enlarges it on a phone (pinch-zoom) and on a laptop up to
+    the 1401 reference (browser zoom, where THE FLOOR holds the carousel's pixel at the theme's)
+    — but NOT on a desktop wider than the 1401 reference: on a 1920 screen 110 and 125 % leave
+    the five texts as they are, 150 % gives ×1.09, 200 % ×1.45, and they double only near 275 %
+    (×1.44 at 200 % on a 2560 screen) — the band scale's trade; the tags, whose own floor is in
+    rem, read 9.31 / 9.30 / 9.75 / 11.7 / 15.6px there at 100 / 110 / 125 / 150 / 200 % (×1.00,
+    ×1.05, ×1.26, ×1.68) (the phase-3 accessibility reviews' arithmetic, 2026-10-20). The site's readers skew older (§1): look at it with them. The levers: the share,
+    one constant in sections/BlogCarousel, or a text floor inside the miniature.
+  - In Safari, which does not scroll a control Tab focuses into view, Home's twelve progress dots
+    (a 308px row: x 6–314 at a 320 window, x 41–349 at 390) can sit under the fixed corner buttons
+    (x 16–72 and W − 72 to W − 16): at 320 dots 2 and 11 can be covered entirely (the discs are
+    round, 28px in radius — an idle 24 × 44 dot fits inside one only within about ±2px of
+    vertical alignment), at 390 only partly (dot 12 is never entirely covered) (SC 2.4.11;
+    computed by the phase-3 accessibility reviews, 2026-10-20). An article gallery's eight
+    (212px) stay clear. Tab through them on an iPhone and on a Mac's Safari at those widths. And
+    with a screen reader, the FIRST press on a carousel's arrow or dot while it runs: since
+    2026-10-21 the press commits the stop — the live region turning polite — in an update of its
+    own BEFORE the card swaps (ui/use-rotation's handNavigation; until then both landed in one
+    update, and whether the new card was announced depended on when the engine read the region's
+    politeness) — check with VoiceOver's and TalkBack's double-tap and NVDA with Firefox that the
+    new card is now announced; if it is still silent, the lever is an always-polite hidden node
+    that receives the card's name on each hand step. And on an iPhone (sections/CardCarousel's
+    header): a tap on a gallery photo (it carries no link), on a side card or on the stage's
+    empty ground must stop the movement for good — iOS Safari sends a click only to an element
+    that answers clicks, so since 2026-10-21 the cards' hand-box carries React's own click
+    responder, set through a ref (inferred from WebKit's rules, not tried on a device); and a
+    quick flick (a tenth of a step, about 16–22px) must move one card WITHOUT also following the
+    card's link on Home, if iOS's tap slop is wider than the carousel's 10px drag threshold (the
+    lever: let a finger's drag arm the click swallow too, for about half a second).
+  - BROWSER ZOOM THAT CANNOT DOUBLE TWO KINDS OF TITLE (WCAG 2.2 SC 1.4.4, the F94 pattern —
+    computed by the blog-article lane's G2 accessibility review, 2026-10-17 and 2026-10-20), both
+    the owner's call: (a) the `hero-scaled` titles — the doctor's name, the blog list's and the
+    Team page's hero heading, the blog article's title (new): on a 1920 screen 89.4 device px from
+    100 to 150 % and ×1.11 at 200 %, and from a ≈1720 to a ≈2876px window no zoom doubles them;
+    the band's trade was accepted on other texts' numbers, never on these (ui/Heading's THE ZOOM
+    TRADE, with its lever — a 5rem cap, which doubles them at 500 % only); (b) Home's slogan (the
+    `slogan` step, 5.5833vw from the tablet up, older than the lane): ×1.00 at 200 % and ×1.49 at
+    500 % on a 1920 screen, never doubling on ≈1433–3840px windows (its THE ZOOM, RECORDED).
+    Safari's zoom stops at 300 %, where neither doubles at a laptop width. A check of "the text
+    grows" passes the `hero-scaled` titles (×1.11) and fails only the slogan, which on ≈1536–1920px
+    windows does not grow at all at 200 %; measure "doubles by 200 %".
+  - THE BLOG'S CATEGORY TAGS UNDER BROWSER ZOOM (WCAG 2.2 SC 1.4.4, the F94 pattern — computed by
+    the blog-article lane's phase-3 accessibility review, 2026-10-20), the owner's call: an
+    article's cover draws its tags in a pixel of their own, relative to the cover's width
+    (sections/PostCover's CHIP_SCALE — the ratio the owner picked at his 723px window), and a page
+    zoom, which narrows the window in CSS pixels, shrinks that pixel as it enlarges the page
+    wherever the zoomed cover is narrower than 513.4 CSS px. An 18px label at 100 % reads, at
+    200 %, 24.0px on an upright iPad mini (744), 24.2 on a 768 iPad (×1.35 — now smaller than the
+    reading time above it, 32px, where at 100 % it was the larger), 24.7 in an 800 window and 30.7
+    in a 1024 window behind a classic scrollbar (15 screen px), 25.9 on an 820 iPad and 33.4 on an
+    iPad Air held sideways (×1.85); of the iPads only the 13-inch ones held sideways double at
+    200 %, the upright ones at 300 % (Safari's largest step); phones up to about 380px wide are
+    already on the floor at 100 % and double exactly, and ×1.95 at 390 and ×1.77 at 430; a pinch
+    zoom enlarges the tags with the page. The blog list's cards draw their tags in the same kind of
+    card-relative pixel (sections/PostCard's THE CHIPS FOLLOW THEIR CARD), and below the band
+    scale's step the same trade holds wherever a ONE-column card's content box is over 342.3px —
+    about 453–738px windows behind a scrollbar, 436–719 without one: at the owner's own 723
+    window an 18px label reads 17.8 / 17.9 / 19.6 / 24.0px at 110 / 125 / 150 / 200 % (×0.99,
+    ×1.00, ×1.09, ×1.33), doubling only at 300 %; at 200 % half a 1280 laptop (a 640 window)
+    gives ×1.53, half a 1366 ×1.42, half a 1440 ×1.34, a 600px touch tablet ×1.59; everywhere
+    else the floor binds and they double at 200 %, or more — but for one more band, the
+    TWO-column cards at about 1040–1138px windows behind a scrollbar (1021–1119 without), whose
+    content boxes sit above the floor there: their tags lag the zoom, as low as ×0.99 / ×1.12 /
+    ×1.34 at 110 / 125 / 150 %, though at least ×2.15 at 200 % (the phase-3 accessibility
+    re-review's arithmetic and the PostCard fold's, 2026-10-20; PostCard.tsx's THE ZOOM) — and a
+    third, found by the round-3 review (2026-10-21): THREE-column cards the band scale never
+    draws, on a touch screen wider than about 1551 CSS px (a coarse pointer keeps the scale off)
+    or with a mouse in Safari 16.0–16.3 or Firefox 110–127 from about 1570px, whose content boxes
+    are over the floor too — on a 1640 touch screen 12.83px at 100 % and ×1.03 / ×1.17 / ×1.52 /
+    ×1.87 at 110 / 125 / 150 / 200 %, on a 2000px one ×1.48 at 200 % — and there the tags can
+    even SHRINK while a zoom enlarges the page: ×0.98 and ×0.96 at 110 and 125 % on that 2000px
+    touch screen, ×0.97 / ×0.92 / ×0.89 at 110 / 125 / 150 % (then ×1.06 at 200 %) on a 2560 one
+    past the gutter's 12.5rem cap, ×0.98 at 110 and 125 % in a 1920 window in those engines (the
+    PostCard fold's arithmetic, 2026-10-21; PostCard.tsx's THE ZOOM). A larger DEFAULT font size
+    passes them by as well: at the 723 window a 20px default leaves the label at 17.96px (×1.00)
+    and a 24px one draws it at 19.6 (×1.09), while the card's other words grow ×1.25 and ×1.5.
+    Recorded, not changed
+    (PostCover.tsx's THE ZOOM); the lever is to drop the cover's own pixel (CHIP_SCALE and its cap)
+    so the chips take the page's — rem outside the band scale, doubling at 200 % — at the cost of
+    44px chips on every phone and, at 320, three long Romanian categories one to a line, ending
+    168px down the 192px picture; and under a phone's 200 % page zoom the lever does WORSE than
+    today: a German „Kieferorthopädie" chip (186.2px at its 18px label, measured) overflows the
+    131.5–139px tag line to the left — 26.7px past the screen's edge on a 375 phone, cutting
+    4.7px of its label, 19.2px on a 390 (its edge and most of its padding) — where today's floor
+    keeps every tag on the screen (the phase-3 reviews, 2026-10-20; PostCover.tsx's THE ZOOM
+    carries the measured numbers).
+  - THE BAND TITLES' STEP UNDER BROWSER ZOOM (WCAG 2.2 SC 1.4.4 — site-wide and older than the
+    blog lanes; computed by the blog-article lane's phase-3 accessibility review, 2026-10-21), the
+    owner's call: ui/Heading's `band` step (§15.24, every `<h2>`) is 30px in a column under 28rem
+    and 36px from it, and a page zoom narrows the column in CSS px — so a band title whose column
+    is 28rem to 56rem wide at 100 % (about 558–1078px windows behind a classic scrollbar) crosses
+    the step and grows only ×1.67 at 200 %, and a card title does the same inside its card (the
+    blog list's one-column card at the 723 window: ×1.10 / ×1.04 / ×1.25 / ×1.67 at 110 / 125 /
+    150 / 200 %). The step exists so that no band title outranks a phone's `<h1>` (ui/Heading's
+    'band' paragraph, UNDER BROWSER ZOOM THE STEP CAN BE CROSSED).
+  - SC 2.2.2 on the three rotators that never stop for good (the fourth, the card carousel, is
+    the bullet above) — no stop for mouse or touch, and no hold while a screen reader's
+    reading cursor is on a review (CLAUDE.md §15.19 round 4, §15.21 round 3); the third rotator, since
     2026-10-13, is the doctor page's courses column, whose highlight moves from idea to idea every
     3 seconds on its own (§15.23 round 7) — it hides nothing, every idea stays readable, but it
     starts by itself, never stops while the courses are on screen, and runs BESIDE the biography,
@@ -94,7 +230,19 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     focus is inside them, it has NO STOP FOR ANYONE, keyboard included — nothing in it is
     focusable (the accessibility review's MEDIUM of that day). What would conform: a pause/stop
     control, or one sweep that finishes within 5 seconds when the list comes into view and then
-    rests; a hover hold alone, or one lap then stop (18 seconds), would not;
+    rests; a hover hold alone, or one lap then stop (18 seconds), would not. And while the Hero
+    or the reviews deck runs, a press that does not come with keyboard focus is NOT announced: it
+    moves the slide, the clock keeps running, and the live region stays 'off' (lib/rotation's
+    liveRegion — polite only while keyboard focus holds the band, or under reduced motion). The
+    people it costs are screen-reader users, not mouse or touch users, who see the change: a
+    VoiceOver or TalkBack double-tap arrives as a click with no keyboard focus, so the new slide
+    is not read (computed from the code, not tried on a device; NVDA's browse-mode Enter could go
+    either way; no AA failure — the new slide and the bead's aria-current are still exposed; the
+    phase-3 accessibility reviews, 2026-10-20). The lever, to check with a real screen reader: a
+    polite window for the press's own change, switched on BEFORE the slide changes (switched in
+    the same update, many screen readers announce nothing) and closed before the next automatic
+    step — the order the card carousel now keeps for its own presses (ui/use-rotation's
+    handNavigation commits the stop first, 2026-10-21), there for good because its press stops;
   - SC 2.4.5 Multiple Ways — a doctor page is reachable only through its card (§15.23; the doctors
     dropdown recorded in §15.15 is one answer);
   - forced colours — `ui/Button`'s solid face loses its boundary when it dresses an `<a>` (§15.23,
@@ -111,7 +259,27 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     the break, so only a real screen reader proves it) — and the same on the Team page
     (`/ro/team/`, `/de/team/`), whose `<h1>` and lead carry the same breaks since 2026-10-15
     (CLAUDE.md §15.25 round 4): there the heading's second line, „și oamenii care te întâmpină la
-    clinică", is half of what it says;
+    clinică", is half of what it says; and on a blog article (`/ro/blog/<slug>/`), the by-line under
+    the title: its capitals are CSS, and Chromium and WebKit hand assistive technology the text as
+    painted, „DE DR. NICU ELENA ALINA" — check that VoiceOver and NVDA say "doctor" and do not
+    spell „DR" letter by letter (sections/PostHeader's A LISTEN OWED; the phase-3 accessibility
+    review, 2026-10-20); and, on the blog's list and Home's articles band on a phone, VoiceOver's
+    and TalkBack's TOUCH exploration over a card — the whole card is one link drawn over its words,
+    so a finger on the summary or the author most likely lands on the link: check that the
+    author, the summary and the tags are still reached by swiping, and whether a double-tap
+    while the screen reader's cursor rests on the title or the summary opens the article (a
+    double-tap is a tap at that point, and the link's layer is there) (sections/PostCard's WHAT
+    IT COSTS — inferred from the engine's hit test, not tried on a device); and the cards'
+    author line has CSS capitals like the by-line — „DR. NICU ELENA ALINA" on the list and on
+    Home's centre card (French „DR NICU …", no full stop) — the same "doctor, not D-R" check;
+    and, on a blog article's share row, the copy button's STATUS LINE (sections/ShareLinks' THE
+    LINE — a `role="status"` region the page prints empty and the press fills): with NVDA and
+    JAWS in Chrome and in Firefox, VoiceOver on macOS and iOS, and TalkBack, check that the first
+    answer is spoken once; that a repeated identical answer is spoken again, both about a second
+    after the last one and after a success has cleared; that a failure can still be read in browse
+    mode afterwards; that the two kept answers (invisible and aria-hidden, there to hold the line's
+    height) cannot be reached by character navigation or by VoiceOver's touch exploration; and that
+    the empty line is no blank swipe stop (the phase-3 accessibility review, 2026-10-21);
   - the map — the corner buttons over Google's zoom controls at 320 and 390px, and the Tab order
     through Google's frame (COOKIES.md §7);
   - SC 2.4.11 Focus Not Obscured under the language banner — an ACCEPTED gap (the owner, 2026-10-03,
@@ -124,7 +292,13 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     the cure belongs to the banner: keep room for the card at the page's end while it is open — the
     planner's recommendation, declined for now (LanguageBanner.tsx, its SC 2.4.11 record). Those
     numbers were taken with the card 16px lower than today (it rose with the corner buttons on
-    2026-10-09, CLAUDE.md §15.36), so the walk re-measures which footer links hide at 1024–1280px;
+    2026-10-09, CLAUDE.md §15.36), so the walk re-measures which footer links hide at 1024–1280px.
+    And LanguageBanner.tsx's claim that the root's scroll padding "rests a Tab-scrolled target's
+    bottom edge" above the card holds only for a target already partly in view: Chromium CENTRES a
+    target reached from wholly out of view in the window less its scroll padding, and on screens
+    shorter than about 600–650px that centre can fall inside the card (the phase-3 accessibility
+    review's reading of the same rule behind the Hero's bead focus scroll, 2026-10-20 — to check
+    in the walk);
   - the language banner on SHORT screens (CLAUDE.md §15.36, computed by the a11y review, not yet
     measured): the card's top slides under the sticky top bar on a viewport under about 408px tall
     (392 before 2026-10-09), and between about 277 and 315px both of its controls hide entirely —
@@ -149,7 +323,14 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     `/de/services/` in a 1920 window in FIREFOX with View → Zoom → "Zoom Text Only" at 150 and 200 % —
     the price rows must read ≈ 1.5× and 2× their 100 % size (not 2.25× and 4×, the double zoom the
     rem floor may cause), and no menu label may cross into the cards column; and compare SAFARI's page
-    zoom at 125 / 150 / 200 % against the Chromium numbers below;
+    zoom at 125 / 150 / 200 % against the Chromium numbers below. (At 1920 a 200 % text zoom enlarges
+    the rem step past the column — 56rem becomes 1792px, the column is 1521 — so the band leaves the
+    scale and reads ≈ 1.45×, the trade Chromium records too; there the double zoom can show only at
+    150 %, as ≈ 1.6× or more. The 2.25× and 4× apply under the 1401 reference. Computed from how
+    Firefox applies text zoom, not run.) The SAME CHECK on the Home page's articles band, the floor's
+    second setter since 2026-10-17 (sections/BlogCarousel's carousel, its cards 65 % miniatures): `/de/`
+    in a 1920 window, "Zoom Text Only" — a card's title ≈ 1.5× at 150 % (≈ 1.6× or more is the double
+    zoom) and ≈ 1.45× at 200 %, and no card's words may leave its frame;
   - the price STRIP (CLAUDE.md §15.20 round 6) — on a real iPhone: its touch scrolling, the hidden
     scroll indicator (iOS 18.2 and later), a link straight to a category on a slow connection (the
     load wait) and VoiceOver's reading order through the chips; on a laptop window under 60rem with
@@ -158,7 +339,9 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     with View → Zoom → "Zoom Text Only", the cards' category chips — drawn in a pixel of their own,
     relative to the card (THE CHIPS' PIXEL in tests/unit/design-scale.test.ts) — may zoom twice,
     like the price list's floor above: open `/de/blog/` in a 1920 window at 150 and 200 % and check
-    that a chip's label reads ≈ 1.5× and 2× its 100 % size, not more, and stays on its picture; on
+    that a chip's label reads ≈ 1.5× and 2× its 100 % size, not more, and stays on its picture —
+    and the same on an article's cover (`/de/blog/<slug>/`, sections/PostCover's tags, the same
+    kind of pixel); on
     page 1 in a 390px window in SAFARI (macOS: Settings → Advanced → "Press Tab to highlight each
     item on a webpage", or Option+Tab; an iPhone: Full Keyboard Access), scroll until the pager rests
     behind the bottom-right discs, then Tab onto its forward arrow — the pager sits right-aligned
@@ -189,7 +372,29 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     scrolls sideways. The owner's levers are in §15.25 round 2 (a cap at the reference) and §15.32
     round 2 (THE FLOOR — on every scaled page at once, so the pages keep matching); he accepted the
     trade for the whole doctor page on 2026-10-13 ("Accept, like Home"), leaving the floor to this
-    pass. The
+    pass. THE BLOG'S ARTICLE PAGE (sections/PostPage, since 2026-10-14 — the site's longest
+    reading) draws in the same unfloored pixel and has NOT been put to him: at a 1140 window
+    behind a classic 15px scrollbar its paragraphs read 14.6px, its notes 13.0 and its by-line 11.4
+    (14.8px for the paragraphs with overlay scrollbars); on a 1440 laptop behind a classic
+    scrollbar its paragraphs hold 18.5 device px at 100, 110 and 125 % (the notes 16.45, the
+    by-line 14.4; with overlay scrollbars, a MacBook's default, 18.75 / 16.67 / 14.58); on a 1920
+    screen 200 % gives ×1.45 (×1.44 with overlay scrollbars); and the worst case, a 24″ iMac at
+    its default 2240px width with overlay scrollbars, reads them 25.0 / 27.5 / 29.2 / 29.2 / 29.2 /
+    29.2 / 45 device px at 100 / 110 / 125 / 150 / 175 / 200 / 250 % — ×1.17 at 200 % (a 2560
+    screen ×1.33 with overlay scrollbars, ×1.32 with a classic one); a 20px default font on the
+    1440 laptop reads 18.5px where rem would draw 22.5 (the phase-3 accessibility reviews'
+    arithmetic, 2026-10-20). OPEN, his: accept it like the blog's list (his „1 a", CLAUDE.md §15.39
+    round 3 (7)(1)), or THE FLOOR on PostPage's rhythm box (never under the theme below the 1401
+    reference, as the price list; the article's title would then read 65px at a 1140 window, the
+    other pages' 52.7). THE FLOOR mends every figure UNDER the reference — 18 / 16 / 14px at 1140,
+    the 1440 laptop 18.5 → 19.8 → 22.5 at 100 / 110 / 125 %, the 20px default font — and raises
+    the iMac's 200 % from 29.2 to 36, rem's own size there (×1.44; its 175 % 29.2 → 31.5, the
+    1920's 150 % 24.75 → 27); but neither screen doubles by 200 %, each starting above the
+    reference (×1.389 and ×1.375 at 100 %; twice the 100 % size near 278 and 275 %); only §15.25
+    round 2's other lever, a cap at the reference, would double them. The article's TITLE has its
+    own, separate open trade (the `hero-scaled` titles, item (a) of the TWO KINDS OF TITLE bullet
+    above): the floor lifts it under the reference (on the 1440 laptop 66.9 → 71.5 → 81.3px at
+    100 / 110 / 125 %) but leaves its ×1.11 on a 1920 screen. The
     price list's OWN numbers (§15.32 round 2, the a11y review's arithmetic, Chromium page zoom):
     under the reference a floor keeps it never smaller than develop and growing with a zoom as rem
     does; past it a 200 % zoom grows the price rows ×1.45 on a 1920 screen and ×1.44 on 2560
@@ -312,7 +517,18 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     number, i'll modify that", §15.27);
   - the production domain — still `https://example.com`. The metadata §10 asks for needs it
     (canonical URLs, hreflang links, the sitemap, the Open Graph tags), and the interim host stays
-    noindex until it is attached (§15.2);
+    noindex until it is attached (§15.2). Since 2026-10-17 a blog article's share links, its copy
+    button and its LINK-PREVIEW tags (the cover photograph and the title a messenger shows for a
+    shared link — the owner's "mandatory feature") are all built on it through lib/site-origin, so
+    until it is set they point at the placeholder: a link sent from a share button or the copy
+    button OPENS example.com itself, and a shared link draws no picture (Facebook also reads
+    og:url as the page's own address and scrapes that, so even an address copied from the
+    browser's bar may be sent there — Facebook's documented behaviour, not measured). A build can
+    name another origin with the SITE_ORIGIN variable — the owner's network preview does; the
+    interim Pages host's builds do NOT (release.yml sets only PAGES_BASE_PATH and NOINDEX), so
+    once promoted its share links, copied address, og:url and og:image all read
+    `https://example.com/premium-smile-development/…`. Setting SITE_ORIGIN there to the host's
+    github.io origin is a one-line lever, not taken;
   - the company's five legal facts (`legal`, since 2026-10-10) — name, CUI, Trade Register number,
     registered office, a privacy e-mail; the privacy page prints „[de completat]" until each
     arrives. Entry 3 has the whole list of what that page still needs.
@@ -343,7 +559,11 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   posts are Claude's placeholder drafts — titles, summaries, dates and tags written so the blog
   page can be seen, attributed to the clinic's real doctors and illustrated with the clinic's own
   three photographs — and, since round 3 (2026-10-14), translated by Claude into English, German,
-  French and Italian, the blog being in every language. No article exists behind any of them. They
+  French and Italian, the blog being in every language. One of them has an article behind it, in
+  all five languages (the next bullet); the other eleven have none — their cards open that one
+  article, the stand-in, while each is named for its own post (an SC 2.4.4 mismatch until every
+  post has its article; ui/TextButton's THE PROMISE, HALF KEPT) — on the list's pages AND, since
+  2026-10-17, in the Home page's articles band, which shows the same cards. They
   landed on develop with the page on the owner's word (2026-10-14), so the next promotion publishes
   them on the interim host — linked from the top bar of every page in every language since rounds 2
   and 3 of the same day (§15.39), and noindex like the whole host. Their reading times („4 min de
@@ -353,6 +573,29 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   owner's, refined with him: „…wie Sie es pflegen, in unserem Blog") and the lead is three phrases, its middle item dropped for the stairway. Replace them, or have each named doctor confirm theirs, in every language, before
   launch (the next promotion already publishes them, linked from every page, on the noindex interim
   host).
+- **`src/content/blog/articles/`** (the article page, §15.39 round 4 — added 2026-10-14): the one
+  article behind the list, „Cum îți alegi periuța de dinți" (728 words, signed by Dr. Nicu Elena
+  Alina), is Claude's draft — the doctor confirms or rewrites it. Its pictures are STAND-INS: since
+  2026-10-15 it shows every kind of blog photo and every kind of before/after the owner asked to
+  see (with a heading and a note, a heading alone, a note alone, neither — four photos and four
+  pairs), all of them the clinic's own lobby, treatment room and handpieces, under headings and
+  grey „Notă: …" lines that say so; and since 2026-10-17 it shows TWO galleries — circular, then
+  end to end, three cards in each window (the five-card window is the Home page's) — each of the
+  same EIGHT placeholder photographs (`public/images/demo/gallery-1.jpg` … `gallery-8.jpg`):
+  portrait crops, six of the clinic's own three hero photographs and two of a STOCK close-up of a
+  dental check-up (`public/images/demo/hero-calm.jpg`, not the clinic's own, its source
+  unrecorded), captioned by Claude in five languages. A
+  real before/after of a patient needs that patient's written consent (a photograph of someone's
+  teeth is health data, GDPR art. 9) and a CMSR check (the advertising guide bans unrealistic
+  result imagery). Its share links and its
+  copy button carry the placeholder domain until `url` is set (above). Its EN/DE/FR/IT words
+  (2026-10-15) are Claude's drafts, checked against the CMSR scan and the dash rule — for the
+  owner's reading like the rest of the site's foreign copy. EVERY CARD OF THE LIST (and of Home's articles band) OPENS IT for
+  now — the owner's "dummy" (2026-10-15: "all should point to same article"): a card titled one
+  thing opens this article until its own post has an article, which its card then opens by
+  itself (lib/blog-article's THE STAND-IN) — and its reading time is its own post's placeholder:
+  nine of the eleven stand-in cards announce 3, 5, 6, 7 or 8 minutes and open a page that says 4.
+  Before launch every post needs its article, or the stand-in leaves.
 - **Consent (GDPR):** written consent from the patients whose seven Google reviews show their
   names, three with their photographs — a name beside a dental review is health data, art. 9
   (§15.19 round 4, `src/lib/reviews/reviews.ts`); and the same from every doctor and every member

@@ -9,7 +9,15 @@
 // each spelled the cut and each walked its own Range over the units, so the
 // two could drift apart: a rule learnt in one file — the soft hyphen, the day
 // the copy marks one (PostCard's WHERE THE BELT BREAKS) — would leave the
-// other cutting the old way. They import both from here now.
+// other cutting the old way. They import both from here now — and so do
+// FOUR files outside this folder, each holding words of its own to the same
+// rule: sections/PostGallery's PostGallery.fixtures.ts (2026-10-15 — a
+// gallery card's caption is that card's title) and
+// sections/PostConclusion's PostConclusion.stories.tsx, which cut their units
+// with `unitsOf`; sections/PostProse's PostProse.subheadings.test.tsx and
+// sections/PostPhoto's PostPhoto.headings.test.tsx, which read their
+// headings with `unitsAcrossLines`. Shared across five folders, it joins
+// CLAUDE.md §15.19's helper-promotion census.
 //
 // ── A UNIT, NOT A WORD: what a line cannot break — the text between two
 // breakable spaces, cut once more after a hyphen, where CSS may break („six-"

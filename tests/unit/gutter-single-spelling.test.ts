@@ -51,6 +51,11 @@ const RETIRED_SPELLING = 'mx-[clamp(1rem,' + '10vw,12.5rem)]';
 
 const ALLOWED = [
   'components/sections/Footer/Footer.test.tsx',
+  // A third deliberate pin (2026-10-14, CLAUDE.md §15.39 round 4): the blog
+  // gallery's card `sizes` are derived from this gutter, so its test pins the
+  // spelling it derived them from — a changed gutter fails there and asks for
+  // the hint to be derived again.
+  'components/sections/PostGallery/PostGallery.test.tsx',
   'components/ui/Container/Container.test.tsx',
   'components/ui/Container/Container.tsx',
 ];
@@ -72,7 +77,7 @@ describe('the gutter clamp has ONE definition in src/ (board fb-343)', () => {
     expect(sourceFiles.length).toBeGreaterThan(40);
   });
 
-  it('finds the spelling ONLY in the definition and the two deliberate pins', () => {
+  it('finds the spelling ONLY in the definition and the deliberate pins', () => {
     const spelling = sourceFiles.filter((name) =>
       readFileSync(join(SRC_DIR, name), 'utf8').includes(CLAMP_SPELLING),
     );

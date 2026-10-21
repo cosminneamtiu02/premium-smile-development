@@ -72,18 +72,23 @@ jobs:
       - name: Site builds (static export)
         run: npm run build
 
-      - name: The blog exists in every language (CLAUDE.md §5, §15.39 round 3)
+      - name: The blog exists in every language — its list and its articles (CLAUDE.md §5, §15.39 rounds 3 and 4)
         # Since round 3 (2026-10-14) every page of the list is written in
-        # every language the [locale] layout generates. Page 1 inherits the
-        # five locales and is asserted for all five. The NUMBERED pages are
-        # the multiplied ones — their generateStaticParams returns the page
-        # alone, and Next multiplies it by the layout's locales — so a change
-        # to that multiplication would drop languages there silently: every
-        # numbered page Romanian has must exist in the other four (the route
-        # always writes at least one — lib/blog's numberedPages: page 1 again
-        # for a blog of six posts or fewer). Whether the pages' links work is
-        # the link check's below: its crawl from / reaches every language's
-        # list through the bar's „Blog" and follows each pager.
+        # every language the [locale] layout generates, and since 2026-10-15
+        # every ARTICLE too (lib/blog-article's EVERY LANGUAGE, IN ONE FILE).
+        # Page 1 inherits the five locales and is asserted for all five. The
+        # NUMBERED pages and the ARTICLES are the multiplied ones — their
+        # generateStaticParams return the page or the slug alone, and Next
+        # multiplies it by the layout's locales — so a change to that
+        # multiplication would drop languages there silently: every numbered
+        # page and every article Romanian has must exist in the other four.
+        # The numbered route always writes at least one page (lib/blog's
+        # numberedPages: page 1 again for a blog of six posts or fewer), and
+        # lib/blog-article ships at least one article (an empty registry fails
+        # the build: the export refuses an empty generateStaticParams). Whether
+        # the pages' links work is the link check's below: its crawl from /
+        # reaches every language's list through the bar's „Blog" and follows
+        # each pager.
         run: |
           for l in ro en de fr it; do
             if [ ! -f "out/$l/blog/index.html" ]; then
@@ -97,11 +102,19 @@ jobs:
             echo "::error::out/ro/blog/page/ holds no page — the numbered route always writes one (lib/blog's numberedPages)"
             exit 1
           fi
-          for page in "${numbered[@]}"; do
+          # Every directory of out/ro/blog/ with a page of its own is an
+          # article — the list's own pages are page 1 (out/ro/blog/index.html)
+          # and out/ro/blog/page/<n>/, whose page/ holds no index.html itself.
+          articles=(out/ro/blog/*/index.html)
+          if [ ${#articles[@]} -eq 0 ]; then
+            echo "::error::out/ro/blog/ holds no article page — lib/blog-article ships at least one (an empty registry fails the build)"
+            exit 1
+          fi
+          for page in "${numbered[@]}" "${articles[@]}"; do
             rel="${page#out/ro/}"
             for l in en de fr it; do
               if [ ! -f "out/$l/$rel" ]; then
-                echo "::error::out/$l/$rel is missing — out/ro/$rel exists, and every page of the list exists in every language"
+                echo "::error::out/$l/$rel is missing — out/ro/$rel exists, and every page of the blog exists in every language"
                 exit 1
               fi
             done

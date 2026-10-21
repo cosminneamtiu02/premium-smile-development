@@ -10,7 +10,9 @@ import {
   wrapStyleAt,
 } from '@/components/sections/PageHero/PageHero.fixtures';
 import { localeHref } from '@/i18n/href';
+import { articleSlugFor } from '@/lib/blog-article/blog-article';
 import {
+  articlePath,
   blogPagePath,
   pageCount,
   postsIn,
@@ -44,18 +46,25 @@ import {
 // `postsIn('ro')`, cut by its own `postsOnPage` (the ReviewsCarousel
 // precedent: stories may read lib data, the band never does). They are the
 // placeholder drafts the JSON ships today (lib/blog's PLACEHOLDERS
-// paragraph), so these frames show exactly what the page shows. The stories
-// do the page's other two jobs themselves, the way the page does them
-// (app/[locale]/blog/populate.ts): each reading time is
-// worded as the page's ICU sentence words it in Romanian („4 min de citit"),
-// and every href goes through localeHref and lib/blog's blogPagePath — the
-// site's one URL rule, so a story link is the address the built page links
-// to. LastPage reads `pageCount()` rather than a fixed 2, so a post added or
-// removed in the JSON moves the story with it instead of breaking it. The
-// hero's two sentences are read out of src/messages/ro.json (blog.hero.*,
-// the PostCard stories' precedent), so the frames show the Romanian copy the
-// page ships, its line breaks included — one of the five PostList.tsx's
-// THE COPY records.
+// paragraph), so these frames show exactly what the page shows. What the
+// page builds around them (app/[locale]/blog/populate.ts), the stories build
+// the same way. Every href goes through localeHref, the site's one URL rule,
+// so a story link is the address the built page links to: a card's over
+// lib/blog's articlePath and lib/blog-article's articleSlugFor — the article
+// the card opens, its post's own or the stand-in while it has none, so today
+// every card opens the blog's one article, as on the page — and the pager's
+// over lib/blog's blogPagePath. The author is the post's own string, which
+// on a Romanian page is the very name the page prints (lib/blog-article's
+// articleAuthor finds its doctor by that spelling). The hero's two sentences
+// are read out of src/messages/ro.json (blog.hero.*, the PostCard stories'
+// precedent), so the frames show the Romanian copy the page ships, its line
+// breaks included — one of the five PostList.tsx's THE COPY records; the
+// page's other words, which it reads out of the same file, are spelled out
+// here as that file words them: each reading time („4 min de citit"), the
+// tag list's name, the read-more, and the pager's name, counter („Pagina 1
+// din 2") and two labels. LastPage reads `pageCount()` rather than a fixed
+// 2, so a post added or removed in the JSON moves the story with it instead
+// of breaking it.
 //
 // ── EVERY STORY PINS ITS LANGUAGE (the preview decorator stamps <html lang>
 // from it, and `hyphens: auto` picks its dictionary there — §15.14): Romanian,
@@ -93,10 +102,13 @@ import {
 /** The blog's language, as the stories pin it. */
 const LOCALE = { locale: 'ro' } as const;
 
-/** A post as the page hands it to the band: the reading time worded as the
- *  page's Romanian sentence words it, the rest as the JSON has it. */
+/** A post as the page hands it to the band: the article its card opens as
+ *  the page builds the address (its own, or lib/blog-article's stand-in —
+ *  today every card's the blog's one article), the reading time worded as
+ *  the page's Romanian sentence words it, the rest as the JSON has it. */
 const itemOf = (post: BlogPost): PostListItem => ({
   slug: post.slug,
+  href: localeHref(LOCALE.locale, articlePath(articleSlugFor(post.slug))),
   title: post.title,
   summary: post.summary,
   author: post.author,
@@ -424,7 +436,7 @@ const meta = {
     title: {
       control: 'text',
       description:
-        'The page’s one <h1>, the hero’s heading, on ui/Heading’s `hero` step (65.04 design pixels inside the band scale — the doctor page’s name’s size — and there as wide as its first line, up to 135 design pixels past the column a side) — finished text with ONE line break where the stairway turns: two lines on a laptop or desktop, the second the shorter; elsewhere the break is a space',
+        'The page’s one <h1>, the hero’s heading, on ui/Heading’s `hero-scaled` step (`hero`, and 65.04 design pixels inside the band scale — the doctor page’s name’s size — and there as wide as its first line, up to 135 design pixels past the column a side) — finished text with ONE line break where the stairway turns: two lines on a laptop or desktop, the second the shorter; elsewhere the break is a space',
     },
     lead: {
       control: 'text',

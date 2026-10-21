@@ -77,6 +77,11 @@ page's one official URL, so indexed duplicates don't split ranking.)
   pin fails the typecheck.
 - **`absoluteUrl(locale, path)`** = `clinic.url + localeHref(locale, path)` — the §5 URL
   rule stays spelled exactly once (in `i18n/href.ts`); seo.ts only prepends the origin.
+  *(SUPERSEDED 2026-10-14, the blog-article lane: the origin is `lib/site-origin` —
+  `absoluteUrl(localeHref(locale, path))`, which reads a build's SITE_ORIGIN before
+  lib/clinic's `url` and refuses an address that leaves the site; built that way, the
+  canonical and hreflang links agree with the article's og:url on every build, a preview
+  included. A cherry-picked S1 must be rewired onto it.)*
   Interim-GitHub-Pages nuance: `localeHref` includes `PAGES_BASE_PATH`, so interim
   canonicals carry the base path — harmless while NOINDEX=1, and the real-domain build has
   no base path.

@@ -44,15 +44,19 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 //     with ONE setter (DoctorStats' tiles, at 9/8); and the gate ONE custom
 //     variant in globals.css with exactly its two conditions. No other
 //     product file in src/ declares the band's pixel or spells its remap —
-//     every wearer (WEARERS below) IMPORTS both strings, and the one other
-//     declarer, sections/PostCard, draws its chips in a pixel of its own
-//     CARD (THE CHIPS' PIXEL, 2026-10-14) — and the few classes that must
+//     every wearer (WEARERS below) IMPORTS both strings, and the two other
+//     declarers draw tag chips in a pixel of their own — sections/PostCard
+//     its CARD's (THE CHIPS' PIXEL, 2026-10-14), sections/PostCover the
+//     card's under a cap at the page's own (THE COVER'S CHIPS, 2026-10-15)
+//     — and the few classes that must
 //     re-spell the chain as a literal (the staff tile's width and gap, the
-//     doctors band's ribbon share, the doctor page's name — and the blog
-//     list's hero: its <h1>, which wears that very size and reaches past its
-//     column, and both of its blocks, the <h1> and the lead, which keep the
-//     copy's line breaks on a laptop, the stairway of 2026-10-15) spell the
-//     same chain.
+//     doctors band's ribbon share, ui/Heading's `hero-scaled` step — the
+//     `hero` size the doctor page's name, the page hero's heading and the
+//     blog article's title ask for, spelled once since 2026-10-15 — and the
+//     page hero, sections/PageHero (the blog list's, the Team page's since
+//     2026-10-15): its <h1>, which reaches past its column, and both of its
+//     blocks, the <h1> and the lead, which keep the copy's line breaks on a
+//     laptop, the stairway of 2026-10-15) spell the same chain.
 //   · A PICTURE ASKED FOR AT THE WRONG SIZE (G2, T5/R7). PersonnelCard's
 //     CUTOUT_SIZES tells the browser how wide the doctor's cutout is drawn,
 //     and each number in it is derived from the band's: the vw share from
@@ -71,8 +75,9 @@ import { UNIT_PX } from '../../src/lib/ribbon-model/ribbon-model.ts';
 // THE D-LIT RULE, for this file and every other: Tailwind reads class names
 // out of every file it scans, tests and comments included, so a complete
 // arbitrary class spelled anywhere but in the one file that wears it
-// (ui/Container; sections/PostCard for its chip pixel) ships as a rule only
-// that file needs (globals.css, THE DESIGN SCALE — THE BARE RULE SHIPS). The
+// (ui/Container; sections/PostCard and sections/PostCover for their chip
+// pixels) ships as a rule only that file needs (globals.css, THE DESIGN SCALE
+// — THE BARE RULE SHIPS). The
 // design pixel's bracketed declaration is therefore never written here whole:
 // its name is matched as a part, every sample is assembled from parts, and
 // the last test below holds the rest of the repository to the same rule.
@@ -465,14 +470,23 @@ const productFiles = readdirSync(new URL('src/', REPO), {
  *  scale and wears none of its own since round 7 the same day), the numbers
  *  and the map take `scaled` from the page; and, since 2026-10-14, the blog's
  *  list band (CLAUDE.md §15.39 round 2: its hero, its three-across grid and
- *  its pager), the map under it `scaled` like everywhere else. */
+ *  its pager), the map under it `scaled` like everywhere else, and the blog
+ *  article's one band, sections/PostPage (round 4) — the blocks inside it
+ *  inherit the scale, and its title asks ui/Heading for the `hero-scaled`
+ *  step (the census below). */
 const WEARERS = [
+  // The Home page's articles band (2026-10-17) — its opener on the rhythm box,
+  // and its carousel — as wide as the column, its cards 65 % miniatures — on a
+  // box of its own that wears `bandScaleClasses` again, with THE FLOOR beside
+  // it, so the cards never draw smaller than the owner's 1401 look.
+  'components/sections/BlogCarousel/BlogCarousel.tsx',
   'components/sections/ClinicLocation/ClinicLocation.tsx',
   'components/sections/DoctorIntro/DoctorIntro.tsx',
   'components/sections/DoctorProfile/DoctorProfile.tsx',
   'components/sections/DoctorShowcase/DoctorShowcase.tsx',
   'components/sections/DoctorStats/DoctorStats.tsx',
   'components/sections/PostList/PostList.tsx',
+  'components/sections/PostPage/PostPage.tsx',
   'components/sections/PriceList/PriceList.tsx',
   'components/sections/ReviewsCarousel/ReviewsCarousel.tsx',
   'components/sections/TeamRoster/TeamRoster.tsx',
@@ -570,7 +584,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(Number(stats.slice(at, stats.indexOf(']', at)))).toBe(9 / 8);
   });
 
-  it('never lets a pixel fall under THE FLOOR — 0px unless a band says otherwise, and ONE band says otherwise: the price list, at 1rem / 16', () => {
+  it('never lets a pixel fall under THE FLOOR — 0px unless a band says otherwise, and TWO say otherwise, both at 1rem / 16: the price list, and the Home band of the blog’s articles round its carousel', () => {
     expect(pixel.floor).toBe('--band-floor');
     expect(pixel.floorDefault).toBe('0px');
     // Assembled from parts, never one literal (THE D-LIT RULE's spirit).
@@ -578,15 +592,20 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     const setters = productFiles
       .filter((name) => tsCode(read(`src/${name}`)).includes(opener))
       .toSorted();
-    expect(setters).toEqual(['components/sections/PriceList/PriceList.tsx']);
-    const list = tsCode(
-      read('src/components/sections/PriceList/PriceList.tsx'),
-    );
-    const at = list.indexOf(opener) + opener.length;
-    // 1rem / 16: the theme's own pixel at ANY root — the price rows never
-    // draw smaller than the theme (the owner's delegated decision, §15.32
-    // round 2), and a larger root lifts the floor with it.
-    expect(list.slice(at, list.indexOf(']', at))).toBe('0.0625rem');
+    expect(setters).toEqual([
+      'components/sections/BlogCarousel/BlogCarousel.tsx',
+      'components/sections/PriceList/PriceList.tsx',
+    ]);
+    // 1rem / 16: the theme's own pixel at ANY root, in both — the price rows
+    // never draw smaller than the theme (the owner's delegated decision,
+    // §15.32 round 2), nor the Home carousel's miniature cards (2026-10-17,
+    // §15.39 round 4: its box round the carousel, never its opener), and a
+    // larger root lifts the floor with it.
+    for (const name of setters) {
+      const code = tsCode(read(`src/${name}`));
+      const at = code.indexOf(opener) + opener.length;
+      expect(code.slice(at, code.indexOf(']', at)), name).toBe('0.0625rem');
+    }
   });
 
   it('is ONE custom variant in globals.css, with exactly its two conditions — a mouse or trackpad, in an engine that registers custom properties', () => {
@@ -619,17 +638,20 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(arbitrary(samples[3]?.utility ?? '')?.name).toBe('--ribbon-unit');
   });
 
-  it('is the ONLY product file in src/ that declares the BAND’s design pixel or spells its remap — sections/PostCard’s card-relative chip pixel the one sanctioned second — and every band of Home, Team, the price list, a doctor’s page and the blog’s list wears it by IMPORTING both strings', () => {
+  it('is the ONLY product file in src/ that declares the BAND’s design pixel or spells its remap — sections/PostCard’s card-relative chip pixel and sections/PostCover’s capped copy of it the two sanctioned others — and every band of Home, Team, the price list, a doctor’s page, the blog’s list and a blog article wears it by IMPORTING both strings', () => {
     const spellers = productFiles
       .filter((name) =>
         /design-scale|--scale-px/.test(tsCode(read(`src/${name}`))),
       )
       .toSorted();
-    // THE BAND SCALE is spelled once, in ui/Container. The one other speller
-    // is NOT a band scale: sections/PostCard's chips draw in a pixel of their
-    // own CARD (THE CHIPS' PIXEL, the next `it`).
+    // THE BAND SCALE is spelled once, in ui/Container. The two other spellers
+    // are NOT band scales: sections/PostCard's chips draw in a pixel of their
+    // own CARD (THE CHIPS' PIXEL, the next `it`), and sections/PostCover's in
+    // the same pixel of its COVER, capped at the page's (THE COVER'S CHIPS,
+    // the `it` after it).
     expect(spellers).toEqual([
       'components/sections/PostCard/PostCard.tsx',
+      'components/sections/PostCover/PostCover.tsx',
       'components/ui/Container/Container.tsx',
     ]);
     const wearers = productFiles
@@ -654,6 +676,18 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     // under 12px is refused (`0.75rem / 18`); an engine without container
     // units keeps the theme's chips (`supports-[width:1cqw]:`, Safari 15).
     // Ungated by `scalable:` — it holds on phones and touch tablets too.
+    // THE MINIATURE (2026-10-17 — the owner's Home cards at "65% of the
+    // height", PostCard's paragraph of that name) adds the card's SECOND
+    // spelling, sanctioned here: the card's own wrapper round ui/Card (a
+    // miniature's alone — ui/Card's className stays its placement, §6.8)
+    // redrawn in a pixel the <article> captures — the spacing step it
+    // INHERITS over four, times the share —
+    // never the band's and never `--scale-px` read back (the cover's
+    // `--tags-cap` idiom, the next case), so no regime gate either: it is a
+    // calc of the inherited step, which every engine computes. Its chips'
+    // pixel rides INLINE (a style object, no class — the tag list's class
+    // stays CHIP_SCALE byte for byte, tests/unit/blog-tags-sync.test.ts), so
+    // no token of it stands here.
     // Assembled from parts, never one literal (THE D-LIT RULE).
     const card = tokensOf(
       tsCode(read('src/components/sections/PostCard/PostCard.tsx')),
@@ -666,33 +700,218 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     ).toEqual([
       `supports-[width:1cqw]:[${PIXEL}:max(calc(0.75rem/18),calc(100cqw/513.40625))]`,
       'supports-[width:1cqw]:design-scale',
+      `[${PIXEL}:var(--miniature-px)]`,
+      'design-scale',
     ]);
   });
+
+  it('lets ONE cover wear the card’s chip pixel, capped at the page’s own — sections/PostCover’s tags: the card’s formula verbatim inside `min(var(--tags-cap), …)`, behind the same guard; the cap read off the page’s spacing step, never off the pixel (THE COVER’S CHIPS)', () => {
+    // The owner (2026-10-15): "reuse all component from it that have been
+    // patched on the other branch". The article's cover wears sections/
+    // PostCard's tag list whole (tests/unit/blog-tags-sync.test.ts holds the
+    // two files together); its chips draw in the card's pixel measured
+    // against the COVER, which spans the page's column, so the pixel is
+    // capped at the page's own — the band's design pixel inside the scale,
+    // the theme's 0.0625rem outside it — or a 1401 window would draw 94.8px
+    // chips. Ungated by `scalable:`, like the card's. Assembled from parts,
+    // never one literal (THE D-LIT RULE).
+    const coverCode = tsCode(
+      read('src/components/sections/PostCover/PostCover.tsx'),
+    );
+    const cover = tokensOf(coverCode).filter(
+      ({ utility }) =>
+        utility === 'design-scale' || arbitrary(utility)?.name === PIXEL,
+    );
+    expect(
+      cover.map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual([
+      `supports-[width:1cqw]:[${PIXEL}:min(var(--tags-cap),max(calc(0.75rem/18),calc(100cqw/513.40625)))]`,
+      'supports-[width:1cqw]:design-scale',
+    ]);
+    // THE CAP'S READ: the page's spacing step over four, captured on the
+    // tag list's parent — never `--scale-px` itself, which outside the band
+    // scale is 1px at any root and would cut under the 12px label's floor
+    // above a 24px root (PostCover's THE TAGS). So the cover names the
+    // design pixel exactly once in its code — its declaration — and the
+    // card likewise: the two chip pixels read no other pixel.
+    const capture = tokensOf(coverCode).filter(
+      ({ utility }) => arbitrary(utility)?.name === '--tags-cap',
+    );
+    expect(
+      capture.map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual(['[--tags-cap:calc(var(--spacing)/4)]']);
+    expect(coverCode.split(PIXEL).length - 1).toBe(1);
+    // The card names it THREE times since THE MINIATURE (2026-10-17), each a
+    // DECLARATION: its chips' class, its miniature's remap on the wrapper
+    // round ui/Card (the previous case) and its miniature's chips, inline — and READS it
+    // nowhere: the miniature's pixel is captured from the inherited spacing
+    // step, the cover's idiom above.
+    const cardCode = tsCode(
+      read('src/components/sections/PostCard/PostCard.tsx'),
+    );
+    expect(cardCode.split(PIXEL).length - 1).toBe(3);
+    expect(cardCode).not.toContain(`var(${PIXEL})`);
+  });
+
+  /** THE STEP'S SIZE (ui/Heading's 'hero-scaled' JOINED, 2026-10-15): the
+   *  one size class the regime's chain carries, spelled whole in ui/Heading
+   *  alone — `hero`'s value at the owner's 1401 window, 16 + 3.5 × 14.01 =
+   *  65.035px, as 16.26 spacing steps, 65.04 design pixels. A byte pin of a
+   *  WORN class, so it ships no rule of its own; its bare utility is never
+   *  written here whole (THE D-LIT RULE — the census below derives it). */
+  const STEP_SIZE =
+    'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]';
+  /** The one product file that spells it. */
+  const HEADING = 'components/ui/Heading/Heading.tsx';
+  /** The three <h1>s that ask for the step, each through ONE `<Heading
+   *  size="hero-scaled" asChild>` around it — every page <h1> of a band that
+   *  scales (the step's own THE PRECONDITION): the doctor page's name, the
+   *  page hero's heading (the blog list's, and the Team page's since it moved
+   *  out of sections/PostList on 2026-10-15) and an article's title. */
+  const STEP_ASKERS = [
+    'components/sections/DoctorIntro/DoctorIntro.tsx',
+    'components/sections/PageHero/PageHero.tsx',
+    'components/sections/PostHeader/PostHeader.tsx',
+  ];
+
+  /** Every product file's code, its comments stripped (`tsCode`) — what the
+   *  two censuses below read. */
+  const productCode = (): Map<string, string> =>
+    new Map(productFiles.map((name) => [name, tsCode(read(`src/${name}`))]));
+
+  /** THE STEP'S NAME, wherever code spells it: `hero-scaled` itself, and
+   *  every `-scaled` that OPENS a string piece — right after a quote, a
+   *  backtick or the `}` closing a template's gap — the half a computed
+   *  spelling appends to `hero`: `` size={`hero${scaled ? '-scaled' : ''}`} ``
+   *  passes tsc and was no ask to the literal-only census of 2026-10-15 (the
+   *  G2 typescript review, 2026-10-20, measured on a scratch copy). A
+   *  `-scaled` after a word (a `data-` attribute's name) or after an
+   *  operator (a negated number called `scaled`) builds no name and is not
+   *  counted. Measured that day: in product code the step's name stands in
+   *  ui/Heading (its type and its row) and in its three asks, and no other
+   *  `-scaled` stands anywhere. A name built with no `-scaled` piece at all —
+   *  `'hero-'` and a bare `'scaled'` joined — is past this text census. */
+  const STEP_NAME = /hero-scaled|(?<=['"`}])-scaled/g;
+
+  /** Code read as JSX STRUCTURE: every string literal emptied, but a JSX
+   *  attribute's own value — a quoted string written straight after ` name=`
+   *  that holds no markup. `tsCode` keeps string literals, so an ask kept IN
+   *  A STRING (`'<Heading size="hero-scaled"><h1>'`) read to the census of
+   *  2026-10-15 as an ask around an <h1> (the G2 typescript review,
+   *  2026-10-20); emptied, it is markup no more, while the real
+   *  `size="hero-scaled"` on a real tag survives. A template literal is never
+   *  an attribute's value (JSX takes one only in braces), so it is always
+   *  emptied. Its one input is `tsCode`'s output: no comment is left in it to
+   *  hide a quote. */
+  const jsxOf = (code: string): string =>
+    code.replace(
+      /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`/g,
+      (literal: string, offset: number) =>
+        literal[0] !== '`' &&
+        !/[<>]/.test(literal) &&
+        /\s[\w-]+=$/.test(code.slice(Math.max(0, offset - 64), offset))
+          ? literal
+          : `${literal[0]}${literal[0]}`,
+    );
+
+  /**
+   * EVERY WAY THE STEP'S SIZE CAN ROT, as words — empty when it holds (the
+   * `audit` shape above, so the teeth test below can feed it a broken tree):
+   * the size worn anywhere but ui/Heading, under the regime's chain, another
+   * or none; a second size behind the gate (another font-size arbitrary
+   * value with the length hint — the 56 design pixels of one afternoon,
+   * 2026-10-15); ui/Heading spelling the size other than exactly once; one of
+   * the three <h1>s not asking for the step around it; an asker naming the
+   * step ANYWHERE ELSE — a second ask, on an <h2> or on nothing, or a piece
+   * that builds one — since its one <h1> is its only ask: each of the three
+   * names the step exactly once in all, and that once is the ask on the
+   * <Heading> around its <h1>, the attributes in any order; and a fourth
+   * file naming the step at all, literally or through a `-scaled` piece
+   * (STEP_NAME). Every file is read as code — an ask or a class left in a
+   * comment is neither — and the ask around the <h1> as JSX STRUCTURE
+   * (`jsxOf`), so markup kept in a string is none either. (A class left in a
+   * comment is not nothing to Tailwind, which reads every source file as
+   * text: this comment names the arbitrary value in words, so it ships no
+   * rule of its own.)
+   */
+  const stepCensus = (code: ReadonlyMap<string, string>): string[] => {
+    const problems: string[] = [];
+    const size = parse(STEP_SIZE).utility;
+    for (const [name, text] of code) {
+      for (const { variants, utility } of tokensOf(text)) {
+        const spelled = [...variants, utility].join(':');
+        const gatedSize =
+          variants.includes('scalable') && utility.startsWith('text-[length:');
+        if (utility !== size && !gatedSize) continue;
+        if (name !== HEADING) {
+          problems.push(
+            `${name}: wears ${spelled} — a size behind the gate is ui/Heading’s step’s alone`,
+          );
+        } else if (spelled !== STEP_SIZE) {
+          problems.push(`${name}: spells ${spelled}, not the step’s size`);
+        }
+      }
+    }
+    const once = tokensOf(code.get(HEADING) ?? '').filter(
+      ({ variants, utility }) => [...variants, utility].join(':') === STEP_SIZE,
+    ).length;
+    if (once !== 1) {
+      problems.push(`${HEADING}: spells the step’s size ${once} times`);
+    }
+    for (const [name, text] of code) {
+      if (name === HEADING) continue;
+      const named = text.match(STEP_NAME) ?? [];
+      if (!STEP_ASKERS.includes(name)) {
+        if (named.length > 0) {
+          problems.push(
+            `${name}: names the step (${named.join(', ')}) — not one of its <h1>s`,
+          );
+        }
+        continue;
+      }
+      const around = [
+        ...jsxOf(text).matchAll(
+          /<Heading\b[^>]*\bsize="hero-scaled"[^>]*>\s*<h1\b/g,
+        ),
+      ].length;
+      if (named.length !== 1 || around !== 1) {
+        problems.push(
+          `${name}: names the step ${named.length}×, ${around}× as the ask on a <Heading> around an <h1> — it may name it once, as that ask`,
+        );
+      }
+    }
+    for (const name of STEP_ASKERS) {
+      if (!code.has(name)) problems.push(`${name}: not in the tree`);
+    }
+    return problems;
+  };
 
   it('lets the GATE CHAIN be re-spelled only where Tailwind needs a literal of its own — and only as the regime’s chain', () => {
     // A class that must follow the regime but is none of its strings — the
     // staff tile's width and its row's gap, the doctors band's ribbon drawn
-    // 30 % thinner (DoctorShowcase D11, §15.26 round 6), the doctor page's
-    // name, whose `hero` step reads the viewport and so is the one size the
-    // remap cannot redraw (DoctorIntro's THE BAND SCALE, §15.32 round 4), and
-    // the page hero's four (sections/PageHero's THE STAIRWAY, THE HEADING'S
-    // REACH and THE <h1> — the blog list's hero, CLAUDE.md §15.39, shared
-    // with the Team page since 2026-10-15): the pre-line white-space its two
-    // blocks wear, the <h1>'s max-content width and that width's cap, the
-    // column plus 135 design pixels a side, and the <h1>'s size, the doctor
-    // page's name's — spells the chain itself, because
-    // Tailwind reads class names from source text. Every such token must
-    // carry the SAME chain, gate first, so a tile can never switch at another
-    // width than the band (the doctor page's name reads a box capped at
-    // 96rem, so for it that holds at any root of 9⅓px or more — DoctorIntro's
-    // THE NAME records the bound; the hero's four read ui/Container's own
-    // column, as the regime's classes on its band's rhythm box do). The gate
-    // is looked for ANYWHERE in a chain (a reordered `@4xl:scalable:` is
-    // caught as itself) and in backtick literals too (the Opus review's
-    // census probe).
+    // 30 % thinner (DoctorShowcase D11, §15.26 round 6), the page hero's
+    // three (sections/PageHero's THE STAIRWAY and THE HEADING'S REACH — the
+    // blog list's hero, CLAUDE.md §15.39, shared with the Team page since
+    // 2026-10-15): the pre-line white-space its two blocks wear, the <h1>'s
+    // max-content width and that width's cap, the column plus 135 design
+    // pixels a side — and ui/Heading's `hero-scaled` step, the size of every
+    // page <h1> of a band that scales (its header's 'hero-scaled' JOINED,
+    // 2026-10-15: `hero` reads the viewport, the one size the remap cannot
+    // redraw) — spells the chain itself, because Tailwind reads class names
+    // from source text. Every such token must carry the SAME chain, gate
+    // first, so a tile can never switch at another width than the band (the
+    // step's size reads the nearest size container: for the page hero's
+    // <h1> and an article's title ui/Container's own column, as the regime's
+    // classes on their band's rhythm box do — PostHeader's NO `@container`
+    // HERE; for the doctor page's name the opener's own box, capped at 96rem,
+    // so for it that holds at any root of 9⅓px or more — DoctorIntro's THE
+    // NAME and ui/Heading's THE BOUND record the bound). The gate is looked
+    // for ANYWHERE in a chain (a reordered `@4xl:scalable:` is caught as
+    // itself) and in backtick literals too (the Opus review's census probe).
     const chain = regime[0]?.variants ?? [];
-    const gatedTokens = productFiles.flatMap((name) =>
-      tokensOf(tsCode(read(`src/${name}`)))
+    const code = productCode();
+    const gatedTokens = [...code].flatMap(([name, text]) =>
+      tokensOf(text)
         .filter(({ variants }) => variants.includes('scalable'))
         .map((token) => ({ name, ...token })),
     );
@@ -704,11 +923,11 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(
       [...new Set(gatedTokens.map(({ name }) => name))].toSorted(),
     ).toEqual([
-      'components/sections/DoctorIntro/DoctorIntro.tsx',
       'components/sections/DoctorShowcase/DoctorShowcase.tsx',
       'components/sections/PageHero/PageHero.tsx',
       'components/sections/TeamRoster/TeamRoster.tsx',
       'components/ui/Container/Container.tsx',
+      HEADING,
     ]);
     for (const { name, variants, utility } of gatedTokens) {
       // The cap alone wears the gate bare (bandColumnClasses).
@@ -740,63 +959,239 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       name: '--ribbon-width-share',
       value: '0.7',
     });
-    // The doctor page's one: the name — the `hero` step's value at the
-    // owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26 spacing
-    // steps, so inside the scale it is that design size × s like everything
-    // round it (DoctorIntro's THE BAND SCALE). In the SPACING step, never in
-    // `--scale-px`, which only ui/Container may name (the test above).
-    expect(
-      gatedTokens
-        .filter(({ name }) => name.endsWith('DoctorIntro.tsx'))
-        .map(({ variants, utility }) => [...variants, utility].join(':')),
-    ).toEqual([
-      'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
-    ]);
-    // The page hero's four (sections/PageHero's THE <h1>, THE STAIRWAY and
-    // THE HEADING'S REACH — the blog list's hero until 2026-10-15, when it
-    // moved out of sections/PostList to open the Team page too): both hero
-    // blocks keep the copy's own line breaks behind the chain (the pre-line
+    // The page hero's three (sections/PageHero's THE STAIRWAY and THE
+    // HEADING'S REACH — the blog list's hero until 2026-10-15, when it moved
+    // out of sections/PostList to open the Team page too): both hero blocks
+    // keep the copy's own line breaks behind the chain (the pre-line
     // white-space, spelled once, in PageHero.tsx's STAIRWAY constant, and
     // worn twice — on the <h1> and on the lead, which this census of source
     // literals cannot see: PageHero.test.tsx holds it, the one white-space
-    // token on each block and the lead's one gated class), the <h1> as wide
-    // as its longest line up to the column's full width plus 67.5 spacing
-    // steps — 135 design pixels a side since 2026-10-16, 100 until then
-    // (PageHero's THE HEADING'S REACH: the fallback face's layout shift) — and
-    // its size, LAST, the doctor
-    // page's name's. The blog list's grid needs no token of its own: its
-    // three columns start at the Container's `@4xl`, the regime's own step —
-    // so sections/PostList itself spells none, nor does sections/DoctorShowcase
-    // for the hero it composes on the Team page (its one token above).
-    const hero = gatedTokens
-      .filter(({ name }) => name.endsWith('PageHero.tsx'))
-      .map(({ variants, utility }) => [...variants, utility].join(':'));
-    expect(hero).toEqual([
+    // token on each block and the lead's one gated class), and the <h1> as
+    // wide as its longest line up to the column's full width plus 67.5
+    // spacing steps — 135 design pixels a side since 2026-10-16, 100 until
+    // then (PageHero's THE HEADING'S REACH: the fallback face's layout
+    // shift). Its SIZE is not the hero's to spell: the <h1> asks for
+    // ui/Heading's `hero-scaled` step (the census below). The blog list's
+    // grid needs no token of its own: its three columns start at the
+    // Container's `@4xl`, the regime's own step — so sections/PostList itself
+    // spells none, nor does sections/DoctorShowcase for the hero it composes
+    // on the Team page (its one token above).
+    expect(
+      gatedTokens
+        .filter(({ name }) => name.endsWith('PageHero.tsx'))
+        .map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual([
       'scalable:@4xl:@min-[896px]:whitespace-pre-line',
       'scalable:@4xl:@min-[896px]:w-max',
       'scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*67.5)]',
-      'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]',
     ]);
-    // KEEP IN SYNC, restored the same day: the hero's <h1> — the blog's then,
-    // the blog's and the Team page's since it moved into sections/PageHero —
-    // wears the doctor page's name's size class BYTE FOR BYTE: still a PAIR,
-    // ONE class in each of two files, however many pages wear the hero. For a
-    // few hours of 2026-10-15 the blog's <h1> wore 14 steps of its own — the owner, asked how to make room for a
-    // heading a phrase longer in every language, had chosen "Heading a size
-    // smaller" — and then he took it back, verbatim: "tbh i kinda liked it
-    // how it looked before. so if it is larger but still fits in page and
-    // looks good it should not be constrained by a div so that it has same
-    // space left and right as the articles seciton". So the room comes from
-    // the heading's reach, never from its size, and a third consumer of this
-    // class is again the trigger for a sibling step in ui/Heading.
-    const sizeOf = (file: string): string[] =>
+    // ui/Heading's one: the `hero-scaled` step's size — the `hero` step's
+    // value at the owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26
+    // spacing steps, so inside the scale every page <h1> of a band that
+    // scales is that design size × s like everything round it. In the
+    // SPACING step, never in `--scale-px`, which only ui/Container may name
+    // (the test above).
+    expect(
       gatedTokens
-        .filter(({ name }) => name.endsWith(file))
-        .filter(({ utility }) => utility.startsWith('text-[length:'))
-        .map(({ variants, utility }) => [...variants, utility].join(':'));
-    expect(sizeOf('PageHero.tsx')).toHaveLength(1);
-    expect(sizeOf('PageHero.tsx')).toEqual(sizeOf('DoctorIntro.tsx'));
-    expect(hero.at(-1)).toBe(sizeOf('DoctorIntro.tsx')[0]);
+        .filter(({ name }) => name === HEADING)
+        .map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual([STEP_SIZE]);
+    // THE STEP'S SIZE, SPELLED ONCE (stepCensus above): the size token in
+    // exactly ONE product file, ui/Heading; the doctor page's name, the page
+    // hero's heading and an article's title each asking for
+    // `size="hero-scaled"` around their <h1> and naming the step nowhere
+    // else, read as code with the comments stripped and the ask as JSX, never
+    // as markup in a string; no other file naming the step, literally or
+    // through a `-scaled` piece; and nothing else in src/ wearing the size,
+    // under any chain or none, nor a second size behind the gate. History,
+    // 2026-10-13 to -15: the doctor's name spelled this class on its own <h1>
+    // (§15.32 round 4); the blog list's heading took it byte for byte — after
+    // a few hours on 14 steps of its own, until the owner took that back,
+    // verbatim: "tbh i kinda liked it how it looked before. so if it is
+    // larger but still fits in page and looks good it should not be
+    // constrained by a div so that it has same space left and right as the
+    // articles seciton", so the room came from the heading's reach, never
+    // from its size — and an article's title made a THIRD consumer, the
+    // trigger this census had booked for a sibling step in ui/Heading. The
+    // step joined; the three ask for it — the list's heading through
+    // sections/PageHero since that hero also opens the Team page
+    // (2026-10-15), still ONE asker, however many pages wear it.
+    expect(stepCensus(code)).toEqual([]);
+  });
+
+  it('has a step-size census with teeth — a re-spelled size, a bare one, a second size behind the gate, a lost ask, an ask left in a comment or kept in a string, a second ask, a fourth asker, a name built from a `-scaled` piece and a step that spells none are each named; an ask with its attributes in another order and a `-scaled` that builds no name are not', () => {
+    // The real tree first, so the census is never vacuous: it holds, and the
+    // one speller and the three askers are all in it.
+    const real = productCode();
+    expect(stepCensus(real)).toEqual([]);
+    for (const name of [HEADING, ...STEP_ASKERS]) {
+      expect(real.has(name), name).toBe(true);
+    }
+    /** The real tree with ONE file's RAW source edited, then read as code —
+     *  comments stripped as the census strips them. */
+    const edited = (
+      name: string,
+      edit: (raw: string) => string,
+    ): Map<string, string> =>
+      new Map(real).set(name, tsCode(edit(read(`src/${name}`))));
+    const [doctor, hero, article] = STEP_ASKERS;
+    // Assembled at run time from the worn class, never written whole (THE
+    // D-LIT RULE: a bare or a second size spelled here would ship a rule).
+    const size = parse(STEP_SIZE).utility;
+    const quote = "'";
+    const probe = 'components/sections/Probe/Probe.tsx';
+    const cases: readonly (readonly [string, Map<string, string>, string])[] = [
+      [
+        'the size re-spelled on a consumer’s <h1>',
+        edited(doctor, (raw) =>
+          raw.replace('<h1 className="', `<h1 className="${STEP_SIZE} `),
+        ),
+        doctor,
+      ],
+      [
+        'the size bare, under no chain',
+        edited(hero, (raw) => `${raw}\nconst B = ${quote}${size}${quote};`),
+        hero,
+      ],
+      [
+        'a second size behind the gate',
+        edited(
+          hero,
+          (raw) =>
+            `${raw}\nconst G = ${quote}${STEP_SIZE.replace('16.26', '14')}${quote};`,
+        ),
+        hero,
+      ],
+      [
+        'the bare `hero` asked for instead',
+        edited(hero, (raw) =>
+          raw.replaceAll('size="hero-scaled"', 'size="hero"'),
+        ),
+        hero,
+      ],
+      [
+        'the ask left only in a comment',
+        edited(article, (raw) =>
+          raw.replace(
+            '<Heading size="hero-scaled" asChild>',
+            '{/* <Heading size="hero-scaled" asChild> */}<Heading size="hero" asChild>',
+          ),
+        ),
+        article,
+      ],
+      [
+        // The G2 typescript review's mutant, 2026-10-20: an asker's <h1> on
+        // the bare `hero`, the ask kept as markup in a string — which
+        // `tsCode` keeps, so the census of 2026-10-15 read one ask around an
+        // <h1> and stayed green (`jsxOf` empties the string).
+        'the ask kept in a string, the <h1> on the bare `hero`',
+        edited(
+          hero,
+          (raw) =>
+            `${raw.replaceAll('size="hero-scaled"', 'size="hero"')}\nconst M = ${quote}<Heading size="hero-scaled" asChild><h1>${quote};`,
+        ),
+        hero,
+      ],
+      [
+        // The same markup as an attribute's VALUE: a quoted string after
+        // ` name=`, kept by `jsxOf` only when it holds no markup.
+        'the ask kept in an attribute’s string, the <h1> on the bare `hero`',
+        edited(
+          article,
+          (raw) =>
+            `${raw.replaceAll('size="hero-scaled"', 'size="hero"')}\nexport const A = () => <i title=${quote}<Heading size="hero-scaled" asChild><h1>${quote} />;`,
+        ),
+        article,
+      ],
+      [
+        // The review's second mutant: the <h1>'s ask kept, and the step asked
+        // for AGAIN — on an <h2> — in the same file (DoctorIntro's own suite
+        // caught it; this census did not).
+        'a second ask in an asker’s file',
+        edited(
+          doctor,
+          (raw) =>
+            `${raw}\nexport const H = () => (<Heading size="hero-scaled" asChild><h2>T</h2></Heading>);`,
+        ),
+        doctor,
+      ],
+      [
+        'a fourth file asking for the step',
+        new Map(real).set(
+          probe,
+          tsCode(
+            'export const P = () => (<Heading size="hero-scaled" asChild><h1>T</h1></Heading>);',
+          ),
+        ),
+        probe,
+      ],
+      [
+        // The review's third mutant: the name COMPUTED — passes tsc, and the
+        // literal-only census of 2026-10-15 saw no ask in it.
+        'a fourth file building the name in a template literal',
+        new Map(real).set(
+          probe,
+          tsCode(
+            'export const P = ({ scaled }: { scaled: boolean }) => (<Heading size={`hero${scaled ? "-scaled" : ""}`} asChild><h2>T</h2></Heading>);',
+          ),
+        ),
+        probe,
+      ],
+      [
+        'a fourth file building the name by concatenation',
+        new Map(real).set(
+          probe,
+          tsCode(
+            "export const P = () => (<Heading size={('hero' + '-scaled') as HeadingSize} asChild><h2>T</h2></Heading>);",
+          ),
+        ),
+        probe,
+      ],
+      [
+        'a step that spells no size',
+        edited(HEADING, (raw) => raw.replaceAll(STEP_SIZE, '')),
+        HEADING,
+      ],
+    ];
+    for (const [what, tree, file] of cases) {
+      // Each mutation really changed what the census reads…
+      expect(tree.get(file), what).not.toBe(real.get(file));
+      // …and is named, once, by the file it broke.
+      const problems = stepCensus(tree);
+      expect(problems, what).toHaveLength(1);
+      expect(problems[0], what).toContain(file);
+    }
+    // …and what is no ask, or the same ask, names nothing: the attributes in
+    // another order (sections/Wordmark writes `asChild` first — the same
+    // element), and every `-scaled` that builds no name (STEP_NAME) — a `data-`
+    // attribute's name, a negated number called `scaled`, and the bands'
+    // own `scaled` flag beside them.
+    const holds: readonly (readonly [string, Map<string, string>, string])[] = [
+      [
+        'the ask with its attributes in another order',
+        edited(article, (raw) =>
+          raw.replace(
+            '<Heading size="hero-scaled" asChild>',
+            '<Heading asChild size="hero-scaled">',
+          ),
+        ),
+        article,
+      ],
+      [
+        'a `-scaled` that builds no name',
+        new Map(real).set(
+          probe,
+          tsCode(
+            'export const P = ({ scaled }: { scaled: number }) => (<div data-scaled="" style={{ marginTop: -scaled }}><ClinicLocation scaled /></div>);',
+          ),
+        ),
+        probe,
+      ],
+    ];
+    for (const [what, tree, file] of holds) {
+      expect(tree.get(file), what).not.toBe(real.get(file));
+      expect(stepCensus(tree), what).toEqual([]);
+    }
   });
 
   it('has a gate-chain reader with teeth — a backtick class and a reordered chain are both seen', () => {
@@ -817,7 +1212,9 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     // An unregistered custom property INHERITS: a setter on any wrapping box
     // would rescale every band inside it. So outside ui/Container's
     // `var(--band-zoom,1)` read and DoctorStats' one class (the zoom test
-    // above), no product code may name it — class, inline style or CSS.
+    // above), no product code may name it — class, inline style or CSS. What
+    // it reads: every .ts/.tsx file under src/ and globals.css — a new .css or
+    // .jsx file would escape it (none exists; widen the readers with one).
     const name = pixel.zoom;
     const offenders = productFiles.filter((file) => {
       const code = tsCode(read(`src/${file}`));
@@ -832,17 +1229,23 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(cssCode(globals).split(name).length - 1, 'globals.css').toBe(0);
   });
 
-  it('lets ONE band set the floor — no other product code names `--band-floor` but ui/Container’s own read', () => {
+  it('lets TWO bands set the floor, once each — no other product code names `--band-floor` but ui/Container’s own read', () => {
     // Unregistered and INHERITED like the zoom: a setter on any wrapping box
     // would lift every band inside it. So outside ui/Container's
-    // `var(--band-floor,0px)` read and the price list's one class (the floor
-    // test above), no product code may name it — class, inline style or CSS.
+    // `var(--band-floor,0px)` read and its two setters' one class each (the
+    // floor test above) — the price list's on its rhythm box, and the Home
+    // articles band's on the box round its carousel alone (2026-10-17), whose
+    // opener must keep every Home band's pixel — no product code may name it:
+    // class, inline style or CSS (read as the zoom's fence reads them: .ts/.tsx
+    // under src/ and globals.css).
     const name = pixel.floor;
     const offenders = productFiles.filter((file) => {
       const code = tsCode(read(`src/${file}`));
       const uses = code.split(name).length - 1;
       if (file === 'components/ui/Container/Container.tsx') return uses !== 1;
       if (file === 'components/sections/PriceList/PriceList.tsx')
+        return uses !== 1;
+      if (file === 'components/sections/BlogCarousel/BlogCarousel.tsx')
         return uses !== 1;
       return uses !== 0;
     });
@@ -856,13 +1259,13 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(count('design-scale')).toBe(1);
   });
 
-  it('lets no scanned file spell a design pixel’s declaration but as its one wearer’s class — ui/Container’s, and sections/PostCard’s chip pixel (THE D-LIT RULE)', () => {
+  it('lets no scanned file spell a design pixel’s declaration but as its one wearer’s class — ui/Container’s, sections/PostCard’s chip pixel and sections/PostCover’s capped one (THE D-LIT RULE)', () => {
     // Tailwind scans comments and tests too, so a bracketed declaration in
     // any other spelling would ship a rule nobody wears. Every occurrence in
     // src/, tests/ and .storybook/ — raw text, comments included — must be
-    // ui/Container's own regime class, whole, or PostCard's chip pixel in
-    // PostCard's own file (below). Never vacuous: Container's own source is
-    // among the occurrences.
+    // ui/Container's own regime class, whole, or a chip pixel in its own
+    // file: PostCard's in PostCard.tsx, PostCover's in PostCover.tsx (below).
+    // Never vacuous: Container's own source is among the occurrences.
     const own = scaleString
       .split(/\s+/)
       .find((token) => arbitrary(parse(token).utility)?.name === PIXEL);
@@ -889,27 +1292,35 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
         }
       }
     }
-    // The one other declaration allowed is sections/PostCard's chip pixel
-    // (THE CHIPS' PIXEL above), whole, in that file alone.
-    const cardOwn = tokensOf(
-      tsCode(read('src/components/sections/PostCard/PostCard.tsx')),
-    )
-      .map(({ variants, utility }) => [...variants, utility].join(':'))
-      .find((token) => token.includes(opener));
+    // The other declarations allowed are the chip pixels — sections/
+    // PostCard's (THE CHIPS' PIXEL above) and sections/PostCover's capped
+    // copy of it (THE COVER'S CHIPS above) — and, since 2026-10-17, the
+    // card's second, its MINIATURE's remap on the wrapper round ui/Card (THE
+    // CHIPS' PIXEL's case names it): each whole, in its own file alone — two in the card's,
+    // one in the cover's.
+    const ownsOf = (file: string): string[] =>
+      tokensOf(tsCode(read(file)))
+        .map(({ variants, utility }) => [...variants, utility].join(':'))
+        .filter((token) => token.includes(opener));
+    const chipFiles = [
+      'src/components/sections/PostCard/PostCard.tsx',
+      'src/components/sections/PostCover/PostCover.tsx',
+    ];
+    const chipOwn = chipFiles.flatMap((file) =>
+      ownsOf(file).map((token) => `${file}: ${token}`),
+    );
     expect(own).toBeDefined();
-    expect(cardOwn).toBeDefined();
+    expect(chipFiles.map((file) => ownsOf(file).length)).toEqual([2, 1]);
     expect(found.length).toBeGreaterThan(0);
     expect(
       found.filter(
         (entry) =>
-          !entry.endsWith(`: ${own ?? ''}`) &&
-          entry !==
-            `src/components/sections/PostCard/PostCard.tsx: ${cardOwn ?? ''}`,
+          !entry.endsWith(`: ${own ?? ''}`) && !chipOwn.includes(entry),
       ),
     ).toEqual([]);
   });
 
-  it('lets no scanned file spell a floor or a zoom setter but as its one wearer’s class, whole (THE D-LIT RULE, the setters)', () => {
+  it('lets no scanned file spell a floor or a zoom setter but as its wearers’ one class, whole (THE D-LIT RULE, the setters)', () => {
     // The same reason, for the two variables a band may set (the G2
     // typescript review): a stale literal in a test or a story — say the old
     // value after the wearer's changed — would ship a rule nobody wears.
@@ -918,6 +1329,18 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       const at = code.indexOf(`[${name}:`);
       return at === -1 ? '' : code.slice(at, code.indexOf(']', at) + 1);
     };
+    // The floor's two wearers spell ONE class (2026-10-17): the Home articles
+    // band's box round its carousel wears the price list's very class, so the
+    // stylesheet ships one rule for both, and the scan below holds every
+    // other spelling to it.
+    expect(
+      setterOf(
+        'components/sections/BlogCarousel/BlogCarousel.tsx',
+        pixel.floor,
+      ),
+    ).toBe(
+      setterOf('components/sections/PriceList/PriceList.tsx', pixel.floor),
+    );
     const cases = [
       {
         name: pixel.floor,
@@ -1062,5 +1485,134 @@ describe('the cutout’s `sizes` — every number derived from the band’s, rea
     expect(stepRem / column).toBe(Number(portrait?.[1]));
     expect(portrait?.[2]).toBe(parts?.[2]);
     expect(Number(portrait?.[4]) * 16).toBe(tile);
+  });
+
+  it('derives the blog conclusion’s CIRCLE_SIZES the same way — its picture 165 % of the circle’s 28 steps, 184.8px, scaled in the article’s band (sections/PostConclusion’s THE `sizes`)', () => {
+    // Until 2026-10-20 the string was pinned only by a copy of itself (the
+    // react and typescript reviews): every number now read where it lives —
+    // the circle's ceiling and the crop's share in the conclusion, the band's
+    // numbers here.
+    const conclusion = tsCode(
+      read('src/components/sections/PostConclusion/PostConclusion.tsx'),
+    );
+    /** A `const NAME = '…';` of the conclusion — its string may sit on the
+     *  next line. */
+    const string = (name: string): string => {
+      const value = new RegExp(`\\bconst ${name} =\\s*'([^']*)';`).exec(
+        conclusion,
+      )?.[1];
+      if (value === undefined) {
+        throw new Error(`no ${name} in sections/PostConclusion`);
+      }
+      return value;
+    };
+    const circleSizes =
+      /^\(min-width: (\d+)rem\) and (\(pointer: fine\)) (\d+)vw, ([\d.]+)rem$/.exec(
+        string('CIRCLE_SIZES'),
+      );
+    // The circle at its full size — its clamp's ceiling, in spacing steps —
+    // and the crop's width, a share of the circle: the picture's box.
+    const ceiling = Number(
+      /,calc\(var\(--spacing\)\*(\d+)\)\)\]/.exec(string('CIRCLE'))?.[1],
+    );
+    const share =
+      Number(
+        /(?:^|\s)w-\[(\d+(?:\.\d+)?)%\](?:\s|$)/.exec(string('CROP'))?.[1],
+      ) / 100;
+    const picture = ceiling * (steps.get('--spacing') ?? NaN) * share;
+    expect(ceiling).toBe(28);
+    expect(share).toBe(1.65);
+    expect(picture).toBeCloseTo(184.8, 10);
+    expect(circleSizes).not.toBeNull();
+    // A mouse is asked for the scaled picture, ceil(100 × 184.8 × 0.8 /
+    // REFERENCE) vw = 14, from the window whose column is the step, under the
+    // gate's own pointer condition; everywhere else for the picture itself.
+    expect(Math.ceil((100 * picture * column) / reference)).toBe(
+      Number(circleSizes?.[3]),
+    );
+    expect(stepRem / column).toBe(Number(circleSizes?.[1]));
+    expect(circleSizes?.[2]).toBe(parts?.[2]);
+    expect(Number(circleSizes?.[4]) * 16).toBeCloseTo(picture, 10);
+  });
+
+  it('derives the blog article COVER’s `sizes` from the same sources — ui/Container’s whole column, phone, ramp and tablet, and THE BAND SCALE’s cap on the gate’s pointer (sections/PostCover’s THE `sizes`, DERIVED; the a11y review, 2026-10-20)', () => {
+    // The cover spans ui/Container's column at every width, so its four
+    // entries are the gutter's three regimes and the band's cap: every number
+    // read off the gutter's clamp (P, R, K and T above), the cap and the
+    // gate, never retyped — until 2026-10-20 the string was pinned only by a
+    // copy of itself, and a gutter change turned nothing red. COVER_SIZES is
+    // written over several `+`ed literals, joined as the browser gets them.
+    const code = tsCode(
+      read('src/components/sections/PostCover/PostCover.tsx'),
+    );
+    const literals = /\bconst COVER_SIZES =([^;]*);/.exec(code)?.[1] ?? '';
+    const cover = [...literals.matchAll(/'([^']*)'/g)]
+      .map((match) => match[1])
+      .join('');
+    const entries =
+      /^\(min-width: ([\d.]+)rem\) and (\(pointer: fine\)) ([\d.]+)rem, \(min-width: ([\d.]+)rem\) (\d+)vw, \(min-width: ([\d.]+)rem\) calc\((\d+)vw \+ ([\d.]+)rem\), (\d+)vw$/.exec(
+        cover,
+      );
+    expect(entries, `COVER_SIZES reads “${cover}”`).not.toBeNull();
+    expect(gutter, 'ui/Container’s gutter, read').not.toBeNull();
+    const [phoneVw, rampVw, rampRem] = [1, 2, 3].map((index) =>
+      Number(gutter?.[index]),
+    );
+    // A phone: P vw a side, a column of 100 − 2P vw — until the ramp's
+    // R vw − K rem passes P vw, at a 100K / (R − P) rem window. (Every
+    // QUOTIENT is held to three decimals, never `toBe`: a derived division
+    // owes nothing to binary floating point's exactness.)
+    expect(Number(entries?.[9])).toBe(100 - 2 * phoneVw);
+    expect(Number(entries?.[6])).toBeCloseTo(
+      (100 * rampRem) / (rampVw - phoneVw),
+      3,
+    );
+    // The ramp: the window less two of R vw − K rem, (100 − 2R) vw + 2K rem.
+    expect(Number(entries?.[7])).toBe(100 - 2 * rampVw);
+    expect(Number(entries?.[8])).toBe(2 * rampRem);
+    // From the ramp's end, T vw a side: the 0.8 column the cutout reads.
+    expect(Number(entries?.[4])).toBeCloseTo(rampEndRem, 3);
+    expect(Number(entries?.[5])).toBe(100 - 2 * tabletVw);
+    // THE BAND SCALE's cap, from the window whose 0.8 column reaches it, on
+    // the gate's own pointer condition.
+    expect(`${entries?.[3] ?? ''}rem`).toBe(pixel.cap);
+    expect(Number(entries?.[1])).toBeCloseTo(
+      (100 * Number(entries?.[3])) / (100 - 2 * tabletVw),
+      3,
+    );
+    expect(entries?.[2]).toBe(
+      /@media (\(pointer: fine\))/.exec(
+        blockAfter(globals, '@custom-variant scalable {'),
+      )?.[1],
+    );
+
+    // THE BOUNDS sections/PostCover quotes beside the string rest on the
+    // gutter's OUTER clamp too — its floor (the clamp's first term, F rem)
+    // and its cap (the last, C rem) — so both are read here, where they
+    // live, and a change to either turns this red until the section's
+    // numbers follow (the typescript review, 2026-10-20). In px at the
+    // default 16px root, as the section's prose counts them.
+    const outer = /mx-\[clamp\(([\d.]+)rem,clamp\([^)]*\),([\d.]+)rem\)\]/.exec(
+      container,
+    );
+    expect(outer, 'ui/Container’s outer floor and cap, read').not.toBeNull();
+    const floorPx = Number(outer?.[1]) * 16;
+    const capPx = Number(outer?.[2]) * 16;
+    // The floor holds below the window where P vw reaches it — 320px — and
+    // there 90vw over-asks the column by at most 4px down to a 280px window
+    // (a Galaxy Fold's cover screen: a 248px cover, asked as 252).
+    expect((100 * floorPx) / phoneVw).toBeCloseTo(320, 3);
+    expect(280 - 2 * floorPx).toBeCloseTo(248, 3);
+    expect(
+      (Number(entries?.[9]) / 100) * 280 - (280 - 2 * floorPx),
+    ).toBeCloseTo(4, 3);
+    // The cap holds past the window where T vw reaches it — 2000px — so on a
+    // touch screen the column outgrows 80vw: by 5 % at 2560.
+    expect((100 * capPx) / tabletVw).toBeCloseTo(2000, 3);
+    expect(
+      Math.round(
+        100 * ((2560 - 2 * capPx) / ((Number(entries?.[5]) / 100) * 2560) - 1),
+      ),
+    ).toBe(5);
   });
 });

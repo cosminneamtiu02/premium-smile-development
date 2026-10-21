@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { localeHref } from '@/i18n/href';
-import { locales } from '@/i18n/locales';
+import { locales, type Locale } from '@/i18n/locales';
+import { STAND_IN_ARTICLE, articles } from '@/lib/blog-article/blog-article';
 import { blogPagePath, pageCount, posts, postsOnPage } from '@/lib/blog/blog';
+import { doctors } from '@/lib/team/team';
 import {
   blogWordsFrom,
   populateBlogPage,
@@ -21,6 +23,26 @@ import {
 // mapping of keys to words: at run time on a translator that records what it
 // is asked, at compile time through `BlogTranslate`'s per-key signatures
 // (its `@ts-expect-error` lines are checked by tsc, which reads this file).
+
+/**
+ * The author's name as the page must print it — lib/team's spelling of the
+ * doctor in `locale`, found by the post's one Romanian-spelled string: read
+ * off lib/team here, never through the populator's own lookup. Throws by name
+ * for an author no doctor carries.
+ */
+const authorIn = (locale: Locale, author: string): string => {
+  const doctor = doctors.find((each) => each.words.ro.name === author);
+  if (doctor === undefined) {
+    throw new Error(`no doctor of lib/team is named „${author}" in Romanian`);
+  }
+  return doctor.words[locale].name;
+};
+
+/** The one article every card opens TODAY, in `locale` — spelled out here,
+ *  never through lib/blog's `articlePath`, so a broken path helper fails
+ *  this file too. */
+const standInHref = (locale: Locale): string =>
+  localeHref(locale, `/blog/${STAND_IN_ARTICLE}`);
 
 /** Words that say which language they were made for — a page passes them on untouched. */
 const wordsFor = (locale: string): BlogPageWords => ({
@@ -49,9 +71,10 @@ describe('populateBlogPage — a list page in every language', () => {
         expect(props.posts).toEqual(
           entries.map((entry) => ({
             slug: entry.slug,
+            href: standInHref(locale),
             title: entry.words[locale].title,
             summary: entry.words[locale].summary,
-            author: entry.author,
+            author: authorIn(locale, entry.author),
             readingTime: `${entry.readingMinutes} min:${locale}`,
             image: { src: entry.image.src, alt: entry.words[locale].alt },
             tags: entry.words[locale].tags,
@@ -85,6 +108,37 @@ describe('populateBlogPage — a list page in every language', () => {
       }
     },
   );
+
+  it('opens the SAME article from every card on every page in every language today — the blog’s one article, the owner’s “dummy” (2026-10-15)', () => {
+    // THE PREMISE: the blog has exactly one article, and it is the stand-in;
+    // the day a second one is registered, its own post's card opens it
+    // (lib/blog-article's THE STAND-IN — blog-article.test.ts holds that rule).
+    expect(articles.map((entry) => entry.slug)).toEqual([STAND_IN_ARTICLE]);
+    for (const locale of locales) {
+      for (let page = 1; page <= pageCount(); page += 1) {
+        const hrefs = populateBlogPage(
+          locale,
+          page,
+          wordsFor(locale),
+        ).posts.map((post) => post.href);
+        expect(hrefs.length).toBeGreaterThan(0);
+        expect(new Set(hrefs)).toEqual(new Set([standInHref(locale)]));
+      }
+    }
+  });
+
+  it('prints each author as lib/team spells the doctor in the page’s language — „Dr” with no point on a French page, the post’s own string elsewhere', () => {
+    for (const locale of locales) {
+      const cards = populateBlogPage(locale, 1, wordsFor(locale)).posts;
+      for (const card of cards) {
+        if (locale === 'fr') {
+          expect(card.author).toMatch(/^Dr [^.]/);
+        } else {
+          expect(card.author).toMatch(/^Dr\. /);
+        }
+      }
+    }
+  });
 
   it('draws no link on a one-page blog — page 1 of 1, in any language', () => {
     for (const locale of locales) {
@@ -132,7 +186,7 @@ describe('blogWordsFrom — every key with its own values (G2 typescript, 2026-1
       '«pagination.previous»',
       '«pagination.next»',
     ]);
-    expect(words.readingTime(5)).toBe('«card.readingTime»');
+    expect(words.readingTime(5)).toBe('«readingTime»');
     expect(words.pagination.status(2, 3)).toBe('«pagination.status»');
     expect(calls).toEqual([
       ['hero.title', undefined],
@@ -142,7 +196,7 @@ describe('blogWordsFrom — every key with its own values (G2 typescript, 2026-1
       ['pagination.label', undefined],
       ['pagination.previous', undefined],
       ['pagination.next', undefined],
-      ['card.readingTime', { minutes: 5 }],
+      ['readingTime', { minutes: 5 }],
       ['pagination.status', { page: 2, total: 3 }],
     ]);
   });
@@ -150,9 +204,9 @@ describe('blogWordsFrom — every key with its own values (G2 typescript, 2026-1
   it('refuses a key paired with another key’s values, or without the values it needs — at compile time (tsc reads this file)', () => {
     const t: BlogTranslate = () => '';
     // @ts-expect-error — the reading time needs its minutes
-    t('card.readingTime');
+    t('readingTime');
     // @ts-expect-error — the counter's numbers are not the reading time's
-    t('card.readingTime', { page: 1, total: 2 });
+    t('readingTime', { page: 1, total: 2 });
     // @ts-expect-error — the reading time's minutes are not the counter's
     t('pagination.status', { minutes: 5 });
     // @ts-expect-error — a plain word takes no values
@@ -162,7 +216,7 @@ describe('blogWordsFrom — every key with its own values (G2 typescript, 2026-1
     // …and each key with its own values compiles.
     expect([
       t('hero.title'),
-      t('card.readingTime', { minutes: 5 }),
+      t('readingTime', { minutes: 5 }),
       t('pagination.status', { page: 1, total: 2 }),
     ]).toEqual(['', '', '']);
   });

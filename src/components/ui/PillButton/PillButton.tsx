@@ -138,7 +138,9 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // its tags over a photograph — past SC 1.4.3's 4.5:1, the bar for any text
 // short of large, at every size the label is drawn: down to the 12px floor of
 // the blog card's chip scale (sections/PostCard's THE CHIPS FOLLOW THEIR
-// CARD), the colour pair being the same at every size. The lavender edge is
+// CARD) and below it, to the 7.8px of the Home band's 65 % miniature, whose
+// floor is that one × its share (PostCard's THE MINIATURE) — the colour pair
+// being the same at every size. The lavender edge is
 // decoration on a tag, like the glow: a tag is no control, and SC 1.4.11 asks
 // nothing of it.
 //

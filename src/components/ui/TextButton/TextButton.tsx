@@ -7,16 +7,32 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // .claude/section-runs/2026-08-05_22-04_top-bar/atoms/TextButton.md, contract
 // fb-125). It absorbs the *pattern* of the old `ui/link` nav variant and the
 // old top bar's inline nav anchors; neither shipped as a component here.
-// Today's callers all go through asChild with a plain <a> child: an <a href>
-// (§15.13) for the Header nav (desktop row + panel list, via NavItem), the
-// Footer's links and the price menu's categories, and — since 2026-10-14 —
-// an <a> with NO href for the blog card's „Citește mai mult…", HTML's
-// placeholder link until the article pages exist: it wears the whole look and
-// underlines on hover — its own, or the whole card's (THE HOVER AREA) — but
-// it is no link: no role, no tab stop. The atom stays a plain quiet button
-// for any later use (fb-111). It is NOT part of an emphasis family (fb-126
-// guardrail): Button keeps its name, and a future bordered look would be a
-// new variant on THIS atom, never a rename anywhere.
+// Today's callers go through asChild onto a plain <a href>: the site's own
+// pages, built by i18n/href (§15.13), for the Header nav (desktop row + panel
+// list, via NavItem), the top bar's dropdown entries (NavSectionEntry) and
+// the Footer's links (its phone a tel:, its „Înapoi sus" a #top); a #fragment
+// of their own page for the price menu's categories; and OUTSIDE addresses
+// for the blog article's share links (sections/ShareLinks) — Facebook's
+// sharer, WhatsApp's api.whatsapp.com/send and a mailto:, which lib/share
+// builds at build time and which open in the same tab — the privacy policy's
+// rule for its links out, applied there, not every link's on this site
+// (ShareLinks' THE SAME TAB). Two plain <button>s of the atom's own are the
+// exceptions: the phone panel's section rows (NavAccordion, since
+// 2026-10-16) and the article's copy control (CopyLinkButton). And since
+// 2026-10-15 one caller dresses a <span>: the LABEL of the blog card's
+// „Citește mai mult…", inside the card's own <a href>. That link lays a
+// layer over the whole card, which a positioned box would keep inside
+// itself, and this atom's box is `relative` (its underline is drawn against
+// it) — so the atom dresses the label and the card owns the link
+// (sections/PostCard's THE LINK). The label wears the whole look and
+// underlines on hover — its own, or the whole card's (THE HOVER AREA) — and
+// leaves the name, the state and the focus ring to its link (`asChild`'s own
+// doc, below). From 2026-10-14 to that day the card's child was an <a> with
+// NO href, HTML's placeholder link, no control at all; no caller ships that
+// shape now (THE PROMISE, HALF KEPT, below). The atom stays a plain quiet
+// button for any later use (fb-111). It is NOT part of an emphasis family
+// (fb-126 guardrail): Button keeps its name, and a future bordered look
+// would be a new variant on THIS atom, never a rename anywhere.
 // The atom NEVER owns navigation. The absorbed old anchors hijacked clicks
 // (preventDefault + a JS router) and hardcoded target/rel on every link —
 // both are required rewrites: real hrefs live on the child element, and
@@ -85,14 +101,29 @@ type TextButtonOwnProps = {
   held?: boolean;
   /**
    * Render no <button> of TextButton's own — the single child element you
-   * nest (an <a href> built by localeHref(), an <a href="#top">) BECOMES the
-   * control and wears these classes on top of its own. An <a> with no href —
-   * HTML's placeholder link, the blog card's until its article exists — wears
-   * them too and becomes no control at all: no role, no tab stop. Behaviour
-   * props (href, target, onClick…) belong on that child; <button>-only props
-   * have no effect — disabled, form*, name and value draw a dev-only
-   * console.error, while `type` is absorbed by its default before the merge
-   * and dropped silently (slot.ts documents the invariant).
+   * nest (an <a href> built by localeHref(), an <a href="#top">, an outside
+   * address) BECOMES the control and wears these classes on top of its own.
+   * Behaviour props (href, target, onClick…) belong on that child;
+   * <button>-only props have no effect — disabled, form*, name and value
+   * draw a dev-only console.error, while `type` is absorbed by its default
+   * before the merge and dropped silently (slot.ts documents the invariant).
+   *
+   * A <span> child is a LABEL, never a control: it wears the whole look and
+   * has no role and no tab stop — the blog card's „Citește mai mult…", inside
+   * the card's own <a href> (sections/PostCard's THE LINK). The link round it
+   * is the control, so three things are its caller's: the NAME, the link's
+   * own, read off the label by `aria-labelledby` (the card reads the label
+   * first and its title after it, SC 2.5.3); the STATE — `active` would set
+   * `aria-current="page"` on the <span>, an element no one operates, so a
+   * current link says so on itself and leaves `active` off its label; and
+   * the FOCUS RING — the atom's answers `:focus-visible`, which this label,
+   * never focused, cannot match, so a ring is drawn by the link, round what
+   * a press opens. `held`, `tone` and `hoverArea` add no ARIA anywhere: on a
+   * label they are paint, which is all a label is. So with a <span> child
+   * pass ONLY the look — `tone`, `hoverArea`, `held`, `className`: the types
+   * still accept `tabIndex`, `role`, handlers and ARIA beside it, and the
+   * slot forwards each onto the span (a `tabIndex` alone would make it
+   * focusable and wear the atom's ring), which no caller does.
    */
   asChild?: boolean;
   /** The label — already-translated text (§8.1); markup is allowed. */
@@ -133,8 +164,11 @@ export type TextButtonProps = TextButtonOwnProps &
 // so the atom wears the `accent` ROLE instead: that lavender's hue and
 // chroma, its lightness lowered to the lightest step that passes on THE
 // GLASS FLOOR. Every ground the atom sits on today is white or nearly — the
-// Footer, the price menu's card and the blog card on bg-surface, the pill and
-// the phone panel at bg-surface/95 — but "nearly" is 95% white over whatever
+// Footer, the price menu's card, the top bar's dropdown card and the blog
+// card on bg-surface, the blog article's share row on --page, the pill and
+// the phone panel (its rows and its section lists) at bg-surface/95;
+// tests/unit/accent-census.test.ts's RENDERERS keeps the whole list, every
+// file beside its ground — but "nearly" is 95% white over whatever
 // is behind the glass, and with the menu open that is the scrim-dimmed page:
 // axe measured the panel at #f8f8f8, and over a dark photograph it goes
 // down to 95% white over black, #f2f2f2. So #746894 = 4.52:1 on #f2f2f2,
@@ -171,23 +205,25 @@ export type TextButtonProps = TextButtonOwnProps &
 // tone's change; an `accent` label wears it already) and the underline's
 // sweep — ALSO while the pointer is over an ancestor wearing
 // `TEXT_BUTTON_HOVER_AREA`. The blog card's article wears it, so a pointer
-// anywhere on the card underlines its read-more; the button's own hover
-// still draws it too. The caller writes both halves and neither acts alone:
-// the class leaves a `self` button inside the area quiet, and the prop with
-// no area round it is the button's own hover. The value names the situation
-// — a marked area — never the Tailwind mechanism under it. A NAMED group
-// (`group/text-button-area`, exported so no caller spells it), because
-// Tailwind's plain `group` is a marker other components wear for hovers of
-// their own — ui/GlyphButton's disc, ui/SpeedDial, the map band's contact
-// rows — and an unnamed `group-hover:` here would light the button under any
-// of them. A `:hover` reaches every ancestor of the pointer, so ANY hovered
-// ancestor wearing the class draws it, not only the nearest: areas do not
-// nest — one per card. A DISABLED button stays quiet: its own `:hover` never
+// anywhere on the card underlines its read-more; the element's own hover —
+// on the card, its label's — still draws it too. The caller writes both
+// halves and neither acts alone: the class leaves a `self` button inside the
+// area quiet, and the prop with no area round it is its own hover alone.
+// The value names the situation — a marked area — never the Tailwind
+// mechanism under it. A NAMED group (`group/text-button-area`, exported so
+// no caller spells it), because Tailwind's plain `group` is a marker other
+// components wear for hovers of their own — ui/GlyphButton's disc,
+// ui/SpeedDial, the map band's contact rows — and an unnamed `group-hover:`
+// here would light the button under any of them. A `:hover` reaches every
+// ancestor of the pointer, so ANY hovered ancestor wearing the class draws
+// it, not only the nearest: areas do not nest — one per card. A DISABLED
+// button stays quiet: its own `:hover` never
 // matches (`disabled:pointer-events-none`), but its ancestor's still does,
 // and a hovered area lit a disabled button (the React review, measured) — so
 // each half of the pair asks `not-disabled:` before it lights. Never
-// `enabled:`, which an <a> — every caller's element today — never matches;
-// an <a> is never disabled, so `not-disabled:` always lets it light.
+// `enabled:`, which neither an <a> nor a <span> ever matches — the area's one
+// caller today dresses a <span>, the blog card's label — and neither is ever
+// disabled, so `not-disabled:` always lets it light.
 // (TextButton.test.tsx's THE HOVER AREA measures each of these with a real
 // pointer.)
 // `self`, the default, adds NOTHING — the empty answer, which cx drops — so
@@ -200,11 +236,37 @@ export type TextButtonProps = TextButtonOwnProps &
 // pair outranks every rest value on specificity (the `:hover` inside the
 // `:is()` the variant compiles to), and like it, it compiles under
 // `@media (hover: hover)`: a touch screen draws neither.
-// RECORDED, not changed (the a11y review's L1): until the blog's article
-// pages exist, the card's hover underlines a placeholder that is no link — a
-// hover that promises a destination the card cannot give yet. The owner's
-// call, recorded with the card's own jump (§15.39), until the article link
-// lands.
+// THE PRECONDITION: an area must BE its control's hit area. A hover look is
+// a promise of what a press THERE does, so an area wider than the control it
+// lights would underline presses that open nothing. The blog card keeps it
+// by construction, all but its four corners: its one link lays an empty
+// layer over the whole card (sections/PostCard's THE LINK), so every point
+// of the <article> that wears the class is a point of that link — but for a
+// spot at each corner, where the layer's rounded corner leaves the article's
+// square one lit and opening nothing (THE LINK measures them, about 55–61
+// px² each, and names the lever). A caller with no such layer marks the link
+// itself (the AsLinkLabel story). HoverEndArea, the story, shows the
+// mechanism on a
+// SIMPLER teaser whose summary is no link — its note says so.
+// THE PROMISE, HALF KEPT (the a11y review's L1, 2026-10-14; re-read
+// 2026-10-17). Until 2026-10-15 the card's hover underlined an <a> with no
+// href — HTML's placeholder link, no link at all — a hover that promised a
+// destination the card could not give. That day the card became ONE link
+// (sections/PostCard's THE LINK), so a press anywhere on it now opens the
+// page its `href` names. But WHICH page is the populator's, and it is not
+// always the post's: app/[locale]/blog/populate.ts asks lib/blog-article's
+// `articleSlugFor` for every card, which answers the post's own article
+// where one is registered and THE STAND-IN, „Cum îți alegi periuța de
+// dinți", for every other post — the owner's interim, verbatim (2026-10-15):
+// "for now it should be a dummy article and all should point to same
+// article" (BACKLOG.md entry 7). So the record is CLOSED for the one post
+// whose article exists — its card opens it — and OPEN for the other eleven
+// of the twelve: each of their links is named „Citește mai mult… <its own
+// title>" and opens another post's article. The purpose a link announces and
+// the page it opens differ — the SC 2.4.4 mismatch, the owner's recorded
+// interim, not this atom's to mend. It closes card by card as each post
+// gains its article: `articleSlugFor` then answers the post's own slug, with
+// no edit here or in the card.
 //
 // THE HELD LOOK (owner, 2026-10-16, on the top bar's dropdowns: "if a
 // dropdown is being clicked or hovered it has to light up lilla and trigger
@@ -240,13 +302,27 @@ export type TextButtonProps = TextButtonOwnProps &
 //
 // BOX — text-first, so there is no width anywhere (§8.4: DE runs +30–35%
 // longer and must wrap, never clip) and no outer margin (§6.4: the parent's
-// gap owns the nav row's spacing). min-h-11 (2.75rem/44px, rem-based so zoom
-// scales it — §7) clears the §9 target floor even if a parent shrinks the
-// font; py-2 keeps that height honest when a label wraps to two lines, and it
-// is also the underline's breathing room, since after:bottom-0 pins the rule
-// to the bottom of the padded box. px-2 lets the full-bleed rule overhang the
-// label by 8px a side — enough to read as deliberate, little enough that it
-// still tracks the word.
+// gap owns the nav row's spacing). min-h-11 (2.75rem/44px) clears the §9
+// target floor even if a parent shrinks the font, and, rem-based, follows
+// zoom (§7) — WHEREVER THE THEME'S PIXEL HOLDS. Inside a `design-scale`
+// remap the step is 44 of the remap's DESIGN pixels instead. In THE BAND
+// SCALE (§15.32) the blog article's share row (sections/ShareLinks, in
+// sections/PostPage's band, which has no floor) never falls under 35.6 CSS
+// px — 896/1106 × 44, the regime's narrowest column, about a 1140 window
+// behind a classic scrollbar: over SC 2.5.8's 24px, under §9's 44 aim, and
+// only for a mouse or a trackpad. The price menu's band floors its pixel at
+// the theme's (ui/Container's THE FLOOR), so its links never fall under 44.
+// And in the Home carousel's 65 % miniature (sections/BlogCarousel) the blog
+// card's label box is 0.65 of its length — 28.6px in the theme's pixel, and
+// never less, that band's own floor holding it there — but no target: the
+// target is the whole card, its link's layer over it (sections/PostCard's
+// THE LINK). The same holds for that label on the blog LIST, whose band has
+// no floor: its box falls to 35.6px at a 1140 window, and it is no target
+// there either. py-2 keeps that height honest when a label wraps to two lines,
+// and it is also the underline's breathing room, since after:bottom-0 pins
+// the rule to the bottom of the padded box. px-2 lets the full-bleed rule
+// overhang the label by 8px a side — enough to read as deliberate, little
+// enough that it still tracks the word.
 // `hyphens-none` — INTERACTIVE LABELS NEVER SYLLABLE-SPLIT (owner, 2026-09-04:
 // "no split in syllables in top bar menu items"). The site ships
 // `hyphens: auto` at the body tier (§15.14) so German compounds may break

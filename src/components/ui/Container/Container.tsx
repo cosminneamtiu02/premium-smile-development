@@ -166,22 +166,36 @@ import { cx } from '@/lib/cx/cx';
 //     box, never open, and the zoom would silently do nothing.
 //   · THE FLOOR, `--band-floor` (default 0px): a band that must never draw
 //     SMALLER than the theme sets a `--band-floor` of its own on its rhythm
-//     box, beside the two strings (an arbitrary property class again — never
-//     spelled here), and its pixel is max(floor, column / 1106 × zoom): under
-//     the reference the band draws exactly as the theme does, past it it grows
-//     like every scaled band. ONE wearer: sections/PriceList, at 0.0625rem —
+//     box, beside the two strings — or on a box round the one part of it that
+//     must not, which then wears `bandScaleClasses` again (THE ZOOM's
+//     precondition holds for it too) — as an arbitrary property class again,
+//     never spelled here; and that box's pixel is max(floor, column / 1106 ×
+//     zoom): under the reference what it floors draws never smaller than the
+//     theme does (exactly as large, at the default 16px font size; a little
+//     larger under a smaller default — the harmless direction), and past it
+//     grows like every scaled band. TWO wearers, both at
+//     0.0625rem. The second (2026-10-17): the Home band of the blog's articles
+//     (sections/BlogCarousel), on a box round its CAROUSEL alone — never on
+//     its rhythm box, so its opener keeps every Home band's pixel — so the
+//     carousel's miniature cards never draw smaller than the owner's 1401
+//     look and no card grows as the window narrows past the regime's step
+//     (that band's THE FLOOR; CLAUDE.md §14's Home row). The first:
+//     sections/PriceList, on its rhythm box —
 //     1rem / 16, the theme's own pixel at ANY root, so under the reference a
 //     larger default font size and a browser zoom enlarge the price rows as
 //     rem does (the owner's delegated decision, 2026-10-02: "decide for me on
-//     decisions and create pr" — his own BACKLOG entry asks for LARGER price
-//     text for older patients, never smaller; CLAUDE.md §15.32 round 2).
+//     decisions and create pr" — his own BACKLOG entry asked for LARGER price
+//     text for older patients, never smaller (entry 5, dropped 2026-10-10);
+//     CLAUDE.md §15.32 round 2).
 //     Unregistered and INHERITED like the zoom, so tests/unit/design-scale.test.ts
 //     fences who may name it; it is read where `--scale-px` is declared, so
 //     it belongs on the box that wears `bandScaleClasses`. It is NOT
 //     multiplied by the zoom: a zoomed box inside a floored band would floor
 //     at the band's own pixel, not at its multiple — so the two must not nest,
-//     and today they cannot (the census holds the floor's one setter and the
-//     zoom's to two other files).
+//     and today they do not: the census holds the floor's two setters and the
+//     zoom's one to three different files, and none of those bands composes
+//     another. The census fences the SETTERS, not the nesting — PriceList or
+//     BlogCarousel rendering DoctorStats inside its floored box would pass it.
 // THE NUMBERS — REFERENCE 1106, CAP 96rem, STEP max(@4xl, 896px) — and what
 // the regime trades (a browser zoom, the user's default font size, the jump at
 // the step, the typeface's optical size) are argued and measured where they
@@ -270,7 +284,7 @@ export const containerClasses =
  * THE BAND SCALE's pixel (the header's THE BAND SCALE): on a laptop or desktop
  * column of max(56rem, 896px) the box wearing it declares the design pixel —
  * min(column, 96rem) / 1106, times `--band-zoom` (1 unless a box says
- * otherwise), never under `--band-floor` (0px unless a band says otherwise)
+ * otherwise), never under `--band-floor` (0px unless a box says otherwise)
  * — and redraws every theme length on it and inside it in that pixel. The CAP is spelled here and in `bandColumnClasses` (KEEP IN SYNC;
  * tests/unit/design-scale.test.ts holds the two equal). ONE static string per
  * class: Tailwind reads class names from source text.

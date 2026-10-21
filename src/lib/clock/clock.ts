@@ -108,30 +108,40 @@ import {
 //   idle + reason  not started / structurally disabled (a list too short to
 //                  rotate) / reduced motion declined the automatic start
 //   running        a tick is pending
-//   suspended      TRANSIENT pause: the pointer is over the widget, or focus
-//                  is inside it. resume() undoes it
-//   stopped        STICKY pause: the visitor pressed the rotation control, or
+//   suspended      TRANSIENT pause, held by one cause or more (SuspendCause,
+//                  below): the pointer over the widget, focus inside it, the
+//                  widget off screen, a hand dragging it. resume() undoes it
+//                  once the last cause has gone
+//   stopped        STICKY pause: the visitor pressed the rotation control,
 //                  keyboard focus entered the widget (the APG rule the
-//                  consumer applies — see rotation.ts, FOCUS). Only play()
-//                  undoes it — never resume(), never start(), so a hover can
-//                  not restart what the visitor stopped and the choice
-//                  outlives an effect re-run (cleanup → start() on the SAME
-//                  store: Fast Refresh, a late client-only mount — a true
-//                  remount builds a new store)
+//                  consumer applies — see rotation.ts, FOCUS), or a press, by
+//                  hand or by key, landed on a rotator that STOPS ON A PRESS:
+//                  ui/use-rotation's handNavigation pauses FIRST, in its own
+//                  commit (so the live region turns polite before the card
+//                  swaps — 2026-10-21), and then takes the step the press
+//                  names, if any (its one consumer, the card
+//                  carousel, since 2026-10-17 — an arrow, a bead, a drag's
+//                  release or cancel, a tap; the Hero and the reviews deck
+//                  have no control either, and a press there only steps).
+//                  Only play() undoes it — never resume(), never start(), so
+//                  neither a hover nor a drag's release can restart what the
+//                  visitor stopped, and the choice outlives an effect re-run
+//                  (cleanup → start() on the SAME store: Fast Refresh, a late
+//                  client-only mount — a true remount builds a new store)
 //
 // ── SUSPENSION IS CAUSE-KEYED (G2-2, a11y HIGH). suspend()/resume() carry a
-// cause — 'pointer' or 'focus', and since 2026-10-13 'offscreen' (the
-// SuspendCause type's doc) — and the clock holds a SET of live causes,
-// resuming only when the set empties. One collapsed flag let a pointer leaving
-// the widget resume motion while keyboard focus was still inside it, which is
-// the APG's reason for keeping hover and focus as separate flags. A set of
-// named causes rather than a counter, because browsers deliver unbalanced
-// enter/leave pairs (a pointer that leaves through a disappearing element, a
-// focusout with no focusin) and an unbalanced counter never returns to zero:
-// suspending twice for the same cause is idempotent by construction. play()
-// CLEARS the set and runs — an explicit request outranks the courtesy (and the
-// rotation control sits outside the hover wrapper, so a real pointer enter
-// follows if the visitor moves back in).
+// cause — 'pointer' or 'focus', since 2026-10-13 'offscreen' and since
+// 2026-10-14 'drag' (the SuspendCause type's doc) — and the clock holds a SET
+// of live causes, resuming only when the set empties. One collapsed flag let a
+// pointer leaving the widget resume motion while keyboard focus was still
+// inside it, which is the APG's reason for keeping hover and focus as separate
+// flags. A set of named causes rather than a counter, because browsers deliver
+// unbalanced enter/leave pairs (a pointer that leaves through a disappearing
+// element, a focusout with no focusin) and an unbalanced counter never returns
+// to zero: suspending twice for the same cause is idempotent by construction.
+// play() CLEARS the set and runs — an explicit request outranks the courtesy
+// (and the rotation control sits outside the hover wrapper, so a real pointer
+// enter follows if the visitor moves back in).
 //
 // ── ENV REACTIONS while running/suspended (board Q9c/Q9d — both were v1
 // omissions with named triggers until the owner's fb-424 rider said build them
@@ -180,9 +190,24 @@ export type ClockIdleReason = 'not-started' | 'disabled' | 'reduced-motion';
  * course timeline, sections/DoctorCourses/CourseTimeline). The tab-hidden rule
  * of ENV REACTIONS, applied to one widget: nobody is watching it, so nothing
  * moves, and the visitor who scrolls back finds the item they left a full
- * interval from its next move.
+ * interval from its next move. And since 2026-10-14 a fourth: a hand DRAGGING
+ * the widget (sections/CardCarousel, the first rotator a visitor can drag) —
+ * the ring must not step under a finger that is moving it. The cause holds
+ * from the moment a primary press lands (since 2026-10-20 — until then from
+ * the moment a press became a drag, 10px of travel judged sideways,
+ * CardCarousel's drag.ts DRAG_DECIDE_PX and THE AXIS, so a press held under
+ * that let a step pass beneath it) until the press ends, wherever it ends,
+ * or the gesture is cancelled; what the release does is the consumer's (since
+ * 2026-10-17 the card carousel's release stops it for good, the owner's pick
+ * for SC 2.2.2 — ui/use-rotation's handNavigation — BEFORE it lets the hold
+ * go, so the resume finds a stopped clock and starts nothing).
+ * Not 'pointer': that flag is the HOVER courtesy, which the owner's rotators
+ * no longer extend (a resting cursor holds nothing, sections/Hero round 3),
+ * while a drag is the visitor's own move and always asks for the hold (a
+ * stopped or idle clock takes none) — which begin(), pause(), going idle and
+ * dispose() clear like any other.
  */
-export type SuspendCause = 'pointer' | 'focus' | 'offscreen';
+export type SuspendCause = 'pointer' | 'focus' | 'offscreen' | 'drag';
 
 /** An immutable read of the clock at one instant. */
 export type ClockSnapshot = Readonly<{
@@ -248,9 +273,16 @@ export type Clock = ExternalStore<ClockSnapshot> &
     start(): void;
     /** The visitor pressed play: runs even under reduced motion. */
     play(): void;
-    /** The visitor pressed pause, or keyboard focus arrived: sticky. */
+    /**
+     * The visitor pressed pause, keyboard focus arrived, or a press landed on
+     * a rotator that stops on a press (ui/use-rotation's handNavigation — the
+     * card carousel): sticky.
+     */
     pause(): void;
-    /** Pointer over / focus within: transient, and keyed by its cause. */
+    /**
+     * Pointer over, focus within, off screen, a hand dragging: transient, and
+     * keyed by its cause (SuspendCause). With no cause it is the pointer's.
+     */
     suspend(cause?: SuspendCause): void;
     /** That cause is gone: back to running once no cause remains. */
     resume(cause?: SuspendCause): void;

@@ -82,9 +82,11 @@ import { toStatTiles } from '../stat-tiles';
 // 2026-09-25: "very important … note it somewhere" · "it will sit above map
 // section"). A band linking THIS doctor's blog posts will stand above the map
 // — since 2026-10-13 between the biography-and-courses band and the map. It
-// is NOT built, because there is nothing for it to link to yet: the blog's
-// LIST exists in every language since 2026-10-14 (/{locale}/blog/, CLAUDE.md
-// §15.39), but no article page does — its cards link nowhere until they land.
+// is NOT built, because there is nothing of a doctor's own for it to list
+// yet: the blog's LIST exists in every language since 2026-10-14
+// (/{locale}/blog/, CLAUDE.md §15.39), and so does ONE article, a placeholder
+// every card of the list opens for now (lib/blog-article's THE STAND-IN, the
+// owner's "dummy" of 2026-10-15).
 // The JSX below carries a comment at the exact spot; when the band lands it
 // is a DUMB band populated from here like the three above, and
 // ./Doctor.stories.tsx gains it in the same change.

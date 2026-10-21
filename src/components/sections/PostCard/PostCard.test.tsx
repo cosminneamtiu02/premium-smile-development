@@ -1,4 +1,5 @@
 import { createRef, type CSSProperties } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent as realUser } from 'vitest/browser';
 import {
@@ -16,7 +17,8 @@ import {
 // the words' inset are COMPUTED lengths (six spacing steps less 2px, a radius
 // less a frame), the chips' size is a pixel computed from the card's own
 // width, their paint is a token's value, and a hover is a rule of the sheet:
-// no class string can answer any of them. tests/setup/components.ts loads no CSS globally; the per-file
+// no class string can answer any of them.
+// tests/setup/components.ts loads no CSS globally; the per-file
 // import is the house pattern (Card, PersonnelCard …). Every other assertion
 // reads tokens, attributes and roles, so each holds with the sheet or without
 // it.
@@ -28,7 +30,12 @@ import {
 } from '@/components/ui/Container/Container';
 import { cx } from '@/lib/cx/cx';
 import type { ImagePath } from '@/lib/image-path/image-path';
-import { PostCard, type PostCardContent, type PostCardProps } from './PostCard';
+import {
+  PostCard,
+  type PostCardContent,
+  type PostCardHeadingLevel,
+  type PostCardProps,
+} from './PostCard';
 import source from './PostCard.tsx?raw';
 import storiesSource from './PostCard.stories.tsx?raw';
 import cardSource from '@/components/ui/Card/Card.tsx?raw';
@@ -59,7 +66,11 @@ import postListSource from '@/components/sections/PostList/PostList.tsx?raw';
 // pointer (a synthetic event cannot move :hover); everywhere else it is
 // parked off the card, so the jump never scales a rectangle read here. The
 // WINDOW is moved in two more, the owner's reference window and the switch
-// points, each putting it back as it found it.
+// points, and the ROOT's font size in one, the chips' floor — each putting it
+// back as it found it. What the title does to the words the blog ships is
+// PostCard.titles.test.tsx's, and what a MINIATURE draws, against its full
+// card, PostCard.miniature.test.tsx's; THE MINIATURE's markup and its code
+// are pinned here, with no stylesheet needed.
 // THE CHIPS' PIXEL IS READ IN PARTS: its bracketed declaration is never
 // written here whole — Tailwind reads tests too, and
 // tests/unit/design-scale.test.ts holds every scanned file to its D-LIT RULE —
@@ -74,6 +85,7 @@ import postListSource from '@/components/sections/PostList/PostList.tsx?raw';
 /** A post as the blog index hands it over, in Romanian with diacritics
  *  (§15.7): every word finished, the reading time included. */
 const POST = {
+  href: '/ro/blog/cum-iti-alegi-periuta-de-dinti/',
   title: 'Cum îți alegi periuța de dinți',
   summary:
     'Firele moi, un cap mic și un mâner comod: ce să urmărești pe ambalaj.',
@@ -157,8 +169,23 @@ const REFERENCE_CONTENT = 513.40625;
 const CHIP = { height: 44, padding: 20, label: 18, inset: 12, gap: 12 };
 /** The footer row on the card's floor. */
 const FOOTER = ['mt-auto', 'flex', 'flex-wrap', 'items-center', 'gap-x-4'];
-/** The read-more's placement, merged last by the atom. */
-const READ_MORE = ['ms-auto', '-me-2'];
+/** THE LINK (PostCard's paragraph): its placement at the row's end, the label
+ *  on the content edge; a flex box round the label; its own ring hidden; and
+ *  its EMPTY layer over the card's border box at the card's corner — the
+ *  press area, and under keyboard focus the house ring round the card. */
+const LINK = [
+  'flex',
+  'ms-auto',
+  '-me-2',
+  'focus-visible:outline-hidden',
+  'before:absolute',
+  'before:-inset-[3px]',
+  'before:rounded-(--radius-soft)',
+  "before:content-['']",
+  'before:outline-offset-2',
+  'focus-visible:before:outline-2',
+  'focus-visible:before:outline-focus',
+];
 const SIZES =
   '(min-width: 121.25rem) and (pointer: fine) 30rem, (min-width: 71.25rem) 25vw, (min-width: 46.25rem) 40vw, 90vw';
 /** ui/Heading's `band` step on its default ink. */
@@ -168,6 +195,19 @@ const BAND_TITLE = [
   '@md:text-4xl',
   'text-ink-strong',
 ];
+/** A picture hint a page of its own may name instead of the list's
+ *  (PostCard's THE `sizes`, OVERRIDDEN) — the card passes any hint through
+ *  verbatim. */
+const PAGE_SIZES = '13rem';
+/** THE MINIATURE (PostCard's header): the Home band's share — the owner's
+ *  65 % — the variable that carries it inline, and the classes that read it,
+ *  written out: the capture on the <article>, and THE MINIATURE'S WRAPPER
+ *  round ui/Card — `h-full` and the remap, its pixel's declaration assembled
+ *  from PARTS (the harness note's THE CHIPS' PIXEL IS READ IN PARTS). */
+const SHARE = 0.65;
+const SHARE_VARIABLE = '--miniature';
+const CAPTURE = '[--miniature-px:calc(var(--spacing)/4*var(--miniature))]';
+const MINIATURE_WRAPPER = ['h-full', `[${PIXEL}:var(--miniature-px)]`, REMAP];
 /** THE TITLE NEVER SPLITS A WORD — the owner's one class (2026-10-15): the
  *  title breaks between its words only, never at a syllable. */
 const TITLE_RULE = 'hyphens-none';
@@ -270,14 +310,17 @@ const part = <T extends Element>(
 
 /** The card's boxes, reached from the <article>: ui/Card is its one child,
  *  and the card holds the picture's cell and the words; the words end on the
- *  footer row. None of them carries a role — they are layout — so structure
- *  is the only honest way in, and every step is a named `part`. */
+ *  footer row, whose second box is the card's LINK with the read-more's
+ *  label inside it. None of them but the link carries a role — they are
+ *  layout — so structure is the only honest way in, and every step is a
+ *  named `part`. */
 const partsOf = (root: Element | null) => {
   const article = part(root, 'article', HTMLElement);
   const card = part(article.firstElementChild, 'card (ui/Card)', HTMLElement);
   const cell = part(card.children[0], 'picture’s cell', HTMLElement);
   const words = part(card.children[1], 'words', HTMLElement);
   const footer = part(words.lastElementChild, 'footer row', HTMLElement);
+  const link = part(footer.children[1], 'link', HTMLAnchorElement);
   return {
     card,
     cell,
@@ -286,7 +329,8 @@ const partsOf = (root: Element | null) => {
     picture: part(cell.querySelector('img'), 'picture', HTMLImageElement),
     author: part(words.children[1], 'author', HTMLElement),
     readingTime: part(footer.children[0], 'reading time', HTMLElement),
-    readMore: part(footer.children[1], 'read-more', HTMLElement),
+    link,
+    readMore: part(link.firstElementChild, 'read-more’s label', HTMLElement),
   };
 };
 
@@ -360,7 +404,7 @@ const pageGrid = (() => {
 const FRAME_GRID = 'grid grid-cols-1 gap-8 @xl:grid-cols-2 @4xl:grid-cols-3';
 
 describe('PostCard — an <article> named by its own title', () => {
-  it('names the article with the title alone, through aria-labelledby — always the page’s <h2>', () => {
+  it('names the article with the title alone, through aria-labelledby — an <h2> by default', () => {
     const { container } = renderCard();
 
     const article = screen.getByRole('article', { name: POST.title });
@@ -408,6 +452,23 @@ describe('PostCard — an <article> named by its own title', () => {
       TITLE_RULE,
       TITLE_BELT,
     ]);
+  });
+
+  it('asks ui/Heading for its `band` step ONCE, in code, and hands the title its rule and its belt alone — no size by className (the narrow steps left on 2026-10-17)', () => {
+    // The one call site: the step, through `asChild`, on the title's own
+    // element — never a second size asked of the atom.
+    const asks = [...CODE.matchAll(/<Heading\b([^>]*)>/g)].map((m) => m[1]);
+    expect(asks).toHaveLength(1);
+    expect(asks[0]).toMatch(/\bsize="band"/);
+    expect(asks[0]).toMatch(/\basChild\b/);
+    // The title's className is two wrapping rules, spelled once, on its own
+    // element (§6.8): THE TITLE NEVER SPLITS A WORD and its belt — and no
+    // size, since THE NARROW STEPS, REMOVED: a miniature draws `band` at
+    // its share, never a smaller step.
+    expect(CODE).toMatch(
+      /<TitleElement id=\{titleId\} className="hyphens-none wrap-anywhere">/,
+    );
+    expect(CODE).not.toMatch(/\btext-(?:xl|2xl)\//);
   });
 
   it('never splits a title word at a syllable — `hyphens-none` on the title’s own <h2>, and on nothing round it (the owner, 2026-10-15)', () => {
@@ -495,6 +556,245 @@ describe('PostCard — an <article> named by its own title', () => {
     const article = screen.getByRole('article', { name: POST.title });
     expect(article.tagName).toBe('ARTICLE');
     expect(article).not.toHaveAttribute('role');
+  });
+
+  it('keeps ONE tab stop, its link, against a `tabIndex` that slips past the types — reset after the spread (the phase-3 review, 2026-10-20)', () => {
+    // The type refuses a written `tabIndex` (the directive below fails `tsc`
+    // the day it compiles); a spread of a wider object could still carry
+    // one, and a focusable <article> would be a second stop on every card.
+    render(
+      <PostCard
+        {...POST}
+        tagsLabel={TAGS_LABEL}
+        readMore={READ_MORE_LABEL}
+        // @ts-expect-error — the card's one tab stop is its link; `tabIndex` is Omitted (THE NAME)
+        tabIndex={0}
+      />,
+    );
+
+    const article = screen.getByRole('article', { name: POST.title });
+    expect(article).not.toHaveAttribute('tabindex');
+  });
+
+  it('refuses an address that is not root-absolute, naming it — and takes both shapes localeHref builds', () => {
+    // On the server's renderer, the bytes a page ships: a refused card
+    // throws there before any markup exists.
+    const markupWith = (href: string): string =>
+      renderToStaticMarkup(
+        <PostCard
+          {...POST}
+          href={href}
+          tagsLabel={TAGS_LABEL}
+          readMore={READ_MORE_LABEL}
+        />,
+      );
+    const ARTICLE = 'ro/blog/cum-iti-alegi-periuta-de-dinti/';
+    // The characters a URL parser DELETES wherever they stand — the tab, the
+    // line feed, the carriage return — and the backslash it reads as a
+    // slash, each built from its code point (never typed raw).
+    const TAB = String.fromCodePoint(0x9);
+    const LF = String.fromCodePoint(0xa);
+    const CR = String.fromCodePoint(0xd);
+    const BACKSLASH = String.fromCodePoint(0x5c);
+    // Each of these strings opens the page the card stands on, one under it
+    // or another site's: the empty and the blank, the dot, the fragment and
+    // the query alone, two invisible characters (never typed raw), a
+    // relative path, a full address, the two that start like the right
+    // shape — a URL parser reads '//' and '/' + a backslash as another host —
+    // and five that hide one of those behind a tab, a line feed or a carriage
+    // return, which the parser deletes (the round-3 review, 2026-10-21: '/',
+    // a tab and '/evil.example/x' resolve to another site,
+    // '//evil.example/x').
+    for (const href of [
+      '',
+      '   ',
+      '.',
+      './',
+      '#',
+      '?',
+      String.fromCodePoint(0x0),
+      String.fromCodePoint(0x200b),
+      ARTICLE,
+      `https://example.com/${ARTICLE}`,
+      `//${ARTICLE}`,
+      `/${BACKSLASH}${ARTICLE}`,
+      `/${TAB}/evil.example/x`,
+      `/${LF}/x`,
+      `/${CR}${BACKSLASH}x`,
+      `/${TAB}${LF}${CR}${TAB}/x`,
+      `/${TAB}${BACKSLASH}evil.example/x`,
+    ]) {
+      const name = JSON.stringify(href);
+      expect(() => markupWith(href), name).toThrow(RangeError);
+      expect(() => markupWith(href), name).toThrow(
+        `\`href\` is no root-absolute address`,
+      );
+      expect(() => markupWith(href), name).toThrow(`got ${name}.`);
+    }
+    // A value that is no string, past the type: a RangeError that names it —
+    // a number and null as written, anything else by its type, never by
+    // running its code (an object whose own text is a root-absolute path is
+    // refused all the same) — and never the TypeError of a string method it
+    // lacks.
+    for (const [smuggled, named] of [
+      [42, '42'],
+      [undefined, '<undefined>'],
+      [null, 'null'],
+      [{ toString: () => `/${ARTICLE}` }, '<object>'],
+    ] as const) {
+      const href = smuggled as unknown as string;
+      expect(() => markupWith(href), named).toThrow(RangeError);
+      expect(() => markupWith(href), named).toThrow(`got ${named}.`);
+    }
+    // …and both shapes localeHref builds — root-served, and under the
+    // interim Pages host's base path (lib/base-path) — open as given, as do
+    // the root, a language's home and an address with a fragment.
+    for (const href of [
+      '/',
+      '/ro/',
+      `/${ARTICLE}`,
+      `/premium-smile-development/${ARTICLE}`,
+      `/${ARTICLE}#primul-pas`,
+    ]) {
+      expect(markupWith(href)).toContain(`href="${href}"`);
+    }
+  });
+});
+
+describe('PostCard — the title’s level: the page’s outline decides it, the look never does (THE TITLE’S LEVEL)', () => {
+  /** The title's class list at the default level — the look every level
+   *  must wear. */
+  const LOOK = [...BAND_TITLE, TITLE_RULE, TITLE_BELT];
+
+  it('is an <h2> by default and at `headingLevel={2}` — the blog list’s, under its <h1>', () => {
+    for (const headingLevel of [undefined, 2] as const) {
+      renderCard({ headingLevel });
+      const heading = screen.getByRole('heading', {
+        level: 2,
+        name: POST.title,
+      });
+      expect(heading.tagName).toBe('H2');
+      expect(screen.getAllByRole('heading')).toHaveLength(1);
+      expect(tokensOf(heading)).toEqual(LOOK);
+      cleanup();
+    }
+  });
+
+  it('is an <h3> at `headingLevel={3}` — the Home band’s, under its own <h2> — in the <h2>’s classes byte for byte, still naming the article and the link', () => {
+    const { container } = renderCard({ headingLevel: 3 });
+
+    const heading = screen.getByRole('heading', { level: 3, name: POST.title });
+    expect(heading.tagName).toBe('H3');
+    expect(screen.getAllByRole('heading')).toHaveLength(1);
+    expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+    // THE LOOK NEVER FOLLOWS THE LEVEL (§15.24).
+    expect(tokensOf(heading)).toEqual(LOOK);
+    // The <h3> is where the <h2> stood — first in the words — and names the
+    // article and, after the read-more's label, the link.
+    const article = screen.getByRole('article', { name: POST.title });
+    const { words, link, readMore } = partsOf(container.firstElementChild);
+    expect(words.firstElementChild).toBe(heading);
+    expect(article).toHaveAttribute('aria-labelledby', heading.id);
+    expect(link.getAttribute('aria-labelledby')).toBe(
+      `${readMore.id} ${heading.id}`,
+    );
+    expect(
+      screen.getByRole('link', { name: `${READ_MORE_LABEL} ${POST.title}` }),
+    ).toBe(link);
+    // The level never reaches the DOM, in any spelling.
+    for (const element of [article, ...article.querySelectorAll('*')]) {
+      expect(
+        element.getAttributeNames().filter((name) => /level/i.test(name)),
+      ).toEqual([]);
+    }
+  });
+
+  it('picks the element through ONE lookup, in code — `HEADING`: 2 → h2, 3 → h3', () => {
+    const table = /\bconst HEADING:[^=]*=\s*\{([^}]*)\}/.exec(CODE)?.[1];
+    expect(table?.replace(/\s+/g, '')).toBe("2:'h2',3:'h3',");
+    expect(CODE).toMatch(/\bconst TitleElement = HEADING\[headingLevel\];/);
+    expect(CODE).toMatch(/\bheadingLevel = 2,/);
+  });
+
+  it('refuses a level past the type — 4, null, the string „3" — with a RangeError that names it', () => {
+    // The round-3 review, 2026-10-21 (the title kept short: a failure's
+    // screenshot is filed under it, and a name past 255 bytes is not saved).
+    // On the server's renderer, the bytes a page ships. Unguarded, 4 and
+    // null find no tag and React throws its generic "Element type is
+    // invalid", and the string '3' finds HEADING's key '3' — an object's keys
+    // are strings — and renders an <h3> unasked.
+    const markupAt = (headingLevel: unknown): string =>
+      renderToStaticMarkup(
+        <PostCard
+          {...POST}
+          tagsLabel={TAGS_LABEL}
+          readMore={READ_MORE_LABEL}
+          headingLevel={headingLevel as PostCardHeadingLevel}
+        />,
+      );
+    for (const [smuggled, named] of [
+      [4, '4'],
+      [1, '1'],
+      [2.5, '2.5'],
+      [Number.NaN, 'NaN'],
+      [null, 'null'],
+      ['3', '"3"'],
+      ['2', '"2"'],
+      [{}, '<object>'],
+    ] as const) {
+      expect(() => markupAt(smuggled), named).toThrow(RangeError);
+      expect(() => markupAt(smuggled), named).toThrow(
+        '`headingLevel` is the title’s level in the page’s outline, 2 or 3',
+      );
+      expect(() => markupAt(smuggled), named).toThrow(`got ${named}.`);
+    }
+    // …while the two levels the type allows, and the default, render as
+    // ever.
+    expect(markupAt(undefined)).toContain('<h2 ');
+    expect(markupAt(2)).toContain('<h2 ');
+    expect(markupAt(3)).toContain('<h3 ');
+  });
+});
+
+describe('PostCard — the picture’s `sizes`: the blog list’s by default, a page’s own when it names one (THE `sizes`, OVERRIDDEN)', () => {
+  it('passes a page’s hint to the <img> verbatim', () => {
+    const { picture } = partsOf(
+      renderCard({ sizes: PAGE_SIZES }).container.firstElementChild,
+    );
+
+    expect(picture).toHaveAttribute('sizes', PAGE_SIZES);
+  });
+
+  it('keeps the blog list’s hint when none is named — an explicit `undefined` included', () => {
+    for (const overrides of [{}, { sizes: undefined }]) {
+      const { picture } = partsOf(
+        renderCard(overrides).container.firstElementChild,
+      );
+      expect(picture).toHaveAttribute('sizes', SIZES);
+      cleanup();
+    }
+  });
+
+  it('hands a page’s hint to the preload link too, on a page’s first card', () => {
+    const { picture } = partsOf(
+      renderCard({ sizes: PAGE_SIZES, preload: true }).container
+        .firstElementChild,
+    );
+
+    expect(picture).toHaveAttribute('sizes', PAGE_SIZES);
+    expect(picture).toHaveAttribute('fetchpriority', 'high');
+    // The link for the picture's own srcset and the page's hint (React keys
+    // an image preload by both).
+    const link = [
+      ...document.head.querySelectorAll('link[rel="preload"][as="image"]'),
+    ].find(
+      (element) =>
+        element.getAttribute('imagesrcset') ===
+          picture.getAttribute('srcset') &&
+        element.getAttribute('imagesizes') === PAGE_SIZES,
+    );
+    expect(link).toBeInstanceOf(HTMLLinkElement);
+    expect(link).toHaveAttribute('fetchpriority', 'high');
   });
 });
 
@@ -789,8 +1089,8 @@ describe('PostCard — the tags: ui/PillButton’s TAGS — labels, not buttons 
 });
 
 describe('PostCard — the footer row: the reading time, and the read-more at the end', () => {
-  it('lays ONE row on the card’s floor — the reading time in ui/Text’s muted ink, then the read-more', () => {
-    const { footer, readingTime, readMore } = partsOf(
+  it('lays ONE row on the card’s floor — the reading time in ui/Text’s muted ink, then the link round the read-more’s label', () => {
+    const { footer, readingTime, link, readMore } = partsOf(
       renderCard().container.firstElementChild,
     );
 
@@ -800,12 +1100,17 @@ describe('PostCard — the footer row: the reading time, and the read-more at th
     expect(readingTime.tagName).toBe('P');
     expect(readingTime.className).toBe(MUTED_TEXT);
     expect(readingTime.textContent).toBe(POST.readingTime);
-    expect(readMore.tagName).toBe('A');
+    // The link holds the label and nothing else.
+    expect(link.children).toHaveLength(1);
+    expect(readMore.tagName).toBe('SPAN');
     expect(readMore.textContent).toBe(READ_MORE_LABEL);
+    expect(link.textContent).toBe(READ_MORE_LABEL);
   });
 
-  it('dresses the read-more as ui/TextButton’s ACCENT tone — the hover’s lavender at rest — placed at the end, its label on the edge', () => {
-    const { readMore } = partsOf(renderCard().container.firstElementChild);
+  it('dresses the read-more’s LABEL as ui/TextButton’s ACCENT tone — the hover’s lavender at rest — and puts the placement on the link round it', () => {
+    const { link, readMore } = partsOf(
+      renderCard().container.firstElementChild,
+    );
 
     const tokens = tokensOf(readMore);
     for (const token of ACCENT_AT_REST) expect(tokens).toContain(token);
@@ -818,8 +1123,14 @@ describe('PostCard — the footer row: the reading time, and the read-more at th
     // …and the card's hover draws the same look: THE WHOLE CARD DRAWS THE
     // UNDERLINE, the atom's group pair.
     for (const token of GROUP_HOVER) expect(tokens).toContain(token);
-    // Placement, merged LAST by the slot (§6.8).
-    expect(tokens.slice(-READ_MORE.length)).toEqual(READ_MORE);
+    // The label is positioned — the atom's own `relative`, its underline's
+    // scope — which is why the LINK, not the label, carries the layer.
+    expect(tokens).toContain('relative');
+    // The placement is the link's, never the label's (THE LINK): exactly its
+    // own contract, written out above.
+    expect(tokensOf(link)).toEqual(LINK);
+    expect(tokens).not.toContain('ms-auto');
+    expect(tokens).not.toContain('-me-2');
     // `tone`, `hoverArea` and `asChild` never reach the DOM; no current-page
     // mark.
     // (An HTML attribute name is case-blind, so one read covers `hoverArea`.)
@@ -837,19 +1148,47 @@ describe('PostCard — the footer row: the reading time, and the read-more at th
     expect(calls[0]).not.toMatch(/\bactive\b/);
   });
 
-  it('is HTML’s PLACEHOLDER link — an <a> with no href: no link role, no tab stop, until the article pages exist', () => {
-    const { readMore } = partsOf(renderCard().container.firstElementChild);
+  it('is the card’s ONE link — the page’s href, named „Citește mai mult… <title>”, the visible label first, one tab stop', () => {
+    const { link, readMore } = partsOf(
+      renderCard().container.firstElementChild,
+    );
 
-    expect(readMore).not.toHaveAttribute('href');
-    expect(screen.queryByRole('link')).toBeNull();
-    readMore.focus();
-    expect(document.activeElement).not.toBe(readMore);
-    // Its words are still read, as text, after the reading time.
-    expect(screen.getByText(READ_MORE_LABEL)).toBe(readMore);
+    expect(link).toHaveAttribute('href', POST.href);
+    // Named by its label and the title, in that order (SC 2.5.3, SC 2.4.4),
+    // through the two ids — the title's is the article's own name.
+    const title = screen.getByRole('heading', { level: 2 });
+    expect(link.getAttribute('aria-labelledby')).toBe(
+      `${readMore.id} ${title.id}`,
+    );
+    expect(readMore.id).not.toBe('');
+    expect(
+      screen.getByRole('link', {
+        name: `${READ_MORE_LABEL} ${POST.title}`,
+      }),
+    ).toBe(link);
+    // A plain link: no target, no rel, nothing that opens a new window.
+    expect(link.getAttributeNames().sort()).toEqual([
+      'aria-labelledby',
+      'class',
+      'href',
+    ]);
+    // It takes focus — the card's one tab stop.
+    link.focus();
+    expect(document.activeElement).toBe(link);
+  });
+
+  it('asks for the link in code with the page’s href and the two ids — and spells no href of its own', () => {
+    const anchors = [...CODE.matchAll(/<a\b([^>]*)>/g)].map((m) => m[1]);
+    expect(anchors).toHaveLength(1);
+    expect(anchors[0]).toMatch(/\bhref=\{href\}/);
+    expect(anchors[0]).toMatch(
+      /\baria-labelledby=\{`\$\{readMoreId\} \$\{titleId\}`\}/,
+    );
+    expect(CODE).not.toMatch(/\bhref="/);
   });
 });
 
-describe('PostCard — the jump, and nothing to press', () => {
+describe('PostCard — the jump, and ONE thing to press: the link', () => {
   it('carries THE CARD JUMP on the article: 200ms, the keyword ease-out, 105 %, still under reduced motion — and the read-more’s hover area beside it', () => {
     renderCard();
 
@@ -865,8 +1204,9 @@ describe('PostCard — the jump, and nothing to press', () => {
       JUMP.join(' '),
     );
     expect(jump.replace(/'[^']*'/g, '').trim()).toMatch(/^[+\s]*$/);
-    // No press state — there is nothing to press — and no growing shadow
-    // anywhere in the card (the jump census refuses the old pop's other half).
+    // No press state of its own — a press opens the article (THE LINK) — and
+    // no growing shadow anywhere in the card (the jump census refuses the old
+    // pop's other half).
     for (const element of [article, ...article.querySelectorAll('*')]) {
       for (const token of tokensOf(element)) {
         expect(token).not.toMatch(/^active:/);
@@ -875,17 +1215,17 @@ describe('PostCard — the jump, and nothing to press', () => {
     }
   });
 
-  it('has nothing focusable or interactive inside — no link, no button, no tabindex, no role but the list’s', () => {
+  it('has ONE thing focusable and interactive inside — the link — and no button, no tabindex, no role but the list’s', () => {
     const { container } = renderCard();
+    const { link } = partsOf(container.firstElementChild);
 
-    expect(screen.queryAllByRole('link')).toHaveLength(0);
+    expect(screen.getAllByRole('link')).toEqual([link]);
     expect(screen.queryAllByRole('button')).toHaveLength(0);
-    expect(
-      container.querySelectorAll(
+    expect([
+      ...container.querySelectorAll(
         'a[href], button, input, select, textarea, summary, details, iframe, [href], [tabindex], [contenteditable]',
       ),
-    ).toHaveLength(0);
-    // The one <a> is the read-more's placeholder.
+    ]).toEqual([link]);
     expect(container.querySelectorAll('a')).toHaveLength(1);
     const roles = [...container.querySelectorAll('[role]')].map((element) =>
       element.getAttribute('role'),
@@ -925,14 +1265,24 @@ describe('PostCard — §6 fidelity: placement in, no styling out', () => {
     );
   });
 
-  it('keeps its own props off the article — no tooltip, no stray attribute', () => {
-    renderCard();
+  it('keeps its own props off the article — no tooltip, no stray attribute, the level, the picture hint and the miniature’s share included', () => {
+    renderCard({ headingLevel: 3, sizes: PAGE_SIZES });
 
     // `title` is the card's heading text, never HTML's tooltip; the content
-    // props are destructured, so nothing of theirs rides the spread.
+    // props — `headingLevel` and `sizes` among them — are destructured, so
+    // nothing of theirs rides the spread.
     expect(screen.getByRole('article').getAttributeNames().sort()).toEqual([
       'aria-labelledby',
       'class',
+    ]);
+    cleanup();
+    // A miniature adds ONE attribute, the style that carries its share —
+    // never `miniature` itself, in any spelling.
+    renderCard({ miniature: SHARE });
+    expect(screen.getByRole('article').getAttributeNames().sort()).toEqual([
+      'aria-labelledby',
+      'class',
+      'style',
     ]);
   });
 
@@ -969,13 +1319,228 @@ describe('PostCard — §6 fidelity: placement in, no styling out', () => {
   });
 });
 
+describe('PostCard — THE MINIATURE as markup and code (what it draws is PostCard.miniature.test.tsx’s)', () => {
+  /** The card as the server prints it — the bytes a page ships. */
+  const markupOf = (overrides: Partial<PostCardProps> = {}): string =>
+    renderToStaticMarkup(
+      <PostCard
+        {...POST}
+        tagsLabel={TAGS_LABEL}
+        readMore={READ_MORE_LABEL}
+        {...overrides}
+      />,
+    );
+
+  it('refuses a share outside (0, 1] — 0, a negative, over 1, NaN and ±Infinity — with a RangeError that names it', () => {
+    for (const share of [
+      0,
+      -0.65,
+      1.0001,
+      2,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    ]) {
+      expect(() => markupOf({ miniature: share }), String(share)).toThrow(
+        RangeError,
+      );
+      expect(() => markupOf({ miniature: share }), String(share)).toThrow(
+        `got ${String(share)}`,
+      );
+    }
+  });
+
+  it('quotes a STRING share that slipped past the type, so „0.65" never reads as the valid number it spells', () => {
+    const smuggled = '0.65' as unknown as number;
+    expect(() => markupOf({ miniature: smuggled })).toThrow(RangeError);
+    expect(() => markupOf({ miniature: smuggled })).toThrow('got "0.65"');
+  });
+
+  it('names any other smuggled share by its TYPE, never by running its code', () => {
+    // Each would mislead or throw if it were run: a BigInt, a boxed number
+    // and an array print as a valid share („1", „0.65"), a null-prototype
+    // object has no text at all (a TypeError), and a throwing toString
+    // throws its own error.
+    for (const [smuggled, type] of [
+      [1n, '<bigint>'],
+      [Object(0.65), '<object>'],
+      [[0.65], '<object>'],
+      [Object.create(null), '<object>'],
+      [
+        {
+          toString: () => {
+            throw new Error('the value’s own code ran');
+          },
+        },
+        '<object>',
+      ],
+    ] as const) {
+      const share = smuggled as unknown as number;
+      expect(() => markupOf({ miniature: share }), type).toThrow(RangeError);
+      expect(() => markupOf({ miniature: share }), type).toThrow(
+        `got ${type}.`,
+      );
+    }
+  });
+
+  it('draws any share in (0, 1] — the Home band’s 0.65, 1 itself and the smallest number there is', () => {
+    for (const share of [SHARE, 1, 0.01, Number.MIN_VALUE]) {
+      expect(markupOf({ miniature: share }), String(share)).toContain(
+        `${SHARE_VARIABLE}:${String(share)}`,
+      );
+    }
+  });
+
+  it('prints the list’s card byte for byte without a share — held from both sides', () => {
+    // No part of the miniature in its markup (`miniature={undefined}` and a
+    // caller's style included), and a miniature with its four parts taken
+    // out IS that markup.
+    /** A regular expression matching `text` as written. */
+    const literally = (text: string): string =>
+      text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    /** `markup` with `part` taken out — found EXACTLY once, or a throw that
+     *  names it, so a part gone missing never passes as removed. */
+    const takeOut = (markup: string, part: string, name: string): string => {
+      const found = markup.match(new RegExp(part, 'g')) ?? [];
+      if (found.length !== 1) {
+        throw new Error(
+          `the miniature’s ${name} stands ${found.length} times in its markup`,
+        );
+      }
+      return markup.replace(new RegExp(part), '');
+    };
+    const share = `${literally(SHARE_VARIABLE)}:${literally(String(SHARE))}`;
+    for (const overrides of [
+      {},
+      { style: { color: 'red' }, id: 'x', className: 'h-full' },
+      { headingLevel: 3 as const, sizes: PAGE_SIZES, preload: true },
+    ]) {
+      const plain = markupOf(overrides);
+      // One side: without a share — the prop left out, or written
+      // `undefined` — none of the four parts.
+      for (const markup of [
+        plain,
+        markupOf({ ...overrides, miniature: undefined }),
+      ]) {
+        expect(markup).not.toContain(SHARE_VARIABLE);
+        expect(markup).not.toContain(CAPTURE);
+        expect(markup).not.toContain(MINIATURE_WRAPPER.join(' '));
+        expect(markup).not.toContain(`style="${PIXEL}:`);
+      }
+      // The other: the miniature's markup, built from other props, is that
+      // card and exactly four parts — the share inline on the <article> (its
+      // own attribute, or after a caller's declarations), the capture among
+      // its classes, THE MINIATURE'S WRAPPER round ui/Card (its opening tag
+      // and the closing one before the article's), and the chips' pixel
+      // inline on the tag list.
+      let mini = markupOf({ ...overrides, miniature: SHARE });
+      mini = takeOut(mini, ` style="${share}"|;${share}(?=")`, 'share');
+      mini = takeOut(mini, ` ${literally(CAPTURE)}`, 'capture');
+      mini = takeOut(
+        mini,
+        literally(`<div class="${MINIATURE_WRAPPER.join(' ')}">`),
+        'wrapper',
+      );
+      mini = mini.replace(/<\/div><\/article>$/, '</article>');
+      mini = takeOut(
+        mini,
+        ` style="${literally(PIXEL)}:[^"]*"`,
+        'chips’ pixel',
+      );
+      expect(mini).toBe(plain);
+    }
+  });
+
+  it('puts the share inline over the caller’s style — which can never unset it — the capture on the <article>, the remap on ONE wrapper of its own round ui/Card, the chips’ pixel inline on the tag list, and nothing else', () => {
+    const { container: plain } = renderCard({ className: 'h-full' });
+    const plainCard = part(
+      plain.querySelector('article')?.firstElementChild,
+      'full card (ui/Card)',
+      HTMLElement,
+    );
+    const plainTokens = [plainCard, ...plainCard.querySelectorAll('*')].map(
+      tokensOf,
+    );
+    cleanup();
+    const { container } = renderCard({
+      className: 'h-full',
+      miniature: SHARE,
+      style: { color: 'red', [SHARE_VARIABLE]: '0.9' } as CSSProperties,
+    });
+    const article = screen.getByRole('article');
+    // The share wins over the caller's own spelling of it; the caller's
+    // other declarations stay.
+    expect(article.style.getPropertyValue(SHARE_VARIABLE)).toBe(String(SHARE));
+    expect(article.style.color).toBe('red');
+    // The capture rides between the card's own classes and the caller's.
+    expect(tokensOf(article)).toEqual([...JUMP, HOVER_AREA, CAPTURE, 'h-full']);
+    // THE MINIATURE'S WRAPPER: the article's one child, a plain <div> with
+    // the stretch and the remap and nothing else — no role, no id, no style —
+    // and ui/Card its one child, its className the full card's own.
+    expect(article.children).toHaveLength(1);
+    const wrapper = part(article.firstElementChild, 'wrapper', HTMLDivElement);
+    expect(wrapper.getAttributeNames()).toEqual(['class']);
+    expect(tokensOf(wrapper)).toEqual(MINIATURE_WRAPPER);
+    expect(wrapper.children).toHaveLength(1);
+    const card = part(wrapper.firstElementChild, 'card (ui/Card)', HTMLElement);
+    expect(tokensOf(card)).toEqual(tokensOf(plainCard));
+    expect(tokensOf(card).slice(-2)).toEqual(['relative', 'h-full']);
+    // The tag list keeps its class byte for byte (the cover's KEEP-IN-SYNC);
+    // its pixel rides inline, CHIP_SCALE's formula with the floor × the
+    // share (the next case reads the two out of the source).
+    const list = screen.getByRole('list', { name: TAGS_LABEL });
+    expect(list.style.getPropertyValue(PIXEL)).toContain(
+      `var(${SHARE_VARIABLE})`,
+    );
+    // The Card and everything in it: every class list the full card's.
+    expect([card, ...card.querySelectorAll('*')].map(tokensOf)).toEqual(
+      plainTokens,
+    );
+    expect(container.querySelectorAll('*')).toHaveLength(
+      plainTokens.length + 2,
+    );
+  });
+
+  it('spells the chips’ miniature pixel as CHIP_SCALE’s own formula with its floor × the share — both read out of the source (KEEP-IN-SYNC within the file)', () => {
+    // CHIP_SCALE's declaration, found by NAME behind THE GUARD (the harness
+    // note: never written here whole).
+    const chipScale = /\bconst CHIP_SCALE =([^;]*);/.exec(CODE)?.[1] ?? '';
+    const classes = [...chipScale.matchAll(/'([^']*)'/g)]
+      .map((match) => match[1])
+      .join('')
+      .split(/\s+/);
+    const head = `${GUARD}[${PIXEL}:`;
+    const formula = classes
+      .find((token) => token.startsWith(head))
+      ?.slice(head.length, -1);
+    const floor = /^max\((calc\([\d.]+rem\/\d+\)),/.exec(formula ?? '')?.[1];
+    if (!formula || !floor) {
+      throw new Error(`PostCard.tsx: CHIP_SCALE moved — ${chipScale}`);
+    }
+    // MINIATURE_CHIPS' value, by the same NAME.
+    const miniature = new RegExp(
+      `\\bconst MINIATURE_CHIPS = \\{\\s*'${PIXEL}':\\s*'([^']*)'`,
+    ).exec(CODE)?.[1];
+    expect(miniature).toBe(
+      formula.replace(floor, `${floor.slice(0, -1)}*var(${SHARE_VARIABLE}))`),
+    );
+    // …and the share is ONE variable: set once (MINIATURE_SHARE), read by
+    // the capture and by the chips' pixel.
+    expect(CODE).toMatch(
+      new RegExp(`\\bconst MINIATURE_SHARE = '${SHARE_VARIABLE}';`),
+    );
+    expect(CAPTURE).toContain(`var(${SHARE_VARIABLE})`);
+    expect(CODE.split(`'${CAPTURE}'`)).toHaveLength(2);
+  });
+});
+
 describe('PostCard — zero islands of its own, zero message keys', () => {
-  it('ships NO client directive and calls ONE hook, the server-safe useId (§16)', () => {
+  it('ships NO client directive and calls ONE hook, the server-safe useId — twice: the title’s id and the read-more’s (§16)', () => {
     expect(CODE).not.toMatch(
       /^\s*['"]use client['"]\s*;?\s*(\/\/.*|\/\*.*)?$/m,
     );
     const hooks = [...CODE.matchAll(/\buse[A-Z]\w*\(/g)].map((m) => m[0]);
-    expect(hooks).toEqual(['useId(']);
+    expect(hooks).toEqual(['useId(', 'useId(']);
     expect(CODE).not.toMatch(/\bon[A-Z]\w*=/);
     expect(CODE).not.toMatch(/\buseTranslations\b/);
     expect(CODE).not.toMatch(/\bt\(/);
@@ -1030,22 +1595,37 @@ describe('PostCard — type-level pins', () => {
     expectTypeOf<PostCardProps>().not.toHaveProperty('aria-labelledby');
     expectTypeOf<PostCardProps>().not.toHaveProperty('aria-label');
     expectTypeOf<PostCardProps>().not.toHaveProperty('children');
-    // THE FALSE AFFORDANCE's promises, kept by the type (the header's THE
-    // NAME): an article it stays, nothing in it takes focus, and no markup
-    // arrives but the named props'.
+    // THE NAME's refusals, kept by the type: an article it stays, the link is
+    // its one tab stop, and no markup arrives but the named props'.
     expectTypeOf<PostCardProps>().not.toHaveProperty('role');
     expectTypeOf<PostCardProps>().not.toHaveProperty('tabIndex');
     expectTypeOf<PostCardProps>().not.toHaveProperty('dangerouslySetInnerHTML');
     // THE DATE LEFT THE CARD (the header's THE AUTHOR): no prop for it.
     expectTypeOf<PostCardProps>().not.toHaveProperty('date');
-    // The title is the page's <h2>, always: no level to choose (THE NAME).
-    expectTypeOf<PostCardProps>().not.toHaveProperty('headingLevel');
-    // `title` is the heading's text, never the native tooltip's string|undefined.
+    // THE TITLE'S LEVEL: two levels and no third, optional — the page's
+    // outline names one, the default is the list's <h2>.
+    expectTypeOf<PostCardHeadingLevel>().toEqualTypeOf<2 | 3>();
+    expectTypeOf<PostCardProps['headingLevel']>().toEqualTypeOf<
+      PostCardHeadingLevel | undefined
+    >();
+    // THE `sizes`, OVERRIDDEN: a page's own hint, optional.
+    expectTypeOf<PostCardProps['sizes']>().toEqualTypeOf<string | undefined>();
+    // THE MINIATURE: a share, optional — the range is the RangeError's.
+    expectTypeOf<PostCardProps['miniature']>().toEqualTypeOf<
+      number | undefined
+    >();
+    // `title` is the heading's text: REQUIRED, a string. What this pin cannot
+    // tell is whether HTML's own `title` was Omitted — were it let back in,
+    // the intersection would read `string & (string | undefined)`, which is
+    // `string` again; the Omit is the props type's own word, and the render
+    // case above keeps any tooltip off the <article> at run time.
     expectTypeOf<PostCardProps['title']>().toEqualTypeOf<string>();
     expectTypeOf<PostCardProps['preload']>().toEqualTypeOf<
       boolean | undefined
     >();
-    // Every string arrives finished, and every one is required.
+    // Every string arrives finished, and every one is required — the
+    // article's address among them (THE LINK).
+    expectTypeOf<PostCardContent['href']>().toEqualTypeOf<string>();
     expectTypeOf<PostCardProps['tagsLabel']>().toEqualTypeOf<string>();
     expectTypeOf<PostCardProps['readMore']>().toEqualTypeOf<string>();
     expectTypeOf<PostCardContent['readingTime']>().toEqualTypeOf<string>();
@@ -1711,9 +2291,15 @@ describe('PostCard — a hover anywhere on the card draws the read-more’s unde
     expect(scaleXOf(getComputedStyle(m.article))).toBe(1);
 
     for (const target of [screen.getByRole('heading', { level: 2 }), m.cell]) {
-      await realUser.hover(target);
-      // The CARD is hovered, the read-more is not…
+      // FORCED: the card's link lays its layer over the whole card (THE
+      // LINK), and Playwright refuses to hover a box another one covers — so
+      // the pointer is put on the target's centre as it stands, where the
+      // card's link takes it.
+      await realUser.hover(target, { force: true });
+      // The CARD is hovered — through its link's layer — the read-more's
+      // label is not…
       expect(m.article.matches(':hover')).toBe(true);
+      expect(m.link.matches(':hover')).toBe(true);
       expect(m.readMore.matches(':hover')).toBe(false);
       // …and the underline is drawn, in the one lavender, while the card
       // jumps on its own clock — THE JUMP STAYS.
@@ -1798,9 +2384,14 @@ describe('PostCard — the tags are LABELS: the tag face at rest, and still unde
       screen.getByRole('heading', { level: 2 }),
       m.cell,
     ]) {
-      await realUser.hover(target);
-      // The pointer is on the target, and so on the card…
-      expect(target.matches(':hover')).toBe(true);
+      // FORCED, as above: the pointer on the target's centre, under the
+      // card's link layer (THE LINK).
+      await realUser.hover(target, { force: true });
+      // The pointer is on the target's place — where the card's LINK lies
+      // over it, so the link is hovered and the target is not — and so on
+      // the card…
+      expect(target.matches(':hover')).toBe(false);
+      expect(m.link.matches(':hover')).toBe(true);
       expect(m.article.matches(':hover')).toBe(true);
       // …and no chip moved a colour or a length, the hovered one included.
       expect(chips.map(faceOf)).toEqual(restFaces);
@@ -1824,5 +2415,99 @@ describe('PostCard — the tags are LABELS: the tag face at rest, and still unde
     } finally {
       unpark();
     }
+  });
+});
+
+describe('PostCard — the whole card is its link, measured (real stylesheet)', () => {
+  holdStill();
+  parkBeforeEach();
+
+  /** The centre of a box on screen. */
+  const centreOf = (element: Element): readonly [number, number] => {
+    const box = element.getBoundingClientRect();
+    return [box.left + box.width / 2, box.top + box.height / 2];
+  };
+
+  /** What a press at a point lands on — the engine's own hit test, which
+   *  answers a pseudo-element with the element it belongs to — and the link
+   *  that holds it, if any. */
+  const linkAt = (x: number, y: number): Element | null =>
+    document.elementFromPoint(x, y)?.closest('a') ?? null;
+
+  it('answers a press ANYWHERE on the card with its link — the picture, each chip, the title, the author, the summary, the reading time, the label and the frame — and nowhere past it', () => {
+    const m = renderMeasured();
+    const chips = within(
+      screen.getByRole('list', { name: TAGS_LABEL }),
+    ).getAllByRole('listitem');
+    expect(chips).toHaveLength(POST.tags.length);
+
+    for (const target of [
+      m.cell,
+      ...chips,
+      screen.getByRole('heading', { level: 2 }),
+      m.author,
+      screen.getByText(POST.summary),
+      m.readingTime,
+      m.readMore,
+    ]) {
+      expect(
+        linkAt(...centreOf(target)),
+        `a press on „${target.textContent || target.tagName}"`,
+      ).toBe(m.link);
+    }
+
+    // The FRAME too — the layer spans the card's border box (its inset the
+    // framed border taken back): the middle of each of the card's four
+    // edges, half a pixel inside them, on the 3px frame itself.
+    const card = m.card.getBoundingClientRect();
+    const middle = [card.left + card.width / 2, card.top + card.height / 2];
+    const [midX = 0, midY = 0] = middle;
+    for (const [x, y] of [
+      [card.left + 0.5, midY],
+      [card.right - 0.5, midY],
+      [midX, card.top + 0.5],
+      [midX, card.bottom - 0.5],
+    ] as const) {
+      expect(linkAt(x, y), `the frame at (${x}, ${y})`).toBe(m.link);
+    }
+    // …and not a pixel past it: the layer is the card's, never the page's.
+    expect(linkAt(card.right + 2, midY)).toBeNull();
+    expect(linkAt(midX, card.bottom + 2)).toBeNull();
+  });
+
+  it('draws the keyboard’s focus ring round the WHOLE card — the layer’s 2px of `--focus` at a 2px offset, at the card’s own corner — and hides the link’s own', async () => {
+    const m = renderMeasured();
+    const layer = (): CSSStyleDeclaration =>
+      getComputedStyle(m.link, '::before');
+
+    // At rest: no ring anywhere. The layer is there all the same — empty,
+    // positioned, over the card's border box: its inset is the frame.
+    expect(layer().outlineStyle).toBe('none');
+    expect(layer().position).toBe('absolute');
+    expect(layer().content).toBe('""');
+    for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+      expect(layer()[side]).toBe(`${-m.frame}px`);
+    }
+    // At the card's own corner: the layer's radius IS the card's.
+    expect(layer().borderTopLeftRadius).toBe(m.cardStyle.borderTopLeftRadius);
+    expect(layer().borderBottomRightRadius).toBe(
+      m.cardStyle.borderBottomRightRadius,
+    );
+
+    // A REAL Tab — the keyboard's focus, the one `:focus-visible` answers —
+    // lands on the link, the card's one tab stop.
+    await realUser.tab();
+    expect(document.activeElement).toBe(m.link);
+    expect(m.link.matches(':focus-visible')).toBe(true);
+    expect(layer().outlineStyle).toBe('solid');
+    expect(layer().outlineWidth).toBe('2px');
+    expect(layer().outlineOffset).toBe('2px');
+    expect(layer().outlineColor).toBe(tokenRgb('focus'));
+    // The link's own ring is hidden: the card's is the one drawn.
+    expect(getComputedStyle(m.link).outlineStyle).toBe('none');
+
+    // Focus gone, ring gone.
+    m.link.blur();
+    expect(layer().outlineStyle).toBe('none');
   });
 });

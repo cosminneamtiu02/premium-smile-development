@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect } from 'storybook/test';
+import { cx } from '@/lib/cx/cx';
+import {
+  Container,
+  bandColumnClasses,
+  bandScaleClasses,
+} from '../Container/Container';
 import { Heading, type HeadingSize, type HeadingTone } from './Heading';
 
 // One story per meaningful state (§13). Demo values are Romanian with
@@ -8,7 +14,7 @@ import { Heading, type HeadingSize, type HeadingTone } from './Heading';
 // net also samples them at the 320px accessibility width (§13 UI-tier opt-in;
 // the tier itself is 1280-only) — SectionStep carries that tag for its own
 // reason: a 30px serif line wrapping inside a 320px column.
-// Three of the six stories exist to show ONE look on three different
+// Three of the stories exist to show ONE look on three different
 // elements — <p>, <h2>, <a>. That decoupling is the atom's whole point, and
 // "identical pixels, different element" is a claim only rendered stories can
 // make honestly.
@@ -31,15 +37,17 @@ const meta = {
       control: 'select',
       options: [
         'title',
+        'subhead',
         'section',
         'band',
         'name',
         'page',
         'hero',
+        'hero-scaled',
         'slogan',
       ] satisfies HeadingSize[],
       description:
-        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's first container-responsive row, joined 2026-09-26 (D48, see Band) · 'name' = a doctor card's name (2026-10-10, PersonnelCard D20): band, and 24px on a 30px line in a container under 24rem, where the name shares its row with the round photo — band itself on an engine without container queries (see NameStep) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
+        "The growth axis, one step per measured consumer: 'title' = the Footer/Header treatment (font-display, text-xl, ink-strong) · 'subhead' = an article's subheadings (sections/PostProse) and a blog photo's heading (sections/PostPhoto, alone or as each half of a before/after) (2026-10-14): text-2xl — 24px on a 32px line — and semi-bold, the axis's one weighted size row, static: 24 design px wherever it stands, 24 × s inside THE BAND SCALE (see SubheadStep) · 'section' = the SectionHeading step (text-3xl, same face and ink), measured 2026-09-01 · 'band' = THE h2 step (text-3xl, text-4xl from the container's @md step): 30px on a column narrower than 28rem, 36px from it — so an h2 never outranks the hero h1's 32px floor on a phone; the axis's first container-responsive row, joined 2026-09-26 (D48, see Band) · 'name' = a doctor card's name (2026-10-10, PersonnelCard D20): band, and 24px on a 30px line in a container under 24rem, where the name shares its row with the round photo — band itself on an engine without container queries (see NameStep) · 'page' = the page-hero step (text-4xl), measured by the 404 band 2026-09-07 · 'hero' = the fluid full-screen step (clamp 32px → 72px with the viewport, /tight), measured by sections/Hero 2026-09-19 and THE h1 step since §15.24 · 'hero-scaled' = the h1 of a band that scales (2026-10-15): hero byte for byte, and inside THE BAND SCALE — a mouse or trackpad, a column of max(56rem, 896px) — hero's value at the owner's 1401 window in the band's design pixel, 65.04 × s: the doctor page's name, the page hero's heading (the blog list's and the Team page's), an article's title; on a wide screen a size browser zoom cannot double — on a 1920 screen behind a classic scrollbar 89.4 device px from 100 to 150 %, ×1.11 at 200 %, ×1.79 at 500 % (the atom's THE ZOOM TRADE; see HeroScaledStep) · 'slogan' = the Home opener's slogan step (2026-10-01): hero's curve to the tablet, the tablet's own 5.58 % of the viewport from there — 32px → 107px (see SloganStep). Further steps join additively when real designs measure them — the default stays 'title' forever, so growth never moves an existing call site",
     },
     tone: {
       control: 'select',
@@ -51,7 +59,7 @@ const meta = {
         'inverse-aura',
       ] satisfies HeadingTone[],
       description:
-        "The ink axis, orthogonal to size: 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'inverse-aura' = the outlined face (the plain weight) plus a lilac HALO — two centred em-scaled text-shadows mixed from the display lilac — the old page's slogan as the owner sees it and the Hero's default face since 2026-10-01. Joined with sections/Hero; the default stays 'default' forever",
+        "The ink axis, independent of size — any step may wear any ink, but a size row and a tone row that both set a weight meet in the stylesheet's order (subhead with inverse-stroked draws at 600, the atom's THE WEIGHT RULE): 'default' = ink-strong, every title's ink · 'inverse' = ink-inverse, display text over the §15.1 scrim · 'inverse-stroked' = the same white ink, bold and tight, with the old page's 2px accent stroke behind the letterforms · 'inverse-outlined' = the plain weight with that stroke alone (the Hero's three compared faces, 2026-09-20/21) · 'inverse-aura' = the outlined face (the plain weight) plus a lilac HALO — two centred em-scaled text-shadows mixed from the display lilac — the old page's slogan as the owner sees it and the Hero's default face since 2026-10-01. Joined with sections/Hero; the default stays 'default' forever",
     },
     asChild: {
       control: false,
@@ -98,6 +106,65 @@ export const AsLink: Story = {
       <a href="#acasa">Premium Smile</a>
     </Heading>
   ),
+};
+
+/**
+ * An article's subheadings (2026-10-14, the blog article page — the owner:
+ * "text and subheadings, so smaller headings of the articles"): the default
+ * scale's 24px on its own 32px line, SEMI-BOLD — the axis's one weighted size
+ * row — shown where it lives, between the 18px paragraphs of an article's
+ * column (`text-lg`, sections/PostProse's reading text). The words are the
+ * demo article's own, copied (src/content/blog/articles — an atom's story
+ * reads no site data): its first subheading follows the controls, its last is
+ * pinned to 'subhead', the paragraph is the first one's opening sentences.
+ * Real <h2>s through asChild, PostProse's shape; two consecutive h2s give
+ * axe's heading-order no increment to score. The column's width is the
+ * article's 42rem measure as an INLINE max-width — NameStep's reason: a width
+ * spelled only here would ship as a rule nothing on the site wears. UI tier,
+ * 1280 only, no 'stress-320': a static step has no narrow case of its own
+ * (the test file measures the same 24px in a phone's column too). The play
+ * reads the step off the engine — size, line and weight — beside the reading
+ * text it heads.
+ */
+export const SubheadStep: Story = {
+  args: { size: 'subhead', children: 'Peri moi, medii sau tari?' },
+  render: (args) => (
+    <div className="flex flex-col gap-4" style={{ maxWidth: '42rem' }}>
+      <Heading {...args} asChild>
+        <h2>{args.children}</h2>
+      </Heading>
+      <p className="text-lg">
+        Pentru majoritatea oamenilor, o periuță cu peri moi este alegerea
+        potrivită. Perii moi îndepărtează placa bacteriană la fel de bine ca cei
+        tari, dar sunt blânzi cu gingia și cu smalțul.
+      </p>
+      <Heading size="subhead" asChild>
+        <h2>Cum o păstrezi curată</h2>
+      </Heading>
+    </div>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    // Both subheadings: 24px on a 32px line at 600. (Background, not what
+    // this reads: src/fonts declares Source Serif 4 as a variable face at
+    // 200–900, so 600 is one of the face's own instances, not a synthesized
+    // bold — a computed weight says 600 either way and cannot tell them apart.)
+    const step = (element: HTMLElement) => {
+      const style = getComputedStyle(element);
+      return [style.fontSize, style.lineHeight, style.fontWeight];
+    };
+    await expect(
+      canvas.getAllByRole('heading', { level: 2 }).map(step),
+    ).toEqual([
+      ['24px', '32px', '600'],
+      ['24px', '32px', '600'],
+    ]);
+    // …over the article's reading text: 18px at the body's own weight.
+    await expect(
+      step(canvas.getByText(/^Pentru majoritatea oamenilor/)),
+    ).toEqual(['18px', '28px', '400']);
+    const root = canvasElement.ownerDocument.documentElement;
+    await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+  },
 };
 
 /**
@@ -308,8 +375,9 @@ export const PageStep: Story = {
  * column (the 320 window's since ui/Container's phone gutter of 2026-10-09;
  * 256 before) is the wrap case, and the step's floor is what this width
  * proves.
- * THE h1 STEP of §15.24 since 2026-09-26 (the doctor page's name, the 404
- * title); the opener's own reshape is SloganStep, beside it.
+ * THE h1 STEP of §15.24 since 2026-09-26 (the 404 title, the privacy
+ * policy's — inside a band that scales, HeroScaledStep's step); the opener's
+ * own reshape is SloganStep, beside it.
  */
 export const HeroStep: Story = {
   tags: ['stress-320'],
@@ -325,6 +393,123 @@ export const HeroStep: Story = {
       </Heading>
     </div>
   ),
+};
+
+/**
+ * THE h1 OF A BAND THAT SCALES (2026-10-15 — the sibling step THE BAND
+ * SCALE's census booked at its gated class's third consumer): `hero` byte for
+ * byte, plus ONE class only THE BAND SCALE opens — inside it `hero`'s value
+ * at the owner's 1401 window, 65.04 design pixels × the band's pixel s (the
+ * atom's header has the arithmetic, the precondition and the bound). Its
+ * wearers are the page <h1>s of the bands that scale: the doctor page's name,
+ * the page hero's heading (the blog list's and the Team page's), an
+ * article's title. Two frames, the same words
+ * twice in each — the first line follows the controls, the second is pinned
+ * to 'hero': OUTSIDE any band, with no container above them, the two lines
+ * are one size and the step IS `hero`; INSIDE a band as a page builds one —
+ * ui/Container's column, then a rhythm box wearing its two band-scale
+ * strings — the step draws in the band's design pixel on a laptop or a
+ * desktop while `hero` keeps the viewport's clamp (on a phone, a touch tablet
+ * or a column under max(56rem, 896px) the two are one size there too). The
+ * words are an article's title, copied (an atom's story reads no site data).
+ * Real <h1>s through asChild, the consumers' shape; four consecutive h1s give
+ * axe's heading-order no increment to score. The frames, their gap and their
+ * dashed outline are the story's, never the atom's (§6.4). UI tier, 1280
+ * only, no 'stress-320': under the step the step IS `hero`, which HeroStep
+ * samples at 320. The play decides the regime from the browser and the
+ * column it MEASURES — its content box, the width the gate's container steps
+ * and the band's `100cqw` read — never from a window it assumes
+ * (DoctorIntro's stories' `scaleOf`), and reads the sizes off the engine.
+ * The step's zoom trade (on a wide screen a size browser zoom cannot double)
+ * is the atom's THE ZOOM TRADE, computed there — a story at one width cannot
+ * show it.
+ */
+export const HeroScaledStep: Story = {
+  args: { size: 'hero-scaled', children: 'Cum îți alegi periuța de dinți' },
+  render: (args) => (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 outline outline-dashed outline-line">
+        <Heading {...args} asChild>
+          <h1>{args.children}</h1>
+        </Heading>
+        <Heading size="hero" asChild>
+          <h1>{args.children}</h1>
+        </Heading>
+      </div>
+      <Container>
+        <div
+          className={cx(
+            bandColumnClasses,
+            bandScaleClasses,
+            'flex flex-col gap-4 outline outline-dashed outline-line',
+          )}
+        >
+          <Heading {...args} asChild>
+            <h1>{args.children}</h1>
+          </Heading>
+          <Heading size="hero" asChild>
+            <h1>{args.children}</h1>
+          </Heading>
+        </div>
+      </Container>
+    </div>
+  ),
+  play: async ({ canvas }) => {
+    // In DOM order: the plain frame's step and `hero`, then the band's.
+    const [plainStep, plainHero, bandStep, bandHero] = canvas.getAllByRole(
+      'heading',
+      { level: 1 },
+    );
+    const type = (element: HTMLElement) => {
+      const style = getComputedStyle(element);
+      return [style.fontSize, style.lineHeight];
+    };
+    // OUTSIDE any band: the step IS `hero`, size and line.
+    await expect(type(plainStep)).toEqual(type(plainHero));
+    // `hero` keeps the viewport's clamp wherever it stands — the one size
+    // the band's remap cannot redraw.
+    await expect(type(bandHero)).toEqual(type(plainHero));
+    // INSIDE the band: the regime read off the browser — a fine pointer, the
+    // relative colour syntax that rides with registered custom properties —
+    // and the column ui/Container hands the rhythm box.
+    const rhythm = bandStep.parentElement;
+    const column = rhythm?.parentElement;
+    if (!(column instanceof HTMLElement)) {
+      throw new Error('HeroScaledStep: no band column above the step');
+    }
+    const rem = parseFloat(
+      getComputedStyle(column.ownerDocument.documentElement).fontSize,
+    );
+    // The column's CONTENT box — what the gate's container steps query and
+    // the band's `100cqw` resolves against — never its border box: the box
+    // less its padding and border, taken FRACTIONALLY (`clientWidth`, an
+    // integer, could disagree with the engine inside a sub-pixel window round
+    // the step — DoctorIntro's stories' `sitsBeside`). ui/Container wears
+    // neither today; read, so the play stays true the day it does.
+    const box = getComputedStyle(column);
+    const width =
+      column.getBoundingClientRect().width -
+      parseFloat(box.paddingLeft) -
+      parseFloat(box.paddingRight) -
+      parseFloat(box.borderLeftWidth) -
+      parseFloat(box.borderRightWidth);
+    const regime =
+      window.matchMedia('(pointer: fine)').matches &&
+      CSS.supports('color', 'rgb(from red r g b)') &&
+      width >= Math.max(56 * rem, 896);
+    if (regime) {
+      // 16.26 spacing steps of the band's design pixel, min(column, 96rem)
+      // / 1106 — 65.04 × s — on the row's `/tight` line.
+      const s = Math.min(width, 96 * rem) / 1106;
+      const size = parseFloat(getComputedStyle(bandStep).fontSize);
+      await expect(size).toBeCloseTo(16.26 * 4 * s, 1);
+      await expect(
+        parseFloat(getComputedStyle(bandStep).lineHeight),
+      ).toBeCloseTo(1.25 * size, 1);
+    } else {
+      await expect(type(bandStep)).toEqual(type(bandHero));
+    }
+  },
 };
 
 /**
@@ -385,7 +570,7 @@ export const SloganStep: Story = {
  * 4.77:1, which is why 0.55 is the locked floor). The wrapper's padding is the
  * story owning its spacing, never the atom's (§6.4). Both steps the Hero
  * uses ride here — the slogan on 'hero', a supporting line on 'section' —
- * because the axis is orthogonal and a story is where that is visible.
+ * because any step may wear any ink and a story is where that is visible.
  */
 export const InverseTone: Story = {
   tags: ['stress-320'],

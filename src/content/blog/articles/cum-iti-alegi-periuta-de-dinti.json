@@ -1,0 +1,965 @@
+{
+  "blocks": [
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Periuța de dinți este instrumentul pe care îl folosești de două ori pe zi, în fiecare zi, așa că merită aleasă cu atenție. Pe raft găsești zeci de modele, cu peri de toate felurile, mânere colorate și promisiuni scrise mare pe ambalaj. Vestea bună este că alegerea nu trebuie să fie complicată: câteva lucruri simple contează mult mai mult decât culoarea sau prețul.",
+        "en": "Your toothbrush is something you use twice a day, every day, so it is worth choosing with care. On the shelf you’ll find dozens of models, with all kinds of bristles, colourful handles and promises in big letters on the packaging. The good news is that the choice does not have to be complicated: a few simple things matter much more than the colour or the price.",
+        "de": "Ihre Zahnbürste nehmen Sie zweimal am Tag in die Hand, Tag für Tag. Es lohnt sich also, sie mit Bedacht auszuwählen. Im Regal finden Sie Dutzende Modelle mit Borsten aller Art, bunten Griffen und groß gedruckten Versprechen auf der Verpackung. Die gute Nachricht ist, dass die Wahl nicht kompliziert sein muss: Ein paar einfache Dinge zählen viel mehr als die Farbe der Bürste oder das, was sie kostet.",
+        "fr": "Vous vous servez de votre brosse à dents deux fois par jour, tous les jours, alors elle mérite d’être choisie avec soin. En rayon, vous trouvez des dizaines de modèles, avec des poils de toutes sortes, des manches colorés et des promesses écrites en grosses lettres sur l’emballage. La bonne nouvelle, c’est que le choix n’a pas besoin d’être compliqué : quelques critères simples comptent bien plus que la couleur ou le coût.",
+        "it": "Lo spazzolino è lo strumento che usi due volte al giorno, tutti i giorni, quindi vale la pena sceglierlo con cura. Sullo scaffale trovi decine di modelli, con setole di ogni tipo, manici colorati e promesse scritte in grande sulla confezione. La buona notizia è che la scelta non deve per forza essere complicata: poche cose semplici contano molto più del colore o del prezzo."
+      }
+    },
+    {
+      "type": "photo",
+      "image": {
+        "src": "/images/hero/instruments.jpg"
+      },
+      "words": {
+        "ro": {
+          "alt": "Prim-plan cu instrumentele suspendate pe brațul unității dentare"
+        },
+        "en": {
+          "alt": "Close-up of the handpieces hanging from the dental unit’s arm"
+        },
+        "de": {
+          "alt": "Nahaufnahme der Instrumente, die am Arm der Behandlungseinheit hängen"
+        },
+        "fr": {
+          "alt": "Gros plan sur les instruments suspendus au bras de l’unité de soins"
+        },
+        "it": {
+          "alt": "Primo piano degli strumenti appesi al braccio del riunito"
+        }
+      }
+    },
+    {
+      "type": "heading",
+      "words": {
+        "ro": "Peri moi, medii sau tari?",
+        "en": "Soft, medium or hard bristles?",
+        "de": "Weiche, mittlere oder harte Borsten?",
+        "fr": "Souple, médium ou dure ?",
+        "it": "Setole morbide, medie o dure?"
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Pentru majoritatea oamenilor, o periuță cu peri moi este alegerea potrivită. Perii moi îndepărtează placa bacteriană la fel de bine ca cei tari, dar sunt blânzi cu gingia și cu smalțul. O periuță tare, folosită cu putere, poate retrage gingia în timp și poate lăsa dinții sensibili la rece și la cald.",
+        "en": "For most people, a toothbrush with soft bristles is the right choice. Soft bristles remove bacterial plaque just as well as hard ones, but they are gentle on your gums and your enamel. A hard brush, used forcefully, can make your gums recede over time and leave your teeth sensitive to cold and heat.",
+        "de": "Für die meisten Menschen ist eine Zahnbürste mit weichen Borsten die passende Wahl. Weiche Borsten entfernen den bakteriellen Zahnbelag genauso gut wie harte, gehen aber schonend mit Zahnfleisch und Zahnschmelz um. Eine harte Zahnbürste, mit viel Kraft benutzt, kann mit der Zeit dazu führen, dass das Zahnfleisch zurückgeht und die Zähne empfindlich auf Kälte und Wärme reagieren.",
+        "fr": "Pour la plupart des gens, une brosse à poils souples est le bon choix. Les poils souples éliminent la plaque bactérienne aussi bien que les poils durs, mais ils sont doux pour les gencives et l’émail. Une brosse dure, utilisée avec force, peut faire reculer les gencives avec le temps et rendre les dents sensibles au froid et au chaud.",
+        "it": "Per la maggior parte delle persone, uno spazzolino a setole morbide è la scelta giusta. Le setole morbide rimuovono la placca batterica bene quanto quelle dure, ma sono delicate con le gengive e con lo smalto. Uno spazzolino duro, usato con forza, col tempo può far ritirare le gengive e rendere i denti sensibili al freddo e al caldo."
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Dacă gingiile îți sângerează la periaj sau ai urmat un tratament parodontal, perii extra moi sunt un bun punct de plecare. Sângerarea nu este un motiv să te speli mai rar. Este un semn că gingia are nevoie de atenție și că e bine să ne faci o vizită, ca să vedem împreună de unde vine.",
+        "en": "If your gums bleed when you brush, or you have had treatment for gum disease, extra-soft bristles are a good place to start. Bleeding is not a reason to brush less often. It is a sign that your gums need attention and that it is a good idea to pay us a visit, so we can find out together what is causing it.",
+        "de": "Wenn Ihr Zahnfleisch beim Putzen blutet oder Sie eine Parodontalbehandlung hinter sich haben, sind extra weiche Borsten ein guter Anfang. Zahnfleischbluten ist kein Grund, seltener zu putzen. Es ist vielmehr ein Zeichen dafür, dass Ihr Zahnfleisch Aufmerksamkeit braucht und dass ein Besuch bei uns sinnvoll ist, damit wir gemeinsam herausfinden, woher das Bluten kommt.",
+        "fr": "Si vos gencives saignent au brossage ou si vous avez suivi un traitement parodontal, une brosse extra-souple est un bon point de départ. Le saignement n’est pas une raison pour vous brosser les dents moins souvent. C’est le signe que vos gencives ont besoin d’attention et qu’il est bon de venir nous voir pour chercher ensemble d’où vient ce saignement.",
+        "it": "Se le gengive ti sanguinano quando ti lavi i denti o se hai fatto un trattamento parodontale, le setole extra morbide sono un buon punto di partenza. Il sanguinamento non è un motivo per lavarti i denti meno spesso. È un segno che le gengive hanno bisogno di attenzione e che è bene passare a trovarci, per capire insieme da cosa dipende."
+      }
+    },
+    {
+      "type": "photo",
+      "image": {
+        "src": "/images/hero/treatment-room.jpg"
+      },
+      "words": {
+        "ro": {
+          "heading": "La consultație",
+          "alt": "Cabinet de tratament, cu scaunul stomatologic și, pe perete, un ecran cu o radiografie panoramică",
+          "note": "pe ecran, o radiografie panoramică."
+        },
+        "en": {
+          "heading": "At your appointment",
+          "alt": "A treatment room with the dental chair and, on the wall, a screen showing a panoramic X-ray",
+          "note": "on the screen, a panoramic X-ray."
+        },
+        "de": {
+          "heading": "Bei der Untersuchung",
+          "alt": "Behandlungsraum mit dem Behandlungsstuhl und einem Bildschirm an der Wand, auf dem ein Panoramaröntgenbild zu sehen ist",
+          "note": "Am Bildschirm ein Panoramaröntgenbild."
+        },
+        "fr": {
+          "heading": "En consultation",
+          "alt": "Une salle de soins avec le fauteuil dentaire et, au mur, un écran affichant une radiographie panoramique",
+          "note": "à l’écran, une radiographie panoramique."
+        },
+        "it": {
+          "heading": "Durante la visita",
+          "alt": "Una sala di trattamento con la poltrona odontoiatrica e, alla parete, uno schermo con una radiografia panoramica",
+          "note": "sullo schermo, una radiografia panoramica."
+        }
+      }
+    },
+    {
+      "type": "heading",
+      "words": {
+        "ro": "Manuală sau electrică?",
+        "en": "Manual or electric?",
+        "de": "Manuell oder elektrisch?",
+        "fr": "Manuelle ou électrique ?",
+        "it": "Manuale o elettrico?"
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Ambele variante curăță bine dacă sunt folosite corect. Periuța electrică te ajută dacă îți este greu să faci mișcări mici și precise, de exemplu când te dor încheieturile, sau dacă ai tendința să apeși prea tare: multe modele te anunță când apeși prea puternic. Periuța manuală nu are nevoie de încărcare și o iei cu tine oriunde.",
+        "en": "Both kinds clean well if they are used correctly. An electric toothbrush helps if you find small, precise movements difficult, for example when your wrists hurt, or if you tend to press too hard: many models let you know when you do. A manual toothbrush needs no charging, and you can take it with you anywhere.",
+        "de": "Beide Varianten reinigen gut, wenn sie richtig benutzt werden. Eine elektrische Zahnbürste hilft, wenn Ihnen kleine, genaue Bewegungen schwerfallen, etwa bei schmerzenden Handgelenken, oder wenn Sie dazu neigen, zu fest aufzudrücken: Viele Modelle geben ein Signal, sobald der Druck zu stark wird. Eine Handzahnbürste muss nicht aufgeladen werden, und Sie können sie überallhin mitnehmen.",
+        "fr": "Les deux nettoient bien, à condition d’être utilisées correctement. La brosse à dents électrique vous aide si vous avez du mal à faire de petits mouvements précis, par exemple quand vous avez mal aux articulations, ou si vous avez tendance à appuyer trop fort : beaucoup de modèles vous préviennent quand la pression est trop forte. La brosse manuelle n’a pas besoin d’être rechargée et vous pouvez l’emporter partout.",
+        "it": "Entrambi puliscono bene, se li usi nel modo giusto. Lo spazzolino elettrico ti aiuta se ti è difficile fare movimenti piccoli e precisi, per esempio quando ti fanno male le articolazioni, o se tendi a spazzolare con troppa forza: molti modelli ti avvisano quando la pressione è eccessiva. Lo spazzolino manuale non va ricaricato e puoi portarlo con te ovunque."
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Oricare ar fi alegerea ta, timpul contează: două minute, de două ori pe zi, cu o pastă de dinți cu fluor. Ține periuța înclinată spre gingie și fă mișcări mici, fără să freci în lung, ca și cum ai lustrui fiecare dinte pe rând. Nu uita de fața dinților dinspre limbă și de suprafețele cu care mesteci.",
+        "en": "Whichever you choose, the time you spend brushing matters: two minutes, twice a day, with a fluoride toothpaste. Hold the brush tilted towards your gums and make small movements, without scrubbing back and forth, as if you were polishing each tooth in turn. Remember to brush the side of your teeth that faces your tongue, and the surfaces you chew with.",
+        "de": "Ganz gleich, wofür Sie sich entscheiden, auf die Putzzeit kommt es an: zwei Minuten, zweimal am Tag, mit einer fluoridhaltigen Zahnpasta. Halten Sie die Bürste schräg zum Zahnfleisch hin und putzen Sie mit kleinen Bewegungen, ohne der Länge nach hin und her zu schrubben, als würden Sie einen Zahn nach dem anderen polieren. Vergessen Sie dabei nicht die Innenseiten der Zähne zur Zunge hin und die Kauflächen.",
+        "fr": "Quel que soit votre choix, le temps de brossage compte : deux minutes, deux fois par jour, avec un dentifrice au fluor. Tenez la brosse inclinée vers la gencive et faites de petits mouvements, sans frotter en longs allers-retours, comme pour polir chaque dent, l’une après l’autre. N’oubliez pas la face des dents côté langue, ni les surfaces qui servent à mâcher.",
+        "it": "Qualunque sia la tua scelta, conta il tempo: due minuti, due volte al giorno, con un dentifricio al fluoro. Tieni lo spazzolino inclinato verso la gengiva e fai piccoli movimenti, senza strofinare avanti e indietro, come se lucidassi un dente alla volta. Non dimenticare il lato dei denti rivolto verso la lingua e le superfici con cui mastichi."
+      }
+    },
+    {
+      "type": "gallery",
+      "mode": "loop",
+      "cards": [
+        {
+          "image": {
+            "src": "/images/demo/gallery-1.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Ușa cabinetului",
+              "alt": "Holul clinicii și ușa deschisă a unui cabinet, prin care se vede scaunul stomatologic mov"
+            },
+            "en": {
+              "caption": "The treatment room door",
+              "alt": "The clinic’s hallway and the open door of a treatment room, through which the purple dental chair can be seen"
+            },
+            "de": {
+              "caption": "Die offene Tür",
+              "alt": "Der Flur der Klinik und die offene Tür eines Behandlungsraums, durch die der lila Behandlungsstuhl zu sehen ist"
+            },
+            "fr": {
+              "caption": "La porte du cabinet",
+              "alt": "Le couloir de la clinique et la porte ouverte d’un cabinet de soins, par laquelle on aperçoit le fauteuil dentaire violet"
+            },
+            "it": {
+              "caption": "La porta dello studio",
+              "alt": "Il corridoio della clinica e la porta aperta di una sala di trattamento, da cui si vede la poltrona odontoiatrica viola"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-2.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Sala de așteptare",
+              "alt": "Două fotolii galbene în fața unui perete cu un model rotund în relief și, în prim-plan, o canapea galbenă"
+            },
+            "en": {
+              "caption": "The waiting room",
+              "alt": "Two yellow armchairs in front of a wall with a round pattern in relief and, in the foreground, a yellow sofa"
+            },
+            "de": {
+              "caption": "Das Wartezimmer",
+              "alt": "Zwei gelbe Sessel vor einer Wand mit einem runden Reliefmuster, im Vordergrund ein gelbes Sofa"
+            },
+            "fr": {
+              "caption": "La salle d’attente",
+              "alt": "Deux fauteuils jaunes devant un mur orné d’un motif rond en relief et, au premier plan, un canapé jaune"
+            },
+            "it": {
+              "caption": "La sala d’attesa",
+              "alt": "Due poltrone gialle davanti a una parete con un motivo circolare in rilievo e, in primo piano, un divano giallo"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-3.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Masa de lucru",
+              "alt": "Sertare albe, aparate mici și un scaun mov într-un cabinet"
+            },
+            "en": {
+              "caption": "The work counter",
+              "alt": "White drawers, small devices and a purple stool in a treatment room"
+            },
+            "de": {
+              "caption": "Die Arbeitsfläche",
+              "alt": "Weiße Schubladen, kleine Geräte und ein lila Hocker in einem Behandlungsraum"
+            },
+            "fr": {
+              "caption": "Le plan de travail",
+              "alt": "Des tiroirs blancs, de petits appareils et un tabouret violet dans un cabinet de soins"
+            },
+            "it": {
+              "caption": "Il piano di lavoro",
+              "alt": "Cassetti bianchi, piccoli apparecchi e uno sgabello viola in una sala di trattamento"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-4.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Scaunul stomatologic",
+              "alt": "Un scaun mov sub lampă și, pe peretele mov, un ecran cu o radiografie panoramică"
+            },
+            "en": {
+              "caption": "The dental chair",
+              "alt": "A purple chair under the lamp and, on the purple wall, a screen showing a panoramic X-ray"
+            },
+            "de": {
+              "caption": "Der Zahnarztstuhl",
+              "alt": "Ein lila Stuhl unter der Lampe und an der lila Wand ein Bildschirm mit einem Panoramaröntgenbild"
+            },
+            "fr": {
+              "caption": "Le fauteuil dentaire",
+              "alt": "Un fauteuil violet sous la lampe et, sur le mur violet, un écran affichant une radiographie panoramique"
+            },
+            "it": {
+              "caption": "La poltrona odontoiatrica",
+              "alt": "Una poltrona viola sotto la lampada e, sulla parete viola, uno schermo con una radiografia panoramica"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-5.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Instrumentele de lucru",
+              "alt": "Prim-plan cu un instrument subțire și o piesă de mână, suspendate pe brațul unității dentare"
+            },
+            "en": {
+              "caption": "The instruments we use",
+              "alt": "Close-up of a thin instrument and a handpiece hanging from the dental unit’s arm"
+            },
+            "de": {
+              "caption": "Die Instrumente",
+              "alt": "Nahaufnahme eines dünnen Instruments und eines Handstücks, die am Arm der Behandlungseinheit hängen"
+            },
+            "fr": {
+              "caption": "Les instruments de travail",
+              "alt": "Gros plan sur un instrument fin et une pièce à main suspendus au bras de l’unité de soins"
+            },
+            "it": {
+              "caption": "Gli strumenti di lavoro",
+              "alt": "Primo piano di uno strumento sottile e di un manipolo appesi al braccio del riunito"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-6.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Piesele de mână",
+              "alt": "Prim-plan cu două piese de mână argintii, una cu un inel roșu, lângă un vârf de culoare bej"
+            },
+            "en": {
+              "caption": "The handpieces",
+              "alt": "Close-up of two silver handpieces, one with a red ring, next to a beige tip"
+            },
+            "de": {
+              "caption": "Die Handstücke",
+              "alt": "Nahaufnahme zweier silberner Handstücke, eines davon mit einem roten Ring, neben einer beigen Spitze"
+            },
+            "fr": {
+              "caption": "Les pièces à main",
+              "alt": "Gros plan sur deux pièces à main argentées, l’une avec un anneau rouge, à côté d’un embout beige"
+            },
+            "it": {
+              "caption": "I manipoli",
+              "alt": "Primo piano di due manipoli argentati, uno con un anello rosso, accanto a un puntale beige"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-7.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Oglinda dentară",
+              "alt": "Un pacient cu ochii închiși, cu oglinda ținută lângă dinți"
+            },
+            "en": {
+              "caption": "The dental mirror",
+              "alt": "A patient with their eyes closed, the mirror held near their teeth"
+            },
+            "de": {
+              "caption": "Der Mundspiegel",
+              "alt": "Eine Person mit geschlossenen Augen, der Spiegel nah an ihren Zähnen"
+            },
+            "fr": {
+              "caption": "Le miroir dentaire",
+              "alt": "Une personne aux yeux fermés, le miroir tenu près de ses dents"
+            },
+            "it": {
+              "caption": "Lo specchietto dentale",
+              "alt": "Una persona con gli occhi chiusi, lo specchietto tenuto vicino ai denti"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-8.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "La control",
+              "alt": "Mâini în mănuși țin o sondă cu mâner portocaliu lângă dinții unui pacient"
+            },
+            "en": {
+              "caption": "At a check-up",
+              "alt": "Gloved hands hold a probe with an orange handle near a patient’s teeth"
+            },
+            "de": {
+              "caption": "Bei der Kontrolle",
+              "alt": "Hände in Handschuhen halten eine Sonde mit orangefarbenem Griff nah an die Zähne einer Person"
+            },
+            "fr": {
+              "caption": "Au contrôle",
+              "alt": "Des mains gantées tiennent une sonde à manche orange près des dents d’une personne"
+            },
+            "it": {
+              "caption": "Al controllo",
+              "alt": "Mani con i guanti tengono una sonda dal manico arancione vicino ai denti di una persona"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "words": {
+        "ro": "Capul periuței și mânerul",
+        "en": "The brush head and the handle",
+        "de": "Bürstenkopf und Griff",
+        "fr": "La tête de la brosse et le manche",
+        "it": "La testina e il manico"
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Un cap mic ajunge mai ușor la măselele din spate și pe fața dinților dinspre limbă, acolo unde placa se adună ușor și unde periajul ajunge greu. Mânerul trebuie să stea comod în mână și să nu alunece când e ud, mai ales dacă te speli pe dinți în grabă, dimineața.",
+        "en": "A small head makes it easier to reach your back teeth and the tongue side of your teeth, where plaque tends to build up and which are hard to brush. The handle should sit comfortably in your hand and not slip when it is wet, especially if you brush your teeth in a hurry in the morning.",
+        "de": "Ein kleiner Bürstenkopf kommt leichter an die hinteren Backenzähne und an die Innenseiten der Zähne zur Zunge hin, also dorthin, wo sich gern Belag sammelt und wo das Putzen schwierig ist. Der Griff sollte gut in der Hand liegen und auch nass nicht rutschen, vor allem wenn Sie sich morgens in Eile die Zähne putzen.",
+        "fr": "Une petite tête atteint plus facilement les molaires du fond et la face des dents côté langue, là où la plaque s’accumule vite et où la brosse a du mal à passer. Le manche doit tenir bien en main et ne pas glisser quand il est mouillé, surtout si vous vous brossez les dents en vitesse, le matin.",
+        "it": "Una testina piccola raggiunge più facilmente i molari in fondo alla bocca e il lato dei denti rivolto verso la lingua, dove la placca tende ad accumularsi e lo spazzolino arriva a fatica. Il manico deve essere comodo da tenere in mano e non scivolare quando è bagnato, soprattutto se la mattina ti lavi i denti di corsa."
+      }
+    },
+    {
+      "type": "photo",
+      "image": {
+        "src": "/images/hero/instruments.jpg"
+      },
+      "words": {
+        "ro": {
+          "alt": "Prim-plan cu instrumentele suspendate pe brațul unității dentare",
+          "note": "și instrumentele noastre au capete mici."
+        },
+        "en": {
+          "alt": "Close-up of the handpieces hanging from the dental unit’s arm",
+          "note": "our instruments have small heads too."
+        },
+        "de": {
+          "alt": "Nahaufnahme der Instrumente, die am Arm der Behandlungseinheit hängen",
+          "note": "Auch unsere Instrumente haben kleine Köpfe."
+        },
+        "fr": {
+          "alt": "Gros plan sur les instruments suspendus au bras de l’unité de soins",
+          "note": "nos instruments aussi ont une petite tête."
+        },
+        "it": {
+          "alt": "Primo piano degli strumenti appesi al braccio del riunito",
+          "note": "anche i nostri strumenti hanno una testina piccola."
+        }
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Dacă porți aparat dentar sau ai implanturi, coroane ori punți, întreabă-ne despre periuțele speciale: cele cu perii tăiați în formă de V, potrivite pentru aparat, și periuțele cu un singur smoc, care ajung în locurile greu accesibile din jurul lucrărilor.",
+        "en": "If you wear braces or have implants, crowns or bridges, ask us about special toothbrushes: ones with bristles cut in a V shape, suitable for braces, and single-tuft brushes, which get into the hard-to-reach places around your dental work.",
+        "de": "Wenn Sie eine Zahnspange tragen oder Implantate, Kronen oder Brücken haben, fragen Sie uns nach speziellen Zahnbürsten: nach Bürsten mit V-förmig geschnittenen Borsten, die sich für Zahnspangen eignen, und nach Einbüschelbürsten, mit denen Sie die schwer zugänglichen Stellen rund um die zahnärztlichen Arbeiten erreichen.",
+        "fr": "Si vous portez un appareil dentaire ou si vous avez des implants, des couronnes ou des bridges, demandez-nous conseil sur les brosses spéciales : celles dont les poils sont taillés en V, adaptées aux appareils, et les brosses à une seule touffe, qui atteignent les endroits difficiles d’accès autour des travaux dentaires.",
+        "it": "Se porti l’apparecchio oppure hai impianti, corone o ponti, chiedici degli spazzolini speciali: quelli con le setole tagliate a V, adatti all’apparecchio, e quelli monociuffo, che hanno un solo ciuffo di setole e arrivano nei punti difficili da raggiungere intorno a questi lavori."
+      }
+    },
+    {
+      "type": "beforeAfter",
+      "before": {
+        "image": {
+          "src": "/images/hero/lobby.jpg"
+        },
+        "words": {
+          "ro": {
+            "heading": "La sosire",
+            "alt": "Sala de așteptare a clinicii, cu fotolii galbene și o ușă deschisă spre un cabinet"
+          },
+          "en": {
+            "heading": "On arrival",
+            "alt": "The clinic’s waiting room, with yellow armchairs and an open door to a treatment room"
+          },
+          "de": {
+            "heading": "Bei der Ankunft",
+            "alt": "Das Wartezimmer der Klinik mit gelben Sesseln und einer offenen Tür zu einem Behandlungsraum"
+          },
+          "fr": {
+            "heading": "À l’arrivée",
+            "alt": "La salle d’attente de la clinique, avec des fauteuils jaunes et une porte ouverte sur un cabinet de soins"
+          },
+          "it": {
+            "heading": "All’arrivo",
+            "alt": "La sala d’attesa della clinica, con poltrone gialle e una porta aperta su una sala di trattamento"
+          }
+        }
+      },
+      "after": {
+        "image": {
+          "src": "/images/hero/treatment-room.jpg"
+        },
+        "words": {
+          "ro": {
+            "heading": "În cabinet",
+            "alt": "Cabinet de tratament, cu scaunul stomatologic și, pe perete, un ecran cu o radiografie panoramică"
+          },
+          "en": {
+            "heading": "In the chair",
+            "alt": "A treatment room with the dental chair and, on the wall, a screen showing a panoramic X-ray"
+          },
+          "de": {
+            "heading": "Auf dem Stuhl",
+            "alt": "Behandlungsraum mit dem Behandlungsstuhl und einem Bildschirm an der Wand, auf dem ein Panoramaröntgenbild zu sehen ist"
+          },
+          "fr": {
+            "heading": "Au fauteuil",
+            "alt": "Une salle de soins avec le fauteuil dentaire et, au mur, un écran affichant une radiographie panoramique"
+          },
+          "it": {
+            "heading": "In poltrona",
+            "alt": "Una sala di trattamento con la poltrona odontoiatrica e, alla parete, uno schermo con una radiografia panoramica"
+          }
+        }
+      }
+    },
+    {
+      "type": "heading",
+      "words": {
+        "ro": "Când o schimbi",
+        "en": "When to replace it",
+        "de": "Wann Sie die Bürste wechseln",
+        "fr": "Quand la changer",
+        "it": "Quando cambiarlo"
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Schimbă periuța la fiecare trei luni sau mai devreme, dacă perii s-au desfăcut în lateral. O periuță cu perii tociți curăță mult mai puțin, oricât de atent te-ai spăla. Merită schimbată și după o răceală sau o gripă, iar copiii au nevoie adesea de una nouă mai des, pentru că o mestecă.",
+        "en": "Replace your toothbrush every three months, or sooner if the bristles have splayed out to the sides. A brush with worn bristles does not clean nearly as well, however carefully you brush. It is also worth replacing after a cold or flu, and children often need a new one sooner, because they chew on it.",
+        "de": "Wechseln Sie die Zahnbürste alle drei Monate oder schon früher, wenn die Borsten zur Seite abstehen. Eine Bürste mit abgenutzten Borsten reinigt viel weniger gründlich, so sorgfältig Sie auch putzen. Auch nach einer Erkältung oder einer Grippe lohnt sich ein Wechsel, und Kinder brauchen oft schon früher eine neue Bürste, weil sie darauf herumkauen.",
+        "fr": "Changez de brosse tous les trois mois, ou plus tôt si les poils s’écartent sur les côtés. Une brosse aux poils usés nettoie beaucoup moins bien, aussi soigneux que soit votre brossage. Pensez aussi à en changer après un rhume ou une grippe. Les enfants, eux, ont souvent besoin d’une brosse neuve plus tôt, parce qu’ils mâchonnent la leur.",
+        "it": "Cambia lo spazzolino ogni tre mesi, o prima, se le setole si sono aperte ai lati. Uno spazzolino con le setole consumate pulisce molto meno, per quanta cura tu ci metta. Vale la pena cambiarlo anche dopo un raffreddore o un’influenza, e ai bambini spesso ne serve uno nuovo prima del tempo, perché lo mordicchiano."
+      }
+    },
+    {
+      "type": "beforeAfter",
+      "before": {
+        "image": {
+          "src": "/images/hero/treatment-room.jpg"
+        },
+        "words": {
+          "ro": {
+            "heading": "Înainte",
+            "alt": "Cabinet de tratament, cu scaunul stomatologic și, pe perete, un ecran cu o radiografie panoramică",
+            "note": "imagine ilustrativă, nu un caz real."
+          },
+          "en": {
+            "heading": "Before",
+            "alt": "A treatment room with the dental chair and, on the wall, a screen showing a panoramic X-ray",
+            "note": "illustrative image, not a real case."
+          },
+          "de": {
+            "heading": "Vorher",
+            "alt": "Behandlungsraum mit dem Behandlungsstuhl und einem Bildschirm an der Wand, auf dem ein Panoramaröntgenbild zu sehen ist",
+            "note": "Symbolbild, kein echter Fall."
+          },
+          "fr": {
+            "heading": "Avant",
+            "alt": "Une salle de soins avec le fauteuil dentaire et, au mur, un écran affichant une radiographie panoramique",
+            "note": "image d’illustration, pas un cas réel."
+          },
+          "it": {
+            "heading": "Prima",
+            "alt": "Una sala di trattamento con la poltrona odontoiatrica e, alla parete, uno schermo con una radiografia panoramica",
+            "note": "immagine di esempio, non un caso reale."
+          }
+        }
+      },
+      "after": {
+        "image": {
+          "src": "/images/hero/instruments.jpg"
+        },
+        "words": {
+          "ro": {
+            "heading": "După",
+            "alt": "Prim-plan cu instrumentele suspendate pe brațul unității dentare",
+            "note": "imagine ilustrativă, nu un rezultat."
+          },
+          "en": {
+            "heading": "After",
+            "alt": "Close-up of the handpieces hanging from the dental unit’s arm",
+            "note": "illustrative image, not a result."
+          },
+          "de": {
+            "heading": "Nachher",
+            "alt": "Nahaufnahme der Instrumente, die am Arm der Behandlungseinheit hängen",
+            "note": "Symbolbild, kein Behandlungsergebnis."
+          },
+          "fr": {
+            "heading": "Après",
+            "alt": "Gros plan sur les instruments suspendus au bras de l’unité de soins",
+            "note": "image d’illustration, pas un résultat."
+          },
+          "it": {
+            "heading": "Dopo",
+            "alt": "Primo piano degli strumenti appesi al braccio del riunito",
+            "note": "immagine di esempio, non un risultato."
+          }
+        }
+      }
+    },
+    {
+      "type": "heading",
+      "words": {
+        "ro": "Pentru copii",
+        "en": "For children",
+        "de": "Für Kinder",
+        "fr": "Pour les enfants",
+        "it": "Per i bambini"
+      }
+    },
+    {
+      "type": "gallery",
+      "mode": "bounded",
+      "cards": [
+        {
+          "image": {
+            "src": "/images/demo/gallery-1.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Ușa cabinetului",
+              "alt": "Holul clinicii și ușa deschisă a unui cabinet, prin care se vede scaunul stomatologic mov"
+            },
+            "en": {
+              "caption": "The treatment room door",
+              "alt": "The clinic’s hallway and the open door of a treatment room, through which the purple dental chair can be seen"
+            },
+            "de": {
+              "caption": "Die offene Tür",
+              "alt": "Der Flur der Klinik und die offene Tür eines Behandlungsraums, durch die der lila Behandlungsstuhl zu sehen ist"
+            },
+            "fr": {
+              "caption": "La porte du cabinet",
+              "alt": "Le couloir de la clinique et la porte ouverte d’un cabinet de soins, par laquelle on aperçoit le fauteuil dentaire violet"
+            },
+            "it": {
+              "caption": "La porta dello studio",
+              "alt": "Il corridoio della clinica e la porta aperta di una sala di trattamento, da cui si vede la poltrona odontoiatrica viola"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-2.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Sala de așteptare",
+              "alt": "Două fotolii galbene în fața unui perete cu un model rotund în relief și, în prim-plan, o canapea galbenă"
+            },
+            "en": {
+              "caption": "The waiting room",
+              "alt": "Two yellow armchairs in front of a wall with a round pattern in relief and, in the foreground, a yellow sofa"
+            },
+            "de": {
+              "caption": "Das Wartezimmer",
+              "alt": "Zwei gelbe Sessel vor einer Wand mit einem runden Reliefmuster, im Vordergrund ein gelbes Sofa"
+            },
+            "fr": {
+              "caption": "La salle d’attente",
+              "alt": "Deux fauteuils jaunes devant un mur orné d’un motif rond en relief et, au premier plan, un canapé jaune"
+            },
+            "it": {
+              "caption": "La sala d’attesa",
+              "alt": "Due poltrone gialle davanti a una parete con un motivo circolare in rilievo e, in primo piano, un divano giallo"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-3.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Masa de lucru",
+              "alt": "Sertare albe, aparate mici și un scaun mov într-un cabinet"
+            },
+            "en": {
+              "caption": "The work counter",
+              "alt": "White drawers, small devices and a purple stool in a treatment room"
+            },
+            "de": {
+              "caption": "Die Arbeitsfläche",
+              "alt": "Weiße Schubladen, kleine Geräte und ein lila Hocker in einem Behandlungsraum"
+            },
+            "fr": {
+              "caption": "Le plan de travail",
+              "alt": "Des tiroirs blancs, de petits appareils et un tabouret violet dans un cabinet de soins"
+            },
+            "it": {
+              "caption": "Il piano di lavoro",
+              "alt": "Cassetti bianchi, piccoli apparecchi e uno sgabello viola in una sala di trattamento"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-4.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Scaunul stomatologic",
+              "alt": "Un scaun mov sub lampă și, pe peretele mov, un ecran cu o radiografie panoramică"
+            },
+            "en": {
+              "caption": "The dental chair",
+              "alt": "A purple chair under the lamp and, on the purple wall, a screen showing a panoramic X-ray"
+            },
+            "de": {
+              "caption": "Der Zahnarztstuhl",
+              "alt": "Ein lila Stuhl unter der Lampe und an der lila Wand ein Bildschirm mit einem Panoramaröntgenbild"
+            },
+            "fr": {
+              "caption": "Le fauteuil dentaire",
+              "alt": "Un fauteuil violet sous la lampe et, sur le mur violet, un écran affichant une radiographie panoramique"
+            },
+            "it": {
+              "caption": "La poltrona odontoiatrica",
+              "alt": "Una poltrona viola sotto la lampada e, sulla parete viola, uno schermo con una radiografia panoramica"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-5.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Instrumentele de lucru",
+              "alt": "Prim-plan cu un instrument subțire și o piesă de mână, suspendate pe brațul unității dentare"
+            },
+            "en": {
+              "caption": "The instruments we use",
+              "alt": "Close-up of a thin instrument and a handpiece hanging from the dental unit’s arm"
+            },
+            "de": {
+              "caption": "Die Instrumente",
+              "alt": "Nahaufnahme eines dünnen Instruments und eines Handstücks, die am Arm der Behandlungseinheit hängen"
+            },
+            "fr": {
+              "caption": "Les instruments de travail",
+              "alt": "Gros plan sur un instrument fin et une pièce à main suspendus au bras de l’unité de soins"
+            },
+            "it": {
+              "caption": "Gli strumenti di lavoro",
+              "alt": "Primo piano di uno strumento sottile e di un manipolo appesi al braccio del riunito"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-6.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Piesele de mână",
+              "alt": "Prim-plan cu două piese de mână argintii, una cu un inel roșu, lângă un vârf de culoare bej"
+            },
+            "en": {
+              "caption": "The handpieces",
+              "alt": "Close-up of two silver handpieces, one with a red ring, next to a beige tip"
+            },
+            "de": {
+              "caption": "Die Handstücke",
+              "alt": "Nahaufnahme zweier silberner Handstücke, eines davon mit einem roten Ring, neben einer beigen Spitze"
+            },
+            "fr": {
+              "caption": "Les pièces à main",
+              "alt": "Gros plan sur deux pièces à main argentées, l’une avec un anneau rouge, à côté d’un embout beige"
+            },
+            "it": {
+              "caption": "I manipoli",
+              "alt": "Primo piano di due manipoli argentati, uno con un anello rosso, accanto a un puntale beige"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-7.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "Oglinda dentară",
+              "alt": "Un pacient cu ochii închiși, cu oglinda ținută lângă dinți"
+            },
+            "en": {
+              "caption": "The dental mirror",
+              "alt": "A patient with their eyes closed, the mirror held near their teeth"
+            },
+            "de": {
+              "caption": "Der Mundspiegel",
+              "alt": "Eine Person mit geschlossenen Augen, der Spiegel nah an ihren Zähnen"
+            },
+            "fr": {
+              "caption": "Le miroir dentaire",
+              "alt": "Une personne aux yeux fermés, le miroir tenu près de ses dents"
+            },
+            "it": {
+              "caption": "Lo specchietto dentale",
+              "alt": "Una persona con gli occhi chiusi, lo specchietto tenuto vicino ai denti"
+            }
+          }
+        },
+        {
+          "image": {
+            "src": "/images/demo/gallery-8.jpg"
+          },
+          "words": {
+            "ro": {
+              "caption": "La control",
+              "alt": "Mâini în mănuși țin o sondă cu mâner portocaliu lângă dinții unui pacient"
+            },
+            "en": {
+              "caption": "At a check-up",
+              "alt": "Gloved hands hold a probe with an orange handle near a patient’s teeth"
+            },
+            "de": {
+              "caption": "Bei der Kontrolle",
+              "alt": "Hände in Handschuhen halten eine Sonde mit orangefarbenem Griff nah an die Zähne einer Person"
+            },
+            "fr": {
+              "caption": "Au contrôle",
+              "alt": "Des mains gantées tiennent une sonde à manche orange près des dents d’une personne"
+            },
+            "it": {
+              "caption": "Al controllo",
+              "alt": "Mani con i guanti tengono una sonda dal manico arancione vicino ai denti di una persona"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Copiii au nevoie de o periuță pe măsura gurii lor, cu cap mic, peri moi și un mâner gros, ușor de ținut în pumn. Până pe la șapte sau opt ani, periajul de seară e bine să fie făcut sau verificat de un părinte. O periuță cu personajul preferat poate face din periaj un obicei de care copilul se bucură, nu o corvoadă.",
+        "en": "Children need a toothbrush the right size for their mouth, with a small head, soft bristles and a thick handle that is easy to hold in a fist. Until about the age of seven or eight, the evening brushing should ideally be done or checked by a parent. A toothbrush with their favourite character on it can turn brushing into a habit your child enjoys, not a chore.",
+        "de": "Kinder brauchen eine Zahnbürste, die zu ihrem Mund passt: mit kleinem Kopf, weichen Borsten und einem dicken Griff, der sich leicht mit der Faust umfassen lässt. Bis zum Alter von etwa sieben oder acht Jahren ist es gut, wenn ein Elternteil abends das Putzen übernimmt oder kontrolliert. Eine Zahnbürste mit der Lieblingsfigur kann dafür sorgen, dass das Zähneputzen für Ihr Kind keine lästige Pflicht ist, sondern eine Gewohnheit, die Freude macht.",
+        "fr": "Les enfants ont besoin d’une brosse adaptée à la taille de leur bouche, avec une petite tête, des poils souples et un manche épais, facile à tenir dans le poing. Jusque vers l’âge de sept ou huit ans, il est bon que le brossage du soir soit fait ou vérifié par un parent. Une brosse à l’effigie du personnage préféré de l’enfant peut faire du brossage une habitude qui lui plaît, et non une corvée.",
+        "it": "I bambini hanno bisogno di uno spazzolino a misura della loro bocca, con una testina piccola, setole morbide e un manico spesso, facile da stringere nel pugno. Fino ai sette o otto anni, è bene che la sera sia un genitore a lavare i denti al bambino, o almeno a ricontrollarli. Uno spazzolino con il suo personaggio preferito può fare del lavarsi i denti un’abitudine piacevole, e non una seccatura."
+      }
+    },
+    {
+      "type": "beforeAfter",
+      "before": {
+        "image": {
+          "src": "/images/hero/instruments.jpg"
+        },
+        "words": {
+          "ro": {
+            "alt": "Înainte: prim-plan cu instrumentele suspendate pe brațul unității dentare"
+          },
+          "en": {
+            "alt": "Before: close-up of the handpieces hanging from the dental unit’s arm"
+          },
+          "de": {
+            "alt": "Vorher: Nahaufnahme der Instrumente, die am Arm der Behandlungseinheit hängen"
+          },
+          "fr": {
+            "alt": "Avant : gros plan sur les instruments suspendus au bras de l’unité de soins"
+          },
+          "it": {
+            "alt": "Prima: primo piano degli strumenti appesi al braccio del riunito"
+          }
+        }
+      },
+      "after": {
+        "image": {
+          "src": "/images/hero/lobby.jpg"
+        },
+        "words": {
+          "ro": {
+            "alt": "După: sala de așteptare a clinicii, cu fotolii galbene și o ușă deschisă spre un cabinet"
+          },
+          "en": {
+            "alt": "After: the clinic’s waiting room, with yellow armchairs and an open door to a treatment room"
+          },
+          "de": {
+            "alt": "Nachher: Wartezimmer der Klinik mit gelben Sesseln und einer offenen Tür zu einem Behandlungsraum"
+          },
+          "fr": {
+            "alt": "Après : la salle d’attente de la clinique, avec des fauteuils jaunes et une porte ouverte sur un cabinet de soins"
+          },
+          "it": {
+            "alt": "Dopo: la sala d’attesa della clinica, con poltrone gialle e una porta aperta su una sala di trattamento"
+          }
+        }
+      }
+    },
+    {
+      "type": "heading",
+      "words": {
+        "ro": "Cum o păstrezi curată",
+        "en": "How to keep it clean",
+        "de": "So bleibt die Bürste sauber",
+        "fr": "Comment la garder propre",
+        "it": "Come tenerlo pulito"
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "După periaj, clătește bine periuța sub jet de apă și las-o să se usuce în poziție verticală, cu capul în sus. Nu o închide într-o cutie cât timp e udă și nu o împrumuta nimănui, nici măcar celor din familie. Dacă mai multe periuțe stau în același pahar, ai grijă să nu se atingă între ele.",
+        "en": "After brushing, rinse your toothbrush well under running water and stand it upright, head up, to dry. Do not shut it in a case while it is still wet, and do not share it with anyone, not even with your family. If you keep several toothbrushes in the same cup, make sure they do not touch each other.",
+        "de": "Spülen Sie die Zahnbürste nach dem Putzen gründlich unter fließendem Wasser ab und lassen Sie sie aufrecht trocknen, mit dem Kopf nach oben. Bewahren Sie sie nicht in einer geschlossenen Dose auf, solange sie nass ist, und verleihen Sie sie an niemanden, nicht einmal innerhalb der Familie. Stehen mehrere Zahnbürsten im selben Zahnputzbecher, achten Sie darauf, dass sie sich nicht berühren.",
+        "fr": "Après le brossage, rincez bien la brosse à l’eau courante et laissez-la sécher à la verticale, la tête en haut. Ne l’enfermez pas dans un étui tant qu’elle est mouillée et ne la prêtez à personne, pas même en famille. Si plusieurs brosses sont rangées dans le même verre, veillez à ce qu’elles ne se touchent pas.",
+        "it": "Dopo l’uso, sciacqua bene lo spazzolino sotto l’acqua corrente e lascialo asciugare in posizione verticale, con la testina verso l’alto. Non chiuderlo in un astuccio finché è ancora bagnato e non prestarlo a nessuno, nemmeno in famiglia. Se più spazzolini stanno nello stesso bicchiere, fai in modo che non si tocchino tra loro."
+      }
+    },
+    {
+      "type": "beforeAfter",
+      "before": {
+        "image": {
+          "src": "/images/hero/instruments.jpg"
+        },
+        "words": {
+          "ro": {
+            "alt": "Înainte: prim-plan cu instrumentele suspendate pe brațul unității dentare",
+            "note": "fiecare instrument își are locul lui."
+          },
+          "en": {
+            "alt": "Before: close-up of the handpieces hanging from the dental unit’s arm",
+            "note": "each instrument has its own place."
+          },
+          "de": {
+            "alt": "Vorher: Nahaufnahme der Instrumente, die am Arm der Behandlungseinheit hängen",
+            "note": "Jedes Instrument hat seinen Platz."
+          },
+          "fr": {
+            "alt": "Avant : gros plan sur les instruments suspendus au bras de l’unité de soins",
+            "note": "chaque instrument a sa place."
+          },
+          "it": {
+            "alt": "Prima: primo piano degli strumenti appesi al braccio del riunito",
+            "note": "ogni strumento ha il suo posto."
+          }
+        }
+      },
+      "after": {
+        "image": {
+          "src": "/images/hero/treatment-room.jpg"
+        },
+        "words": {
+          "ro": {
+            "alt": "După: cabinet de tratament, cu un blat lung cu sertare, scaunul stomatologic și, pe perete, un ecran cu o radiografie panoramică",
+            "note": "sertarele țin totul în ordine."
+          },
+          "en": {
+            "alt": "After: a treatment room with a long counter of drawers, the dental chair and, on the wall, a screen showing a panoramic X-ray",
+            "note": "the drawers keep everything in order."
+          },
+          "de": {
+            "alt": "Nachher: Behandlungsraum mit einer langen Arbeitsfläche voller Schubladen, dem Behandlungsstuhl und einem Bildschirm an der Wand, auf dem ein Panoramaröntgenbild zu sehen ist",
+            "note": "Die Schubladen halten alles in Ordnung."
+          },
+          "fr": {
+            "alt": "Après : une salle de soins avec un long plan de travail à tiroirs, le fauteuil dentaire et, au mur, un écran affichant une radiographie panoramique",
+            "note": "les tiroirs gardent tout bien rangé."
+          },
+          "it": {
+            "alt": "Dopo: una sala di trattamento con un lungo bancone a cassetti, la poltrona odontoiatrica e, alla parete, uno schermo con una radiografia panoramica",
+            "note": "i cassetti tengono tutto in ordine."
+          }
+        }
+      }
+    },
+    {
+      "type": "paragraph",
+      "words": {
+        "ro": "Periuța curăță fețele dinților, dar nu și spațiile dintre ei. Pentru acestea ai nevoie de ață dentară sau de periuțe interdentare, despre care îți povestim într-un articol separat. Împreună, cele două obiceiuri țin gingia sănătoasă mult mai bine decât periajul singur.",
+        "en": "A toothbrush cleans the surfaces of your teeth, but not the spaces between them. For those you need dental floss or interdental brushes, which we write about in a separate article. Together, the two habits do much more to keep your gums healthy than brushing alone.",
+        "de": "Die Zahnbürste reinigt die Oberflächen der Zähne, aber nicht die Zwischenräume. Dafür brauchen Sie Zahnseide oder Interdentalbürsten, von denen wir Ihnen in einem eigenen Artikel erzählen. Gemeinsam halten diese beiden Gewohnheiten das Zahnfleisch viel besser gesund als das Zähneputzen allein.",
+        "fr": "La brosse à dents nettoie la surface des dents, mais pas les espaces entre elles. Pour les nettoyer, il vous faut du fil dentaire ou des brossettes interdentaires, dont nous vous parlons dans un article à part. Ensemble, ces deux habitudes maintiennent les gencives en bonne santé bien mieux que le brossage seul.",
+        "it": "Lo spazzolino pulisce le superfici dei denti, ma non gli spazi tra un dente e l’altro. Per pulirli ti servono il filo interdentale o gli scovolini, di cui ti parliamo in un articolo a parte. Insieme, queste due abitudini mantengono sane le gengive molto meglio del solo spazzolamento."
+      }
+    },
+    {
+      "type": "photo",
+      "image": {
+        "src": "/images/hero/lobby.jpg"
+      },
+      "words": {
+        "ro": {
+          "heading": "Aici te așteptăm",
+          "alt": "Sala de așteptare a clinicii, cu fotolii galbene și o ușă deschisă spre un cabinet"
+        },
+        "en": {
+          "heading": "We’ll be waiting for you here",
+          "alt": "The clinic’s waiting room, with yellow armchairs and an open door to a treatment room"
+        },
+        "de": {
+          "heading": "Hier erwarten wir Sie",
+          "alt": "Das Wartezimmer der Klinik mit gelben Sesseln und einer offenen Tür zu einem Behandlungsraum"
+        },
+        "fr": {
+          "heading": "Nous vous attendons ici",
+          "alt": "La salle d’attente de la clinique, avec des fauteuils jaunes et une porte ouverte sur un cabinet de soins"
+        },
+        "it": {
+          "heading": "Ti aspettiamo qui",
+          "alt": "La sala d’attesa della clinica, con poltrone gialle e una porta aperta su una sala di trattamento"
+        }
+      }
+    }
+  ],
+  "conclusion": {
+    "ro": "O periuță moale, schimbată la timp și folosită cu răbdare, face mai mult pentru gingiile tale decât orice model scump. Dacă nu știi ce să alegi, adu-ți periuța la următoarea consultație și o alegem împreună.",
+    "en": "A soft toothbrush, replaced in good time and used with patience, does more for your gums than any expensive model. If you are not sure what to choose, bring your toothbrush along to your next appointment and we’ll choose one together.",
+    "de": "Eine weiche Zahnbürste, rechtzeitig gewechselt und mit Geduld benutzt, tut mehr für Ihr Zahnfleisch als jedes teure Modell. Wenn Sie nicht wissen, welche Sie nehmen sollen, bringen Sie Ihre Zahnbürste zum nächsten Termin mit, dann suchen wir gemeinsam eine aus.",
+    "fr": "Une brosse souple, changée à temps et utilisée avec patience, fait plus pour vos gencives que n’importe quel modèle cher. Si vous ne savez pas laquelle choisir, apportez votre brosse à votre prochaine consultation et nous la choisirons ensemble.",
+    "it": "Uno spazzolino morbido, cambiato per tempo e usato con pazienza, fa più bene alle tue gengive di qualsiasi modello costoso. Se non sai quale scegliere, porta il tuo spazzolino alla prossima visita e lo scegliamo insieme."
+  }
+}

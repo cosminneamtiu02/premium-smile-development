@@ -1,11 +1,18 @@
 import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { PostList } from '@/components/sections/PostList/PostList';
 import { namedAs } from '@/components/sections/PageHero/PageHero.fixtures';
-import { blogPagePath, pageCount, postsIn, postsOnPage } from '@/lib/blog/blog';
+import { articleSlugFor } from '@/lib/blog-article/blog-article';
+import {
+  articlePath,
+  blogPagePath,
+  pageCount,
+  postsIn,
+  postsOnPage,
+} from '@/lib/blog/blog';
 import { localeHref } from '@/i18n/href';
 import { isLocale, type Locale } from '@/i18n/locales';
 import de from '@/messages/de.json';
@@ -105,12 +112,20 @@ async function expectPageIn(
       name: namedAs(MESSAGES[locale].blog.hero.title),
     }),
   ).toBeInTheDocument();
-  const titles = postsOnPage(page, postsIn(locale)).map((post) => post.title);
-  await expect(canvas.getAllByRole('article')).toHaveLength(titles.length);
-  for (const title of titles) {
-    await expect(
-      canvas.getByRole('article', { name: title }),
-    ).toBeInTheDocument();
+  const shown = postsOnPage(page, postsIn(locale));
+  await expect(canvas.getAllByRole('article')).toHaveLength(shown.length);
+  for (const post of shown) {
+    const article = canvas.getByRole('article', { name: post.title });
+    // THE CARD'S LINK (PostCard's THE LINK): one per card, opening its
+    // post's article — or, while it has none, the blog's one article, the
+    // owner's "dummy" (lib/blog-article's THE STAND-IN) — in the story's
+    // language.
+    const links = within(article).getAllByRole('link');
+    await expect(links).toHaveLength(1);
+    await expect(links[0]).toHaveAttribute(
+      'href',
+      localeHref(locale, articlePath(articleSlugFor(post.slug))),
+    );
   }
 }
 

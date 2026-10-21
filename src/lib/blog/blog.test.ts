@@ -4,12 +4,15 @@ import {
   MAX_READING_MINUTES,
   MAX_TAGS,
   POSTS_PER_PAGE,
+  articlePath,
   blogPagePath,
+  isPostAlt,
   newestFirst,
   numberedPages,
   pageCount,
   parsePageParam,
   parsePosts,
+  postIn,
   posts,
   postsIn,
   postsOnPage,
@@ -18,6 +21,19 @@ import {
 
 // lib/blog — the reader of src/content/blog/posts.json and the arithmetic that
 // cuts the list into pages. The header of blog.ts argues every rule pinned here.
+
+/** Characters that SHOW NOTHING and survive `trim` (lib/visible-text's THE
+ *  UNSEEN SET), by their codes — never typed into the source: the zero-width
+ *  space U+200B, the soft hyphen U+00AD, the word joiner U+2060, the Hangul
+ *  filler U+3164, a letter drawn as blank width, and NEL U+0085, a control
+ *  character — the one of Unicode's White_Space that `\s` misses. */
+const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b);
+const SOFT_HYPHEN = String.fromCharCode(0xad);
+const WORD_JOINER = String.fromCharCode(0x2060);
+const HANGUL_FILLER = String.fromCharCode(0x3164);
+const NEXT_LINE = String.fromCharCode(0x85);
+/** A tooth (U+1F9B7) — an emoji, which shows and names nothing. */
+const TOOTH = String.fromCodePoint(0x1f9b7);
 
 /** One language's valid words; a test breaks exactly one thing in a copy. */
 function rawWords(
@@ -121,6 +137,18 @@ describe('parsePosts — the build-time check of the JSON', () => {
     expect(most?.words.de.tags).toEqual(full);
   });
 
+  it('accepts an alt that describes in words of any script, and a title or a tag that is a number — a letter or a digit names something', () => {
+    for (const alt of ['O fotografie', 'Ψ', 'ș.']) {
+      const [post] = parsePosts([rawPostWithGerman(rawWords({ alt }))]);
+      expect(post?.words.de.alt, alt).toBe(alt);
+    }
+    const [year] = parsePosts([
+      rawPostWithGerman(rawWords({ title: '2019', tags: ['2024'] })),
+    ]);
+    expect(year?.words.de.title).toBe('2019');
+    expect(year?.words.de.tags).toEqual(['2024']);
+  });
+
   it('refuses a file that is not an array, and an entry that is not an object', () => {
     expect(() => parsePosts({ posts: [] })).toThrow(/expected an array/);
     expect(() => parsePosts(['text'])).toThrow(/post 1: expected an object/);
@@ -130,13 +158,13 @@ describe('parsePosts — the build-time check of the JSON', () => {
     [
       'an unknown key (a typo)',
       rawPost({ sumary: 'x' }),
-      /unknown key\(s\) sumary/,
+      /unknown key\(s\) "sumary"/,
     ],
-    ['a missing key', rawPostWithout('author'), /missing key\(s\) author/],
+    ['a missing key', rawPostWithout('author'), /missing key\(s\) "author"/],
     [
       'the words of the old, one-language shape at the top level',
       rawPost({ title: 'Un titlu' }),
-      /unknown key\(s\) title/,
+      /unknown key\(s\) "title"/,
     ],
     ['an upper-case slug', rawPost({ slug: 'Exemplu' }), /"slug" must be/],
     [
@@ -146,15 +174,53 @@ describe('parsePosts — the build-time check of the JSON', () => {
     ],
     ['a slug with a space', rawPost({ slug: 'un slug' }), /"slug" must be/],
     ['the reserved slug "page"', rawPost({ slug: 'page' }), /reserved/],
-    ['an author that is not text', rawPost({ author: 7 }), /"author"/],
     [
-      'an author with a stray space',
+      'an author that is not text — saying so, and naming the value by its type',
+      rawPost({ author: 7 }),
+      '"author" must be visible text, trimmed: it is not a string, got 7',
+    ],
+    [
+      'an author with a stray space — saying so, the value quoted',
       rawPost({ author: 'Dr. Exemplu ' }),
-      /"author"/,
+      '"author" must be visible text, trimmed: it has white space at its start or end, got "Dr. Exemplu "',
+    ],
+    [
+      'an author that SHOWS NOTHING — a zero-width space, which trimming keeps, spelled by its code point in the quote',
+      rawPost({ author: ZERO_WIDTH_SPACE }),
+      '"author" must be visible text, trimmed: it shows nothing, got "\\u{200B}"',
+    ],
+    [
+      'an author that is NEL alone — a control character, the one of White_Space that `\\s` misses',
+      rawPost({ author: NEXT_LINE }),
+      '"author" must be visible text, trimmed: it shows nothing, got "\\u{0085}"',
+    ],
+    [
+      'a slug holding a character drawn as nothing — spelled by its code point, where the post is named and where it is refused (round 2 of lib/visible-text’s review)',
+      rawPost({ slug: `exemplu${ZERO_WIDTH_SPACE}` }),
+      'post 1 ("exemplu\\u{200B}"): "slug" must be lower-case ASCII words joined by single dashes, got "exemplu\\u{200B}"',
+    ],
+    [
+      'a key holding a character drawn as nothing — quoted, beside the key it misses',
+      (() => {
+        const post = rawPostWithout('author');
+        post[`author${ZERO_WIDTH_SPACE}`] = 'Dr. Exemplu';
+        return post;
+      })(),
+      'unknown key(s) "author\\u{200B}"; missing key(s) "author"',
     ],
     ['a day that does not exist', rawPost({ date: '2026-02-30' }), /"date"/],
     ['a day without its zeros', rawPost({ date: '2026-2-3' }), /"date"/],
     ['a day written first', rawPost({ date: '15-01-2026' }), /"date"/],
+    [
+      'a day written as a number — named as written',
+      rawPost({ date: 20260115 }),
+      '"date" must be a real day spelled YYYY-MM-DD, got 20260115',
+    ],
+    [
+      'a day with a no-break space after it — the space spelled',
+      rawPost({ date: `2026-01-15${String.fromCharCode(0xa0)}` }),
+      '"date" must be a real day spelled YYYY-MM-DD, got "2026-01-15\\u{00A0}"',
+    ],
     [
       'an image that is a string',
       rawPost({ image: '/images/x.jpg' }),
@@ -163,17 +229,22 @@ describe('parsePosts — the build-time check of the JSON', () => {
     [
       'an image that still carries its alt (it is a language’s word now)',
       rawPost({ image: { src: '/images/x.jpg', alt: '' } }),
-      /"image": unknown key\(s\) alt/,
+      /"image": unknown key\(s\) "alt"/,
     ],
     [
       'a picture outside /images/',
       rawPost({ image: { src: '/photos/x.jpg' } }),
-      /"image.src"/,
+      '"image.src" must be a path under /images/, got "/photos/x.jpg"',
+    ],
+    [
+      'a picture path that is no string — named by its type',
+      rawPost({ image: { src: ['/images/x.jpg'] } }),
+      '"image.src" must be a path under /images/, got <object>',
     ],
     [
       'a post with no reading time',
       rawPostWithout('readingMinutes'),
-      /missing key\(s\) readingMinutes/,
+      /missing key\(s\) "readingMinutes"/,
     ],
     [
       'a reading time of zero',
@@ -196,6 +267,11 @@ describe('parsePosts — the build-time check of the JSON', () => {
       /"readingMinutes" .* got "5"/,
     ],
     [
+      'a reading time that is a BigInt — named by its type, never JSON’s own „Do not know how to serialize a BigInt"',
+      rawPost({ readingMinutes: BigInt(4) }),
+      'post 1 ("exemplu-de-articol"): "readingMinutes" must be a whole number of minutes from 1 to 60, got <bigint>',
+    ],
+    [
       'words that are not an object',
       rawPost({ words: ['ro'] }),
       /"words" must be an object \{ ro, en, de, fr, it \}/,
@@ -209,12 +285,12 @@ describe('parsePosts — the build-time check of the JSON', () => {
             .map((locale) => [locale, rawWords()]),
         ),
       }),
-      /"words": missing language\(s\) it/,
+      /"words": missing language\(s\) "it"/,
     ],
     [
       'a language the site does not route',
       rawPost({ words: rawAllWords({ es: rawWords() }) }),
-      /"words": unknown language\(s\) es/,
+      /"words": unknown language\(s\) "es"/,
     ],
     [
       'a language that is not an object',
@@ -228,12 +304,12 @@ describe('parsePosts — the build-time check of the JSON', () => {
         delete words.summary;
         return rawPostWithGerman(words);
       })(),
-      /"words\.de": missing key\(s\) summary/,
+      /"words\.de": missing key\(s\) "summary"/,
     ],
     [
       'a language with an unknown field',
       rawPostWithGerman(rawWords({ titel: 'x' })),
-      /"words\.de": unknown key\(s\) titel/,
+      /"words\.de": unknown key\(s\) "titel"/,
     ],
     [
       'an empty title',
@@ -244,6 +320,41 @@ describe('parsePosts — the build-time check of the JSON', () => {
       'a summary with a stray space',
       rawPostWithGerman(rawWords({ summary: 'Text ' })),
       /"words\.de\.summary"/,
+    ],
+    [
+      'a title that SHOWS NOTHING — a Hangul filler, a letter drawn as blank width',
+      rawPostWithGerman(rawWords({ title: HANGUL_FILLER })),
+      '"words.de.title" must be visible text, trimmed: it shows nothing, got "\\u{3164}"',
+    ],
+    [
+      'a title of a mark alone — it shows, and names nothing',
+      rawPostWithGerman(rawWords({ title: '.' })),
+      '"words.de.title" names nothing: it holds no letter or digit that shows, got "." — a title of marks alone is a heading with no name',
+    ],
+    [
+      'a title of an emoji alone',
+      rawPostWithGerman(rawWords({ title: TOOTH })),
+      `"words.de.title" names nothing: it holds no letter or digit that shows, got "${TOOTH}"`,
+    ],
+    [
+      'a title of an ellipsis beside a Hangul filler — the one letter is drawn as nothing',
+      rawPostWithGerman(rawWords({ title: `…${HANGUL_FILLER}` })),
+      '"words.de.title" names nothing: it holds no letter or digit that shows, got "…\\u{3164}"',
+    ],
+    [
+      'a summary that SHOWS NOTHING — a soft hyphen, which trimming keeps',
+      rawPostWithGerman(rawWords({ summary: SOFT_HYPHEN })),
+      '"words.de.summary" must be visible text, trimmed: it shows nothing, got "\\u{00AD}"',
+    ],
+    [
+      'a tag that SHOWS NOTHING — a word joiner, which trimming keeps — naming the tag',
+      rawPostWithGerman(rawWords({ tags: ['Mundhygiene', WORD_JOINER] })),
+      '"words.de.tags": every tag must be visible text, trimmed — tag 2: it shows nothing, got "\\u{2060}"',
+    ],
+    [
+      'a tag of an ellipsis alone — a chip that names nothing',
+      rawPostWithGerman(rawWords({ tags: ['…', 'Tipps'] })),
+      '"words.de.tags": tag 1 names nothing: it holds no letter or digit that shows, got "…" — a chip of marks alone is a label with no name',
     ],
     [
       'tags that are not a list',
@@ -258,7 +369,7 @@ describe('parsePosts — the build-time check of the JSON', () => {
     [
       'a tag listed twice',
       rawPostWithGerman(rawWords({ tags: ['tipps', 'tipps'] })),
-      /"words\.de\.tags": a tag is listed twice/,
+      '"words.de.tags": the tag "tipps" is listed twice (tags 1 and 2)',
     ],
     [
       `more than ${MAX_TAGS} tags`,
@@ -274,14 +385,51 @@ describe('parsePosts — the build-time check of the JSON', () => {
     [
       'an alt with a stray space',
       rawPostWithGerman(rawWords({ alt: ' a' })),
-      /"words\.de\.alt"/,
+      '"words.de.alt" must be "" for a picture that only decorates the title beside it, or words that describe it — visible text, trimmed, holding a letter that shows: it has white space at its start or end, got " a"',
     ],
     [
       'an alt that is not text',
       rawPostWithGerman(rawWords({ alt: null })),
-      /"words\.de\.alt"/,
+      '"words.de.alt" must be "" for a picture that only decorates the title beside it, or words that describe it — visible text, trimmed, holding a letter that shows: it is not a string, got null',
+    ],
+    // A cover alt is "" or WORDS (lib/blog's THE TEXTS): until round 1 of
+    // lib/visible-text's review (2026-10-21) every one of these passed as a
+    // described picture, a cover named by nothing — on the card, on the
+    // article's cover and in the link preview's og:image:alt.
+    [
+      'an alt that SHOWS NOTHING — a zero-width space',
+      rawPostWithGerman(rawWords({ alt: ZERO_WIDTH_SPACE })),
+      '"words.de.alt" must be "" for a picture that only decorates the title beside it, or words that describe it — visible text, trimmed, holding a letter that shows: it shows nothing, got "\\u{200B}"',
+    ],
+    [
+      'an alt that is NEL alone — a control character',
+      rawPostWithGerman(rawWords({ alt: NEXT_LINE })),
+      /"words\.de\.alt" must be "" .*: it shows nothing, got "\\u\{0085\}"$/,
+    ],
+    [
+      'an alt that is a dot — it shows, and describes nothing',
+      rawPostWithGerman(rawWords({ alt: '.' })),
+      '"words.de.alt" must be "" for a picture that only decorates the title beside it, or words that describe it — visible text, trimmed, holding a letter that shows: it holds no letter that shows, got "."',
+    ],
+    [
+      'an alt that is a dash',
+      rawPostWithGerman(rawWords({ alt: '-' })),
+      /"words\.de\.alt" must be "" .*: it holds no letter that shows, got "-"$/,
+    ],
+    [
+      'an alt that is a number alone — a figure describes no picture',
+      rawPostWithGerman(rawWords({ alt: '2' })),
+      /"words\.de\.alt" must be "" .*: it holds no letter that shows, got "2"$/,
+    ],
+    [
+      'an alt of a Hangul filler beside a dot — the dot shows, the one letter is drawn as nothing',
+      rawPostWithGerman(rawWords({ alt: `${HANGUL_FILLER}.` })),
+      /"words\.de\.alt" must be "" .*: it holds no letter that shows, got "\\u\{3164\}\."$/,
     ],
   ])('refuses %s', (_case, entry, message) => {
+    // Always the parser's own TypeError, naming the post — never one thrown
+    // on the way to its message (JSON's, for a BigInt).
+    expect(() => parsePosts([entry])).toThrow(TypeError);
     expect(() => parsePosts([entry])).toThrow(message);
   });
 
@@ -289,7 +437,7 @@ describe('parsePosts — the build-time check of the JSON', () => {
     expect(() =>
       parsePosts([rawPost(), rawPost({ date: '2026-02-01' })]),
     ).toThrow(
-      /post 2 \(„exemplu-de-articol"\): "slug" exemplu-de-articol is used by an earlier post/,
+      /post 2 \("exemplu-de-articol"\): "slug" "exemplu-de-articol" is used by an earlier post/,
     );
   });
 
@@ -302,13 +450,39 @@ describe('parsePosts — the build-time check of the JSON', () => {
           words: rawAllWords({ fr: rawWords({ title: '' }) }),
         }),
       ]),
-    ).toThrow(/posts\.json, post 2 \(„al-doilea"\): "words\.fr\.title"/);
+    ).toThrow(/posts\.json, post 2 \("al-doilea"\): "words\.fr\.title"/);
   });
 
   it('names the slug even when the post fails on its keys — the typo case', () => {
     expect(() => parsePosts([rawPost({ sumary: 'x' })])).toThrow(
-      /post 1 \(„exemplu-de-articol"\): unknown key\(s\) sumary/,
+      /post 1 \("exemplu-de-articol"\): unknown key\(s\) "sumary"/,
     );
+  });
+});
+
+describe('isPostAlt — THE TEXTS’ rule for a post’s picture, the one parsePosts and the data test ask', () => {
+  it.each([
+    ['"" — a picture that only decorates', ''],
+    ['words that describe', 'Sala de așteptare a clinicii'],
+    ['a letter of another script', 'Ψ'],
+    ['a small letter beside a dot', 'ș.'],
+  ])('takes %s', (_name, alt) => {
+    expect(isPostAlt(alt)).toBe(true);
+  });
+
+  it.each([
+    ['a dot', '.'],
+    ['a dash', '-'],
+    ['a number alone', '2'],
+    ['a zero-width space', ZERO_WIDTH_SPACE],
+    ['a Hangul filler beside a dot', `${HANGUL_FILLER}.`],
+    ['NEL, a control character', NEXT_LINE],
+    ['words with a space before them', ' Sala'],
+    ['words with a lone surrogate', `Sala ${String.fromCharCode(0xd800)}`],
+    ['null', null],
+    ['a number', 7],
+  ])('refuses %s — neither "" nor words that describe', (_name, alt) => {
+    expect(isPostAlt(alt)).toBe(false);
   });
 });
 
@@ -350,6 +524,46 @@ describe('postsIn — one language of every post, what a list page shows', () =>
         'nou',
         'vechi',
       ]);
+    }
+  });
+});
+
+describe('postIn — ONE post in one language, what the article page reads', () => {
+  it.each(locales)(
+    '%s: the entry’s facts with that language’s words — exactly what `postsIn` makes of the same entry',
+    (locale) => {
+      const [entry] = parsePosts([
+        rawPost({
+          words: rawAllWords({
+            [locale]: rawWords({
+              title: `title:${locale}`,
+              summary: `summary:${locale}`,
+              tags: [`tag:${locale}`],
+              alt: `alt:${locale}`,
+            }),
+          }),
+        }),
+      ]);
+      if (entry === undefined) throw new Error('parsePosts returned no post');
+
+      expect(postIn(locale, entry)).toEqual({
+        slug: 'exemplu-de-articol',
+        title: `title:${locale}`,
+        summary: `summary:${locale}`,
+        author: 'Dr. Exemplu',
+        image: { src: '/images/hero/lobby.jpg', alt: `alt:${locale}` },
+        tags: [`tag:${locale}`],
+        readingMinutes: 5,
+      });
+      expect(postsIn(locale, [entry])).toEqual([postIn(locale, entry)]);
+    },
+  );
+
+  it('is what `postsIn` makes of every shipped post, in every language, in the list’s order', () => {
+    for (const locale of locales) {
+      expect(postsIn(locale), locale).toEqual(
+        posts.map((entry) => postIn(locale, entry)),
+      );
     }
   });
 });
@@ -425,13 +639,86 @@ describe('the pages — counting, cutting and spelling them', () => {
     }
   });
 
-  it('reads the route segment back as a number, and only a canonical one', () => {
+  it('spells a post’s article as /blog/<slug> — and refuses a slug no post could carry, naming it', () => {
+    expect(articlePath('cum-iti-alegi-periuta-de-dinti')).toBe(
+      '/blog/cum-iti-alegi-periuta-de-dinti',
+    );
+    // The rule's edges, each a slug parsePosts lets through: one character,
+    // digits alone, digits beside a word.
+    for (const slug of ['a', '42', 'ghid-2026']) {
+      expect(articlePath(slug), slug).toBe(`/blog/${slug}`);
+    }
+    // Refused: the empty string, the reserved word, a capital, a doubled or
+    // leading dash, a space, a slash; dots ('..' is a path's own word for the
+    // folder above) and an underscore, which a pattern widened by one
+    // character would let through — also after a dash, where a pattern
+    // widened only in its second half would; a Romanian letter, the likeliest
+    // slip on this site; a line break, which a pattern read line by line
+    // would let through; a zero-width space, which no reader would see. The
+    // message names each as lib/visible-text's `spelled` writes it, written
+    // out: the line break and the zero-width space by their code points, so
+    // the message stays on one line and shows what the slug holds.
+    for (const [slug, named] of [
+      ['', '""'],
+      ['page', '"page"'],
+      ['Cum', '"Cum"'],
+      ['a--b', '"a--b"'],
+      ['-a', '"-a"'],
+      ['a b', '"a b"'],
+      ['a/b', '"a/b"'],
+      ['..', '".."'],
+      ['a.b', '"a.b"'],
+      ['a_b', '"a_b"'],
+      ['a-b.c', '"a-b.c"'],
+      ['a-b_c', '"a-b_c"'],
+      ['periuță', '"periuță"'],
+      ['a\nb', '"a\\u{000A}b"'],
+      [`a${ZERO_WIDTH_SPACE}b`, '"a\\u{200B}b"'],
+    ] as const) {
+      expect(() => articlePath(slug), named).toThrow(RangeError);
+      expect(() => articlePath(slug), named).toThrow(
+        `${named} is not a post's slug`,
+      );
+    }
+  });
+
+  it('refuses a value that is not a string at all, naming it by its type — never by running its code', () => {
+    // A caller outside TypeScript, reached through `unknown`. The slug
+    // pattern alone would read each value as text (`RegExp.prototype.test`
+    // converts its argument), so undefined, null, 123 and ['abc'] would pass
+    // it as "undefined", "null", "123" and "abc" and come back as paths.
+    // Named as lib/visible-text's `spelled` names it — a number, null and
+    // undefined as written, anything else by its type — and the error is
+    // always the RangeError: never JSON's own TypeError (a BigInt, a cycle).
+    const call = (value: unknown): unknown => articlePath(value as string);
+    const cycle: Record<string, unknown> = {};
+    cycle.self = cycle;
+    const named: ReadonlyArray<readonly [unknown, string]> = [
+      [undefined, 'undefined'],
+      [null, 'null'],
+      [123, '123'],
+      [['abc'], '<object>'],
+      [BigInt(10), '<bigint>'],
+      [cycle, '<object>'],
+      [Symbol('slug'), '<symbol>'],
+      [() => 'slug', '<function>'],
+    ];
+    for (const [value, shown] of named) {
+      expect(() => call(value), shown).toThrow(RangeError);
+      expect(() => call(value), shown).toThrow(`${shown} is not a post's slug`);
+    }
+  });
+
+  it('reads the route segment back as a number, and only a canonical one — naming a refused one `spelled`', () => {
     expect(parsePageParam('2')).toBe(2);
     expect(parsePageParam('1')).toBe(1);
     expect(parsePageParam('10')).toBe(10);
     for (const value of ['', '0', '02', '2.0', ' 2', 'x', '-2']) {
       expect(() => parsePageParam(value), value).toThrow(RangeError);
     }
+    expect(() => parsePageParam(`2${ZERO_WIDTH_SPACE}`)).toThrow(
+      '"2\\u{200B}" is not a page number',
+    );
   });
 });
 

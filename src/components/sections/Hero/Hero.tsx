@@ -104,7 +104,10 @@ import { liveRegion } from '@/lib/rotation/rotation';
 // Each bead's accessible name is the SAME string as its slide's — the page
 // formats `home.hero.slide` once per row and the row carries it. The beads
 // come FIRST in the DOM (the APG order: controls before slides — a keyboard
-// visitor can stop the motion before reading) and LAST in the picture
+// visitor's focus holds the motion while they read; it moves on once focus
+// leaves, round 3 — though in Chromium the Tab that focuses a bead also
+// scrolls the page, centring the bead, §15.21 round 11's record) and LAST in
+// the picture
 // (absolute, 8 % up from the stage's bottom, over the fade's invisible
 // start — round 6). Hit box 24 × 44 around an 8px bead (SC 2.5.8 with
 // slack); the active one is a 28px pill; the only motion is the bead's width
@@ -772,11 +775,22 @@ export function Hero({
                   aria-label={slide.label}
                   aria-current={current ? 'true' : undefined}
                   // goto lands and buys a full interval; the shell's
-                  // handNavigation (goto, then pause for good) is NOT used.
+                  // handNavigation (pause for good, then the step) is NOT
+                  // used.
                   onClick={() => rotation.goto(index)}
-                  // 24 × 44 hit box around the bead (px-2 + h-11); the ring
-                  // is the remapped white `--focus`, offset outside the box.
-                  className="group/bead flex h-11 items-center rounded-md px-2 outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus"
+                  // A hit box around the bead (px-2 + h-11): 1.5rem wide,
+                  // 24 × 44 at a 16px root, never under 24px wide, the bead
+                  // centred in it — on this band the floor binds only when
+                  // the default font size is under 16px (the theme's steps
+                  // alone would draw the box 18px wide at Chrome's „Small",
+                  // 12px); inside sections/CardCarousel's band scale it
+                  // binds under the 1401 reference too. The ring is the
+                  // remapped white `--focus`, offset outside the box; in
+                  // forced colours a border, where the bead's ground is the
+                  // system's own and draws nothing to rely on (2026-10-20).
+                  // KEEP-IN-SYNC: sections/CardCarousel's BEAD, held equal
+                  // by CardCarousel.test.tsx.
+                  className="group/bead flex h-11 min-w-[24px] items-center justify-center rounded-md px-2 outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus forced-colors:border"
                 >
                   <span
                     aria-hidden="true"
@@ -797,8 +811,13 @@ export function Hero({
 
         {/* THE SLIDES — their words in row 2, stacked in one cell; their
             pictures escape to the whole stage. 'off' while the band moves on
-            its own, 'polite' once it stops: from then on a change means the
-            visitor asked for it. ON THE FLOOR from the tablet up
+            its own (lib/rotation's liveRegion); 'polite' while keyboard focus
+            holds it, or under reduced motion, when a change means the
+            visitor asked for it. While the band runs, a press on a bead that
+            does not come with keyboard focus is NOT announced — above all a
+            screen reader's double-tap (VoiceOver, TalkBack), which arrives
+            as a click: it calls `goto`, the clock keeps running, the region
+            stays 'off' (round 3's manners; BACKLOG.md entry 2). ON THE FLOOR from the tablet up
             (`md:items-end`, round 12e): the row is as tall as the tallest
             slogan, and a shorter one used to sit at its TOP — a line above
             the others. Measured on the built export once round 12 enlarged

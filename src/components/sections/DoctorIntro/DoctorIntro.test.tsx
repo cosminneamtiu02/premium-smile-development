@@ -108,9 +108,15 @@ const CREDO: DoctorIntroCredo = {
 /** ui/Heading's `hero` size row + its default `tone` row, concatenated in that
  *  order — the fluid clamp the atom's header measures out (32px at the 320
  *  stress width, the old site's 72px from 1600px up) in the ink every
- *  non-inverse title wears. */
+ *  non-inverse title wears. What the name's step IS wherever THE BAND SCALE
+ *  does not apply. */
 const HERO_STEP =
   'font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight text-ink-strong';
+/** ui/Heading's `hero-scaled` size row + its default `tone` row — the step the
+ *  name has worn since 2026-10-15: `hero`'s row byte for byte with ONE class
+ *  closing the size row, before the ink (SCALED_SIZE, next). */
+const HERO_SCALED_STEP =
+  'font-display text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)] text-ink-strong';
 /** ui/Eyebrow's RECIPE constant. */
 const EYEBROW_RECIPE =
   'font-mono text-sm font-medium tracking-widest text-ink-muted uppercase';
@@ -140,12 +146,14 @@ const GRID =
  *  never retyped, because Container.tsx is the one place they are spelled
  *  (tests/unit/design-scale.test.ts's census). */
 const SCALE_BOX = ['@container', bandColumnClasses, bandScaleClasses].join(' ');
-/** The name's one regime class (DoctorIntro.tsx's THE BAND SCALE, THE NAME):
- *  inside the scale, the `hero` step's value at the owner's 1401 window in
- *  the design pixel — 16.26 spacing steps, 65.04 design pixels — behind THE
- *  BAND SCALE's own gate chain, re-spelled because Tailwind reads a class
- *  only whole. A byte pin of a WORN class, so it ships no rule of its own. */
-const NAME_SCALE =
+/** The `hero-scaled` step's ONE class beyond `hero` (ui/Heading's
+ *  'hero-scaled' JOINED; DoctorIntro.tsx's THE BAND SCALE, THE NAME): inside
+ *  the scale, the `hero` step's value at the owner's 1401 window in the
+ *  design pixel — 16.26 spacing steps, 65.04 design pixels — behind THE BAND
+ *  SCALE's own gate chain. The name's one regime class, and the STEP's, never
+ *  the band's: this band spells no size. A byte pin of a WORN class, so it
+ *  ships no rule of its own. */
+const SCALED_SIZE =
   'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]';
 /** The picture's container: below the step capped at 20rem and centred in the
  *  column, exactly as before D62; at the step the whole first track — the cap
@@ -194,7 +202,7 @@ const tokensOf = (element: Element) =>
   element.className.split(/\s+/).filter(Boolean);
 
 /** A class's variant chain — everything up to its last colon OUTSIDE square
- *  brackets, so an arbitrary value's own colons (`text-[length:…]`) never
+ *  brackets, so an arbitrary value's own colons (a `length:` hint) never
  *  cut it (TeamRoster.test.tsx's reader). */
 const chainOf = (token: string): string => {
   let depth = 0;
@@ -217,18 +225,27 @@ const BAND_CHAIN = (() => {
 })();
 
 /**
- * The band's source with its PROSE removed, which is what the zero-island
- * guards at the bottom run against (mechanism copied verbatim from
- * SectionHeading.test.tsx, where its reasoning is written out in full).
+ * The band's source with its PROSE removed, which is what the source guards
+ * run against. Without it those guards police the file's own documentation:
+ * this band is deliberately comment-heavy and its header discusses
+ * `'use client'`, `t()` and hooks by name.
  *
- * Without it those guards police the file's own documentation: this band is
- * deliberately comment-heavy and its header discusses `'use client'`, `t()`
- * and hooks by name. Known limit, same as there: it strips block comments and
- * whole-line `//` comments, not a `//` trailing real code — a shape this file
- * does not contain, and one that is visible in review.
+ * ONE left-to-right pass, copied from tests/unit/design-scale.test.ts's
+ * `tsCode` (PostHeader.test.tsx's `codeOf` is the same copy): string literals
+ * are stepped over whole, and a `//` comment — which opens only at a line's
+ * start or after whitespace — is consumed before a `/*` inside it could open a
+ * block running on to the next `*\/`. The two passes it replaces (2026-10-20,
+ * after the G2 typescript review of PageHero.test.tsx's three) took blocks
+ * first and left a `//` trailing code alone: a trailing comment naming
+ * `src/messages/*.json` opened a block at its `/*`, and the code after it — a
+ * size class among it — went with the prose, so "spells no size" passed on a
+ * band that spelled one (measured on a scratch copy).
  */
 const stripComments = (code: string): string =>
-  code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+  code.replace(
+    /('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/gm,
+    (match: string, literal: string | undefined) => literal ?? ' ',
+  );
 
 const CODE = stripComments(source);
 
@@ -298,7 +315,7 @@ const mount = (placement: Placement = {}) =>
   );
 
 describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
-  it('renders the name as the ONE <h1>, in ui/Heading’s hero step', () => {
+  it('renders the name as the ONE <h1>, in ui/Heading’s hero-scaled step', () => {
     // The element is the decision: a doctor page has exactly one outline root
     // and it is the doctor's name. The atom supplies the step through asChild
     // and never picks a tag of its own.
@@ -307,12 +324,13 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
     const heading = screen.getByRole('heading', { level: 1, name: NAME });
     expect(heading.tagName).toBe('H1');
     expect(container.querySelectorAll('h1')).toHaveLength(1);
-    // The atom's two rows first, then this band's placement row — a person's
-    // name never breaks at a syllable (§15.14's rider), it wraps between
-    // words — and LAST the name's one regime class (THE BAND SCALE): the
-    // design's size on a laptop or a desktop, where `hero`'s viewport clamp
-    // is one no remap can reach.
-    expect(heading.className).toBe(`${HERO_STEP} ${LINE} ${NAME_SCALE}`);
+    // The atom's two rows first — the `hero-scaled` step, whose one gated
+    // class gives the name the design's size on a laptop or a desktop, where
+    // `hero`'s viewport clamp is one no remap can reach (THE BAND SCALE, THE
+    // NAME), then its ink — and then this band's placement row and NOTHING
+    // after it: a person's name never breaks at a syllable (§15.14's rider),
+    // it wraps between words, and the band spells no size of its own.
+    expect(heading.className).toBe(`${HERO_SCALED_STEP} ${LINE}`);
     // Ș ș Ț ț ă â î survive the whole chain — queried by TEXT, because a role
     // query would still match a mangled name.
     expect(screen.getByText(NAME).textContent).toBe(NAME);
@@ -401,10 +419,10 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
     // rhythm box's parent: the scale's recipe (Container.tsx's rule 5) on a
     // band whose shares are read in `cqi` — so the box is a size container of
     // its own, and past the cap every share reads the capped box, never the
-    // column. No other element of the band wears a gated class but the
-    // name's one (the test below), and the grid wears no `@container` of its
-    // own (an element never queries itself: its `@3xl` and its `cqi` read the
-    // box above).
+    // column. No other element of the band wears a gated class but the name,
+    // whose one is its STEP's — ui/Heading's `hero-scaled` (the test below)
+    // — and the grid wears no `@container` of its own (an element never
+    // queries itself: its `@3xl` and its `cqi` read the box above).
     const { container } = mount();
 
     const box = scaleBoxOf(container);
@@ -421,36 +439,60 @@ describe('DoctorIntro — the page’s opener, and the page’s <h1>', () => {
     const name = screen.getByRole('heading', { level: 1, name: NAME });
     for (const element of bandOf(container).querySelectorAll('*')) {
       if (element === box) continue;
-      expect(gated(element)).toEqual(element === name ? [NAME_SCALE] : []);
+      expect(gated(element)).toEqual(element === name ? [SCALED_SIZE] : []);
     }
     expect(tokensOf(gridOf(container))).not.toContain('@container');
     expect(tokensOf(containerOf(container))).toContain('@container');
   });
 
-  it('draws the NAME in the design inside the scale — the `hero` step’s 1401-window value in spacing steps, behind THE BAND SCALE’s own chain (CLAUDE.md §15.32 round 4)', () => {
+  it('asks ui/Heading for the `hero-scaled` step — the NAME’s size inside the scale is the step’s, and the band spells no size of its own (CLAUDE.md §15.32 round 4; the step since 2026-10-15)', () => {
     // `hero` is a VIEWPORT clamp, clamp(2rem, 1rem + 3.5vw, 4.5rem), and the
-    // band scale redraws theme VARIABLES only — so inside the scale the name
-    // takes the design's size by one class of its own: the clamp's value at
-    // the owner's 1401 window, 16 + 3.5 × 14.01 = 65.035px, as 16.26 spacing
-    // steps (65.04 design pixels). Its chain is THE BAND SCALE's, to the
-    // byte, so it opens where the band's pixel does — for every root of
-    // 9⅓px or more: its queries read the band's capped box, which a smaller
-    // root caps under the 896px floor (DoctorIntro.tsx's THE NAME, G2 LOW-1);
-    // and it sets the font SIZE alone (the `length:` hint) — the atom's
-    // `/tight` line height, a ratio, follows by itself.
+    // band scale redraws theme VARIABLES only — so the name wears ui/Heading's
+    // `hero-scaled` step: `hero` byte for byte, plus ONE class that sets,
+    // inside the scale, the clamp's value at the owner's 1401 window, 16 +
+    // 3.5 × 14.01 = 65.035px, as 16.26 spacing steps (65.04 design pixels).
+    // Until 2026-10-15 that class rode the <h1>'s own className; the step
+    // spells it once, in the atom (tests/unit/design-scale.test.ts holds the
+    // size to that one file). Its chain is THE BAND SCALE's, to the byte, so
+    // it opens where the band's pixel does — for every root of 9⅓px or more:
+    // its queries read the band's capped box, which a smaller root caps under
+    // the 896px floor (DoctorIntro.tsx's THE BOUND, G2 LOW-1); and it sets the
+    // font SIZE alone (the `length:` hint) — the step's `/tight` line height,
+    // a ratio, follows by itself.
     mount();
 
+    // THE SOURCE, its prose stripped: the <h1> is the one child of a Heading
+    // on the `hero-scaled` step, `asChild` — its attributes read in ANY
+    // order, as the census reads them (`asChild` first, sections/Wordmark's
+    // order, is the same element; the G2 typescript review, 2026-10-20) —
+    // never the bare `hero`, and the band's own className on it is the
+    // placement row and nothing else, no size.
+    expect(CODE).toMatch(
+      /<Heading\b(?=[^>]*\bsize="hero-scaled")(?=[^>]*\basChild\b)[^>]*>\s*<h1\b/,
+    );
+    expect(CODE).not.toMatch(/size="hero"/);
+    expect(/<h1 className="([^"]*)">/.exec(CODE)?.[1]).toBe(LINE);
+    expect(CODE).not.toContain('text-[length:');
+
+    // THE ELEMENT: the step's one gated class, on THE BAND SCALE's own chain.
     const heading = screen.getByRole('heading', { level: 1, name: NAME });
     const regime = tokensOf(heading).filter((token) =>
       token.startsWith('scalable:'),
     );
-    expect(regime).toEqual([NAME_SCALE]);
-    expect(chainOf(NAME_SCALE)).toBe(BAND_CHAIN);
+    expect(regime).toEqual([SCALED_SIZE]);
+    expect(chainOf(SCALED_SIZE)).toBe(BAND_CHAIN);
     expect(BAND_CHAIN).toBe('scalable:@4xl:@min-[896px]:');
-    const steps = /^text-\[length:calc\(var\(--spacing\)\*([\d.]+)\)\]$/.exec(
-      NAME_SCALE.slice(BAND_CHAIN.length),
+    // The two byte pins agree: the step IS `hero` plus that one class, so
+    // wherever the gate stays shut the name is `hero` to the byte.
+    const step = HERO_SCALED_STEP.split(' ');
+    expect(step.filter((token) => token === SCALED_SIZE)).toHaveLength(1);
+    expect(step.filter((token) => token !== SCALED_SIZE).join(' ')).toBe(
+      HERO_STEP,
     );
-    if (!steps) throw new Error('DoctorIntro test: the name’s class moved');
+    const steps = /^text-\[length:calc\(var\(--spacing\)\*([\d.]+)\)\]$/.exec(
+      SCALED_SIZE.slice(BAND_CHAIN.length),
+    );
+    if (!steps) throw new Error('DoctorIntro test: the step’s class moved');
     // Four design pixels a step, against the `hero` clamp at a 1401px window
     // (its 2rem floor and 4.5rem cap do not bind there): within a hundredth
     // of a pixel.
@@ -1233,7 +1275,7 @@ describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () 
     }
     // Never vacuous: the gate rides THE BAND SCALE's box three times (the
     // cap, the pixel, the remap — counted off ui/Container's own strings) and
-    // the name once.
+    // the name once — its `hero-scaled` step's one class.
     const fromContainer = `${bandColumnClasses} ${bandScaleClasses}`
       .split(' ')
       .filter((token) => token.startsWith('scalable:')).length;
@@ -1241,13 +1283,14 @@ describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () 
     expect(gated).toBe(fromContainer + 1);
   });
 
-  it('takes THE BAND SCALE from ui/Container by import — its two strings named there, the scale spelled nowhere here but the name’s one chain', () => {
+  it('takes THE BAND SCALE from ui/Container by import — its two strings named there, the scale spelled nowhere here, not even the name’s size', () => {
     // The band names exactly three things from the Container module: the
     // atom and its two band-scale strings. Its own code declares no design
     // pixel, spells no remap and sets no zoom and no floor — those live in
     // ui/Container and globals.css alone (tests/unit/design-scale.test.ts
-    // holds the whole repository to that); its ONE gated class is the name's,
-    // on THE BAND SCALE's own chain.
+    // holds the whole repository to that) — and since 2026-10-15 it spells
+    // no gated class at all: the name's one, the design's size, is
+    // ui/Heading's `hero-scaled` step's, which the band asks for.
     const names =
       /^import\s*\{([^}]*)\}\s*from\s*'@\/components\/ui\/Container\/Container';/m
         .exec(CODE)?.[1]
@@ -1263,8 +1306,8 @@ describe('DoctorIntro — container steps only, zero islands (§6.5, §16)', () 
     expect(CODE).not.toMatch(
       /design-scale|--scale-px|--band-zoom|--band-floor/,
     );
-    expect(CODE.match(/scalable:/g)).toHaveLength(1);
-    expect(CODE).toContain(NAME_SCALE);
+    expect(CODE).not.toMatch(/scalable:/);
+    expect(CODE).toMatch(/\bsize="hero-scaled"/);
   });
 
   it('ships NO client directive — the band is inert HTML (§16)', () => {

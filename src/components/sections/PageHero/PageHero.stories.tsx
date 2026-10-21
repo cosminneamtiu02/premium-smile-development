@@ -172,7 +172,7 @@ const meta = {
     title: {
       control: 'text',
       description:
-        'The page’s one <h1>, on ui/Heading’s `hero` step (65.04 design pixels inside the band scale — the doctor page’s name’s size — and there as wide as its first line, up to 135 design pixels past the column a side) — finished text with ONE line break where the stairway turns: two lines on a laptop or desktop, the second the shorter; elsewhere the break is a space',
+        'The page’s one <h1>, on ui/Heading’s `hero-scaled` step (`hero`, and 65.04 design pixels inside the band scale — the doctor page’s name’s size — and there as wide as its first line, up to 135 design pixels past the column a side) — finished text with ONE line break where the stairway turns: two lines on a laptop or desktop, the second the shorter; elsewhere the break is a space',
     },
     lead: {
       control: 'text',

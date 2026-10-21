@@ -60,7 +60,16 @@
       "slide": "Imaginea {index} din {total}",
       "contact": "Programează o consultație",
       "services": "Vezi serviciile",
-      "picker": "Alege imaginea (oprește derularea)"
+      "picker": "Alege imaginea"
+    },
+    "articles": {
+      "eyebrow": "Blog",
+      "title": "Sfaturi de la medicii noștri",
+      "region": "Articole din blog",
+      "previous": "Articolul anterior",
+      "next": "Articolul următor",
+      "picker": "Alege articolul",
+      "slide": "Articolul {index} din {total}"
     },
     "location": {
       "eyebrow": "Ne găsești",
@@ -124,6 +133,32 @@
     }
   },
   "blog": {
+    "article": {
+      "byline": "de {author}",
+      "note": "Notă: {note}",
+      "gallery": {
+        "region": "Galerie foto",
+        "regionNumbered": "Galerie foto {index} din {total}",
+        "previous": "Fotografia anterioară",
+        "next": "Fotografia următoare",
+        "slide": "Fotografia {index} din {total}",
+        "picker": "Alege fotografia"
+      },
+      "share": {
+        "label": "Distribuie articolul",
+        "facebook": "Facebook",
+        "facebookName": "Facebook, distribuie articolul",
+        "whatsapp": "WhatsApp",
+        "whatsappName": "WhatsApp, trimite articolul",
+        "email": "E-mail",
+        "emailName": "E-mail, trimite articolul",
+        "copy": "Copiază linkul",
+        "copied": "Link copiat",
+        "copyFailed": "Linkul nu a putut fi copiat",
+        "message": "Citește acest articol de la {site}: {title}",
+        "subject": "Un articol de la {site}: {title}"
+      }
+    },
     "title": "Articole și noutăți",
     "pageTitle": "{title}, pagina {page}",
     "hero": {
@@ -131,9 +166,9 @@
       "lead": "Aici găsești noutățile clinicii și sfaturile medicilor noștri:\ncum să îți îngrijești dinții și gingiile acasă\nși când e bine să ne faci o vizită."
     },
     "tags": "Categorii",
+    "readingTime": "{minutes, number} min de citit",
     "card": {
-      "readMore": "Citește mai mult…",
-      "readingTime": "{minutes, number} min de citit"
+      "readMore": "Citește mai mult…"
     },
     "pagination": {
       "label": "Paginile articolelor",

@@ -4,7 +4,7 @@ import {
   screen,
   within,
 } from '@testing-library/react';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { PageHero } from '@/components/sections/PageHero/PageHero';
 import { namedAs } from '@/components/sections/PageHero/PageHero.fixtures';
 import type { PaginationProps } from '@/components/sections/Pagination/Pagination';
@@ -72,10 +72,26 @@ import source from './PostList.tsx?raw';
 
 /** Three posts as the page hands them over, in Romanian with diacritics
  *  (§15.7): every word finished, the reading time included, one post without
- *  categories. Fixtures — never shipped data. */
+ *  categories. Fixtures — never shipped data.
+ *  EACH HAS AN ADDRESS OF ITS OWN, `/ro/blog/<its slug>/`, so that a check of
+ *  a card's link can tell one card from another: while the three shared one
+ *  address, a band that handed every card its neighbour's href, or the first
+ *  post's to all three, passed this whole suite (G2 typescript, measured on
+ *  scratch copies of the band; G2 react, 2026-10-20). With an address each,
+ *  both of those bands turn two of its tests red, the link's and the slug's
+ *  (measured the same day). The real site is the other way round today: all
+ *  twelve cards open one address, the blog's one article — the first post's
+ *  own, and the stand-in the other eleven open until their own articles
+ *  exist (the owner, 2026-10-15: "all should point to same article"). That
+ *  is the populator's to pin (src/app/[locale]/blog/populate.test.ts), never
+ *  this band's: the band hands each card the href its own item carries,
+ *  whatever it is. ONE test hands the band that shape on purpose, the key's
+ *  ("keys every item by its SLUG"): on one address, a key read off the href
+ *  would collide — with an address each, as here, it never can. */
 const POSTS = [
   {
     slug: 'cum-iti-alegi-periuta-de-dinti',
+    href: '/ro/blog/cum-iti-alegi-periuta-de-dinti/',
     title: 'Cum îți alegi periuța de dinți',
     summary:
       'Firele moi, un cap mic și un mâner comod: ce să urmărești pe ambalaj.',
@@ -89,6 +105,7 @@ const POSTS = [
   },
   {
     slug: 'ce-este-tartrul',
+    href: '/ro/blog/ce-este-tartrul/',
     title: 'Ce este tartrul și de ce se formează',
     summary:
       'Placa bacteriană întărită pe dinți, pe care periajul de acasă nu o mai poate îndepărta.',
@@ -102,6 +119,7 @@ const POSTS = [
   },
   {
     slug: 'prima-vizita-a-copilului-la-dentist',
+    href: '/ro/blog/prima-vizita-a-copilului-la-dentist/',
     title: 'Prima vizită a copilului la dentist',
     summary:
       'Cum îl pregătești acasă și ce se întâmplă în timpul primei consultații.',
@@ -392,7 +410,9 @@ describe('PostList — the list of articles', () => {
       const post = POSTS[index];
       expect(item.tagName).toBe('LI');
       const article = within(item).getByRole('article', { name: post.title });
-      expect(item.firstElementChild).toBe(article);
+      // The card and nothing else: no box, and no second link, beside it in
+      // its item (the whole card is its link — PostCard's THE LINK).
+      expect([...item.children]).toEqual([article]);
       expect(
         within(article).getByRole('heading', { level: 2, name: post.title }),
       ).toBeInTheDocument();
@@ -408,11 +428,19 @@ describe('PostList — the list of articles', () => {
     }
   });
 
-  it('hands every card the tag list’s name and the read-more’s label', () => {
+  it('hands every card the tag list’s name, the read-more’s label and its OWN item’s href — the card’s one link', () => {
     renderList();
 
-    for (const post of POSTS) {
-      const article = screen.getByRole('article', { name: post.title });
+    // THE PREMISE (POSTS): every fixture has an address of its own, so a
+    // card handed another item's href cannot pass the check below.
+    expect(new Set(POSTS.map((post) => post.href)).size).toBe(POSTS.length);
+    const items = [...articleList().children] as HTMLElement[];
+    expect(items).toHaveLength(POSTS.length);
+    items.forEach((item, index) => {
+      // The item at the card's own place in the list, and the card that
+      // place holds, found by that item's title.
+      const post = POSTS[index];
+      const article = within(item).getByRole('article', { name: post.title });
       if (post.tags.length > 0) {
         expect(
           within(article).getByRole('list', { name: TAGS_LABEL }),
@@ -420,9 +448,20 @@ describe('PostList — the list of articles', () => {
       } else {
         expect(within(article).queryByRole('list')).toBeNull();
       }
-      expect(within(article).getByText(READ_MORE).tagName).toBe('A');
+      // THE LINK (PostCard's): one per card — counted in the card's ITEM, so
+      // a second tab stop beside the <article> fails here too — to ITS
+      // item's href, named by the read-more's label and the card's title.
+      expect(within(item).getAllByRole('link')).toEqual([
+        within(article).getByRole('link', {
+          name: `${READ_MORE} ${post.title}`,
+        }),
+      ]);
+      expect(within(article).getByRole('link')).toHaveAttribute(
+        'href',
+        post.href,
+      );
       expect(within(article).getByText(post.readingTime)).toBeInTheDocument();
-    }
+    });
   });
 
   it('preloads the FIRST card’s picture at high priority — and leaves every other card lazy', () => {
@@ -441,21 +480,70 @@ describe('PostList — the list of articles', () => {
     }
   });
 
-  it('keeps the slug out of the DOM — no attribute names it, nothing prints it', () => {
+  it('keeps the slug out of the DOM — no attribute names it, nothing prints it but the cards’ hrefs', () => {
     const { container } = renderList();
 
     expect(container.querySelectorAll('[slug]')).toHaveLength(0);
+    // The page's href is an article's ADDRESS and spells that article's slug
+    // — each fixture's its own post's (POSTS) — so every slug IS printed, in
+    // its own card's href. Read off the cards' links, one by one, so the
+    // check below can never pass on a DOM that printed no slug at all…
+    let withoutCardHrefs = container.innerHTML;
     for (const post of POSTS) {
-      expect(container.innerHTML).not.toContain(post.slug);
+      const href =
+        within(screen.getByRole('article', { name: post.title }))
+          .getByRole('link')
+          .getAttribute('href') ?? '';
+      expect(href).toContain(post.slug);
+      withoutCardHrefs = withoutCardHrefs.replaceAll(` href="${href}"`, '');
+    }
+    // …and with the CARDS' hrefs set aside — the pager's stay, its pages'
+    // addresses spelling no slug — no slug is left anywhere.
+    for (const post of POSTS) {
+      expect(withoutCardHrefs).not.toContain(post.slug);
     }
     // The <li> is bare, and the <article> carries PostCard's own two
-    // attributes alone: nothing of the item reaches it but its six fields.
+    // attributes alone: nothing of the item reaches it but its seven fields —
+    // the href on the card's link, never on the article.
     for (const item of articleList().children) {
       expect(item.getAttributeNames()).toEqual([]);
       expect(
         (item.firstElementChild as HTMLElement).getAttributeNames().sort(),
       ).toEqual(['aria-labelledby', 'class']);
     }
+  });
+
+  it('keys every item by its SLUG — three cards on ONE address, the site’s shape today, each link to it and React raises no duplicate key', () => {
+    // THE SITE'S SHAPE (POSTS' note): every card opens one address, the
+    // blog's one article — the first post's own. A key is invisible in the
+    // DOM, so two things carry the pin (DoctorProfile's suite does the same
+    // for its paragraphs): React's own complaint — a key read off the href
+    // would give these three cards ONE key, and React logs "Encountered two
+    // children with the same key" — and the source.
+    const onOneAddress = POSTS.map((post) => ({
+      ...post,
+      href: POSTS[0].href,
+    }));
+    // THE PREMISE: one address among the three, a slug of its own each.
+    expect(new Set(onOneAddress.map((post) => post.href)).size).toBe(1);
+    expect(new Set(onOneAddress.map((post) => post.slug)).size).toBe(
+      POSTS.length,
+    );
+    const complaints = vi.spyOn(console, 'error');
+    try {
+      renderList({ posts: onOneAddress });
+      expect(complaints).not.toHaveBeenCalled();
+    } finally {
+      complaints.mockRestore();
+    }
+    for (const post of onOneAddress) {
+      expect(
+        within(screen.getByRole('article', { name: post.title })).getByRole(
+          'link',
+        ),
+      ).toHaveAttribute('href', POSTS[0].href);
+    }
+    expect(CODE).toMatch(/<li key=\{post\.slug\}>/);
   });
 });
 
@@ -464,7 +552,7 @@ describe('PostList — every prop by name', () => {
   // PostCard and Pagination both spread what they do not know onto their
   // roots — so the band passes each field by name and spreads nothing
   // (PostList.tsx's EVERY CARD PROP BY NAME, AND NOTHING ELSE; THE PAGER).
-  it('hands every card its six content fields alone — a field the page adds to an item never reaches the DOM', () => {
+  it('hands every card its seven content fields alone — a field the page adds to an item never reaches the DOM', () => {
     const [first, ...rest] = POSTS;
     const wide = {
       ...first,
@@ -621,7 +709,7 @@ describe('PostList — type-level pins', () => {
     expectTypeOf<PostListItem>().toExtend<PostCardContent>();
     expectTypeOf<PostListItem['slug']>().toEqualTypeOf<string>();
     // The navigation's data is sections/Pagination's own eight fields, and
-    // spreads into it as they are.
+    // the band hands them over by name.
     expectTypeOf<keyof PostListPagination>().toEqualTypeOf<
       | 'label'
       | 'current'

@@ -679,8 +679,9 @@ describe('PillButton — kind="tag": a label that answers nothing (owner 2026-10
   const renderTags = (...tags: string[]) => render(tagList(...tags));
 
   /** `node` between two real buttons, the stops a keyboard must go between
-   *  when nothing in `node` is one (TextButton.test.tsx's placeholder-link
-   *  shape). */
+   *  when nothing in `node` is one — behaviour as the evidence, never a
+   *  `tabIndex` read (the shape TextButton.test.tsx's "takes no focus of its
+   *  own" test uses for its label). */
   const renderBetween = (node: ReactNode) =>
     render(
       <>
@@ -883,8 +884,9 @@ describe('PillButton — kind="tag": a label that answers nothing (owner 2026-10
     const tags = within(list).getAllByRole('listitem');
     expect(tags).toHaveLength(3);
     expect(within(list).queryByRole('button')).not.toBeInTheDocument();
-    // The behaviour is the evidence (TextButton's placeholder-link test): no
-    // focus target for a script…
+    // The behaviour is the evidence, not `tabIndex` (TextButton's "takes no
+    // focus of its own" test for its label does the same): no focus target
+    // for a script…
     for (const tag of tags) {
       tag.focus();
       expect(tag).not.toHaveFocus();

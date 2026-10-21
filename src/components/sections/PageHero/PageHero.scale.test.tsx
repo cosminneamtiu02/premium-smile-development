@@ -58,8 +58,9 @@ import {
 // row: the day a page composes the hero, its copy is held here.
 //
 // ── WHAT IS MEASURED, per copy (the runner's own viewport, set per case —
-// ui/Heading's `hero` step reads it — beside the classic 15px scrollbar this
-// runner draws, the visual net's own geometry):
+// ui/Heading's `hero-scaled` step reads it off the scale, `hero`'s clamp —
+// beside the classic 15px scrollbar this runner draws, the visual net's own
+// geometry):
 //   · THE COPY ITSELF (THE COPY'S RULES): one break in the heading, two in
 //     the lead, each between two words, and no other character that breaks a
 //     line (a carriage return, U+2028, U+2029).
@@ -145,9 +146,9 @@ const PHONES = [320, 360, 375, 390, 393, 412, 430, 440, 768] as const;
 const CLASSIC = [768, 1024, 1100] as const;
 
 /** The <h1>'s size in the scale, in design pixels: 16.26 spacing steps,
- *  65.04 — sections/DoctorIntro's name's, the `hero` step's value at the
- *  owner's 1401 window (PageHero.tsx's THE ONE SIZE THE REMAP CANNOT REDRAW:
- *  the KEEP-IN-SYNC pair). */
+ *  65.04 — ui/Heading's `hero-scaled` step's, the `hero` step's value at
+ *  the owner's 1401 window, which sections/DoctorIntro's name wears too
+ *  (PageHero.tsx's THE ONE SIZE THE REMAP CANNOT REDRAW). */
 const TITLE_DESIGN = 16.26 * 4;
 
 /** THE HEADING'S REACH (PageHero.tsx's paragraph of that name), in design

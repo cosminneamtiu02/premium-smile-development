@@ -4,6 +4,7 @@ import {
   useSyncExternalStore,
   type FocusEvent,
 } from 'react';
+import { flushSync } from 'react-dom';
 import {
   classifyFocusEntry,
   createRotation,
@@ -28,6 +29,14 @@ import {
 // so neither manners object below has anything to answer; its one hold, while
 // the list is off screen, is lib/clock's `'offscreen'` cause, set from its own
 // IntersectionObserver.
+// A FOURTH arrived on 2026-10-14: sections/CardCarousel, the cards of a blog
+// article's gallery (sections/PostGallery) and, since 2026-10-17, of the Home
+// page's articles band (sections/BlogCarousel) — a carousel again, so it
+// takes useRotation WITH the same focus pair the other two carousels spread
+// (below), plus two holds of its own: off screen (CourseTimeline's way) and a
+// hand PRESSING it, a drag included, from the press to its end (lib/clock's
+// `'drag'` cause; a drag alone until 2026-10-20). Since 2026-10-17 every activation
+// on it goes through handNavigation, whose one consumer it is.
 //
 // ── WHY ui/ AND NOT lib/ (lib/cx/cx.ts's two questions, in order). Question 1:
 // this module imports React — useState, useEffect, useSyncExternalStore — so
@@ -55,35 +64,76 @@ import {
 //     (the recipe's own guard: setCount() runs one frame after a list
 //     shrinks, so `active` may point past the end for that frame — clamp,
 //     never wrap, so that frame shows the slide setCount() is about to land
-//     on). `active` is returned too, for a consumer that keys a lap counter
-//     on it (the deck's remount trick).
+//     on). `active` is returned too, and NONE of the four consumers reads it:
+//     each renders from `shown`, and the two that lay their cards out on a
+//     ring never remount one — the deck keys every slide by its review id
+//     (ReviewsDeck.tsx's NO LAP KEYS), the card carousel every card by its
+//     place in the list. It stays for the one case lib/rotation's THE MOVE
+//     ITSELF names: a deck whose visible window EQUALS its count, which
+//     needs a lap counter bumped on every `active` change.
 //   · focusManners() / pointerManners(): the APG's three focus cases (a
 //     keyboard entry is the STICKY pause, a pointer entry a transient one, a
 //     move within the region neither) and the hover pair, as two objects —
 //     SEPARATE, because the law splits them for a rotator WITH a control:
 //     focus goes on the REGION (Tab landing on the control is an entry),
-//     pointer on the hover WRAPPER that excludes the control. The two
-//     carousels render no control (each on the owner's word), and since
-//     2026-09-20 BOTH spread ONLY the focus pair, with `keyboardEntry:
-//     'suspend'` (the transient hold instead of the law's sticky pause) and
-//     `pointerEntry: 'none'` (a click-focused control holds nothing), and NO
-//     pointer pair at all — the Hero first (round 2 had moved the hover hold
-//     from the region to the beads: a band that is the whole first screen
-//     cannot suspend under every resting cursor; round 3 dropped it: a hand
-//     resting on the bead it just pressed would hold the ring the owner wants
-//     moving — "automatically resume even if you interact with it"), the deck
-//     the same evening on the owner's word ("like the slides"). Hero.tsx's NO
+//     pointer on the hover WRAPPER that excludes the control. The three
+//     carousels render no control (each on the owner's word), and all three
+//     spread ONLY the focus pair, with `keyboardEntry: 'suspend'` (the
+//     transient hold instead of the law's sticky pause) and `pointerEntry:
+//     'none'` (a click-focused control holds nothing), and NO pointer pair at
+//     all — the Hero first (round 2 had moved the hover hold from the region
+//     to the beads: a band that is the whole first screen cannot suspend
+//     under every resting cursor; round 3 dropped it: a hand resting on the
+//     bead it just pressed would hold the ring the owner wants moving —
+//     "automatically resume even if you interact with it"), the deck the same
+//     evening, 2026-09-20, on the owner's word ("like the slides"), the card
+//     carousel from its first day (a resting cursor is not a request). The
+//     course timeline spreads neither — nothing in it can take focus — so
+//     `pointerManners` has had no caller since that evening; it stays the
+//     law's hover pair (lib/rotation's THE HOVER WRAPPER). Hero.tsx's NO
 //     ROTATION CONTROL paragraph carries the measurements and the SC 2.2.2
-//     record; ReviewsDeck.tsx's points to it.
-//   · handNavigation(): the visitor's step, then `pause()` — the touch-
-//     reachable stop SC 2.2.2 needs when there is no control (ReviewsDeck.tsx's
-//     NO ROTATION CONTROL paragraph; Swiper's `disableOnInteraction`). A
-//     rotator that DOES render the control calls rotation.next/prev/goto
-//     directly and must not use this — the law's "buys a full interval" is
-//     the right manner there. Both control-less rotators call goto/prev/next
-//     directly on the owner's word (the Hero's round 3, the deck the same
-//     evening — nothing stops for good on this site); this helper has NO
-//     consumer today and stays as the law's stop-for-good for a future one.
+//     record of the first two carousels, and ReviewsDeck.tsx's points to it;
+//     the card carousel's record is the handNavigation bullet's, below.
+//   · handNavigation(): `pause()` FIRST, committed on its own, THEN the
+//     visitor's step — the touch-reachable stop SC 2.2.2 needs when there is
+//     no control (Swiper's `disableOnInteraction`). WHY THAT ORDER (2026-10-21,
+//     the card carousel's round-3 accessibility review): the stop is what turns
+//     a carousel's live region from 'off' to 'polite' (lib/rotation's
+//     liveRegion), the step is what swaps its slides, and called together they
+//     land in ONE commit, in which React applies a parent's attributes AFTER
+//     its children's — so the slides' `inert` and `aria-hidden` changed while
+//     the region still said 'off', the worst order for an engine that judges
+//     politeness at the moment of a mutation (possibly WebKit): the visitor's
+//     own move could go unannounced. MEASURED by the carousel's suite with a
+//     MutationObserver on a click while the ring ran: inert → inert →
+//     aria-live, under the old order (the step, then the pause). Now the stop
+//     is flushed first (react-dom's flushSync, the shell's one call of it), so
+//     the region is polite before the step's commit begins; the step then
+//     lands on a stopped clock, whose restart() is a no-op, and the ring ends
+//     where the old order left it. A drag's release was never in question —
+//     the press's hold had made the region polite already. A rotator that
+//     DOES render the control calls rotation.next/prev/goto directly and must
+//     not use this — the law's "buys a full interval" is the right manner
+//     there. The Hero and the
+//     reviews deck call goto/prev/next directly on the owner's word (the
+//     Hero's round 3, the deck the same evening — neither stops for good);
+//     this helper's one consumer is sections/CardCarousel, since 2026-10-17
+//     — the owner's "OPTION 1" for SC 2.2.2 — where every ACTIVATION, by hand or
+//     by key, goes through it: an enabled arrow, a bead, a drag's release, a
+//     tap on the stage or on a card. A press on a 'bounded' gallery's
+//     DISABLED end arrow stops nothing: a disabled button runs no click
+//     handler, and the arrows sit outside the box around the stage whose
+//     click capture turns a click into a tap. The record is CardCarousel.tsx's
+//     "SC 2.2.2 — THE OWNER'S OPTION 1" paragraph and BACKLOG.md entry 2,
+//     with their caveat: nothing visible or audible SAYS that a press stops
+//     it, and a screen reader's reading cursor is not a press (the card it
+//     reads is still swapped), so an auditor may still ask for the control.
+//     The deck's NO ROTATION CONTROL paragraph keeps this stop as its history
+//     only (its first manner, from 2026-09-12 to 2026-09-20).
+//     ./use-rotation.test.ts pins the sticky half — the review that asked for
+//     it measured every carousel suite still green with the stop swapped for
+//     a transient hold — and, since 2026-10-21, the order: the stop published
+//     and committed before the step.
 //   NOT shared: the markup (the deck fans cards, the hero crossfades photos),
 //   the live-region attribute (a one-liner from lib/rotation's liveRegion —
 //   a consumer decides which container carries it), and the rhythm (owned
@@ -212,18 +262,32 @@ export function pointerManners(rotation: RotationRing): PointerManners {
 }
 
 /**
- * A hand on the widget: the step the control names, then the STOP FOR GOOD.
- * `pause()` is the sticky one — the state only a play button could undo —
- * and a control-less rotator has none, so the first press ends the automatic
- * rotation and the visitor is in charge from then on. A no-op while the ring
- * is idle (reduced motion, too few), where there is nothing to stop.
+ * A hand on the widget: the STOP FOR GOOD, committed on its own, then the step
+ * the control names. `pause()` is the sticky one — the state only a play
+ * button could undo: no resume of any cause, no effect re-run (dispose(), then
+ * start()) and no list growing back past two lifts it — and a control-less
+ * rotator has no play button, so the first press ends the automatic rotation
+ * and the visitor is in charge from then on.
+ *
+ * THE ORDER (the header's handNavigation bullet): the stop FIRST, flushed
+ * through react-dom's flushSync, so a live region the stop turns polite is
+ * polite in the DOM before the step's commit swaps the slides; the step then
+ * lands on a stopped clock, whose restart() is a no-op, so the ring ends where
+ * the old order left it, card for card. While the ring is idle (reduced
+ * motion, too few) the stop is a no-op — nothing is running to stop — and the
+ * STEP still lands: goto moves an idle ring and starts nothing. Building the
+ * handler does neither (the card carousel builds its handlers on every
+ * render); calling it does both — from an event, never during a render, where
+ * flushSync cannot flush. ./use-rotation.test.ts pins all of it.
  */
 export function handNavigation(
   rotation: RotationRing,
   step: () => void,
 ): () => void {
   return () => {
+    flushSync(() => {
+      rotation.pause();
+    });
     step();
-    rotation.pause();
   };
 }

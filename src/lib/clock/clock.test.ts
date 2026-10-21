@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createClock } from './clock.ts';
-import type { ClockEnv } from './clock.ts';
+import type { ClockEnv, SuspendCause } from './clock.ts';
 
 // Runs in the `components` project (real chromium, vitest.config.ts) because the
 // module calls the browser's own setTimeout and, by default, matchMedia and
@@ -25,6 +25,32 @@ import type { ClockEnv } from './clock.ts';
 
 /** One rhythm for the whole suite; a dwell that differs from it where it matters. */
 const INTERVAL = 5_000;
+
+/**
+ * A FIRST DWELL WELL UNDER THE INTERVAL, AND A HOLD TAKEN JUST SHORT OF IT. A
+ * hold taken at HELD_AT on a clock started with FIRST_DWELL is one whose
+ * release can tell the full interval a resume owes from its two wrong twins:
+ * the first dwell armed again (1 s), and the countdown resumed where the hold
+ * found it (100 ms). Held at 0 on a clock whose dwell IS the interval, all
+ * three answers look alike — the blind spot the lane's G2 review found in the
+ * DRAG and OFFSCREEN cases on 2026-10-20.
+ */
+const FIRST_DWELL = 1_000;
+const HELD_AT = 900;
+
+/**
+ * EVERY suspension cause, spelled as a record so the compiler keeps the list
+ * whole: a fifth cause added to SuspendCause fails to compile here until it is
+ * listed — and so gets the every-cause cases below — and a word that is not a
+ * cause fails too. ui/use-rotation.test.ts keeps the same list for the hook.
+ */
+const CAUSE: { readonly [K in SuspendCause]: K } = {
+  pointer: 'pointer',
+  focus: 'focus',
+  offscreen: 'offscreen',
+  drag: 'drag',
+};
+const CAUSES = Object.values(CAUSE);
 
 /** A fake browser environment: readable, flippable, and counted. */
 function createEnv(initial: { reduced?: boolean; hidden?: boolean } = {}) {
@@ -552,6 +578,61 @@ describe('pause() — sticky, the way the rotation control is', () => {
     vi.advanceTimersByTime(1);
     expect(ticks()).toBe(1);
   });
+
+  // A hold of every cause against the stop, in both orders (2026-10-20). A
+  // release is a resume(), and no resume() undoes a stop — THE STATE
+  // MACHINE's `stopped` row. For a drag these are the card carousel's two
+  // paths since 2026-10-17: its first drag holds the ring, and the release
+  // stops it BEFORE letting the hold go (CardCarousel's letGo), while a later
+  // drag on the ring it stopped holds nothing. ui/use-rotation.test.ts pins
+  // the same through the hook.
+  it.each(CAUSES)(
+    'outlasts a hold taken BEFORE it — the stop takes over, and the release starts nothing — %s',
+    (cause) => {
+      const { clock, ticks } = createTestClock();
+
+      clock.start();
+      clock.suspend(cause);
+      clock.pause();
+      expect(clock.getSnapshot()).toEqual({
+        status: 'stopped',
+        idleReason: null,
+      });
+
+      clock.resume(cause);
+      expect(clock.getSnapshot()).toEqual({
+        status: 'stopped',
+        idleReason: null,
+      });
+      expect(vi.getTimerCount()).toBe(0);
+      vi.advanceTimersByTime(10 * INTERVAL);
+      expect(ticks()).toBe(0);
+    },
+  );
+
+  it.each(CAUSES)(
+    'outlasts a hold taken AFTER it — a stopped clock takes none, and the release starts nothing — %s',
+    (cause) => {
+      const { clock, ticks } = createTestClock();
+
+      clock.start();
+      clock.pause();
+      clock.suspend(cause);
+      expect(clock.getSnapshot()).toEqual({
+        status: 'stopped',
+        idleReason: null,
+      });
+
+      clock.resume(cause);
+      expect(clock.getSnapshot()).toEqual({
+        status: 'stopped',
+        idleReason: null,
+      });
+      expect(vi.getTimerCount()).toBe(0);
+      vi.advanceTimersByTime(10 * INTERVAL);
+      expect(ticks()).toBe(0);
+    },
+  );
 });
 
 describe('suspend()/resume() — the transient pause of hover and focus', () => {
@@ -593,7 +674,7 @@ describe('suspend()/resume() — the transient pause of hover and focus', () => 
   });
 });
 
-describe('suspension is CAUSE-KEYED — hover and focus are separate flags', () => {
+describe('suspension is CAUSE-KEYED — pointer, focus, offscreen and drag are separate flags', () => {
   it('stays suspended while any cause remains', () => {
     const { clock, ticks } = createTestClock();
 
@@ -668,9 +749,13 @@ describe('suspension is CAUSE-KEYED — hover and focus are separate flags', () 
   });
 
   it('keeps OFFSCREEN a third flag beside hover and focus (the course timeline, 2026-10-13)', () => {
-    const { clock, ticks } = createTestClock();
+    // Held late in a short first dwell (FIRST_DWELL's note, 2026-10-20).
+    const { clock, ticks } = createTestClock({ startDelayMs: FIRST_DWELL });
 
     clock.start();
+    vi.advanceTimersByTime(HELD_AT);
+    expect(ticks()).toBe(0);
+
     // The widget scrolls out of view, and a pointer happens to rest over it
     // as it goes: two causes, so neither alone may restart the beat.
     clock.suspend('offscreen');
@@ -681,7 +766,8 @@ describe('suspension is CAUSE-KEYED — hover and focus are separate flags', () 
     expect(ticks()).toBe(0);
 
     // Back in view: running again, and the next move is a FULL interval
-    // away — the visitor is seeing this item for the first time.
+    // away — the visitor is seeing this item for the first time — neither
+    // the first dwell again nor what was left of it.
     clock.resume('offscreen');
     expect(clock.getSnapshot().status).toBe('running');
     vi.advanceTimersByTime(INTERVAL - 1);
@@ -690,20 +776,106 @@ describe('suspension is CAUSE-KEYED — hover and focus are separate flags', () 
     expect(ticks()).toBe(1);
   });
 
-  it('never lets OFFSCREEN start a clock reduced motion declined', () => {
-    const { clock, ticks } = createTestClock({ reduced: true });
+  it('keeps DRAG a fourth flag — a drag holds the clock, and once the last hold lifts the next move is a FULL interval away', () => {
+    // What the CLOCK does on its own. The card carousel never comes this way
+    // when a drag ends: since 2026-10-17 its release stops the ring for good
+    // FIRST (ui/use-rotation's handNavigation) and only then lets the drag's
+    // hold go — ui/use-rotation.test.ts pins that stop, cause by cause, and
+    // the pause() cases above pin the clock's side of it. Held late in a
+    // short first dwell (FIRST_DWELL's note, 2026-10-20).
+    const { clock, ticks } = createTestClock({ startDelayMs: FIRST_DWELL });
 
     clock.start();
-    clock.suspend('offscreen');
-    clock.resume('offscreen');
+    vi.advanceTimersByTime(HELD_AT);
+    expect(ticks()).toBe(0);
 
-    expect(clock.getSnapshot()).toEqual({
-      status: 'idle',
-      idleReason: 'reduced-motion',
-    });
+    // A press becomes a drag; a keyboard focus comes and goes while the hand
+    // is down — two causes, so the focus leaving restarts nothing.
+    clock.suspend('drag');
+    clock.suspend('focus');
+    clock.resume('focus');
+    expect(clock.getSnapshot().status).toBe('suspended');
+    vi.advanceTimersByTime(10 * INTERVAL);
+    expect(ticks()).toBe(0);
+
+    // The last hold lifts: running again, and the next move a FULL interval
+    // away — neither the first dwell again nor what was left of it.
+    clock.resume('drag');
+    expect(clock.getSnapshot().status).toBe('running');
+    vi.advanceTimersByTime(INTERVAL - 1);
+    expect(ticks()).toBe(0);
+    vi.advanceTimersByTime(1);
+    expect(ticks()).toBe(1);
+  });
+
+  it('keeps DRAG apart from POINTER — whichever is lifted first, the other still holds', () => {
+    // The pair the SuspendCause doc keeps apart on purpose: the hover
+    // courtesy and the visitor's own move (2026-10-20). Kept as one flag, a
+    // cursor leaving would lift a drag still under way, and a drag ending
+    // would lift a hover.
+    const { clock } = createTestClock();
+
+    clock.start();
+    clock.suspend('drag');
+    clock.suspend('pointer');
+    clock.resume('pointer');
+    expect(clock.getSnapshot().status).toBe('suspended');
+    clock.resume('drag');
+    expect(clock.getSnapshot().status).toBe('running');
+
+    clock.suspend('pointer');
+    clock.suspend('drag');
+    clock.resume('drag');
+    expect(clock.getSnapshot().status).toBe('suspended');
+    clock.resume('pointer');
+    expect(clock.getSnapshot().status).toBe('running');
+  });
+
+  it('keeps DRAG apart from OFFSCREEN — a release off screen leaves the widget held', () => {
+    const { clock, ticks } = createTestClock();
+
+    clock.start();
+    clock.suspend('drag');
+    clock.suspend('offscreen');
+    clock.resume('drag');
+    expect(clock.getSnapshot().status).toBe('suspended');
     vi.advanceTimersByTime(10 * INTERVAL);
     expect(ticks()).toBe(0);
   });
+
+  // Every cause, from the typed list (2026-10-20; OFFSCREEN alone had this
+  // case from 2026-10-13): a hold is a TRANSIENT pause of a clock that RUNS,
+  // so a clock reduced motion has idled — whether it declined the automatic
+  // start, or the preference flipped while a hold was on — has nothing to
+  // hold and nothing to resume.
+  it.each(CAUSES)(
+    'never lets a hold start a clock reduced motion declined or idled mid-hold — %s',
+    (cause) => {
+      const declined = createTestClock({ reduced: true });
+      declined.clock.start();
+      declined.clock.suspend(cause);
+      declined.clock.resume(cause);
+      expect(declined.clock.getSnapshot()).toEqual({
+        status: 'idle',
+        idleReason: 'reduced-motion',
+      });
+
+      const flipped = createTestClock();
+      flipped.clock.start();
+      flipped.clock.suspend(cause);
+      flipped.env.flipReducedMotion(true);
+      flipped.clock.resume(cause);
+      expect(flipped.clock.getSnapshot()).toEqual({
+        status: 'idle',
+        idleReason: 'reduced-motion',
+      });
+
+      expect(vi.getTimerCount()).toBe(0);
+      vi.advanceTimersByTime(10 * INTERVAL);
+      expect(declined.ticks()).toBe(0);
+      expect(flipped.ticks()).toBe(0);
+    },
+  );
 });
 
 describe('restart() — the full-interval courtesy after user navigation', () => {

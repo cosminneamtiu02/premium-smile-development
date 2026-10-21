@@ -16,11 +16,11 @@ import {
 // both carrying the 'stress-320' tag → the visual net also samples them at the
 // 320px accessibility width (§13 UI-tier opt-in).
 // The hrefs are stand-ins: the Header nests a plain <a href> whose
-// locale-aware route string comes from localeHref() (§15.13), the blog card
-// an <a> with no href at all until its article exists (AsPlaceholderLink),
-// and HoverEndArea's teaser card links its title and its read-more to a
-// stand-in article. Nothing here owns navigation — the atom never did (see
-// TextButton.tsx).
+// locale-aware route string comes from localeHref() (§15.13); AsLinkLabel's
+// link stands for the blog card's own, round the label the atom dresses
+// (sections/PostCard's THE LINK); and HoverEndArea's teaser card links its
+// title and its read-more to a stand-in article. Nothing here owns
+// navigation — the atom never did (see TextButton.tsx).
 
 const meta = {
   title: 'UI/TextButton',
@@ -58,7 +58,7 @@ const meta = {
     asChild: {
       control: false,
       description:
-        'Render no <button> of its own — the single child element becomes the control (see AsNavLink; an <a> with no href becomes no control at all — see AsPlaceholderLink)',
+        'Render no <button> of its own — the single child element becomes the control (see AsNavLink); a <span> child is the LABEL of a link its caller owns, and no control itself (see AsLinkLabel)',
     },
     children: {
       control: 'text',
@@ -123,36 +123,87 @@ export const AsNavLink: Story = {
 };
 
 /**
- * The blog card's shape until its article exists: asChild onto an <a> with NO
- * href — HTML's placeholder link. It wears the whole look and underlines on
- * hover, but it is no link: no role and no tab stop (the play checks both);
- * the day the article lands it gains its href and becomes one. 'no-visual':
- * it lays out exactly as Accent's <button> — the same box, the same words in
- * the same place (TextButton.test.tsx measures it) — so its frame would only
- * repeat Accent's pixels; the play and the axe pass still run in the Vitest
- * storybook project.
+ * THE LABEL — the shape the blog card ships since 2026-10-15
+ * (sections/PostCard's THE LINK): asChild onto a <span>, the LABEL of a link
+ * its caller owns. The link is the control, ONE tab stop, and owns the name,
+ * read off the label by `aria-labelledby` (the card adds its title's id after
+ * the label's, so a page's read-mores tell themselves apart). The label wears
+ * the whole look and is no control: no role, no tab stop, never focused — so
+ * the atom's ring never draws on it, and a ring is the link's to draw.
+ * `hoverArea="area"`, as the card asks, with the area class on the LINK: the
+ * simplest way to keep THE HOVER AREA's precondition, the area being the
+ * link's hit area — the blog card marks its <article> instead, which its
+ * link's layer covers whole. A play cannot move a real pointer (HoverEnd's
+ * note), so it reads what holds wherever the runner's pointer rests: the one
+ * link and its name, the label's silence, its ink the rule's own lavender,
+ * the rule swept away at rest — or drawn, should that pointer rest on the
+ * link — and the hover END values a real pointer draws it with;
+ * TextButton.test.tsx moves one. 'no-visual': the label lays out exactly as
+ * Accent's <button> (TextButton.test.tsx measures it) and the link round it
+ * paints nothing at rest, so its frame would only repeat Accent's pixels; the
+ * play and the axe pass still run in the Vitest storybook project.
  */
-export const AsPlaceholderLink: Story = {
+export const AsLinkLabel: Story = {
   tags: ['no-visual'],
-  // The placeholder's words are the fixture's JSX, which wins over the spread
+  // The label's words are the fixture's JSX, which wins over the spread
   // `children` — the control would move nothing: off, not silently inert.
   argTypes: { children: { control: false } },
-  args: { tone: 'accent' },
+  args: { tone: 'accent', hoverArea: 'area' },
   render: (args) => (
-    <TextButton {...args} asChild>
-      {/* jsx-a11y/anchor-is-valid is right that this is no working link —
-          that is the case shown (the Wordmark D9 precedent). */}
-      {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-      <a>Citește mai mult…</a>
-    </TextButton>
+    <a
+      href="#articol"
+      aria-labelledby="textbutton-eticheta"
+      className={TEXT_BUTTON_HOVER_AREA}
+    >
+      <TextButton {...args} asChild>
+        <span id="textbutton-eticheta">Citește mai mult…</span>
+      </TextButton>
+    </a>
   ),
   play: async ({ canvas }) => {
-    const placeholder = canvas.getByText('Citește mai mult…');
-    await expect(placeholder).not.toHaveAttribute('href');
-    await expect(canvas.queryByRole('link')).toBeNull();
+    // ONE control — the caller's link, named by the label's words…
+    await expect(canvas.getAllByRole('link')).toHaveLength(1);
+    const link = canvas.getByRole('link', { name: 'Citește mai mult…' });
     await expect(canvas.queryByRole('button')).toBeNull();
-    placeholder.focus();
-    await expect(placeholder).not.toHaveFocus();
+    // …and the label the clone itself, the link's own child: no role, no
+    // address, no tab stop and no state of its own.
+    const label = canvas.getByText('Citește mai mult…');
+    await expect(label.tagName).toBe('SPAN');
+    await expect(label.parentElement).toBe(link);
+    for (const attribute of ['role', 'href', 'tabindex', 'aria-current']) {
+      await expect(label).not.toHaveAttribute(attribute);
+    }
+    label.focus();
+    await expect(label).not.toHaveFocus();
+    // Tab lands on the link, and the atom's ring stays off the label.
+    await userEvent.tab();
+    await expect(link).toHaveFocus();
+    await expect(getComputedStyle(label).outlineStyle).toBe('none');
+    // The paint wherever the runner's pointer rests: the rule's own lavender
+    // at rest and under a hover alike (THE TONE); the rule swept away — or
+    // drawn, should that pointer rest on the link (a resting pointer is
+    // :hover). The scale-x utilities compile onto `scale`, read back "0 1"
+    // swept away and "1" drawn (TextButton.test.tsx's underlineScaleX).
+    // Read once the rule's 300ms sweep has settled: a pointer resting on the
+    // link when the play re-runs in Storybook would otherwise catch it mid-way.
+    await Promise.all(
+      label.getAnimations({ subtree: true }).map((sweep) => sweep.finished),
+    );
+    const rule = getComputedStyle(label, '::after');
+    await expect(getComputedStyle(label).color).toBe(rule.backgroundColor);
+    const [x = 'none'] = rule.scale.split(/\s+/);
+    const drawn =
+      x === 'none' ? 1 : x.endsWith('%') ? parseFloat(x) / 100 : parseFloat(x);
+    await expect(drawn).toBe(link.matches(':hover') ? 1 : 0);
+    // …and what a real pointer draws it with: its own hover's END value and
+    // the area's pair, keyed on the area's name.
+    await expect(label).toHaveClass('hover:after:scale-x-100');
+    const areaHover = `group-hover/${TEXT_BUTTON_HOVER_AREA.slice('group/'.length)}:`;
+    await expect(
+      Array.from(label.classList).filter((token) =>
+        token.startsWith(areaHover),
+      ),
+    ).toHaveLength(2);
   },
 };
 
@@ -176,10 +227,11 @@ export const FocusVisible: Story = {
 
 /**
  * The other sanctioned light ground: --surface (a Card, the drawer) — the
- * Footer's, the price menu card's and the blog card's. The lavender reads
- * 5.06:1 on it, label and underline alike (TextButton.tsx's COLOR INVARIANT),
- * and the story keeps a rendered instance with pixels and axe behind it (G2
- * a11y F5). The ground itself belongs to the parent (§6.4).
+ * Footer's, the price menu card's, the top bar's dropdown card's and the blog
+ * card's. The lavender reads 5.06:1 on it, label and underline alike
+ * (TextButton.tsx's COLOR INVARIANT), and the story keeps a rendered instance
+ * with pixels and axe behind it (G2 a11y F5). The ground itself belongs to the
+ * parent (§6.4).
  */
 export const OnSurface: Story = {
   render: (args) => (
@@ -243,10 +295,16 @@ export const HoverEndAccent: Story = {
  * workbench; flip `hoverArea` to `self` and only the read-more's own hover
  * draws it. 'pin-hover' photographs it the way the owner sees it: the visual
  * spec hovers the FIRST control in the canvas, so this card's title is a
- * link (the common teaser card) and the pointer rests on it — on the card,
- * off the read-more, which draws its underline through the card alone. The
- * play holds that premise. The blog card's own title is no link;
- * sections/PostCard's stories show the real card.
+ * link and the pointer rests on it — on the card, off the read-more, which
+ * draws its underline through the card alone. The play holds that premise.
+ * THE SIMPLER SHAPE, on purpose: this teaser's title and read-more are two
+ * links of their own and the card is none, so a pointer on its summary
+ * would light a read-more that a press there does not open — it shows the
+ * MECHANISM, not a shape to ship (TextButton.tsx's THE PRECONDITION). The
+ * blog card keeps the precondition: it is ONE link, its read-more's, whose
+ * layer lies over the whole card, title and summary included
+ * (sections/PostCard's THE LINK; its stories show the real card), and its
+ * read-more is AsLinkLabel's label.
  */
 export const HoverEndArea: Story = {
   tags: ['pin-hover'],

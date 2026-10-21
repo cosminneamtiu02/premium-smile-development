@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { postsIn as blogPostsIn } from '../../src/lib/blog/blog';
+import {
+  articles as blogArticles,
+  type ArticleBlock,
+} from '../../src/lib/blog-article/blog-article';
 import { heroSlides } from '../../src/lib/hero-slides/hero-slides';
 import { reviews } from '../../src/lib/reviews/reviews';
 import { auxiliaries, clinicStats, doctors } from '../../src/lib/team/team';
+import { withoutInvisible } from '../../src/lib/visible-text/visible-text';
 import { locales, type Locale } from '../../src/i18n/locales';
 import de from '../../src/messages/de.json';
 import en from '../../src/messages/en.json';
@@ -44,7 +49,16 @@ import ro from '../../src/messages/ro.json';
 // languages since, read in the lane that drafted the other four. And the
 // `blog` namespace of the five message files (2026-10-14, CLAUDE.md §15.39
 // round 2): the list page's hero — its heading and its lead, the clinic
-// describing what it writes — drafted in that lane.
+// describing what it writes — drafted in that lane, and, since round 4, the
+// article page's own words beside them (`blog.article.*`). And the articles
+// themselves (2026-10-14, the article page's lane, CLAUDE.md §15.39 round 4):
+// every paragraph, subheading, caption, heading and note (a gallery card's
+// caption; a photo's and each half of a before/after's heading and note,
+// wherever the block has them, since 2026-10-15) and picture description,
+// and the doctor's conclusion, of every file in src/content/blog/articles —
+// in Romanian until 2026-10-15, in all five languages since, read in the lane
+// that drafted the other four (every article is written in every language,
+// lib/blog-article's EVERY LANGUAGE, IN ONE FILE).
 // WHY THAT SCOPE: the
 // doctor pages, the reviews and the opener are where a clinic talks about
 // itself. Widening it to lib/prices and the other namespaces is one more entry
@@ -65,11 +79,12 @@ import ro from '../../src/messages/ro.json';
 
 /** The exact strings the owner has verified and allows through, verbatim —
  *  as a visitor READS them, which is how `visible` (below) reads every string
- *  before it is compared: no `<k>` key-word marks, no invisible format
- *  character, and every run of whitespace ONE plain space, U+0020. So an
- *  exception copied out of a message file is written with a plain space
- *  where the copy has a line break, a no-break space or two spaces in a row,
- *  or it never matches; the honesty test at the end holds every entry to it. */
+ *  before it is compared: no `<k>` key-word marks, no invisible character,
+ *  every diacritic composed (NFC), and every run of whitespace ONE plain
+ *  space, U+0020. So an exception copied out of a message file is written
+ *  with a plain space where the copy has a line break, a no-break space or two
+ *  spaces in a row, or it never matches; the honesty test at the end holds
+ *  every entry to it. */
 const ALLOWED: readonly string[] = [];
 
 const PATTERNS: Readonly<Record<Locale, readonly RegExp[]>> = {
@@ -173,7 +188,10 @@ function messageStrings(locale: Locale): readonly [string, string][] {
  * since 2026-10-14 (CLAUDE.md §15.39 round 2): its hero heading and lead are
  * the clinic talking about what it writes, so the scan reads them in the lane
  * that drafted them, in all five languages — the list pages' own since round
- * 3.
+ * 3 — and with them the article page's words (`blog.article.*`, round 4: its
+ * by-line, its gallery's and its share controls' labels) and the reading
+ * time the list's cards and the article page share (`blog.readingTime`), in
+ * all five languages, every one of which has its article pages.
  */
 function blogMessageStrings(locale: Locale): readonly [string, string][] {
   return namespaceStrings(locale, 'blog');
@@ -255,6 +273,99 @@ function blogStrings(locale: Locale): readonly [string, string][] {
   ]);
 }
 
+/**
+ * The blog's articles (CLAUDE.md §15.39 round 4) — every paragraph,
+ * subheading, caption (a gallery card's), heading and note (a photo's, each
+ * half of a before/after's) and picture description, and the conclusion, the
+ * doctor's own closing words, in the language scanned: each article's body in
+ * that language, as its page prints it (lib/blog-article's
+ * `languages[locale]`). Every alt is read: lib/blog-article's `parseArticle`
+ * refuses an empty one, in every language, because a photo's, a
+ * before/after's and a gallery's pictures are information. A heading or a
+ * note is read wherever the block has one — the photo's and the pair's are
+ * optional since 2026-10-15 (lib/blog-article's THE PHOTO and THE PAIR IS
+ * ONE SHAPE) — and a note is read WITHOUT its lead-in („Notă: "), which is
+ * the page's word (`blog.article.note`) and is read with the `blog`
+ * namespace. Every language since 2026-10-15; Romanian alone until then.
+ */
+function articleStrings(locale: Locale): readonly [string, string][] {
+  return blogArticles.flatMap((entry): [string, string][] => {
+    const article = entry.languages[locale];
+    return [
+      ...article.blocks.flatMap((block, index): [string, string][] => {
+        const where = `${article.slug}.blocks[${index}]`;
+        switch (block.type) {
+          case 'paragraph':
+          case 'heading':
+            return [[`${where}.${block.type}`, block.text]];
+          case 'gallery':
+            return block.cards.flatMap((card, n): [string, string][] => [
+              [`${where}.cards[${n}].caption`, card.caption],
+              [`${where}.cards[${n}].alt`, card.image.alt],
+            ]);
+          case 'photo': {
+            const out: [string, string][] = [];
+            if (block.heading !== undefined) {
+              out.push([`${where}.heading`, block.heading]);
+            }
+            out.push([`${where}.alt`, block.image.alt]);
+            if (block.note !== undefined) {
+              out.push([`${where}.note`, block.note]);
+            }
+            return out;
+          }
+          case 'beforeAfter':
+            return (['before', 'after'] as const).flatMap(
+              (half): [string, string][] => {
+                const out: [string, string][] = [];
+                if (block.headings !== undefined) {
+                  out.push([`${where}.${half}.heading`, block.headings[half]]);
+                }
+                out.push([`${where}.${half}.alt`, block.images[half].alt]);
+                if (block.notes !== undefined) {
+                  out.push([`${where}.${half}.note`, block.notes[half]]);
+                }
+                return out;
+              },
+            );
+        }
+      }),
+      [`${article.slug}.conclusion`, article.conclusion],
+    ];
+  });
+}
+
+/**
+ * How many strings `articleStrings` reads from one block — the exact count
+ * below, spelled a second way. A switch over every type rather than a Record
+ * of numbers, because a gallery's count depends on its cards and a photo's
+ * and a pair's on the words they have; a block type it forgets still fails to
+ * compile (the function would fall off its end).
+ */
+function articleStringsIn(block: ArticleBlock): number {
+  switch (block.type) {
+    case 'paragraph':
+    case 'heading':
+      return 1;
+    case 'gallery':
+      return 2 * block.cards.length; // a caption and an alt per card
+    case 'photo':
+      // its alt, and its heading and its note when it has them
+      return (
+        1 +
+        (block.heading === undefined ? 0 : 1) +
+        (block.note === undefined ? 0 : 1)
+      );
+    case 'beforeAfter':
+      // two alts, and two headings and two notes when the pair has them
+      return (
+        2 +
+        (block.headings === undefined ? 0 : 2) +
+        (block.notes === undefined ? 0 : 2)
+      );
+  }
+}
+
 /** The sources the scan walks today; a new lane ADDS a row, never edits one. */
 const SOURCES: readonly [
   string,
@@ -266,6 +377,7 @@ const SOURCES: readonly [
   ['lib/hero-slides', heroStrings],
   ['content/blog', blogStrings],
   ['messages blog.*', blogMessageStrings],
+  ['content/blog/articles', articleStrings],
 ];
 
 /**
@@ -274,22 +386,40 @@ const SOURCES: readonly [
  * 2026-10-13, every biography paragraph too (CLAUDE.md §15.23 round 7) — and
  * a mark inside a banned phrase („fără <k>durere</k>") would otherwise split
  * it out of every pattern's reach while the page still prints it whole. Then
- * every invisible FORMAT character removed — Unicode's Cf: the soft hyphen
- * U+00AD, the zero-width space U+200B, the word joiner U+2060 and their kin.
- * None prints (a soft hyphen only where a line ends on it), yet each splits a
- * word or a phrase in the source out of every pattern's reach; and those
- * three are no whitespace to `\s`, so the next step would never see them.
- * Removed FIRST, so that a space, a zero-width space and a space read as the
- * one space they show. Last, every run of whitespace read as ONE plain space,
- * the space the patterns spell: the blog hero's line breaks (set as lines on
- * a laptop since 2026-10-15, CLAUDE.md §15.39 round 3) and the copy's no-break
+ * every INVISIBLE character removed — lib/visible-text's `withoutInvisible`,
+ * the site's one set of characters that show nothing (its THE UNSEEN SET),
+ * less the white space: the soft hyphen U+00AD, the zero-width space U+200B,
+ * the word joiner U+2060, the combining grapheme joiner U+034F, the
+ * variation selectors, the Mongolian ones, the control characters (NEL
+ * U+0085 among them) and their kin. None prints (a soft hyphen only where a
+ * line ends on it), yet each splits a word or a phrase in the source out of
+ * every pattern's reach; and none is whitespace to `\s`, so the last step
+ * would never see them. Until round 1 of lib/visible-text's review
+ * (2026-10-21) this step removed the FORMAT characters alone (`\p{Cf}`), and
+ * a banned word split by U+034F, U+FE0F, U+FE00 or U+180B — no format
+ * characters, all four drawn as nothing — was read in pieces: 0 of 3 hits
+ * then, 3 of 3 with the default-ignorable set (the reviewers measured it; the
+ * cases below hold it). A BLANK GAP — the braille blank, a Hangul filler, an
+ * interlinear annotation character, which an engine draws as a blank width
+ * — is read as the SPACE the eye sees, never removed (round 2 of that review:
+ * „Cea", the braille blank, „mai" read „Ceamai" until then, out of the
+ * superlative's reach). Then every diacritic COMPOSED (NFC): „ă" written as
+ * „a" and a combining breve is one letter to the eye and two to a pattern
+ * that spells „ă" — the round-2 typescript review measured five banned
+ * phrases decomposed („fără durere", „recunoaștere", „reușite", „führend",
+ * « résultats garantis ») and all five missed, all five caught composed.
+ * Removed FIRST and composed after, so a combining grapheme joiner between
+ * a letter and its mark, which blocks composition, is gone before the two
+ * are composed. Last, every run of whitespace read as ONE plain space, the
+ * space the patterns spell: the blog hero's line breaks (set as lines on a
+ * laptop since 2026-10-15, CLAUDE.md §15.39 round 3) and the copy's no-break
  * spaces (U+00A0, French's U+202F) would otherwise split a phrase the same
- * way — and a RUN of them, a space beside a no-break space, as much as one.
+ * way — and a RUN of them, a space beside a no-break space or a gap, as much
+ * as one.
  */
 const visible = (text: string): string =>
-  text
-    .replace(/<\/?k>/g, '')
-    .replace(/\p{Cf}/gu, '')
+  withoutInvisible(text.replace(/<\/?k>/g, ''))
+    .normalize('NFC')
     .replace(/\s+/g, ' ');
 
 function hits(locale: Locale, text: string): readonly string[] {
@@ -344,6 +474,32 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
         ),
       );
     }
+    // The articles, in every language: every paragraph, subheading, caption,
+    // alt and conclusion of each article's body in that language, exactly.
+    expect(blogArticles.length).toBeGreaterThan(0);
+    for (const locale of locales) {
+      expect(articleStrings(locale), locale).toHaveLength(
+        blogArticles.reduce(
+          (sum, entry) =>
+            sum +
+            1 +
+            entry.languages[locale].blocks.reduce(
+              (count, block) => count + articleStringsIn(block),
+              0,
+            ),
+          0,
+        ),
+      );
+    }
+    // …each language its OWN words: five languages, five different readings
+    // — a reader that read one language's body under every label would scan
+    // the four others' words never.
+    const readings = locales.map((locale) =>
+      articleStrings(locale)
+        .map(([, text]) => text)
+        .join('\n'),
+    );
+    expect(new Set(readings).size).toBe(locales.length);
   });
 
   it.each([
@@ -430,9 +586,11 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
     (locale, what, text) => {
       // None of the three prints — a soft hyphen only where a line ends on it
       // — yet each splits a banned word or phrase in the SOURCE, and none is
-      // whitespace to `\s`. The scan removes every format character (Cf), and
-      // removes it BEFORE it reads the whitespace: the last case is red if the
-      // two steps swap, for its two spaces would then stay two.
+      // whitespace to `\s`. The scan removes every invisible character
+      // (lib/visible-text's `withoutInvisible`, these three format characters
+      // among them), and removes it BEFORE it reads the whitespace: the last
+      // case is red if the two steps swap, for its two spaces would then stay
+      // two.
       expect(
         hits(locale, text).length,
         `${what} removed before the words are read`,
@@ -441,6 +599,113 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
         PATTERNS[locale].some((p) => p.test(text)),
         'the raw source escapes every pattern — the case proves the removal',
       ).toBe(false);
+    },
+  );
+
+  const COMBINING_GRAPHEME_JOINER = String.fromCodePoint(0x034f);
+  const PRESENTATION_SELECTOR = String.fromCodePoint(0xfe0f);
+  const VARIATION_SELECTOR_1 = String.fromCodePoint(0xfe00);
+  const MONGOLIAN_SELECTOR = String.fromCodePoint(0x180b);
+  const NEXT_LINE = String.fromCodePoint(0x0085);
+  it.each([
+    [
+      'ro',
+      'a combining grapheme joiner (U+034F)',
+      `Tratament fără du${COMBINING_GRAPHEME_JOINER}rere.`,
+    ],
+    [
+      'en',
+      'the emoji presentation selector (U+FE0F)',
+      `A pain${PRESENTATION_SELECTOR}less visit.`,
+    ],
+    [
+      'de',
+      'a variation selector (U+FE00)',
+      `Eine schmerz${VARIATION_SELECTOR_1}freie Behandlung.`,
+    ],
+    [
+      'fr',
+      'a Mongolian free variation selector (U+180B)',
+      `Un soin sans dou${MONGOLIAN_SELECTOR}leur.`,
+    ],
+    [
+      'it',
+      'NEL (U+0085), a control character',
+      `Una cura senza do${NEXT_LINE}lore.`,
+    ],
+  ] as const)(
+    '%s: reads past %s inside a banned word — drawn as nothing, and no format character',
+    (locale, what, text) => {
+      // Each splits a banned word in the SOURCE, and none is a format
+      // character (Cf) or white space to `\s`: the retired reading — the
+      // format characters alone removed — left every one in place, and the
+      // word in pieces. `visible` removes lib/visible-text's whole set.
+      const retired = text
+        .replace(/<\/?k>/g, '')
+        .replace(/\p{Cf}/gu, '')
+        .replace(/\s+/g, ' ');
+      expect(
+        PATTERNS[locale].some((p) => p.test(retired)),
+        `the retired \\p{Cf} reading misses ${what} — the case proves the new set`,
+      ).toBe(false);
+      expect(
+        hits(locale, text).length,
+        `${what} removed before the words are read`,
+      ).toBeGreaterThan(0);
+    },
+  );
+
+  // ROUND 2 OF lib/visible-text's REVIEW (2026-10-21): a banned phrase whose
+  // diacritics the source writes DECOMPOSED — a letter and its combining
+  // mark, which every engine draws as the one letter — and one whose words a
+  // BLANK GAP parts. Each built from code points; each escapes every pattern
+  // raw, and `visible` reads it whole.
+  it.each([
+    ['ro', '„fără durere"', 'Tratament fără durere.'],
+    ['ro', '„recunoaștere"', 'Recunoaștere pentru grija noastră.'],
+    ['ro', '„reușite"', 'Intervenții reușite, zi de zi.'],
+    ['de', '„führend"', 'Eine führende Praxis.'],
+    ['fr', '« résultats prévisibles »', 'Des résultats prévisibles.'],
+  ] as const)(
+    '%s: reads %s written DECOMPOSED — composed (NFC) before the patterns run',
+    (locale, _what, composed) => {
+      const text = composed.normalize('NFD');
+      expect(text, 'the premise: the source decomposes it').not.toBe(composed);
+      expect(
+        PATTERNS[locale].some((p) => p.test(text)),
+        'the raw source escapes every pattern — the case proves the composing',
+      ).toBe(false);
+      expect(hits(locale, text).length).toBeGreaterThan(0);
+    },
+  );
+
+  it('removes BEFORE it composes — a combining grapheme joiner between „a" and its breve blocks composition, so composed first „fără" stayed in pieces', () => {
+    const text = `Tratament fa${String.fromCodePoint(0x034f, 0x0306)}ră durere.`;
+    expect(
+      PATTERNS.ro.some((p) => p.test(text)),
+      'the raw source escapes every pattern',
+    ).toBe(false);
+    // The order matters: composed first, the joiner is dropped too late.
+    const composedFirst = withoutInvisible(text.normalize('NFC'));
+    expect(PATTERNS.ro.some((p) => p.test(composedFirst))).toBe(false);
+    expect(hits('ro', text).length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ['the braille blank (U+2800)', 0x2800],
+    ['a Hangul filler (U+3164)', 0x3164],
+    ['an interlinear annotation anchor (U+FFF9)', 0xfff9],
+  ] as const)(
+    'reads %s between the words of a banned phrase as the SPACE the eye sees — never „Ceamai"',
+    (_what, gap) => {
+      const blank = String.fromCodePoint(gap);
+      const text = `Cea${blank}mai${blank}bună clinică.`;
+      expect(
+        PATTERNS.ro.some((p) => p.test(text)),
+        'the raw source escapes every pattern — the case proves the reading',
+      ).toBe(false);
+      expect(visible(text)).toBe('Cea mai bună clinică.');
+      expect(hits('ro', text).length).toBeGreaterThan(0);
     },
   );
 
@@ -467,12 +732,12 @@ describe('CMSR — no guarantee, superlative, comparison or undocumented award i
       expect(text.trim()).toBe(text);
       expect(text.length).toBeGreaterThan(0);
       // Written as it reads: `hits` compares an exception with what `visible`
-      // makes of a string, so an entry carrying a mark, an invisible format
+      // makes of a string, so an entry carrying a mark, an invisible
       // character, a line break, a no-break space or two spaces in a row
       // would never match anything.
       expect(
         visible(text),
-        'write it as visible() reads it: no <k> marks, no invisible format characters, every run of whitespace one U+0020',
+        'write it as visible() reads it: no <k> marks, no invisible characters, every run of whitespace one U+0020',
       ).toBe(text);
     }
   });

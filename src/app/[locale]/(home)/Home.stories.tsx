@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
+import { BlogCarousel } from '@/components/sections/BlogCarousel/BlogCarousel';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
@@ -19,7 +20,11 @@ import de from '@/messages/de.json';
 import ro from '@/messages/ro.json';
 import { populateDoctorShowcase, populateStats } from '../team/populate';
 import { toStatTiles } from '../team/stat-tiles';
-import { populateHero } from './populate';
+import {
+  blogCarouselWordsFrom,
+  populateBlogCarousel,
+  populateHero,
+} from './populate';
 
 // Pages/Home — the page as it actually ships: the Hero opener (the site's
 // second rotator, owner dispatch 2026-09-19, epic #103) over the clinic's
@@ -117,12 +122,18 @@ function HomePageBand(): ReactElement {
   const t = useTranslations('home');
   const tc = useTranslations('common');
   const tt = useTranslations('team');
+  const tb = useTranslations('blog');
   const locale = useLocale();
   if (!isLocale(locale))
     throw new Error(`home story: unknown locale "${locale}"`);
 
   const slides = populateHero(locale, (index, total) =>
     t('hero.slide', { index, total }),
+  );
+  // The articles band — the page's own walk and words (./populate.ts).
+  const articles = populateBlogCarousel(
+    locale,
+    blogCarouselWordsFrom(t, tb, tc),
   );
   // The doctors band — the Team page's own walk and words, as in page.tsx.
   const cards = populateDoctorShowcase(
@@ -161,6 +172,8 @@ function HomePageBand(): ReactElement {
         tiles={toStatTiles(populateStats(locale, clinicStats))}
         format={new Intl.NumberFormat(locale).format}
       />
+      {/* The articles band — the page's, prop for prop. */}
+      <BlogCarousel {...articles} />
       <DoctorShowcase
         eyebrow={tt('showcase.eyebrow')}
         title={tt('showcase.title')}
@@ -272,6 +285,24 @@ export const Romanian: Story = {
         .getAllByRole('heading', { level: 3 })
         .map((label) => label.textContent),
     ).toEqual(clinicStats.map((stat) => stat.words.ro.label));
+    // THE ARTICLES BAND, AS WIDE AS THE NUMBERS (owner, 2026-10-17: "make it
+    // the width of the: ÎN CIFRE … section"): its carousel on the numbers
+    // band's column — the rhythm box ui/Container gives both — one left edge
+    // and one width (sections/BlogCarousel's THE WIDTH; its scale test holds
+    // the same at fifteen windows).
+    const articles = canvas.getByRole('region', {
+      name: ro.home.articles.region,
+    });
+    const statsColumn =
+      stats.firstElementChild?.firstElementChild?.getBoundingClientRect();
+    const articlesBox = articles.getBoundingClientRect();
+    await expect(statsColumn).toBeDefined();
+    await expect(
+      Math.abs(articlesBox.left - (statsColumn?.left ?? NaN)),
+    ).toBeLessThanOrEqual(0.01);
+    await expect(
+      Math.abs(articlesBox.width - (statsColumn?.width ?? NaN)),
+    ).toBeLessThanOrEqual(0.01);
     // The map, named by its own h2 — after the numbers and the doctors, as on
     // the page: hero → numbers → doctors → map (the owner's order since
     // 2026-10-01: "so first in cifre and then doctors").

@@ -131,6 +131,16 @@ const WEARERS: Readonly<Record<string, number>> = {
   // has"; `text-cta` until then). Its hover label is `accent-strong`, which the
   // lookahead refuses — so one spelling. Both pairs are measured below.
   'components/sections/LanguageBanner/LanguageBanner.tsx': 1,
+  // The card carousel (2026-10-17, the owner): its previous / next are a
+  // tall black chevron on no ground at all ("transparent background … at rest
+  // it should be black … on hover it gets a bit larger and lilla") — the
+  // hover INK, 4.81:1 on the page, 5.06:1 on white — and its progress dots'
+  // current pill ("progress dots like on home hero"), a lavender GRAPHIC on
+  // the page ground (SC 1.4.11's 3:1: 4.81:1). The press ink is
+  // `accent-strong`, which the lookahead refuses — so two spellings. Until
+  // that day the deck's outline discs (`tone="accent"`), then for one day
+  // two tall grey bars.
+  'components/sections/CardCarousel/CardCarousel.tsx': 2,
   // The price strip's chip (owner 2026-10-09: "the currently selected one with
   // current selected mecanism should be lilla"): ui/PillButton's ACTIVE face —
   // the ground and the edge, white label on it (5.06:1, ui/Button's lavender
@@ -216,6 +226,14 @@ const RENDERERS: Readonly<Record<string, string>> = {
   // NavItem's ground, in the same panel.
   'components/sections/Header/NavAccordion.tsx':
     'bg-surface/95 — the NavMenu panel, the glass floor: 4.52:1',
+  // The blog article's four share controls (CLAUDE.md §15.39 round 4,
+  // 2026-10-14): the owner's "rop button buttons … on hover tutn lilla and at
+  // base are black" — the three share links and the copy button, in the row
+  // above the cover picture, on the page ground: the hover label 4.81:1.
+  'components/sections/ShareLinks/ShareLinks.tsx':
+    '--page — the article cover row, sections/PostCover',
+  'components/sections/ShareLinks/CopyLinkButton.tsx':
+    '--page — the article cover row, sections/PostCover',
 };
 
 /**
@@ -242,6 +260,14 @@ const PILL_RENDERERS: Readonly<Record<string, string>> = {
   // face, so the lavender label (5.06:1) never meets the photo.
   'components/sections/PostCard/PostCard.tsx':
     'the card’s photograph — tags, each on its own white face: the label at 5.06:1',
+  // The blog article's categories (CLAUDE.md §15.39 round 4, 2026-10-14): the
+  // owner's "use current „igienă", „sfaturi" items … above the top image at
+  // top right" — and, the same day, TAGS (`kind="tag"`: the lavender edge and
+  // label held still, no hover — "i do not want to give impression of a
+  // button"), floating over the cover photograph, each on its own white face,
+  // so the lavender label (5.06:1) never meets the picture.
+  'components/sections/PostCover/PostCover.tsx':
+    'the cover photograph — tags, each on its own white face: the label at 5.06:1',
 };
 
 /**

@@ -52,10 +52,20 @@ const LEAD = ro.blog.hero.lead;
 // THE RECIPES, written out.
 /** The hero: both boxes centred, 3rem apart, the heading's lines centred. */
 const HERO = ['flex', 'flex-col', 'items-center', 'gap-12', 'text-center'];
-/** ui/Heading's `hero` step — THE h1 step (§15.24) — on its default ink. */
-const HERO_STEP = [
+/** The <h1>'s size inside the band scale — the `hero-scaled` step's ONE class
+ *  beyond `hero` (ui/Heading's 'hero-scaled' JOINED): 16.26 spacing steps,
+ *  65.04 design pixels, sections/DoctorIntro's name's size too, restored on
+ *  the owner's word of 2026-10-15 ("tbh i kinda liked it how it looked
+ *  before"). The STEP's class, never the hero's: PageHero spells no size. */
+const SIZE_IN_SCALE =
+  'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]';
+/** ui/Heading's `hero-scaled` step — THE h1 step (§15.24), `hero`, as it
+ *  reads in a band that scales — on its default ink: `hero`'s row with
+ *  SIZE_IN_SCALE closing the size row, before the ink. */
+const HERO_SCALED_STEP = [
   'font-display',
   'text-[clamp(2rem,1rem+3.5vw,4.5rem)]/tight',
+  SIZE_IN_SCALE,
   'text-ink-strong',
 ];
 /** The one wrap style the hero's two blocks wear: `pretty` on a phone's or a
@@ -75,12 +85,6 @@ const REACH = [
   'scalable:@4xl:@min-[896px]:w-max',
   'scalable:@4xl:@min-[896px]:max-w-[calc(100%+var(--spacing)*67.5)]',
 ];
-/** The <h1>'s size inside the band scale: 16.26 spacing steps, 65.04 design
- *  pixels — sections/DoctorIntro's name's class byte for byte, the KEEP-IN-
- *  SYNC pair restored on the owner's word of 2026-10-15 ("tbh i kinda liked
- *  it how it looked before"). */
-const SIZE_IN_SCALE =
-  'scalable:@4xl:@min-[896px]:text-[length:calc(var(--spacing)*16.26)]';
 /** The <h1>'s own classes before its gated ones: the 6xl cap (THE CAPS),
  *  whole words, the belt, and the phone's `pretty` wrap. */
 const TITLE_OWN = ['max-w-6xl', 'hyphens-none', 'wrap-anywhere', PHONE_PRETTY];
@@ -150,19 +154,25 @@ const leadIn = (hero: HTMLElement): HTMLElement =>
   });
 
 /**
- * The hero's source with its PROSE removed — what the zero-island guards run
+ * The hero's source with its PROSE removed — what the guards below run
  * against: the header names `'use client'`, t() and the hooks the hero does
- * not have, by name. Three passes, in the PostCard suite's order (the accent
- * census's lesson): full-line comments first — a line comment may itself
- * hold a block opener, which taken first would swallow the code up to the
- * next block's close — then blocks, JSX comments included, then the
- * comments that trail code.
+ * not have, by name. ONE left-to-right pass, copied from
+ * tests/unit/design-scale.test.ts's `tsCode` (PostHeader.test.tsx's `codeOf`
+ * is the same copy): string literals are stepped over whole, and a `//`
+ * comment — which opens only at a line's start or after whitespace — is
+ * consumed before a `/*` inside it could open a block running on to the next
+ * `*\/`. The three regex passes it replaces (2026-10-20, the G2 typescript
+ * review, measured) took full-line comments, then blocks, then trailing
+ * comments: a TRAILING comment that names `src/messages/*.json` opened a
+ * block at its `/*` in the second pass, and the code after it — `REACH,` and
+ * a size class re-added to the <h1> — went with the prose, so the "spells no
+ * size" check below passed on a hero that spelled one.
  */
 const stripComments = (code: string): string =>
-  code
-    .replace(/^[ \t]*\/\/.*$/gm, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
+  code.replace(
+    /('(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|(?<=^|\s)\/\/[^\n]*/gm,
+    (match: string, literal: string | undefined) => literal ?? ' ',
+  );
 
 const CODE = stripComments(source);
 
@@ -192,18 +202,17 @@ describe('PageHero — one <header>: the page’s <h1> over its lead', () => {
     ]);
   });
 
-  it('renders exactly ONE <h1>, the title, on ui/Heading’s `hero` step — whole words, belted and capped', () => {
+  it('renders exactly ONE <h1>, the title, on ui/Heading’s `hero-scaled` step — whole words, belted and capped', () => {
     renderHero();
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     const h1 = pageTitle();
     expect(h1.tagName).toBe('H1');
     expect(tokensOf(h1)).toEqual([
-      ...HERO_STEP,
+      ...HERO_SCALED_STEP,
       ...TITLE_OWN,
       STAIRWAY,
       ...REACH,
-      SIZE_IN_SCALE,
     ]);
   });
 
@@ -226,25 +235,45 @@ describe('PageHero — one <header>: the page’s <h1> over its lead', () => {
     expect(namedAs(TITLE)(TITLE.replace('blogul', 'jurnalul'))).toBe(false);
   });
 
-  it('wears, LAST, the doctor page’s name’s size in the band scale — 16.26 spacing steps, 65.04 design pixels — behind the band scale’s chain, the stairway and the heading’s reach beside it', () => {
+  it('takes its size in the band scale from ui/Heading’s `hero-scaled` step — 16.26 spacing steps, 65.04 design pixels, the doctor page’s name’s — and spells none of its own: the stairway and the heading’s reach close its classes', () => {
     renderHero();
 
     // The `hero` step reads the viewport, the one size the remap cannot
-    // redraw (PageHero.tsx's THE ONE SIZE THE REMAP CANNOT REDRAW): inside
-    // the scale the title takes sections/DoctorIntro's name's design size,
-    // 65.04 (tests/unit/design-scale.test.ts holds the two classes equal),
-    // and the room for every language's two lines comes from the heading's
-    // reach, not from a smaller size.
+    // redraw (PageHero.tsx's THE ONE SIZE THE REMAP CANNOT REDRAW): so the
+    // title wears ui/Heading's `hero-scaled` step, whose one gated class
+    // draws, inside the scale, sections/DoctorIntro's name's design size,
+    // 65.04 — spelled in the atom alone (tests/unit/design-scale.test.ts
+    // holds the size to that file and the three <h1>s to the step) — and the
+    // room for every language's two lines comes from the heading's reach,
+    // not from a smaller size.
+    // THE SOURCE, its prose stripped: the <h1> is the one child of a Heading
+    // on the `hero-scaled` step, `asChild` — its attributes read in ANY
+    // order, as the census reads them (`asChild` first, sections/Wordmark's
+    // order, is the same element; the G2 typescript review, 2026-10-20) —
+    // never the bare `hero`, and the hero spells no size anywhere.
+    expect(CODE).toMatch(
+      /<Heading\b(?=[^>]*\bsize="hero-scaled")(?=[^>]*\basChild\b)[^>]*>\s*<h1\b/,
+    );
+    expect(CODE).not.toMatch(/size="hero"/);
+    expect(CODE).not.toContain('text-[length:');
+    // THE ELEMENT: the step's classes first, then the hero's own — the cap,
+    // whole words, the belt, the phone's wrap, the stairway and the reach,
+    // exactly, so no font size is among them.
     const tokens = tokensOf(pageTitle());
-    expect(tokens.at(-1)).toBe(SIZE_IN_SCALE);
+    expect(tokens.slice(0, HERO_SCALED_STEP.length)).toEqual(HERO_SCALED_STEP);
+    expect(tokens.slice(HERO_SCALED_STEP.length)).toEqual([
+      ...TITLE_OWN,
+      STAIRWAY,
+      ...REACH,
+    ]);
     // …behind the band scale's own chain, the gate first, and nothing else on
-    // the heading gated but the stairway and the reach.
-    for (const token of [STAIRWAY, ...REACH, SIZE_IN_SCALE]) {
+    // the heading gated but the step's size, the stairway and the reach.
+    for (const token of [SIZE_IN_SCALE, STAIRWAY, ...REACH]) {
       expect(String(variantsOf(token)), token).toBe(SCALE_CHAIN);
     }
     expect(
       tokens.filter((token) => variantsOf(token).includes('scalable')),
-    ).toEqual([STAIRWAY, ...REACH, SIZE_IN_SCALE]);
+    ).toEqual([SIZE_IN_SCALE, STAIRWAY, ...REACH]);
     // …so the reach is never worn ungated: off the scale a max-content width
     // would lay the whole heading on one line wider than a phone (the full
     // token list above admits no other width on the heading; the ungated
@@ -319,7 +348,7 @@ describe('PageHero — one <header>: the page’s <h1> over its lead', () => {
     expect(wrapTokensOf(hero)).toEqual([]);
   });
 
-  it('gates nothing but the title’s four classes and the lead’s one — the regime itself is ui/Container’s, worn by the band around the hero', () => {
+  it('gates nothing but the title’s four classes — its step’s size and its own three — and the lead’s one; the regime itself is ui/Container’s, worn by the band around the hero', () => {
     const { container } = renderHero();
 
     const h1 = pageTitle();
@@ -329,7 +358,7 @@ describe('PageHero — one <header>: the page’s <h1> over its lead', () => {
         variantsOf(token).includes('scalable'),
       );
       if (element === h1)
-        expect(gated).toEqual([STAIRWAY, ...REACH, SIZE_IN_SCALE]);
+        expect(gated).toEqual([SIZE_IN_SCALE, STAIRWAY, ...REACH]);
       else if (element === lead) expect(gated).toEqual([STAIRWAY]);
       else expect(gated, element.tagName).toEqual([]);
     }

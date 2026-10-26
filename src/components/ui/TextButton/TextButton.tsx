@@ -9,16 +9,17 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // old top bar's inline nav anchors; neither shipped as a component here.
 // Today's callers go through asChild onto a plain <a href>: the site's own
 // pages, built by i18n/href (§15.13), for the Header nav (desktop row + panel
-// list, via NavItem), the top bar's dropdown entries (NavSectionEntry) and
-// the Footer's links (its phone a tel:, its „Înapoi sus" a #top); a #fragment
+// list, via NavItem), the top bar's dropdown entries (NavSectionEntry), the
+// phone panel's two section rows (NavAccordion, links again since 2026-10-26 —
+// a <button> of the atom's own from 2026-10-16 until then) and the Footer's
+// links (its phone a tel:, its „Înapoi sus" a #top); a #fragment
 // of their own page for the price menu's categories; and OUTSIDE addresses
 // for the blog article's share links (sections/ShareLinks) — Facebook's
 // sharer, WhatsApp's api.whatsapp.com/send and a mailto:, which lib/share
 // builds at build time and which open in the same tab — the privacy policy's
 // rule for its links out, applied there, not every link's on this site
-// (ShareLinks' THE SAME TAB). Two plain <button>s of the atom's own are the
-// exceptions: the phone panel's section rows (NavAccordion, since
-// 2026-10-16) and the article's copy control (CopyLinkButton). And since
+// (ShareLinks' THE SAME TAB). One plain <button> of the atom's own is the
+// exception: the article's copy control (CopyLinkButton). And since
 // 2026-10-15 one caller dresses a <span>: the LABEL of the blog card's
 // „Citește mai mult…", inside the card's own <a href>. That link lays a
 // layer over the whole card, which a positioned box would keep inside
@@ -37,6 +38,12 @@ import { BUTTON_ONLY_PROPS, slotClone } from '../slot';
 // (preventDefault + a JS router) and hardcoded target/rel on every link —
 // both are required rewrites: real hrefs live on the child element, and
 // target is set by the consumer only where a link is genuinely external.
+// (One consumer holds a click back, and it is no router: the phone panel's
+// section row prevents a tap on its link while the list under it is SHUT,
+// opening the list, and while that list is OPEN leaves the tap to the
+// browser — a plain navigation; the list's open state decides, never a count
+// of taps; NavAccordion's own click, never this atom's; CLAUDE.md §15.40
+// round 5.)
 // §6 contract: label is a slot (children), semantic tokens only, no outer
 // margins, parent className merged (§6.8).
 
@@ -282,7 +289,9 @@ export type TextButtonProps = TextButtonOwnProps &
 // the rule's sweep over 300ms, and the way back when it lets go — exactly as
 // a hover does, and the same two `motion-reduce` resets make both instant.
 // The state itself is the caller's to announce, on the control that opens
-// the section (`aria-expanded`): the phone panel's row is that button; on the
+// the section (`aria-expanded`): on the phone panel's row that control is the
+// word itself, a link that opens its list while the list is shut and goes to
+// its page while it is open (a button from 2026-10-16 to 2026-10-26); on the
 // bar, the word is a link and its ⌄ beside it is. `active` and `held`
 // together are `active`.
 //

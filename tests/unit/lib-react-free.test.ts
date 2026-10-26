@@ -400,6 +400,8 @@ describe('the islands never import the site’s data (§15.40, §16)', () => {
         `${HEADER}NavItem.tsx`,
         `${HEADER}NavMenu.tsx`,
         `${HEADER}NavSectionEntry.tsx`,
+        `${HEADER}accordionTiming.ts`,
+        `${HEADER}isPlainLeftClick.ts`,
         `${HEADER}useNavDropdowns.ts`,
         `${HEADER}useNavItems.ts`,
         'components/sections/CardCarousel/CardCarousel.tsx',

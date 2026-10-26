@@ -26,9 +26,12 @@ import { TextButton } from '@/components/ui/TextButton/TextButton';
 // lavender label and full rule kept on while ITS card is open. Still no state
 // of its own — the open card is ./useNavDropdowns', and the prop is that state
 // handed down. The phone panel's Servicii and Echipa rows stopped rendering
-// this file the same day: there the word OPENS ITS LIST, so it is a button,
-// not a link (./NavAccordion's THE WORD OPENS THE LIST); Acasă and Blog are
-// still this entry in both places.
+// this file the same day, when their word began to OPEN ITS LIST. Since
+// 2026-10-26 they are links again — but ./NavAccordion's own: an <a href>
+// with a click handler that holds a tap back while its list is shut, opening
+// the list instead, and `aria-expanded` — a disclosure, which this entry by
+// its own doctrine never becomes (that file's THE ROW IS A LINK THAT OPENS
+// ITS LIST FIRST); Acasă and Blog are still this entry in both places.
 // And later that day a SLOT (the owner: "place an svg on the right side of
 // the text with an arrow pointing downwards. hinting it is a dropdown menu"):
 // `trailing`, drawn INSIDE the link after the label — §6.2's slots over

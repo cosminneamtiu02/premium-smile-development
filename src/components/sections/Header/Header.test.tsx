@@ -18,13 +18,8 @@ import globalsSource from '@/styles/globals.css?raw';
 import { PANEL_ID } from './NavMenu';
 import navSource from './HeaderNav.tsx?raw';
 import menuSource from './NavMenu.tsx?raw';
-import burgerSource from './BurgerToggle.tsx?raw';
-import itemSource from './NavItem.tsx?raw';
 import dropdownSource from './NavDropdown.tsx?raw';
 import accordionSource from './NavAccordion.tsx?raw';
-import entrySource from './NavSectionEntry.tsx?raw';
-import dropdownStateSource from './useNavDropdowns.ts?raw';
-import linksSource from './navSectionLinks.ts?raw';
 
 // Role-based queries on purpose (§9, §13): a passing suite doubles as proof of
 // accessible markup. Fixtures are Romanian with diacritics (§15.7), and every
@@ -225,17 +220,35 @@ const STEP_FILES = {
   'NavMenu.tsx': stripComments(menuSource),
 } as const;
 
-/** The folder's other files, which spell no container step at all — the
- *  dropdowns' five among them since 2026-10-15 (§15.40). */
-const STEPLESS_FILES = {
-  'NavItem.tsx': stripComments(itemSource),
-  'BurgerToggle.tsx': stripComments(burgerSource),
-  'NavDropdown.tsx': stripComments(dropdownSource),
-  'NavAccordion.tsx': stripComments(accordionSource),
-  'NavSectionEntry.tsx': stripComments(entrySource),
-  'useNavDropdowns.ts': stripComments(dropdownStateSource),
-  'navSectionLinks.ts': stripComments(linksSource),
-} as const;
+/**
+ * Every source file of this folder but its tests and stories, as text — a
+ * build-time Vite transform (src/app/[locale]/page-twins.test.ts's
+ * precedent), so a file added later is read here without an edit. Typed by
+ * Next's own declaration, whose eager form answers `unknown` per file: each
+ * is checked to be text where it is read.
+ */
+const FOLDER_SOURCES = import.meta.glob(
+  ['./*.{ts,tsx}', '!./*.test.{ts,tsx}', '!./*.stories.{ts,tsx}'],
+  { query: '?raw', import: 'default', eager: true },
+);
+
+/**
+ * The folder's other files — every one of FOLDER_SOURCES but the three
+ * STEP_FILES — which spell no container step at all, read from the folder
+ * itself since 2026-10-26 (§15.40 round 5; the TypeScript review): the hand
+ * list it replaced had missed ./useNavItems.ts, and a file added to the
+ * folder is now fenced the day it lands.
+ */
+const STEPLESS_FILES: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(FOLDER_SOURCES)
+    .map(([path, source]): [string, string] => {
+      if (typeof source !== 'string') {
+        throw new Error(`${path} did not load as text`);
+      }
+      return [path.replace(/^\.\//, ''), stripComments(source)];
+    })
+    .filter(([file]) => !Object.hasOwn(STEP_FILES, file)),
+);
 
 describe('Header — the burger toggles the panel (disclosure, not a dialog)', () => {
   it('flips aria-expanded false → true → false and mounts/unmounts the panel', async () => {
@@ -938,11 +951,14 @@ describe('Header — the nav row, the panel list, and the current page', () => {
         // prefetch observer — the browser does the navigating (§15.13).
         expect(link.tagName).toBe('A');
       }
-      // THE PANEL, since 2026-10-16: Acasă and Blog are the same links, while
-      // the words Servicii and Echipa OPEN THEIR LISTS (the owner: "on phone
-      // on click of servicii it has to open it's respective dropdown") — a
-      // <button> each, its label and no href (NavAccordion.tsx's THE WORD
-      // OPENS THE LIST; Header.dropdowns.test.tsx holds what it opens).
+      // THE PANEL: the same four links, in the same order. Servicii and
+      // Echipa are links that OPEN THEIR LISTS first — a <button> each from
+      // 2026-10-16 (the owner: "on phone on click of servicii it has to open
+      // it's respective dropdown"), links to their pages again since
+      // 2026-10-26, a tap with the list open going to the page (the owner:
+      // "when i click it ONCE to open dropdown and ehn i click it twice to
+      // go to page top"; NavAccordion.tsx's THE ROW IS A LINK THAT OPENS ITS
+      // LIST FIRST; Header.dropdowns.test.tsx holds the taps).
       const rows = Array.from(
         (panel() as HTMLElement).querySelectorAll<HTMLElement>(
           ':scope > ul > li > :is(a, button)',
@@ -955,12 +971,12 @@ describe('Header — the nav row, the panel list, and the current page', () => {
           row.getAttribute('href'),
         ]),
         locale,
-      ).toEqual([
-        ['A', ...expected[0]],
-        ['BUTTON', messages.nav.services, null],
-        ['BUTTON', messages.nav.team, null],
-        ['A', ...expected[3]],
-      ]);
+      ).toEqual(expected.map((row) => ['A', ...row]));
+      // Only the two words with a list are disclosures.
+      expect(
+        rows.map((row) => row.getAttribute('aria-expanded')),
+        locale,
+      ).toEqual([null, 'false', 'false', null]);
       unmount();
     }
   });
@@ -1335,11 +1351,13 @@ describe("Header — the bar's step is ONE number in three files", () => {
     // the DOM tests never render cannot slip past either. The source is read
     // through Vite's ?raw (typed by the repo's own src/types/raw-import.d.ts),
     // prose stripped — the comments NAME the old step as history.
-    // Three files spell it, the folder's other two spell none: every
-    // container variant in the three must be THE step, and NavItem.tsx and
-    // BurgerToggle.tsx must carry no container variant at all — so the step
-    // cannot leak into a fourth file behind Header.tsx's "spelled in THREE
-    // files" claim. The old named step is asserted absent by name for a
+    // Three files spell it, the folder's other files spell none: every
+    // container variant in the three must be THE step, and STEPLESS_FILES —
+    // every other source file of the folder, read off the folder itself by a
+    // glob since 2026-10-26, tests and stories aside — must carry no
+    // container variant at all — so the step cannot leak into a fourth file
+    // behind Header.tsx's "spelled in THREE files" claim, not even a file
+    // added later. The old named step is asserted absent by name for a
     // readable failure; any other `@<step>:` (a `@4xl:` added to one file, a
     // `@min-[56rem]:` typo) fails the set check. The pattern also takes the
     // NAMED-container form (`@3xl/bar:`, `@min-[62rem]/x:` — the optional
@@ -1352,6 +1370,18 @@ describe("Header — the bar's step is ONE number in three files", () => {
       expect(new Set(code.match(containerVariant)), file).toEqual(
         new Set([STEP]),
       );
+    }
+    // Never vacuous: the glob read the folder — the two files a hand list
+    // once missed and once needed among them — and no STEP file, no test and
+    // no story slipped into it.
+    const stepless = Object.keys(STEPLESS_FILES);
+    expect(stepless.length).toBeGreaterThan(0);
+    expect(stepless).toEqual(
+      expect.arrayContaining(['useNavItems.ts', 'isPlainLeftClick.ts']),
+    );
+    for (const file of stepless) {
+      expect(Object.hasOwn(STEP_FILES, file), file).toBe(false);
+      expect(file, file).not.toMatch(/\.(?:test|stories)\.tsx?$/);
     }
     for (const [file, code] of Object.entries(STEPLESS_FILES)) {
       expect(code.match(containerVariant) ?? [], file).toEqual([]);

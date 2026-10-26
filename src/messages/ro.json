@@ -8,7 +8,8 @@
       "team": "Echipa",
       "blog": "Blog",
       "ariaLabel": "Navigare principală",
-      "submenu": "Submeniul {label}"
+      "submenu": "Submeniul {label}",
+      "pressAgain": "Apasă din nou pentru a deschide pagina."
     },
     "actions": {
       "call": "Sună acum",

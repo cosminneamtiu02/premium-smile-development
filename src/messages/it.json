@@ -8,7 +8,8 @@
       "team": "Team",
       "blog": "Blog",
       "ariaLabel": "Navigazione principale",
-      "submenu": "Sottomenu {label}"
+      "submenu": "Sottomenu {label}",
+      "pressAgain": "Premi di nuovo per aprire la pagina."
     },
     "actions": {
       "call": "Chiama ora",

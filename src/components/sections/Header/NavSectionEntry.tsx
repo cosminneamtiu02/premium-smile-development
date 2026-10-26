@@ -1,10 +1,6 @@
-import type {
-  CSSProperties,
-  MouseEvent,
-  MouseEventHandler,
-  ReactElement,
-} from 'react';
+import type { CSSProperties, MouseEventHandler, ReactElement } from 'react';
 import { TextButton } from '@/components/ui/TextButton/TextButton';
+import { isPlainLeftClick } from './isPlainLeftClick';
 import type { NavSectionLink } from './navSectionLinks';
 
 // sections/Header — ONE entry of a dropdown: a list item holding a plain
@@ -57,8 +53,13 @@ import type { NavSectionLink } from './navSectionLinks';
 // A middle click, or a Ctrl, Cmd, Shift or Alt click, opens the link in
 // another tab or window, and THIS page must stay exactly as it was — the card
 // open, the menu open. The link itself is never prevented either way.
-// `isPlainLeftClick` is sections/PriceList's own filter, copied rather than
-// imported: a section never imports another section's internals (§4).
+// `isPlainLeftClick` is ./isPlainLeftClick's since 2026-10-26: this file held
+// it as a private copy of sections/PriceList's own filter — copied, never
+// imported, a section never importing another section's internals (§4) —
+// until ./NavAccordion's word became its second asker in this folder (a tap
+// while its list is shut opens the list, a tap while it is open goes to the
+// page — CLAUDE.md §15.40 round 5), and the one copy moved into a sibling
+// module both import.
 //
 // No 'use client': no state and no hook, so it compiles into whichever island
 // renders it — today HeaderNav's and NavMenu's.
@@ -73,18 +74,6 @@ const entryMotion =
   'group-data-[state=open]/nav-sections:[transition-timing-function:ease-in-out] ' +
   'group-data-[state=open]/nav-sections:[transition-delay:calc(50ms_+_var(--i)_*_20ms)] ' +
   'motion-reduce:transition-none';
-
-/** A click that navigates THIS tab: the primary button, no modifier held
- *  (sections/PriceList's PriceMenu, copied — the file header says why). */
-function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
-  return (
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.ctrlKey &&
-    !event.shiftKey &&
-    !event.altKey
-  );
-}
 
 export type NavSectionEntryProps = Readonly<{
   /** The finished link — href and label, from Header.tsx (navSectionLinks). */

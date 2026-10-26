@@ -478,7 +478,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
 | Blog (every locale since 2026-10-14, §15.39 round 3 — its articles since 2026-10-15, round 4 —; ro only until then) | **PostList** (the index, built 2026-10-11 on the blog branch and reshaped 2026-10-14, §15.39 round 2: a centred hero — **PageHero** since 2026-10-15, moved out of the band when the Team page took it (§15.25 round 4) — the page's `<h1>` „Pentru că ne pasă de zâmbetul tău, îți arătăm cum să ai grijă de el prin blogul nostru", two lines from a laptop up over a three-line lead, every line shorter than the one above it (a stairway, set line by line, its `<h1>` the `hero` step's 65.04 design px and free to run past the cards' column on a laptop — §15.39 round 3 (7)) —, then the posts THREE to a row and SIX a page (one column on a phone, two on a tablet held upright, three on one held sideways) as **PostCard**s — the doctor card's frame (ui/Card `framed`, the soft corner), a 3:2 picture flush across the top with the categories floating over its top-right corner as ui/PillButton TAGS (the lavender face, still — never a button), the title (an `<h2>` on `band`), the author on the eyebrow line, the summary and ONE footer row: the reading time and „Citește mai mult…" (ui/TextButton's lilac `accent` tone on the label of the card's ONE link, named with the title); the whole card IS that link — a press anywhere on it opens the article, every card for now the blog's one article, the owner's "dummy" (2026-10-15, §15.39 round 4) — and JUMPS on hover like a button — then **Pagination** under the grid's right end: the reviews deck's round lilac arrows with „1 / 2" between them, plain links between pages built ahead of time, the ends disabled. The whole band in THE BAND SCALE on a laptop or desktop. A DUMB props-in band the page populates from `src/content/blog/posts.json` through `lib/blog`; zero client JavaScript) · **ClinicLocation** (`scaled`, Home's map, on every page of the list) · **PostPage** (one article, `/{locale}/blog/<slug>/` in every language, built 2026-10-14, §15.39 round 4 — the owner's reference a real-estate blog's article page: a DUMB props-in band in THE BAND SCALE composing the article's REUSABLE SECTIONS — **PostHeader** (the title, the page's `<h1>` on ui/Heading's `hero-scaled` step — the doctor page's name's and the page hero's (the list's and the Team page's), the `hero` step that grows with THE BAND SCALE — over „de Dr. …" in eyebrow style, both START-aligned on the owner's second look (centred first); no date, the owner's pick) · **PostCover** (on the left the reading time as muted text, „4 min de citit" — the post's own `readingMinutes` in the list card's own phrase (`blog.readingTime`), held to the article's words by a test; on the right **ShareLinks** — Facebook · WhatsApp · E-mail · Copy link as the top bar's ui/TextButton with an icon, black at rest and lilac on hover, icons only on phones; since 2026-10-17 (the owner: "a mandatory feature") the WhatsApp text and the e-mail say the page's own sentence around the address — „Citește acest articol de la Premium Smile: {titlu}" — the e-mail under a subject of its own, and the page prints LINK-PREVIEW tags (Open Graph and the large-picture card) so a shared link shows the article's cover photograph and its title — once those addresses name the host that serves the page: every one is built on lib/site-origin, which is lib/clinic's placeholder domain until its `url` is set or a build sets SITE_ORIGIN, and no CI or release build does yet (BACKLOG.md entry 7); under them the big picture, rounded, its categories floating over its top-right corner as ui/PillButton TAGS, the list cards' own `kind="tag"`, sized like the cards' — their chip pixel measured against the cover and capped at the page's own) · then, in a centred 42rem measure, the article's blocks in its own order — **PostProse** (paragraphs, start-aligned, and `<h2>` subheadings on ui/Heading's `subhead` step) · **PostGallery** (the owner's photo carousel on sections/CardCarousel — circular, or since 2026-10-16 a list that scrolls by itself to one end and turns round („bounded"), both moving on their own and both moved by a swipe; THREE cards on a straight line — every card upright, every centre on one horizontal line, the neighbours turned away in 3D (the owner, 2026-10-17: "i want all of them to look like "Pentru copii" as a frontal aspect"; the five-card wheel and ring of 2026-10-16/17 are history, and the five-card window is the Home page's articles band since that day: "do not represent it in the article"); previous and next as TALL LILAC CHEVRONS on no ground at the stage's edges, the outermost cards fading into their strips — black at rest for one afternoon, lilac at rest and under the mouse since that evening ("always lilla even at rest and grey in case fof disable"), grey where an end disables one, 10 % larger under the mouse, a line 15 % thinner and a few pixels further out ("a bit thinner, like 15% thinner an jsut a very ver little moved to the sides"), a page-coloured halo keeping them clear of a photo on a phone ("transparent background … on hover it gets a bit larger and lilla … like 600% taller"); the Hero's PROGRESS DOTS under the cards, one per card, the current one a lilac pill ("progress dots like on home hero"); and ANY press — an arrow, a dot, a swipe, a tap on the cards — stopping the automatic movement for good (the owner's pick for SC 2.2.2, "OPTION 1"); its captions never cutting a word; it replaced the dashed „Galerie foto · în curând" placeholder on 2026-10-14; the demo article shows two, circular then end-to-end, eight placeholder photos each, their regions numbered „Galerie foto 1 din 2" …) · **PostPhoto** (the blog photo, 2026-10-15: one picture across the measure in the before/after's rounded 4:3 shape, an optional heading over it and an optional grey note under it, „Notă: …", two lines at most at the default text size, no emphasis) · **BeforeAfter** (two PostPhotos split by THE LINE, stacked on a phone — both halves one shape: headings over both or neither, any words, and notes under both or neither) — and **PostConclusion** always last: THE LINE down its left, a large solid quote mark in the ribbon's colour, the doctor's closing words, and the doctor card's round phone photo beside the specialty and the name. The page populates it from `src/content/blog/articles/<slug>.json` + `posts.json` (its post's words in the page's language through `postsIn`) through `lib/blog-article`; TWO client islands, the gallery's carousel and the copy button) — and NO map after it since 2026-10-15 (the owner: "drop the map"): the article ends on the doctor's last word, the Footer under it | `blog` |
 | Contact (modal) | ContactModal: `tel:` phone, WhatsApp, address, hours, directions link | `contact` |
 | Privacy & cookies (`/privacy`, 2026-10-10 — §15.38) | **PrivacyPolicy** (the whole page, one band wired to site data: the `<h1>`, „Pe scurt" in the deck's idle frame, then nine parts, each an `<h2>` on a plain `<section>` with an English id — who runs the clinic, the visit, the one cookie as a definition list, the Google map (`#map`), contact, the patients' reviews, links out, rights, changes; zero client JavaScript; the clinic's legal facts placeholders until supplied) | its own files, `messages/privacy/*.json` |
-| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher; since 2026-10-15 a card drops down under „Servicii" — the eleven price categories — and under „Echipa" — the six doctors — on hover or by a ⌄ the keyboard reaches, each entry a link to its card on the page, a small down arrow after each of the two words, the open item's word held lit and the card pointing up at it with a small notch (since 2026-10-16); on a phone a tap on „Servicii" or „Echipa" itself opens the same list in the burger panel (the word no longer a link there since 2026-10-16), one at a time; never on „Acasă" or „Blog" — §15.40) · Footer (the logo, the same link + **full NAP** + hours + the policy link, built 2026-10-10 — „Confidențialitate și cookie-uri" under the copyright, `LEGAL_ROUTES`, §15.38) | `common` |
+| Global | Header (the logo — a link home since 2026-10-02, §15.33 — + nav + Contact button + LanguageSwitcher; since 2026-10-15 a card drops down under „Servicii" — the eleven price categories — and under „Echipa" — the six doctors — on hover or by a ⌄ the keyboard reaches, each entry a link to its card on the page, a small down arrow after each of the two words, the open item's word held lit and the card pointing up at it with a small notch (since 2026-10-16); on a phone a tap on „Servicii" or „Echipa" itself opens the same list in the burger panel, one at a time, and a tap on the word with its list open goes to its page, at the top — from half a second after the open, so a quick double tap opens the list and stays — while a screen reader hears „Apasă din nou pentru a deschide pagina." on the open word (since 2026-10-26 — the word a link again; from 2026-10-16 until then it only opened and closed its list); never on „Acasă" or „Blog" — §15.40) · Footer (the logo, the same link + **full NAP** + hours + the policy link, built 2026-10-10 — „Confidențialitate și cookie-uri" under the copyright, `LEGAL_ROUTES`, §15.38) | `common` |
 
 ## 15. Parked decisions — ASK before deciding, do not improvise
 
@@ -6047,6 +6047,160 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     machine). VISUAL: this Mac draws overlay scrollbars (a 0px gutter, probed), so the darwin cells listed in rounds 1
     to 3 are the owner's, under classic scrollbars; the linux set is CI's (`visual-baseline.yml`), before the next
     promotion.
+    **Round 5 — THE SECOND TAP (owner, 2026-10-26, verbatim: "i want a small refactor on the dropdown menu on tighter
+    screens like phone etc, when i click it ONCE to open dropdown and ehn i click it twice to go to page top, do not
+    implement with a counter, but with an if dropdown open flag. so if dropdown of services open on click of it go to
+    services page at top"; lane `rework/phone-row-second-tap` off develop ffd97d6, one Opus builder for
+    sections/Header):** in the burger panel a tap on „Servicii" or „Echipa" opens its list as before, and a tap on the
+    same word WHILE ITS LIST IS OPEN goes to its page, at its top. (1) THE FLAG, NEVER A COUNT: NavAccordion's
+    `expanded` — NavMenu's `expandedPath === path`, "is this row's list the open one?" — is read when the tap arrives:
+    shut, the row holds its link back (`preventDefault`) and NavMenu opens the list (`onOpen`, shutting the other
+    row's); open, nothing is held back, NavMenu closes the whole menu synchronously (`onFollow` — its `closeForJump`,
+    the entries' own path) and the BROWSER follows the link. A row whose list the other row shut opens it again on its
+    next tap, which a count of taps would get wrong. (2) THE ROW IS A LINK AGAIN — `<a href="/ro/services/">` through
+    ui/TextButton's `asChild`, `aria-expanded` and `aria-controls` on it („Servicii, link, collapsed"); its look, ring
+    and corner, the ⌄, THE HELD LOOK and the current-page mark unchanged — because a control that goes to a page is a
+    plain link on this site and the browser does the going (§9, §15.13, §15.33): zero navigation JavaScript, a long
+    press offers the browser's own "open in a new tab", and "page top" needs no scroll code. MEASURED before the build,
+    on the built export in Chromium, WebKit and Firefox: on /ro/services/ scrolled 2000px down, a click on the page's
+    own link loads a NEW document at 0 (`navigate`, not a reload), so on the services page its own row takes the
+    visitor back to the top. ARIA 1.2 allows `aria-expanded` on a link (aria-query's link role lists it, so
+    jsx-a11y's `role-supports-aria-props` passes). (3) ONLY A PLAIN LEFT CLICK DECIDES: a Ctrl, Cmd, Shift, Alt or
+    middle click is the browser's own — a new tab or window — and the list and the menu stay as they were (the
+    entries' rule). `isPlainLeftClick` moved out of NavSectionEntry into a flat sibling module,
+    `sections/Header/isPlainLeftClick.ts`, now that the folder has a second asker (§4's sharing table, row 1);
+    sections/PriceList's PriceMenu keeps its own copy (another section, §4). That leaves two byte-identical copies
+    (PriceMenu's and this module) beside LanguageSwitcher's partial one (the four modifiers, no button check); §4's
+    row 1 points the two sections' copies at lib/ — left for a lane of its own, to keep this one the owner's small
+    refactor (the TypeScript review's LOW-1, 2026-10-26). (4) WHAT IT COSTS, recorded: the word no longer SHUTS its
+    own list — the ✕, Escape, the sheet, the other word or a navigation do — and with the list open the ⌄ points UP,
+    the web's usual "close" sign and what this row did from 2026-10-16 to 2026-10-26, so a visitor who opened a list by
+    mistake and taps the word to close it leaves for the page; a quick double tap (or double click) opens the list
+    and goes to the page in one go — the owner's literal "click it twice"; a guard on the click count would be the
+    counter he refused — and a slow press brings up the browser's own link menu or preview. Space no longer opens it
+    (a link answers Enter, which is a click — Enter on a shut list opens it, on an open one goes; SC 2.1.1 met); on
+    the row Space scrolls the panel only while the panel overflows, otherwise nothing (the page is scroll-locked),
+    and NVDA's Space in browse mode is the reader's own activation, so it opens and goes like Enter. A screen reader
+    hears „link, collapsed", and activating the collapsed row opens its list rather than the page. ARIA 1.2 allows
+    `aria-expanded` on a link, but the ARIA Authoring Practices' disclosure-navigation example keeps the link and its
+    toggle as two controls, so screen-reader users rarely meet this hybrid and an outside audit may question it under
+    4.1.2 (the accessibility review, 2026-10-26: no WCAG 2.2 AA failure) — BACKLOG.md entry 2's listening pass gains
+    the checks. (5) ROUND 2'S CONSEQUENCE IS UNDONE: for ten days
+    the phone's menu did not link the two pages themselves; it does again, through the open word, so the „Toate
+    serviciile" / „Toată echipa" first-entry lever is retired. ALSO FOUND by the builder: the dropdown suite's
+    comments said "the browser runner's own guard prevents every link" — there is no such guard (Vitest only fails
+    the whole file once its test frame navigates): the comments are corrected and a document-level net,
+    `holdTheFrame`, sits behind the tests' own `<body>` recorders. AND FOUND WHILE GATING: the suite's short-screen
+    test ("the page never moves while the panel reveals the list") failed 2 runs in 3 on the lane and 0 in 3 on
+    develop. MEASURED: several phone tests END with the page still gliding 1–7px — user-event presses after a plain
+    `focus()`, whose scroll the shell's `scroll-behavior: smooth` animates — and a glide in flight was read as the
+    next test's baseline. The trigger bisected to the new keyboard test (3 runs in 3 green without it, without its
+    Space presses, or without its last Enter); the exact path from it to the glide is not established, and the fix
+    does not need it: the phone block's `beforeEach` aborts any glide with an INSTANT scroll to the top (CSSOM View) —
+    5 runs in 5 green. Space and Enter themselves move nothing: probed, the test page and the runner's page stay at 0
+    (the menu's scroll lock holds). **THE REVIEW ROUND (the owner, the same evening: "delegate the test agents
+    first") — four Opus reviewers, read-only: react-reviewer, typescript-reviewer, a11y-architect,
+    ecc:pr-test-analyzer:** four times APPROVE WITH CHANGES, 0 critical / 0 high, no WCAG 2.2 AA failure. THE ONE
+    DEFECT, the React review's MEDIUM, MEASURED before folding (the built export, Chromium with touch emulation): a list
+    a TAP opened had the panel scroll itself 300ms later to show the list's end (THE REVEAL of 2026-10-15, built when
+    the word only toggled its list) — 100px at 390×664, 375×667 and 844×390 — so the word slid up from under the finger
+    and a second tap on the same spot landed on a category („Urgențe", /ro/services/#emergencies), not on the page's
+    top; at 390×844 nothing moved. FIXED: the reveal runs for a list the KEYBOARD opened (a click's `detail` 0) and
+    never for a pointer's (1 or more) — an input-device check, never a tap count: open or go is still the flag's
+    alone. Re-measured after the fix, the word stays put and the second tap lands on /ro/services/ (or /ro/team/) at
+    every screen measured; a new e2e test (390×664, 375×667, 844×390) was red before the fix (the word at 122 where it
+    stood at 222) and is green after. The cost: after a tap on a short phone the end of a long list is reached by
+    scrolling the panel by hand. ALSO FOLDED: the flag's reset pinned (the test-coverage MEDIUM — after a link closes
+    the menu, it reopens with every list shut and the next tap opens; red with `closeForJump`'s reset deleted); a
+    pointer test on the short screen (every frame for REVEAL_AFTER_MS + 600ms: no panel scroll, no word or page
+    movement, then the second tap follows; red with the old reveal); the e2e's first tap watched for ANY main-frame
+    navigation request, and a tap on the ⌄'s box proven to land inside the link; the keyboard test now asserts the
+    page never scrolls; `STEPLESS_FILES` built from the folder by `import.meta.glob` (the hand list had missed
+    `useNavItems.ts` since 2026-08-17 — a step planted there turns the fence red); `holdTheFrame()` at file scope;
+    comments that described a tap count now describe the flag; the costs in (4). OPTIONS FOR THE OWNER (the
+    accessibility review's, not built): while the list is open, a → ("go") in the ⌄'s place instead of the up-turned
+    ⌄ ("close"); a guard that ignores a second tap within ~500ms of the open (a timestamp, still no counter — a quick
+    deliberate second tap would then be ignored); a spoken hint while open, through `aria-describedby` (five strings
+    the owner approves); a visible first entry per list („Toate serviciile →") or the separate ⌄ of 2026-10-15.
+    **EVIDENCE AT READY (after the fold):** prettier · eslint (develop's one warning) · tsc clean; vitest 225 files /
+    7 239 passed + 2 skipped in CI's condition (the optimizer's output moved aside); `next build` 73 pages, its
+    stylesheet byte-identical to develop ffd97d6's; e2e nav-dropdowns + header-step 47 passed / 0 failed on the final
+    export (the phone block once, its three new tests among the passes); the second tap re-measured after the fold at
+    390×844, 390×664, 375×667, 844×390 and on Echipa at 390×600 — always the page, the word never moving — and with a
+    150ms gap at 390×844 and 390×664 (opens and goes, by design); the phone panel PHOTOGRAPHED on develop's export and
+    on the lane's (390×844 at 2×, reduced motion; lists shut and Servicii's open, on /ro/ and on /ro/services/): 0
+    differing pixels in all four, before and after the fold — the `<a>` wears the `<button>`'s classes, and a tap
+    leaves it focused with no ring in both — so no visual baseline moves.
+    **Round 6 — THE GUARD AND THE HINT (owner, the same evening, on round 5's options, verbatim: "no: … show a → ("go")
+    instead of the up-turned ⌄ … A "Toate serviciile →" entry at the top of each list. yes: Ignore a second tap that
+    comes within about 0.5 s of opening. It's based on time, not a count, but a fast deliberate double tap would then do
+    nothing. A spoken hint for screen readers while the list is open"; and, mid-build: "i hope you implemented this on
+    echipa too, not just on servicii, servicii was just an example" — it is: both rows are the one NavAccordion, and
+    every test of this lane runs on both):** (1) THE GUARD: a plain tap on an OPEN list's word within
+    `FOLLOW_AFTER_MS` = 500 of that list's open is held back (`preventDefault`, nothing else moves); past it the tap
+    goes to the page as before. Time, never a count — the open flag still decides open or go, the guard only asks how
+    long ago this list opened (the opening click's `event.timeStamp`) — and it holds for every plain activation, a tap,
+    a click, Enter, a screen reader's. So a double tap FASTER THAN HALF A SECOND opens the list and STAYS, which
+    reverses (4)'s "opens the list and goes to the page in one go" for it; a slower one still opens and goes — an
+    older hand's double tap often is slower, a double-click setting can be slowed past 0.5s (Windows allows up to
+    900ms), a tremor's burst can run longer (the accessibility review's LOW-1). The cost the owner accepted: a
+    deliberate second tap within half a second does nothing — the visitor taps again; for a screen-reader user that
+    held press is SILENT, no speech and no change (LOW-2). (2) THE HINT: while a list is
+    open its word carries `aria-describedby` pointing at a `hidden` sentence in the row — off the screen and out of the
+    accessibility tree, so reading the panel line by line never meets it, while a directly referenced element still
+    supplies the description (accname 1.2) — so a screen reader says „Servicii, link, expanded, Apasă din nou pentru a
+    deschide pagina."; while shut, nothing extra. One key, `common.nav.pressAgain` ×5, Claude's DRAFTS flagged for the
+    owner (§15.17): ro „Apasă din nou pentru a deschide pagina." · en "Press again to open the page." · de „Drücken Sie
+    erneut, um die Seite zu öffnen." · fr « Appuyez de nouveau pour ouvrir la page. » · it «Premi di nuovo per aprire la
+    pagina.» — each language in the register of its message file (tu · you · Sie · vous · tu). NOT BUILT, the owner's
+    no: a → glyph while open, and a „Toate serviciile →" first entry. TESTS, nine new in the phone block, each shown
+    red by deleting what it guards (restored byte-identical from a saved copy): a quick double tap on BOTH rows held
+    back, the list, the menu and the frozen page unmoved, then a tap past the guard followed; a double Enter the same;
+    the exact boundary with set click times — held at +1ms and +499ms, a Ctrl click inside the window left to the
+    browser, followed at +500ms, and a held tap never restarting the window; the hint in all five languages on both
+    rows — none while shut, the sentence while open, gone when the other row takes over, `hidden` and outside the link,
+    whose name stays its label. **EVIDENCE (round 6):** prettier · eslint (develop's one warning) · tsc clean; vitest 225
+    files / 7 248 passed + 2 skipped in CI's condition; `next build` 73 pages, its stylesheet byte-identical to develop
+    ffd97d6's; e2e nav-dropdowns + header-step 48 passed / 0 failed (a double-tap test new, Echipa in every new test);
+    re-measured on the built export (Chromium, touch): taps 900ms apart land on the page at 390×844, 390×664, 375×667,
+    844×390 and on Echipa at 390×600, the word never moving; a 150ms double tap stays on /ro/ with the list open; the
+    panel's pixels still identical to develop's in all four photographed states. **THE ROUND-6 REVIEW (the owner:
+    "did you run the reviewers?" — not yet on round 6 — then "when done create pr"; the same four Opus reviewers,
+    read-only):** react-reviewer, a11y-architect and ecc:pr-test-analyzer APPROVE WITH CHANGES, typescript-reviewer
+    APPROVE; 0 critical / 0 high, no WCAG 2.2 AA failure (2.2.1 does not apply — a half-second minimum wait is no time
+    limit — and 2.5.2, 2.5.3, 4.1.2 are met); the five-language copy read kept all five hint sentences as written.
+    MEASURED for it on the built export: (a) THE BROWSER'S OWN ACCESSIBILITY TREE (Chromium, CDP): the shut word is
+    link „Servicii", expanded false, no description; the open word expanded true, described „Apasă din nou pentru a
+    deschide pagina." — the exposure is the browser's, not only the test libraries' computation; (b) A HELD ENTER on
+    the shut word (one press, then auto-repeat from 500ms every 33ms until 1.5s): Chromium sent ONE click (the list
+    opened, nothing more), but WebKit and Firefox kept activating the link on the repeats, and the first repeat past
+    the guard went to /ro/services/ — FIXED: an Enter keydown the browser itself marks as repeating (`event.repeat`) is
+    prevented on the word, so a held Enter opens the list once and a fresh press goes. FOLDED: the two timings in ONE
+    import-free module, `sections/Header/accordionTiming.ts` (`REVEAL_AFTER_MS`, `FOLLOW_AFTER_MS`), imported by
+    NavAccordion, its tests and the e2e — the e2e's hand copy deleted, so the spec cannot drift (the card-carousel
+    e2e's precedent); the guard reads the NATIVE click time (React falls back to `Date.now()`, another clock, for a 0
+    timestamp) and holds a tap back only for 0 ≤ elapsed < `FOLLOW_AFTER_MS`; a boundary test across both rows
+    (Servicii opens, Echipa opens and holds, Servicii opens AGAIN and holds, then follows) so the window keys off THIS
+    opening, never a row's first; each recorded tap says whether its list was open BEFORE it; the e2e's double tap
+    records both clicks — two, the gap inside the guard as a named premise, the first on a shut list, the second on an
+    open one and held. RECORDED, from the accessibility review: the hint is the word's DESCRIPTION, which a reader MAY
+    speak — NVDA possibly as it appears; VoiceOver, JAWS and TalkBack more likely only on returning to the word; none
+    with hints switched off — so the visitor round 5's cost (a) describes, who presses the open word to close it, may
+    leave before hearing it, and that cost stands for sighted visitors, the → glyph declined; the lever if listeners
+    miss it is a description in the SHUT state too („Prima apăsare deschide lista, a doua pagina."), five more strings
+    and a change to the owner's "while open"; a live region, a visually hidden span and `aria-description` were
+    weighed and declined (spoken twice, a stop of its own, an ARIA 1.3 draft). On the services page itself the open
+    word's press reloads the page being viewed, at its top — a sentence of its own is the lever. **EVIDENCE AT THE
+    SEAL:** prettier · eslint (develop's one warning) · tsc clean; vitest 225 files / 7 253 passed + 2 skipped in CI's
+    condition (the Header folder's components suite 204, each new test shown red on a planted mutation and restored
+    byte-identical); `next build` 73 pages, its stylesheet byte-identical to develop ffd97d6's; e2e nav-dropdowns +
+    header-step 48 passed / 0 failed; the held Enter re-measured on a bare page in Playwright's three engines — before
+    the hold Chromium 1 click, WebKit 28, Firefox 29; with it, 1 in all three. REBASED onto develop 2427deb (#174,
+    #176): one conflict, MIGRATION_INVENTORY's appended rows (both kept); #176's two new tests of the open phone menu
+    found the Servicii row as a `button[aria-expanded]` and now find the link (`src/app/[locale]/shell.test.tsx`,
+    `tests/e2e/bar-focus-scroll.spec.ts`). On the combined tree: prettier · eslint · tsc clean; vitest 225 files /
+    7 304 passed + 2 skipped in CI's condition; `next build` 73 pages, its stylesheet byte-identical to develop
+    2427deb's; e2e nav-dropdowns + header-step + bar-focus-scroll + forced-colors 102 passed / 0 failed.
 
 ## 16. Build-time vs runtime contract
 

@@ -980,9 +980,11 @@ describe('Shell — THE BAR NEVER MOVES THE PAGE (fix lane, 2026-10-26)', () => 
       .poll(() => burger().getAttribute('aria-expanded'))
       .toBe('true');
 
+    // The row is a LINK since 2026-10-26 (CLAUDE.md §15.40 round 5): Enter on
+    // it while its list is shut opens the list, and the page stays.
     const services = Array.from(
-      document.querySelectorAll<HTMLButtonElement>(
-        '#header-menu button[aria-expanded]',
+      document.querySelectorAll<HTMLAnchorElement>(
+        '#header-menu a[aria-expanded]',
       ),
     ).find((row) => row.textContent?.trim().startsWith(ro.common.nav.services));
     if (!services) throw new Error('the panel has no Servicii row');

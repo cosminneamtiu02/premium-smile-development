@@ -316,19 +316,25 @@ export const MenuOpen: Story = {
     });
     await expect(burger).toHaveAttribute('aria-expanded', 'true');
     // On a phone the panel is the ONLY way to the blog (owner, 2026-10-14):
-    // its last link, the list's page 1. Since 2026-10-16 the words Servicii
-    // and Echipa OPEN THEIR LISTS (the owner: "on phone on click of servicii
-    // it has to open it's respective dropdown") — a button each — so the
-    // panel's links are its two plain words, Acasă and Blog.
+    // its last link, the list's page 1. The panel's links are its four
+    // words, in the bar's order — Servicii and Echipa links again since
+    // 2026-10-26, each OPENING ITS LIST on a tap while the list is shut and
+    // going to its page on a tap while it is open (the owner: "when i click
+    // it ONCE to open dropdown and ehn i click it twice to go to page top";
+    // NavAccordion.tsx's THE ROW IS A LINK THAT OPENS ITS LIST FIRST) — and
+    // no entry of a shut list.
     const links = within(panel).getAllByRole('link');
-    await expect(links.map((link) => link.textContent)).toEqual([
-      ro.common.nav.home,
-      ro.common.nav.blog,
+    await expect(
+      links.map((link) => [link.textContent, link.getAttribute('href')]),
+    ).toEqual([
+      [ro.common.nav.home, '/ro/'],
+      [ro.common.nav.services, '/ro/services/'],
+      [ro.common.nav.team, '/ro/team/'],
+      [ro.common.nav.blog, '/ro/blog/'],
     ]);
-    await expect(links.at(-1)).toHaveAttribute('href', '/ro/blog/');
     for (const label of [ro.common.nav.services, ro.common.nav.team]) {
       await expect(
-        within(panel).getByRole('button', { name: label }),
+        within(panel).getByRole('link', { name: label }),
       ).toHaveAttribute('aria-expanded', 'false');
     }
     // The bar keeps its brand while the panel is open (BRAND + ✕) — and at
@@ -831,17 +837,32 @@ export const KeyboardToggle: Story = {
 
 /**
  * The phone panel with Servicii's list open under its row: the WORD opens the
- * list (owner, 2026-10-16: "on phone on click of servicii it has to open it's
- * respective dropdown" — until then dentestet.ro's way, the word a link and a
- * ⌄ at the row's end the list's button), the eleven categories beneath it
- * between two hairlines, the ⌄ at the row's end turned up, the other rows
- * moved down. One list at a time. On this route Servicii is also the current
- * page, so its row wears the current-page mark — the same lavender label and
- * full rule as THE HELD LOOK an open list holds on any other row.
+ * list on a tap while the list is shut (owner, 2026-10-16: "on phone on click
+ * of servicii it has to open it's respective dropdown" — until then
+ * dentestet.ro's way, the word a link and a ⌄ at the row's end the list's
+ * button) and, since 2026-10-26, goes to its page on a tap while it is open
+ * (the owner: "so if dropdown of services open on click of it go to services
+ * page at top") — a link again, wearing `aria-expanded` (NavAccordion.tsx's
+ * THE ROW IS A LINK THAT OPENS ITS LIST FIRST). The eleven categories beneath
+ * it between two hairlines, the ⌄ at the row's end turned up, the other rows
+ * moved down, the panel left at its top: a pointer opened the list, so
+ * nothing scrolls it (NavAccordion.tsx's THE REVEAL, the keyboard's alone
+ * since the same day). One list at a time. On this route Servicii is also the
+ * current page, so its row wears the current-page mark — the same lavender
+ * label and full rule as THE HELD LOOK an open list holds on any other row.
+ * With its list open the word is also DESCRIBED by a sentence nobody sees,
+ * „Apasă din nou pentru a deschide pagina." — which a screen reader may
+ * speak as the word's description, when and whether at all being the
+ * reader's own (the owner's pick the same evening; NavAccordion.tsx's THE
+ * HINT); the play checks the description, the page's part.
  *
  * `pin-open` and the phone pin for MenuOpen's reasons (its doc comment): the
  * runner opens the panel at 390, and the play opens it and the list — both
- * idempotently, so the two can never close each other.
+ * idempotently, so the two can never close each other. The play taps the row
+ * ONLY while its list is shut: with the list open, a tap goes to the services
+ * page — half a second after the opening at the soonest (NavAccordion.tsx's
+ * THE GUARD), which the play never leans on — and would take the story's
+ * frame with it.
  */
 export const MenuOpenAccordion: Story = {
   tags: ['pin-open'],
@@ -857,16 +878,23 @@ export const MenuOpenAccordion: Story = {
     const panel = await canvas.findByRole('navigation', {
       name: ro.common.menu.label,
     });
-    // The row IS the word: a button named by its label alone.
-    const row = within(panel).getByRole('button', {
+    // The row IS the word: a link to its page, named by its label alone.
+    const row = within(panel).getByRole('link', {
       name: ro.common.nav.services,
     });
+    await expect(row).toHaveAttribute('href', '/ro/services/');
+    // Tapped only while shut — a tap then opens the list; a tap with the
+    // list open would follow the link (the doc comment above).
     if (row.getAttribute('aria-expanded') !== 'true') {
       await userEvent.click(row);
     }
     await expect(row).toHaveAttribute('aria-expanded', 'true');
-    // The current page keeps its mark on the button that opens its list.
+    // The current page keeps its mark on the link that opens its list.
     await expect(row).toHaveAttribute('aria-current', 'page');
+    // THE HINT: with its list open the word is described by its press-again
+    // sentence — never drawn; a reader may speak it as the word's
+    // description (NavAccordion.tsx).
+    await expect(row).toHaveAccessibleDescription(ro.common.nav.pressAgain);
     const list = document.getElementById(
       row.getAttribute('aria-controls') ?? '',
     );
@@ -877,10 +905,11 @@ export const MenuOpenAccordion: Story = {
       ),
     );
     // Echipa's list stays shut beside it, and its word holds nothing.
-    const team = within(panel).getByRole('button', {
+    const team = within(panel).getByRole('link', {
       name: ro.common.nav.team,
     });
     await expect(team).toHaveAttribute('aria-expanded', 'false');
     await expect(team).not.toHaveClass('text-accent');
+    await expect(team).not.toHaveAttribute('aria-describedby');
   },
 };

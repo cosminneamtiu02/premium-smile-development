@@ -1,4 +1,9 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import {
+  FOLLOW_AFTER_MS,
+  REVEAL_AFTER_MS,
+} from '../../src/components/sections/Header/accordionTiming';
+import ro from '../../src/messages/ro.json';
 
 // THE TOP BAR'S DROPDOWNS on the BUILT export (CLAUDE.md §15.40; the owner,
 // 2026-10-15: "i want to implement a navigation dropdown on hover JUST ON THE
@@ -19,7 +24,15 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 // list. And the owner's look at that (the same day: "make the traingle way
 // smaller … and place an svg on the right side of the text with an arrow
 // pointing downwards"): the pointer a small right-angled notch, and a down
-// arrow after each dropdown word.
+// arrow after each dropdown word. And the owner's word of 2026-10-26 ("when i
+// click it ONCE to open dropdown and … twice to go to page top, do not
+// implement with a counter, but with an if dropdown open flag"): on a phone
+// the word is a LINK again — a tap while its list is shut opens the list and
+// stays, a tap while it is open is the browser following it to the page's
+// top, from another page and from the page itself — and the same evening's
+// picks: a tap within half a second of the open is held back (time, never a
+// count — a quick double tap opens and stays), and while a list is open a
+// screen reader hears „Apasă din nou pentru a deschide pagina.".
 //
 // Everything is found by ROLE and NAME — the words a visitor reads — never by
 // a class, so the spec survives a restyle and fails on a renamed control.
@@ -608,20 +621,43 @@ test.describe('phone — the burger panel’s lists', () => {
     await barAtRest(page);
   }
 
-  test('a tap on Servicii or Echipa opens its list — the two words are the only toggles — and opening one closes the other, the open word lit (2026-10-16)', async ({
+  /** A visitor who reads the list before tapping again: past THE GUARD (the
+   *  owner's pick, 2026-10-26 — a tap on an open list's word within
+   *  `FOLLOW_AFTER_MS` of the open is held back). The constant is imported
+   *  from the row's own import-free timing module, never copied, so this
+   *  spec cannot drift from the component (the round-6 reviews). */
+  const pastTheGuard = (page: Page) =>
+    page.waitForTimeout(FOLLOW_AFTER_MS + 150);
+
+  /** Every navigation of the page's main frame, by URL, from now on. A tap
+   *  that opened the list AND left would show here before the next document
+   *  commits — Playwright's tap waits for no navigation of its own, so the
+   *  URL and the page's state alone could still read the old page (the
+   *  test-coverage review, 2026-10-26). */
+  function watchNavigations(page: Page): string[] {
+    const navigations: string[] = [];
+    page.on('request', (request) => {
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame())
+        navigations.push(request.url());
+    });
+    return navigations;
+  }
+
+  test('a tap on Servicii or Echipa opens its list — the two words, links since 2026-10-26, are the only toggles — and opening one closes the other, the open word lit (2026-10-16)', async ({
     page,
   }) => {
     await openPanel(page, '/ro/');
     const panel = panelOf(page);
-    await expect(panel.locator('button[aria-expanded]')).toHaveCount(2);
+    await expect(panel.locator('a[aria-expanded]')).toHaveCount(2);
+    await expect(panel.locator('button[aria-expanded]')).toHaveCount(0);
     await expect(
       panel.getByRole('button', { name: /^Submeniul / }),
     ).toHaveCount(0);
-    const services = panel.getByRole('button', {
+    const services = panel.getByRole('link', {
       name: 'Servicii',
       exact: true,
     });
-    const team = panel.getByRole('button', { name: 'Echipa', exact: true });
+    const team = panel.getByRole('link', { name: 'Echipa', exact: true });
     // The panel's own paints: the current page's row (Acasă on /ro/), lit —
     // the look an open row holds — and „Blog", at rest.
     const lit = await paintOf(
@@ -652,26 +688,256 @@ test.describe('phone — the burger panel’s lists', () => {
     await expect.poll(() => paintOf(team)).toEqual(lit);
   });
 
-  test('the word opens its list and never leaves the page — a second tap closes it (2026-10-16)', async ({
+  // THE SECOND TAP (the owner, 2026-10-26: "when i click it ONCE to open
+  // dropdown and … twice to go to page top … with an if dropdown open flag").
+  // The first tap is held back by the row — the list opens, the page stays;
+  // with the list open the same word is a plain link the browser follows, to
+  // a fresh document at its top.
+  test('the first tap opens the list and stays on the page; a tap with the list open goes to the page, at its top (2026-10-26)', async ({
     page,
   }) => {
-    await openPanel(page, '/ro/');
-    const panel = panelOf(page);
-    await expect(
-      panel.getByRole('link', { name: 'Servicii', exact: true }),
-    ).toHaveCount(0);
-    const services = panel.getByRole('button', {
+    const navigations = watchNavigations(page);
+
+    for (const [name, path] of [
+      ['Servicii', '/ro/services/'],
+      ['Echipa', '/ro/team/'],
+    ] as const) {
+      await openPanel(page, '/ro/');
+      const row = panelOf(page).getByRole('link', { name, exact: true });
+      await expect(row).toHaveAttribute('href', path);
+      await expect(row).toHaveAttribute('aria-expanded', 'false');
+      // A tap on the ⌄ at the row's end is a tap on the word — the spot the
+      // arrow invites: its box is part of the link, nothing laid over it.
+      expect(
+        await row.evaluate((link) => {
+          const glyph = link.querySelector(':scope > [aria-hidden="true"]');
+          if (!glyph) return 'no ⌄ box in the row';
+          const box = glyph.getBoundingClientRect();
+          const hit = document.elementFromPoint(
+            box.left + box.width / 2,
+            box.top + box.height / 2,
+          );
+          return hit !== null && link.contains(hit);
+        }),
+        name,
+      ).toBe(true);
+
+      // THE HINT (the owner's pick, 2026-10-26): nothing extra is said while
+      // the list is shut…
+      await expect(row).toHaveAccessibleDescription('');
+
+      const before = navigations.length;
+      await row.tap();
+      await expect(row).toHaveAttribute('aria-expanded', 'true');
+      await expect(
+        (await controlled(page, row)).getByRole('link').first(),
+      ).toBeVisible();
+      expect(new URL(page.url()).pathname, name).toBe('/ro/');
+      expect(navigations.slice(before), name).toEqual([]);
+      // …and while it is open a screen reader hears what the next press does.
+      await expect(row).toHaveAccessibleDescription(ro.common.nav.pressAgain);
+
+      await pastTheGuard(page);
+      await row.tap();
+      await page.waitForURL(`**${path}`);
+      await page.waitForLoadState('load');
+      // The page arrives at its top — nothing on it moves the visitor on
+      // load (a script that scrolled the arriving page would show here).
+      expect(await page.evaluate(() => scrollY), name).toBe(0);
+      await expect(panelOf(page)).toHaveCount(0);
+    }
+  });
+
+  // THE SAME SPOT, TWICE, ON A SHORT PHONE (the React review of 2026-10-26,
+  // MEASURED the same day on the built export): until the fold, a list
+  // opened by a tap had the panel scroll itself 300ms later to show the
+  // list's end — 100px at 390×664, 375×667 and 844×390 — so the word slid up
+  // from under the finger and a second tap on the same spot landed on a
+  // category („Urgențe", /ro/services/#emergencies), not the page's top. A
+  // pointer's open no longer scrolls the panel (NavAccordion's reveal is the
+  // keyboard's alone). Echipa's shorter list moved its word too, on a shorter
+  // screen (24px at 390×600, measured) and on a phone held sideways — the
+  // owner, the same evening: "i hope you implemented this on echipa too".
+  test('on a short phone a second tap on the SAME spot still goes to the page — the word never slides from under the finger, on Servicii and on Echipa (2026-10-26)', async ({
+    page,
+  }) => {
+    for (const [name, path, width, height] of [
+      ['Servicii', '/ro/services/', 390, 664],
+      ['Servicii', '/ro/services/', 375, 667],
+      ['Servicii', '/ro/services/', 844, 390],
+      ['Echipa', '/ro/team/', 390, 600],
+      ['Echipa', '/ro/team/', 844, 390],
+    ] as const) {
+      const where = `${name} at ${width}×${height}`;
+      await page.setViewportSize({ width, height });
+      await openPanel(page, '/ro/');
+      const row = panelOf(page).getByRole('link', { name, exact: true });
+      const box = await row.boundingBox();
+      if (!box) throw new Error(`the row is not laid out: ${where}`);
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+
+      await page.touchscreen.tap(x, y);
+      await expect(row).toHaveAttribute('aria-expanded', 'true');
+      // A visitor reads the list before tapping again — past the old
+      // reveal's delay and its glide, and past the guard.
+      expect(REVEAL_AFTER_MS + 600, where).toBeGreaterThan(FOLLOW_AFTER_MS);
+      await page.waitForTimeout(REVEAL_AFTER_MS + 600);
+      expect((await row.boundingBox())?.y, where).toBe(box.y);
+
+      const loaded = page.waitForEvent('load');
+      await page.touchscreen.tap(x, y);
+      await loaded;
+      const landed = new URL(page.url());
+      expect(landed.pathname + landed.hash, where).toBe(path);
+    }
+  });
+
+  // THE GUARD (the owner's pick, 2026-10-26: "Ignore a second tap that comes
+  // within about 0.5 s of opening. It's based on time, not a count"): a
+  // double tap faster than half a second opens the list and STAYS on the
+  // page; the next tap past the half second goes. On both rows.
+  test('a quick double tap opens the list and stays on the page — the next tap past the half second goes to the page (2026-10-26)', async ({
+    page,
+  }) => {
+    const navigations = watchNavigations(page);
+    for (const [name, path] of [
+      ['Servicii', '/ro/services/'],
+      ['Echipa', '/ro/team/'],
+    ] as const) {
+      await openPanel(page, '/ro/');
+      const row = panelOf(page).getByRole('link', { name, exact: true });
+      const box = await row.boundingBox();
+      if (!box) throw new Error(`the ${name} row is not laid out`);
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+
+      // Every click that reaches a row's word, as the page sees it: when (the
+      // click's own timestamp), whether its list was open just BEFORE it
+      // (read in the capture phase, ahead of React), and whether its link was held
+      // back (read once React's handler has run) — so the test proves the
+      // guard ran, never merely that nothing happened (the round-6 reviews).
+      await page.evaluate(() => {
+        type Click = {
+          at: number;
+          wasOpen: string | null;
+          prevented?: boolean;
+        };
+        const clicks: Click[] = [];
+        (window as unknown as { clicks: Click[] }).clicks = clicks;
+        const rowOf = (event: Event) =>
+          event.target instanceof Element
+            ? event.target.closest('#header-menu a[aria-expanded]')
+            : null;
+        addEventListener(
+          'click',
+          (event) => {
+            const row = rowOf(event);
+            if (row)
+              clicks.push({
+                at: event.timeStamp,
+                wasOpen: row.getAttribute('aria-expanded'),
+              });
+          },
+          true,
+        );
+        addEventListener('click', (event) => {
+          if (rowOf(event))
+            clicks[clicks.length - 1].prevented = event.defaultPrevented;
+        });
+      });
+
+      const before = navigations.length;
+      const gap = Math.round(FOLLOW_AFTER_MS * 0.3);
+      const settle = Math.round(FOLLOW_AFTER_MS * 0.6);
+      await page.touchscreen.tap(x, y);
+      await page.waitForTimeout(gap);
+      await page.touchscreen.tap(x, y);
+      // Time for a navigation the second tap might have started to show.
+      await page.waitForTimeout(settle);
+      const clicks = await page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              clicks: {
+                at: number;
+                wasOpen: string | null;
+                prevented?: boolean;
+              }[];
+            }
+          ).clicks,
+      );
+      expect(clicks.length, `${name}: both taps reached the word`).toBe(2);
+      expect(
+        clicks[1].at - clicks[0].at,
+        `${name}: THE PREMISE — the second tap landed inside the guard`,
+      ).toBeLessThan(FOLLOW_AFTER_MS);
+      expect(
+        clicks.map(({ wasOpen, prevented }) => ({ wasOpen, prevented })),
+        name,
+      ).toEqual([
+        { wasOpen: 'false', prevented: true },
+        { wasOpen: 'true', prevented: true },
+      ]);
+      await expect(row).toHaveAttribute('aria-expanded', 'true');
+      expect(navigations.slice(before), name).toEqual([]);
+      expect(new URL(page.url()).pathname, name).toBe('/ro/');
+
+      await pastTheGuard(page);
+      const loaded = page.waitForEvent('load');
+      await page.touchscreen.tap(x, y);
+      await loaded;
+      expect(new URL(page.url()).pathname, name).toBe(path);
+    }
+  });
+
+  test('on its own page, scrolled down, the second tap on Servicii loads the page afresh at its top (2026-10-26)', async ({
+    page,
+  }) => {
+    // A link to the page you are on, with no fragment, is a NEW document —
+    // `navigate`, not a reload, so nothing restores the scroll (measured on
+    // the built export, Chromium, WebKit and Firefox, before this lane was
+    // built).
+    await page.goto('/ro/services/');
+    await page.waitForLoadState('load');
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      window.scrollTo(0, 1500);
+      (window as unknown as { before: boolean }).before = true;
+    });
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(1000);
+    await page.getByRole('button', { name: 'Meniu' }).tap();
+    await expect(panelOf(page)).toBeVisible();
+    const row = panelOf(page).getByRole('link', {
       name: 'Servicii',
       exact: true,
     });
+    await expect(row).toHaveAttribute('aria-current', 'page');
 
-    await services.tap();
-    await expect(services).toHaveAttribute('aria-expanded', 'true');
-    expect(new URL(page.url()).pathname).toBe('/ro/');
+    await row.tap();
+    await expect(row).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      await page.evaluate(() => 'before' in window),
+      'still the same document after the first tap',
+    ).toBe(true);
 
-    await services.tap();
-    await expect(services).toHaveAttribute('aria-expanded', 'false');
-    expect(new URL(page.url()).pathname).toBe('/ro/');
+    await pastTheGuard(page);
+    const loaded = page.waitForEvent('load');
+    await row.tap();
+    await loaded;
+    expect(
+      await page.evaluate(() => ({
+        fresh: !('before' in window),
+        path: location.pathname + location.hash,
+        y: scrollY,
+        type: (() => {
+          const [entry] = performance.getEntriesByType('navigation');
+          return entry instanceof PerformanceNavigationTiming
+            ? entry.type
+            : null;
+        })(),
+      })),
+    ).toEqual({ fresh: true, path: '/ro/services/', y: 0, type: 'navigate' });
   });
 
   // (The menu's close before a jump matters on the SAME page — the services
@@ -682,7 +948,7 @@ test.describe('phone — the burger panel’s lists', () => {
   }) => {
     await openPanel(page, '/ro/');
     await panelOf(page)
-      .getByRole('button', { name: 'Echipa', exact: true })
+      .getByRole('link', { name: 'Echipa', exact: true })
       .tap();
     await panelOf(page)
       .getByRole('link', { name: 'Dr. Nicu Elena Alina', exact: true })
@@ -705,7 +971,7 @@ test.describe('phone — the burger panel’s lists', () => {
   }) => {
     await openPanel(page, '/ro/services/');
     await panelOf(page)
-      .getByRole('button', { name: 'Servicii', exact: true })
+      .getByRole('link', { name: 'Servicii', exact: true })
       .tap();
     await panelOf(page)
       .getByRole('link', { name: 'Ortodonție', exact: true })

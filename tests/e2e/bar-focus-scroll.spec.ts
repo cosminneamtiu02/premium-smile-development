@@ -277,9 +277,10 @@ test.describe('the phone menu’s Contact (390 × 844)', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator(PANEL)).toBeVisible();
 
-    // The Servicii row's button: the word, which opens its list (§15.40).
+    // The Servicii row: the word, which opens its list (§15.40) — a link since
+    // 2026-10-26 (round 5), whose Enter opens the list while it is shut.
     const services = page
-      .locator(`${PANEL} button[aria-expanded]`)
+      .locator(`${PANEL} a[aria-expanded]`)
       .filter({ hasText: /^Servicii/ });
     await focusQuietly(services);
     await page.keyboard.press('Enter');

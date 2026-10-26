@@ -221,8 +221,9 @@ import { navSectionLinks } from './navSectionLinks';
 //                        three files that spell it; NavItem.tsx,
 //                        BurgerToggle.tsx and the dropdowns' files
 //                        (NavDropdown, NavAccordion, NavSectionEntry,
-//                        useNavDropdowns, navSectionLinks — 2026-10-15)
-//                        spell no container step at all;
+//                        useNavDropdowns, navSectionLinks — 2026-10-15 —
+//                        and isPlainLeftClick, 2026-10-26) spell no
+//                        container step at all;
 //   Header.test.tsx      `STEP` — the constant the token tests and "the bar's
 //                        step is ONE number in three files" fence read;
 //   Header.stories.tsx   AtTheStep — its wrapper's `calc(62rem+6px+…)` and

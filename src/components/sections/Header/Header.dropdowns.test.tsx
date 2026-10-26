@@ -1,5 +1,13 @@
 import type { ReactElement } from 'react';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import {
+  act,
+  createEvent,
+  fireEvent,
+  isInaccessible,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { renderToString } from 'react-dom/server';
@@ -31,9 +39,9 @@ import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
 import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
+import { FOLLOW_AFTER_MS, REVEAL_AFTER_MS } from './accordionTiming';
 import { Header } from './Header';
 import { HeaderNav } from './HeaderNav';
-import { REVEAL_AFTER_MS } from './NavAccordion';
 import { NavMenu, PANEL_ID } from './NavMenu';
 import { type NavSectionsByPath, navSectionLinks } from './navSectionLinks';
 import {
@@ -384,6 +392,34 @@ const withRealFace = (): void => {
     face = null;
   });
 };
+
+/**
+ * THE FRAME NEVER LEAVES — a net under every click of this file. Since
+ * 2026-10-26 Servicii and Echipa are LINKS that go to their pages once their
+ * lists are open (NavAccordion.tsx's THE ROW IS A LINK THAT OPENS ITS LIST
+ * FIRST), and @vitest/browser guards no link: a test frame that navigates
+ * fails the WHOLE file ("Cannot connect to the iframe", its orchestrator's
+ * words) instead of one assertion. Every click a test means the browser to
+ * follow is recorded on <body> and held back there (the phone describe's
+ * `whileRecording`, the desktop tests' own recorders); this listener sits on
+ * the DOCUMENT — after every <body> listener, so it changes nothing a test
+ * reads — and holds back whatever a regression lets through. Called ONCE, at
+ * file scope, right below: every test of the file runs over it.
+ */
+const holdTheFrame = (): void => {
+  const stay = (event: MouseEvent): void => {
+    if (event.target instanceof Element && event.target.closest('a[href]')) {
+      event.preventDefault();
+    }
+  };
+  beforeEach(() => {
+    document.addEventListener('click', stay);
+  });
+  afterEach(() => {
+    document.removeEventListener('click', stay);
+  });
+};
+holdTheFrame();
 
 describe('the dropdowns in the STATIC HTML (§16 rule 2)', () => {
   it('prints both cards CLOSED with every link, and Acasă and Blog bare', () => {
@@ -762,8 +798,9 @@ describe('desktop — the row, at a laptop’s width', () => {
       // The navigation is the browser's: this listener records whether
       // anything prevented it — then prevents it itself, so the test page
       // stays. On <body>: AFTER React's handler (at its root, the container
-      // RTL renders into) and BEFORE the document, where the browser runner's
-      // own guard prevents every link it sees.
+      // RTL renders into) and BEFORE the browser's default action — the
+      // runner guards no link of its own (holdTheFrame says what a navigated
+      // test frame costs).
       let prevented: boolean | null = null;
       const record = (event: MouseEvent) => {
         prevented = event.defaultPrevented;
@@ -1109,22 +1146,27 @@ describe('desktop — the row, at a laptop’s width', () => {
     expect(words[1].querySelector('svg')).toBeNull();
     expect(words[2].querySelector('svg')).not.toBeNull();
     // The panel: Servicii's row is its plain word again — a link to its
-    // page, no list — while Echipa's word is the button that opens its list.
+    // page with nothing to open — while Echipa's word is a link that opens
+    // its list first (NavAccordion.tsx's THE ROW IS A LINK THAT OPENS ITS
+    // LIST FIRST): both links, only one a disclosure.
     await browser.viewport(390, 844);
     try {
       await userEvent.click(
         screen.getByRole('button', { name: ro.common.menu.label }),
       );
       const panel = document.getElementById('header-menu') as HTMLElement;
-      expect(
-        within(panel).getByRole('link', { name: ro.common.nav.services }),
-      ).toHaveAttribute('href', '/ro/services/');
-      expect(
-        within(panel).queryByRole('button', { name: ro.common.nav.services }),
-      ).toBeNull();
-      expect(
-        within(panel).getByRole('button', { name: ro.common.nav.team }),
-      ).toHaveAttribute('aria-expanded', 'false');
+      const services = within(panel).getByRole('link', {
+        name: ro.common.nav.services,
+      });
+      expect(services).toHaveAttribute('href', '/ro/services/');
+      expect(services).not.toHaveAttribute('aria-expanded');
+      expect(services).not.toHaveAttribute('aria-controls');
+      const team = within(panel).getByRole('link', {
+        name: ro.common.nav.team,
+      });
+      expect(team).toHaveAttribute('href', '/ro/team/');
+      expect(team).toHaveAttribute('aria-expanded', 'false');
+      expect(team).toHaveAttribute('aria-controls');
     } finally {
       await browser.viewport(1536, 900);
     }
@@ -1664,7 +1706,8 @@ describe('desktop — the row, at a laptop’s width', () => {
         // The navigation is the browser's: this listener records which link
         // the click would follow and whether anything prevented it — then
         // prevents it itself, so the test page stays (the entry test's
-        // listener, on <body>: after React, before the runner's own guard).
+        // listener, on <body>: after React, before the browser's default
+        // action — the runner guards no link, holdTheFrame).
         let followed: string | null = null;
         let prevented: boolean | null = null;
         const record = (event: MouseEvent) => {
@@ -2247,6 +2290,17 @@ describe('phone — the burger panel’s lists', () => {
   beforeAll(async () => {
     await browser.viewport(390, 844);
   });
+  // EVERY TEST STARTS FROM A STILL PAGE AT ITS TOP. user-event presses an
+  // element after a plain focus(), which may scroll the page (the short
+  // screen test below says why it avoids it), and under the shell's
+  // `scroll-behavior: smooth` that scroll is a GLIDE that can outlive its test
+  // — MEASURED 2026-10-26: phone tests ending with the page 1–7px into one,
+  // and the short screen's "the page never moves" read, taken mid-glide,
+  // failing 2 runs in 3. A new INSTANT scroll aborts a glide in flight (CSSOM
+  // View), so none runs into the next test.
+  beforeEach(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  });
 
   const mountPanel = async (locale: Locale = 'ro') => {
     const user = userEvent.setup();
@@ -2257,24 +2311,233 @@ describe('phone — the burger panel’s lists', () => {
     const panel = document.getElementById('header-menu') as HTMLElement;
     expect(panel).not.toBeNull();
     // Re-read each time: a menu closed and opened again is a NEW panel. A
-    // row with a list IS its word — a button named by its label alone
-    // (NavAccordion.tsx's THE WORD OPENS THE LIST).
+    // row with a list IS its word — a LINK named by its label alone, again
+    // since 2026-10-26 (NavAccordion.tsx's THE ROW IS A LINK THAT OPENS ITS
+    // LIST FIRST).
     const rowOf = (label: string) =>
       within(document.getElementById('header-menu') as HTMLElement).getByRole(
-        'button',
+        'link',
         { name: label },
       );
-    const regionOf = (button: HTMLElement) =>
+    const regionOf = (row: HTMLElement) =>
       document.getElementById(
-        button.getAttribute('aria-controls') ?? '',
+        row.getAttribute('aria-controls') ?? '',
       ) as HTMLElement;
     return { ...utils, user, messages, burger, panel, rowOf, regionOf };
   };
 
-  it('makes the WORD of Servicii and Echipa the button that opens its list — no „Submeniul …" control left — while Acasă and Blog stay links', async () => {
-    // The owner, 2026-10-16: "on phone on click of servicii it has to open
-    // it's respective dropdown" — reversing the 2026-10-15 pick, where the
-    // word navigated and a ⌄ beside it opened the list.
+  /** The ⌄'s box at a row's end — decoration INSIDE the link. Throws by name
+   *  when the row carries none, rather than handing a null on to a click or a
+   *  measure. */
+  const glyphBoxOf = (row: HTMLElement): HTMLElement => {
+    const box = row.querySelector<HTMLElement>(':scope > [aria-hidden="true"]');
+    if (!box) {
+      throw new Error(`the row „${row.textContent ?? ''}" carries no ⌄ box`);
+    }
+    return box;
+  };
+
+  /** Reads `read` on every frame for `ms` and returns the LARGEST value each
+   *  of its numbers reached — so something that moved for a moment, or moved
+   *  and came back, is caught, not only something moved by the end. */
+  const largestOver = async (
+    ms: number,
+    read: () => Readonly<Record<string, number>>,
+  ): Promise<Record<string, number>> => {
+    const largest: Record<string, number> = { ...read() };
+    const until = performance.now() + ms;
+    while (performance.now() < until) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      for (const [name, value] of Object.entries(read())) {
+        largest[name] = Math.max(largest[name] ?? value, value);
+      }
+    }
+    return largest;
+  };
+
+  /** What one click found and left behind. `expandedBefore` is read as the
+   *  click ARRIVED — in the CAPTURE phase on <body>, before React's
+   *  listeners at its root (the container RTL renders into, inside <body>)
+   *  and so before the row's handler: the clicked link's `aria-expanded`,
+   *  false a shut list's word, true an open one's, null a link that carries
+   *  none (an entry of a list). The rest is read as the click reached <body>
+   *  on its way back up — AFTER the row's handler, BEFORE the browser's
+   *  default action: did anything hold the link back, which link it would
+   *  follow, and where the menu stood at that moment. */
+  type Tap = Readonly<{
+    expandedBefore: boolean | null;
+    prevented: boolean;
+    href: string | null;
+    menuOpen: boolean;
+    pageInert: boolean;
+    overflow: string;
+  }>;
+
+  /** The link a click lands in, if any — the row, or an entry. */
+  const linkOf = (event: Event): Element | null =>
+    event.target instanceof Element ? event.target.closest('a[href]') : null;
+
+  /** Every click `run` makes, recorded on <body> (`Tap`) and then held back
+   *  there, so the test page stays — one pair of listeners for a run of
+   *  clicks. The document's net (holdTheFrame) sits behind them. */
+  const whileRecording = async (run: () => unknown): Promise<Tap[]> => {
+    const taps: Tap[] = [];
+    // Each click's `expandedBefore`, keyed by the event itself: the capture
+    // listener writes it, the bubbling one reads it.
+    const found = new WeakMap<Event, boolean | null>();
+    const arrive = (event: MouseEvent) => {
+      const expanded = linkOf(event)?.getAttribute('aria-expanded') ?? null;
+      found.set(event, expanded === null ? null : expanded === 'true');
+    };
+    const record = (event: MouseEvent) => {
+      taps.push({
+        expandedBefore: found.get(event) ?? null,
+        prevented: event.defaultPrevented,
+        href: linkOf(event)?.getAttribute('href') ?? null,
+        menuOpen: document.getElementById('header-menu') !== null,
+        pageInert: pageMain.hasAttribute('inert'),
+        overflow: document.documentElement.style.overflow,
+      });
+      event.preventDefault();
+    };
+    document.body.addEventListener('click', arrive, { capture: true });
+    document.body.addEventListener('click', record);
+    try {
+      await run();
+    } finally {
+      document.body.removeEventListener('click', arrive, { capture: true });
+      document.body.removeEventListener('click', record);
+    }
+    return taps;
+  };
+
+  /** A tap that OPENED a list: its list SHUT as the tap arrived, the row
+   *  held the link back, and the menu still stood open over the frozen,
+   *  scroll-locked page. */
+  const opened = (href: string): Tap => ({
+    expandedBefore: false,
+    prevented: true,
+    href,
+    menuOpen: true,
+    pageInert: true,
+    overflow: 'hidden',
+  });
+
+  /** A tap THE GUARD held back (NavAccordion.tsx): the marks of an opening
+   *  tap but one — its list already OPEN as the tap arrived, opened less
+   *  than FOLLOW_AFTER_MS before: open before, held. Never a shut list
+   *  opened a second time, which `opened` records. */
+  const heldBack = (href: string): Tap => ({
+    ...opened(href),
+    expandedBefore: true,
+  });
+
+  /** A tap the browser FOLLOWS on an OPEN list's word: nothing held it back,
+   *  and the menu was already gone — the page unfrozen and unlocked — before
+   *  the browser's default action (NavMenu's closeForJump). */
+  const followed = (href: string): Tap => ({
+    expandedBefore: true,
+    prevented: false,
+    href,
+    menuOpen: false,
+    pageInert: false,
+    overflow: '',
+  });
+
+  /** An ENTRY of a list, followed: the word's marks, on a link that carries
+   *  no `aria-expanded`. */
+  const entryFollowed = (href: string): Tap => ({
+    ...followed(href),
+    expandedBefore: null,
+  });
+
+  /** A click left to the browser's own way — a new tab or window: nothing
+   *  held back here, and nothing moved either — the menu open over the
+   *  frozen page. `expandedBefore` is what the click found: false a shut
+   *  list's word, true an open one's, null an entry. */
+  const leftToTheBrowser = (
+    href: string,
+    expandedBefore: boolean | null,
+  ): Tap => ({
+    expandedBefore,
+    prevented: false,
+    href,
+    menuOpen: true,
+    pageInert: true,
+    overflow: 'hidden',
+  });
+
+  /** A click on `row` that stands for a moment: `at`, set as the NATIVE
+   *  event's own `timeStamp` before it is dispatched — the stamp THE GUARD
+   *  reads (NavAccordion.tsx's ONE CLOCK) — so a boundary is exact, never a
+   *  race against a real wait; the tests that wait for real use
+   *  `pastTheGuard`. A pointer's click unless `init` says otherwise
+   *  (`detail` 1: THE REVEAL stays still). THE PREMISE is checked before the
+   *  click is dispatched, so a stamp that did not take names itself rather
+   *  than failing a test's taps. Throws by name on a row that has LEFT the
+   *  document: a click on it escapes every net here — no listener outside a
+   *  detached element hears it — and Chrome still follows a detached link
+   *  (measured 2026-10-26: with the guard deleted, a later click navigated
+   *  the frame and took the whole file down). */
+  const clickAt = (
+    row: HTMLElement,
+    at: number,
+    init: MouseEventInit = {},
+  ): void => {
+    if (!row.isConnected) {
+      throw new Error(
+        `the row „${row.textContent ?? ''}" has left the document — the menu closed before this click`,
+      );
+    }
+    const event = createEvent.click(row, { button: 0, detail: 1, ...init });
+    Object.defineProperty(event, 'timeStamp' satisfies keyof Event, {
+      value: at,
+    });
+    expect(
+      event.timeStamp,
+      'THE PREMISE: the click carries the moment it stands for',
+    ).toBe(at);
+    fireEvent(row, event);
+  };
+
+  /** A REAL wait past THE GUARD — for a test whose next tap on an open
+   *  list's word must go to the page. Never a fake timer: the guard reads
+   *  each click's own `event.timeStamp`, the browser's clock, which no fake
+   *  timer moves; a wait that starts once the opening tap has landed puts
+   *  the next one at least this far behind it. */
+  const pastTheGuard = (): Promise<void> =>
+    new Promise((resolve) => {
+      window.setTimeout(resolve, FOLLOW_AFTER_MS + 100);
+    });
+
+  /** The browser's clock at every click `row` receives from here on — each
+   *  event's `timeStamp`, the one THE GUARD reads — for a test's premise:
+   *  how far apart its taps really landed. The listener dies with the row. */
+  const clickStamps = (row: HTMLElement): number[] => {
+    const stamps: number[] = [];
+    row.addEventListener('click', (event) => {
+      stamps.push(event.timeStamp);
+    });
+    return stamps;
+  };
+
+  /** The clicks that open a link elsewhere — the browser's, never this
+   *  page's (./isPlainLeftClick answers no to each). */
+  const modifiedClicks = [
+    ['a Ctrl click', { ctrlKey: true }],
+    ['a Cmd click', { metaKey: true }],
+    ['a Shift click', { shiftKey: true }],
+    ['an Alt click', { altKey: true }],
+    ['a middle click', { button: 1 }],
+  ] as const;
+
+  it('makes all four rows LINKS to their pages — Servicii and Echipa the words that open their lists, no „Submeniul …" control left', async () => {
+    // The owner, 2026-10-26: "when i click it ONCE to open dropdown and ehn
+    // i click it twice to go to page top, do not implement with a counter,
+    // but with an if dropdown open flag" — the word a link to its page
+    // again, after ten days as a <button> that only toggled its list
+    // (2026-10-16: "on phone on click of servicii it has to open it's
+    // respective dropdown").
     const ui = await mountPanel();
     expect(
       within(ui.panel).queryAllByRole('button', { name: /^Submeniul / }),
@@ -2293,30 +2556,36 @@ describe('phone — the burger panel’s lists', () => {
       ]),
     ).toEqual([
       ['A', ro.common.nav.home, '/ro/'],
-      ['BUTTON', ro.common.nav.services, null],
-      ['BUTTON', ro.common.nav.team, null],
+      ['A', ro.common.nav.services, '/ro/services/'],
+      ['A', ro.common.nav.team, '/ro/team/'],
       ['A', ro.common.nav.blog, '/ro/blog/'],
     ]);
+    // Acasă and Blog: plain words — nothing opens from them.
+    for (const row of [rows[0], rows[3]]) {
+      expect(row).not.toHaveAttribute('aria-expanded');
+      expect(row).not.toHaveAttribute('aria-controls');
+    }
     const list = ui.panel.querySelector(':scope > ul') as HTMLElement;
+    const plain = rows[0].getBoundingClientRect();
     for (const label of [ro.common.nav.services, ro.common.nav.team]) {
       const row = ui.rowOf(label);
-      // A native button: its name is its label alone (SC 2.5.3), and it is
-      // the disclosure — aria-expanded, aria-controls its list.
-      expect(row).toHaveAttribute('type', 'button');
+      // A link whose name is its label alone (SC 2.5.3), and the disclosure:
+      // aria-expanded, aria-controls its list — shut.
       expect(row).toHaveAccessibleName(label);
       expect(row).toHaveAttribute('aria-expanded', 'false');
       expect(ui.regionOf(row)).not.toBeNull();
-      // As wide as the panel's list and a §9 target, like every row.
+      expect(ui.regionOf(row)).toHaveAttribute('data-state', 'closed');
+      // As wide as the panel's list and a §9 target — the plain rows' own
+      // box, to the pixel.
       const box = row.getBoundingClientRect();
       expect(box.width).toBeCloseTo(list.getBoundingClientRect().width, 0);
       expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBe(plain.height);
+      expect(box.left).toBe(plain.left);
       // The ⌄ is decoration INSIDE it, where the old ⌄ square stood: an
       // aria-hidden box 44px wide at the row's end, the row's height,
       // absolutely placed — so the label stays centred on the row.
-      const glyphBox = row.querySelector<HTMLElement>(
-        ':scope > [aria-hidden="true"]',
-      ) as HTMLElement;
-      expect(glyphBox).not.toBeNull();
+      const glyphBox = glyphBoxOf(row);
       expect(glyphBox.querySelector('svg')).not.toBeNull();
       const g = glyphBox.getBoundingClientRect();
       expect(getComputedStyle(glyphBox).position).toBe('absolute');
@@ -2330,37 +2599,515 @@ describe('phone — the burger panel’s lists', () => {
     }
   });
 
-  it('toggles its list on a tap — anywhere on the row, the ⌄ at its end included — and never navigates', async () => {
+  it('OPENS its list on the first tap — the row holds the link back, the menu stays open, nothing navigates — on the word or on the ⌄ at its end', async () => {
     const ui = await mountPanel();
     const services = ui.rowOf(ro.common.nav.services);
-    await ui.user.click(services);
+    const team = ui.rowOf(ro.common.nav.team);
+    const url = window.location.href;
+
+    expect(await whileRecording(() => ui.user.click(services))).toEqual([
+      opened('/ro/services/'),
+    ]);
     expect(services).toHaveAttribute('aria-expanded', 'true');
     expect(ui.regionOf(services)).toHaveAttribute('data-state', 'open');
-    // The menu stays open: the row opened a list, it went nowhere.
-    expect(document.getElementById('header-menu')).not.toBeNull();
-    // A tap on the ⌄'s box is a tap on the row.
-    await ui.user.click(
-      services.querySelector(':scope > [aria-hidden="true"]') as HTMLElement,
+
+    // The ⌄'s box is the row: a tap on it, Echipa's list shut, opens that
+    // list the same way — and shuts Servicii's, one list at a time.
+    expect(await whileRecording(() => ui.user.click(glyphBoxOf(team)))).toEqual(
+      [opened('/ro/team/')],
     );
+    expect(team).toHaveAttribute('aria-expanded', 'true');
+    expect(ui.regionOf(team)).toHaveAttribute('data-state', 'open');
     expect(services).toHaveAttribute('aria-expanded', 'false');
-    expect(ui.regionOf(services)).toHaveAttribute('data-state', 'closed');
+
+    // The same page, the same menu, the same freeze.
+    expect(window.location.href).toBe(url);
+    expect(document.getElementById('header-menu')).not.toBeNull();
+    expect(ui.burger).toHaveAttribute('aria-expanded', 'true');
+    expect(pageMain).toHaveAttribute('inert');
   });
 
-  it('toggles on Enter and on Space — a native button, a real keyboard', async () => {
+  it.each([
+    ['Servicii', 'its word', 'services'],
+    ['Echipa', 'the ⌄ at its end', 'team'],
+  ] as const)(
+    'GOES TO ITS PAGE on the next tap, its list open — %s, tapped on %s: nothing held back, the menu shut BEFORE the browser follows, focus not on the burger',
+    async (_row, on, key) => {
+      // "so if dropdown of services open on click of it go to services page
+      // at top": the browser follows the plain link — no script here
+      // navigates or scrolls (NavAccordion.tsx's WHY A LINK).
+      const ui = await mountPanel();
+      const row = ui.rowOf(ro.common.nav[key]);
+      const href = `/ro/${key}/`;
+      const target = on === 'its word' ? row : glyphBoxOf(row);
+      expect(await whileRecording(() => ui.user.click(target))).toEqual([
+        opened(href),
+      ]);
+      expect(row).toHaveAttribute('aria-expanded', 'true');
+
+      // A visitor who reads the list before tapping again: past THE GUARD
+      // (a sooner tap is held back — the tests below).
+      await pastTheGuard();
+      expect(await whileRecording(() => ui.user.click(target))).toEqual([
+        followed(href),
+      ]);
+      expect(document.getElementById('header-menu')).toBeNull();
+      expect(ui.burger).toHaveAttribute('aria-expanded', 'false');
+      // The next document decides where the keyboard goes — not the burger.
+      expect(document.activeElement).not.toBe(ui.burger);
+    },
+  );
+
+  it('opens on the first Enter and goes to the page on the next — a link and a real keyboard; Space opens nothing, and the page never moves', async () => {
     const ui = await mountPanel();
     const team = ui.rowOf(ro.common.nav.team);
     team.focus({ preventScroll: true });
     expect(document.activeElement).toBe(team);
-    await realUser.keyboard('{Enter}');
+    // THE PAGE STAYS PUT through every key (the React review, 2026-10-26):
+    // the planner's probe saw nothing move, and these reads keep it so.
+    expect(window.scrollY).toBe(0);
+
+    // Space: a link does not answer it — no click at all, nothing opens.
+    expect(await whileRecording(() => realUser.keyboard('[Space]'))).toEqual(
+      [],
+    );
+    expect(team).toHaveAttribute('aria-expanded', 'false');
+    expect(window.scrollY).toBe(0);
+
+    // Enter: a click of the primary button — the first one opens…
+    expect(await whileRecording(() => realUser.keyboard('{Enter}'))).toEqual([
+      opened('/ro/team/'),
+    ]);
     expect(team).toHaveAttribute('aria-expanded', 'true');
     expect(ui.regionOf(team)).toHaveAttribute('data-state', 'open');
-    await realUser.keyboard('[Space]');
-    expect(team).toHaveAttribute('aria-expanded', 'false');
-    expect(ui.regionOf(team)).toHaveAttribute('data-state', 'closed');
     expect(document.activeElement).toBe(team);
+    expect(window.scrollY).toBe(0);
+    // …Space still does nothing, the list stays open…
+    expect(await whileRecording(() => realUser.keyboard('[Space]'))).toEqual(
+      [],
+    );
+    expect(team).toHaveAttribute('aria-expanded', 'true');
+    expect(window.scrollY).toBe(0);
+    // …and the next Enter, past THE GUARD's half second, goes to the page.
+    await pastTheGuard();
+    expect(await whileRecording(() => realUser.keyboard('{Enter}'))).toEqual([
+      followed('/ro/team/'),
+    ]);
+    expect(ui.burger).toHaveAttribute('aria-expanded', 'false');
+    expect(document.activeElement).not.toBe(ui.burger);
+    // …and with the menu gone, the page unlocked, nothing scrolls it after.
+    expect(await largestOver(500, () => ({ scrollY: window.scrollY }))).toEqual(
+      { scrollY: 0 },
+    );
   });
 
-  it('holds the word’s hover look while its list is open — and lets go when it closes or the other row takes over', async () => {
+  it.each([
+    ['Servicii', 'services'],
+    ['Echipa', 'team'],
+  ] as const)(
+    'HOLDS BACK a second tap within FOLLOW_AFTER_MS of the opening — %s: a quick double tap opens the list and STAYS, the menu and the freeze as they were; a tap past the guard goes to the page',
+    async (_row, key) => {
+      // The owner, 2026-10-26: "Ignore a second tap that comes within about
+      // 0.5 s of opening. It's based on time, not a count" (NavAccordion.tsx's
+      // THE GUARD).
+      const ui = await mountPanel();
+      const row = ui.rowOf(ro.common.nav[key]);
+      const href = `/ro/${key}/`;
+      const stamps = clickStamps(row);
+
+      // A double tap: two taps on the word, back to back.
+      const taps = await whileRecording(async () => {
+        await ui.user.click(row);
+        await ui.user.click(row);
+      });
+      // THE PREMISE first: two taps, the second inside the guard.
+      expect(stamps).toHaveLength(2);
+      expect(
+        stamps[1] - stamps[0],
+        'THE PREMISE: the second tap landed inside the guard',
+      ).toBeLessThan(FOLLOW_AFTER_MS);
+      expect(taps).toEqual([opened(href), heldBack(href)]);
+      // The list stays open, and so do the menu and the freeze.
+      expect(row).toHaveAttribute('aria-expanded', 'true');
+      expect(ui.regionOf(row)).toHaveAttribute('data-state', 'open');
+      expect(document.getElementById('header-menu')).not.toBeNull();
+      expect(ui.burger).toHaveAttribute('aria-expanded', 'true');
+      expect(pageMain).toHaveAttribute('inert');
+      expect(document.documentElement.style.overflow).toBe('hidden');
+
+      // Past the guard, the very same tap goes to the page.
+      await pastTheGuard();
+      expect(await whileRecording(() => ui.user.click(row))).toEqual([
+        followed(href),
+      ]);
+      expect(stamps[2] - stamps[0]).toBeGreaterThanOrEqual(FOLLOW_AFTER_MS);
+    },
+  );
+
+  it('HOLDS BACK a second Enter within FOLLOW_AFTER_MS of the opening one — a real keyboard; an Enter past the guard goes to the page', async () => {
+    const ui = await mountPanel();
+    const services = ui.rowOf(ro.common.nav.services);
+    const stamps = clickStamps(services);
+    services.focus({ preventScroll: true });
+
+    // Two Enters in one breath — a click of button 0 each, `detail` 0.
+    const taps = await whileRecording(() =>
+      realUser.keyboard('{Enter}{Enter}'),
+    );
+    expect(stamps).toHaveLength(2);
+    expect(
+      stamps[1] - stamps[0],
+      'THE PREMISE: the second Enter landed inside the guard',
+    ).toBeLessThan(FOLLOW_AFTER_MS);
+    expect(taps).toEqual([opened('/ro/services/'), heldBack('/ro/services/')]);
+    expect(services).toHaveAttribute('aria-expanded', 'true');
+    expect(document.activeElement).toBe(services);
+    expect(ui.burger).toHaveAttribute('aria-expanded', 'true');
+    expect(pageMain).toHaveAttribute('inert');
+
+    await pastTheGuard();
+    expect(await whileRecording(() => realUser.keyboard('{Enter}'))).toEqual([
+      followed('/ro/services/'),
+    ]);
+    expect(document.activeElement).not.toBe(ui.burger);
+  });
+
+  it('measures THE GUARD in TIME from the OPENING, never in taps — held 1ms and FOLLOW_AFTER_MS − 1ms after it whatever the click count, a modified click the browser’s own inside it, followed at FOLLOW_AFTER_MS: a held tap re-arms nothing', async () => {
+    // Each click carries the moment it stands for in its own native
+    // `timeStamp`, the stamp THE GUARD reads — `clickAt`, which checks THE
+    // PREMISE before each click is dispatched — so the boundary is exact,
+    // never a race against a real wait; the tests above wait for real.
+    const ui = await mountPanel();
+    const services = ui.rowOf(ro.common.nav.services);
+    const href = '/ro/services/';
+    // A whole number of milliseconds, so every difference below is exact.
+    const t0 = Math.floor(performance.now());
+
+    expect(
+      await whileRecording(() => {
+        // The opening click.
+        clickAt(services, t0, { detail: 1 });
+        // A double click's second click (`detail` 2), 1ms on: held.
+        clickAt(services, t0 + 1, { detail: 2 });
+        // A Ctrl click inside the guard: the browser's own — the modifier
+        // check runs first.
+        clickAt(services, t0 + 2, { detail: 1, ctrlKey: true });
+        // A lone click (`detail` 1) 1ms short of the half second: held —
+        // time, not a count.
+        clickAt(services, t0 + FOLLOW_AFTER_MS - 1, { detail: 1 });
+      }),
+    ).toEqual([
+      opened(href),
+      heldBack(href),
+      leftToTheBrowser(href, true),
+      heldBack(href),
+    ]);
+    expect(services).toHaveAttribute('aria-expanded', 'true');
+
+    // FOLLOW_AFTER_MS after the OPENING — 1ms behind the last held click,
+    // which re-armed nothing — and a double click's second at that: it goes.
+    expect(
+      await whileRecording(() => {
+        clickAt(services, t0 + FOLLOW_AFTER_MS, { detail: 2 });
+      }),
+    ).toEqual([followed(href)]);
+  });
+
+  it('keys THE GUARD off THIS opening, never a row’s first — across both rows: each word held for half a second after ITS list’s latest opening, then followed', async () => {
+    // The test-coverage review's MEDIUM (2026-10-26): every other guard test
+    // opens a row once, so a guard measured from a row's FIRST opening would
+    // pass them all. Here Servicii opens twice: the second time 1200ms after
+    // the first, and a tap 1ms after THAT opening is held — measured from
+    // the first opening, it would be 1201ms and go to the page.
+    const ui = await mountPanel();
+    const services = ui.rowOf(ro.common.nav.services);
+    const team = ui.rowOf(ro.common.nav.team);
+    const t0 = Math.floor(performance.now());
+
+    expect(
+      await whileRecording(() => {
+        // Servicii opens…
+        clickAt(services, t0);
+        // …Echipa opens 600ms on, shutting it, and its word holds a tap 1ms
+        // after ITS opening…
+        clickAt(team, t0 + 600);
+        clickAt(team, t0 + 601);
+        // …Servicii opens AGAIN, Echipa's list shut by it, and its word
+        // holds a tap 1ms after this second opening.
+        clickAt(services, t0 + 1200);
+        clickAt(services, t0 + 1201);
+      }),
+    ).toEqual([
+      opened('/ro/services/'),
+      opened('/ro/team/'),
+      heldBack('/ro/team/'),
+      opened('/ro/services/'),
+      heldBack('/ro/services/'),
+    ]);
+    expect(services).toHaveAttribute('aria-expanded', 'true');
+    expect(team).toHaveAttribute('aria-expanded', 'false');
+
+    // FOLLOW_AFTER_MS after Servicii's SECOND opening, its word goes.
+    expect(
+      await whileRecording(() => {
+        clickAt(services, t0 + 1200 + FOLLOW_AFTER_MS);
+      }),
+    ).toEqual([followed('/ro/services/')]);
+  });
+
+  it('reads both stamps off the NATIVE click, one clock — a tap 1ms after an opening the browser stamped 0 is held, where React’s own stamp would be the wall clock; and a tap stamped BEFORE its opening, which only two clocks make, goes', async () => {
+    // The React and TypeScript reviews (2026-10-26): React's synthetic
+    // `timeStamp` is the native one, or `Date.now()` where the native one is
+    // 0 — the wall clock against the event clock. NavAccordion.tsx's ONE
+    // CLOCK reads the native stamp both times, and holds a tap only for an
+    // elapsed time from 0 up to FOLLOW_AFTER_MS.
+    const ui = await mountPanel();
+    const services = ui.rowOf(ro.common.nav.services);
+    const team = ui.rowOf(ro.common.nav.team);
+
+    // An opening stamped 0 by the browser — React's own stamp for it would
+    // be `Date.now()` — and a tap 1ms on, on the event's clock: held.
+    expect(
+      await whileRecording(() => {
+        clickAt(services, 0);
+        clickAt(services, 1);
+      }),
+    ).toEqual([opened('/ro/services/'), heldBack('/ro/services/')]);
+    expect(services).toHaveAttribute('aria-expanded', 'true');
+
+    // Echipa opens, and a tap on its word stamped 1000ms BEFORE that
+    // opening — a negative elapsed time, which only two clocks can make —
+    // is let through: it goes to the page.
+    const t0 = Math.floor(performance.now());
+    expect(
+      await whileRecording(() => {
+        clickAt(team, t0);
+      }),
+    ).toEqual([opened('/ro/team/')]);
+    expect(
+      await whileRecording(() => {
+        clickAt(team, t0 - 1000);
+      }),
+    ).toEqual([followed('/ro/team/')]);
+  });
+
+  /** What one keydown left behind when it reached <body> — after the row's
+   *  React handler: which key, whether the browser marked it repeating, and
+   *  whether anything held its default action back. */
+  type Press = Readonly<{
+    key: string;
+    repeat: boolean;
+    prevented: boolean;
+  }>;
+
+  /** Every keydown `run` makes, recorded on <body> (`Press`) — never held
+   *  back here, so a key keeps whatever default action the row left it. */
+  const whilePressing = async (run: () => unknown): Promise<Press[]> => {
+    const presses: Press[] = [];
+    const record = (event: KeyboardEvent) => {
+      presses.push({
+        key: event.key,
+        repeat: event.repeat,
+        prevented: event.defaultPrevented,
+      });
+    };
+    document.body.addEventListener('keydown', record);
+    try {
+      await run();
+    } finally {
+      document.body.removeEventListener('keydown', record);
+    }
+    return presses;
+  };
+
+  it.each([
+    ['shut', false],
+    ['open', true],
+  ] as const)(
+    'holds back an Enter keydown the browser marks REPEATING, its list %s — and nothing else: an unrepeated Enter, and a repeating Space or arrow key, are left alone',
+    async (_state, open) => {
+      // The accessibility review's LOW-3 (2026-10-26), MEASURED by the
+      // planner on the built export: Enter held on the shut word, keydowns
+      // marked `repeat` every 33ms from 500ms to 1.5s — Chromium sent ONE
+      // click, WebKit and Firefox kept activating the link on the repeats,
+      // the first past THE GUARD going to /ro/services/ (NavAccordion.tsx's
+      // A HELD ENTER OPENS THE LIST ONCE; re-measured on a bare page the
+      // same day, the same rhythm: without the hold Chromium 1 click, WebKit
+      // 28, Firefox 29 — with it, 1 in all three). This Chromium cannot show
+      // the engines' difference — it ignores a repeating Enter on a link of
+      // its own accord — so the hold itself is what this test pins: a
+      // dispatched keydown is untrusted and has no default action anyway,
+      // but `defaultPrevented` says whether the row held it back.
+      const ui = await mountPanel();
+      const services = ui.rowOf(ro.common.nav.services);
+      if (open) await ui.user.click(services);
+      expect(services).toHaveAttribute('aria-expanded', String(open));
+      const press = (init: KeyboardEventInit): void => {
+        services.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            ...init,
+          }),
+        );
+      };
+
+      const presses: Press[] = [];
+      const taps = await whileRecording(async () => {
+        presses.push(
+          ...(await whilePressing(() => {
+            press({ key: 'Enter', code: 'Enter', repeat: true });
+            press({ key: 'Enter', code: 'Enter', repeat: false });
+            press({ key: ' ', code: 'Space', repeat: true });
+            press({ key: 'ArrowDown', code: 'ArrowDown', repeat: true });
+          })),
+        );
+      });
+      expect(presses).toEqual([
+        { key: 'Enter', repeat: true, prevented: true },
+        { key: 'Enter', repeat: false, prevented: false },
+        { key: ' ', repeat: true, prevented: false },
+        { key: 'ArrowDown', repeat: true, prevented: false },
+      ]);
+      // …and the keys changed nothing: no click, the list as it was, the
+      // menu open over the frozen page.
+      expect(taps).toEqual([]);
+      expect(services).toHaveAttribute('aria-expanded', String(open));
+      expect(document.getElementById('header-menu')).not.toBeNull();
+      expect(pageMain).toHaveAttribute('inert');
+    },
+  );
+
+  it('opens the list ONCE for a REAL held Enter — the browser’s own repeating keydowns, every one after the first held back', async () => {
+    // vitest/browser's `{Enter>4/}` presses Enter and keeps it down for
+    // three more keydowns, each one the browser marks `repeat` (Playwright's
+    // auto-repeat), then lets go: the input a held key makes. This Chromium
+    // answers only the first with a click whatever the row does (A HELD
+    // ENTER's measurement); the hold on the three repeats is the row's.
+    const ui = await mountPanel();
+    const services = ui.rowOf(ro.common.nav.services);
+    services.focus({ preventScroll: true });
+
+    const presses: Press[] = [];
+    const taps = await whileRecording(async () => {
+      presses.push(
+        ...(await whilePressing(() => realUser.keyboard('{Enter>4/}'))),
+      );
+    });
+    expect(presses).toEqual([
+      { key: 'Enter', repeat: false, prevented: false },
+      { key: 'Enter', repeat: true, prevented: true },
+      { key: 'Enter', repeat: true, prevented: true },
+      { key: 'Enter', repeat: true, prevented: true },
+    ]);
+    expect(taps).toEqual([opened('/ro/services/')]);
+    expect(services).toHaveAttribute('aria-expanded', 'true');
+    expect(document.getElementById('header-menu')).not.toBeNull();
+  });
+
+  it.each(locales)(
+    'DESCRIBES the open word to a screen reader — `%s`: on both rows, only while its list is open; the sentence never drawn, never in the accessibility tree, never part of the name',
+    async (locale) => {
+      // The owner, 2026-10-26: "A spoken hint for screen readers while the
+      // list is open. It needs five translations from you." (NavAccordion.tsx's
+      // THE HINT: the word's DESCRIPTION, which a reader may speak — „Servicii,
+      // link, expanded, Apasă din nou pentru a deschide pagina." — when, and
+      // whether at all, the reader's own; what this test pins is the
+      // exposure, the page's part.)
+      const ui = await mountPanel(locale);
+      const hint = ui.messages.nav.pressAgain;
+      const services = ui.rowOf(ui.messages.nav.services);
+      const team = ui.rowOf(ui.messages.nav.team);
+      /** A row's own sentence: in its <li>, beside the link. Throws by name
+       *  when the row carries none. */
+      const sentenceOf = (row: HTMLElement): HTMLElement => {
+        const sentence = row
+          .closest('li')
+          ?.querySelector<HTMLElement>(':scope > span[hidden]');
+        if (!sentence) {
+          throw new Error(
+            `the row „${row.textContent ?? ''}" carries no sentence`,
+          );
+        }
+        return sentence;
+      };
+
+      // Shut: nothing describes either word — each row's sentence there all
+      // the same, beside its link and never in it, `hidden`: never drawn,
+      // and out of the accessibility tree (Testing Library's own test of
+      // it, the one its role queries filter by).
+      for (const row of [services, team]) {
+        expect(row).not.toHaveAttribute('aria-describedby');
+        expect(row).toHaveAccessibleDescription('');
+        const sentence = sentenceOf(row);
+        expect(sentence.textContent).toBe(hint);
+        expect(row.contains(sentence)).toBe(false);
+        expect(sentence).toHaveAttribute('hidden');
+        expect(getComputedStyle(sentence).display).toBe('none');
+        expect(isInaccessible(sentence)).toBe(true);
+      }
+
+      // Servicii's list open: its word is described by its own sentence,
+      // its name still its label alone (SC 2.5.3)…
+      await ui.user.click(services);
+      expect(services).toHaveAttribute('aria-expanded', 'true');
+      expect(services).toHaveAttribute(
+        'aria-describedby',
+        sentenceOf(services).id,
+      );
+      expect(services).toHaveAccessibleDescription(hint);
+      expect(services).toHaveAccessibleName(ui.messages.nav.services);
+      // …Echipa's by nothing, and the panel's drawn text carries no trace of
+      // the sentence.
+      expect(team).not.toHaveAttribute('aria-describedby');
+      expect(team).toHaveAccessibleDescription('');
+      expect(ui.panel.innerText).not.toContain(hint);
+
+      // Echipa takes over: the description goes with the open list.
+      await ui.user.click(team);
+      expect(team).toHaveAttribute('aria-expanded', 'true');
+      expect(team).toHaveAttribute('aria-describedby', sentenceOf(team).id);
+      expect(team).toHaveAccessibleDescription(hint);
+      expect(team).toHaveAccessibleName(ui.messages.nav.team);
+      expect(services).not.toHaveAttribute('aria-describedby');
+      expect(services).toHaveAccessibleDescription('');
+    },
+  );
+
+  it.each(modifiedClicks)(
+    'leaves the ROW to the browser on %s — shut or open, nothing held back, the list and the menu as they were',
+    async (_form, modifiers) => {
+      // A new tab or window for the page is the browser's own; THIS page
+      // stays exactly as it was (NavAccordion.tsx's ONLY A PLAIN LEFT CLICK
+      // DECIDES — the entries' rule, below).
+      const ui = await mountPanel();
+      const services = ui.rowOf(ro.common.nav.services);
+      // Shut: nothing opens.
+      expect(
+        await whileRecording(() => {
+          fireEvent.click(services, modifiers);
+        }),
+      ).toEqual([leftToTheBrowser('/ro/services/', false)]);
+      expect(services).toHaveAttribute('aria-expanded', 'false');
+      // Open (a plain tap first): nothing closes, nothing is followed — and
+      // nothing is held back either, though the click comes right behind
+      // the opening tap: the modifier check runs before THE GUARD (its exact
+      // half second is the time-stamped test above).
+      expect(await whileRecording(() => ui.user.click(services))).toEqual([
+        opened('/ro/services/'),
+      ]);
+      expect(
+        await whileRecording(() => {
+          fireEvent.click(services, modifiers);
+        }),
+      ).toEqual([leftToTheBrowser('/ro/services/', true)]);
+      expect(services).toHaveAttribute('aria-expanded', 'true');
+      expect(ui.regionOf(services)).toHaveAttribute('data-state', 'open');
+      expect(ui.burger).toHaveAttribute('aria-expanded', 'true');
+    },
+  );
+
+  it('holds the word’s hover look while its list is open — and lets go when the other row takes over', async () => {
     // THE HELD LOOK on the phone (the owner: "leave it on until card or
     // section unfocus or change"). The REAL pointer parked BEFORE the panel
     // opens — its sheet then covers the parking spot — so no :hover passes
@@ -2385,58 +3132,84 @@ describe('phone — the burger panel’s lists', () => {
     // Nothing said by it: no aria-current off the current page.
     expect(services).not.toHaveAttribute('aria-current');
 
-    // The other row takes over: this one lets go, that one holds.
+    // The other row takes over: this one lets go, that one holds…
     await ui.user.click(team);
     expect(wearsHeld(team)).toBe(true);
     expect(wearsHeld(services)).toBe(false);
     expect(getComputedStyle(services).color).toBe(tokenColour('ink'));
     expect(ruleScaleX(services)).toBe(0);
 
-    // Closed: nothing held.
-    await ui.user.click(team);
+    // …and back the other way: the word no longer shuts its own list, so a
+    // hold ends when the OTHER row's list opens.
+    await ui.user.click(services);
+    expect(wearsHeld(services)).toBe(true);
     expect(wearsHeld(team)).toBe(false);
+    expect(getComputedStyle(team).color).toBe(tokenColour('ink'));
+    expect(ruleScaleX(team)).toBe(0);
   });
 
-  it('keeps the CURRENT page’s mark on its row — aria-current="page", lavender and underlined — and its list still opens', async () => {
-    // „Servicii, pagina curentă, buton, restrâns": on the services page the
-    // menu still says where the visitor is, although the word now opens
-    // its list (NavAccordion.tsx's THE CURRENT PAGE KEEPS ITS MARK).
+  it('keeps the CURRENT page’s mark on its row — and its open word goes to that very page, at its top', async () => {
+    // „Servicii, current page, link, collapsed": on the services page the
+    // menu still says where the visitor is (NavAccordion.tsx's THE CURRENT
+    // PAGE KEEPS ITS MARK), and with its list open the word follows its own
+    // URL — no fragment, so the browser loads the page anew, at its top.
     nav.pathname = '/services';
     const ui = await mountPanel();
     const services = ui.rowOf(ro.common.nav.services);
     expect(services).toHaveAttribute('aria-current', 'page');
     expect(wearsHeld(services)).toBe(true);
     expect(ui.rowOf(ro.common.nav.team)).not.toHaveAttribute('aria-current');
-    await ui.user.click(services);
+
+    expect(await whileRecording(() => ui.user.click(services))).toEqual([
+      opened('/ro/services/'),
+    ]);
     expect(services).toHaveAttribute('aria-expanded', 'true');
     expect(services).toHaveAttribute('aria-current', 'page');
-    await ui.user.click(services);
-    expect(services).toHaveAttribute('aria-expanded', 'false');
-    expect(services).toHaveAttribute('aria-current', 'page');
     expect(wearsHeld(services)).toBe(true);
+
+    await pastTheGuard();
+    expect(await whileRecording(() => ui.user.click(services))).toEqual([
+      followed('/ro/services/'),
+    ]);
+    expect(ui.burger).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('opens one list at a time — Echipa’s closes Servicii’s', async () => {
+  it('opens one list at a time — and a row whose list the other shut OPENS it again on its next tap: the flag, never a count', async () => {
+    // "do not implement with a counter, but with an if dropdown open flag":
+    // Servicii's second tap here comes after Echipa's shut its list, so the
+    // flag says shut and the tap opens — a count of taps would have gone to
+    // the page. The three taps come back to back, and none is held: THE
+    // GUARD asks only about an OPEN list's word.
     const ui = await mountPanel();
     const services = ui.rowOf(ro.common.nav.services);
     const team = ui.rowOf(ro.common.nav.team);
-    await ui.user.click(services);
+    const taps = await whileRecording(async () => {
+      await ui.user.click(services);
+      expect(services).toHaveAttribute('aria-expanded', 'true');
+      expect(ui.regionOf(services)).toHaveAttribute('data-state', 'open');
+      expect(within(ui.regionOf(services)).getAllByRole('link')).toHaveLength(
+        11,
+      );
+
+      await ui.user.click(team);
+      expect(team).toHaveAttribute('aria-expanded', 'true');
+      expect(services).toHaveAttribute('aria-expanded', 'false');
+      expect(ui.regionOf(services)).toHaveAttribute('data-state', 'closed');
+      expect(within(ui.regionOf(team)).getAllByRole('link')).toHaveLength(6);
+      expect(
+        Array.from(ui.regionOf(team).querySelectorAll('a'), (a) =>
+          a.getAttribute('href'),
+        ),
+      ).toEqual(teamHrefs('ro'));
+
+      await ui.user.click(services);
+    });
+    expect(taps).toEqual([
+      opened('/ro/services/'),
+      opened('/ro/team/'),
+      opened('/ro/services/'),
+    ]);
     expect(services).toHaveAttribute('aria-expanded', 'true');
-    expect(ui.regionOf(services)).toHaveAttribute('data-state', 'open');
-    expect(within(ui.regionOf(services)).getAllByRole('link')).toHaveLength(11);
-
-    await ui.user.click(team);
-    expect(team).toHaveAttribute('aria-expanded', 'true');
-    expect(services).toHaveAttribute('aria-expanded', 'false');
-    expect(ui.regionOf(services)).toHaveAttribute('data-state', 'closed');
-    expect(within(ui.regionOf(team)).getAllByRole('link')).toHaveLength(6);
-    expect(
-      Array.from(ui.regionOf(team).querySelectorAll('a'), (a) =>
-        a.getAttribute('href'),
-      ),
-    ).toEqual(teamHrefs('ro'));
-
-    await ui.user.click(team);
     expect(team).toHaveAttribute('aria-expanded', 'false');
   });
 
@@ -2449,14 +3222,18 @@ describe('phone — the burger panel’s lists', () => {
       expect(region.getBoundingClientRect().height).toBe(0);
       expect(within(region).queryAllByRole('link')).toHaveLength(0);
     }
-    // The panel's links are its two plain words, Acasă and Blog — Servicii
-    // and Echipa are the buttons that open these lists (the Contact is a
-    // button too).
+    // The panel's links are its four words — a collapsed list adds none
+    // (the Contact is a button).
     expect(
       within(ui.panel)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual([ro.common.nav.home, ro.common.nav.blog]);
+    ).toEqual([
+      ro.common.nav.home,
+      ro.common.nav.services,
+      ro.common.nav.team,
+      ro.common.nav.blog,
+    ]);
   });
 
   it('frames the list with a hairline, never a tinted ground', async () => {
@@ -2473,27 +3250,19 @@ describe('phone — the burger panel’s lists', () => {
     expect(list).toHaveAttribute('role', 'list');
   });
 
-  it.each([
-    ['a Ctrl click', { ctrlKey: true }],
-    ['a Cmd click', { metaKey: true }],
-    ['a middle click', { button: 1 }],
-  ])(
+  it.each(modifiedClicks)(
     'leaves the menu OPEN on %s of an entry — a new tab, not this page’s jump',
     async (_form, modifiers) => {
       const ui = await mountPanel();
       const services = ui.rowOf(ro.common.nav.services);
       await ui.user.click(services);
       const entry = within(ui.regionOf(services)).getAllByRole('link')[0];
-      const record = (event: MouseEvent) => event.preventDefault();
-      document.body.addEventListener('click', record);
-      try {
-        fireEvent.click(entry, modifiers);
-        expect(document.getElementById('header-menu')).not.toBeNull();
-        expect(pageMain).toHaveAttribute('inert');
-        expect(services).toHaveAttribute('aria-expanded', 'true');
-      } finally {
-        document.body.removeEventListener('click', record);
-      }
+      expect(
+        await whileRecording(() => {
+          fireEvent.click(entry, modifiers);
+        }),
+      ).toEqual([leftToTheBrowser(servicesHrefs('ro')[0], null)]);
+      expect(services).toHaveAttribute('aria-expanded', 'true');
     },
   );
 
@@ -2506,32 +3275,14 @@ describe('phone — the burger panel’s lists', () => {
     const target = within(ui.regionOf(services)).getByRole('link', {
       name: priceCategories[10].name.ro,
     });
-    // On <body> — after React's handler (at its root), before the document,
-    // where the browser runner's own guard prevents every link, and before the
-    // browser's default action — the menu must already be gone; then this
-    // listener stops the navigation itself so the test page stays.
-    let seen: Record<string, unknown> | null = null;
-    const record = (event: MouseEvent) => {
-      seen = {
-        prevented: event.defaultPrevented,
-        panel: document.getElementById('header-menu'),
-        inert: pageMain.hasAttribute('inert'),
-        overflow: document.documentElement.style.overflow,
-      };
-      event.preventDefault();
-    };
-    document.body.addEventListener('click', record);
-    try {
-      await ui.user.click(target);
-    } finally {
-      document.body.removeEventListener('click', record);
-    }
-    expect(seen).toEqual({
-      prevented: false,
-      panel: null,
-      inert: false,
-      overflow: '',
-    });
+    // At <body> — after React's handler, before the browser's default
+    // action (`whileRecording`) — the menu must already be gone: the path
+    // the open word takes too (NavMenu's closeForJump). The entry is tapped
+    // right behind the opening tap: THE GUARD holds back the word alone,
+    // never an entry.
+    expect(await whileRecording(() => ui.user.click(target))).toEqual([
+      entryFollowed(servicesHrefs('ro')[10]),
+    ]);
     expect(ui.burger).toHaveAttribute('aria-expanded', 'false');
     // The jump decides where the keyboard goes next — not the burger.
     expect(document.activeElement).not.toBe(ui.burger);
@@ -2547,6 +3298,48 @@ describe('phone — the burger panel’s lists', () => {
       expect(ui.rowOf(label)).toHaveAttribute('aria-expanded', 'false');
     }
   });
+
+  it.each(['an entry of its list', 'its open word'] as const)(
+    'resets THE FLAG when %s is followed — the menu, opened again, has every list shut, and a tap on Servicii OPENS it, never goes',
+    async (what) => {
+      // A followed link closes the menu through NavMenu's closeForJump, not
+      // its close(): that path must clear `expandedPath` too, or the panel
+      // opened next would show Servicii's list open, and its first tap would
+      // go to the page.
+      const ui = await mountPanel();
+      const services = ui.rowOf(ro.common.nav.services);
+      expect(await whileRecording(() => ui.user.click(services))).toEqual([
+        opened('/ro/services/'),
+      ]);
+      const word = what === 'its open word';
+      const link = word
+        ? services
+        : within(ui.regionOf(services)).getAllByRole('link')[0];
+      const href = word ? '/ro/services/' : servicesHrefs('ro')[0];
+      // The word goes only past THE GUARD; an entry is never held.
+      if (word) await pastTheGuard();
+      expect(await whileRecording(() => ui.user.click(link))).toEqual([
+        word ? followed(href) : entryFollowed(href),
+      ]);
+      expect(document.getElementById('header-menu')).toBeNull();
+
+      // The menu opened again — a NEW panel, every list in it shut…
+      await ui.user.click(ui.burger);
+      for (const label of [ro.common.nav.services, ro.common.nav.team]) {
+        expect(ui.rowOf(label)).toHaveAttribute('aria-expanded', 'false');
+      }
+      // …so a tap on Servicii opens its list again, never goes to the page.
+      expect(
+        await whileRecording(() =>
+          ui.user.click(ui.rowOf(ro.common.nav.services)),
+        ),
+      ).toEqual([opened('/ro/services/')]);
+      expect(ui.rowOf(ro.common.nav.services)).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    },
+  );
 
   it('closes everything on Escape, focus back on the burger', async () => {
     const ui = await mountPanel();
@@ -2573,7 +3366,9 @@ describe('phone — the burger panel’s lists', () => {
     expect(classes()).toContain('-rotate-90');
     expect(classes()).not.toContain('rotate-90');
     expect(getComputedStyle(glyph).rotate).toBe('-90deg');
-    await ui.user.click(services);
+    // Shut again by the other row's opening — this word, its list open,
+    // would go to its page.
+    await ui.user.click(ui.rowOf(ro.common.nav.team));
     expect(getComputedStyle(glyph).rotate).toBe('90deg');
     // Decoration: hidden from assistive technology, inside its hidden box.
     expect(glyph).toHaveAttribute('aria-hidden', 'true');
@@ -2591,17 +3386,22 @@ describe('phone — the burger panel’s lists', () => {
       await browser.viewport(390, 844);
     });
 
-    it('scrolls the PANEL — never the page — to show an opened list’s end', async () => {
+    it('scrolls the PANEL — never the page — to show the end of a list the KEYBOARD opened', async () => {
       const ui = await mountPanel();
       const team = ui.rowOf(ro.common.nav.team);
       const scrollY = window.scrollY;
       expect(ui.panel.scrollTop).toBe(0);
-      // Pressed WITHOUT user-event: its click focuses the row with a plain
-      // focus(), which scrolls the page itself when the row sits in the
-      // root's scroll-padding — the runner's motion, not the panel's.
-      act(() => {
-        team.click();
-      });
+      // Opened by the KEYBOARD: THE REVEAL is the keyboard's alone since
+      // 2026-10-26 (NavAccordion.tsx's THE REVEAL; a pointer's open is the
+      // next test). Focused WITHOUT a scroll — a plain focus() scrolls the
+      // page itself when the row sits in the root's scroll-padding, the
+      // runner's motion, not the panel's — then a real Enter: a click of
+      // button 0 whose `detail` is 0. The list shut, it opens (the row holds
+      // the link back).
+      team.focus({ preventScroll: true });
+      expect(await whileRecording(() => realUser.keyboard('{Enter}'))).toEqual([
+        opened('/ro/team/'),
+      ]);
       const list = ui.regionOf(team).querySelector('ul') as HTMLElement;
       await expect
         .poll(
@@ -2623,6 +3423,56 @@ describe('phone — the burger panel’s lists', () => {
         ui.panel.getBoundingClientRect().top,
       );
     });
+
+    it('leaves the panel STILL for a list a POINTER opened — the word stays under the finger, and a second tap on the same spot goes to the page', async () => {
+      // The React review's MEDIUM (2026-10-26, measured on the built export
+      // at 390×664, 375×667 and 844×390): the reveal scrolled the panel 100px
+      // after a tap on „Servicii", the word slid away, and a second tap on
+      // the same spot landed on the entry „Urgențe" — not the page.
+      const ui = await mountPanel();
+      const services = ui.rowOf(ro.common.nav.services);
+      const scrollY = window.scrollY;
+      expect(ui.panel.scrollTop).toBe(0);
+      const before = services.getBoundingClientRect();
+      // The spot a finger taps: the row's centre.
+      const x = before.left + before.width / 2;
+      const y = before.top + before.height / 2;
+
+      // A POINTER's click — user-event counts it, `detail` 1.
+      expect(await whileRecording(() => ui.user.click(services))).toEqual([
+        opened('/ro/services/'),
+      ]);
+      // THE PREMISE: the list ends past the panel's visible bottom — a
+      // reveal WOULD have scrolled the panel here.
+      const list = ui.regionOf(services).querySelector('ul') as HTMLElement;
+      const panelBox = ui.panel.getBoundingClientRect();
+      expect(list.getBoundingClientRect().bottom).toBeGreaterThan(
+        panelBox.top + ui.panel.clientTop + ui.panel.clientHeight,
+      );
+
+      // Well past the reveal's moment and the glide it would start — and past
+      // THE GUARD's half second, so the second tap below goes: on every
+      // frame the panel unscrolled, the word where it was, the page still.
+      expect(REVEAL_AFTER_MS + 600).toBeGreaterThan(FOLLOW_AFTER_MS);
+      expect(
+        await largestOver(REVEAL_AFTER_MS + 600, () => ({
+          panelScrollTop: ui.panel.scrollTop,
+          wordMoved: Math.abs(
+            services.getBoundingClientRect().top - before.top,
+          ),
+          pageMoved: Math.abs(window.scrollY - scrollY),
+        })),
+      ).toEqual({ panelScrollTop: 0, wordMoved: 0, pageMoved: 0 });
+
+      // The same spot is still the word…
+      const hit = document.elementFromPoint(x, y);
+      if (!hit) throw new Error('nothing is drawn at the tapped spot');
+      expect(hit.closest('a')).toBe(services);
+      // …and the second tap there goes to the page.
+      expect(await whileRecording(() => ui.user.click(hit))).toEqual([
+        followed('/ro/services/'),
+      ]);
+    });
   });
 });
 
@@ -2641,10 +3491,11 @@ describe('THE REVEAL’S CLOCK is the list’s opening transition (KEEP-IN-SYNC)
     await user.click(
       screen.getByRole('button', { name: ro.common.menu.label }),
     );
-    // The row IS the word since 2026-10-16 — the button named „Servicii".
+    // The row IS the word — the link named „Servicii" (a <button> from
+    // 2026-10-16 to 2026-10-26); its first tap opens the list.
     const services = within(
       document.getElementById('header-menu') as HTMLElement,
-    ).getByRole('button', { name: ro.common.nav.services });
+    ).getByRole('link', { name: ro.common.nav.services });
     await user.click(services);
     const region = document.getElementById(
       services.getAttribute('aria-controls') ?? '',

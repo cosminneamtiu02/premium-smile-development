@@ -434,8 +434,31 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
     word's arrow) — and an iPad held sideways under VoiceOver's touch exploration, where WebKit may skip that
     click-through ⌄. Tools that click by SCREEN POSITION (JAWS's mouse routing, Dragon's MouseGrid) land on
     the word's link and follow it, never the ⌄ — expected, to confirm. On a phone, VoiceOver and TalkBack
-    on the menu's two section rows: „Servicii, button, collapsed" (with „current page" on its own page) and
-    the list under it.
+    on the menu's two section rows: „Servicii, link, collapsed" (with „current page" on its own page) and
+    the list under it — since 2026-10-26 a LINK that opens its list while the list is shut and goes to the
+    page while it is open (CLAUDE.md §15.40 round 5; „button, collapsed" until then): confirm both readers
+    announce the expanded state, that activating the open row goes to the page, and that activating the
+    collapsed row from VoiceOver's rotor or TalkBack's links menu opens its list rather than the page
+    (expected — it is the same click). TalkBack especially (the accessibility review of 2026-10-26, not
+    verified): what it says in both states, hints included — a „double-tap to collapse" hint on the open
+    row would promise what the row no longer does — and its Actions menu on both rows, where a „Collapse"
+    action may run Chrome's default action, a click, and so go to the page. The same panel replaces the bar
+    on a desktop in a narrow window or at 400 % zoom: there NVDA and JAWS in browse mode — Enter, the
+    Elements / Links List (choosing „Servicii" opens its list, not the page), and whether „expanded" is
+    spoken after activation. The hint the owner picked (round 6): „Apasă din nou pentru a deschide pagina."
+    is the open word's description — confirm each reader speaks it (VoiceOver after a pause, as a hint;
+    TalkBack as its hint; NVDA and JAWS per their "report descriptions" setting), and WHEN: right after the
+    opening press with focus unmoved, or only on returning to the word (the accessibility review of round 6
+    expects the latter outside NVDA); with hints switched off (VoiceOver „Speak hints", TalkBack usage
+    hints, NVDA „Report object descriptions") nothing; none while the list is shut; and a second press
+    within half a second is SILENT (the guard holds it back — no speech, no change). On a real keyboard in
+    Safari and Firefox, a held Enter on the shut word opens the list once and stays (round 6 ignores the
+    key's auto-repeat; measured in Playwright's WebKit and Firefox, where it had gone to the page). And sighted, on a real iPhone and an Android phone: a quick double tap (opens the list and STAYS —
+    the half-second guard, round 6), a tap on the open word after half a second (goes to the page), a slow
+    press (the browser's own link menu or preview), two separate taps on the same spot on a short screen (the fold of
+    2026-10-26 keeps the word under the finger), and that Safari follows the link the menu removes during
+    its own tap (the HTML spec allows it and the list's entries have relied on it since 2026-10-15; the
+    e2e suite runs Chromium only — one Firefox run of its phone block belongs here too).
 
 ## 3 · The privacy and cookie policy page
 

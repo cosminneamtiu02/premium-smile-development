@@ -62,8 +62,9 @@ import { useNavItems } from './useNavItems';
 // includes the bar and therefore the ✕ — and the ✕ must stay reachable. It is
 // honestly a DISCLOSURE: a button that opens and closes a thing, wearing
 // aria-expanded + aria-controls. With everything below the bar inert, the
-// browser's OWN Tab order is the brand link → ✕ → Contact → the rows (the
-// links, and Servicii's and Echipa's list buttons since 2026-10-16) — the
+// browser's OWN Tab order is the brand link → ✕ → Contact → the rows (four
+// links: Servicii's and Echipa's open their lists first — buttons from
+// 2026-10-16, links again since 2026-10-26) — the
 // brand corner is sections/Wordmark's home link again since 2026-10-02 (its
 // D9), and it sits in the bar, which is never frozen, so it is a live stop in
 // the cycle too — page content is unreachable, and there is NO JavaScript
@@ -78,15 +79,27 @@ import { useNavItems } from './useNavItems';
 // it should open up a dropdown with the adjacent subsections … if you click
 // on another section with other subsections and another section is open it
 // should close the other open one"). Servicii and Echipa are ./NavAccordion
-// rows, and since 2026-10-16 the WORD itself opens the list of the page's
+// rows: since 2026-10-16 the WORD itself opens the list of the page's
 // sections under it (the owner: "on phone on click of servicii it has to open
-// it's respective dropdown") — one button per row, holding the hover's
-// lavender look while its list is open; the ⌄ at the row's end is its
-// decoration, and the word no longer opens the page (that file's THE WORD
-// OPENS THE LIST records what this costs and the lever). ONE list at a time —
-// `expandedPath`, the second variable of this file, which every close of the
-// menu resets — and an entry tapped closes the whole menu BEFORE the browser
-// follows it (the `closeForJump` paragraph below). The entries arrive
+// it's respective dropdown"), and since 2026-10-26 the word is a LINK to its
+// page again — a tap while its list is shut held back to open the list, a
+// tap while it is open followed to the page, at its top (the owner: "when i
+// click it ONCE to open dropdown and ehn i click it twice to go to page top,
+// do not implement with a counter, but with an if dropdown open flag"; §15.40
+// round 5; that file's THE ROW IS A LINK THAT OPENS ITS LIST FIRST). THE FLAG
+// IS `expandedPath`, the second variable of this file — "is this row's list
+// the open one?", never a count of taps — so a row whose list the other row
+// shut is shut again, and a tap on it opens it. ONE list at a time, every
+// close of the menu resets it (a followed link's too — `closeForJump`), and
+// the word no longer shuts its own list (the ✕, Escape, the sheet, the other
+// row or a navigation do); it holds the hover's lavender look while its list
+// is open, the ⌄ at the row's end its decoration. A link of a row followed —
+// the open word, or an entry of its list — closes the whole menu BEFORE the
+// browser follows it (the `closeForJump` paragraph below). Since the owner's
+// two picks the same evening, a tap on the open word within half a second of
+// the opening is held back — time, never a count (NavAccordion's THE GUARD)
+// — and the open word is described to a screen reader by a sentence this
+// file translates and hands down (its THE HINT). The entries arrive
 // finished from Header.tsx (`sections`, built on the server by
 // ./navSectionLinks, whose TYPES alone this file imports).
 
@@ -234,9 +247,11 @@ function warnIfNothingWasFrozen(frozen: readonly Element[]): void {
 // INTERNALLY: the panel scrolls, the page behind it stays frozen. Since
 // 2026-10-15 a row's list can open inside it (./NavAccordion, §15.40) and
 // make it far taller still — Servicii's eleven entries — and the same cap
-// holds; an opened list is brought into view by scrolling THIS box, never the
-// page (NavAccordion's THE REVEAL). `dvh`, not
-// `vh`, because mobile URL bars change the viewport height as you scroll;
+// holds; a list the KEYBOARD opened is brought into view by scrolling THIS
+// box, never the page, while a pointer's open leaves it still since
+// 2026-10-26, its word kept under the finger (NavAccordion's THE REVEAL).
+// `dvh`, not `vh`, because mobile URL bars change the viewport height as you
+// scroll;
 // 6.5rem is the panel's own top edge — the pill's reach plus the gap, top-4 +
 // h-20 + mt-2 — i.e. everything below the hanging panel and nothing more.
 // THE NUMBER MOVED ON 2026-09-04 (owner: "make top bar same size on every
@@ -341,17 +356,21 @@ export function NavMenu({ sections }: NavMenuProps): ReactElement {
     setExpandedPath(null);
   }, []);
 
-  // ── AN ENTRY OF A ROW'S LIST WAS TAPPED (2026-10-15, §15.40). The menu
+  // ── A LINK OF A ROW IS FOLLOWED — an entry of its list (2026-10-15,
+  // §15.40), or since 2026-10-26 the row's word itself, its list open (round
+  // 5: ./NavAccordion's THE ROW IS A LINK THAT OPENS ITS LIST FIRST). The menu
   // closes NOW — flushSync applies the close, its freeze's cleanup included,
   // before the click handler returns (the DEPARTURE paragraph below has the
   // tool) — and only then does the browser follow the link. The order is the
   // point: a link to a section of THIS page is a fragment jump, and it must
   // run on a page that is unlocked and no longer `inert`, or it scrolls a
-  // frozen root and lands nowhere a visitor can use; a link to another page
-  // loses nothing by it. The navigation is never prevented. And the focus
-  // return is NOT armed (setOpen, never close()): the jump decides where the
-  // keyboard continues — the fragment's own target, or the next document —
-  // and putting focus back on the burger would undo it.
+  // frozen root and lands nowhere a visitor can use; a link to another page —
+  // or the word's own, its page with no fragment, which loads a new document
+  // at its top even when it is this page — loses nothing by it, and the menu
+  // is gone the moment the tap lands. The navigation is never prevented. And
+  // the focus return is NOT armed (setOpen, never close()): the jump decides
+  // where the keyboard continues — the fragment's own target, or the next
+  // document — and putting focus back on the burger would undo it.
   const closeForJump = useCallback(() => {
     flushSync(() => {
       setOpen(false);
@@ -623,23 +642,33 @@ export function NavMenu({ sections }: NavMenuProps): ReactElement {
 
           <ul className="flex flex-col gap-1">
             {items.map(({ path, ...route }) => {
-              // Servicii and Echipa: the row — the word, a button that opens
-              // its list — and the list (./NavAccordion), one list open at a
-              // time. An empty list draws the plain row: the word, a link.
+              // Servicii and Echipa: the row — the word, a link to its page:
+              // a tap while its list is shut OPENS the list, a tap while it
+              // is open goes to the page (`expandedPath` is the flag), half
+              // a second after the opening at the soonest (NavAccordion's
+              // THE GUARD: a tap sooner is held back) — and the list
+              // (./NavAccordion), one list open at a time: opening this one
+              // shuts the other's. Both its links, followed, close the menu
+              // first (closeForJump). `pressAgainHint` is the sentence that
+              // describes the open word to a screen reader, „Apasă din nou
+              // pentru a deschide pagina." (`common.nav.pressAgain`, Claude's
+              // drafts ×5, flagged for the owner — §15.17): t() is called
+              // HERE and the row is handed the finished text, like its label
+              // (§8.1); it reads it only through `aria-describedby`, while
+              // its list is open (NavAccordion's THE HINT). An empty list
+              // draws the plain row: the word, a link.
               if (isSectioned(path) && sections[path].length > 0) {
                 return (
                   <NavAccordion
                     key={route.href}
                     label={route.label}
+                    href={route.href}
                     active={route.active}
                     links={sections[path]}
                     expanded={expandedPath === path}
-                    onToggle={() =>
-                      setExpandedPath((current) =>
-                        current === path ? null : path,
-                      )
-                    }
-                    onEntryActivate={closeForJump}
+                    onOpen={() => setExpandedPath(path)}
+                    onFollow={closeForJump}
+                    pressAgainHint={t('nav.pressAgain')}
                     panelRef={panelRef}
                   />
                 );

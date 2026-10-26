@@ -214,11 +214,35 @@ export type ButtonProps = ButtonOwnProps &
 // that JUMPS the aura rides the scale with the box, 5 % larger at the top of
 // the hover — the box-shadow is drawn in the element's own space — which is
 // the only growth the glow gets (THE JUMP below).
+// ── THE FORCED-COLOURS BOUNDARY (fix lane `fix/dialog-scroll-forced-colors`,
+// 2026-10-26 — the follow-up CLAUDE.md §15.23 parked, §15.25 and §15.30 round 5
+// re-recorded, and BACKLOG.md entry 2 listed). In forced colours (Windows High
+// Contrast) the browser repaints every colour from the visitor's palette and
+// drops every box-shadow, so a face whose EDGE was its colour lost its edge.
+// MEASURED under Chromium's forced-colours emulation, every face of this atom
+// and of ui/GlyphButton on the site's own stylesheet: solid and ghost, in both
+// families, as a <button> and as an <a>, drew as bare text (link-coloured on
+// an <a>) on the page's own ground, no box — the doctor card's „Mai multe
+// despre mine", the contact dialog's call and WhatsApp controls, the bar's
+// Contact — while outline kept its 1px border. Firefox's emulation the same,
+// a <button> keeping only a ButtonFace ground 1.2:1 off the page. THE CURE is
+// the border this atom never needed outside forced colours: 1px, solid, in
+// currentColor — which forced colours resolve to the face's own text colour,
+// LinkText on an <a> and ButtonText on a <button> (measured) — behind the
+// `forced-colors:` variant, so not one pixel moves anywhere else. On outline it
+// adds nothing (its own border is the same 1px). The Hero's beads and the card
+// carousel's dots wear the same utility for the same reason, so the rule
+// already ships. The focus ring stays the 2px outline 2px outside it, painted
+// by forced colours in the palette's own colour. KEEP-IN-SYNC with
+// ui/GlyphButton's base (the same token, the same reason): Button.test and
+// GlyphButton.test pin it on every face, tests/e2e/forced-colors.spec.ts
+// measures the shipped ones on the built pages.
 const base =
   'inline-flex items-center justify-center gap-2 text-center ' +
   'rounded-md font-medium hyphens-none outline-offset-2 ' +
   'focus-visible:outline-2 focus-visible:outline-focus ' +
   'disabled:pointer-events-none disabled:opacity-50 ' +
+  'forced-colors:border ' +
   '[--fade:400ms] active:duration-0 motion-reduce:transition-none';
 
 // ── THE JUMP (owner, 2026-10-01 — "like in old webpage i want the book

@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
-import { page } from 'vitest/browser';
+import { page, userEvent as realKeys } from 'vitest/browser';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import { FloatingActions } from '@/components/sections/FloatingActions/FloatingActions';
@@ -829,5 +829,198 @@ describe('Shell — the scroll-padding pair on <html> (E5/E12, boxes 1 + 3)', ()
       expect(paddings().bottom).toMatch(new RegExp(`(^|\\D)${step}px`));
       expect(paddings().bottom).toMatch(/100%\s*-\s*152px/);
     }
+  });
+});
+
+describe('Shell — THE BAR NEVER MOVES THE PAGE (fix lane, 2026-10-26)', () => {
+  // The report: "focus the header's Contact button and press Enter — the page
+  // glides up ~215px while the contact dialog opens". MEASURED on develop's
+  // own export, the dialog is innocent (a fixed top-layer box, which no engine
+  // scrolls the page for); the jump was the button's OWN focus. globals.css's
+  // `scroll-padding-top` (6rem, asserted above) asks every reveal to keep the
+  // sticky pill's strip clear, and a control INSIDE the strip can never leave
+  // it, so the engine moved the page for nothing — and for the phone menu's
+  // panel, which hangs off the same bar, the bottom clearance did the same to
+  // the frozen page. sections/Header's THE BAR'S OWN CONTROLS CANCEL THE PAGE'S
+  // TOP CLEARANCE and lib/scroll-lock's THE BOTTOM CLEARANCE GOES WITH THE
+  // FREEZE are the two cures; every case here was RED before them, in this
+  // runner (Chromium): a script's focus() on the bar's Contact took the page
+  // from 1200 to 985 at 1366 × 633, the burger's to 871 at 390 × 844, and the
+  // panel's list began sliding the frozen page down at „Protetică" (1223 —
+  // on the built export the walk ended at 2805).
+  // Real scrolling in real Chromium, exact equality, every scroll synchronous
+  // (the file's stillness rule forces `scroll-behavior: auto`).
+  const MID = 1200;
+
+  /** The shell with a page tall enough to stand mid-way down it. */
+  const standMidPage = (): void => {
+    mount();
+    const tall = document.createElement('div');
+    tall.style.height = '4000px';
+    main().append(tall);
+    window.scrollTo(0, MID);
+    expect(window.scrollY).toBe(MID);
+  };
+
+  const header = (): HTMLElement =>
+    document.querySelector('header') as HTMLElement;
+  /** The bar's own controls, as shown: every link and button of the header
+   *  that is rendered and lives in neither drop surface (the panel, a card). */
+  const barControls = (): HTMLElement[] =>
+    Array.from(
+      header().querySelectorAll<HTMLElement>('a[href], button'),
+    ).filter(
+      (control) =>
+        control.offsetParent !== null &&
+        control.closest('#header-menu, [data-nav-dropdown] > div') === null,
+    );
+  const nameOf = (control: Element | null): string =>
+    control?.getAttribute('aria-label') ?? control?.textContent?.trim() ?? '';
+  /** The bar's Contact — never the panel's, which exists while the menu is open. */
+  const contactInBar = (): HTMLButtonElement =>
+    header().querySelector(
+      'button[aria-haspopup="dialog"]:not(#header-menu *)',
+    ) as HTMLButtonElement;
+
+  afterAll(async () => {
+    await page.viewport(390, 844);
+  });
+
+  it('a script’s focus() on every control of the bar leaves the page where it is (a laptop)', async () => {
+    await page.viewport(1366, 633);
+    standMidPage();
+    const controls = barControls();
+    // The logo, the four words, the two ⌄ and the Contact: the walk is the
+    // real row, not an empty list that would pass by having nothing to say.
+    expect(controls.length).toBeGreaterThanOrEqual(8);
+    for (const control of controls) {
+      window.scrollTo(0, MID);
+      control.focus();
+      expect(document.activeElement).toBe(control);
+      expect(window.scrollY, `focus on „${nameOf(control)}"`).toBe(MID);
+    }
+  });
+
+  it('the real Tab key walks the bar end to end without moving the page (a laptop)', async () => {
+    await page.viewport(1366, 633);
+    standMidPage();
+    const [logo] = barControls();
+    logo?.focus({ preventScroll: true });
+    expect(document.activeElement).toBe(logo);
+
+    const stops: string[] = [];
+    for (let step = 0; step < 12; step += 1) {
+      await realKeys.tab();
+      const active = document.activeElement;
+      if (!active || !header().contains(active)) break;
+      stops.push(nameOf(active));
+      expect(window.scrollY, `Tab to „${nameOf(active)}"`).toBe(MID);
+      if (active === contactInBar()) break;
+    }
+    expect(stops.length).toBeGreaterThanOrEqual(7);
+    expect(document.activeElement).toBe(contactInBar());
+  });
+
+  it('opens and closes the contact dialog from the bar by keyboard, and the page never moves', async () => {
+    await page.viewport(1366, 633);
+    standMidPage();
+    const contact = contactInBar();
+
+    contact.focus(); // the report's own step: a script's focus, no options
+    expect(window.scrollY).toBe(MID);
+
+    await realKeys.keyboard('{Enter}');
+    await expect.poll(() => dialog().open).toBe(true);
+    expect(window.scrollY).toBe(MID);
+
+    // Trusted keys only: <dialog>'s own Escape ignores synthetic ones.
+    await realKeys.keyboard('{Escape}');
+    await expect.poll(() => dialog().open).toBe(false);
+    expect(document.activeElement).toBe(contact);
+    expect(window.scrollY).toBe(MID);
+  });
+
+  it('the phone: the burger, the panel’s Contact, the dialog and back — the page never moves', async () => {
+    await page.viewport(390, 844);
+    standMidPage();
+
+    burger().focus(); // a script's focus on the burger — 1200 → 871 before
+    expect(window.scrollY).toBe(MID);
+
+    await realKeys.keyboard('{Enter}');
+    await expect
+      .poll(() => burger().getAttribute('aria-expanded'))
+      .toBe('true');
+    const panelContact = document.querySelector<HTMLButtonElement>(
+      '#header-menu button[aria-haspopup="dialog"]',
+    );
+    if (!panelContact) throw new Error('the panel has no Contact');
+    await realKeys.tab();
+    expect(document.activeElement).toBe(panelContact);
+    expect(window.scrollY).toBe(MID);
+
+    await realKeys.keyboard('{Enter}');
+    await expect.poll(() => dialog().open).toBe(true);
+    expect(window.scrollY).toBe(MID);
+
+    await realKeys.keyboard('{Escape}');
+    await expect.poll(() => dialog().open).toBe(false);
+    expect(document.activeElement).toBe(burger());
+    expect(window.scrollY).toBe(MID);
+  });
+
+  it('the phone: every entry of the panel’s open list takes focus, the frozen page never moving', async () => {
+    await page.viewport(390, 844);
+    standMidPage();
+    const root = document.documentElement;
+
+    burger().focus({ preventScroll: true });
+    await realKeys.keyboard('{Enter}');
+    await expect
+      .poll(() => burger().getAttribute('aria-expanded'))
+      .toBe('true');
+
+    const services = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '#header-menu button[aria-expanded]',
+      ),
+    ).find((row) => row.textContent?.trim().startsWith(ro.common.nav.services));
+    if (!services) throw new Error('the panel has no Servicii row');
+    services.focus({ preventScroll: true });
+    await realKeys.keyboard('{Enter}');
+    await expect
+      .poll(() => services.getAttribute('aria-expanded'))
+      .toBe('true');
+
+    const list = document.getElementById(
+      services.getAttribute('aria-controls') ?? '',
+    );
+    if (!list) throw new Error('the Servicii row controls no list');
+    const entries = Array.from(
+      list.querySelectorAll<HTMLAnchorElement>('a[href]'),
+    );
+    // Eleven price categories: a short list would prove nothing.
+    expect(entries.length).toBe(11);
+    for (const entry of entries) {
+      entry.focus();
+      expect(window.scrollY, `focus on „${nameOf(entry)}"`).toBe(MID);
+      // The panel still reveals its own entries inside its own scroll.
+      const box = entry.getBoundingClientRect();
+      expect(box.top, `„${nameOf(entry)}" on screen`).toBeGreaterThanOrEqual(0);
+      expect(box.bottom).toBeLessThanOrEqual(window.innerHeight);
+    }
+    // HOW: the freeze takes the bottom clearance off and leaves the top one
+    // (lib/scroll-lock — the visitor-facing contract is the walk above).
+    expect(root.style.scrollPaddingBottom).toBe('0px');
+    expect(getComputedStyle(root).scrollPaddingTop).toBe('96px');
+
+    await realKeys.keyboard('{Escape}');
+    await expect
+      .poll(() => burger().getAttribute('aria-expanded'))
+      .toBe('false');
+    expect(window.scrollY).toBe(MID);
+    // …and the clearance is back the moment the page thaws.
+    expect(root.style.scrollPaddingBottom).toBe('');
+    expect(getComputedStyle(root).scrollPaddingBottom).toMatch(/(^|\D)168px/);
   });
 });

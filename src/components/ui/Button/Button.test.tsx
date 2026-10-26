@@ -873,3 +873,70 @@ describe('Button — the jump (owner, 2026-10-01)', () => {
     expect(link.className.split(/\s+/)).toContain('hover:scale-105');
   });
 });
+
+describe('Button — THE FORCED-COLOURS BOUNDARY (2026-10-26)', () => {
+  // In forced colours the browser repaints the face from the visitor's palette
+  // and drops every box-shadow, so solid and ghost — whose edge WAS their
+  // colour — drew as bare text (Button.tsx's paragraph of the same name has
+  // the measurement). The cure is ONE token in the base row. MEASURED on the
+  // built pages in tests/e2e/forced-colors.spec.ts (a fresh forced context per
+  // face — never an emulation in this shared tab); pinned here on EVERY face,
+  // the ones no page wears included, as a <button> and as an asChild <a>.
+  const variants = Object.keys({
+    solid: true,
+    outline: true,
+    ghost: true,
+  } satisfies Record<ButtonVariant, true>) as ButtonVariant[];
+  const tones = Object.keys({
+    cta: true,
+    accent: true,
+  } satisfies Record<ButtonTone, true>) as ButtonTone[];
+  const faces = variants.flatMap((variant) =>
+    tones.map((tone): [ButtonVariant, ButtonTone] => [variant, tone]),
+  );
+
+  /** The face's tokens as a <button> and as an asChild <a>. */
+  const both = (variant: ButtonVariant, tone: ButtonTone): string[][] => {
+    const asButton = render(
+      <Button variant={variant} tone={tone}>
+        Programează o consultație
+      </Button>,
+    );
+    const button = screen.getByRole('button').className.split(/\s+/);
+    asButton.unmount();
+    const asLink = render(
+      <Button variant={variant} tone={tone} asChild>
+        <a href="tel:+40770162765">Sună acum</a>
+      </Button>,
+    );
+    const link = screen.getByRole('link').className.split(/\s+/);
+    asLink.unmount();
+    return [button, link];
+  };
+
+  it.each(faces)(
+    '%s · %s keeps an edge in forced colours, as a <button> and as an <a>',
+    (variant, tone) => {
+      for (const tokens of both(variant, tone)) {
+        expect(tokens).toContain('forced-colors:border');
+      }
+    },
+  );
+
+  it.each(faces)(
+    '%s · %s: the edge exists ONLY in forced colours — nothing changes outside them',
+    (variant, tone) => {
+      for (const tokens of both(variant, tone)) {
+        // The one forced-colours token, and no other.
+        expect(tokens.filter((t) => t.includes('forced-colors:'))).toEqual([
+          'forced-colors:border',
+        ]);
+        // Outside forced colours the face's border is the variant's own:
+        // outline's 1px line, and none at all on solid and ghost.
+        expect(tokens.filter((t) => /^border(-|$)/.test(t))).toEqual(
+          variant === 'outline' ? ['border', `border-${tone}`] : [],
+        );
+      }
+    },
+  );
+});

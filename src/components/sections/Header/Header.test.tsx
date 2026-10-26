@@ -12,8 +12,10 @@ import en from '@/messages/en.json';
 import fr from '@/messages/fr.json';
 import it_ from '@/messages/it.json';
 import ro from '@/messages/ro.json';
-import { Header } from './Header';
+import { BAR_CLEARANCE_CANCEL, Header } from './Header';
 import headerSource from './Header.tsx?raw';
+import globalsSource from '@/styles/globals.css?raw';
+import { PANEL_ID } from './NavMenu';
 import navSource from './HeaderNav.tsx?raw';
 import menuSource from './NavMenu.tsx?raw';
 import burgerSource from './BurgerToggle.tsx?raw';
@@ -1388,3 +1390,39 @@ describe('Header — the bar’s arrow and the phone row’s ⌄ turn on ONE clo
 // blog-article lane’s round-2 review): it parses every module with the
 // TypeScript compiler there, in the node project, and shares that reader
 // with the React-free ring’s fence.
+
+describe('Header — the bar’s own controls cancel the page’s top clearance (2026-10-26)', () => {
+  // THE BAR'S OWN CONTROLS CANCEL THE PAGE'S TOP CLEARANCE (Header.tsx, above
+  // the function): a keyboard focus in the sticky bar must never move the page
+  // to clear a strip the control lives in. The behaviour is MEASURED where the
+  // real stylesheet loads — app/[locale]/shell.test.tsx's THE BAR NEVER MOVES
+  // THE PAGE, and tests/e2e/bar-focus-scroll.spec.ts on the built export; this
+  // project loads no styles, so these pin the string that carries it.
+  it('wears the cancel on its root, as one class of its own', () => {
+    mount();
+    const root = document.querySelector('header');
+    expect(root?.className.split(/\s+/)).toContain(BAR_CLEARANCE_CANCEL);
+  });
+
+  it('spells it exactly: minus 6rem on every link and button outside the panel and the cards', () => {
+    expect(BAR_CLEARANCE_CANCEL).toBe(
+      '[&_:is(a,button):not(:is(#header-menu,[data-nav-dropdown]>div)_*)]:scroll-mt-[-6rem]',
+    );
+  });
+
+  it('excludes the very surfaces this folder renders: the panel’s id and the dropdown’s hook', () => {
+    // The panel: NavMenu's PANEL_ID, the id its burger's aria-controls names.
+    expect(BAR_CLEARANCE_CANCEL).toContain(`:is(#${PANEL_ID},`);
+    // The card: the <div> child of NavDropdown's <li data-nav-dropdown> — the
+    // item's hook since §15.40 — which carries the card's id.
+    expect(dropdownSource).toMatch(/<li\s+data-nav-dropdown=\{path\}/);
+    expect(dropdownSource).toMatch(/<div\s+id=\{cardId\}/);
+  });
+
+  it('cancels exactly the clearance globals.css spells — the two numbers move together', () => {
+    const code = globalsSource.replace(/\/\*[\s\S]*?\*\//g, '');
+    const top = /scroll-padding-top:\s*([\d.]+)rem/.exec(code)?.[1];
+    expect(top).toBe('6');
+    expect(BAR_CLEARANCE_CANCEL).toContain(`:scroll-mt-[-${top}rem]`);
+  });
+});

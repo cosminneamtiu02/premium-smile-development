@@ -2109,7 +2109,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     reachable only through its Team card; options: an "other doctors" strip on the doctor page,
     the doctors listed under „Echipa" in the Footer's site map, or an HTML site-map page (the SEO
     lane's `sitemap.xml` is not a user-facing way); forced-colors on `ui/Button`'s solid face
-    when it dresses an `<a>` (a ui/Button follow-up: `forced-colors:border`); the nav's
+    when it dresses an `<a>` (a ui/Button follow-up: `forced-colors:border`) *(BUILT 2026-10-26 in this lane, `fix/dialog-scroll-forced-colors`: a 1px edge in forced colours on every face of ui/Button and ui/GlyphButton, nothing moving outside them)*; the nav's
     `aria-current="page"` on „Echipa" while on a doctor page (`lib/routes`' section rule,
     pre-existing); the 320 sideways-scroll plays are not a failing gate (harness follow-up: a
     `pageerror` hook in the visual spec); `team.doctor.schedule.closed` duplicates
@@ -3077,7 +3077,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     are `<h3>`s, so no level-3 name outranks a level-2 one)* ·
     IN FORCED COLOURS the card's one button loses its face (measured: no border, no shadow — link-coloured
     text; the card keeps its 3px border): item 23's parked ui/Button follow-up, `forced-colors:border`,
-    now on the only way to a doctor page · a WRAPPED `lg` label fills the button's 56px exactly (two
+    now on the only way to a doctor page *(BUILT 2026-10-26 in this lane, `fix/dialog-scroll-forced-colors`: a 1px edge in forced colours on every face of ui/Button and ui/GlyphButton, nothing moving outside them)* · a WRAPPED `lg` label fills the button's 56px exactly (two
     28px lines), a small `py` is the look's lever · one LISTEN is owed on iOS VoiceOver — the list
     ("list, N items"; Chromium's tree exposes exactly that, measured) and the phone's reading order.
     **Round 2 — THE SCALE (owner, 2026-10-01, verbatim: "so about the doctors component with the line. i like
@@ -4331,7 +4331,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     crossfade passes through 1:1 at its midpoint (the label under 4.5:1 for ~294ms, the green's
     ~380ms; no resting state under 5.06:1, keyboard and touch never see it); in forced colours both
     controls show as link text with no box — ui/Button's parked `forced-colors:border` (§15.23,
-    §15.25), now on the dialog's conversion controls too (BACKLOG.md, entry 2). ADVISORY, the
+    §15.25), now on the dialog's conversion controls too (BACKLOG.md, entry 2) *(BUILT 2026-10-26 in this lane, `fix/dialog-scroll-forced-colors`: a 1px edge in forced colours on every face of ui/Button and ui/GlyphButton, nothing moving outside them)*. ADVISORY, the
     owner's: the lilac is as light as the green but about half as colourful (OKLCH chroma 0.069
     against 0.129) — more contrast, less pop, and "call the clinic" now shares its colour with the
     secondary controls; the hover's hairline is 1px.

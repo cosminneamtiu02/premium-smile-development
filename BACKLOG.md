@@ -292,9 +292,12 @@ never merged).
     handNavigation commits the stop first, 2026-10-21), there for good because its press stops;
   - SC 2.4.5 Multiple Ways — a doctor page is reachable only through its card (§15.23; the doctors
     dropdown recorded in §15.15 is one answer);
-  - forced colours — `ui/Button`'s solid face loses its boundary when it dresses an `<a>` (§15.23,
-    §15.25: the `forced-colors:border` follow-up) — the contact dialog's call and WhatsApp
-    controls among them, the site's main conversion controls (§15.30 round 5);
+  - forced colours — BUILT 2026-10-26 (fix lane `fix/dialog-scroll-forced-colors`): the solid face
+    that lost its boundary when it dressed an `<a>` (§15.23, §15.25: the `forced-colors:border`
+    follow-up), the contact dialog's call and WhatsApp controls among them (§15.30 round 5) — every
+    face of `ui/Button` and `ui/GlyphButton` now keeps a 1px edge in forced colours, measured under
+    Chromium's emulation (tests/e2e/forced-colors.spec.ts) and Firefox's; still to be SEEN on real
+    Windows High Contrast in this pass, in Windows' own palettes, in Edge and Chrome;
   - owed listens — iOS VoiceOver on the doctors list and its phone reading order (§15.25), and on
     the stat tiles, plus NVDA with Firefox in browse mode on a tile (§15.23 round 5); and, on the
     blog's list at a laptop width (`/ro/blog/`), the site's first forced line breaks (§15.39 round 3

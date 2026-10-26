@@ -165,8 +165,20 @@ export type GlyphButtonProps = GlyphButtonOwnProps &
 // transition list: exactly three properties at rest, border-color pointedly
 // absent, so the outline's border never moves and the focus ring never joins
 // the clock; four under `jump`, where `scale` joins on its own clock.
+// THE FORCED-COLOURS BOUNDARY (2026-10-26) — ui/Button's paragraph of the same
+// name carries the measurement and the reason: in forced colours a solid or a
+// ghost disc lost its edge (its ground repainted to the page's own, its inset
+// hairline dropped with every box-shadow) and drew as a bare glyph — the corner
+// discs, the burger, the dialog's ✕ — so every face wears a 1px currentColor
+// border there and nowhere else. On this atom's fixed square box (border-box)
+// the border takes 1px from inside the box, never from the layout; on outline
+// it adds nothing. Here and not in ui/disc.ts: SpeedDial, the other reader of
+// discBase, is another atom, and its forced colours were not this lane's.
+// KEEP-IN-SYNC with ui/Button's base: GlyphButton.test pins the token.
 const base =
-  'group ' + discBase + ' disabled:pointer-events-none disabled:opacity-50';
+  'group ' +
+  discBase +
+  ' disabled:pointer-events-none disabled:opacity-50 forced-colors:border';
 
 // THE JUMP — Button's `motionClasses`, byte for byte (KEEP-IN-SYNC: edit both
 // or GlyphButton.test's cross-atom pin fails). `still` is this atom's own

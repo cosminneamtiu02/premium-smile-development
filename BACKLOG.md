@@ -21,6 +21,29 @@ never merged).
   get to cookies consent and implementation later" — recorded as CLAUDE.md §12's rider. The
   smaller first step below, `credentialless`, was proposed on 2026-10-01 and sent here by the
   owner on 2026-10-02: "add to backlog cookies".
+- **Is it required? Researched 2026-10-26** (the owner: "is this still a must for impement? do i
+  even need this? i'd prefer not to, but if legally required, add agani to backlog"; research,
+  not legal advice: entry 3's lawyer confirms). NOT STRICTLY REQUIRED, BUT A REAL RISK. No law,
+  court or regulator clearly requires a consent step for this setup, and the map sets no cookies.
+  It stays an accepted risk for three reasons:
+  - (1) the visitor's IP reaches Google on load under "legitimate interest", and a court can reject
+    that basis when a less intrusive way exists: click-to-load, or a picture (LG München I, Google
+    Fonts, 2022, €100);
+  - (2) German regulators read the cookie rule as covering Google's script and a map that loads by
+    itself (DSK, OH Digitale Dienste ¶76). That script writes and removes a sessionStorage test key
+    on every load (COOKIES.md §3);
+  - (3) the US transfer rests on the EU–US Data Privacy Framework, which the General Court upheld
+    in 2025 (Latombe) and which is under appeal (C-703/25 P).
+
+  No decision on an embedded map was found anywhere, and ANSPDCP's cookie fines found (5,000–37,000
+  lei) were all for tracking cookies. The realistic exposure:
+  - Romania: an order to change, possibly a fine; unlikely.
+  - Germany: a visitor's claim of about €100 plus costs, or a competitor's warning letter.
+
+  NO WORK UNTIL A TRIGGER FIRES. Build click-to-load (below; COOKIES.md §7):
+  - before the site is marketed to German patients;
+  - at the first complaint or warning letter;
+  - the day the framework falls.
 - **Today:** the „Ne găsești" map (`sections/ClinicLocation`, on Home, Team and every doctor page)
   loads Google's `<iframe>` with the page, with no consent gate. The only cookie the site itself
   writes is the language cookie (COOKIES.md §2).

@@ -410,7 +410,11 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
   19 of 46 requests) is closed. A note under the map said the IP goes to Google, linked to the policy's map part,
   until the owner removed it on 2026-10-13 (§15.38 round 3): the policy, linked from every footer,
   carries GDPR art. 13's information alone. The IP transfer stays the accepted, deferred risk
-  recorded above.
+  recorded above. *(Researched 2026-10-26, on the owner's question "is this still a must for
+  impement? do i even need this?"; BACKLOG.md entry 1 has the verdict. No law, court or regulator
+  clearly requires a consent step for this map, so it stays an ACCEPTED RISK with three named
+  triggers for click-to-load. A re-probe the same day found Google's script writing and removing
+  one sessionStorage test key on every load (COOKIES.md §3).)*
 - **Analytics is out of scope by owner decision** — historical data explicitly not needed,
   so never install any analytics script. If this ever changes: cookieless only (Plausible/
   Umami/Cloudflare) = one script tag, no banner. Search Console + GBP insights already cover

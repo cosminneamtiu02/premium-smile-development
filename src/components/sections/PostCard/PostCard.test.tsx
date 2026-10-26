@@ -3412,9 +3412,30 @@ describe('PostCard — THE CLAMP, measured (real stylesheet, real faces)', () =>
       // The face does overhang (never vacuous)…
       expect(before, name).toBeGreaterThan(0);
       expect(after, name).toBeGreaterThan(0);
-      // …and the room before and after the text holds it twice over.
-      expect(side, name).toBeGreaterThan(2 * Math.max(before, after));
+      // …and the room before and after the text holds it twice over — the
+      // overhang counted in WHOLE pixels, rounded out. CI's Linux Chromium, at
+      // device scale 1, reports a canvas's ink bounds that way (PR #173's
+      // first CI run, 2026-10-26; its advances it rounds to the nearest pixel,
+      // CLAUDE.md §15.39's Pagination lesson): there the summary's hook,
+      // 1.227px in this Mac's fractions, reads 2, and its 4px room holds it
+      // exactly twice. On the raw reading a strict "more than twice" passed
+      // here and failed there at 4 > 4; counted whole, the two engines read
+      // the same at the two sizes this test renders (Linux reads „f" as its
+      // rounded-out right edge less its rounded advance, which is the arm
+      // rounded out at 16 and 30px, not at every size), and here the check is
+      // stricter than it was: the room must reach 4px where it had to pass
+      // 2 × 1.227 = 2.45.
+      expect(side, name).toBeGreaterThanOrEqual(
+        2 * Math.ceil(Math.max(before, after)),
+      );
       // Between two lines the ink leaves a gap, and the room below is in it.
+      // THIN ON LINUX, RECORDED (the fix's review, 2026-10-26): its whole
+      // pixels leave the 30px title a 1px gap against a 0.75px room — 0.25px
+      // to spare, where this Mac reads 2.18 — so a deeper descender or a
+      // slightly different title size could turn it red there with nothing
+      // clipped. The robust form, not built: measure the true ink apart from
+      // the rounded metrics (the „j" hook case's pixel method, applied to the
+      // line gap).
       expect(gap, name).toBeGreaterThan(0);
       expect(below, name).toBeGreaterThan(0);
       expect(below, name).toBeLessThan(gap);

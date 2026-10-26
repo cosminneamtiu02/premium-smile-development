@@ -11,6 +11,9 @@ An entry keeps its number for good, because CLAUDE.md and code comments cite the
 leaves takes its number with it. Entry 5 — larger text on the Services page — left on 2026-10-10
 on the owner's word ("drop this one"), the day entries 7 and 8 joined. Entry 4 — new words for the
 doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Premium Smile".
+Entry 11 — the threshold scroll steps checked against the „Echipa" dropdown — left on 2026-10-26
+on the owner's word ("ok"), once the scroll steps it was to check had been dropped (2026-10-16,
+never merged).
 
 ## 1 · Cookies — consent for the Google Maps embed
 
@@ -18,6 +21,29 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
   get to cookies consent and implementation later" — recorded as CLAUDE.md §12's rider. The
   smaller first step below, `credentialless`, was proposed on 2026-10-01 and sent here by the
   owner on 2026-10-02: "add to backlog cookies".
+- **Is it required? Researched 2026-10-26** (the owner: "is this still a must for impement? do i
+  even need this? i'd prefer not to, but if legally required, add agani to backlog"; research,
+  not legal advice: entry 3's lawyer confirms). NOT STRICTLY REQUIRED, BUT A REAL RISK. No law,
+  court or regulator clearly requires a consent step for this setup, and the map sets no cookies.
+  It stays an accepted risk for three reasons:
+  - (1) the visitor's IP reaches Google on load under "legitimate interest", and a court can reject
+    that basis when a less intrusive way exists: click-to-load, or a picture (LG München I, Google
+    Fonts, 2022, €100);
+  - (2) German regulators read the cookie rule as covering Google's script and a map that loads by
+    itself (DSK, OH Digitale Dienste ¶76). That script writes and removes a sessionStorage test key
+    on every load (COOKIES.md §3);
+  - (3) the US transfer rests on the EU–US Data Privacy Framework, which the General Court upheld
+    in 2025 (Latombe) and which is under appeal (C-703/25 P).
+
+  No decision on an embedded map was found anywhere, and ANSPDCP's cookie fines found (5,000–37,000
+  lei) were all for tracking cookies. The realistic exposure:
+  - Romania: an order to change, possibly a fine; unlikely.
+  - Germany: a visitor's claim of about €100 plus costs, or a competitor's warning letter.
+
+  NO WORK UNTIL A TRIGGER FIRES. Build click-to-load (below; COOKIES.md §7):
+  - before the site is marketed to German patients;
+  - at the first complaint or warning letter;
+  - the day the framework falls.
 - **Today:** the „Ne găsești" map (`sections/ClinicLocation`, on Home, Team and every doctor page)
   loads Google's `<iframe>` with the page, with no consent gate. The only cookie the site itself
   writes is the language cookie (COOKIES.md §2).
@@ -458,11 +484,15 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
     Colegiul Medicilor Stomatologi din România — `controller.profession` in
     `src/messages/privacy/*.json`; correct it if any doctor's title was granted elsewhere;
   - **the prices line** — „Prețurile sunt exprimate în RON și includ toate taxele."
-    (`services.prices.taxNote` ×5): confirm it is true of every price on the list;
+    (`services.prices.taxNote` ×5): confirm it is true of every price on the list — RESOLVED
+    2026-10-26: the owner confirmed it („confirm asta", answering "Confirm „prices include all
+    taxes" is true"), so the line stands as written;
   - **the patient part** — the page says the patient file is handled at the clinic, where the
     patient is informed about it (`contact.patient`); align it with the clinic's own patient
-    privacy notice, if one exists, and say whether the clinic has a data protection officer
-    (none is named today; a single clinic is normally not required to have one);
+    privacy notice, if one exists. Whether the clinic has a data protection officer was asked
+    here too, until the owner DROPPED the question on 2026-10-26 ("drop this too: Whether the
+    clinic has a data protection officer (usually not required)"): the policy names none, and a
+    single clinic is normally not required to have one;
   - **a lawyer's read of the Romanian text**, then the four translations confirmed — EN, DE, FR
     and IT are Claude's drafts, flagged in this lane's record (§15.38 lists the points the drafts
     raised: the GDPR wording for art. 6(1)(b), the one-month reply that GDPR lets extend by two,
@@ -490,6 +520,9 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
   with this pr in the backlog to reoptimize site for all static content". The ribbon fix (CLAUDE.md
   §15.26 round 7) is the trigger: it was a performance question too, and it showed how much the
   browser can still be spared.
+- **When (the owner, 2026-10-26: "pictures and site speed optimization and seo optimisation comes
+  when i'll have all the content."):** once all the content is in — entry 7's list, the real
+  photographs and texts — because every new picture and text changes what is measured.
 - **What it is:** one pass over everything the static export serves — the HTML of every locale ×
   route, the stylesheet, the client islands' JavaScript, the fonts, the optimised pictures — for
   weight and for the work the visitor's browser does with it, against CLAUDE.md §10.6, which already
@@ -545,10 +578,17 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
     card on 2026-10-13 (§15.23 round 7), so no placeholder "Thursday: closed" remains for a
     patient to act on. Also Claude's drafts, from the same day: the courses' eyebrow „Repere din
     drumul meu spre specializare" in five languages, and each doctor's second biography paragraph
-    and „Cursuri" tile written around it;
+    and „Cursuri" tile written around it. ESTIMATES ARE ENOUGH for each doctor's four „în cifre"
+    numbers (the owner, 2026-10-26: "and in cases of dr pages for the same category component
+    elements also just estimations"): three tiles print their number with „+", "at least", so an
+    estimate rounded down stays true; the „Cursuri" tile is today a bare count of the course rows
+    the page lists, so an estimate there takes the „+" too and never says fewer than those rows
+    (tests/unit/team-data.test.ts);
   - the clinic's three numbers on Home and Team — 16+ years, 8.000+ patients, 11.000+ procedures —
     placeholders too (`clinicStats`, §15.23 round 5): no clinic-wide count exists in the
-    repository or on the old site.
+    repository or on the old site. ESTIMATES ARE ENOUGH here too (the owner, 2026-10-26: "add at
+    those that i want just some estimations: Years open / Total patients / Total procedures"):
+    the clinic's own round figures replace them, rounded down under their „+".
 - **`src/lib/prices/prices.ts`:** five rows read off a skewed photograph of the printed tariff
   carry `TODO(owner): verify against the printed sheet` (§15.20).
 - **`src/lib/hero-slides/hero-slides.ts`:** the Home opener's three slogans and their picture
@@ -612,23 +652,148 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
 - **The work:** the owner sends each value; it lands in its file, where the data tests and the
   CMSR scan (§13) check it.
 
+THE LIST FOR THE CLINIC (the owner, 2026-10-26: "le vreau cu liniuta pe romana, la ce ii legat de
+doctori vreau o lista cu fiecar doctor individual ce ii trebuie, odata ca si fotografie, odata
+pentru pagina respectivilor"), in Romanian — what to ask the clinic for:
+
+**Contact**
+
+- numărul de WhatsApp, dacă e altul decât telefonul clinicii
+- o adresă de e-mail pentru pacienți
+- o adresă de e-mail pentru cererile privind datele personale (poate fi aceeași)
+- pagina de Facebook a clinicii, dacă există
+- confirmarea programului: luni–vineri 09:00–19:00, sâmbătă și duminică închis
+- domeniul site-ului (adresa web a clinicii)
+
+**Date legale (pentru pagina de confidențialitate)**
+
+- denumirea firmei
+- CUI
+- numărul de la Registrul Comerțului
+- sediul social
+- forma juridică: SRL, cabinet medical individual sau societate civilă medicală
+- autorizația DSP și înscrierea în Registrul unic al cabinetelor medicale
+- nota de informare a clinicii pentru pacienți, dacă există
+- cât timp se păstrează fișele pacienților
+
+**Medicii — pentru fiecare medic, separat**
+
+**Dr. Malea (Sabău) Oana Bianca — medic specialist în protetică dentară și parodontologie**
+
+- fotografia: de la talie în sus, cu fundalul eliminat (sau pe un fundal simplu, îl eliminăm noi)
+- pentru pagina medicului:
+  - o biografie scurtă (3 paragrafe)
+  - un citat personal (filozofia de lucru)
+  - cursurile și specializările (5–6 repere)
+  - cifrele, ca estimări: ani de experiență, pacienți, intervenții, cursuri
+- acordul scris pentru apariția pe site
+- de confirmat: specialitatea, așa cum e scrisă mai sus
+
+**Dr. Toma Lucian — medic specialist în protetică dentară, specializat în endodonție microscopică**
+
+- fotografia: de la talie în sus, cu fundalul eliminat (sau pe un fundal simplu, îl eliminăm noi)
+- pentru pagina medicului:
+  - o biografie scurtă (3 paragrafe)
+  - un citat personal (filozofia de lucru)
+  - cursurile și specializările (5–6 repere)
+  - cifrele, ca estimări: ani de experiență, pacienți, intervenții, cursuri
+- acordul scris pentru apariția pe site
+- de confirmat: specialitatea, așa cum e scrisă mai sus
+
+**Dr. Nicu Elena Alina — medic specialist în parodontologie**
+
+- fotografia: de la talie în sus, cu fundalul eliminat (sau pe un fundal simplu, îl eliminăm noi)
+- pentru pagina medicului:
+  - o biografie scurtă (3 paragrafe)
+  - un citat personal (filozofia de lucru)
+  - cursurile și specializările (5–6 repere)
+  - cifrele, ca estimări: ani de experiență, pacienți, intervenții, cursuri
+- acordul scris pentru apariția pe site
+- de confirmat: specialitatea, așa cum e scrisă mai sus
+
+**Dr. Ivașcu-Zugravu Cătălina — medic specialist în ortodonție și ortopedie facială**
+
+- fotografia: de la talie în sus, cu fundalul eliminat (sau pe un fundal simplu, îl eliminăm noi)
+- pentru pagina medicului:
+  - o biografie scurtă (3 paragrafe)
+  - un citat personal (filozofia de lucru)
+  - cursurile și specializările (5–6 repere)
+  - cifrele, ca estimări: ani de experiență, pacienți, intervenții, cursuri
+- acordul scris pentru apariția pe site
+- de confirmat: scrierea numelui cu diacritice (Ivașcu, Cătălina) și specialitatea — „ortopedie facială" sau denumirea oficială, „ortopedie dento-facială"
+
+**Dr. Opriș Mircea — medic specialist în chirurgie dento-alveolară**
+
+- fotografia: de la talie în sus, cu fundalul eliminat (sau pe un fundal simplu, îl eliminăm noi)
+- pentru pagina medicului:
+  - o biografie scurtă (3 paragrafe)
+  - un citat personal (filozofia de lucru)
+  - cursurile și specializările (5–6 repere)
+  - cifrele, ca estimări: ani de experiență, pacienți, intervenții, cursuri
+- acordul scris pentru apariția pe site
+- de confirmat: scrierea numelui cu diacritice (Opriș) și specialitatea
+
+**Dr. Bozdog Horațiu — medic specialist în chirurgie dento-alveolară**
+
+- fotografia: de la talie în sus, cu fundalul eliminat (sau pe un fundal simplu, îl eliminăm noi)
+- pentru pagina medicului:
+  - o biografie scurtă (3 paragrafe)
+  - un citat personal (filozofia de lucru)
+  - cursurile și specializările (5–6 repere)
+  - cifrele, ca estimări: ani de experiență, pacienți, intervenții, cursuri
+- acordul scris pentru apariția pe site
+- de confirmat: scrierea numelui cu diacritice (Horațiu) și specialitatea
+
+**Personalul de sprijin — pentru fiecare: o fotografie portret, pe verticală (format 3:4), și acordul scris pentru apariția pe site**
+
+- Stan Ioana Ecaterina — registratoare medicală
+- Gurgu Aurelia — asistentă medicală
+- Cândea Angelica — recepție, programări și comunicarea cu pacienții
+
+**Cifrele clinicii („În cifre") — ca estimări**
+
+- de câți ani funcționează clinica
+- numărul total de pacienți
+- numărul total de intervenții
+
+**Prețuri**
+
+- de verificat 5 rânduri, citite dintr-o fotografie neclară a listei de prețuri:
+  - Extracție corp străin de pe canalul radicular (ac) — 300 lei
+  - Extracție corp străin de pe canalul radicular (pivot, DCR) — 220 lei
+  - Kemeny flexibil — 550 lei
+  - Gutieră de repoziționare — 1.100 lei
+  - Implant dentar Bredent — 3.200 lei
+- confirmarea că toate prețurile sunt la zi
+
+The items the owner supplies himself are off this list but still owed in the bullets above: the
+reviewers' consent, the blog's articles and their photos, the Home opener's slogans, the Team
+page's heading and the placeholder posts.
+
 ## 8 · Decisions parked until launch
 
-- **Why it waits:** each is recorded as the owner's to make before launch, and none blocks the
-  work in progress. Added on the owner's word, 2026-10-10.
+- **Why it waits:** each was recorded as the owner's to make before launch, and none blocks the
+  work in progress. Added on the owner's word, 2026-10-10. On 2026-10-26 the owner settled four of
+  the five (below); only the final host is still open.
 - **The decisions:**
   - translated URLs — `/de/leistungen` instead of today's shared English slugs (`/de/services`,
     and since 2026-10-10 `/ro/privacy` for the policy page, which could be `/ro/confidentialitate`).
     Decide before launch: changing a published URL afterwards needs redirects (CLAUDE.md §5,
-    §15.3);
-  - EUR prices on the four foreign-language pages — every price is in RON today, on every page
-    (§8.3, §15.4; §15.20 records a EUR column "maybe, on every language");
+    §15.3). DECIDED 2026-10-26: translated URLs, being built in their own lane
+    (`rework/localized-slugs`; the owner: "this sound sensational, but i want a separate worktree
+    working on it"). The item stays until that lane lands;
   - the share image — the picture WhatsApp and Facebook show beside a link to the site, the Open
-    Graph image (§10.3; §15.6's last open item, for which the logo mark is the natural source);
+    Graph image (§10.3; §15.6's last open item, for which the logo mark is the natural source).
+    DECIDED 2026-10-26: the clinic's logo mark (the owner: "here i go with your idea: The
+    link-preview image (the logo is the natural choice)"), built with the SEO work (entry 10);
   - the final host — Cloudflare Pages is the recommendation, not yet confirmed; GitHub Pages is
     the interim host only and will not be the launch host (§15.2);
   - the purple — whether `accent-decorative` #7A6D9C moves to the logo's own lilac #8576B1, which
     re-tints the lilac tints, the auras and the ribbon with it (§15.1's one open sub-item, §15.28).
+    DECIDED FOR NOW 2026-10-26: #7A6D9C stays (the owner: "keep like it is now at the moment"),
+    open to revisiting.
+- **Dropped 2026-10-26:** EUR prices on the foreign-language pages — lei (RON) everywhere, no
+  euros (the owner: "drop this: Euro prices on the foreign-language pages, or lei everywhere.").
 
 ## 9 · Re-check the privacy policy against the website
 
@@ -691,6 +856,9 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
   owner halted on 2026-09-06 (§15.17), and none of it reached develop. The plan is
   PHASE4_SEO_PLAN.md §3, §4 and §7 — its §6 and §7 predate the clinic's photos, the map, the
   real reviews and the favicon, so read them as the plan for the machinery, not as today's state.
+- **When (the owner, 2026-10-26: "pictures and site speed optimization and seo optimisation comes
+  when i'll have all the content."):** the work starts once all the content is in (entry 7), and
+  the share image, the logo mark (entry 8), is built with it.
 - **Today (develop `823bce1`'s build, 2026-10-11):** no page carries the clinic's structured
   data (the `Dentist` JSON-LD), a canonical link, links to its other languages (hreflang) or
   Open Graph tags; there is no `sitemap.xml` and no `robots.txt`; Home and Services are titled
@@ -706,96 +874,21 @@ doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Pre
   - a title and a meta description for every page in every language, "Service — Clinic — City"
     (§10.3) — the words are the owner's (§15.17), drafted by Claude only on his word; the doctor
     pages' pattern is in PHASE4_SEO_PLAN.md §4;
-  - Open Graph tags and the share image (entry 8);
+  - Open Graph tags and the share image — the clinic's logo mark, decided 2026-10-26 (entry 8),
+    built with this work;
   - `sitemap.xml` with hreflang alternates and `x-default`, hreflang links in every page's head,
     a self-referencing canonical, and `robots.txt` pointing at the sitemap (§10.4);
   - optionally, `Service` markup on the Services page (§10.2; the archived `servicesJsonLd`);
   - at launch: the sitemap submitted in Google Search Console, and the owner claims the Google
-    Business Profile (§10.7).
+    Business Profile (§10.7) — for both, the clinic's Google Business Profile LOGIN, to get from
+    the clinic (the owner, 2026-10-26: "add this for launch backlog: The clinic's Google Business
+    Profile login, to claim it and submit the sitemap at launch"); Search Console still verifies
+    the domain itself, by a DNS record or a file on the site.
 - **Depends on:** the production domain (entry 7 — every canonical, hreflang link, sitemap row
   and the JSON-LD's `url` is built from it); translated URLs (entry 8 — once Google has indexed
-  a URL, changing it needs a redirect); the share image (entry 8). Already done: the Footer's
-  address and phone on every page (§10.5). Core Web Vitals (§10.6) are entry 6.
-
-## 11 · The threshold scroll steps against the „Echipa" dropdown — check them together
-
-- **Why it waits:** the owner, 2026-10-15: "add to backlog to check if a bug arrises from the 2
-  things that are right now being developed, a trashhold based scroll focus vs a take to doctor
-  card from top bar dropdown" — and: "just add it to the backlog, do not fix anything yet". Both
-  are lanes in flight — uncommitted, each branched from develop `bfadb0a`, neither aware of the
-  other — so the check needs a tree that has both: it belongs to whichever lane merges SECOND (it
-  rebases onto the first), or to develop once both are in, before the next promotion to main.
-  The entry leaves the list in the lane that runs it.
-- **The two pieces, as their code stood on 2026-10-15** (their records, CLAUDE.md §15.26 round 8
-  and §15.40, are not on develop yet, and either lane may still change):
-  - THE STEPS — `rework/doctor-scroll-steps`, NEW `src/lib/scroll-steps`: inside the doctors band
-    (on Home and on the Team page) the page stops scrolling; the wheel or a finger adds up as
-    intent and, past 140px of it, the page glides (650ms) to the next card, the card being left
-    first hurried to the end of its ribbon stretch (a scroll key counts as the whole 140px). A
-    card that fits the window under the top bar's 6rem strip rests CENTRED there; a taller one
-    with its top 1rem under that strip (112px). A page left BETWEEN two such resting places is
-    glided onto the nearer one by THE SETTLE — 140ms after the last scroll the steps did not
-    make, and only within 4s of a wheel, a touch, a pointer press or a scroll key; any focus
-    move, and any other key, cancels that window.
-  - THE DROPDOWN — `rework/nav-dropdowns`, NEW `src/lib/nav-sections`: the top bar's „Echipa"
-    opens on hover a card listing the six doctors — on a phone, a ⌄ list under „Echipa" in the
-    menu — each a plain link to `/{locale}/team/#{doctor id}`; each card's ribbon station wears
-    its doctor's id (DoctorShowcase's D13, THE ANCHOR), so the browser's own jump — smooth,
-    through the html's `scroll-behavior` — rests the card's top 136px down (the root's 6rem
-    `scroll-padding-top` and the station's 2.5rem `scroll-margin-top`).
-- **Where they may collide — read off both lanes' code, NOT measured:**
-  1. TWO RESTING PLACES FOR ONE CARD — 136px against centred, or 112px — so after a dropdown jump
-     the page rests BETWEEN two of the steps' resting places, and:
-     - THE SETTLE may move it again once the jump stops: a second, shorter glide onto the steps'
-       own place for that card. Whether it runs hangs on details neither lane has settled —
-       Chromium focuses a clicked link, which cancels the settle's window, and Safari does not;
-       whether the dropdown hands focus back to „Echipa" as it closes is not written yet;
-     - the FIRST NUDGE skips the threshold: from between two resting places THE DECISION enters
-       a card at once, so one wheel tick, a short swipe or one arrow key after the jump glides to
-       another doctor — DOWN to the next one where the card fits under the strip (every phone:
-       the cards are about 480–550px tall at 390×844), UP to the previous one's end where it is
-       taller (the steps' own header names 1366×633, 1536×730 and 1920×945) — where inside the
-       band a step takes 140px of intent;
-     - the steps do not learn where the jump went: their current step stays the one before it
-       (none after a page load), so the next step hurries the wrong card's ribbon stretch while
-       the jumped-to card's keeps drawing at its own pace.
-  2. A CLICK DURING A STEP. A step lasts about a second (its hurry, then the glide, which writes
-     the page's position every frame). A script scroll of the page during the browser's smooth
-     fragment glide CANCELS that glide (§15.20 round 6 measured it for `scrollIntoView`, in
-     Chromium and WebKit), and the steps' glide gives way only once something else has moved the
-     page more than 2px — so a dropdown click in that second may end on the step's card, or on
-     neither.
-  3. THE KEYS. The steps take the arrow keys, PageUp/PageDown and Space from the window unless the
-     key was already prevented (Space on a link or a button is left alone). So with focus inside
-     the open dropdown and the page resting in the band, an arrow key the dropdown does not
-     prevent moves the page a whole card behind it — wrong if the dropdown moves between its
-     entries with the arrows (it must then prevent them), a choice to confirm if it leaves the
-     arrows to the page.
-- **How to check:** on the built export with reduced motion OFF — the visual net runs every story
-  with `reducedMotion: 'reduce'` (playwright.config.ts), where the steps stand down and the jump
-  is instant, so it can never see this — in Chromium AND WebKit (case 1 differs between them; the
-  e2e suite is Chromium-only, §15.20 round 5), RO + DE, at 1366×633 (a doctor card taller than
-  the space under the strip), in a taller window where one fits, and on a phone through the
-  menu's ⌄ list (390×844, where the cards fit; the open menu freezes the page, which stands the
-  steps down until it closes). For each doctor, from the top of `/ro/team/` and from inside the
-  band: open „Echipa" and click — a second after the page stands still, the clicked doctor's card
-  is the one on screen and nothing moved again (or only onto that same card); then one small
-  scroll or swipe down, one up and one arrow key; then a click while a step glides; then the
-  arrow keys inside the open dropdown. Last, a cold load of
-  `/ro/team/#{id}` on a slowed connection: the steps move nothing at start, so it should land, but
-  §15.20 round 6 found fragment loads fragile. If `rework/team-hero` is in by then, measure with
-  it: it puts a hero above the band on the Team page and moves every card down.
-- **Levers, if it breaks (none is a decision, and nothing is built):**
-  - ONE RESTING PLACE — the price list's answer to "a click and a scroll cannot disagree" (§15.20
-    round 5): the steps write each station's planned resting place as its `scroll-margin-top`, so
-    the browser's own jump comes to rest ON a step. It costs `lib/scroll-steps` its "writes
-    nothing but the window's scroll position", and D13 its 2.5rem — a jumped-to doctor card would
-    no longer rest on the price cards' line;
-  - THE STEPS ADOPT A JUMP — on a `hashchange`, and at load when the URL names a station, they
-    take that card as the current step and its position as resting there (a second click on the
-    same doctor fires no `hashchange`, though the browser scrolls again);
-  - THE STEPS GIVE WAY TO A CLICK — a click on an in-page link ends a step under way at once, so
-    the browser's jump is the only movement left.
+  a URL, changing it needs a redirect; decided 2026-10-26, in their own lane); the share image
+  (entry 8 — decided 2026-10-26: the logo mark). Already done: the Footer's address and phone on
+  every page (§10.5). Core Web Vitals (§10.6) are entry 6.
 
 ## 12 · The patients' reviews — the „[…]" cuts and the CMSR's testimonial rule
 

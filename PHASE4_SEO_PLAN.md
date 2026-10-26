@@ -97,7 +97,7 @@ Decisions that ride with it (D-S1-4…8):
 | `Dentist.url` | `absoluteUrl('ro', '/')` — the ro home; root `/` is a redirect stub |
 | hreflang `x-default` | the `ro` URLs (locales.ts charter) |
 | JSON-LD `image` | **omitted** — §15.6: no asset in repo; inventing a URL = dead link (recommended field, not required — zero-errors target unaffected) |
-| `og:image` | **omitted** — §15.6 blocks the share image |
+| `og:image` | **omitted** — §15.6 blocks the share image *(unblocked 2026-10-26: the share image is the logo mark, §15.6)* |
 | `og:locale` map | ro→`ro_RO`, en→`en_GB` (Union Jack precedent §8.5 — **confirm en_GB vs en_US**), de→`de_DE`, fr→`fr_FR`, it→`it_IT` |
 | Blog pages | `alternates=false` → canonical only, no languages map (§10.4) — *SUPERSEDED 2026-10-14: the blog is in every language (CLAUDE.md §10.4, §15.39 round 3), so its pages take the alternates every page takes; a cherry-pick of S1 drops this branch* |
 
@@ -170,7 +170,7 @@ These bind the copy regardless of who writes it:
 - **Prices are data, not copy** (D-S2-6): values live in `lib/services.ts`, names and
   descriptions are message keys, rendering is `Intl.NumberFormat` RON + ICU `priceFrom`
   (§8.2/§8.3); only the 3 sourced tiers exist (consultation 100 · cleaning 250 ·
-  whitening 800 RON); EUR display stays parked (§15.4). Full service list + prices =
+  whitening 800 RON); EUR display stays parked (§15.4) *(dropped 2026-10-26: RON everywhere)*. Full service list + prices =
   TODO(owner).
 - **Copy note at 320px:** site-wide `hyphens: auto` may split "Whats-App" in prose
   (labels are exempt per §15.14, prose is not) — rephrase or accept, owner's call.
@@ -191,7 +191,7 @@ These bind the copy regardless of who writes it:
 | Item | What it unblocks |
 | --- | --- |
 | `lib/clinic/clinic.ts` real NAP — name, phone, address, geo and hours LANDED 2026-09-30 (CLAUDE.md §15.27); still owed: the WhatsApp number (the phone's for now) and **url** | `url` gates real canonicals, hreflang and JSON-LD `url`; the rest fills the Dentist object, Footer and ContactModal in one move (§10.1) |
-| §15.6 logo → vectorized SVG → **favicon** + OG share image | favicon is the ONLY Lighthouse deduction; OG image + JSON-LD `image` fields un-omit |
+| §15.6 logo → vectorized SVG → **favicon** + OG share image | favicon is the ONLY Lighthouse deduction; OG image + JSON-LD `image` fields un-omit *(the mark landed 2026-10-01 and is the favicon, §15.31; it is the share image too, decided 2026-10-26, §15.6)* |
 | og:locale confirmation | `en_GB` vs `en_US` (D-S1-6) |
 
 ## 8. Follow-ups absorbed from the run (recorded so they're not lost)

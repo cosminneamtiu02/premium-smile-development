@@ -146,12 +146,14 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // §15.1's `--accent-decorative` #7a6d9c ("pending hue confirm vs the real
 // logo") is a different lavender — re-setting that role, and the ribbon's
 // #8377a3, to the logo's hue repaints tints, auras and keywords across the
-// site and was NOT done here (§15.28 has the numbers). THE FAVICON LANDED
+// site and was NOT done here (§15.28 has the numbers); on 2026-10-26 the owner
+// kept #7a6d9c for now, open to revisiting (§15.1). THE FAVICON LANDED
 // 2026-10-01 (owner: "use the logo from top bar also in the tab"): this very
 // file is the browser tab's icon — src/app/icon.svg is a byte copy of it and
 // src/app/favicon.ico is rasterised from it (CLAUDE.md §15.31; the copy is
 // pinned by tests/unit/logotype-census.test.ts, so a re-cut mark that forgets
-// the tab fails there). The OG share image is §15.6's last open item.
+// the tab fails there). The OG share image, §15.6's last open item until
+// 2026-10-26, is this mark too, on the owner's word; the SEO work builds it.
 //
 // NO `loading` attribute, i.e. the HTML default of EAGER, and that is a
 // decision rather than an omission: the SAL badge is `lazy` because it sits at

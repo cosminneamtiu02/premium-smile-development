@@ -104,9 +104,9 @@ import {
 // no message file itself (D1): the story hands it the finished strings, as
 // the page does.
 
-const EYEBROW_RO = 'Familia Premium Smile';
+const EYEBROW_RO = 'Echipa Premium Smile';
 const TITLE_RO = 'Specialiștii cu care ne mândrim';
-const EYEBROW_DE = 'Die Premium-Smile-Familie';
+const EYEBROW_DE = 'Das Premium-Smile-Team';
 const TITLE_DE = 'Spezialisten, auf die wir stolz sind';
 
 /** The Team page's hero, Romanian and German (D12) — the page's own keys. */

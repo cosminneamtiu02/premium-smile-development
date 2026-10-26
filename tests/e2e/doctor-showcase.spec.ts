@@ -651,7 +651,7 @@ test.describe('/ro/ — Home keeps the band opener (DoctorShowcase D12)', () => 
     await expect(
       region.getByRole('heading', { level: 2, name: BAND_TITLE.ro }),
     ).toBeAttached();
-    await expect(region.getByText('Familia Premium Smile')).toBeAttached();
+    await expect(region.getByText('Echipa Premium Smile')).toBeAttached();
     const stations = region.locator(STATION);
     const count = await stations.count();
     expect(count).toBeGreaterThan(0);

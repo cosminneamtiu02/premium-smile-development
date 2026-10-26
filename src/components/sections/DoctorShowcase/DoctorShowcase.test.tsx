@@ -115,7 +115,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const EYEBROW = 'Familia Premium Smile';
+const EYEBROW = 'Echipa Premium Smile';
 const TITLE = 'Specialiștii cu care ne mândrim';
 const LABEL = 'Mai multe despre mine';
 

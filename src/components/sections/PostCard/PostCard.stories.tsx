@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { createTranslator } from 'next-intl';
 import { expect, within } from 'storybook/test';
@@ -28,12 +28,14 @@ import {
 } from './PostCard';
 import { unitsAcrossLines } from './PostCard.fixtures';
 
-// EIGHT stories, and the count is the honest one: the everyday card, a post
+// NINE stories, and the count is the honest one: the everyday card, a post
 // with no categories, the long-word stress, the German stress, the Italian
-// footer row, the hover jump the pixel net cannot photograph, and the Home
+// footer row, the hover jump the pixel net cannot photograph, the Home
 // band's MINIATURE beside its full card, in Romanian and in German
 // (2026-10-17 — they replace the same day's two narrow-card stories, which
-// left with the title's narrow steps: PostCard's THE NARROW STEPS, REMOVED).
+// left with the title's narrow steps: PostCard's THE NARROW STEPS, REMOVED),
+// and THE CLAMP, a card as the Home band's flat row holds it beside the same
+// card unclamped (2026-10-25).
 // The export
 // NAMES are load-bearing — each names a baseline file
 // (`sections/post-card/default-…`) — so this list IS the section's
@@ -75,14 +77,15 @@ import { unitsAcrossLines } from './PostCard.fixtures';
 // from it, and the summary's `hyphens: auto` picks its dictionary there —
 // §15.14; the title never splits a word, PostCard's THE TITLE NEVER SPLITS A
 // WORD, which LongWords and GermanStress lay out), and the
-// frame's two neighbours follow it; six pin a VIEWPORT, for the Vitest
+// frame's two neighbours follow it; seven pin a VIEWPORT, for the Vitest
 // storybook project: NoTags and Italian at the laptop's 1536 — three cards to
-// a row, in the band scale — Miniature at the laptop's 1536 too, so the
-// pair stands in the band's design pixel, GermanStress and MiniatureGerman at
-// the phone's 390, in the theme's, and LongWords at the 320 stress width —
-// one column, the footer row wrapped. The visual net ignores the pins (it sets its own page
-// size per project), which is why every play DERIVES what it expects from the
-// boxes it measures, never from the pinned width.
+// a row, in the band scale — Miniature and Clamped at the laptop's 1536 too,
+// so each pair stands in the band's design pixel, GermanStress and
+// MiniatureGerman at the phone's 390, in the theme's, and LongWords at the
+// 320 stress width — one column, the footer row wrapped. The visual net
+// ignores the pins (it sets its own page size per project), which is why
+// every play DERIVES what it expects from the boxes it measures, never from
+// the pinned width.
 //
 // ── THE FRAME IS THE PAGE'S (sections/PostList — the lane contract's D9 and
 // D12): a full-bleed <section> that paints, a ui/Container that measures the
@@ -108,14 +111,26 @@ import { unitsAcrossLines } from './PostCard.fixtures';
 // 0.65. Their widths are written in the band's own spacing step (inline
 // styles: Tailwind reads stories too), so on a laptop both stand in the band's
 // design pixel and on a phone in the theme's. The FULL card is the story's
-// args with the share taken off, at the list's <h2>, its own picture hint;
-// the MINIATURE is the story itself — what the Home band passes: the share,
-// `headingLevel` 3 (its <h3> under the band's <h2>, PostCard's THE TITLE'S
-// LEVEL) and a picture hint of its own, MINIATURE_SIZES (THE `sizes`,
-// OVERRIDDEN). Their plays measure the share: each text at it, the picture
-// and the content box to the px residuals PostCard records, the frame in CSS
-// px. No carousel is rendered: the frame shows the pair, and
+// args with the share taken off, at the list's <h2>, its own picture hint
+// and its own jump; the MINIATURE is the story itself — what the Home band
+// passes: the share, `headingLevel` 3 (its <h3> under the band's <h2>,
+// PostCard's THE TITLE'S LEVEL), a picture hint of its own, MINIATURE_SIZES
+// (THE `sizes`, OVERRIDDEN), and `jump={false}`, its carousel growing the
+// card's slot instead (THE JUMP, A PAGE'S TO TURN OFF). Their plays measure
+// the share: each text at it — the chips' label at twelve of the miniature's
+// own pixel, 12/16 of its summary wherever the frame stands, and its full
+// card's share only in the theme's pixel (PostCard's THE CHIPS FOLLOW THE
+// PIXEL) — every text of the miniature in its theme ratio to its summary,
+// the picture and the content box to the px residuals PostCard records, the
+// frame in CSS px. No carousel is rendered: the frame shows the pair, and
 // sections/BlogCarousel's stories show the band.
+// THE CLAMP FRAME (`parameters.frame: 'clamp'`, 2026-10-25) is the flat
+// row's clamp instead (PostCard's THE CLAMP, A PAGE'S TO SWITCH ON): the same
+// band holding the story's card twice in the blog list's three-across slot —
+// the flat row's card at the theme's pixel, FULL_SLOT — first as a page that
+// sets nothing draws a `clampable` card, then with the page's four variables
+// inline on its slot (`CLAMP_ON`, never classes). Its play counts each
+// card's title and summary lines and reads the clamp's computed values.
 //
 // ── WHAT THE PLAYS READ, AND WHAT THEY CANNOT. Every geometry number below is
 // a LAYOUT value — a computed size, an offset, or a rectangle taken relative
@@ -137,9 +152,10 @@ import { unitsAcrossLines } from './PostCard.fixtures';
 // owner's reference read off the class, its declaration found by NAME and
 // never spelled whole here (Tailwind reads stories too, and
 // tests/unit/design-scale.test.ts holds every scanned file to its D-LIT
-// RULE) — and holds the chips, their inset and their gap to the atom's own
-// lengths in that pixel, at whatever width the story is handed. The exact
-// reading at the owner's window is PostCard.test.tsx's.
+// RULE), a miniature's floor counted in the pixel it draws in (PostCard's
+// THE CHIPS) — and holds the chips, their inset and their gap to the atom's
+// own lengths in that pixel, at whatever width the story is handed. The
+// exact reading at the owner's window is PostCard.test.tsx's.
 // THE CHIPS ARE TAGS, NOT BUTTONS (PostCard's THE TAGS): the same plays read
 // each chip's COMPUTED paint — its four edges and its label the `--accent`
 // token, its ground the white `--surface`. A play cannot park the real
@@ -285,6 +301,12 @@ const GERMAN_STRESS = {
  *  (PostCard's THE FOOTER ROW). */
 const ITALIAN = contentOf('it', EVERYDAY, { described: true });
 
+/** THE CLAMP's post, read from the JSON by its slug: „Coroane și punți
+ *  dentare: care e diferența" — its title on three lines in the flat row's
+ *  card up to the owner's window, and its summary on five (PostCard's THE
+ *  CARD IT DRAWS), so its clamp shows on both. */
+const CROWNS = contentOf('ro', 'coroane-si-punti-dentare', { described: true });
+
 /** The frame's two neighbours (THE FRAME IS THE PAGE'S), by slug: two more
  *  of the index's posts, in the story's language, their pictures decorative
  *  as on the page. */
@@ -352,21 +374,25 @@ const SHARE = 0.65;
  *  stand-in's estimate — the Home band derives its own. */
 const MINIATURE_SIZES = '20rem';
 
-/** One slot of THE MINIATURE FRAME: a label over the card, `width` wide and
- *  never shrunk. Inline styles, never classes: Tailwind reads stories too,
- *  and a class only this frame wore would ship as a rule. */
+/** One slot of THE MINIATURE FRAME or THE CLAMP FRAME: a label over the
+ *  card, `width` wide and never shrunk, carrying any custom properties it is
+ *  handed down to the card (THE CLAMP's four, the page's). Inline styles,
+ *  never classes: Tailwind reads stories too, and a class only this frame
+ *  wore would ship as a rule. */
 const Slot = ({
   slot,
   label,
   width,
+  variables = {},
   children,
 }: {
-  slot: 'full' | 'miniature';
+  slot: 'full' | 'miniature' | 'whole' | 'clamped';
   label: string;
   width: string;
+  variables?: CSSProperties;
   children: ReactNode;
 }): ReactElement => (
-  <div data-slot={slot} style={{ width, flexShrink: 0 }}>
+  <div data-slot={slot} style={{ ...variables, width, flexShrink: 0 }}>
     <Eyebrow>{label}</Eyebrow>
     <div style={{ marginTop: 'calc(var(--spacing) * 3)' }}>{children}</div>
   </div>
@@ -407,6 +433,7 @@ const MiniatureFrame = ({
                 miniature={undefined}
                 headingLevel={undefined}
                 sizes={undefined}
+                jump={undefined}
                 className={undefined}
               />
             </Slot>
@@ -424,14 +451,70 @@ const MiniatureFrame = ({
   );
 };
 
+/** THE CLAMP's four variables as the page sets them in the flat row
+ *  (sections/BlogCarousel's THE FLAT ROW): the box, the clip, two lines of
+ *  the title and two of the summary — here inline on a slot, never classes
+ *  (Slot's rule). */
+const CLAMP_ON = {
+  '--clamp-box': '-webkit-box',
+  '--clamp-clip': 'hidden',
+  '--title-lines': '2',
+  '--summary-lines': '2',
+} as CSSProperties;
+
+/** THE CLAMP FRAME (the header): the page's band and its scale, and the
+ *  story's card twice in the blog list's three-across slot — the flat row's
+ *  card at the theme's pixel — first as a page that sets nothing draws it,
+ *  then under THE CLAMP's four variables on its slot. The two wrap where the
+ *  column cannot hold both. */
+const ClampFrame = ({
+  args,
+  children,
+}: {
+  args: CardArgs;
+  children: ReactNode;
+}): ReactElement => (
+  <section className="bg-page">
+    <Container>
+      <div className={cx(bandColumnClasses, bandScaleClasses, 'py-10')}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+            gap: 'calc(var(--spacing) * 8)',
+            containerType: 'inline-size',
+          }}
+        >
+          <Slot
+            slot="whole"
+            label="Fără variabilele paginii: textul întreg"
+            width={FULL_SLOT}
+          >
+            <PostCard {...args} />
+          </Slot>
+          <Slot
+            slot="clamped"
+            label="Rândul plat: cel mult două rânduri"
+            width={FULL_SLOT}
+            variables={CLAMP_ON}
+          >
+            {children}
+          </Slot>
+        </div>
+      </div>
+    </Container>
+  </section>
+);
+
 /** The story's pinned language, for its neighbours — Romanian for any other
  *  the toolbar may flip to (the frame's languages are the stories'). */
 const languageOf = (locale: unknown): Language =>
   locale === 'de' || locale === 'it' ? locale : 'ro';
 
 /** The frame a story asks for (`parameters.frame`): the blog list's page,
- *  unless it names THE MINIATURE FRAME. Typed to the args a play reads
- *  (CardArgs), so the miniature frame takes them with no cast. */
+ *  unless it names THE MINIATURE FRAME or THE CLAMP FRAME. Typed to the args
+ *  a play reads (CardArgs), so those frames take them with no cast. */
 const withFrame: Decorator<CardArgs> = (
   Story,
   { args, globals, parameters },
@@ -440,6 +523,10 @@ const withFrame: Decorator<CardArgs> = (
     <MiniatureFrame args={args}>
       <Story />
     </MiniatureFrame>
+  ) : parameters.frame === 'clamp' ? (
+    <ClampFrame args={args}>
+      <Story />
+    </ClampFrame>
   ) : (
     <Frame language={languageOf(globals.locale)}>
       <Story />
@@ -469,11 +556,14 @@ const GUARD = 'supports-[width:1cqw]:';
 
 /**
  * THE CHIPS' OWN PIXEL, as the stylesheet computes it: the larger of the
- * floor — FLOOR rem over DIVISOR — and the card's content width over the
- * owner's reference, the three numbers read off the list's own class (its
- * declaration behind the guard) — the floor × `share` on a miniature, whose
- * tag list carries CHIP_SCALE's formula so, inline (PostCard's THE
- * MINIATURE). The pattern is built from strings, so no bracketed declaration
+ * floor — FLOOR rem over DIVISOR, which is FLOOR × 16 of the theme's pixels
+ * over DIVISOR — and the card's content width over the owner's reference,
+ * the three numbers read off the list's own class (its declaration behind
+ * the guard). `floorPixel` is the pixel the floor is counted in: the
+ * theme's, a sixteenth of a rem, on a full card, whose floor is absolute;
+ * on a miniature the pixel it draws in (`floorPixelOf`), whose tag list
+ * carries CHIP_SCALE's formula with its floor counted so, inline (PostCard's
+ * THE CHIPS). The pattern is built from strings, so no bracketed declaration
  * stands in this file's text (the header's THE CHIPS ARE MEASURED AGAINST
  * THEIR CARD). Throws by name when the declaration is missing or its shape
  * moved.
@@ -481,7 +571,7 @@ const GUARD = 'supports-[width:1cqw]:';
 const chipPixelOf = (
   list: Element,
   contentWidth: number,
-  share = 1,
+  floorPixel: number = rem() / 16,
 ): number => {
   const open = '[';
   const declaration = (list.getAttribute('class') ?? '')
@@ -498,7 +588,7 @@ const chipPixelOf = (
     );
   }
   return Math.max(
-    (share * Number(shape[1]) * rem()) / Number(shape[2]),
+    (Number(shape[1]) * 16 * floorPixel) / Number(shape[2]),
     contentWidth / Number(shape[3]),
   );
 };
@@ -517,7 +607,7 @@ const isMiniature = (article: HTMLElement): boolean =>
   article.firstElementChild?.classList.contains(REMAP) ?? false;
 
 /** A card's share — the number a miniature carries inline on its <article>,
- *  1 on a full card: what its chips' floor is multiplied by. */
+ *  1 on a full card. */
 const shareOf = (article: HTMLElement): number =>
   isMiniature(article)
     ? Number(article.style.getPropertyValue('--miniature'))
@@ -573,6 +663,19 @@ const partsOf = (article: HTMLElement) => {
     readMore: part(footer.children[1]?.firstElementChild, 'read-more’s label'),
   };
 };
+
+/** The pixel a card's chips' floor is counted in (`chipPixelOf`): the
+ *  theme's — a sixteenth of a rem — on a full card, whose floor is absolute;
+ *  on a miniature the pixel it draws in, THE MINIATURE'S WRAPPER's registered
+ *  one, the share of the pixel the card inherits (PostCard's THE CHIPS). */
+const floorPixelOf = (article: HTMLElement): number =>
+  isMiniature(article)
+    ? px(
+        getComputedStyle(
+          part(article.firstElementChild, 'miniature’s wrapper'),
+        ).getPropertyValue(PIXEL),
+      )
+    : rem() / 16;
 
 /** The grid an article stands in — the frame's list. */
 const gridOf = (article: HTMLElement): HTMLElement =>
@@ -636,13 +739,16 @@ const expectNoSidewaysScroll = async (article: HTMLElement): Promise<void> => {
 };
 
 /** What a play reads of a story's args: the card's content, its two labels,
- *  and the level and picture hint a page may name. */
+ *  and the level, the picture hint, the share, the jump and the clamp a page
+ *  may name. */
 type CardArgs = PostCardContent & {
   tagsLabel: string;
   readMore: string;
   headingLevel?: PostCardHeadingLevel;
   sizes?: string;
   miniature?: number;
+  jump?: boolean;
+  clampable?: boolean;
 };
 
 /** The facts every card owes whatever its width: named by its title — at
@@ -741,7 +847,7 @@ const expectChipsOverPicture = async (article: HTMLElement): Promise<void> => {
   const pixel = chipPixelOf(
     list,
     edgesOf(card).content.width,
-    shareOf(article),
+    floorPixelOf(article),
   );
   const listStyle = getComputedStyle(list);
   await expect(px(listStyle.getPropertyValue(PIXEL))).toBeCloseTo(pixel, 4);
@@ -904,12 +1010,17 @@ const textSizesOf = (article: HTMLElement) => {
  * card owes (`expectArticleParts` — the full card at the list's <h2>, the
  * miniature at the story's level), its picture flush, its chips on it in
  * their own pixel, its footer row and every title word whole; and between the
- * two, PostCard's THE MINIATURE: every text at the share (to 0.01), the 3px
- * frame on both, the picture the share of the full card's less 4 × (1 −
- * share) px and the content box the share less 2 × (1 − share) px (PostCard's
- * residuals, to half a pixel — every length here layout, never paint), and
- * the story's picture hint on the miniature's <img>, never less than the
- * picture it draws. Nothing pushes the page sideways.
+ * two, PostCard's THE MINIATURE: every text at the share (to 0.01) — the
+ * chips' label at it only where the frame stands in the theme's pixel, since
+ * it reads the miniature's own (THE CHIPS FOLLOW THE PIXEL) — every text of
+ * the miniature in its theme ratio to its summary (its title 30 / 16, its
+ * chips' label 12 / 16 …) wherever the frame stands, the 3px frame on both,
+ * the picture the share of the full card's less 4 × (1 − share) px and the
+ * content box the share less 2 × (1 − share) px (PostCard's residuals, to
+ * half a pixel — every length here layout, never paint), the jump the
+ * story's args ask for on the miniature and the list's on the full card,
+ * and the story's picture hint on the miniature's <img>, never less than
+ * the picture it draws. Nothing pushes the page sideways.
  */
 const expectMiniature = async (
   canvasElement: HTMLElement,
@@ -940,14 +1051,51 @@ const expectMiniature = async (
     await expectFooterRow(article);
     await expectTitleWordsWhole(article);
   }
-  // Every text at the share.
+  // Every text at the share — but the chips' label, which reads the
+  // miniature's own pixel (PostCard's THE CHIPS FOLLOW THE PIXEL): the share
+  // of its full card's only where the frame stands in the theme's pixel —
+  // the full card's summary a rem — where the full card's absolute floor is
+  // the same number.
   const [a, b] = [textSizesOf(full), textSizesOf(mini)];
-  for (const name of Object.keys(a) as (keyof typeof a)[]) {
+  for (const name of [
+    'title',
+    'author',
+    'summary',
+    'readingTime',
+    'readMore',
+  ] as const) {
     await expect(
       Math.abs(b[name] / a[name] - share),
       `the ${name}: ${b[name]} against ${a[name]}`,
     ).toBeLessThanOrEqual(0.01);
   }
+  if (Math.abs(a.summary - rem()) < 0.001) {
+    await expect(
+      Math.abs(b.chip / a.chip - share),
+      `the chips’ label: ${b.chip} against ${a.chip}`,
+    ).toBeLessThanOrEqual(0.01);
+  }
+  // THE TRUE COPY: every text of the miniature in its theme ratio to its own
+  // summary, the chips' label among them, in whatever pixel the frame stands.
+  for (const [name, ratio] of [
+    ['title', 30 / 16],
+    ['author', 14 / 16],
+    ['readingTime', 1],
+    ['readMore', 18 / 16],
+    ['chip', 12 / 16],
+  ] as const) {
+    await expect(
+      Math.abs(b[name] / b.summary - ratio),
+      `the ${name} beside the summary: ${b[name]} against ${b.summary}`,
+    ).toBeLessThan(0.005);
+  }
+  // THE JUMP, A PAGE'S TO TURN OFF: the jump's clock on the miniature's
+  // <article> exactly when the story's args ask for it, and on the full
+  // card's always — the list's own default.
+  const jumps = (article: HTMLElement): boolean =>
+    getComputedStyle(article).transitionProperty === 'scale';
+  await expect(jumps(full)).toBe(true);
+  await expect(jumps(mini)).toBe(args.jump ?? true);
   // The px parts in px, and the residuals they leave.
   const [cardA, cardB] = [partsOf(full).card, partsOf(mini).card];
   const [edgesA, edgesB] = [edgesOf(cardA), edgesOf(cardB)];
@@ -1048,7 +1196,17 @@ const meta = {
     miniature: {
       control: { type: 'range', min: 0.3, max: 1, step: 0.05 },
       description:
-        'THE MINIATURE: the card drawn as a copy of itself at this share — every theme length at the share of the design pixel it inherits, the chips with it; a share in (0, 1], the Home band’s 0.65. Unset, the blog list’s card',
+        'THE MINIATURE: the card drawn as a copy of itself at this share — every theme length at the share of the design pixel it inherits, the chips’ floor with them, the title on `band`’s small row alone; a share in (0, 1], the Home band’s 0.65. Unset, the blog list’s card',
+    },
+    jump: {
+      control: 'boolean',
+      description:
+        'THE CARD JUMP: the card grows to 105 % on a hover (true, the default — the blog list); false for a page that grows the card’s slot itself (the Home band) — a hover still draws the read-more’s underline',
+    },
+    clampable: {
+      control: 'boolean',
+      description:
+        'THE CLAMP: the title and the summary wear a line clamp the PAGE switches on with four CSS variables on an ancestor (the box, the clip and each one’s number of lines — the Home band’s flat row: two each, ending in „…”); inert without them, the card the blog list’s to the pixel. False, the default — the blog list',
     },
     className: {
       control: false,
@@ -1228,10 +1386,13 @@ export const Italian: Story = {
  * THE HOME BAND'S MINIATURE, IN ROMANIAN — the owner's "Miniature (all 65%)"
  * (2026-10-17): the everyday post as the blog list draws it, its full card in
  * the list's three-across slot, beside the Home band's miniature in the share
- * of it (THE MINIATURE FRAME) — the share, the band's <h3> and the band's
- * own picture hint. Pinned to the laptop (1536px), so the pair stands in the
- * band's design pixel: every text at 0.65 of its full card's, the frame and
- * the ring in CSS px, the picture and the content box to the residuals
+ * of it (THE MINIATURE FRAME) — the share, the band's <h3>, the band's own
+ * picture hint and no jump of its own. Pinned to the laptop (1536px), so the
+ * pair stands in the band's design pixel: every text at 0.65 of its full
+ * card's but the chips' label, which reads the miniature's own pixel there
+ * (0.71 of its full card's at 1536 — PostCard's THE CHIPS FOLLOW THE PIXEL),
+ * every text of the miniature in its theme ratio to its summary, the frame
+ * and the ring in CSS px, the picture and the content box to the residuals
  * PostCard records.
  */
 export const Miniature: Story = {
@@ -1241,6 +1402,7 @@ export const Miniature: Story = {
     miniature: SHARE,
     headingLevel: 3,
     sizes: MINIATURE_SIZES,
+    jump: false,
   },
   play: async ({ args, canvasElement }) => {
     await expectMiniature(canvasElement, args, 'ro');
@@ -1283,9 +1445,101 @@ export const MiniatureGerman: Story = {
     miniature: SHARE,
     headingLevel: 3,
     sizes: MINIATURE_SIZES,
+    jump: false,
   },
   play: async ({ args, canvasElement }) => {
     await expectMiniature(canvasElement, args, 'de');
+  },
+};
+
+/** A box's LINES: its content box over its line height — layout values.
+ *  Never its height over the line: a clamped box carries THE CLAMP'S ROOM as
+ *  padding. */
+const linesOf = (element: Element): number => {
+  const style = getComputedStyle(element);
+  return (
+    (px(style.height) - px(style.paddingTop) - px(style.paddingBottom)) /
+    px(style.lineHeight)
+  );
+};
+
+/**
+ * THE CLAMP — the owner's „Card 24% shorter, same text size" (2026-10-25,
+ * PostCard's THE CLAMP, A PAGE'S TO SWITCH ON): the Home band's flat row holds
+ * its cards' titles and summaries to two lines each, „…" closing a longer
+ * one, every text its size. In THE CLAMP FRAME the story's card stands twice
+ * in the blog list's three-across slot: first as a page that sets nothing
+ * draws it — `clampable` and inert, the list's card to the pixel (that
+ * reading is PostCard.test.tsx's) — then under the page's four variables on
+ * its slot. Its args are the band's own answers, `clampable`, the band's <h3>
+ * and no jump. Pinned to the laptop (1536px), so the pair stands side by side
+ * in the band's design pixel; the play derives what it expects from what it
+ * measures, so it holds at any width the net shoots: every fact a card owes,
+ * on both; the whole card's every line, the clamped card's two of each where
+ * there were more — the same text, whole, in both DOMs and both names — and
+ * the clamp's own values computed on the second card alone.
+ */
+export const Clamped: Story = {
+  globals: { locale: 'ro', viewport: { value: 'laptop' } },
+  parameters: { frame: 'clamp' },
+  args: { ...CROWNS, clampable: true, headingLevel: 3, jump: false },
+  play: async ({ args, canvasElement }) => {
+    await expectLanguage('ro');
+    const slot = (name: 'whole' | 'clamped'): HTMLElement =>
+      part(
+        canvasElement.querySelector(`[data-slot="${name}"] article`),
+        `${name} card`,
+      );
+    const whole = slot('whole');
+    const clamped = slot('clamped');
+    for (const article of [whole, clamped]) {
+      await expectArticleParts(article, args);
+      await expectPictureFlush(article);
+      await expectChipsOverPicture(article);
+      await expectFooterRow(article);
+      await expectNoSidewaysScroll(article);
+    }
+    /** A card's title and summary. */
+    const textsOf = (article: HTMLElement) => {
+      const { readingTime } = partsOf(article);
+      return [
+        [within(article).getByRole('heading'), args.title],
+        [
+          part(readingTime.parentElement?.previousElementSibling, 'summary'),
+          args.summary,
+        ],
+      ] as const;
+    };
+    const lines = { whole: [] as number[], clamped: [] as number[] };
+    for (const [name, article] of [
+      ['whole', whole],
+      ['clamped', clamped],
+    ] as const) {
+      for (const [element, text] of textsOf(article)) {
+        // The same words, whole, in either DOM.
+        await expect(element.textContent).toBe(text);
+        lines[name].push(Math.round(linesOf(element)));
+      }
+    }
+    // Two lines of each at most where the page clamps; the whole card's
+    // every line where it does not — and at the pinned laptop the post runs
+    // past two lines of its summary there, so the clamp has work to do.
+    for (const [index, count] of lines.whole.entries()) {
+      await expect(lines.clamped[index]).toBe(Math.min(2, count));
+    }
+    if (window.innerWidth === 1536) {
+      await expect(lines.whole[1]).toBeGreaterThan(2);
+    }
+    for (const [element] of textsOf(whole)) {
+      const style = getComputedStyle(element);
+      await expect(style.overflow).toBe('visible');
+      await expect(style.getPropertyValue('-webkit-line-clamp')).toBe('none');
+    }
+    for (const [element] of textsOf(clamped)) {
+      const style = getComputedStyle(element);
+      await expect(style.overflow).toBe('hidden');
+      await expect(style.getPropertyValue('-webkit-line-clamp')).toBe('2');
+    }
   },
 };
 

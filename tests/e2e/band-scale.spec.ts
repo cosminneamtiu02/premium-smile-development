@@ -72,8 +72,10 @@ const PAGES: readonly {
    *  sections/PageHero (the blog list's, the Team page's since 2026-10-15)? */
   readonly hero: boolean;
 }[] = [
-  // Home: the numbers, the doctors, the map, the reviews.
-  { path: (l) => `/${l}/`, bands: 4, staff: false, reviews: true, hero: false },
+  // Home: the numbers, the blog's articles (sections/BlogCarousel, since
+  // 2026-10-17 — this count stood at 4 until 2026-10-25, red on develop's own
+  // export from that day), the doctors, the map, the reviews.
+  { path: (l) => `/${l}/`, bands: 5, staff: false, reviews: true, hero: false },
   // Team: the hero over the doctors (no eyebrow and <h2> of their own since
   // 2026-10-15), then the staff, the numbers, the map.
   {

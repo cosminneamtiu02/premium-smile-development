@@ -416,6 +416,10 @@ describe('PostGallery — the native <section> surface', () => {
     expectTypeOf<PostGalleryProps>().not.toHaveProperty('visible');
     expectTypeOf<PostGalleryProps>().not.toHaveProperty('cardCap');
     expectTypeOf<PostGalleryProps>().not.toHaveProperty('cardWidth');
+    // …nor the flat row (CardCarousel's THE FLAT ROW, 2026-10-25): the
+    // article's galleries stand on the line at every width — the row is the
+    // Home band's.
+    expectTypeOf<PostGalleryProps>().not.toHaveProperty('flatFrom');
     expectTypeOf<PostGalleryProps>().not.toHaveProperty('cardHeight');
     // …no clock option…
     expectTypeOf<PostGalleryProps>().not.toHaveProperty('intervalMs');
@@ -524,6 +528,21 @@ describe('PostGallery — THE STRIP: a wider spread hands the island nothing the
     expect(centreWidth()).toBeCloseTo(20 * ROOT, 1);
   });
 
+  it('a flat row — no RangeError beside the gallery’s cap, no card posed in a row: the card still 20rem (the G2 typescript review, 2026-10-26)', () => {
+    // Reaching the island beside the cap, `flatFrom` meets its "without
+    // `cardWidth`" RangeError and the gallery throws; stripped, the island
+    // never hears of it, and no card carries the row's per-card pose.
+    renderSmuggling({ flatFrom: 'tablet' });
+
+    for (const box of cardBoxes(region())) {
+      expect(
+        box.style.getPropertyValue('--ftx'),
+        box.getAttribute('aria-label') ?? '',
+      ).toBe('');
+    }
+    expect(centreWidth()).toBeCloseTo(20 * ROOT, 1);
+  });
+
   it('a height for the cards — none stretched to the tallest card: each keeps its own', () => {
     renderSmuggling({ cardHeight: 'tallest' });
 
@@ -606,6 +625,7 @@ describe('PostGallery — a dumb Server Component composing a section (§4, §16
       'env',
       'cardWidth',
       'cardHeight',
+      'flatFrom',
     ]) {
       expect(named, option).not.toContain(option);
     }

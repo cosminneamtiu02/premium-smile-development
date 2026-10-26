@@ -52,8 +52,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // blog index (sections/PostList) and, since 2026-10-17, the Home band of the
 // blog's articles (sections/BlogCarousel), which draws it as a 65 % copy of
 // the index's own (THE MINIATURE), heads it with its own <h2> (THE TITLE'S
-// LEVEL) and names its own picture hint (THE `sizes`, OVERRIDDEN); reuse never
-// promotes a composite (§4).
+// LEVEL), names its own picture hint (THE `sizes`, OVERRIDDEN) and, in its
+// flat row, holds its title and summary to two lines each (THE CLAMP); reuse
+// never promotes a composite (§4).
 //
 // ── THE FRAME: ui/Card `tone="framed" corners="soft"` — exactly what
 // sections/PersonnelCard asks for its doctor cards, the owner's "same border
@@ -63,7 +64,8 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // boxes — the chips' list (THE TAGS) and the link's layer over the card (THE
 // LINK) — and `h-full`, so the card fills an article its list stretches.
 //
-// ── THE ROOT IS THE SECTION'S OWN <article>, AND IT JUMPS. The owner's "just
+// ── THE ROOT IS THE SECTION'S OWN <article>, AND IT JUMPS — unless its page
+// turns the jump off (THE JUMP, A PAGE'S TO TURN OFF, below). The owner's "just
 // react on hover like a button" (2026-10-11), kept on his word of 2026-10-14
 // above, is the house's button jump — ui/Button's `motion` axis, its THE JUMP
 // paragraph: the box grows to 105 % on hover over its own 200ms clock, and
@@ -90,6 +92,32 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // under `prefers-reduced-motion` the card never moves (§9). No shadow grows
 // with it — the old pop's other half, which the jump census refuses
 // everywhere.
+// THE JUMP, A PAGE'S TO TURN OFF (2026-10-25): `jump`, true by default — the
+// blog list's cards jump as above, their markup byte for byte — and
+// `jump={false}` for a page that grows the card's SLOT itself. The Home band
+// of the blog's articles (sections/BlogCarousel) passes it: since that day
+// sections/CardCarousel lifts the slot under a hover (the centre card to
+// 1.05, a live side card to the centre's size), and a card that jumped
+// inside a slot that grows would grow twice. It is also how that band cures
+// the owner's hover bug, verbatim: "on max hover all contents of card are all
+// of a sudden going down" — MEASURED by the planner (Chromium, 2026-10-25):
+// the <article> is no compositing layer at rest, so the engine promotes it
+// for the jump's 200ms and folds it back at the end, redrawing its text — a
+// stretched copy while it grows, re-drawn crisp when the growth ends; the
+// carousel's slot is composited all the time, so its growth leaves nothing
+// to fold back. A card that does not jump keeps everything else a hover
+// draws: the <article> still wears TEXT_BUTTON_HOVER_AREA, so a pointer
+// anywhere on the card sweeps the read-more's underline in (THE FOOTER ROW's
+// THE WHOLE CARD DRAWS THE UNDERLINE), and the link's layer still lies over
+// the whole card (THE LINK). It wears CARD_JUMP whole or not at all: the
+// constant stays the jump census's, byte for byte. Past the type, anything
+// but a boolean throws a RangeError that names it (`isFlag`, `quoted`) —
+// this file's rule for a prop whose wrong value would draw another card than
+// the one asked for: the string „false" is truthy, and would grow twice a
+// card its page asked to hold still, and null, which no default replaces,
+// would hold a list card still unasked. (`preload` keeps none: a wrong value
+// there fetches the picture sooner or later, and the card it draws is the
+// same.)
 // THE PROMISE, HALF KEPT — the owner, verbatim (2026-10-15): "on click of card
 // anywhere it should take you to article. but for now it should be a dummy
 // article and all should point to same article". From 2026-10-11 to that day
@@ -160,9 +188,11 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // 28rem of content, which in the page's grid is every card but the one-column
 // band just under two columns (36px there, a 525px content box at a 719px
 // window) — and 30 design pixels in the band scale (27.4px at 1280, 32.9 at
-// 1536, MEASURED). A miniature draws that very step at its share — 19.5px
-// in the theme's pixel at 0.65 — never a smaller one (THE MINIATURE; THE
-// NARROW STEPS, REMOVED, below).
+// 1536, MEASURED). A miniature draws `band`'s small row alone, `section` —
+// the same 30 design pixels, at its share: 19.5px in the theme's pixel at
+// 0.65 — with no container step under it, and never a smaller one (THE
+// MINIATURE's THE STEPS THE MINIATURE CANNOT REDRAW; THE NARROW STEPS,
+// REMOVED, below). `TITLE_STEP`, a lookup: a renamed step fails to compile.
 // THE TITLE NEVER SPLITS A WORD — the owner, 2026-10-15. The site's
 // `hyphens: auto` (§15.14) broke card titles at a syllable: „Zahnbürs-te" on
 // a 390 phone, „pe-riuța" in the narrowest two-column card, „copilu-lui" on a
@@ -212,8 +242,10 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // line height, its lines and its line — 180 readings of 180; and under 222px,
 // the control, all 180 readings differed, so the steps had been live where
 // they were meant to be. Their records — the narrow cards' words, the four
-// German words the narrowest of them cut — left with them; the title has one
-// size, `band`, at any share.
+// German words the narrowest of them cut — left with them; the title kept one
+// step, `band`, at any share — until 2026-10-25, when a miniature's took
+// `band`'s small row alone, `section`: the 30 design pixels it had always set,
+// never a smaller step (THE STEPS THE MINIATURE CANNOT REDRAW).
 // THE PRICE, MEASURED (Chromium on macOS, which hyphenates all five
 // languages; the real face): a word the dictionary used to split now moves
 // whole to the next line. Of the 60 titles on those three lines, 55 of 180
@@ -302,16 +334,24 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // theme length (spacing, type, radius, container: the lengths globals.css's
 // `design-scale` remaps) at m × the design pixel the card INHERITS where it
 // stands — the theme's, a quarter of the spacing step, or a band's inside
-// THE BAND SCALE. In a slot m × a full card's width it lays out as that full
-// card does: the Home band's slot is 0.65 of the list's three-across card at
-// the owner's 1401 window, (1106 − 64) / 3 = 347.333 design px, so 225.767.
+// THE BAND SCALE — and, since 2026-10-25, the chips' floor with them (THE
+// CHIPS, below). So in ANY pixel a miniature is its full card as the theme's
+// pixel draws it, at m times the pixel it inherits: the copy the owner
+// picked, magnified with its band — his word of that day, of the Home band
+// drawn in a larger pixel past his window: "raports from article card,
+// heading, eyebrow, etc must also always mentain the same raport as now of
+// the card". In a slot m × a full card's width it lays out as that full card
+// does, line for line, wherever no container step lies between the two (THE
+// STEPS THE MINIATURE CANNOT REDRAW): the Home band's slot is 0.65 of the
+// list's three-across card at the owner's 1401 window, (1106 − 64) / 3 =
+// 347.333 design px, so 225.767.
 // LAYOUT-NATIVE, never a transform: a miniature's height is real layout, so a
 // longer translation or a reader's SC 1.4.12 spacing makes it taller instead
 // of spilling out of a scaled box. Unset, the card is the list's byte for
 // byte — PostCard.test.tsx holds it from both sides: without a share, a
 // caller's own style and `miniature={undefined}` included, the markup carries
 // none of the miniature's parts; and a miniature's markup with its parts taken
-// out IS the list card's.
+// out — and its title's step put back to `band` — IS the list card's.
 // HOW m REACHES THE CSS — ONE NUMBER in the DOM, `--miniature`, inline on the
 // <article> (merged over the caller's own style, which can therefore never
 // unset it; absent without the prop), and two static rules and one inline
@@ -347,14 +387,34 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //     inherited step, which every engine computes, registered or not — no
 //     `cqw` is in it.
 //   · THE CHIPS (MINIATURE_CHIPS): CHIP_SCALE's floor, 0.75rem / 18, is
-//     absolute, so a miniature's chips would keep the full card's 12px labels
-//     — half again as large, against everything round them. A miniature's
-//     tag list carries CHIP_SCALE's formula with the floor × the share,
-//     INLINE, where it outranks the list's class: the class stays CHIP_SCALE
-//     byte for byte, the cover's KEEP-IN-SYNC (tests/unit/blog-tags-sync.test.ts
-//     reads the list's className), and PostCard.test.tsx reads both formulas
-//     out of this file and holds the one to the other, its floor × the share.
-//     The `cqw` half needs nothing: the card is already the share as wide. An
+//     absolute — a full card never sets a label under 12px, whatever pixel
+//     it stands in (THE TAGS' THE FLOOR) — so a miniature's chips would keep
+//     the full card's 12px labels, half again as large, against everything
+//     round them. A miniature's tag list carries CHIP_SCALE's formula with
+//     its floor counted in the CAPTURED pixel instead — `--miniature-px` ×
+//     12 / 18, 0.75rem being 12 of the theme's pixels, a sixteenth of a rem
+//     each — INLINE, where it outranks the list's class: the class stays
+//     CHIP_SCALE byte for byte, the cover's KEEP-IN-SYNC
+//     (tests/unit/blog-tags-sync.test.ts reads the list's className), and
+//     PostCard.test.tsx reads both formulas out of this file and holds the
+//     one to the other, the floor's rem turned into twelve of the captured
+//     pixel. In the theme's pixel the two spellings are one number at any
+//     root — 0.75rem / 18 × the share — and in any other pixel the floor
+//     follows it, as every other length of the miniature does.
+//     THE CHIPS FOLLOW THE PIXEL (2026-10-25, the owner's "raports" above):
+//     until that day the floor was 0.75rem / 18 × the share, as absolute as
+//     the list's, so in a band's pixel past the owner's window the chips kept
+//     PostCard's own chip pixel while the words grew with the band — at the
+//     band scale's cap a 9.40px label beside words 1.389 times the theme's,
+//     only 1.21 times its 7.8 — where they now set 10.83px, 1.389 times, the
+//     words' ratio (MEASURED). The `cqw` half needs nothing: the card is
+//     already the share as wide — and on this card it no longer binds: a
+//     miniature's content box, 194.567 × P − 2px at 0.65 in a pixel P (THE
+//     STEPS THE MINIATURE CANNOT REDRAW), over 513.40625 is 0.379 × P −
+//     0.004px, under the floor's 0.433 × P at every P. It would bind only on
+//     the miniature of a wider card — about where that card's own chips leave
+//     the floor in the theme's pixel, a content box over 342.3px (THE TAGS'
+//     THE FLOOR) — and there it follows its card as the full card's does. An
 //     engine without container units never uses the inline value (the
 //     list's remap is behind THE GUARD), so its chips inherit the card's own
 //     pixel — the share of its full card's chips, which are the theme's there.
@@ -377,32 +437,40 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // miniature side by side in one box — the theme's pixel, a band's 1px, the
 // band scale's step, 0.810px, and its cap, 1.389px): the title, the author,
 // the summary, the reading time and the read-more at exactly 0.65 of their
-// full card's; the chips' labels at 0.65 where their floor binds (the theme's
-// pixel, 1px, the step) and 0.648 at the cap, where their `cqw` half binds on
-// a content box 0.36 % short; the frame, the layer's inset and the ring in
-// CSS px; the picture and the height to the residuals above.
+// full card's; the chips' label at 0.65 of its full card's in the theme's
+// pixel and at 1px, and in every pixel 12/16 of the miniature's own summary
+// — 7.8 × the pixel — where the full card's keeps its own chip pixel (0.527
+// of it at the step, the full card on its 12px floor; 0.747 at the cap, on
+// its `cqw` half); the frame, the layer's inset and the ring in CSS px; the
+// picture and the height to the residuals above.
 // THE SMALLEST TEXT, for the owner: at 0.65 in the theme's pixel the title
 // sets 19.5px, the author 9.1, the summary 10.4, the reading time 10.4, the
-// read-more 11.7 and a chip's label 7.8 — and that is what Home's band draws on
-// every phone and tablet and on laptops up to the 1401 window, because it
-// floors its pixel (sections/BlogCarousel's CAROUSEL_FLOOR); at the cap 27.1,
-// 12.6, 14.4, 14.4, 16.2 and 9.4. (Unfloored, the band scale's step — a 1140
-// window — would draw 15.8, 7.4, 8.4, 8.4, 9.5 and 7.8: the mechanism, which
-// no page ships.) No criterion of WCAG 2.2 AA sets a smallest size, and zoom
-// enlarges each one on a phone (pinch) and on a laptop up to the owner's
-// window, where THE FLOOR (sections/BlogCarousel's CAROUSEL_FLOOR) holds the
-// theme's pixel and the CAROUSEL grows with a zoom as rem does — not the
-// band's opener, which keeps the band scale's unfloored pixel (at a 1280
-// window and 110 % its <h2> stays 32.8 device px) — but NOT on a desktop
-// past the 1401 reference. On a 1920 screen 110 and 125 % leave the
-// five texts — all but the tags — as they are, 150 % gives ×1.09 and 200 %
-// ×1.45; the tags, in a pixel of their own (THE CHIPS FOLLOW THEIR CARD), move
-// otherwise: their labels 9.31 / 9.30 / 9.75 / 11.7 / 15.6px at 100 / 110 /
-// 125 / 150 / 200 %, ×1.00, ×1.05, ×1.26 and ×1.68 of the first — the band
-// scale's owner-accepted trade (CLAUDE.md §15.32; computed by the phase-3
-// accessibility review and its re-review, 2026-10-20). 7.8 to 10.4px is far
-// under anything this site sets for an older reader elsewhere: the share is
-// the owner's lever, one number at the call site (BACKLOG.md entry 2).
+// read-more 11.7 and a chip's label 7.8 — and since 2026-10-25 that is what
+// Home's band draws on a PHONE alone, held either way (its line; until then
+// on every screen, held at the theme's pixel up to the 1401 window by a floor
+// from 2026-10-17 to 2026-10-26). From a tablet's screen up its flat row
+// draws the miniatures at the full card's own sizes — 30, 14, 16, 16, 18 and
+// 12 on every touch tablet and in a mouse window under the band scale's step
+// (its pixel the theme's over the share: sections/BlogCarousel's THE FLAT
+// ROW'S PIXEL) — and inside the band scale at 9/8 of the band's pixel, the
+// summary a numbers tile's sentence (the owner's rule; that band's THE ZOOM):
+// 27.37, 12.77, 14.6, 14.6, 16.42 and 10.95 at the step (a 1140 window),
+// 33.74, 15.75, 18, 18, 20.25 and 13.5 at the owner's 1401, and 46.87, 21.87,
+// 25, 25, 28.12 and 18.75 past the cap (MEASURED on the built export, the
+// centred card, 2026-10-26). In any pixel each of the six is its 0.65 size
+// times the pixel, the chips' label too since 2026-10-25 (THE CHIPS FOLLOW
+// THE PIXEL). No criterion of WCAG 2.2 AA sets a smallest size; zoom enlarges
+// each one on a phone (pinch), and on a laptop or a desktop the row follows
+// the band scale's owner-accepted trade (CLAUDE.md §15.32), the numbers
+// band's own. MEASURED the same day, the summary on a 1440 × 900 laptop reads
+// 18.5 / 18.48 / 18.45 / 24 / 28 / 32 device px at 100 / 110 / 125 / 150 /
+// 175 / 200 %, and on a 1920 screen 24.75 / 24.73 / 24.69 / 24.63 / 28 / 32:
+// larger at every step than the floored line it replaced (10.69 to 20.8 on
+// the 1440, 14.3 to 20.8 on the 1920, develop ad8a584), but growing 1.73 and
+// 1.29 times to 200 % where that line grew 1.95 and 1.45 times. 7.8 to
+// 10.4px on a phone is far under anything this site sets for an older
+// reader elsewhere: the share is the owner's lever, one number at the call
+// site (BACKLOG.md entry 2).
 // THE OPTICAL SIZE MOVES A LINE, RECORDED. Source Serif 4's optical-size
 // axis follows each text's own size (`font-optical-sizing: auto`) and draws
 // small text wider per em — MEASURED, the summary's words 5.7 % wider at
@@ -428,10 +496,29 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // 16 was due).
 // THE STEPS THE MINIATURE CANNOT REDRAW: a container query compiles to a
 // fixed rem (the title's `@md` is 28rem, never a variable), so it reads the
-// slot's CSS width. A miniature is its full card's copy wherever no container
-// step lies between the two — true of the list's three-across card, whose
-// 297.333-design-px line stays under 28rem up to the band scale's cap (413px)
-// — and the reason the title's narrow steps had to go (THE NARROW STEPS,
+// slot's CSS width, never the design's. A miniature is its full card's copy
+// wherever no container step lies between the two, and the one step inside
+// the card is the title's. The list's three-across card — the card the Home
+// band copies — never takes it: its 297.333-design-px line stays under 28rem
+// up to the band scale's cap (413.7px), where a full card in a box that
+// magnifies further takes it from P ≈ 1.503. Its miniature would: its
+// content box, 194.567 × P − 2px at 0.65 in a pixel P, passes 448px from
+// P ≈ 2.313 at the default root (MEASURED: 447.98px there, the title stepped)
+// — a pixel the Home band's flat row reaches on a wide desktop
+// (sections/BlogCarousel's record) — and its title would leap to 36 of its
+// design pixels over a summary of 16: the ratio the owner asked to keep,
+// broken ("raports … same as now", 2026-10-25). So a miniature's title wears
+// the step its full card draws, `section` — `band`'s small row byte for
+// byte, with no container step under it — at every pixel (TITLE_STEP), and a
+// full card keeps `band`: the list's one-column card on a phone and a tablet
+// does reach `@md` (a 525px content box at a 719 window, 36px there), and
+// must. NOTHING A PAGE DRAWS TODAY MOVED: the Home band's miniatures stood in
+// the carousel's floored pixel, at most the band scale's cap — a content box
+// of 268.2px at most — so `band` and `section` set one size and one line
+// there at every window (PostCard.miniature.test.tsx puts `band`'s container
+// row back on a miniature's title at the four pixels it measures: nothing
+// moves; at P = 2.5 the same row takes the title from 48.75 to 58.5px). The
+// title's narrow steps had to go for the same reason (THE NARROW STEPS,
 // REMOVED, above).
 //
 // ── THE PICTURE, OUT TO THE FRAME. A 3:2 cell — the clinic photographs' own
@@ -601,9 +688,11 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // card widths).
 // THE FLOOR, never under 0.75rem / 18: a 12px label on 29.3px chips at the
 // default root — two-thirds of the atom — so no FULL card's label shrinks
-// past reading (the floor is a full card's: a miniature's is this one × its
-// share, a 7.8px label at 0.65 — THE MINIATURE's THE CHIPS, THE SMALLEST
-// TEXT). It binds wherever the content box is under two-thirds of 513.40625,
+// past reading, whatever pixel the card stands in (the floor is a full
+// card's: a miniature's is twelve of the pixel IT draws in over 18 — in the
+// theme's pixel this one × its share, a 7.8px label at 0.65, in a band's the
+// share of that band's pixel — THE MINIATURE's THE CHIPS, THE SMALLEST TEXT).
+// It binds wherever the content box is under two-thirds of 513.40625,
 // 342.3px, which is most cards: behind a classic scrollbar a window up to
 // ≈453px (one column), ≈739 to ≈1039 (two) and ≈1139 to ≈1609 (three
 // across, in the band scale); without one, every phone up to 430px and a 768
@@ -634,10 +723,14 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 // a line each and end 65.4px above the picture's floor (66.0 at 320); the
 // three widest German tags take two — „Kieferorthopädie" alone, then
 // „Parodontologie" and „Implantologie" — and end 102.8px above it. A
-// miniature (THE MINIATURE) draws its chips at the share of its full card's
-// on a line the share as wide — the chips' floor × the share — so its full
-// card's ceiling is its own: every chip row the same in all 240 pairs
-// PostCard.miniature.test.tsx measures. Both ceilings, a tag's length and a
+// miniature (THE MINIATURE) draws its chips as its full card does in the
+// theme's pixel, at the share of the pixel it inherits — their floor in its
+// own pixel (THE CHIPS) — on a line the share as wide, magnified with them,
+// the frames' 6px of it no theme length: a little more room than a copy's as
+// the pixel grows, a little less under the theme's. So its full card's
+// ceiling in the theme's pixel is its own: every chip row the same in all 240
+// pairs PostCard.miniature.test.tsx measures (re-measured 2026-10-25 with the
+// chips in the miniature's own pixel). Both ceilings, a tag's length and a
 // post's three tags, are the blog's data's to hold, never this card's
 // (tests/unit/blog-data.test.ts).
 // THE ZOOM — WCAG 2.2 SC 1.4.4, the F94 pattern: THE OWNER'S CALL, OPEN (the
@@ -700,6 +793,124 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //
 // ── THE SUMMARY: ui/Text, muted — the screenshot's grey paragraph —
 // start-aligned like all site prose (§15.15 b).
+//
+// ── THE CLAMP, A PAGE'S TO SWITCH ON (2026-10-25). The owner, verbatim, of
+// the Home band of the blog's articles, drawn from a tablet's screen up as a
+// flat row (sections/BlogCarousel's THE FLAT ROW): "almost perfect. one
+// thing i'd have to comment on is the size. i just realised it's too big.
+// try by cutting like 24% of the text and if the text is loger, place three
+// dots." Asked to choose, he picked "Card 24% shorter, same text size": the
+// title on two lines at most and the summary on two, each ending in „…" where
+// it is longer, every text its size — in the flat row ALONE ("on phone you
+// mentain current aspect").
+// WHO SWITCHES IT ON: `clampable`, false by default — the blog list's cards,
+// byte for byte — puts THE CLAMP on the title's own element (after its rule
+// and its belt, through the slot's className merge, as `hyphens-none` rides
+// it) and on the summary's <p> (ui/Text's className merge: a rule of the
+// element's own box, never a restyle of the atom's insides, §6.8); the PAGE
+// turns it on, setting four CSS variables on an ancestor of its cards —
+// `--clamp-box` to -webkit-box, `--clamp-clip` to clip (hidden in an engine
+// without `overflow: clip`, which would drop the value and paint the cut
+// lines; a clip, unlike hidden, makes no scroll container, so neither a
+// script nor a scrollIntoView can slide the cut lines into view — measured
+// by the band's builder, 2026-10-26: hidden moved 26–111px, clip 0),
+// `--title-lines` and `--summary-lines` to 2: sections/BlogCarousel, under
+// its flat row's query.
+// VARIABLES, NOT A PROP NUMBER: the clamp holds in the flat row and not on a
+// phone, and only a media query knows which a window is — a prop cannot
+// change with the window, and a card has no business knowing its band's
+// steps; a custom property crosses the card as every inherited one does, read
+// where it is due with today's value behind it.
+// INERT BY CONSTRUCTION: every declaration is a page's variable with today's
+// value as its fallback — display block, overflow visible, the clamp none,
+// THE CLAMP'S ROOM (below) 0 — so with none of the four set every computed
+// value is today's but `-webkit-box-orient`'s, vertical, which only a
+// -webkit-box reads (MEASURED in Chromium, WebKit and Firefox), and the card
+// is a card without the prop to the pixel (PostCard.test.tsx photographs the
+// two). Never the clamp worn outright with no lines: MEASURED by the planner
+// (2026-10-25), a summary given the -webkit-box, the clip and a clamp of none
+// outright differs from today's block on a 390 phone (91 bytes of 3.17M).
+// WHAT A SET CLAMP DOES: each box shows its lines at most, the last ending in
+// the engine's ellipsis „…" — Chromium 151 and Firefox compute the box as a
+// flow root, WebKit as a -webkit-box — and the lines past them are laid out
+// under the box and PAINTED unless clipped (MEASURED, Chromium: the box two
+// lines tall under visible, hidden and clip alike, the hidden lines drawn
+// under it when nothing clips): the clip is what hides them. THE TEXT STAYS
+// WHOLE in the DOM, so the article's name is the whole title (THE NAME, the
+// title through aria-labelledby), a screen reader reads both texts to their
+// end, and the blog list draws the same posts unclamped.
+// THE CLAMP'S ROOM — the clip, checked. A clip at the box's edges cuts what a
+// glyph draws past them, and Source Serif 4 draws past them: MEASURED with
+// the canvas's ink bounds (Chromium, the real face, 16 to 33.75px), the hook
+// of „j" reaches 0.073–0.077em before its origin and „f" as far past its
+// advance, the capital acute and grave accents (É È À Í Ì Ù) rise
+// 0.873–0.879em and „j", „y", „ș", „ț" sink 0.245–0.253em — and the title's
+// line height is 1.2, so its second line's descenders end within about half a
+// pixel of the box's bottom edge, while the hidden third line's capital
+// accents start only 1.2 − 0.879 − 0.253 = 0.068em under them. MEASURED in
+// pixels — the clamped box against the same box with its clip pushed 0.75em
+// away and its third line transparent (one layout, two clips), at every title
+// size from 27 to 47px by halves and at four sub-pixel offsets, in Chromium,
+// WebKit and Firefox at device scales 1 and 2: with the clip at the box's
+// edges a line opening on „j" lost its hook at every size (Chromium, 27 to
+// 94px), and the second line's descenders were shaved at 27 of 44 sizes in
+// Chromium at either scale (84 pixels at up to 105 levels at the owner's own
+// 33.75px), 42 and 41 of 44 in WebKit, 39 and 36 of 44 in Firefox, up to
+// 233 levels. So the clip's box grows past the text by PADDING that a
+// NEGATIVE MARGIN of the same size takes back, so the content box and every
+// line break stay where they were (MEASURED in the three engines: a 300px
+// box grows to 317.5px, its content 300px, its two lines two) — a quarter of
+// an em on top and on both sides, three times the widest overhang, and a
+// fortieth of one below, BETWEEN the second line's ink and the third's:
+// 0.025em, the room the sweep chose from 0 to 0.03em. Both ride
+// `--clamp-on`, the element's own number — its page's lines held to 1 by
+// min(), 0 where the page sets none — so the room, too, is 0 until the page
+// asks.
+// WHAT 0.025em LEAVES, RECORDED (the same sweep): Chromium 2 of 44 sizes at
+// either scale — at 32.5px a sliver at the clip's bottom edge (at most 12
+// device pixels, 84 levels), and at 27.34px, the band scale's step, the tips
+// of the third line's capital accents where that line holds one (at most 72
+// pixels at scale 1 and 105 device pixels at scale 2, 93 levels); WebKit 5
+// of 44 at scale 1 (at most 7 pixels, 28 levels) and none at 2 — an iPad, a
+// Retina Mac; Firefox 8 of 44 at scale 1 (at most 38 pixels, 63 levels) and
+// none at 2. A room of 0.03em is cleaner in WebKit and dirtier in Chromium
+// (the third line's accents at five more sizes, up to 119 levels); 0.02em
+// leaves Chromium five sizes. The summary, its line height 1.5, is clean at
+// every room in the three engines at both scales (14.5 to 25px). And every
+// title the blog ships, in its five languages, in the flat row's card at six
+// pixels from 0.911 to 1.5625 (Chromium, scale 1): no ink cut, no line
+// peeking.
+// THE CARD IT DRAWS, MEASURED (Chromium, the real faces, the flat row's card
+// — the miniature at 0.65 in the row's pixel P / 0.65 — every post the blog
+// ships): clamped on a tablet and at the owner's window (P 1 and 1.125) are
+// 2 of the 12 Romanian titles (3–4 English, 6 German, 7 French, 3–4
+// Italian) and every summary (four to eight lines each), so the tallest card
+// takes two lines of each; that card, the row's height, goes at the owner's
+// window (P 1.125) from 681.5 to
+// 560.0px in Romanian, English and Italian (17.8 % shorter), from 722.0 in
+// German (22.4 %) and 735.5 in French (23.9 %), and on a tablet (P 1) from
+// 605.4–653.4 to 497.4px. So the owner's 24 % is met in French alone; the
+// numbers of lines are the page's lever (a summary line is 24px of a
+// tablet's card, 27 of the owner's window's).
+// THE HYPHEN BEFORE THE ELLIPSIS, RECORDED — the owner's call: the summary
+// keeps the site's `hyphens: auto` (§15.14), and in the flat row's card its
+// second line ends inside a word the dictionary splits for 5–6 of the 12
+// Romanian summaries (4–6 German, 4 French, 3–4 Italian, 0–1 English;
+// MEASURED at P 1 and 1.125) — and the engine then draws its „…" after the
+// hyphen where it fits: „pentru du-…", the toothache post's, photographed.
+// The lever, not built: a fifth page variable for the clamped summary's
+// hyphenation (manual — the copy's own soft hyphens still honoured).
+// A VALUE THE PAGE MISSPELLS: a `--clamp-box` that is no display value makes
+// the box compute inline (a var() that substitutes nothing valid falls to
+// the property's initial value — MEASURED in the three engines), and a
+// `--clamp-clip` that is no overflow value, by the same rule, leaves the
+// hidden lines painted over what follows (they are painted, above). The
+// page's four values are its tests' to pin.
+// A FIXED HEIGHT WOULD SQUEEZE IT (CSS's rule, not measured here): a box
+// that clips is a flex item with no automatic minimum height, so a card made
+// SHORTER than its content would shrink the clamped title or summary first.
+// The Home band's cards are as tall as the tallest one's content
+// (sections/CardCarousel's THE CARDS' HEIGHT), so nothing is squeezed.
 //
 // ── THE FOOTER ROW: ONE line on the card's floor (`mt-auto`, THE LAYOUT) —
 // the reading time on the left (ui/Text muted, FINISHED by the page:
@@ -798,7 +1009,9 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //   own corners, about 61 px² each at the theme's step (the 16px radius drawn
 //   at 105 %), reached only from inside the card. Under reduced motion the
 //   card never grows, and the RESTING corners are the dead spots, about
-//   55 px² each at the theme's step. The band scale enlarges them — at its
+//   55 px² each at the theme's step — and so on a card whose page turns the
+//   jump off (`jump={false}`), unless that page grows the card's slot, which
+//   carries the dead spots with it. The band scale enlarges them — at its
 //   cap about 117 px² jumped and 106 at rest — and a miniature shrinks them,
 //   about 26 and 23 px² at 0.65 in the theme's pixel (each a corner's square
 //   less its quarter circle, (1 − π/4) r²). The lever is
@@ -808,8 +1021,12 @@ import type { ImagePath } from '@/lib/image-path/image-path';
 //
 // ── WHAT THIS SECTION DOES NOT OWN: its width and its margins (§6.4/§6.8 —
 // the page's list places it), its height (`h-full` arrives from the page),
-// and the gap between cards — which must stay wider than the jump's growth,
-// 2.5 % of a card's width a side and of its height above and below. MEASURED:
+// whether its title and summary are clamped and to how many lines (THE
+// CLAMP: the page's four variables, on a card that says `clampable`),
+// and the gap between cards — which, wherever the card jumps, must stay
+// wider than the jump's growth, 2.5 % of a card's width a side and of its
+// height above and below (a page that turns the jump off and grows the slot
+// owns its own growth, THE JUMP, A PAGE'S TO TURN OFF). MEASURED:
 // ±7.9 / ±13.5px at 1280 against a 29.2px gap, ±9.5 / ±16.3 at 1536 against
 // 35.1, ±7.3 / ±15.6 in a 768 tablet's columns against 32, ±7.2 / ±15.1 on a
 // 320 phone; the tallest card measured, the long-words post at 320 (840px —
@@ -884,12 +1101,35 @@ type PostCardOwnProps = PostCardContent & {
    * THE MINIATURE (the header): the card drawn as a copy of itself at this
    * share of its size — every theme length (spacing, type, radius,
    * container) at `miniature` × the design pixel the card inherits where it
-   * stands, the chips with it — so in a slot that share of a full card's
-   * width it lays out exactly as that full card does. A share in (0, 1]; any
-   * other number throws a RangeError. Unset, the card is the blog list's,
-   * byte for byte.
+   * stands, the chips' floor with them, and its title on `band`'s small row
+   * alone, `section` — so in a slot that share of a full card's width it
+   * lays out exactly as that full card does in the theme's pixel, and in
+   * any other pixel is that copy magnified. A share in (0, 1]; any other
+   * number throws a RangeError. Unset, the card is the blog list's, byte for
+   * byte.
    */
   miniature?: number;
+  /**
+   * THE CARD JUMP (the header): the card grows to 105 % on a hover, the
+   * house button's jump. `false` for a page that grows the card's SLOT
+   * itself — the Home band of the blog's articles, whose carousel lifts the
+   * card it holds (sections/CardCarousel) — so a card never grows twice; a
+   * hover still draws the read-more's underline. Anything but a boolean
+   * throws a RangeError. @default true, the blog list's
+   */
+  jump?: boolean;
+  /**
+   * THE CLAMP (the header): the title and the summary each wear a line clamp
+   * that stays INERT until the PAGE switches it on — four CSS variables on
+   * an ancestor, `--clamp-box: -webkit-box`, `--clamp-clip: clip` (hidden
+   * where an engine lacks `overflow: clip`), `--title-lines` and
+   * `--summary-lines` (each a number of lines) — and each
+   * of the two then shows at most that many lines, the last ending in the
+   * engine's „…", the whole text still in the DOM. With none of the four
+   * set, the card draws exactly as a card without the prop. Anything but a
+   * boolean throws a RangeError. @default false, the blog list's
+   */
+  clampable?: boolean;
 };
 
 export type PostCardProps = PostCardOwnProps &
@@ -912,8 +1152,9 @@ export type PostCardProps = PostCardOwnProps &
 
 /** THE CARD JUMP (the header): ui/Button's jump, the scale alone. KEEP IN
  *  SYNC with ui/Button's `motionClasses` jump cell — 200ms, the keyword
- *  ease-out, 105 %, still under reduced motion. One static string: Tailwind
- *  reads class names from source text. */
+ *  ease-out, 105 %, still under reduced motion. Worn whole by every card
+ *  but one whose page says `jump={false}` (THE JUMP, A PAGE'S TO TURN OFF).
+ *  One static string: Tailwind reads class names from source text. */
 const CARD_JUMP =
   '[--jump:200ms] transition-[scale] duration-(--jump) ease-[ease-out] ' +
   'hover:scale-105 motion-reduce:hover:scale-100';
@@ -933,6 +1174,14 @@ const HEADING: Readonly<Record<PostCardHeadingLevel, 'h2' | 'h3'>> = {
   2: 'h2',
   3: 'h3',
 };
+
+/** The title's step on ui/Heading's axis (THE TITLE'S LEVEL; THE STEPS THE
+ *  MINIATURE CANNOT REDRAW): a full card's `band` — 30px on a card under
+ *  28rem of content, 36 from it — and a miniature's `section`, `band`'s
+ *  small row byte for byte with no container step under it: the copy of the
+ *  list's three-across card, whose title never reaches that step. A lookup
+ *  the Heading's `size` type checks, so a renamed step fails to compile. */
+const TITLE_STEP = { full: 'band', miniature: 'section' } as const;
 
 /** The words under the picture, on the card's own 12px rhythm: growing to the
  *  card's floor, and as far under the picture as the frame's padding — the
@@ -980,14 +1229,43 @@ const MINIATURE_CAPTURE =
  *  string: Tailwind reads class names from source text. */
 const MINIATURE_SCALE = 'h-full [--scale-px:var(--miniature-px)] design-scale';
 
-/** THE MINIATURE'S CHIPS (the header): CHIP_SCALE's pixel with its floor ×
- *  the share — INLINE on the tag list, where it outranks the list's class,
- *  because that class stays CHIP_SCALE byte for byte (the cover's
- *  KEEP-IN-SYNC). The cqw half is CHIP_SCALE's own: the card is already the
- *  share as wide. */
+/** THE MINIATURE'S CHIPS (the header's THE CHIPS): CHIP_SCALE's pixel with
+ *  its floor counted in the CAPTURED pixel — twelve of it over 18, 0.75rem
+ *  being twelve of the theme's pixels — so in the theme's pixel it is
+ *  CHIP_SCALE's floor × the share at any root, and in a band's it follows
+ *  the band with every other length of the miniature. INLINE on the tag
+ *  list, where it outranks the list's class, because that class stays
+ *  CHIP_SCALE byte for byte (the cover's KEEP-IN-SYNC). The cqw half is
+ *  CHIP_SCALE's own: the card is already the share as wide. */
 const MINIATURE_CHIPS = {
-  '--scale-px': 'max(calc(0.75rem/18*var(--miniature)),calc(100cqw/513.40625))',
+  '--scale-px': 'max(calc(var(--miniature-px)*12/18),calc(100cqw/513.40625))',
 } as CSSProperties;
+
+/** THE CLAMP'S BOX (the header): the declarations the title and the summary
+ *  share. Three are a PAGE'S variable with today's value behind it — the
+ *  block it always was, no clip — and `-webkit-box-orient`, which only a
+ *  `-webkit-box` reads, is worn plain; the last two are THE CLAMP'S ROOM, the
+ *  clip's box grown past the text by padding that a negative margin of the
+ *  same size takes back, so no line moves: a quarter of an em on top and on
+ *  both sides, a fortieth of one below, each times `--clamp-on` — 0 until a
+ *  page sets the element's number of lines (CLAMP_LINES), 1 after it. One
+ *  static string per class: Tailwind reads class names from source text. */
+const CLAMP_BOX =
+  '[display:var(--clamp-box,block)] [-webkit-box-orient:vertical] ' +
+  '[overflow:var(--clamp-clip,visible)] ' +
+  '[padding:calc(var(--clamp-on)*0.25em)_calc(var(--clamp-on)*0.25em)_calc(var(--clamp-on)*0.025em)] ' +
+  '[margin:calc(var(--clamp-on)*-0.25em)_calc(var(--clamp-on)*-0.25em)_calc(var(--clamp-on)*-0.025em)]';
+
+/** THE CLAMP'S LINES (the header): how many lines the title and the summary
+ *  each show — a page's variable each, with `none`, no clamp, behind it — and
+ *  the switch of each one's ROOM, `--clamp-on`: that number held to 1, and 0
+ *  where the page sets none. */
+const CLAMP_LINES = {
+  title:
+    '[-webkit-line-clamp:var(--title-lines,none)] [--clamp-on:min(var(--title-lines,0),1)]',
+  summary:
+    '[-webkit-line-clamp:var(--summary-lines,none)] [--clamp-on:min(var(--summary-lines,0),1)]',
+} as const;
 
 /** One line on the card's floor: the reading time, then the read-more at the
  *  end — on a line of its own, still at the end, where the two do not fit
@@ -1032,6 +1310,11 @@ const isShare = (value: unknown): boolean =>
 const isHeadingLevel = (value: unknown): boolean =>
   typeof value === 'number' && Object.hasOwn(HEADING, value);
 
+/** A value THE CARD JUMP and THE CLAMP can take: a boolean — the string
+ *  „false" is truthy, and null takes no default (THE JUMP, A PAGE'S TO TURN
+ *  OFF). Typed `unknown`, like its neighbours. */
+const isFlag = (value: unknown): boolean => typeof value === 'boolean';
+
 /** An address THE LINK can lead to: ROOT-ABSOLUTE, as i18n/href's localeHref
  *  builds every internal link (§15.13) — a string that starts with ONE slash,
  *  never with two or with a slash and a backslash, which a URL parser reads
@@ -1075,6 +1358,8 @@ export function PostCard({
   headingLevel = 2,
   sizes = PICTURE_SIZES,
   miniature,
+  jump = true,
+  clampable = false,
   className,
   ...rest
 }: PostCardProps): ReactElement {
@@ -1109,6 +1394,27 @@ export function PostCard({
       `PostCard: \`href\` is no root-absolute address — the card’s one link must lead to an article; got ${quoted(href)}.`,
     );
   }
+  // THE CARD JUMP, past the type (THE JUMP, A PAGE'S TO TURN OFF): named by
+  // its type (`quoted`), before a truthy „false" could grow a card twice or
+  // a null hold a list card still.
+  if (!isFlag(jump)) {
+    throw new RangeError(
+      `PostCard: \`jump\` is whether the card grows on a hover, true or false — got ${quoted(jump)}.`,
+    );
+  }
+  // THE CLAMP, past the type: named by its type (`quoted`), before a truthy
+  // „false" could clamp a card its page asked to keep whole.
+  if (!isFlag(clampable)) {
+    throw new RangeError(
+      `PostCard: \`clampable\` is whether the page may clamp the title and the summary, true or false — got ${quoted(clampable)}.`,
+    );
+  }
+  // THE CLAMP: the title's and the summary's, a clampable card's alone — so
+  // a card without it hands both elements the className they always had.
+  const titleClamp = clampable ? cx(CLAMP_BOX, CLAMP_LINES.title) : undefined;
+  const summaryClamp = clampable
+    ? cx(CLAMP_BOX, CLAMP_LINES.summary)
+    : undefined;
   // THE MINIATURE'S SHARE, merged over the caller's own style — a NEW object
   // for a miniature alone, so a card without one hands React the caller's
   // `style` inside the spread, where it always stood (byte for byte).
@@ -1141,12 +1447,18 @@ export function PostCard({
       </div>
       <div className={WORDS}>
         {/* The title, at the level the page's outline gives it, in the one
-            look every level wears (THE TITLE'S LEVEL): ui/Heading's
-            `band`. It never splits a word at a syllable (THE TITLE NEVER
-            SPLITS A WORD, `hyphens-none`), and its belt, `wrap-anywhere`,
-            breaks only a word that cannot fit its line by itself. */}
-        <Heading size="band" asChild>
-          <TitleElement id={titleId} className="hyphens-none wrap-anywhere">
+            look every level wears (THE TITLE'S LEVEL): ui/Heading's `band`
+            on a full card, `band`'s small row alone, `section`, on a
+            miniature (TITLE_STEP — THE STEPS THE MINIATURE CANNOT REDRAW).
+            It never splits a word at a syllable (THE TITLE NEVER SPLITS A
+            WORD, `hyphens-none`), and its belt, `wrap-anywhere`, breaks
+            only a word that cannot fit its line by itself; on a clampable
+            card the clamp rides after them (THE CLAMP). */}
+        <Heading size={TITLE_STEP[mini ? 'miniature' : 'full']} asChild>
+          <TitleElement
+            id={titleId}
+            className={cx('hyphens-none wrap-anywhere', titleClamp)}
+          >
             {title}
           </TitleElement>
         </Heading>
@@ -1168,7 +1480,9 @@ export function PostCard({
             ))}
           </ul>
         ) : null}
-        <Text tone="muted">{summary}</Text>
+        <Text tone="muted" className={summaryClamp}>
+          {summary}
+        </Text>
         <div className={FOOTER}>
           <Text tone="muted">{readingTime}</Text>
           {/* THE LINK: the card's one link, named by its label and the
@@ -1197,6 +1511,8 @@ export function PostCard({
     // the article stays one, and a smuggled `tabIndex` so the card keeps
     // one tab stop, its link. A miniature's share rides LAST, over the
     // caller's style, which can therefore never unset it (THE MINIATURE).
+    // The jump is worn whole unless the page turns it off; the read-more's
+    // hover area always (THE JUMP, A PAGE'S TO TURN OFF).
     <article
       {...rest}
       aria-label={undefined}
@@ -1204,7 +1520,7 @@ export function PostCard({
       tabIndex={undefined}
       aria-labelledby={titleId}
       className={cx(
-        CARD_JUMP,
+        jump ? CARD_JUMP : undefined,
         TEXT_BUTTON_HOVER_AREA,
         mini ? MINIATURE_CAPTURE : undefined,
         className,

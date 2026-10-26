@@ -241,6 +241,7 @@ const WITHHELD = [
   'visible',
   'cardCap',
   'cardWidth',
+  'flatFrom',
   'cardHeight',
   'labels',
   'mode',

@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import type { CSSProperties, ReactNode } from 'react';
 import {
   afterAll,
@@ -16,8 +22,20 @@ import { page, userEvent as realUser } from 'vitest/browser';
 import '@/styles/globals.css';
 import { Container } from '@/components/ui/Container/Container';
 import type { ClockEnv } from '@/lib/clock/clock';
-import { CardCarousel, type CardCarouselLabels } from './CardCarousel';
-import { ARRANGEMENTS, FIVE_FALLBACK, OUTER_SHARE, poseAt } from './conveyor';
+import {
+  CARD_CAROUSEL_FLAT_QUERY,
+  CardCarousel,
+  type CardCarouselLabels,
+} from './CardCarousel';
+import {
+  ARRANGEMENTS,
+  CARD_GAP,
+  FIVE_FALLBACK,
+  FLAT_SIDE_SCALE,
+  FLAT_STEP,
+  OUTER_SHARE,
+  poseAt,
+} from './conveyor';
 
 // sections/CardCarousel — THE STAGE, COMPUTED (CardCarousel.tsx's THE
 // GEOMETRY): what the engine draws with ./conveyor's numbers in a column of a
@@ -40,6 +58,22 @@ import { ARRANGEMENTS, FIVE_FALLBACK, OUTER_SHARE, poseAt } from './conveyor';
 // the same at the pinned widths; this file owns the THRESHOLDS, which a pinned
 // width can only sample. No typeface is needed: the stand-in cards are 3:4
 // boxes with no text that sets a size.
+//
+// ── THE FLAT ROW (2026-10-25) is drawn here at real windows — a 768 × 1024
+// tablet and a 1280 × 800 laptop, the root the whole window wide, the Home
+// band's 347.33px list card: its poses (the centre straight at scale 1, the
+// rest 0.9, CARD_GAP of air, no turn, one line), the mask opaque at the
+// arrows' strips, the reach and the live cards it frees, a REAL hover growing
+// the centre card to 1.05 and a live side card to the centre card's size, the
+// aura on the centre card alone, the drag's own step, and the rules' order —
+// and at 390 × 844 and 430 × 932 the line, exactly as without the option. The
+// viewports are the runner's own (`page.viewport`); a touch screen is never
+// emulated here (tests/unit/no-touch-emulation.test.ts), so the runner is a
+// mouse — a fine pointer — and keeps the row in a short window too (THE
+// QUERY's pointer clause, 2026-10-26), the coarse pointer's height clause read
+// as the engine reads it. And since that day: the row's layer by engine
+// (WebKit's alone — this runner's Chromium wears none), and Tab through the
+// row in its own order (CSS reading-flow, which this Chromium follows).
 
 const LABELS: CardCarouselLabels = {
   region: 'Galeria clinicii',
@@ -2215,5 +2249,562 @@ describe('CardCarousel — THE CLICK RESPONDER brings no tap flash', () => {
     expect(highlight(hand)).toBe(none);
     for (const slide of slides) expect(highlight(slide)).toBe(none);
     unmount();
+  });
+});
+
+describe('CardCarousel — THE FLAT ROW: from a tablet up, one straight row as wide as the screen', () => {
+  /** The Home band's list card in the theme's step: 347.33px at the default
+   *  root. */
+  const ROW_CARD = 'calc(var(--spacing) / 4 * (1106 - 2 * 32) / 3)';
+  const CARD_PX = (1106 - 2 * 32) / 3;
+
+  /** The seven cards left to right as a loop standing on its first card
+   *  draws them: positions −3 … +3. */
+  const LEFT_TO_RIGHT = [5, 6, 7, 1, 2, 3, 4].map((n) => `${n} din 7`);
+
+  /** The carousel of seven 3:4 stand-ins lying flat, in a `width` × `height`
+   *  window, its root the whole window wide — the consumer's bleed, here the
+   *  body's own width. */
+  async function mountRow(
+    width: number,
+    height: number,
+    mode: 'loop' | 'bounded' = 'loop',
+    content: ReactNode[] = cards(),
+  ) {
+    await page.viewport(width, height);
+    const drawn = render(
+      <CardCarousel
+        slides={content}
+        slideLabels={Array.from({ length: 7 }, (_, i) => `${i + 1} din 7`)}
+        labels={LABELS}
+        mode={mode}
+        visible={5}
+        cardWidth={ROW_CARD}
+        flatFrom="tablet"
+        env={STILL}
+      />,
+    );
+    const region = screen.getByRole('region', { name: LABELS.region });
+    const stage = region.querySelector('[aria-live]');
+    if (!(stage instanceof HTMLElement)) throw new Error('no stage');
+    const slides = [...stage.children].filter(
+      (child): child is HTMLElement => child instanceof HTMLElement,
+    );
+    const card = (name: string): HTMLElement => {
+      const found = slides.find(
+        (slide) => slide.getAttribute('aria-label') === name,
+      );
+      if (found === undefined) throw new Error(`no card ${name}`);
+      return found;
+    };
+    const previous = screen.getByRole('button', { name: LABELS.previous });
+    return { ...drawn, region, stage, slides, card, previous };
+  }
+
+  /** The names of the live cards — neither inert nor aria-hidden. */
+  const liveOf = (slides: HTMLElement[]): string[] =>
+    slides
+      .filter(
+        (slide) =>
+          !slide.hasAttribute('inert') && !slide.hasAttribute('aria-hidden'),
+      )
+      .map((slide) => slide.getAttribute('aria-label') ?? '');
+
+  /** A box's vertical middle. */
+  const middleOf = (rect: DOMRect): number => (rect.top + rect.bottom) / 2;
+
+  it('answers its query as the windows ask it — for this runner’s FINE pointer the row from 600 wide up at ANY height, a laptop a zoom made short among them (1366 × 633 at 125 % and 150 %: 1093 × 506, 911 × 422), the line under 600 — and for a COARSE pointer, never emulated here, the height clause alone: the line on a phone held sideways, the row on every tablet', async () => {
+    // The premise: a mouse.
+    expect(matchMedia('(pointer: fine)').matches).toBe(true);
+    for (const [width, height, flat] of [
+      [600, 512, true],
+      [768, 1024, true],
+      [1024, 768, true],
+      [1280, 800, true],
+      [1366, 633, true],
+      // THE QUERY's pointer clause (the header, 2026-10-26): short windows
+      // keep the row — a zoomed laptop's, a short desktop window's.
+      [1093, 506, true],
+      [911, 422, true],
+      [1280, 511, true],
+      [844, 390, true],
+      [599, 900, false],
+      [390, 844, false],
+      [320, 568, false],
+    ] as const) {
+      await page.viewport(width, height);
+      expect(
+        matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches,
+        `${width} × ${height}`,
+      ).toBe(flat);
+    }
+    // A COARSE pointer meets the pointer clause never, so it is answered by
+    // the height clause alone — read as the engine reads the query.
+    const [heightClause, pointerClause] = matchMedia(
+      CARD_CAROUSEL_FLAT_QUERY,
+    ).media.split(', ');
+    expect(pointerClause).toBe('(min-width: 37.5rem) and (pointer: fine)');
+    for (const [width, height, flat] of [
+      [844, 390, false],
+      [932, 430, false],
+      [390, 844, false],
+      [768, 1024, true],
+      [1024, 768, true],
+      [820, 1180, true],
+      [1180, 820, true],
+    ] as const) {
+      await page.viewport(width, height);
+      expect(
+        matchMedia(heightClause).matches,
+        `a coarse pointer, ${width} × ${height}`,
+      ).toBe(flat);
+    }
+  });
+
+  it.each([
+    [1093, 506],
+    [911, 422],
+  ] as const)(
+    'keeps THE ROW in a laptop window a zoom made short — %i × %i, under 32rem tall — every card flat, the centre card whole at its size in the aura: never the phone’s line under a fine pointer',
+    async (width, height) => {
+      const restore = withoutTransitions();
+      try {
+        const { stage, card } = await mountRow(width, height);
+        expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(true);
+        const centre = card('1 din 7');
+        for (const name of LEFT_TO_RIGHT) {
+          // Flat: a 2D matrix — no perspective, no turn.
+          expect(getComputedStyle(card(name)).transform, name).toMatch(
+            /^matrix\(/,
+          );
+        }
+        expectLength(
+          centre.getBoundingClientRect().width,
+          CARD_PX,
+          'the centre card',
+        );
+        expect(getComputedStyle(centre, '::before').opacity).toBe('1');
+        const box = stage.getBoundingClientRect();
+        expect(
+          centre.getBoundingClientRect().left +
+            centre.getBoundingClientRect().width / 2,
+        ).toBeCloseTo(box.left + box.width / 2, 1);
+        const html = document.documentElement;
+        expect(html.scrollWidth).toBeLessThanOrEqual(html.clientWidth);
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  it.each([
+    // [window, the reach a side, the live cards]
+    [768, 1024, 0, ['1 din 7']],
+    [1280, 800, 1, ['1 din 7', '2 din 7', '7 din 7']],
+  ] as const)(
+    'lays ONE STRAIGHT ROW at %i × %i — the centre card whole, the rest 0.9, the air, one line — the mask at the strips, %i live a side',
+    async (width, height, reach, live) => {
+      const restore = withoutTransitions();
+      try {
+        const { region, stage, slides, card, previous } = await mountRow(
+          width,
+          height,
+        );
+        expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(true);
+        // THE STAGE IS THE SCREEN: the root the page's whole width — the
+        // window less the classic scrollbar's 15px gutter this runner keeps
+        // (753 at a 768 window, 1265 at 1280) — and the stage the root's.
+        const root = region.getBoundingClientRect();
+        const box = stage.getBoundingClientRect();
+        expectLength(
+          root.width,
+          document.body.getBoundingClientRect().width,
+          'the root',
+        );
+        expect(root.width).toBeGreaterThan(width - 16);
+        expectLength(box.width, root.width, 'the stage');
+        for (const slide of slides) {
+          expectLength(
+            parseFloat(getComputedStyle(slide).width),
+            CARD_PX,
+            'a card box',
+          );
+          // Flat: a 2D matrix — no perspective, no turn.
+          expect(getComputedStyle(slide).transform).toMatch(/^matrix\(/);
+        }
+        // THE POSES, drawn: the centre card straight, whole and centred, its
+        // full size; every other card 0.9 of it.
+        const rects = LEFT_TO_RIGHT.map((name) =>
+          card(name).getBoundingClientRect(),
+        );
+        const centre = rects[3];
+        expectLength(centre.width, CARD_PX, 'the centre card');
+        expect(centre.left + centre.width / 2).toBeCloseTo(
+          box.left + box.width / 2,
+          1,
+        );
+        for (const [index, rect] of rects.entries()) {
+          if (index === 3) continue;
+          expect(rect.width, LEFT_TO_RIGHT[index]).toBeCloseTo(
+            FLAT_SIDE_SCALE * CARD_PX,
+            1,
+          );
+        }
+        // CARD_GAP of air between every two neighbours' drawn edges.
+        for (let index = 1; index < rects.length; index++) {
+          expect(
+            rects[index].left - rects[index - 1].right,
+            `${LEFT_TO_RIGHT[index - 1]} → ${LEFT_TO_RIGHT[index]}`,
+          ).toBeCloseTo(CARD_GAP * CARD_PX, 1);
+        }
+        // ONE LINE: every card's vertical middle the centre card's.
+        for (const rect of rects) {
+          expect(middleOf(rect)).toBeCloseTo(middleOf(centre), 2);
+        }
+        // THE MASK: transparent at the stage's edge, opaque at the arrow's
+        // strip's inner edge — the fade the strip itself.
+        const bar = previous.getBoundingClientRect().width;
+        expect(bar).toBeCloseTo(36, 1);
+        const [clear, opaque] = maskStops(stage);
+        expect(clear).toBeCloseTo(0, 2);
+        expect(opaque).toBeCloseTo(bar, 1);
+        // THE REACH: the cards wholly clear of the strips even grown to the
+        // centre card's size live, the rest previews — the belt both halves.
+        const names: readonly string[] = live;
+        expect(liveOf(slides).sort()).toEqual([...names].sort());
+        for (const slide of slides) {
+          const isLive = names.includes(slide.getAttribute('aria-label') ?? '');
+          expect(slide.hasAttribute('inert')).toBe(!isLive);
+          expect(slide.getAttribute('aria-hidden')).toBe(
+            isLive ? null : 'true',
+          );
+        }
+        // …and every live card's grown box inside the strips.
+        for (const name of names) {
+          const rect = card(name).getBoundingClientRect();
+          const middle = rect.left + rect.width / 2;
+          expect(middle - CARD_PX / 2).toBeGreaterThanOrEqual(box.left + bar);
+          expect(middle + CARD_PX / 2).toBeLessThanOrEqual(box.right - bar);
+        }
+        // The reach is the conveyor's own arithmetic on these numbers.
+        expect(reach).toBe(
+          Math.max(
+            0,
+            Math.floor(((box.width / 2 - bar) / CARD_PX - 0.55) / 0.96),
+          ),
+        );
+        const html = document.documentElement;
+        expect(html.scrollWidth).toBeLessThanOrEqual(html.clientWidth);
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  it('lets a pointer through an inert side card to the hand’s box at 768, and gives it to a LIVE one at 1280', async () => {
+    const tablet = await mountRow(768, 1024);
+    const tabletSide = tablet.card('2 din 7').getBoundingClientRect();
+    const strip = tablet.previous.getBoundingClientRect().width;
+    // A point on the side card, short of the next arrow's strip.
+    const x = Math.min(
+      tabletSide.left + tabletSide.width / 4,
+      tablet.stage.getBoundingClientRect().right - strip - 2,
+    );
+    const y = tabletSide.top + tabletSide.height / 2;
+    expect(x).toBeGreaterThan(tabletSide.left);
+    expect(document.elementFromPoint(x, y)).toBe(tablet.stage.parentElement);
+    tablet.unmount();
+    const laptop = await mountRow(1280, 800);
+    const side = laptop.card('2 din 7');
+    const rect = side.getBoundingClientRect();
+    expect(
+      side.contains(
+        document.elementFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it('grows a card under a REAL pointer — the box, not the card in it: the centre card to 1.05, ui/Button’s jump, and a live side card to 1 ÷ 0.9, the centre card’s own size', async () => {
+    const restore = withoutTransitions();
+    try {
+      expect(matchMedia('(hover: hover)').matches).toBe(true);
+      const { card } = await mountRow(1280, 800);
+      const centre = card('1 din 7');
+      const side = card('2 din 7');
+      expect(getComputedStyle(centre).scale).toBe('none');
+      await realUser.hover(centre);
+      expect(Number(getComputedStyle(centre).scale)).toBeCloseTo(1.05, 5);
+      expect(centre.getBoundingClientRect().width).toBeCloseTo(
+        1.05 * CARD_PX,
+        1,
+      );
+      // Grown about its own centre: still centred on the stage.
+      await realUser.hover(side);
+      expect(getComputedStyle(centre).scale).toBe('none');
+      expect(Number(getComputedStyle(side).scale)).toBeCloseTo(1 / 0.9, 4);
+      // 0.9 × 1 ÷ 0.9: the centre card's own size, where it stood.
+      const grown = side.getBoundingClientRect();
+      expect(grown.width).toBeCloseTo(CARD_PX, 1);
+      expect(grown.left + grown.width / 2).toBeCloseTo(
+        centre.getBoundingClientRect().left +
+          centre.getBoundingClientRect().width / 2 +
+          FLAT_STEP * CARD_PX,
+        1,
+      );
+      // Still clear of the centre card.
+      expect(grown.left).toBeGreaterThan(centre.getBoundingClientRect().right);
+    } finally {
+      restore();
+    }
+  });
+
+  it('wears the aura on the centred card alone, in the row alone — the house’s glow on a layer its own size, the soft corner, taking no pointer', async () => {
+    const restore = withoutTransitions();
+    try {
+      const { slides, card } = await mountRow(1280, 800);
+      const glow = getComputedStyle(card('1 din 7'), '::before');
+      expect(glow.opacity).toBe('1');
+      expect(glow.position).toBe('absolute');
+      expect(glow.pointerEvents).toBe('none');
+      expect(glow.borderTopLeftRadius).toBe('16px');
+      expect(glow.boxShadow).toMatch(/0px 8px 22px/);
+      for (const slide of slides) {
+        if (slide === card('1 din 7')) continue;
+        expect(getComputedStyle(slide, '::before').opacity).toBe('0');
+      }
+      // The layer is the box's own size.
+      const box = card('1 din 7');
+      expect(parseFloat(glow.width)).toBeCloseTo(
+        parseFloat(getComputedStyle(box).width),
+        1,
+      );
+    } finally {
+      restore();
+    }
+  });
+
+  // A phone held SIDEWAYS keeps the line by its coarse pointer, which this
+  // runner never emulates: the query test above reads that clause instead.
+  it.each([
+    [390, 844],
+    [430, 932],
+  ] as const)(
+    'keeps THE LINE on a phone held upright — a %i × %i window: every card the line’s function list to the bit and no `translate`, the centre card alone live, no aura',
+    async (width, height) => {
+      const restore = withoutTransitions();
+      try {
+        const { stage, slides } = await mountRow(width, height);
+        expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(false);
+        const probe = document.createElement('div');
+        probe.style.width = 'var(--card)';
+        probe.style.transform =
+          'perspective(calc(var(--card) * var(--k))) translateX(calc(var(--card) * var(--tx))) rotateY(calc(var(--ry) * 1deg)) scale(var(--sc))';
+        stage.append(probe);
+        try {
+          for (const slide of slides) {
+            for (const name of ['--tx', '--ry', '--sc']) {
+              probe.style.setProperty(name, slide.style.getPropertyValue(name));
+            }
+            expect(getComputedStyle(slide).transform).toBe(
+              getComputedStyle(probe).transform,
+            );
+            expect(getComputedStyle(slide).translate).toBe('none');
+            expect(getComputedStyle(slide, '::before').opacity).toBe('0');
+          }
+        } finally {
+          probe.remove();
+        }
+        expect(liveOf(slides)).toEqual(['1 din 7']);
+        // THE FIXED CARD's own mask: the room what the column leaves beside
+        // the window, the fade short of the centre card.
+        const column = stage.getBoundingClientRect().width;
+        const room = Math.max(
+          0,
+          (column - ARRANGEMENTS[5].ratio * CARD_PX) / 2,
+        );
+        const [clear, opaque] = maskStops(stage);
+        expect(clear).toBeCloseTo(room, 1);
+        expect(opaque - clear).toBeCloseTo(
+          Math.min(
+            ARRANGEMENTS[5].fade * CARD_PX,
+            Math.max(0, (column - CARD_PX) / 2 - room),
+          ),
+          1,
+        );
+        const root = document.documentElement;
+        expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  it('drags the row on its OWN step: FLAT_STEP card widths a card, the centre card under the hand', async () => {
+    const restore = withoutTransitions();
+    try {
+      const { stage, card } = await mountRow(1280, 800);
+      const centre = card('1 din 7');
+      const rest = centre.getBoundingClientRect();
+      const box = stage.getBoundingClientRect();
+      const x = box.left + box.width / 2;
+      const init = {
+        pointerId: 3,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        buttons: 1,
+        clientY: box.top + box.height / 2,
+      };
+      const dx = -0.3 * FLAT_STEP * CARD_PX;
+      fireEvent.pointerDown(stage, { ...init, clientX: x });
+      fireEvent.pointerMove(stage, { ...init, clientX: x + dx / 2 });
+      fireEvent.pointerMove(stage, { ...init, clientX: x + dx });
+      await frame();
+      const moved = centre.getBoundingClientRect();
+      expect(
+        moved.left + moved.width / 2 - (rest.left + rest.width / 2),
+      ).toBeCloseTo(dx, 1);
+      fireEvent.pointerCancel(stage, { ...init, buttons: 0, clientX: x + dx });
+    } finally {
+      restore();
+    }
+  });
+
+  it('gives a card box in the row its compositing layer in WEBKIT alone — `will-change: transform` under the row’s query and `@supports (font: -apple-system-body)`, a keyword only WebKit knows — and this Chromium none, whose layer kept a hovered card a stretched copy (the header’s THE LAYER, BY ENGINE)', async () => {
+    // The premise: this engine is no WebKit.
+    expect(CSS.supports('font', '-apple-system-body')).toBe(false);
+    const { slides } = await mountRow(1280, 800);
+    expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(true);
+    for (const slide of slides) {
+      expect(
+        getComputedStyle(slide).willChange,
+        slide.getAttribute('aria-label') ?? '',
+      ).toBe('auto');
+    }
+    // …and the rule WebKit reads, where it sits: inside the supports test,
+    // inside the row's query.
+    const selector = `.${CSS.escape(
+      '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:supports-[font:-apple-system-body]:will-change-transform',
+    )}`;
+    const found: CSSStyleRule[] = [];
+    const walk = (rules: CSSRuleList): void => {
+      for (const rule of rules) {
+        if (rule instanceof CSSStyleRule && rule.selectorText === selector) {
+          found.push(rule);
+        } else if (rule instanceof CSSGroupingRule) {
+          walk(rule.cssRules);
+        }
+      }
+    };
+    for (const sheet of document.styleSheets) walk(sheet.cssRules);
+    expect(found).toHaveLength(1);
+    const [rule] = found;
+    expect(rule.style.getPropertyValue('will-change')).toBe('transform');
+    const supports = rule.parentRule;
+    expect(supports).toBeInstanceOf(CSSSupportsRule);
+    expect(
+      (supports as CSSSupportsRule).conditionText.replaceAll(' ', ''),
+    ).toBe('(font:-apple-system-body)');
+    const media = supports?.parentRule;
+    expect(media).toBeInstanceOf(CSSMediaRule);
+    expect((media as CSSMediaRule).conditionText.replaceAll(' ', '')).toBe(
+      CARD_CAROUSEL_FLAT_QUERY.replaceAll(' ', ''),
+    );
+  });
+
+  it('Tabs through the row in its OWN order — left to right as drawn, the far left card first, where the DOM would go centre, right, far left: CSS reading-flow on the stage and each card’s reading-order, which this Chromium follows (the header’s THE TAB ORDER FOLLOWS THE ROW)', async () => {
+    // The premise: an engine that knows both properties.
+    expect(CSS.supports('reading-flow', 'source-order')).toBe(true);
+    expect(CSS.supports('reading-order', '1')).toBe(true);
+    const linked = Array.from({ length: 7 }, (_, index) => (
+      <div key={index} style={{ aspectRatio: '3 / 4' }}>
+        <a href={`#card-${index + 1}`}>{`Deschide ${index + 1}`}</a>
+      </div>
+    ));
+    const { region, slides } = await mountRow(1280, 800, 'loop', linked);
+    // One live card a side: „7 din 7", „1 din 7", „2 din 7".
+    expect(liveOf(slides).sort()).toEqual(['1 din 7', '2 din 7', '7 din 7']);
+    const stage = region.querySelector('[aria-live]');
+    if (!(stage instanceof HTMLElement)) throw new Error('no stage');
+    expect(getComputedStyle(stage).getPropertyValue('reading-flow')).toBe(
+      'source-order',
+    );
+    const beads = within(
+      screen.getByRole('group', { name: LABELS.picker }),
+    ).getAllByRole('button');
+    beads[beads.length - 1].focus();
+    const order: string[] = [];
+    for (let step = 0; step < 3; step++) {
+      await realUser.tab();
+      const holder = slides.find((slide) =>
+        slide.contains(document.activeElement),
+      );
+      order.push(holder?.getAttribute('aria-label') ?? 'outside the cards');
+    }
+    expect(order).toEqual(['7 din 7', '1 din 7', '2 din 7']);
+  });
+
+  it('orders the rules so the row wins only inside its query: every override a later rule than the line’s at the same weight, the hover’s reduced-motion hold after the hover', () => {
+    const rules = styleRules();
+    /** The one rule whose selector is exactly the class (and its pseudo). */
+    const ruleOf = (className: string, pseudo = ''): number => {
+      const selector = `.${CSS.escape(className)}${pseudo}`;
+      const indices = rules.flatMap((rule, index) =>
+        rule.selector === selector ? [index] : [],
+      );
+      expect(indices, selector).toHaveLength(1);
+      return indices[0];
+    };
+    const condition = (media: string[]): string[] =>
+      media.map((text) => text.replaceAll(' ', ''));
+    // Each override spelled WHOLE — the very class the island wears: an
+    // override written bare here, outside its variant, is a class of its own
+    // in a scanned file, and Tailwind would ship a rule nothing wears.
+    for (const [override, base, pseudo] of [
+      [
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[--inset:0px]',
+        '[--inset:max(0px,calc((100cqw_-_var(--card)*var(--r5))/2))]',
+        '',
+      ],
+      [
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[--fade:var(--bar)]',
+        '[--fade:min(calc(var(--card)*var(--f5)),max(0px,calc((100cqw_-_var(--card))/2_-_var(--inset))))]',
+        '',
+      ],
+      [
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[transform:scale(var(--fsc))]',
+        '[transform:perspective(calc(var(--card)*var(--k)))_translateX(calc(var(--card)*var(--tx)))_rotateY(calc(var(--ry)*1deg))_scale(var(--sc))]',
+        '',
+      ],
+      [
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:before:opacity-100',
+        'before:opacity-0',
+        '::before',
+      ],
+    ] as const) {
+      const later = ruleOf(override, pseudo);
+      const earlier = ruleOf(base, pseudo);
+      expect(later, override).toBeGreaterThan(earlier);
+      expect(condition(rules[later].media)).toEqual([
+        CARD_CAROUSEL_FLAT_QUERY.replaceAll(' ', ''),
+      ]);
+      expect(rules[earlier].media, base).toEqual([]);
+    }
+    const hover = ruleOf(
+      'hover:scale-[max(1.05,calc(1/var(--fsc)))]',
+      ':hover',
+    );
+    const held = ruleOf('motion-reduce:hover:scale-100', ':hover');
+    expect(held).toBeGreaterThan(hover);
+    expect(rules[hover].media).toContain('(hover: hover)');
+    expect(rules[held].media).toEqual(
+      expect.arrayContaining([
+        '(prefers-reduced-motion: reduce)',
+        '(hover: hover)',
+      ]),
+    );
   });
 });

@@ -8,12 +8,23 @@ import { cx } from '@/lib/cx/cx';
 import type { ImagePath } from '@/lib/image-path/image-path';
 import ro from '@/messages/ro.json';
 import {
+  CARD_CAROUSEL_FLAT_QUERY,
   CardCarousel,
   type CardCarouselLabels,
   type CardCarouselMode,
   type CardCarouselVisible,
 } from './CardCarousel';
-import { ARRANGEMENTS, OUTER_SHARE, STEP, poseAt } from './conveyor';
+import {
+  ARRANGEMENTS,
+  CARD_GAP,
+  FLAT_PITCH,
+  FLAT_SIDE_SCALE,
+  FLAT_STEP,
+  OUTER_SHARE,
+  STEP,
+  flatReach,
+  poseAt,
+} from './conveyor';
 import { BOUNDED_RESISTANCE } from './drag';
 
 // Sections/CardCarousel — the card carousel's workbench: the owner's FOUR
@@ -25,12 +36,19 @@ import { BOUNDED_RESISTANCE } from './drag';
 // (FixedWidth: a 14rem card in three columns, five asked for in each, the
 // stage the column, a narrow one cut from the faded sides — the Home band's
 // way since 2026-10-17, which retired the FULL-WIDTH story of the lifted cap
-// with the option itself on 2026-10-20), the cards' ONE HEIGHT
-// (UniformHeight: notes of unequal length, every box the tallest's), and
-// five MOVING stories the pixel net never photographs (tag `no-visual`): the
-// automatic move caught mid-glide, the hand, the bounded list's two ends, its
-// ping-pong, and the controls pressed — the arrows and the beads, then the
-// stop for good.
+// with the option itself on 2026-10-20), THE FLAT ROW (2026-10-25 —
+// FlatRowTablet and FlatRowNotebook: the 14rem cards lying flat across the
+// whole canvas from a tablet up, pinned to a 768 × 1024 tablet and a laptop's
+// 1280 × 800; the pixel net opens them at its own 390 and 1536, so it
+// photographs THE LINE and the row), the cards' ONE HEIGHT (UniformHeight:
+// notes of unequal length, every box the tallest's), and six MOVING stories
+// the pixel net never photographs (tag `no-visual`): the automatic move caught
+// mid-glide, the hand, the bounded list's two ends, its ping-pong, the
+// controls pressed — the arrows and the beads, then the stop for good — and
+// the flat row caught mid-glide (FlatRowMoving). The flat row's plays read
+// the centred card off the current BEAD (`centredOf`): in the row its live
+// neighbours are not inert either, so "the card that is not inert" is no
+// longer the centre there.
 //
 // ── THE DEMO CARD IS A STAND-IN (the owner: "always hold a card and i'll
 // decide later on card"). It follows his screenshot — a portrait 3:4 card, the
@@ -931,6 +949,170 @@ async function expectTrackStop(canvasElement: HTMLElement): Promise<void> {
   }
 }
 
+/** The card the beads name current — the ring's own, in the row (where its
+ *  live neighbours are not inert either) as on the line. */
+function centredOf(root: HTMLElement): HTMLElement {
+  const picker = within(regionOf(root)).getByRole('group', {
+    name: LABELS.picker,
+  });
+  const name = within(picker)
+    .getAllByRole('button')
+    .find((bead) => bead.getAttribute('aria-current') === 'true')
+    ?.getAttribute('aria-label');
+  const card = cardsOf(stageOf(root)).find(
+    (entry) => entry.getAttribute('aria-label') === name,
+  );
+  if (card === undefined) {
+    throw new Error('CardCarousel story: no card is the current bead’s');
+  }
+  return card;
+}
+
+/** A card's place on THE FLAT ROW, from the row's pose it wears — the
+ *  inverse of ./conveyor's flatPoseAt: whole at rest. */
+function rowPlaceOf(card: HTMLElement): number {
+  const tx = Number(card.style.getPropertyValue('--ftx'));
+  const out = Math.abs(tx);
+  const place =
+    out <= FLAT_STEP ? out / FLAT_STEP : 1 + (out - FLAT_STEP) / FLAT_PITCH;
+  return Math.sign(tx) * place;
+}
+
+/**
+ * THE FLAT ROW, MEASURED (CardCarousel.tsx's THE FLAT ROW) wherever the ring
+ * stands and at whatever size the runner opens the story: from the row's
+ * query up, THE ROW — the stage the root, the centre card straight and whole
+ * at its full size in the aura, every other at 0.9, CARD_GAP of air between
+ * neighbours, every card unturned and every centre on one line, the mask
+ * opaque at the arrows' strips, and live exactly the cards the reach frees —
+ * and, where it frees any, the stage silent beside one status line saying the
+ * centred card's label, that card's group the current one (THE ANNOUNCEMENT
+ * IS THE CENTRE CARD'S, THE CURRENT CARD, SAID); under it, THE LINE — every
+ * card turned or straight through its perspective, the centre card alone
+ * live, no aura, no status line. Read at rest.
+ */
+async function expectFlatRow(root: HTMLElement): Promise<void> {
+  const region = regionOf(root);
+  const stage = stageOf(root);
+  const { previous } = controlsOf(root);
+  const flat = matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches;
+  const reading = await atRest(region, () => {
+    const centred = centredOf(root);
+    return {
+      root: region.getBoundingClientRect(),
+      stage: stage.getBoundingClientRect(),
+      bar: previous.getBoundingClientRect().width,
+      width: widthOf(cardsOf(stage)[0]),
+      mask: getComputedStyle(stage).maskImage,
+      // THE ANNOUNCEMENT IS THE CENTRE CARD'S: the stage's politeness, and
+      // the status line beside it — the section's own live region — if any.
+      stageLive: stage.getAttribute('aria-live'),
+      status: region.querySelector(':scope > [aria-live]')?.textContent ?? null,
+      cards: cardsOf(stage).map((card) => ({
+        name: card.getAttribute('aria-label'),
+        rect: card.getBoundingClientRect(),
+        place: rowPlaceOf(card),
+        transform: getComputedStyle(card).transform,
+        live: !card.hasAttribute('inert') && !card.hasAttribute('aria-hidden'),
+        glow: getComputedStyle(card, '::before').opacity,
+        current: card.getAttribute('aria-current'),
+        centred: card === centred,
+      })),
+    };
+  });
+  const { width } = reading;
+  const centre = reading.cards.find((entry) => entry.centred);
+  if (centre === undefined) throw new Error('no centred card');
+  if (!flat) {
+    // THE LINE: every card through its perspective, the centre alone live,
+    // no aura — and the stage the cards' one live region.
+    for (const entry of reading.cards) {
+      await expect(entry.transform).toMatch(/^matrix3d\(/);
+      await expect(entry.live).toBe(entry.centred);
+      await expect(entry.glow).toBe('0');
+      await expect(entry.current).toBeNull();
+    }
+    await expect(reading.status).toBeNull();
+    return;
+  }
+  // THE STAGE IS THE SCREEN: the stage the root, the root the canvas.
+  await near(reading.stage.width, reading.root.width, 0.5, 'the stage');
+  // THE POSES: the centre card whole at its size, straight; the rest 0.9.
+  await near(centre.place, 0, 1e-6, 'the centred card’s place');
+  await near(centre.rect.width, width, 0.5, 'the centre card at its size');
+  await near(
+    centre.rect.left + centre.rect.width / 2,
+    reading.stage.left + reading.stage.width / 2,
+    0.5,
+    'the centre card centred',
+  );
+  for (const entry of reading.cards) {
+    await expect(entry.transform).toMatch(/^matrix\(/);
+    if (entry.centred) continue;
+    await near(
+      entry.rect.width,
+      FLAT_SIDE_SCALE * width,
+      0.5,
+      `${entry.name}: 0.9 of a card`,
+    );
+  }
+  // THE AIR: CARD_GAP between every two neighbours' drawn edges.
+  const row = [...reading.cards].sort((a, b) => a.place - b.place);
+  for (let index = 1; index < row.length; index++) {
+    await near(
+      row[index].rect.left - row[index - 1].rect.right,
+      CARD_GAP * width,
+      0.5,
+      `${row[index - 1].name} → ${row[index].name}: the air`,
+    );
+  }
+  // ONE LINE: every card's vertical middle the centre card's.
+  for (const entry of reading.cards) {
+    await near(
+      middle(entry.rect),
+      middle(centre.rect),
+      0.5,
+      `${entry.name}: on the line`,
+    );
+  }
+  // THE MASK: transparent at the stage's edge, opaque at the strip's inner
+  // edge.
+  const stops =
+    /^linear-gradient\(to right, rgba\(0, 0, 0, 0\) ([-\d.e+]+)px, rgb\(0, 0, 0\) ([-\d.e+]+)px/.exec(
+      reading.mask,
+    );
+  if (stops === null) throw new Error(`an unexpected mask: ${reading.mask}`);
+  await near(Number(stops[1]), 0, 0.5, 'the mask clear at the stage’s edge');
+  await near(Number(stops[2]), reading.bar, 0.5, 'opaque at the strip');
+  // THE REACH: live exactly the cards ./conveyor's arithmetic frees on these
+  // numbers — held under half the list — and the aura the centred card's.
+  const reach = Math.min(
+    flatReach((reading.stage.width / 2 - reading.bar) / width),
+    Math.floor((COUNT - 1) / 2),
+  );
+  for (const entry of reading.cards) {
+    await expect(entry.live, `${entry.name}: live`).toBe(
+      Math.abs(Math.round(entry.place)) <= reach,
+    );
+    await expect(entry.glow, `${entry.name}: the aura`).toBe(
+      entry.centred ? '1' : '0',
+    );
+    // THE CURRENT CARD, SAID — of several live cards only.
+    await expect(entry.current, `${entry.name}: current`).toBe(
+      reach > 0 && entry.centred ? 'true' : null,
+    );
+  }
+  // THE ANNOUNCEMENT IS THE CENTRE CARD'S: with live side cards the stage is
+  // silent and one status line says the centred card's label; with none, the
+  // stage is the live region it always was.
+  if (reach > 0) {
+    await expect(reading.stageLive).toBe('off');
+    await expect(reading.status).toBe(centre.name);
+  } else {
+    await expect(reading.status).toBeNull();
+  }
+}
+
 // ── THE STORIES ────────────────────────────────────────────────────────────
 
 /**
@@ -1182,6 +1364,78 @@ export const FixedWidth: Story = {
         `${column}px: the centre card centred`,
       );
     }
+    await expectNoSidewaysScroll();
+  },
+};
+
+/**
+ * THE FLAT ROW's carousel (CardCarousel.tsx): the eight photo cards at THE
+ * FIXED CARD's 14rem, five asked for — the Home band's own window — lying flat
+ * from a tablet up, across the whole canvas: no frame of ours, as the Home
+ * band bleeds its carousel to the screen.
+ */
+function FlatRowDemo({
+  mode,
+  visible,
+  env,
+  intervalMs,
+  startDelayMs,
+}: DemoProps) {
+  return (
+    <CardCarousel
+      slides={SLIDES}
+      slideLabels={slideLabelsFor(COUNT)}
+      labels={LABELS}
+      visible={visible}
+      mode={mode}
+      cardWidth={FIXED_CARD}
+      flatFrom="tablet"
+      env={env}
+      intervalMs={intervalMs}
+      startDelayMs={startDelayMs}
+    />
+  );
+}
+
+/**
+ * THE FLAT ROW on a TABLET, 768 × 1024 (CardCarousel.tsx): one straight row
+ * as wide as the canvas — the centre card straight at its full size in the
+ * house's aura, every other at 0.9 on the same line, CARD_GAP of air between
+ * them, as many showing as fit and fading out under the arrows, the ones clear
+ * of the arrows live (hovered, pressed, tabbed to). Moving by itself in the
+ * workbench, like the other visual stories. On a phone — the pixel net's 390
+ * frame — the same carousel is THE LINE.
+ */
+export const FlatRowTablet: Story = {
+  args: { visible: 5 },
+  parameters: { frame: 'bleed' },
+  globals: { locale: 'ro', viewport: { value: 'tablet' } },
+  render: (args) => <FlatRowDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    await loadFace(canvasElement);
+    // The pin's premise: the row is what this window draws.
+    await expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(true);
+    await expectControls(canvasElement);
+    await expectFlatRow(canvasElement);
+    await expectNoSidewaysScroll();
+  },
+};
+
+/**
+ * THE FLAT ROW on a LAPTOP's 1280 × 800 (§7's Notebook): the same row, wider —
+ * more cards on it and more of them live.
+ */
+export const FlatRowNotebook: Story = {
+  args: { visible: 5 },
+  parameters: { frame: 'bleed' },
+  globals: { locale: 'ro', viewport: { value: 'notebook' } },
+  render: (args) => <FlatRowDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    await loadFace(canvasElement);
+    // The pin's premise: the row is what this window draws.
+    await expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(true);
+    await expectControls(canvasElement);
+    await expectFlatRow(canvasElement);
     await expectNoSidewaysScroll();
   },
 };
@@ -1616,6 +1870,59 @@ export const Controls: Story = {
       await userEvent.tab();
       await expect(document.activeElement).toBe(bead);
     }
+    await expectNoSidewaysScroll();
+  },
+};
+
+/**
+ * THE FLAT ROW MOVING (`no-visual`: it moves by design), on a laptop's 1280 ×
+ * 800 and the product's rhythm: after the 1.5 s first dwell the row moves on,
+ * and the play pauses every glide at its half and reads the row there — still
+ * straight, every card unturned and every centre on one line, the card coming
+ * to the centre between its two sizes (CardCarousel.tsx's THE FLAT ROW).
+ */
+export const FlatRowMoving: Story = {
+  args: { visible: 5 },
+  parameters: { frame: 'bleed' },
+  globals: { locale: 'ro', viewport: { value: 'notebook' } },
+  tags: ['no-visual'],
+  render: (args) => <FlatRowDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    await loadFace(canvasElement);
+    const stage = stageOf(canvasElement);
+    await expect(matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches).toBe(true);
+    await expect(await restingCentre(stage)).toBe('1 din 8');
+
+    await waitFor(
+      () =>
+        expect(centredOf(canvasElement)).toHaveAttribute(
+          'aria-label',
+          '2 din 8',
+        ),
+      { timeout: 6_000, interval: 16 },
+    );
+    const gliding = freezeGlides(stage, 350);
+    await expect(gliding.length).toBeGreaterThan(0);
+    const cards = cardsOf(stage);
+    const centres = cards.map((card) => middle(card.getBoundingClientRect()));
+    await near(
+      Math.max(...centres) - Math.min(...centres),
+      0,
+      0.5,
+      'the vertical centres mid-glide',
+    );
+    for (const card of cards) {
+      await expect(getComputedStyle(card).transform).toMatch(/^matrix\(/);
+    }
+    // The card coming in is half-way: wider than a side card, narrower than
+    // the centre card at rest.
+    const incoming = centredOf(canvasElement);
+    const drawn = incoming.getBoundingClientRect().width;
+    await expect(drawn).toBeGreaterThan(
+      FLAT_SIDE_SCALE * widthOf(incoming) + 0.5,
+    );
+    await expect(drawn).toBeLessThan(widthOf(incoming) - 0.5);
+    for (const animation of gliding) animation.finish();
     await expectNoSidewaysScroll();
   },
 };

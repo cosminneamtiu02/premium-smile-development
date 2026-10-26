@@ -476,9 +476,10 @@ const productFiles = readdirSync(new URL('src/', REPO), {
  *  step (the census below). */
 const WEARERS = [
   // The Home page's articles band (2026-10-17) — its opener on the rhythm box,
-  // and its carousel — as wide as the column, its cards 65 % miniatures — on a
-  // box of its own that wears `bandScaleClasses` again, with THE FLOOR beside
-  // it, so the cards never draw smaller than the owner's 1401 look.
+  // and its carousel, its cards 65 % miniatures, on a box of its own that
+  // wears `bandScaleClasses` again: since 2026-10-25 a flat row as wide as the
+  // screen from a tablet up, at the tiles' zoom over its miniature's share
+  // (THE ZOOM below), so a card's summary reads a tile's sentence.
   'components/sections/BlogCarousel/BlogCarousel.tsx',
   'components/sections/ClinicLocation/ClinicLocation.tsx',
   'components/sections/DoctorIntro/DoctorIntro.tsx',
@@ -507,6 +508,37 @@ const tokensOf = (code: string): { variants: string[]; utility: string }[] =>
     )
     .filter(Boolean)
     .map(parse);
+
+/** Every token round each occurrence of `opener` in a raw text, read WHOLE —
+ *  back to the white space, quote or backtick before it and on to the one
+ *  after — so a declaration is read with the variant chain it rides behind,
+ *  never from its bracket alone: read that way, a setter behind another
+ *  variant, or behind none, passed for a worn class (the G2 typescript
+ *  review, 2026-10-26). Both D-LIT rules below read through it. */
+const wholeTokens = (text: string, opener: string): string[] => {
+  const out: string[] = [];
+  for (let at = text.indexOf(opener); at !== -1;) {
+    let start = at;
+    let end = at;
+    while (start > 0 && !/[\s'"`]/.test(text[start - 1] ?? '')) start -= 1;
+    while (end < text.length && !/[\s'"`]/.test(text[end] ?? '')) end += 1;
+    out.push(text.slice(start, end));
+    at = text.indexOf(opener, end);
+  }
+  return out;
+};
+
+/** THE FLAT ROW'S VARIANT (2026-10-25): from a tablet's screen up the Home
+ *  articles band's carousel lies flat, and every class that rides that row —
+ *  the carousel's own and the band's round it — wears ONE arbitrary media
+ *  variant: sections/CardCarousel's exported query, the one its matchMedia
+ *  reads, with Tailwind's underscores for its spaces. Derived here and never
+ *  retyped, so the band's classes are held to the carousel's query (the G2
+ *  reviews moved it once already: a fine pointer joined the height). */
+const FLAT_ROW = `[@media${exported(
+  tsCode(read('src/components/sections/CardCarousel/CardCarousel.tsx')),
+  'CARD_CAROUSEL_FLAT_QUERY',
+).replaceAll(' ', '_')}]`;
 
 describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band of Home and Team (§15.32)', () => {
   const count = (token: string): number => container.split(token).length - 1;
@@ -564,7 +596,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     );
   });
 
-  it('multiplies the pixel by THE ZOOM — 1 unless a box says otherwise, and ONE box says otherwise: DoctorStats’ tiles, at 9/8', () => {
+  it('multiplies the pixel by THE ZOOM — 1 unless a box says otherwise, and TWO boxes say otherwise: DoctorStats’ tiles at 9/8, and the Home articles band’s flat row at the tiles’ zoom over its miniature’s share', () => {
     expect(pixel.zoom).toBe('--band-zoom');
     expect(pixel.zoomDefault).toBe(1);
     // Assembled from parts, never one literal (THE D-LIT RULE's spirit).
@@ -573,6 +605,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       .filter((name) => tsCode(read(`src/${name}`)).includes(opener))
       .toSorted();
     expect(setters).toEqual([
+      'components/sections/BlogCarousel/BlogCarousel.tsx',
       'components/sections/DoctorStats/DoctorStats.tsx',
     ]);
     const stats = tsCode(
@@ -581,10 +614,32 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     const at = stats.indexOf(opener) + opener.length;
     // 9/8: a tile's sentence (text-base, 16) reads the doctor card's quote
     // (text-lg, 18) — the owner's "1 to 1" — and the tile keeps its ratios.
-    expect(Number(stats.slice(at, stats.indexOf(']', at)))).toBe(9 / 8);
+    const tiles = Number(stats.slice(at, stats.indexOf(']', at)));
+    expect(tiles).toBe(9 / 8);
+    // THE FLAT ROW (2026-10-25, sections/BlogCarousel's paragraph of that
+    // name — the owner: the card's text "must also always mentain text wise
+    // the size of "Peste 8000 de zâmbete…"", a tile's sentence): from a
+    // tablet's screen up the box round the carousel draws in the tiles' zoom
+    // over its cards' miniature share, so a miniature's summary (text-base ×
+    // the share) IS a tile's sentence. Its value, read where it lives, is
+    // that quotient — DoctorStats' number over BlogCarousel's MINIATURE — and
+    // it rides the flat row's query alone, never the line's.
+    const band = tsCode(
+      read('src/components/sections/BlogCarousel/BlogCarousel.tsx'),
+    );
+    const share = Number(/\bconst MINIATURE = ([\d.]+);/.exec(band)?.[1]);
+    expect(share).toBe(0.65);
+    const from = band.indexOf(opener) + opener.length;
+    const value = band.slice(from, band.indexOf(']', from));
+    expect(value).toBe(`calc(${tiles}/${share})`);
+    // ONE zoom class in the band, read whole: behind THE FLAT ROW'S VARIANT,
+    // the carousel's own query, and behind nothing else.
+    expect(wholeTokens(band, opener)).toEqual([
+      `${FLAT_ROW}:${opener}${value}]`,
+    ]);
   });
 
-  it('never lets a pixel fall under THE FLOOR — 0px unless a band says otherwise, and TWO say otherwise, both at 1rem / 16: the price list, and the Home band of the blog’s articles round its carousel', () => {
+  it('never lets a pixel fall under THE FLOOR — 0px unless a band says otherwise, and ONE says otherwise, at 1rem / 16: the price list', () => {
     expect(pixel.floor).toBe('--band-floor');
     expect(pixel.floorDefault).toBe('0px');
     // Assembled from parts, never one literal (THE D-LIT RULE's spirit).
@@ -592,20 +647,24 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     const setters = productFiles
       .filter((name) => tsCode(read(`src/${name}`)).includes(opener))
       .toSorted();
-    expect(setters).toEqual([
-      'components/sections/BlogCarousel/BlogCarousel.tsx',
-      'components/sections/PriceList/PriceList.tsx',
-    ]);
-    // 1rem / 16: the theme's own pixel at ANY root, in both — the price rows
-    // never draw smaller than the theme (the owner's delegated decision,
-    // §15.32 round 2), nor the Home carousel's miniature cards (2026-10-17,
-    // §15.39 round 4: its box round the carousel, never its opener), and a
-    // larger root lifts the floor with it.
-    for (const name of setters) {
-      const code = tsCode(read(`src/${name}`));
-      const at = code.indexOf(opener) + opener.length;
-      expect(code.slice(at, code.indexOf(']', at)), name).toBe('0.0625rem');
-    }
+    // The price list alone. The Home articles band held its carousel's
+    // miniatures to the same floor from 2026-10-17 (§15.39 round 4) and let
+    // it go on 2026-10-26: its flat row now takes every fine-pointer window
+    // from a tablet's width up, so the band scale — the floor's one reader —
+    // never meets its line, and in the row the floor was already taken off
+    // again (sections/BlogCarousel's THE FLAT ROW). Both classes changed
+    // nothing, and left with the dead code they had become.
+    expect(setters).toEqual(['components/sections/PriceList/PriceList.tsx']);
+    // 1rem / 16: the theme's own pixel at ANY root — the price rows never
+    // draw smaller than the theme (the owner's delegated decision, §15.32
+    // round 2), and a larger root lifts the floor with it. ONE class, read
+    // whole: bare, behind no variant.
+    expect(
+      wholeTokens(
+        tsCode(read('src/components/sections/PriceList/PriceList.tsx')),
+        opener,
+      ),
+    ).toEqual([`${opener}0.0625rem]`]);
   });
 
   it('is ONE custom variant in globals.css, with exactly its two conditions — a mouse or trackpad, in an engine that registers custom properties', () => {
@@ -644,12 +703,17 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
         /design-scale|--scale-px/.test(tsCode(read(`src/${name}`))),
       )
       .toSorted();
-    // THE BAND SCALE is spelled once, in ui/Container. The two other spellers
-    // are NOT band scales: sections/PostCard's chips draw in a pixel of their
-    // own CARD (THE CHIPS' PIXEL, the next `it`), and sections/PostCover's in
-    // the same pixel of its COVER, capped at the page's (THE COVER'S CHIPS,
-    // the `it` after it).
+    // THE BAND SCALE is spelled once, in ui/Container. The three other
+    // spellers are NOT band scales: sections/PostCard's chips draw in a pixel
+    // of their own CARD (THE CHIPS' PIXEL, the next `it`), sections/
+    // PostCover's in the same pixel of its COVER, capped at the page's (THE
+    // COVER'S CHIPS, the `it` after it), and since 2026-10-25 the Home
+    // articles band's FLAT ROW draws its carousel, where the band scale does
+    // not apply, in the theme's pixel over its miniature's share — so a
+    // card's summary reads a tile's 1rem sentence (THE FLAT ROW'S PIXEL, the
+    // `it` after those).
     expect(spellers).toEqual([
+      'components/sections/BlogCarousel/BlogCarousel.tsx',
       'components/sections/PostCard/PostCard.tsx',
       'components/sections/PostCover/PostCover.tsx',
       'components/ui/Container/Container.tsx',
@@ -751,6 +815,37 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     );
     expect(cardCode.split(PIXEL).length - 1).toBe(3);
     expect(cardCode).not.toContain(`var(${PIXEL})`);
+  });
+
+  it('lets ONE band draw its carousel in the flat row’s pixel — the Home articles band: the theme’s pixel over its miniature’s share, from a tablet’s screen up, where no band scale applies (THE FLAT ROW’S PIXEL)', () => {
+    // The owner (2026-10-25): the card's text "must also always mentain text
+    // wise the size of "Peste 8000 de zâmbete…"" — a tile's sentence, 1rem
+    // where the band scale does not apply. A miniature's summary is 1rem ×
+    // its share in the pixel it inherits, so the box round the carousel
+    // declares 1rem / 16 / the share: the summary is 1rem again. Inside the
+    // regime the carousel's own box re-declares the band's pixel at the
+    // tiles' zoom over the share (THE ZOOM above), whose `design-scale`
+    // overrides this one for its subtree — so no rule order decides. Behind
+    // the flat row's query alone: the phone's line keeps the theme's pixel.
+    // Assembled from parts, never one literal (THE D-LIT RULE).
+    const code = tsCode(
+      read('src/components/sections/BlogCarousel/BlogCarousel.tsx'),
+    );
+    const row = tokensOf(code).filter(
+      ({ utility }) =>
+        utility === 'design-scale' || arbitrary(utility)?.name === PIXEL,
+    );
+    const share = Number(/\bconst MINIATURE = ([\d.]+);/.exec(code)?.[1]);
+    expect(share).toBe(0.65);
+    expect(
+      row.map(({ variants, utility }) => [...variants, utility].join(':')),
+    ).toEqual([
+      `${FLAT_ROW}:[${PIXEL}:calc(1rem/16/${share})]`,
+      `${FLAT_ROW}:design-scale`,
+    ]);
+    // It declares the pixel once and reads it nowhere.
+    expect(code.split(PIXEL).length - 1).toBe(1);
+    expect(code).not.toContain(`var(${PIXEL})`);
   });
 
   /** THE STEP'S SIZE (ui/Heading's 'hero-scaled' JOINED, 2026-10-15): the
@@ -1208,19 +1303,23 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(seen).toEqual([`${gate}:@3xl:w-88`, `@3xl:${gate}:w-88`]);
   });
 
-  it('lets ONE box set the zoom — no other product code names `--band-zoom` but ui/Container’s own read', () => {
+  it('lets TWO boxes set the zoom, once each — no other product code names `--band-zoom` but ui/Container’s own read', () => {
     // An unregistered custom property INHERITS: a setter on any wrapping box
     // would rescale every band inside it. So outside ui/Container's
-    // `var(--band-zoom,1)` read and DoctorStats' one class (the zoom test
-    // above), no product code may name it — class, inline style or CSS. What
-    // it reads: every .ts/.tsx file under src/ and globals.css — a new .css or
-    // .jsx file would escape it (none exists; widen the readers with one).
+    // `var(--band-zoom,1)` read and its two setters' one class each (the zoom
+    // test above) — DoctorStats' tiles, and the Home articles band's box
+    // round its carousel alone, in its flat row (2026-10-25) — no product
+    // code may name it: class, inline style or CSS. What it reads: every
+    // .ts/.tsx file under src/ and globals.css — a new .css or .jsx file
+    // would escape it (none exists; widen the readers with one).
     const name = pixel.zoom;
     const offenders = productFiles.filter((file) => {
       const code = tsCode(read(`src/${file}`));
       const uses = code.split(name).length - 1;
       if (file === 'components/ui/Container/Container.tsx') return uses !== 1;
       if (file === 'components/sections/DoctorStats/DoctorStats.tsx')
+        return uses !== 1;
+      if (file === 'components/sections/BlogCarousel/BlogCarousel.tsx')
         return uses !== 1;
       return uses !== 0;
     });
@@ -1229,23 +1328,20 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     expect(cssCode(globals).split(name).length - 1, 'globals.css').toBe(0);
   });
 
-  it('lets TWO bands set the floor, once each — no other product code names `--band-floor` but ui/Container’s own read', () => {
+  it('lets ONE band set the floor — the price list, once — no other product code names `--band-floor` but ui/Container’s own read', () => {
     // Unregistered and INHERITED like the zoom: a setter on any wrapping box
     // would lift every band inside it. So outside ui/Container's
-    // `var(--band-floor,0px)` read and its two setters' one class each (the
-    // floor test above) — the price list's on its rhythm box, and the Home
-    // articles band's on the box round its carousel alone (2026-10-17), whose
-    // opener must keep every Home band's pixel — no product code may name it:
-    // class, inline style or CSS (read as the zoom's fence reads them: .ts/.tsx
-    // under src/ and globals.css).
+    // `var(--band-floor,0px)` read and its one setter (the floor test above),
+    // the price list's one class on its rhythm box — the Home articles band's
+    // two, its floor and its flat row's reset of it, left on 2026-10-26 — no
+    // product code may name it: class, inline style or CSS (read as the
+    // zoom's fence reads them: .ts/.tsx under src/ and globals.css).
     const name = pixel.floor;
     const offenders = productFiles.filter((file) => {
       const code = tsCode(read(`src/${file}`));
       const uses = code.split(name).length - 1;
       if (file === 'components/ui/Container/Container.tsx') return uses !== 1;
       if (file === 'components/sections/PriceList/PriceList.tsx')
-        return uses !== 1;
-      if (file === 'components/sections/BlogCarousel/BlogCarousel.tsx')
         return uses !== 1;
       return uses !== 0;
     });
@@ -1278,26 +1374,18 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       })) {
         if (!/\.(ts|tsx|mts|mjs|js|css|mdx)$/.test(name)) continue;
         const text = read(`${root}${name.replaceAll('\\', '/')}`);
-        for (let at = text.indexOf(opener); at !== -1;) {
-          let start = at;
-          let end = at;
-          while (start > 0 && !/[\s'"`]/.test(text[start - 1] ?? '')) {
-            start -= 1;
-          }
-          while (end < text.length && !/[\s'"`]/.test(text[end] ?? '')) {
-            end += 1;
-          }
-          found.push(`${root}${name}: ${text.slice(start, end)}`);
-          at = text.indexOf(opener, end);
+        for (const token of wholeTokens(text, opener)) {
+          found.push(`${root}${name}: ${token}`);
         }
       }
     }
     // The other declarations allowed are the chip pixels — sections/
     // PostCard's (THE CHIPS' PIXEL above) and sections/PostCover's capped
-    // copy of it (THE COVER'S CHIPS above) — and, since 2026-10-17, the
-    // card's second, its MINIATURE's remap on the wrapper round ui/Card (THE
-    // CHIPS' PIXEL's case names it): each whole, in its own file alone — two in the card's,
-    // one in the cover's.
+    // copy of it (THE COVER'S CHIPS above) — since 2026-10-17 the card's
+    // second, its MINIATURE's remap on the wrapper round ui/Card (THE CHIPS'
+    // PIXEL's case names it), and since 2026-10-25 the Home articles band's
+    // FLAT ROW pixel (THE FLAT ROW'S PIXEL above): each whole, in its own
+    // file alone — two in the card's, one in the cover's, one in the band's.
     const ownsOf = (file: string): string[] =>
       tokensOf(tsCode(read(file)))
         .map(({ variants, utility }) => [...variants, utility].join(':'))
@@ -1305,12 +1393,13 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
     const chipFiles = [
       'src/components/sections/PostCard/PostCard.tsx',
       'src/components/sections/PostCover/PostCover.tsx',
+      'src/components/sections/BlogCarousel/BlogCarousel.tsx',
     ];
     const chipOwn = chipFiles.flatMap((file) =>
       ownsOf(file).map((token) => `${file}: ${token}`),
     );
     expect(own).toBeDefined();
-    expect(chipFiles.map((file) => ownsOf(file).length)).toEqual([2, 1]);
+    expect(chipFiles.map((file) => ownsOf(file).length)).toEqual([2, 1, 1]);
     expect(found.length).toBeGreaterThan(0);
     expect(
       found.filter(
@@ -1329,18 +1418,26 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
       const at = code.indexOf(`[${name}:`);
       return at === -1 ? '' : code.slice(at, code.indexOf(']', at) + 1);
     };
-    // The floor's two wearers spell ONE class (2026-10-17): the Home articles
-    // band's box round its carousel wears the price list's very class, so the
-    // stylesheet ships one rule for both, and the scan below holds every
-    // other spelling to it.
-    expect(
-      setterOf(
-        'components/sections/BlogCarousel/BlogCarousel.tsx',
-        pixel.floor,
-      ),
-    ).toBe(
-      setterOf('components/sections/PriceList/PriceList.tsx', pixel.floor),
-    );
+    // THE FLAT ROW (2026-10-25): the Home articles band's box round its
+    // carousel sets the zoom once more, from a tablet's screen up — at the
+    // tiles' over its miniature's share (THE ZOOM above) — a whole class of
+    // its own behind THE FLAT ROW'S VARIANT. (It set the floor too, the price
+    // list's very class and the row's reset of it, until 2026-10-26: THE
+    // FLOOR above.) Every spelling below is read WHOLE, with the variant
+    // chain it rides behind (the G2 typescript review, 2026-10-26: read from
+    // its bracket alone, a row value behind another variant, or behind none,
+    // passed — and would ship a rule nobody wears), and the row's class is
+    // allowed in the band's own file alone.
+    const band = 'components/sections/BlogCarousel/BlogCarousel.tsx';
+    const rowOf = (name: string): string[] =>
+      tokensOf(tsCode(read(`src/${band}`)))
+        .filter(
+          ({ variants, utility }) =>
+            variants.length > 0 && arbitrary(utility)?.name === name,
+        )
+        .map(({ variants, utility }) => [...variants, utility].join(':'));
+    const rowZoom = rowOf(pixel.zoom);
+    expect(rowZoom).toEqual([`${FLAT_ROW}:[${pixel.zoom}:calc(1.125/0.65)]`]);
     const cases = [
       {
         name: pixel.floor,
@@ -1348,6 +1445,7 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
           'components/sections/PriceList/PriceList.tsx',
           pixel.floor,
         ),
+        row: [] as string[],
       },
       {
         name: pixel.zoom,
@@ -1355,24 +1453,23 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
           'components/sections/DoctorStats/DoctorStats.tsx',
           pixel.zoom,
         ),
+        row: rowZoom,
       },
     ];
-    for (const { name, own } of cases) {
+    for (const { name, own, row } of cases) {
       // The wearer may assemble its class from parts (the price list does);
       // then its code holds no whole literal and the value is the census's.
       const opener = `[${name}:`;
-      const found: string[] = [];
+      const found: { path: string; token: string }[] = [];
       for (const root of ['src/', 'tests/', '.storybook/']) {
         for (const file of readdirSync(new URL(root, REPO), {
           recursive: true,
           encoding: 'utf8',
         })) {
           if (!/\.(ts|tsx|mts|mjs|js|css|mdx)$/.test(file)) continue;
-          const raw = read(`${root}${file.replaceAll('\\', '/')}`);
-          for (let at = raw.indexOf(opener); at !== -1;) {
-            const end = raw.indexOf(']', at) + 1;
-            found.push(raw.slice(at, end));
-            at = raw.indexOf(opener, end);
+          const path = `${root}${file.replaceAll('\\', '/')}`;
+          for (const token of wholeTokens(read(path), opener)) {
+            found.push({ path, token });
           }
         }
       }
@@ -1380,8 +1477,14 @@ describe('THE BAND SCALE — spelled ONCE, in ui/Container, worn by every band o
         own ||
         (name === pixel.floor ? `[${name}:0.0625rem]` : `[${name}:1.125]`);
       expect(
-        found.filter((token) => token !== expected),
-        `every ${opener}…] in a scanned file`,
+        found
+          .filter(
+            ({ path, token }) =>
+              token !== expected &&
+              !(path === `src/${band}` && row.includes(token)),
+          )
+          .map(({ path, token }) => `${path}: ${token}`),
+        `every ${opener}…] in a scanned file, read whole`,
       ).toEqual([]);
     }
   });

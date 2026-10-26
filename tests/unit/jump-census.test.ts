@@ -152,6 +152,12 @@ const SPELLS_A_HOVER_SCALE = [
   // gets a bit larger and lilla"): the CHEVRON inside each previous / next
   // button grows to 110 % on the jump clock — the button's own box never
   // scales, so its invisible strip cannot reach past the screen's edge.
+  // And since 2026-10-25 (THE FLAT ROW — the owner: "on hover of non central
+  // they turn the size of central and on hover of central they turn larger a
+  // bit as they do now") the SLOT of a card in a flat-row carousel: the
+  // centre card's to 105 %, a live side card's to the centre card's size —
+  // the card's own jump turned off by its page (sections/PostCard's
+  // `jump={false}`), held to Button's numbers by the block after this one.
   'components/sections/CardCarousel/CardCarousel.tsx',
 ];
 
@@ -223,5 +229,104 @@ describe('the card jump — a hover scale with no button under it (owner, 2026-1
     const code =
       "// see src/messages/*.json\nconst KEEP = 'hover:scale-105';\n// end */";
     expect(stripComments(code)).toContain('hover:scale-105');
+  });
+});
+
+/** A bracketed transition list's entries, split at its TOP-LEVEL commas only
+ *  — a cubic-bezier() keeps its own four. */
+function entries(list: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let at = 0; at < list.length; at += 1) {
+    const char = list[at];
+    if (char === '(') depth += 1;
+    else if (char === ')') depth -= 1;
+    else if (char === ',' && depth === 0) {
+      out.push(list.slice(start, at));
+      start = at + 1;
+    }
+  }
+  out.push(list.slice(start));
+  return out;
+}
+
+// THE SLOT JUMP (2026-10-25, sections/CardCarousel's THE FLAT ROW). In a
+// flat-row carousel the card's SLOT grows on hover instead of the card — the
+// Home band turns sections/PostCard's own jump off — so the slot is held to
+// the same numbers as the card's jump and the buttons': Button's 105 % as the
+// centre card's size (a live side card grows past it, to the centre card's
+// rest size, `1 / --fsc`), Button's scale clock — 200ms, the `ease-out`
+// KEYWORD — in both of the slot's transition strings, and still under
+// reduced motion.
+describe('the card carousel’s slot jump — the flat row’s hover, on the buttons’ numbers (owner, 2026-10-25)', () => {
+  const carousel = stripComments(
+    read('components/sections/CardCarousel/CardCarousel.tsx'),
+  );
+  const button = joinedLiterals(
+    stripComments(read('components/ui/Button/Button.tsx')),
+    /\bjump:((?:\s*'[^']*'\s*\+?)+),/,
+  );
+  const buttonScale = transitionList(button, 'property').indexOf('scale');
+
+  it('grows the centre card to Button’s 105 %, a live side card to the centre card’s size, and neither under reduced motion', () => {
+    const slide = /const FLAT_SLIDE = cx\(([^;]*)\);/.exec(carousel)?.[1];
+    expect(slide, 'FLAT_SLIDE in the carousel').toBeDefined();
+    const classes = [...(slide ?? '').matchAll(/'([^']*)'/g)]
+      .map((match) => match[1])
+      .join(' ');
+    expect(classes).toContain('hover:scale-[max(1.05,calc(1/var(--fsc)))]');
+    expect(classes).toContain('motion-reduce:hover:scale-100');
+    // The floor of the max() IS Button's jump: 105 %.
+    expect(button).toContain('hover:scale-105');
+  });
+
+  it('glides the slot’s scale on Button’s clock in the move — its own entry of three', () => {
+    const move = joinedLiterals(carousel, /const FLAT_MOVE =([^;]*);/);
+    expect(move).toContain('[--jump:200ms]');
+    const list = (longhand: string): string[] =>
+      entries(
+        new RegExp(`\\[transition-${longhand}:([^\\]]+)\\]`).exec(move)?.[1] ??
+          '',
+      );
+    const at = list('property').indexOf('scale');
+    expect(at, 'the move transitions the slot’s scale').toBeGreaterThanOrEqual(
+      0,
+    );
+    expect(list('duration')[at]).toBe(
+      transitionList(button, 'duration')[buttonScale],
+    );
+    expect(list('timing-function')[at]).toBe(
+      transitionList(button, 'timing-function')[buttonScale],
+    );
+  });
+
+  it('glides it on the same clock in the snap — the card’s own jump’s clock, byte for byte', () => {
+    const snap = joinedLiterals(carousel, /const FLAT_SNAP =([^;]*);/);
+    const card = joinedLiterals(
+      stripComments(read('components/sections/PostCard/PostCard.tsx')),
+      /const CARD_JUMP =([^;]*);/,
+    );
+    // CARD_JUMP's clock half (its first four classes): the snap's own.
+    const clock = card.split(' ').slice(0, 4).join(' ');
+    expect(clock).toBe(
+      '[--jump:200ms] transition-[scale] duration-(--jump) ease-[ease-out]',
+    );
+    expect(snap.startsWith(clock)).toBe(true);
+  });
+
+  it('spells exactly its four hover scales — the chevron’s two and the slot’s two — so a stray one anywhere in the file turns this red (the TypeScript review)', () => {
+    // The file is allowlisted whole (SPELLS_A_HOVER_SCALE), so the count is
+    // what keeps a fifth hover scale out: the chevron's grow and its
+    // reduced-motion hold, the slot's grow and its reduced-motion hold.
+    expect(carousel.match(/\bhover:(?:\*:)?scale-/g)?.length).toBe(4);
+  });
+
+  it('splits a transition list at its top-level commas only', () => {
+    expect(entries('a,cubic-bezier(1,2,3,4),b')).toEqual([
+      'a',
+      'cubic-bezier(1,2,3,4)',
+      'b',
+    ]);
   });
 });

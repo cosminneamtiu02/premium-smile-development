@@ -106,6 +106,16 @@ const WEARERS: Readonly<
     bottom: 0,
     part: 'the blog gallery’s provisional photo card — the screenshot’s round corner',
   },
+  // The card carousel's highlight (2026-10-25, sections/CardCarousel's THE
+  // FLAT ROW — the owner: "currrent card one is highlighted"): the centred
+  // card's aura is drawn by a layer the card's box wears, at the soft corner
+  // its cards wear (sections/PostCard's frame) — the glow's 22px blur hides
+  // what is left of the miniature's smaller corner.
+  'components/sections/CardCarousel/CardCarousel.tsx': {
+    whole: 1,
+    bottom: 0,
+    part: 'the flat row’s highlight — the aura layer round the centred card',
+  },
 };
 
 /** The sections that ASK ui/Card for the soft corner: the atom wears the

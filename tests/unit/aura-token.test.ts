@@ -132,6 +132,11 @@ const CONSUMERS = [
     '../../src/components/ui/PillButton/PillButton.tsx',
     1,
   ],
+  [
+    'CardCarousel.tsx (the flat row’s highlight round the centred card — owner 2026-10-25: "currrent card one is highlighted")',
+    '../../src/components/sections/CardCarousel/CardCarousel.tsx',
+    1,
+  ],
 ] as const;
 
 describe('the aura token (header-aura board, fb-359)', () => {

@@ -173,13 +173,11 @@ import { cx } from '@/lib/cx/cx';
 //     zoom): under the reference what it floors draws never smaller than the
 //     theme does (exactly as large, at the default 16px font size; a little
 //     larger under a smaller default — the harmless direction), and past it
-//     grows like every scaled band. TWO wearers, both at
-//     0.0625rem. The second (2026-10-17): the Home band of the blog's articles
-//     (sections/BlogCarousel), on a box round its CAROUSEL alone — never on
-//     its rhythm box, so its opener keeps every Home band's pixel — so the
-//     carousel's miniature cards never draw smaller than the owner's 1401
-//     look and no card grows as the window narrows past the regime's step
-//     (that band's THE FLOOR; CLAUDE.md §14's Home row). The first:
+//     grows like every scaled band. ONE wearer, at 0.0625rem (the Home band
+//     of the blog's articles, sections/BlogCarousel, wore the same class on a
+//     box round its carousel from 2026-10-17 until 2026-10-26, when its flat
+//     row took every window the band scale reaches and left the floor nothing
+//     to hold — that band's THE CAROUSEL'S OWN PIXEL):
 //     sections/PriceList, on its rhythm box —
 //     1rem / 16, the theme's own pixel at ANY root, so under the reference a
 //     larger default font size and a browser zoom enlarge the price rows as
@@ -192,10 +190,11 @@ import { cx } from '@/lib/cx/cx';
 //     it belongs on the box that wears `bandScaleClasses`. It is NOT
 //     multiplied by the zoom: a zoomed box inside a floored band would floor
 //     at the band's own pixel, not at its multiple — so the two must not nest,
-//     and today they do not: the census holds the floor's two setters and the
-//     zoom's one to three different files, and none of those bands composes
-//     another. The census fences the SETTERS, not the nesting — PriceList or
-//     BlogCarousel rendering DoctorStats inside its floored box would pass it.
+//     and today they do not: the census holds the floor's one setter and the
+//     zoom's two to three different files (PriceList; DoctorStats and, in its
+//     flat row since 2026-10-25, BlogCarousel), and none of those bands
+//     composes another. The census fences the SETTERS, not the nesting —
+//     PriceList rendering DoctorStats inside its floored box would pass it.
 // THE NUMBERS — REFERENCE 1106, CAP 96rem, STEP max(@4xl, 896px) — and what
 // the regime trades (a browser zoom, the user's default font size, the jump at
 // the step, the typeface's optical size) are argued and measured where they

@@ -239,7 +239,10 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
   and timed redirects are BANNED as soft-404s. The five pages are noindex and
   never enter the sitemap. Set `trailingSlash: true` for clean static hosting.
 - **Parked decision:** localized slugs (`/de/leistungen`). Default to shared English slugs for now;
-  ask before launch — changing URLs later requires redirects.
+  ask before launch — changing URLs later requires redirects. *(DECIDED 2026-10-26, the owner:
+  "this sound sensational, but i want a separate worktree working on it" — translated slugs, in
+  progress in their own lane, `rework/localized-slugs`; the shared English slugs stand until it
+  lands. §15.3.)*
 
 ## 6. Component architecture rules
 
@@ -296,7 +299,8 @@ the Header and Footer in that locale's language and wraps `{children}`; child ro
 2. **ICU everywhere:** plurals via ICU categories (Romanian has one/few/other), interpolation
    instead of string concatenation, never build sentences from fragments, no text inside images.
 3. **Formatting via `Intl`:** `Intl.NumberFormat` for prices (RON; EUR display on foreign locales
-   is a parked decision — ask), `Intl.DateTimeFormat` for dates.
+   is a parked decision — ask *(DECIDED 2026-10-26: lei everywhere, no euros — §15.4)*),
+   `Intl.DateTimeFormat` for dates.
 4. **Text expansion headroom:** German ≈ +30–35%, French/Italian ≈ +15–25% vs English. Use
    `min-width` on buttons, `min-height` on cards; never fixed widths on text containers.
 5. **Language switcher:** in the Header; each language named in itself — Română, English,
@@ -484,7 +488,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    `--font-sans`); one additional role `--color-accent-decorative: #7A6D9C` for large
    display text (≥ 3:1 contexts) and graphics only — the a11y addon polices misuse.
    **Only open sub-item:** confirm the purple hue against the real logo/signage when the
-   owner supplies it. Until Phase 0 writes these values, provisional neutrals stand.
+   owner supplies it. *(DECIDED FOR NOW 2026-10-26, the owner: "keep like it is now at the
+   moment" — `accent-decorative` stays #7A6D9C beside the logo's #8576B1, open to revisiting;
+   §15.28, BACKLOG.md entry 8.)* Until Phase 0 writes these values, provisional neutrals stand.
    **Exception to the long-prose `text-align: start` lock (2026-09-06, S6 404 lane,
    owner) — REVERSED 2026-09-07 (owner, 404-polish live round: "f*ck justify keep
    centered"):** the 404 page's message paragraph now ships `text-center` as a
@@ -638,8 +644,13 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    0 broken of 553 links in both shapes (all 118 optimized variants checked). Nothing moves on a
    root-served build: its 59 HTML files are byte-identical to develop's. G2 on Opus (react,
    typescript): APPROVE WITH CHANGES twice, 0 critical / 0 high, every finding folded.
-3. Localized URL slugs (decide before launch).
-4. EUR price display on non-`ro` locales.
+3. Localized URL slugs (decide before launch). *(DECIDED 2026-10-26, the owner: "this sound
+   sensational, but i want a separate worktree working on it" — translated slugs, in progress in
+   their own lane, `rework/localized-slugs`; BACKLOG.md entry 8 keeps the item until it lands.)*
+4. EUR price display on non-`ro` locales. *(DECIDED 2026-10-26, the owner: "drop this: Euro prices
+   on the foreign-language pages, or lei everywhere." — lei (RON) on every page, in every
+   language, no euros; nothing to build, the site already prints RON everywhere, and §15.20's EUR
+   column goes with it.)*
 5. ~~Image optimizer final pick~~ — **DECIDED 2026-08-01 (owner, Phase 0 kickoff):**
    **next-image-export-optimizer** (~1.20.1, with sharp ~0.35.3) as named in §3, behind the
    single `ui/Image` wrapper. Unblocks the first photo.
@@ -656,10 +667,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
    lettering; if that ever arrives it replaces the words as a second file. The purple
    confirmation is now a NUMBER, not a change: the logo's lilac is #8576B1 against
    `accent-decorative`'s #7A6D9C and the ribbon's #8377A3 — adopting it is the owner's call
-   (§15.28). *(Since 2026-10-02 the ribbon follows `accent-decorative`: `--ribbon` is the
+   (§15.28) *(not for now: the owner kept #7A6D9C on 2026-10-26 — §15.1)*. *(Since 2026-10-02 the ribbon follows `accent-decorative`: `--ribbon` is the
    lilac band's ground, #D4CFDC, held to that mix by a test — §15.26 round 6.)* THE FAVICON LANDED THE SAME DAY (§15.31): the mark itself is the tab's icon —
    `src/app/icon.svg`, a byte copy, beside `src/app/favicon.ico` rasterised from it. STILL OPEN: the
-   OG share image, for which the mark is the natural source.
+   OG share image, for which the mark is the natural source. *(DECIDED 2026-10-26, the owner: "here
+   i go with your idea: The link-preview image (the logo is the natural choice)" — the mark is the
+   share image, built with the SEO work, BACKLOG.md entry 10.)*
 7. **Visual-testing environment — DECIDED 2026-07-31 (owner, via plan-canvas review):**
    no Docker on the development machine. Playwright baselines are **platform-suffixed dual
    sets**: the **darwin set** is generated/compared natively on the workstation and serves
@@ -1107,7 +1120,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     trigger, consumed. `app/[locale]/services/page.tsx` is THE ONE POPULATOR (`getLocale` →
     `isLocale` → `populatePriceList` → the band), the only place a number becomes words through
     `services.prices.amount = "{amount, number} RON"` — **„RON" everywhere, no euros (fb-450)**;
-    a EUR column „maybe, on every language" is recorded as §15.4's successor, still parked.
+    a EUR column „maybe, on every language" is recorded as §15.4's successor, still parked *(dropped with
+    §15.4 on 2026-10-26: RON everywhere)*.
     Fragment ids are English (fb-461). Every internal link stays a plain `<a href="#id">`
     (§15.13); zero client JavaScript ships for the band (§16's island list is unchanged) — **that JavaScript sentence is superseded by Round 2 below**.
     **Strings:** the three UI keys ×5, the 11 short category names, the three eyebrows and the
@@ -2432,7 +2446,10 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     production build while lib/team is flagged placeholder is the shape); the specialty eyebrow's lead-in
     („Medic specialist în" is a full line at 320 — Toma's takes five); „Închis" for a doctor's day off (reads
     as the clinic shut); heading hyphenation site-wide; name order abroad; „Dr." in German implying a
-    doctorate; French typography (a no-break space before « : », site-wide, fr.json included); the clinic
+    doctorate *(DECIDED 2026-10-26, the owner: "foloseste doctorul romanesc, nu chestia cu doctoratul": in
+    every language „Dr." before a doctor's name keeps its Romanian sense, a physician or a dentist, and implies
+    no doctorate; lib/team already writes it so in all five, „Dr" without the point in French, so no code
+    moved)*; French typography (a no-break space before « : », site-wide, fr.json included); the clinic
     routines the third paragraphs state (written aftercare instructions, check-ups booked from the start).
 
     **Round 4 — THE REAL STAFF (owner, 2026-10-01, verbatim: "these are just the 3 standard personell cards.
@@ -4047,8 +4064,10 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     the owner did not ask for with the logo — his lever. **Recorded, not built — the owner's:** `accent-decorative`
     #7A6D9C and `--ribbon` #8377A3 to the logo's own #8576B1 (repaints tints, auras, keywords, the ribbon;
     #8576B1 reads 3.82:1 on the page, inside the display charter's 3:1) *(the ribbon's half is moot since
-    2026-10-02: `--ribbon` is the lilac band's ground and follows `accent-decorative` — §15.26 round 6)*; the favicon (`src/app/icon.svg`) *(BUILT
-    2026-10-01, §15.31)* and the OG share image from the mark; the mark's size in the pill (90 % / 40 % of the row,
+    2026-10-02: `--ribbon` is the lilac band's ground and follows `accent-decorative` — §15.26 round 6)* *(the
+    rest kept for now on 2026-10-26, #7A6D9C, open to revisiting — §15.1)*; the favicon (`src/app/icon.svg`) *(BUILT
+    2026-10-01, §15.31)* and the OG share image from the mark *(DECIDED 2026-10-26 — §15.6)*; the mark's size in the
+    pill (90 % / 40 % of the row,
     kept from the cat — one number in Wordmark.tsx) *(TAKEN 2026-10-01, §15.31: 68.85 % / 30.6 %, the name to the
     30px `section` step, in both instances)*; the Publio lettering, if it ever arrives, as a second file; the placeholder `<a>` →
     `<span>` now that the home link is dropped for good (three suites and the e2e find the lockup through it);
@@ -4472,7 +4491,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     round. Recorded, not built: `loadFace` in Wordmark.stories.tsx is the sixth copy of the `document.fonts.load`
     idiom (the §15.19 helper-promotion census).
     **Recorded, not built — the owner's:** an `apple-icon.png` (180 × 180: the iPhone home-screen and bookmark
-    tile, one more file beside these); the OG share image (§15.6's last open item); a bolder small-size cut of the
+    tile, one more file beside these); the OG share image (§15.6's last open item *— decided 2026-10-26: the
+    mark*); a bolder small-size cut of the
     mark for 1× screens. Overlap, recorded: the uncommitted page-scale lane rewrites the same
     assertions in Wordmark.stories.tsx's Default play and Footer.stories.tsx's `expectLockupChain` (rem-relative
     sizes) — whichever merges second folds the other's numbers into its own (68.85 % of `5 * rem()`, the 30px name
@@ -5222,6 +5242,8 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     *(The note REMOVED 2026-10-13 on the owner's word — round 3 below; `credentialless` stays.)*
     (4) **THE PRICES LINE** — PriceList's optional `note`, printed last in the cards column; the Services page passes
     „Prețurile sunt exprimate în RON și includ toate taxele." ×5 (TODO(owner) confirm); absent or empty, nothing.
+    *(CONFIRMED 2026-10-26 — the owner: „confirm asta", answering "Confirm „prices include all taxes" is true":
+    every price on the list includes all taxes, so the line stands as written.)*
     **Reviews (four Opus agents — react, typescript, a11y, a five-language copy read):** APPROVE WITH CHANGES ×3, 0
     critical / 0 high; every finding folded or recorded in BACKLOG entry 3 (the legal form, the retention period,
     the DSP question, the 12-month cookie under Law 506/2004, Romanian names `lang="ro"` in the other languages —
@@ -5876,7 +5898,9 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     „Echipa" still rests 136px down (the e2e, both windows); the evidence below is the rebased tree's. blog-article
     (ui/TextButton's header comment) and doctor-scroll-steps (the doctors band's threshold scroll steps, which rest a
     card where a jump from the „Echipa" dropdown may not: BACKLOG.md entry 11, which the lane that merges SECOND
-    discharges on the combined tree) are still in flight — the second to merge rebases.
+    discharges on the combined tree) are still in flight — the second to merge rebases. *(The scroll steps were
+    dropped on 2026-10-16 and never merged, so nothing was left to check against the dropdown: BACKLOG.md entry 11
+    left the list on 2026-10-26, on the owner's word.)*
     **EVIDENCE AT READY:** prettier · eslint (0 errors; develop's one warning) · tsc clean; vitest 178 files / 4 880
     passed + 2 skipped with the optimizer variants hidden (CI's condition); build-storybook and `next build` green (69
     pages); the link check 711 links / 63 pages / 0 broken; e2e 551 passed / 419 skipped / 0 failed; no client JavaScript

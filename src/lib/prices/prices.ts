@@ -90,8 +90,10 @@ import type { Locale } from '../../i18n/locales';
 // the platform's (ro/de „1.300", en „1,300", fr „1 300", it „1300") and the
 // unit word is the owner's. `Intl`'s own currency mode is unusable as-is: it
 // prints a bare „L" in German and French and puts „lei" in FRONT in English.
-// EUR on the foreign locales stays parked (§15.4); it would be a display-time
-// decision (a rate, its date, a rounding rule), and the data stores lei only.
+// EUR on the foreign locales was parked (§15.4) until the owner DROPPED it on
+// 2026-10-26: lei on every page, in every language. It would have been a
+// display-time decision (a rate, its date, a rounding rule), and the data
+// stores lei only.
 //
 // UNITS LIVE INSIDE THE NAME (board §2c.1, §2.3 rider). Eight rows carry a unit
 // („/ dinte / ședință", „per arcadă", „/ element", „/ hemiarcadă", „(per

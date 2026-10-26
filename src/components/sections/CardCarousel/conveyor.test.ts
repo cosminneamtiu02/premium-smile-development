@@ -4,12 +4,17 @@ import {
   BEYOND_PITCH,
   CARD_GAP,
   FIVE_FALLBACK,
+  FLAT_PITCH,
+  FLAT_SIDE_SCALE,
+  FLAT_STEP,
   JUMP_LIMIT,
   OUTER_SHARE,
   PERSPECTIVE,
   SLOTS,
   STEP,
   drawnEdges,
+  flatPoseAt,
+  flatReach,
   jumpedSince,
   poseAt,
   stackOrder,
@@ -23,7 +28,11 @@ import {
 // reading of the CSS function list, a DOMMatrix — its two windows solved for
 // the owner's "60 40", the five-card fallback the three-card window itself,
 // every card drawn within the centre card's height and upright, every waiting
-// card off its stage at rest and between, the pose, and the no-fly rule.
+// card off its stage at rest and between, the pose, and the no-fly rule — and
+// THE FLAT ROW (2026-10-25): its poses, their air at rest, their continuity and
+// their mirror, and the reach — which cards stand clear of the arrows' strips,
+// grown to the centre card's size — and THE GUARD (2026-10-26): what a number
+// that is not finite draws, one rule for both poses and the reach.
 
 /** A point in card widths from the stage's centre, y down. */
 type Point = readonly [x: number, y: number];
@@ -243,6 +252,12 @@ describe('conveyor — the pose', () => {
     }
   });
 
+  it('draws a position that is NOT A FINITE NUMBER at the centre, at rest — never a NaN or an Infinity in a custom property (THE GUARD, flatReach’s rule)', () => {
+    for (const x of [Number.NaN, Infinity, -Infinity]) {
+      expect(poseAt(x), String(x)).toEqual({ tx: 0, ry: 0, sc: 1 });
+    }
+  });
+
   it('is piecewise LINEAR: half-way between two whole positions is half-way in every number (what the browser’s glide draws)', () => {
     for (let from = -6; from < 6; from++) {
       const to = from + 1;
@@ -318,5 +333,155 @@ describe('conveyor — the no-fly rule', () => {
 
   it('flags nothing on the first arrangement (no painted entry to compare)', () => {
     expect(jumpedSince([], [0, 1, -1])).toEqual([false, false, false]);
+  });
+});
+
+describe('conveyor — THE FLAT ROW: its poses', () => {
+  /** A flat card's drawn edges at continuous position `x`: its position ±
+   *  half its scale — nothing projected, the row lies in the screen's
+   *  plane. */
+  const flatEdgesAt = (x: number) => {
+    const { tx, sc } = flatPoseAt(x);
+    return { left: tx - sc / 2, right: tx + sc / 2 };
+  };
+
+  it('pins the centre at scale 1 and every other card at THE LINE’s own neighbour step, 0.9 — the step 1.01 card widths, the pitch beyond it 0.96', () => {
+    expect(FLAT_SIDE_SCALE).toBe(SLOTS[1].scale);
+    expect(FLAT_SIDE_SCALE).toBe(0.9);
+    expect(FLAT_STEP).toBeCloseTo(1.01, 12);
+    expect(FLAT_PITCH).toBeCloseTo(0.96, 12);
+    // Both derived from the line's own air, never respelled.
+    expect(FLAT_STEP).toBe(0.5 + CARD_GAP + FLAT_SIDE_SCALE / 2);
+    expect(FLAT_PITCH).toBe(FLAT_SIDE_SCALE + CARD_GAP);
+  });
+
+  it('draws the centre as the identity — no shift, scale 1 — and never a −0 in a custom property', () => {
+    expect(flatPoseAt(0)).toEqual({ tx: 0, sc: 1 });
+    for (const value of [
+      ...Object.values(flatPoseAt(0)),
+      ...Object.values(flatPoseAt(-0)),
+    ]) {
+      expect(Object.is(value, -0)).toBe(false);
+    }
+  });
+
+  it('draws a position that is NOT A FINITE NUMBER at the centre, at rest — never a NaN or an Infinity in a custom property: THE GUARD, the one rule flatReach and poseAt keep too', () => {
+    for (const x of [Number.NaN, Infinity, -Infinity]) {
+      expect(flatPoseAt(x), String(x)).toEqual({ tx: 0, sc: 1 });
+      expect(poseAt(x), String(x)).toEqual({ tx: 0, ry: 0, sc: 1 });
+      expect(flatReach(x), String(x)).toBe(0);
+    }
+  });
+
+  it('keeps CARD_GAP of air between every two cards’ drawn edges at rest — the centre and its neighbour, and every pair beyond', () => {
+    expect(flatEdgesAt(1).left - 0.5).toBeCloseTo(CARD_GAP, 6);
+    for (let x = 1; x < 7; x++) {
+      expect(
+        flatEdgesAt(x + 1).left - flatEdgesAt(x).right,
+        `between ${x} and ${x + 1}`,
+      ).toBeCloseTo(CARD_GAP, 6);
+      expect(
+        flatEdgesAt(-x).left - flatEdgesAt(-(x + 1)).right,
+        `between −${x} and −${x + 1}`,
+      ).toBeCloseTo(CARD_GAP, 6);
+    }
+  });
+
+  it('lands exactly on the neighbour — continuous at |x| = 1, where the step meets the pitch', () => {
+    expect(flatPoseAt(1)).toEqual({ tx: 1.01, sc: 0.9 });
+    for (const side of [-1, 1]) {
+      const below = flatPoseAt(side * (1 - 1e-6));
+      const above = flatPoseAt(side * (1 + 1e-6));
+      expect(above.tx - below.tx).toBeCloseTo(0, 5);
+      expect(above.sc - below.sc).toBeCloseTo(0, 5);
+    }
+    // Past the neighbour the scale holds; only the shift goes on.
+    expect(flatPoseAt(2)).toEqual({ tx: 1.97, sc: 0.9 });
+    expect(flatPoseAt(3.5).tx - flatPoseAt(3).tx).toBeCloseTo(
+      FLAT_PITCH / 2,
+      5,
+    );
+  });
+
+  it('mirrors every pose left of the centre', () => {
+    for (const x of walk(0, 6).filter((_, k) => k % 37 === 0)) {
+      const right = flatPoseAt(x);
+      expect(flatPoseAt(-x), `at ${x}`).toEqual({
+        tx: right.tx === 0 ? 0 : -right.tx,
+        sc: right.sc,
+      });
+    }
+  });
+
+  it('is piecewise LINEAR: half-way between two whole positions is half-way in both numbers (what the browser’s glide draws)', () => {
+    for (let from = -6; from < 6; from++) {
+      const a = flatPoseAt(from);
+      const b = flatPoseAt(from + 1);
+      const mid = flatPoseAt(from + 0.5);
+      for (const key of ['tx', 'sc'] as const) {
+        expect(mid[key], `${key} between ${from} and ${from + 1}`).toBeCloseTo(
+          (a[key] + b[key]) / 2,
+          5,
+        );
+      }
+    }
+  });
+
+  it('moves every card outward along the row, never growing as it leaves the centre — and never shifts a card above or below another: the row has no turn and no vertical term', () => {
+    let previous = flatPoseAt(0);
+    for (let x = 0.25; x <= 6; x += 0.25) {
+      const pose = flatPoseAt(x);
+      expect(pose.tx).toBeGreaterThan(previous.tx);
+      expect(pose.sc).toBeLessThanOrEqual(previous.sc);
+      expect(Object.keys(pose).sort()).toEqual(['sc', 'tx']);
+      previous = pose;
+    }
+  });
+});
+
+describe('conveyor — THE FLAT ROW: the reach', () => {
+  /** The j-th side card's outer edge, grown to the centre card's size, card
+   *  widths from the centre — read off the pose it wears. */
+  const grownEdge = (j: number): number => flatPoseAt(j).tx + 0.5;
+
+  it('reads the grown edge off the row itself: FLAT_STEP + (j − 1) · FLAT_PITCH + ½, a straight line in j', () => {
+    for (let j = 1; j <= 5; j++) {
+      expect(grownEdge(j), `card ${j}`).toBeCloseTo(
+        FLAT_STEP + (j - 1) * FLAT_PITCH + 0.5,
+        6,
+      );
+    }
+    expect(grownEdge(1)).toBeCloseTo(1.51, 6);
+    expect(grownEdge(2)).toBeCloseTo(2.47, 6);
+  });
+
+  it('counts a card exactly at its limit as inside, and loses it a hair before — at every boundary from the first to the fifth card', () => {
+    for (let j = 1; j <= 5; j++) {
+      const edge = grownEdge(j);
+      expect(flatReach(edge), `at card ${j}’s edge`).toBe(j);
+      expect(flatReach(edge - 1e-6), `just short of card ${j}`).toBe(j - 1);
+      expect(flatReach(edge + 0.5), `half a card past card ${j}`).toBe(j);
+    }
+  });
+
+  it('reaches no side card where even the first does not fit — and nothing for a reading that is not a finite number', () => {
+    expect(flatReach(grownEdge(1) - 1e-3)).toBe(0);
+    expect(flatReach(0)).toBe(0);
+    expect(flatReach(-3)).toBe(0);
+    for (const reading of [Number.NaN, Infinity, -Infinity]) {
+      expect(flatReach(reading), String(reading)).toBe(0);
+    }
+  });
+
+  it('records the BARE carousel’s arithmetic at two screens — a 347.33px card, 36px strips, the stage the whole screen: none at 768, one a side at 1280 (not the Home band’s own row, which draws 55.38px strips at a tablet on a stage 1rem narrower than the screen: sections/BlogCarousel measures that)', () => {
+    const card = (1106 - 2 * 32) / 3;
+    const reach = (screen: number): number =>
+      flatReach((screen / 2 - 36) / card);
+    expect(reach(768)).toBe(0);
+    expect(reach(1280)).toBe(1);
+    // Two a side from about a 1788px screen: card 2's grown edge, 2.47 card
+    // widths, and a strip.
+    expect(reach(2 * (grownEdge(2) * card + 36) - 1)).toBe(1);
+    expect(reach(2 * (grownEdge(2) * card + 36) + 1)).toBe(2);
   });
 });

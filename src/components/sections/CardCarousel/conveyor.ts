@@ -98,6 +98,30 @@
 // owner rejected both ("i want 0 designs that look like "Când o schimbi""),
 // and they are gone, with their pivot, their roll and the room their corners
 // asked for.
+//
+// ── THE FLAT ROW (2026-10-25 — the Home band's articles, the owner, verbatim:
+// "On phone it looks perfect, it must reamin like that, but on tablet and
+// above, i do not want it to be circular anymore. i just want it to be like
+// flat, a circular list as now but central, currrent card one is highlighted"
+// — "the list must be flat, not curved at is now. it must be wider and it must
+// fit a nr of article in function of screen width"). A carousel that asks for
+// it (CardCarousel.tsx's THE FLAT ROW) draws THE LINE below its query — the
+// phone, unchanged — and from it up a second conveyor, flat: no turn and no
+// perspective, every card upright in the screen's own plane by construction,
+// the centre card at scale 1 and every other at FLAT_SIDE_SCALE, 0.9 — THE
+// LINE's own neighbour step, so the row and the line agree on how much smaller
+// a side card is. The slots are not solved through a projection, because
+// nothing is projected: a card's drawn edge is its position ± half its scale,
+// and CARD_GAP of air between two cards' drawn edges at rest gives the
+// centre-to-neighbour step FLAT_STEP = ½ + CARD_GAP + 0.9 ÷ 2 = 1.01 card
+// widths and the pitch beyond it FLAT_PITCH = 0.9 + CARD_GAP = 0.96 —
+// piecewise linear in x like THE LINE's poses, so a glide and a drag pass
+// through the same row. The ROW HAS NO WINDOW of its own: its stage is the
+// screen (the consumer bleeds the carousel's root to it), and as many cards
+// show as fit — the count follows the width by construction. What the row
+// adds is a REACH (flatReach): how many cards each side of the centre stand
+// wholly clear of the two arrows' strips, even grown under a mouse to the
+// centre card's size — the cards a visitor may hover and press there.
 
 /** One pinned pose of THE LINE: where the card's centre stands, in card
  *  widths from the stage's centre, how large it is drawn, and how far it is
@@ -212,12 +236,29 @@ export const BEYOND_PITCH = SLOTS[2].position - SLOTS[1].position;
 const tidy = (value: number): number => Math.round(value * 1e6) / 1e6 + 0;
 
 /**
+ * THE GUARD, one rule for the three functions that take a number from the
+ * island (2026-10-26, the lane's TypeScript review — until then flatReach
+ * alone had it): a reading or a position that is NOT A FINITE NUMBER gets the
+ * neutral answer — flatReach no side card, poseAt and flatPoseAt the centre's
+ * pose at rest — never a NaN or an Infinity written into a custom property.
+ * Nothing in the island makes one (every position is a signed offset or a
+ * distance between finite numbers, a drag's travel over a pitch never under
+ * 1px); and for a NaN the pose is the one the stylesheet would draw anyway —
+ * a `scale()` of NaN is no number at all, so the transform falls away and the
+ * card stands unmoved (an Infinity it would not: inside calc() the keyword is
+ * a length past any screen).
+ */
+const finite = (value: number): boolean => Number.isFinite(value);
+
+/**
  * The pose of a card at continuous position `x` on THE LINE (THE SLOTS): drawn
  * on straight lines between the pinned poses, mirrored left of the centre —
  * the same in both windows, which differ only in how much of the line the
- * stage shows.
+ * stage shows. A position that is not a finite number is drawn at the centre,
+ * at rest (THE GUARD).
  */
 export function poseAt(x: number): CardPose {
+  if (!finite(x)) return { tx: 0, ry: 0, sc: 1 };
   const side = x < 0 ? -1 : 1;
   const distance = Math.abs(x);
   const [centre, neighbour, nextPair] = SLOTS;
@@ -265,6 +306,81 @@ export const ARRANGEMENTS: Readonly<Record<ConveyorWindow, Arrangement>> = {
  *  shows in a narrow column — the three-card window itself, on the same
  *  line. */
 export const FIVE_FALLBACK: Arrangement = ARRANGEMENTS[3];
+
+/** What CardCarousel.tsx writes onto one card of a carousel that can lie
+ *  flat (THE FLAT ROW) — `--ftx`, `--fsc` — beside its line's pose: the
+ *  sideways shift in card widths, and the scale. No turn: the row lies in
+ *  the screen's own plane. */
+export type FlatPose = Readonly<{
+  tx: number;
+  sc: number;
+}>;
+
+/** THE FLAT ROW's side card (the header): THE LINE's own neighbour step,
+ *  0.9 — every card but the centre one, however far out. */
+export const FLAT_SIDE_SCALE: number = NEIGHBOUR.scale;
+
+/** THE FLAT ROW's step, centre to neighbour, in card widths (the header):
+ *  half the centre card, CARD_GAP of air and half a side card — 1.01. It is
+ *  also how far a dragging hand travels to move the row one card. */
+export const FLAT_STEP = 0.5 + CARD_GAP + FLAT_SIDE_SCALE / 2;
+
+/** THE FLAT ROW's pitch past the neighbours (the header): one side card and
+ *  the air — 0.96. */
+export const FLAT_PITCH = FLAT_SIDE_SCALE + CARD_GAP;
+
+/**
+ * The pose of a card at continuous position `x` on THE FLAT ROW (the header):
+ * a straight line from the centre to the neighbour — the shift 0 to
+ * FLAT_STEP card widths, the scale 1 down to FLAT_SIDE_SCALE — and from there
+ * the pitch FLAT_PITCH a card at FLAT_SIDE_SCALE, mirrored left of the
+ * centre. Piecewise linear in x, like THE LINE's poses, so a glide between two
+ * whole positions and a drag through them draw the same row. A position that
+ * is not a finite number is drawn at the centre, at rest (THE GUARD).
+ */
+export function flatPoseAt(x: number): FlatPose {
+  if (!finite(x)) return { tx: 0, sc: 1 };
+  const side = x < 0 ? -1 : 1;
+  const distance = Math.abs(x);
+  const position =
+    distance <= 1
+      ? FLAT_STEP * distance
+      : FLAT_STEP + FLAT_PITCH * (distance - 1);
+  const scale =
+    distance <= 1 ? 1 - (1 - FLAT_SIDE_SCALE) * distance : FLAT_SIDE_SCALE;
+  return { tx: tidy(side * position), sc: tidy(scale) };
+}
+
+/** Where the j-th side card's outer edge stands, grown to the centre card's
+ *  size, is FLAT_STEP + (j − 1) · FLAT_PITCH + ½ card widths out — a straight
+ *  line in j, GROWN_EDGE + j · FLAT_PITCH, of which this is the intercept:
+ *  0.55. */
+const GROWN_EDGE = FLAT_STEP - FLAT_PITCH + 0.5;
+
+/** A hair, in card widths: a card standing exactly on its limit counts as
+ *  inside it, so the floating arithmetic's last bit never takes one away. */
+const REACH_SLACK = 1e-9;
+
+/**
+ * THE REACH (the header): how many cards each side of the centre stand
+ * WHOLLY between the two arrows' strips even grown to the centre card's size
+ * — the j-th side card's grown outer edge, GROWN_EDGE + j · FLAT_PITCH card
+ * widths out, at most `halfClear` — so a pointer on any of them lands on the
+ * card and never on an arrow, and the card's growth under it never slides
+ * under one.
+ *
+ * @param halfClear how far out from the centre a card may reach, in card
+ * widths: half the stage less one arrow's strip.
+ * @returns a whole count, never under 0 — and 0 for a reading that is not a
+ * finite number (THE GUARD).
+ */
+export function flatReach(halfClear: number): number {
+  if (!finite(halfClear)) return 0;
+  return Math.max(
+    0,
+    Math.floor((halfClear - GROWN_EDGE) / FLAT_PITCH + REACH_SLACK),
+  );
+}
 
 /**
  * A card's stacking rank: the centre on top, then the neighbours, and so on

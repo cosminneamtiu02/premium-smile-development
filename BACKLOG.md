@@ -121,18 +121,38 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     Home page's articles band are 10–14 Tab stops per carousel — the lever, not taken, is one Tab
     stop for the row (a roving-tabindex toolbar, arrow keys between the dots).
   - The Home page's articles band draws the blog's cards as 65 % MINIATURES (the owner's pick,
-    2026-10-17, „Miniature (all 65%)"; sections/BlogCarousel, sections/PostCard's `miniature`): on
-    every phone and tablet and on laptops up to a 1401px window the centre card's title reads
-    19.5px, its read-more 11.7, its summary and reading time 10.4, its author 9.1 and its category
-    tags 7.8px (on a 1920 desktop the text ×1.375, the tags ×1.19, 9.3px). No AA criterion sets a
-    minimum text size, and zoom still enlarges it on a phone (pinch-zoom) and on a laptop up to
-    the 1401 reference (browser zoom, where THE FLOOR holds the carousel's pixel at the theme's)
-    — but NOT on a desktop wider than the 1401 reference: on a 1920 screen 110 and 125 % leave
-    the five texts as they are, 150 % gives ×1.09, 200 % ×1.45, and they double only near 275 %
-    (×1.44 at 200 % on a 2560 screen) — the band scale's trade; the tags, whose own floor is in
-    rem, read 9.31 / 9.30 / 9.75 / 11.7 / 15.6px there at 100 / 110 / 125 / 150 / 200 % (×1.00,
-    ×1.05, ×1.26, ×1.68) (the phase-3 accessibility reviews' arithmetic, 2026-10-20). The site's readers skew older (§1): look at it with them. The levers: the share,
-    one constant in sections/BlogCarousel, or a text floor inside the miniature.
+    2026-10-17, „Miniature (all 65%)"; sections/BlogCarousel, sections/PostCard's `miniature`): ON A
+    PHONE, its line, the centre card's title reads 19.5px, its read-more 11.7, its summary and
+    reading time 10.4, its author 9.1 and its category tags 7.8px. From a tablet's screen up its
+    flat row (2026-10-25, CLAUDE.md §15.39 round 5) draws the full card's own sizes on a tablet (the
+    summary 16px) and, on a laptop or a desktop, a numbers tile's sentence (14.6px at a 1140
+    window, 18 at 1401, 24.75 at 1920). No AA criterion sets a minimum text size; zoom enlarges the
+    phone's text (pinch-zoom), and the row follows the band scale's trade, the numbers band's own:
+    on a 1440 × 900 laptop the summary holds 18.5 device px at 100, 110 and 125 % and reads 24 / 28 /
+    32 at 150 / 175 / 200 %; on a 1920 screen it holds 24.7 up to 150 % and reads 28 and 32 after —
+    larger at every step than the floored line it replaced there (develop's 10.7 → 20.8 and 14.3 →
+    20.8), but growing ×1.73 and ×1.29 to 200 % where that line grew ×1.95 and ×1.45 (MEASURED on
+    the built export, 2026-10-26). The site's readers skew older (§1): look at it with them. The
+    levers: the share, one constant in sections/BlogCarousel, or a text floor inside the miniature.
+  - The Home page's articles band's FLAT ROW (2026-10-25, CLAUDE.md §15.39 round 5), from a tablet's
+    screen up — one decision for the owner and two checks:
+    · THE CLAMPED TITLES, THE OWNER'S CALL: in the row a card's title and summary show two lines at
+      most, „…" past them (his pick, "Card 24% shorter, same text size"). Under SC 1.4.12's
+      text-spacing overrides a title that fits two lines needs a third, and its end goes behind the
+      „…": at his 1401 window Romanian cuts 10 of the 12 titles with the overrides (2 without),
+      English 7 (3), German 11 (6), French 12 (7), Italian 11 (3) — measured by the band's builder,
+      2026-10-26. The whole words stay in the DOM, in the link's accessible name and on the article
+      page, but an auditor may read it as F104 (the G2 accessibility review's MEDIUM 5). The levers:
+      clamp the summary alone and keep the titles whole, or three title lines — either makes the
+      row's cards taller again.
+    · A LISTEN (NVDA with Chrome, VoiceOver with Safari): in the row several cards are on screen and
+      live, so the cards' container is silent and ONE visually hidden status line names the centred
+      card after a press („Articolul 2 din 12"), and the centred card carries `aria-current` —
+      measured in the built page's markup in Chromium, never heard.
+    · THE TAB ORDER IN SAFARI AND FIREFOX: Tab walks the row's live cards in their on-screen order
+      through CSS `reading-flow` and `reading-order`, which only Chromium supports (137+); in WebKit
+      26.5 and Firefox 153 it follows the list's order, so at the ring's wrap it goes centre → right
+      → far left (SC 2.4.3, borderline: each card says its place, „Articolul 12 din 12").
   - In Safari, which does not scroll a control Tab focuses into view, Home's twelve progress dots
     (a 308px row: x 6–314 at a 320 window, x 41–349 at 390) can sit under the fixed corner buttons
     (x 16–72 and W − 72 to W − 16): at 320 dots 2 and 11 can be covered entirely (the discs are
@@ -327,10 +347,14 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
     the rem step past the column — 56rem becomes 1792px, the column is 1521 — so the band leaves the
     scale and reads ≈ 1.45×, the trade Chromium records too; there the double zoom can show only at
     150 %, as ≈ 1.6× or more. The 2.25× and 4× apply under the 1401 reference. Computed from how
-    Firefox applies text zoom, not run.) The SAME CHECK on the Home page's articles band, the floor's
-    second setter since 2026-10-17 (sections/BlogCarousel's carousel, its cards 65 % miniatures): `/de/`
-    in a 1920 window, "Zoom Text Only" — a card's title ≈ 1.5× at 150 % (≈ 1.6× or more is the double
-    zoom) and ≈ 1.45× at 200 %, and no card's words may leave its frame;
+    Firefox applies text zoom, not run.) The SAME CHECK on the Home page's articles band (sections/
+    BlogCarousel, its cards 65 % miniatures), whose flat row draws in a pixel of its own in rem — the
+    theme's pixel over the share, from a tablet's width up to the band scale's step (THE FLAT ROW'S
+    PIXEL, 2026-10-25; its floor, a second rem path, left on 2026-10-26): `/de/` in a 1024 window,
+    "Zoom Text Only" at 150 and 200 % — a card's summary ≈ 1.5× and 2× its 100 % size (≈ 2.25× and 4×
+    is the double zoom) — and in a 1920 window, where its title should read ≈ 1.5× at 150 % (≈ 1.6×
+    or more is the double zoom); and no card's words may leave its frame (in the row a title or a
+    summary past its two lines ends in „…" — the clamp, not a defect);
   - the price STRIP (CLAUDE.md §15.20 round 6) — on a real iPhone: its touch scrolling, the hidden
     scroll indicator (iOS 18.2 and later), a link straight to a category on a slow connection (the
     load wait) and VoiceOver's reading order through the chips; on a laptop window under 60rem with

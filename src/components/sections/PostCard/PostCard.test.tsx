@@ -70,7 +70,15 @@ import postListSource from '@/components/sections/PostList/PostList.tsx?raw';
 // back as it found it. What the title does to the words the blog ships is
 // PostCard.titles.test.tsx's, and what a MINIATURE draws, against its full
 // card, PostCard.miniature.test.tsx's; THE MINIATURE's markup and its code
-// are pinned here, with no stylesheet needed.
+// are pinned here, with no stylesheet needed. THE CLAMP's markup and code
+// are pinned here too, and what it draws is measured in the LAST block, the
+// one that injects the REAL faces (it counts lines, which only they lay out)
+// for itself alone and the one that PHOTOGRAPHS the card (vitest/browser's
+// `page.screenshot`, decoded in the page): to the pixel without the page's
+// variables, and the hook of a „j" kept by the clip's room. Its sweep across
+// sizes, engines and device scales is PostCard.tsx's record, never a gate —
+// at a fortieth of an em the clip's bottom edge stands within a pixel of
+// both lines' ink, and CI's Linux draws its glyphs otherwise.
 // THE CHIPS' PIXEL IS READ IN PARTS: its bracketed declaration is never
 // written here whole — Tailwind reads tests too, and
 // tests/unit/design-scale.test.ts holds every scanned file to its D-LIT RULE —
@@ -188,13 +196,17 @@ const LINK = [
 ];
 const SIZES =
   '(min-width: 121.25rem) and (pointer: fine) 30rem, (min-width: 71.25rem) 25vw, (min-width: 46.25rem) 40vw, 90vw';
-/** ui/Heading's `band` step on its default ink. */
+/** ui/Heading's `band` step on its default ink — a full card's title. */
 const BAND_TITLE = [
   'font-display',
   'text-3xl',
   '@md:text-4xl',
   'text-ink-strong',
 ];
+/** ui/Heading's `section` step on its default ink — `band`'s small row byte
+ *  for byte, with no container step under it: a MINIATURE's title (PostCard's
+ *  THE STEPS THE MINIATURE CANNOT REDRAW). */
+const SECTION_TITLE = ['font-display', 'text-3xl', 'text-ink-strong'];
 /** A picture hint a page of its own may name instead of the list's
  *  (PostCard's THE `sizes`, OVERRIDDEN) — the card passes any hint through
  *  verbatim. */
@@ -241,6 +253,61 @@ const CHIP_TAG = [
 /** ui/TextButton's ACCENT rest — the hover's lavender at rest, the underline
  *  folded until a hover draws it. */
 const ACCENT_AT_REST = ['text-accent', 'after:scale-x-0'];
+/** THE CLAMP (PostCard's header): what a clampable card's title and summary
+ *  both wear — three of a page's variables with today's value behind each,
+ *  `-webkit-box-orient` plain, and THE CLAMP'S ROOM, padding and the margin
+ *  that takes it back, each times the element's `--clamp-on` — then each
+ *  one's lines and that switch. Written out (the harness note): a renamed
+ *  variable or a moved room fails here. */
+const CLAMP = [
+  '[display:var(--clamp-box,block)]',
+  '[-webkit-box-orient:vertical]',
+  '[overflow:var(--clamp-clip,visible)]',
+  '[padding:calc(var(--clamp-on)*0.25em)_calc(var(--clamp-on)*0.25em)_calc(var(--clamp-on)*0.025em)]',
+  '[margin:calc(var(--clamp-on)*-0.25em)_calc(var(--clamp-on)*-0.25em)_calc(var(--clamp-on)*-0.025em)]',
+];
+const CLAMP_TITLE_LINES = [
+  '[-webkit-line-clamp:var(--title-lines,none)]',
+  '[--clamp-on:min(var(--title-lines,0),1)]',
+];
+const CLAMP_SUMMARY_LINES = [
+  '[-webkit-line-clamp:var(--summary-lines,none)]',
+  '[--clamp-on:min(var(--summary-lines,0),1)]',
+];
+/** THE CLAMP'S ROOM, in the element's ems: on top and on both sides, and
+ *  below (PostCard's THE CLAMP'S ROOM). */
+const ROOM = { side: 0.25, below: 0.025 };
+/** The page's four variables as sections/BlogCarousel sets them in its flat
+ *  row — here INLINE on an ancestor, never as classes: Tailwind reads tests
+ *  too, and a class nothing else wears would ship as a rule. */
+const CLAMP_ON = {
+  '--clamp-box': '-webkit-box',
+  '--clamp-clip': 'hidden',
+  '--title-lines': '2',
+  '--summary-lines': '2',
+} as CSSProperties;
+/** A post longer than THE CLAMP's two lines in the flat row's card — its
+ *  title on three lines there, its summary on five and more — in Romanian
+ *  with diacritics (§15.7): the suite's own words, to the CMSR rules every
+ *  page keeps (no superlative, no promise, no result). */
+const LONG_POST = {
+  ...POST,
+  title:
+    'Coroane și punți dentare: care e diferența și când e nevoie de fiecare',
+  summary:
+    'O coroană acoperă un dinte slăbit, iar o punte înlocuiește unul care lipsește, sprijinindu-se pe dinții vecini. Îți explicăm pe rând cum arată fiecare, cât durează lucrarea și cum le îngrijești acasă, între două controale.',
+} as const satisfies PostCardContent;
+/** A post SHORTER than the clamp's lines — one line of each in the flat
+ *  row's card — so a set clamp has nothing to hide in it. */
+const SHORT_POST = {
+  ...POST,
+  title: 'Ce este tartrul',
+  summary: 'Pe scurt, ce este.',
+} as const satisfies PostCardContent;
+/** The flat row's card on a tablet: the blog list's three-across card at the
+ *  owner's 1401 window, (1106 − 64) / 3 design px, in the theme's pixel
+ *  (sections/BlogCarousel's THE FIXED SHAPE, THE FLAT ROW). */
+const ROW_CARD = (1106 - 64) / 3;
 
 /** Read through the ATTRIBUTE, the same bytes on HTML and SVG elements. */
 const tokensOf = (element: Element): string[] =>
@@ -454,19 +521,40 @@ describe('PostCard — an <article> named by its own title', () => {
     ]);
   });
 
-  it('asks ui/Heading for its `band` step ONCE, in code, and hands the title its rule and its belt alone — no size by className (the narrow steps left on 2026-10-17)', () => {
+  it('dresses a MINIATURE’s title in `band`’s small row alone, `section`, then the same rule and belt', () => {
+    renderCard({ miniature: SHARE });
+
+    expect(tokensOf(screen.getByRole('heading', { level: 2 }))).toEqual([
+      ...SECTION_TITLE,
+      TITLE_RULE,
+      TITLE_BELT,
+    ]);
+    // `band` less its one container row, and nothing else: the small row the
+    // list's three-across card always draws.
+    expect(BAND_TITLE.filter((token) => !token.startsWith('@'))).toEqual(
+      SECTION_TITLE,
+    );
+  });
+
+  it('asks ui/Heading for its step ONCE, in code, through TITLE_STEP — `band` or `section` — and no size by className', () => {
     // The one call site: the step, through `asChild`, on the title's own
     // element — never a second size asked of the atom.
     const asks = [...CODE.matchAll(/<Heading\b([^>]*)>/g)].map((m) => m[1]);
     expect(asks).toHaveLength(1);
-    expect(asks[0]).toMatch(/\bsize="band"/);
+    expect(asks[0]).toMatch(
+      /\bsize=\{TITLE_STEP\[mini \? 'miniature' : 'full'\]\}/,
+    );
     expect(asks[0]).toMatch(/\basChild\b/);
+    // The lookup: two steps, a full card's and a miniature's, and no third.
+    const table = /\bconst TITLE_STEP = \{([^}]*)\}/.exec(CODE)?.[1];
+    expect(table?.replace(/\s+/g, '')).toBe("full:'band',miniature:'section'");
     // The title's className is two wrapping rules, spelled once, on its own
-    // element (§6.8): THE TITLE NEVER SPLITS A WORD and its belt — and no
-    // size, since THE NARROW STEPS, REMOVED: a miniature draws `band` at
-    // its share, never a smaller step.
+    // element (§6.8): THE TITLE NEVER SPLITS A WORD and its belt — then, on
+    // a clampable card alone, THE CLAMP — and no size, since THE NARROW
+    // STEPS, REMOVED: a miniature draws its step at its share, never a
+    // smaller one.
     expect(CODE).toMatch(
-      /<TitleElement id=\{titleId\} className="hyphens-none wrap-anywhere">/,
+      /<TitleElement\s+id=\{titleId\}\s+className=\{cx\('hyphens-none wrap-anywhere', titleClamp\)\}\s*>/,
     );
     expect(CODE).not.toMatch(/\btext-(?:xl|2xl)\//);
   });
@@ -706,6 +794,22 @@ describe('PostCard — the title’s level: the page’s outline decides it, the
       expect(
         element.getAttributeNames().filter((name) => /level/i.test(name)),
       ).toEqual([]);
+    }
+  });
+
+  it('keeps a MINIATURE’s look, `section`’s, at either level — the level is the outline’s, the step the miniature’s', () => {
+    for (const headingLevel of [2, 3] as const) {
+      renderCard({ headingLevel, miniature: SHARE });
+      const heading = screen.getByRole('heading', {
+        level: headingLevel,
+        name: POST.title,
+      });
+      expect(tokensOf(heading)).toEqual([
+        ...SECTION_TITLE,
+        TITLE_RULE,
+        TITLE_BELT,
+      ]);
+      cleanup();
     }
   });
 
@@ -1215,6 +1319,81 @@ describe('PostCard — the jump, and ONE thing to press: the link', () => {
     }
   });
 
+  it('jumps by default and at `jump={true}`; at `jump={false}` the jump’s tokens and nothing else leave the markup', () => {
+    // On the server's renderer, the bytes a page ships.
+    const markupWith = (overrides: Partial<PostCardProps>): string =>
+      renderToStaticMarkup(
+        <PostCard
+          {...POST}
+          tagsLabel={TAGS_LABEL}
+          readMore={READ_MORE_LABEL}
+          {...overrides}
+        />,
+      );
+    const jumping = markupWith({});
+    expect(markupWith({ jump: true })).toBe(jumping);
+    expect(markupWith({ jump: undefined })).toBe(jumping);
+    // The jump stands ONCE in the jumping card's markup, its six tokens in a
+    // row before the hover area — and the still card is that markup with
+    // them taken out, whatever else the card is (a miniature, a level, a
+    // caller's class).
+    const tokens = `${JUMP.join(' ')} `;
+    expect(jumping.split(tokens)).toHaveLength(2);
+    expect(markupWith({ jump: false })).toBe(jumping.replace(tokens, ''));
+    for (const overrides of [
+      { miniature: SHARE },
+      { headingLevel: 3 as const, className: 'h-full', preload: true },
+    ]) {
+      expect(markupWith({ ...overrides, jump: false })).toBe(
+        markupWith(overrides).replace(tokens, ''),
+      );
+    }
+    // In the DOM: the article's class is the hover area alone, so a hover
+    // still draws the read-more's underline (the measured block below).
+    renderCard({ jump: false });
+    expect(tokensOf(screen.getByRole('article'))).toEqual([HOVER_AREA]);
+  });
+
+  it('asks for the jump in code ONCE — CARD_JUMP whole or nothing, on the <article>, its default `true`', () => {
+    expect(CODE).toMatch(/\bjump = true,/);
+    // Its declaration and its one wear, and no other mention in code.
+    expect(CODE.match(/\bCARD_JUMP\b/g)).toHaveLength(2);
+    expect(CODE).toMatch(/\bjump \? CARD_JUMP : undefined,/);
+  });
+
+  it('refuses a `jump` past the type — „false", null, 0, an object — with a RangeError that names it', () => {
+    // On the server's renderer, the bytes a page ships. Unguarded, the string
+    // „false" is truthy and would grow a card its page asked to hold still,
+    // and null, which no default replaces, would hold a list card still.
+    const markupAt = (jump: unknown): string =>
+      renderToStaticMarkup(
+        <PostCard
+          {...POST}
+          tagsLabel={TAGS_LABEL}
+          readMore={READ_MORE_LABEL}
+          jump={jump as boolean}
+        />,
+      );
+    for (const [smuggled, named] of [
+      ['false', '"false"'],
+      ['true', '"true"'],
+      [null, 'null'],
+      [0, '0'],
+      [1, '1'],
+      [{}, '<object>'],
+    ] as const) {
+      expect(() => markupAt(smuggled), named).toThrow(RangeError);
+      expect(() => markupAt(smuggled), named).toThrow(
+        '`jump` is whether the card grows on a hover, true or false',
+      );
+      expect(() => markupAt(smuggled), named).toThrow(`got ${named}.`);
+    }
+    // …while the two booleans and the default render as ever.
+    expect(markupAt(undefined)).toContain(JUMP.join(' '));
+    expect(markupAt(true)).toContain(JUMP.join(' '));
+    expect(markupAt(false)).not.toContain(JUMP[0]);
+  });
+
   it('has ONE thing focusable and interactive inside — the link — and no button, no tabindex, no role but the list’s', () => {
     const { container } = renderCard();
     const { link } = partsOf(container.firstElementChild);
@@ -1265,12 +1444,17 @@ describe('PostCard — §6 fidelity: placement in, no styling out', () => {
     );
   });
 
-  it('keeps its own props off the article — no tooltip, no stray attribute, the level, the picture hint and the miniature’s share included', () => {
-    renderCard({ headingLevel: 3, sizes: PAGE_SIZES });
+  it('keeps its own props off the article — no tooltip, no stray attribute, the level, the picture hint, the jump, the clamp and the miniature’s share included', () => {
+    renderCard({
+      headingLevel: 3,
+      sizes: PAGE_SIZES,
+      jump: false,
+      clampable: true,
+    });
 
     // `title` is the card's heading text, never HTML's tooltip; the content
-    // props — `headingLevel` and `sizes` among them — are destructured, so
-    // nothing of theirs rides the spread.
+    // props — `headingLevel`, `sizes`, `jump` and `clampable` among them —
+    // are destructured, so nothing of theirs rides the spread.
     expect(screen.getByRole('article').getAttributeNames().sort()).toEqual([
       'aria-labelledby',
       'class',
@@ -1394,26 +1578,38 @@ describe('PostCard — THE MINIATURE as markup and code (what it draws is PostCa
   it('prints the list’s card byte for byte without a share — held from both sides', () => {
     // No part of the miniature in its markup (`miniature={undefined}` and a
     // caller's style included), and a miniature with its four parts taken
-    // out IS that markup.
+    // out — and its title's step put back — IS that markup.
     /** A regular expression matching `text` as written. */
     const literally = (text: string): string =>
       text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    /** `markup` with `part` taken out — found EXACTLY once, or a throw that
-     *  names it, so a part gone missing never passes as removed. */
-    const takeOut = (markup: string, part: string, name: string): string => {
+    /** `markup` with `part` turned into `into` — found EXACTLY once, or a
+     *  throw that names it, so a part gone missing never passes as handled. */
+    const swap = (
+      markup: string,
+      part: string,
+      into: string,
+      name: string,
+    ): string => {
       const found = markup.match(new RegExp(part, 'g')) ?? [];
       if (found.length !== 1) {
         throw new Error(
           `the miniature’s ${name} stands ${found.length} times in its markup`,
         );
       }
-      return markup.replace(new RegExp(part), '');
+      return markup.replace(new RegExp(part), into);
     };
+    /** `markup` with `part` taken out — `swap` into nothing. */
+    const takeOut = (markup: string, part: string, name: string): string =>
+      swap(markup, part, '', name);
     const share = `${literally(SHARE_VARIABLE)}:${literally(String(SHARE))}`;
+    /** The title's class, as each kind of card wears it. */
+    const titleClass = (step: readonly string[]): string =>
+      `class="${[...step, TITLE_RULE, TITLE_BELT].join(' ')}"`;
     for (const overrides of [
       {},
       { style: { color: 'red' }, id: 'x', className: 'h-full' },
       { headingLevel: 3 as const, sizes: PAGE_SIZES, preload: true },
+      { jump: false },
     ]) {
       const plain = markupOf(overrides);
       // One side: without a share — the prop left out, or written
@@ -1446,6 +1642,15 @@ describe('PostCard — THE MINIATURE as markup and code (what it draws is PostCa
         mini,
         ` style="${literally(PIXEL)}:[^"]*"`,
         'chips’ pixel',
+      );
+      // …and its title's step, `section` where the list's card wears `band`
+      // (THE STEPS THE MINIATURE CANNOT REDRAW), put back.
+      expect(plain).toContain(titleClass(BAND_TITLE));
+      mini = swap(
+        mini,
+        literally(titleClass(SECTION_TITLE)),
+        titleClass(BAND_TITLE),
+        'title’s step',
       );
       expect(mini).toBe(plain);
     }
@@ -1486,22 +1691,36 @@ describe('PostCard — THE MINIATURE as markup and code (what it draws is PostCa
     expect(tokensOf(card)).toEqual(tokensOf(plainCard));
     expect(tokensOf(card).slice(-2)).toEqual(['relative', 'h-full']);
     // The tag list keeps its class byte for byte (the cover's KEEP-IN-SYNC);
-    // its pixel rides inline, CHIP_SCALE's formula with the floor × the
-    // share (the next case reads the two out of the source).
+    // its pixel rides inline, CHIP_SCALE's formula with the floor in the
+    // CAPTURED pixel (the next case reads the two out of the source) — the
+    // capture's, never the share's own variable.
     const list = screen.getByRole('list', { name: TAGS_LABEL });
-    expect(list.style.getPropertyValue(PIXEL)).toContain(
+    expect(list.style.getPropertyValue(PIXEL)).toContain('var(--miniature-px)');
+    expect(list.style.getPropertyValue(PIXEL)).not.toContain(
       `var(${SHARE_VARIABLE})`,
     );
-    // The Card and everything in it: every class list the full card's.
-    expect([card, ...card.querySelectorAll('*')].map(tokensOf)).toEqual(
-      plainTokens,
+    // The Card and everything in it: every class list the full card's — but
+    // the title's, `section` for `band` (THE STEPS THE MINIATURE CANNOT
+    // REDRAW).
+    const inside = [card, ...card.querySelectorAll('*')];
+    const titleAt = inside.indexOf(screen.getByRole('heading', { level: 2 }));
+    expect(titleAt).toBeGreaterThan(0);
+    expect(plainTokens[titleAt]).toEqual([
+      ...BAND_TITLE,
+      TITLE_RULE,
+      TITLE_BELT,
+    ]);
+    expect(inside.map(tokensOf)).toEqual(
+      plainTokens.map((tokens, index) =>
+        index === titleAt ? [...SECTION_TITLE, TITLE_RULE, TITLE_BELT] : tokens,
+      ),
     );
     expect(container.querySelectorAll('*')).toHaveLength(
       plainTokens.length + 2,
     );
   });
 
-  it('spells the chips’ miniature pixel as CHIP_SCALE’s own formula with its floor × the share — both read out of the source (KEEP-IN-SYNC within the file)', () => {
+  it('spells the chips’ miniature pixel as CHIP_SCALE’s formula, its floor twelve of the CAPTURED pixel — both read out of the source', () => {
     // CHIP_SCALE's declaration, found by NAME behind THE GUARD (the harness
     // note: never written here whole).
     const chipScale = /\bconst CHIP_SCALE =([^;]*);/.exec(CODE)?.[1] ?? '';
@@ -1513,24 +1732,171 @@ describe('PostCard — THE MINIATURE as markup and code (what it draws is PostCa
     const formula = classes
       .find((token) => token.startsWith(head))
       ?.slice(head.length, -1);
-    const floor = /^max\((calc\([\d.]+rem\/\d+\)),/.exec(formula ?? '')?.[1];
-    if (!formula || !floor) {
+    const floor = /^max\((calc\(([\d.]+)rem\/(\d+)\)),/.exec(formula ?? '');
+    if (!formula || !floor?.[1] || !floor[2] || !floor[3]) {
       throw new Error(`PostCard.tsx: CHIP_SCALE moved — ${chipScale}`);
     }
-    // MINIATURE_CHIPS' value, by the same NAME.
+    // The floor's rem in the theme's pixels — a sixteenth of a rem each, the
+    // spacing step over four — and so, on a miniature, in the CAPTURED one:
+    // `--miniature-px`, the share of the pixel the card inherits.
+    const twelve = Number(floor[2]) * 16;
+    expect(twelve).toBe(12);
+    // MINIATURE_CHIPS' value, by the same NAME: CHIP_SCALE's formula, its
+    // floor turned into twelve of the captured pixel over the same 18, its
+    // `cqw` half as it stands.
     const miniature = new RegExp(
       `\\bconst MINIATURE_CHIPS = \\{\\s*'${PIXEL}':\\s*'([^']*)'`,
     ).exec(CODE)?.[1];
     expect(miniature).toBe(
-      formula.replace(floor, `${floor.slice(0, -1)}*var(${SHARE_VARIABLE}))`),
+      formula.replace(
+        floor[1],
+        `calc(var(--miniature-px)*${twelve}/${floor[3]})`,
+      ),
     );
-    // …and the share is ONE variable: set once (MINIATURE_SHARE), read by
-    // the capture and by the chips' pixel.
+    // …and the share is ONE variable: set once (MINIATURE_SHARE) and read
+    // once, by the capture — the chips read the CAPTURED pixel, never the
+    // share itself, so a miniature's chips follow the pixel it inherits.
     expect(CODE).toMatch(
       new RegExp(`\\bconst MINIATURE_SHARE = '${SHARE_VARIABLE}';`),
     );
     expect(CAPTURE).toContain(`var(${SHARE_VARIABLE})`);
     expect(CODE.split(`'${CAPTURE}'`)).toHaveLength(2);
+    expect(CODE.split(`var(${SHARE_VARIABLE})`)).toHaveLength(2);
+    expect(CAPTURE.startsWith('[--miniature-px:')).toBe(true);
+  });
+});
+
+describe('PostCard — THE CLAMP as markup and code (a page’s to switch on)', () => {
+  /** The card as the server prints it — the bytes a page ships. */
+  const markupOf = (overrides: Partial<PostCardProps> = {}): string =>
+    renderToStaticMarkup(
+      <PostCard
+        {...POST}
+        tagsLabel={TAGS_LABEL}
+        readMore={READ_MORE_LABEL}
+        {...overrides}
+      />,
+    );
+  /** Every token THE CLAMP may put on an element. */
+  const CLAMP_TOKENS = [...CLAMP, ...CLAMP_TITLE_LINES, ...CLAMP_SUMMARY_LINES];
+
+  it('prints the list’s card byte for byte unless asked — no clamp token, whatever else the card is', () => {
+    for (const overrides of [
+      {},
+      { miniature: SHARE },
+      { headingLevel: 3 as const, className: 'h-full', preload: true },
+      { jump: false },
+    ]) {
+      const plain = markupOf(overrides);
+      expect(markupOf({ ...overrides, clampable: undefined })).toBe(plain);
+      expect(markupOf({ ...overrides, clampable: false })).toBe(plain);
+      for (const token of CLAMP_TOKENS) {
+        expect(plain, token).not.toContain(token);
+      }
+    }
+  });
+
+  it('puts THE CLAMP on the title after its rule and belt, on the summary after its ink — and nowhere else', () => {
+    for (const [overrides, step] of [
+      [{}, BAND_TITLE],
+      [{ miniature: SHARE }, SECTION_TITLE],
+    ] as const) {
+      const { container } = renderCard({ ...overrides, clampable: true });
+      const heading = screen.getByRole('heading', { level: 2 });
+      const summary = screen.getByText(POST.summary);
+      expect(tokensOf(heading)).toEqual([
+        ...step,
+        TITLE_RULE,
+        TITLE_BELT,
+        ...CLAMP,
+        ...CLAMP_TITLE_LINES,
+      ]);
+      expect(tokensOf(summary)).toEqual([
+        ...MUTED_TEXT.split(' '),
+        ...CLAMP,
+        ...CLAMP_SUMMARY_LINES,
+      ]);
+      // Nothing else in the card wears a token of it: the author, the
+      // reading time, the words box and the card keep theirs.
+      for (const element of container.querySelectorAll('*')) {
+        if (element === heading || element === summary) continue;
+        for (const token of tokensOf(element)) {
+          expect(CLAMP_TOKENS, `<${element.tagName}>`).not.toContain(token);
+        }
+      }
+      cleanup();
+    }
+  });
+
+  it('is the list’s card and those tokens, nothing more', () => {
+    for (const overrides of [
+      {},
+      { miniature: SHARE, headingLevel: 3 as const, jump: false },
+    ]) {
+      const plain = markupOf(overrides);
+      const clamped = markupOf({ ...overrides, clampable: true });
+      const title = ` ${[...CLAMP, ...CLAMP_TITLE_LINES].join(' ')}"`;
+      const summary = ` ${[...CLAMP, ...CLAMP_SUMMARY_LINES].join(' ')}"`;
+      // Each run of tokens stands ONCE, at the end of its element's class.
+      expect(clamped.split(title)).toHaveLength(2);
+      expect(clamped.split(summary)).toHaveLength(2);
+      expect(clamped.replace(title, '"').replace(summary, '"')).toBe(plain);
+    }
+  });
+
+  it('spells THE CLAMP once in code, defaults `clampable` to false, wears it through two classNames', () => {
+    /** A constant's string literals, joined — the constant spelled as the
+     *  jump census reads CARD_JUMP: literals alone, joined by `+`. */
+    const literalsOf = (body: string): string =>
+      [...body.matchAll(/'([^']*)'/g)].map((m) => m[1]).join('');
+    const box = /const CLAMP_BOX =([^;]*);/.exec(CODE)?.[1] ?? '';
+    expect(literalsOf(box)).toBe(CLAMP.join(' '));
+    expect(box.replace(/'[^']*'/g, '').trim()).toMatch(/^[+\s]*$/);
+    const lines = /const CLAMP_LINES = \{([^}]*)\}/.exec(CODE)?.[1] ?? '';
+    expect(/title:\s*'([^']*)'/.exec(lines)?.[1], 'the title’s lines').toBe(
+      CLAMP_TITLE_LINES.join(' '),
+    );
+    expect(/summary:\s*'([^']*)'/.exec(lines)?.[1], 'the summary’s lines').toBe(
+      CLAMP_SUMMARY_LINES.join(' '),
+    );
+    expect(CODE).toMatch(/\bclampable = false,/);
+    expect(CODE).toMatch(
+      /\bconst titleClamp = clampable \? cx\(CLAMP_BOX, CLAMP_LINES\.title\) : undefined;/,
+    );
+    expect(CODE).toMatch(
+      /\bconst summaryClamp = clampable\s*\?\s*cx\(CLAMP_BOX, CLAMP_LINES\.summary\)\s*:\s*undefined;/,
+    );
+    expect(CODE).toMatch(
+      /<Text tone="muted" className=\{summaryClamp\}>\s*\{summary\}\s*<\/Text>/,
+    );
+    // Each constant declared once and worn once — no second spelling.
+    expect(CODE.match(/\bCLAMP_BOX\b/g)).toHaveLength(3);
+    expect(CODE.match(/\bCLAMP_LINES\b/g)).toHaveLength(3);
+  });
+
+  it('refuses a `clampable` past the type with a RangeError that names it', () => {
+    // Unguarded, the string „false" is truthy and would clamp a card its
+    // page asked to keep whole wherever the page sets the variables.
+    const markupAt = (clampable: unknown): string =>
+      markupOf({ clampable: clampable as boolean });
+    for (const [smuggled, named] of [
+      ['false', '"false"'],
+      ['true', '"true"'],
+      [null, 'null'],
+      [0, '0'],
+      [1, '1'],
+      [{}, '<object>'],
+    ] as const) {
+      expect(() => markupAt(smuggled), named).toThrow(RangeError);
+      expect(() => markupAt(smuggled), named).toThrow(
+        '`clampable` is whether the page may clamp the title and the summary, true or false',
+      );
+      expect(() => markupAt(smuggled), named).toThrow(`got ${named}.`);
+    }
+    // …while the two booleans and the default render as ever.
+    expect(markupAt(undefined)).not.toContain(CLAMP[0]);
+    expect(markupAt(false)).not.toContain(CLAMP[0]);
+    expect(markupAt(true)).toContain(CLAMP.join(' '));
   });
 });
 
@@ -1613,6 +1979,13 @@ describe('PostCard — type-level pins', () => {
     // THE MINIATURE: a share, optional — the range is the RangeError's.
     expectTypeOf<PostCardProps['miniature']>().toEqualTypeOf<
       number | undefined
+    >();
+    // THE CARD JUMP: a flag, optional — `true` when left out, the list's.
+    expectTypeOf<PostCardProps['jump']>().toEqualTypeOf<boolean | undefined>();
+    // THE CLAMP: a flag, optional — `false` when left out, the list's; how
+    // many lines is the page's (its variables), never a number here.
+    expectTypeOf<PostCardProps['clampable']>().toEqualTypeOf<
+      boolean | undefined
     >();
     // `title` is the heading's text: REQUIRED, a string. What this pin cannot
     // tell is whether HTML's own `title` was Omitted — were it let back in,
@@ -1823,22 +2196,39 @@ const contrastOf = (first: string, second: string): number => {
  * drawn at `scalePx`: `design-scale` is globals.css's real utility, the one
  * ui/Container's THE BAND SCALE switches on for the page's band. The scale
  * rides an inline style, never an arbitrary class: it varies per case, and
- * Tailwind reads class names from source text.
+ * Tailwind reads class names from source text. `card` hands the card props
+ * of its own (a case's `jump`), and `variables` custom properties for the
+ * box to pass down to it (a page's THE CLAMP), inline for the same reason.
  */
 const renderMeasured = ({
   scalePx,
   width = 360,
-}: { scalePx?: number; width?: number } = {}) => {
+  card = {},
+  variables = {},
+}: {
+  scalePx?: number;
+  width?: number;
+  card?: Partial<PostCardProps>;
+  variables?: CSSProperties;
+} = {}) => {
   const style = {
     width: `${width}px`,
     ...(scalePx === undefined ? {} : { [PIXEL]: `${scalePx}px` }),
+    ...variables,
   } as CSSProperties;
   render(
     <div className={scalePx === undefined ? undefined : REMAP} style={style}>
-      <PostCard {...POST} tagsLabel={TAGS_LABEL} readMore={READ_MORE_LABEL} />
+      <PostCard
+        {...POST}
+        tagsLabel={TAGS_LABEL}
+        readMore={READ_MORE_LABEL}
+        {...card}
+      />
     </div>,
   );
-  const article = screen.getByRole('article', { name: POST.title });
+  const article = screen.getByRole('article', {
+    name: card.title ?? POST.title,
+  });
   const parts = partsOf(article);
   const cardStyle = getComputedStyle(parts.card);
   const cardBox = parts.card.getBoundingClientRect();
@@ -2321,6 +2711,40 @@ describe('PostCard — a hover anywhere on the card draws the read-more’s unde
       unpark();
     }
   });
+
+  it('with `jump={false}` holds the card still under a real hover, and still draws the read-more’s underline', async () => {
+    // THE PREMISE: a device that hovers, where the jump would answer.
+    expect(matchMedia('(hover: hover)').matches).toBe(true);
+    const m = renderMeasured({ card: { jump: false } });
+    const accent = tokenRgb('accent');
+    expect(m.article.matches(':hover')).toBe(false);
+    expect(scaleXOf(getComputedStyle(m.readMore, '::after'))).toBe(0);
+
+    for (const target of [screen.getByRole('heading', { level: 2 }), m.cell]) {
+      // FORCED, as above: the pointer on the target's centre, under the
+      // card's link layer (THE LINK).
+      await realUser.hover(target, { force: true });
+      expect(m.article.matches(':hover')).toBe(true);
+      // The underline is drawn, in the one lavender…
+      expect(scaleXOf(getComputedStyle(m.readMore, '::after'))).toBe(1);
+      expect(getComputedStyle(m.readMore).color).toBe(accent);
+      // …and the card holds still: no scale, and painted at its laid-out
+      // width.
+      expect(getComputedStyle(m.article).scale).toBe('none');
+      expect(m.article.getBoundingClientRect().width).toBeCloseTo(
+        parseFloat(getComputedStyle(m.article).width),
+        3,
+      );
+    }
+
+    const unpark = await parkPointer();
+    try {
+      expect(m.article.matches(':hover')).toBe(false);
+      expect(scaleXOf(getComputedStyle(m.readMore, '::after'))).toBe(0);
+    } finally {
+      unpark();
+    }
+  });
 });
 
 describe('PostCard — the tags are LABELS: the tag face at rest, and still under a real hover of a chip or of the card (real stylesheet, a real pointer)', () => {
@@ -2509,5 +2933,512 @@ describe('PostCard — the whole card is its link, measured (real stylesheet)', 
     // Focus gone, ring gone.
     m.link.blur();
     expect(layer().outlineStyle).toBe('none');
+  });
+});
+
+/** The real faces' declarations, as PostCard.miniature.test.tsx injects them
+ *  (KEEP-IN-SYNC: the font files .storybook/preview-fonts.css declares,
+ *  served from the repo's root, `font-display: block` so no fallback is ever
+ *  measured) — THE CLAMP counts LINES, which only the real face can lay out. */
+const SERIF = 'Source Serif 4 SB';
+const MONO = 'JetBrains Mono SB';
+const REAL_FACES = `
+@font-face {
+  font-family: '${SERIF}';
+  src: url('/src/fonts/SourceSerif4Variable-subset.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: '${MONO}';
+  src: url('/src/fonts/JetBrainsMonoVariable-subset.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: block;
+}
+:root { --font-source-serif: '${SERIF}'; --font-jetbrains-mono: '${MONO}'; }
+`;
+
+/** THE REAL FACES for the calling block: injected before it, taken out after
+ *  it, so every other block measures as it always did. A 404 on a subset
+ *  REJECTS the load — loudly. */
+const withRealFaces = (): void => {
+  let faces: HTMLStyleElement | undefined;
+  beforeAll(async () => {
+    faces = document.createElement('style');
+    faces.textContent = REAL_FACES;
+    document.head.append(faces);
+    await document.fonts.load(`1rem "${SERIF}"`);
+    await document.fonts.load(`1rem "${MONO}"`);
+    await document.fonts.ready;
+  });
+  afterAll(() => {
+    faces?.remove();
+  });
+};
+
+/** Every face the card's text is laid out in, loaded for that text — the
+ *  stories' `loadFace`, for a whole card. */
+const loadFacesOf = async (root: Element): Promise<void> => {
+  for (const element of root.querySelectorAll('h2, h3, p, li, span, a')) {
+    const style = getComputedStyle(element);
+    await document.fonts.load(
+      `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+      element.textContent ?? '',
+    );
+  }
+  await document.fonts.ready;
+};
+
+/** A box's LINES: its content box over its line height — layout values, the
+ *  pointer parked (so nothing is painted at a jump's scale). Never its
+ *  offsetHeight over the line: on a clamped box that height carries THE
+ *  CLAMP'S ROOM as padding. */
+const linesOf = (element: Element): number => {
+  const style = getComputedStyle(element);
+  const content =
+    parseFloat(style.height) -
+    parseFloat(style.paddingTop) -
+    parseFloat(style.paddingBottom);
+  return content / parseFloat(style.lineHeight);
+};
+
+/** Every picture in `root` loaded and decoded — a picture still swapping to
+ *  its original (the harness note: the optimizer's variants 404 here) would
+ *  photograph differently from one render to the next. Bounded: a picture
+ *  that never arrives fails by name after five seconds. */
+const picturesSettled = async (root: Element): Promise<void> => {
+  const ready = (image: HTMLImageElement): boolean =>
+    image.complete && image.naturalWidth > 0;
+  const until = performance.now() + 5_000;
+  for (const image of root.querySelectorAll('img')) {
+    while (!ready(image)) {
+      if (performance.now() > until) {
+        throw new Error(`PostCard: the picture ${image.src} never loaded.`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    await image.decode().catch(() => undefined);
+  }
+  await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+  await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+};
+
+/** An element as the runner photographs it: its PNG, decoded in the page
+ *  (sections/CardCarousel's geometry suite's reader). The runner shoots at
+ *  its own scale, so these cases compare one drawing with another, never a
+ *  pixel with a CSS length. */
+const pixelsOf = async (element: Element): Promise<ImageData> => {
+  const base64 = await page.screenshot({ element, save: false });
+  const blob = await (await fetch(`data:image/png;base64,${base64}`)).blob();
+  const bitmap = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const context = canvas.getContext('2d');
+  if (context === null) throw new Error('PostCard: no 2D context.');
+  context.drawImage(bitmap, 0, 0);
+  return context.getImageData(0, 0, bitmap.width, bitmap.height);
+};
+
+/** How many of two same-size images' pixels differ — any channel by any
+ *  level. Throws by name when their sizes differ. */
+const differingPixels = (a: ImageData, b: ImageData): number => {
+  if (a.width !== b.width || a.height !== b.height) {
+    throw new Error(
+      `PostCard: two photographs of one box differ in size (${a.width}×${a.height}, ${b.width}×${b.height}).`,
+    );
+  }
+  let count = 0;
+  for (let i = 0; i < a.data.length; i += 4) {
+    if (
+      a.data[i] !== b.data[i] ||
+      a.data[i + 1] !== b.data[i + 1] ||
+      a.data[i + 2] !== b.data[i + 2]
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+};
+
+describe('PostCard — THE CLAMP, measured (real stylesheet, real faces)', () => {
+  holdStill();
+  parkBeforeEach();
+  withRealFaces();
+
+  /** The flat row's card on a tablet, `clampable` unless told, the page's
+   *  variables on the box round it when given — its title, summary and card
+   *  read where the card puts them. */
+  const renderRow = async ({
+    card = {},
+    variables = {},
+  }: {
+    card?: Partial<PostCardProps>;
+    variables?: CSSProperties;
+  } = {}) => {
+    const m = renderMeasured({
+      width: ROW_CARD,
+      card: { clampable: true, ...card },
+      variables,
+    });
+    await loadFacesOf(m.article);
+    const title = screen.getByRole('heading', { level: 2 });
+    const summary = part(m.words.children[3], 'summary', HTMLElement);
+    return { ...m, title, summary };
+  };
+
+  /** What THE CLAMP may change on an element, as the engine computes it. */
+  const clampStyleOf = (element: Element) => {
+    const style = getComputedStyle(element);
+    return {
+      display: style.display,
+      overflow: style.overflow,
+      clamp: style.getPropertyValue('-webkit-line-clamp'),
+      padding: style.padding,
+      margin: style.margin,
+    };
+  };
+
+  /** Every box of the card, relative to the card's own — layout values. */
+  const boxesOf = (card: Element) => {
+    const origin = card.getBoundingClientRect();
+    return [card, ...card.querySelectorAll('*')].map((element) => {
+      const box = element.getBoundingClientRect();
+      return [
+        element.tagName,
+        +(box.left - origin.left).toFixed(2),
+        +(box.top - origin.top).toFixed(2),
+        +box.width.toFixed(2),
+        +box.height.toFixed(2),
+      ];
+    });
+  };
+
+  it('is inert without the page’s variables — every value but `-webkit-box-orient`, every box, every pixel', async () => {
+    for (const { name, width, card } of [
+      { name: 'the flat row’s card', width: ROW_CARD, card: {} },
+      {
+        name: 'the phone line’s miniature',
+        width: ROW_CARD * SHARE,
+        card: { miniature: SHARE, headingLevel: 3 as const, jump: false },
+      },
+    ]) {
+      /** One card, as the engine computes and draws it. */
+      const read = async (clampable: boolean) => {
+        const { container } = render(
+          <div style={{ width: `${width}px` }}>
+            <PostCard
+              {...LONG_POST}
+              tagsLabel={TAGS_LABEL}
+              readMore={READ_MORE_LABEL}
+              {...card}
+              clampable={clampable}
+            />
+          </div>,
+        );
+        const article = part(
+          container.querySelector('article'),
+          'article',
+          HTMLElement,
+        );
+        await loadFacesOf(article);
+        await picturesSettled(article);
+        const title = screen.getByRole('heading', { name: LONG_POST.title });
+        const summary = screen.getByText(LONG_POST.summary);
+        const reading = {
+          title: clampStyleOf(title),
+          summary: clampStyleOf(summary),
+          orient: [title, summary].map((element) =>
+            getComputedStyle(element).getPropertyValue('-webkit-box-orient'),
+          ),
+          boxes: boxesOf(article),
+          // THE WORDS, NOT THE PHOTOGRAPH: the clamp sits on the title and
+          // the summary alone, so the words' block — the title's parent,
+          // every line the clamp could move — is what is photographed. The
+          // picture is left out because CI's condition cannot hold it still:
+          // there the optimizer's variants 404 and ui/Image swaps each
+          // picture to its original in the browser, and two shots of the
+          // SAME card never agreed (285 pixels, every run, measured by the
+          // planner with the variants hidden) — whatever the clamp did.
+          image: await pixelsOf(
+            part(title.parentElement, 'the words’ block', HTMLElement),
+          ),
+        };
+        cleanup();
+        return reading;
+      };
+      // THE RUNNER SETTLES FIRST: MEASURED, its first photographs of a card
+      // differ from its later ones though the card is the same — up to 18
+      // levels across the whole card on a cold start, and after this file's
+      // other blocks a second shot still 2 levels off in the chips' corner —
+      // while once two shots in a row agree, every later one, plain or
+      // clampable, is the same to the pixel. So the plain card is shot until
+      // two shots in a row agree (five at most), and the clampable card is
+      // held to the plain shot on EITHER side of it.
+      let previous = await read(false);
+      let plain = await read(false);
+      for (
+        let shots = 2;
+        differingPixels(previous.image, plain.image) > 0 && shots < 5;
+        shots += 1
+      ) {
+        previous = plain;
+        plain = await read(false);
+      }
+      expect(
+        differingPixels(previous.image, plain.image),
+        `${name}: two shots of the same card never agreed`,
+      ).toBe(0);
+      const clampable = await read(true);
+      const after = await read(false);
+      // Today's values — the fallbacks behind every variable.
+      expect(clampable.title, name).toEqual(plain.title);
+      expect(clampable.summary, name).toEqual(plain.summary);
+      expect(plain.title).toEqual({
+        display: 'block',
+        overflow: 'visible',
+        clamp: 'none',
+        padding: '0px',
+        margin: '0px',
+      });
+      // The one value that moved — read by a -webkit-box alone.
+      expect(plain.orient).toEqual(['horizontal', 'horizontal']);
+      expect(clampable.orient).toEqual(['vertical', 'vertical']);
+      // Every box where it stood, and every pixel the card draws.
+      expect(clampable.boxes, name).toEqual(plain.boxes);
+      expect(differingPixels(clampable.image, plain.image), name).toBe(0);
+      expect(differingPixels(clampable.image, after.image), name).toBe(0);
+    }
+  });
+
+  it('holds the title and the summary to two lines each under the variables — every word in the DOM and the name', async () => {
+    // THE PREMISE, measured: without the variables this post runs past two
+    // lines of each in the flat row's card — or the clamp would prove
+    // nothing.
+    const free = await renderRow({ card: LONG_POST });
+    const freeLines = {
+      title: Math.round(linesOf(free.title)),
+      summary: Math.round(linesOf(free.summary)),
+    };
+    expect(freeLines.title).toBeGreaterThan(2);
+    expect(freeLines.summary).toBeGreaterThan(2);
+    cleanup();
+
+    const m = await renderRow({ card: LONG_POST, variables: CLAMP_ON });
+    for (const [element, text] of [
+      [m.title, LONG_POST.title],
+      [m.summary, LONG_POST.summary],
+    ] as const) {
+      const style = getComputedStyle(element);
+      // Two lines, laid out: the content box is two line heights.
+      expect(linesOf(element), text).toBeCloseTo(2, 2);
+      // Clipped and clamped — a box that is no longer the plain block (the
+      // engines name it differently; PostCard's WHAT A SET CLAMP DOES).
+      expect(style.overflow).toBe('hidden');
+      expect(style.getPropertyValue('-webkit-line-clamp')).toBe('2');
+      expect(['block', 'inline']).not.toContain(style.display);
+      // The lines past the clamp are still laid out, under the box.
+      expect(element.scrollHeight).toBeGreaterThan(element.clientHeight);
+      // Every word in the DOM.
+      expect(element.textContent).toBe(text);
+    }
+    // The article is named by the WHOLE title, as is its heading — and so
+    // is the card's one link, after its label.
+    expect(
+      screen.getByRole('article', { name: LONG_POST.title }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 2, name: LONG_POST.title }),
+    ).toBe(m.title);
+    expect(m.link).toHaveAccessibleName(
+      `${READ_MORE_LABEL} ${LONG_POST.title}`,
+    );
+  });
+
+  it('grows the clip by THE CLAMP’S ROOM and takes it back — nothing else moves', async () => {
+    const free = await renderRow({ card: SHORT_POST });
+    const before = {
+      boxes: boxesOf(free.card),
+      title: free.title.getBoundingClientRect(),
+      summary: free.summary.getBoundingClientRect(),
+      lines: [linesOf(free.title), linesOf(free.summary)],
+    };
+    cleanup();
+
+    const m = await renderRow({ card: SHORT_POST, variables: CLAMP_ON });
+    for (const [element, box] of [
+      [m.title, before.title],
+      [m.summary, before.summary],
+    ] as const) {
+      const style = getComputedStyle(element);
+      const em = parseFloat(style.fontSize);
+      const side = ROOM.side * em;
+      const below = ROOM.below * em;
+      // The room, in the element's own ems…
+      expect(parseFloat(style.paddingTop)).toBeCloseTo(side, 2);
+      expect(parseFloat(style.paddingLeft)).toBeCloseTo(side, 2);
+      expect(parseFloat(style.paddingRight)).toBeCloseTo(side, 2);
+      expect(parseFloat(style.paddingBottom)).toBeCloseTo(below, 2);
+      // …taken back by a margin of the same size.
+      expect(parseFloat(style.marginTop)).toBeCloseTo(-side, 2);
+      expect(parseFloat(style.marginLeft)).toBeCloseTo(-side, 2);
+      expect(parseFloat(style.marginRight)).toBeCloseTo(-side, 2);
+      expect(parseFloat(style.marginBottom)).toBeCloseTo(-below, 2);
+      // The clip's box is the text's box grown by the room on every side…
+      const grown = element.getBoundingClientRect();
+      expect(grown.left).toBeCloseTo(box.left - side, 1);
+      expect(grown.right).toBeCloseTo(box.right + side, 1);
+      expect(grown.top).toBeCloseTo(box.top - side, 1);
+      expect(grown.bottom).toBeCloseTo(box.bottom + below, 1);
+    }
+    // …and nothing else moved: every other box of the card, and its lines.
+    const after = boxesOf(m.card);
+    const grownAt = new Set(
+      [m.title, m.summary].map((element) =>
+        [m.card, ...m.card.querySelectorAll('*')].indexOf(element),
+      ),
+    );
+    expect(after.filter((_, index) => !grownAt.has(index))).toEqual(
+      before.boxes.filter((_, index) => !grownAt.has(index)),
+    );
+    // The lines, to the engine's own arithmetic: it computes the room from
+    // the variable's calc() a hair under its ems (7.49999px for 7.5).
+    const [titleLines = 0, summaryLines = 0] = before.lines;
+    expect(linesOf(m.title)).toBeCloseTo(titleLines, 3);
+    expect(linesOf(m.summary)).toBeCloseTo(summaryLines, 3);
+  });
+
+  it('keeps the hook of a title’s opening „j" — the room against the clip moved off and at the edge', async () => {
+    const m = await renderRow({
+      card: {
+        ...SHORT_POST,
+        title: 'jocuri și jucării: cum îl pregătești pe copil',
+      },
+      variables: CLAMP_ON,
+    });
+    const style = getComputedStyle(m.title);
+    const em = parseFloat(style.fontSize);
+    const box = m.title.getBoundingClientRect();
+    const card = m.card.getBoundingClientRect();
+    // A lens over the strip a quarter em wide before the title's CONTENT
+    // box, as tall as its content — the card's own padding, the room's.
+    const content = {
+      left: box.left + parseFloat(style.paddingLeft),
+      top: box.top + parseFloat(style.paddingTop),
+      height:
+        box.height -
+        parseFloat(style.paddingTop) -
+        parseFloat(style.paddingBottom),
+    };
+    const lens = document.createElement('div');
+    lens.style.cssText = `position: absolute; pointer-events: none; left: ${content.left - ROOM.side * em - card.left - m.frame}px; top: ${content.top - card.top - m.frame}px; width: ${ROOM.side * em}px; height: ${content.height}px`;
+    m.card.append(lens);
+    try {
+      // The warm-up shot, discarded (the inert case's: the runner's first
+      // photograph is its own).
+      await pixelsOf(lens);
+      const shipped = await pixelsOf(lens);
+      // THE CONTROL: the clip at the box's own edge — no room before the
+      // text, the layout the same (the padding and its take-back both 0).
+      m.title.style.paddingInline = '0';
+      m.title.style.marginInline = '0';
+      const edge = await pixelsOf(lens);
+      // THE REFERENCE: the clip moved three times further off.
+      m.title.style.paddingInline = '0.75em';
+      m.title.style.marginInline = '-0.75em';
+      const off = await pixelsOf(lens);
+      /** The darkest channel the strip holds — the ink there, if any. */
+      const darkest = (image: ImageData): number => {
+        let least = 255;
+        for (let i = 0; i < image.data.length; i += 4) {
+          least = Math.min(
+            least,
+            image.data[i] ?? 255,
+            image.data[i + 1] ?? 255,
+            image.data[i + 2] ?? 255,
+          );
+        }
+        return least;
+      };
+      // The hook IS there, before the content box (never vacuous)…
+      expect(darkest(off)).toBeLessThan(160);
+      // …the clip at the box's edge would cut it…
+      expect(differingPixels(edge, off)).toBeGreaterThan(0);
+      // …and the room keeps every pixel of it.
+      expect(differingPixels(shipped, off)).toBe(0);
+    } finally {
+      lens.remove();
+      m.title.style.removeProperty('padding-inline');
+      m.title.style.removeProperty('margin-inline');
+    }
+  });
+
+  it('sets THE CLAMP’S ROOM inside the face’s ink bounds — past the overhangs, under the inter-line gap', async () => {
+    const m = await renderRow({ card: LONG_POST, variables: CLAMP_ON });
+    const canvas = new OffscreenCanvas(8, 8);
+    const context = canvas.getContext('2d');
+    if (context === null) throw new Error('PostCard: no 2D context.');
+    for (const element of [m.title, m.summary]) {
+      const style = getComputedStyle(element);
+      context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      /** The largest of one ink bound over a set of letters. */
+      const most = (
+        letters: string,
+        read: (metrics: TextMetrics) => number,
+      ): number =>
+        Math.max(
+          ...[...letters].map((letter) => read(context.measureText(letter))),
+        );
+      // The five languages' tallest capitals, their deepest letters, and
+      // the two that overhang their box: „j"'s hook, „f"'s arm.
+      const ascent = most(
+        'ÉÈÀÎĂÂÄÖÜÊÔÛÍÓÚÙÌ',
+        (metrics) => metrics.actualBoundingBoxAscent,
+      );
+      const descent = most(
+        'jyșțȘȚgpqçÇ',
+        (metrics) => metrics.actualBoundingBoxDescent,
+      );
+      const before = most('jJ', (metrics) => metrics.actualBoundingBoxLeft);
+      const after = most(
+        'f',
+        (metrics) => metrics.actualBoundingBoxRight - metrics.width,
+      );
+      const line = parseFloat(style.lineHeight);
+      const gap = line - ascent - descent;
+      const side = parseFloat(style.paddingLeft);
+      const below = parseFloat(style.paddingBottom);
+      const name = `<${element.tagName}> at ${style.fontSize}`;
+      // The face does overhang (never vacuous)…
+      expect(before, name).toBeGreaterThan(0);
+      expect(after, name).toBeGreaterThan(0);
+      // …and the room before and after the text holds it twice over — the
+      // overhang counted in WHOLE pixels, rounded out. CI's Linux Chromium, at
+      // device scale 1, reports a canvas's ink bounds that way (PR #173's
+      // first CI run, 2026-10-26; its advances it rounds to the nearest pixel,
+      // CLAUDE.md §15.39's Pagination lesson): there the summary's hook,
+      // 1.227px in this Mac's fractions, reads 2, and its 4px room holds it
+      // exactly twice. On the raw reading a strict "more than twice" passed
+      // here and failed there at 4 > 4; counted whole, the two engines read
+      // the same at the two sizes this test renders (Linux reads „f" as its
+      // rounded-out right edge less its rounded advance, which is the arm
+      // rounded out at 16 and 30px, not at every size), and here the check is
+      // stricter than it was: the room must reach 4px where it had to pass
+      // 2 × 1.227 = 2.45.
+      expect(side, name).toBeGreaterThanOrEqual(
+        2 * Math.ceil(Math.max(before, after)),
+      );
+      // Between two lines the ink leaves a gap, and the room below is in it.
+      // THIN ON LINUX, RECORDED (the fix's review, 2026-10-26): its whole
+      // pixels leave the 30px title a 1px gap against a 0.75px room — 0.25px
+      // to spare, where this Mac reads 2.18 — so a deeper descender or a
+      // slightly different title size could turn it red there with nothing
+      // clipped. The robust form, not built: measure the true ink apart from
+      // the rounded metrics (the „j" hook case's pixel method, applied to the
+      // line gap).
+      expect(gap, name).toBeGreaterThan(0);
+      expect(below, name).toBeGreaterThan(0);
+      expect(below, name).toBeLessThan(gap);
+    }
   });
 });

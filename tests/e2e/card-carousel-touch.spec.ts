@@ -87,20 +87,39 @@ function readCarousel(region: Locator): Promise<Reading> {
   return region.evaluate((section) => {
     const stage = section.querySelector('[aria-live]');
     if (!(stage instanceof HTMLElement)) throw new Error('no stage');
+    // THE CENTRE CARD is the one named like the current bead: in a flat row
+    // (sections/CardCarousel's THE FLAT ROW, 2026-10-25) the side cards wholly
+    // between the arrows are live too, so "not inert" no longer names it.
+    const current = section
+      .querySelector('button[aria-current="true"]')
+      ?.getAttribute('aria-label');
     const centre = [...stage.children].find(
-      (card) => !card.hasAttribute('inert'),
+      (card) => card.getAttribute('aria-label') === current,
     );
     if (!(centre instanceof HTMLElement)) throw new Error('no centre card');
-    const matrix = new DOMMatrix(getComputedStyle(centre).transform);
+    // Its drawn shift: the `translate` property (the flat row's move) plus
+    // the centre point through `transform` (the line's whole pose) — the
+    // individual properties compose outside `transform`, and the hover's
+    // `scale` grows the card about its own centre, which it leaves where it
+    // is.
+    const style = getComputedStyle(centre);
+    const moved = style.translate === 'none' ? 0 : parseFloat(style.translate);
+    const matrix = new DOMMatrix(style.transform);
     const point = matrix.transformPoint(new DOMPoint(0, 0, 0, 1));
     const box = centre.getBoundingClientRect();
     return {
       label: centre.getAttribute('aria-label') ?? '',
-      shift: point.x / point.w,
+      shift: moved + point.x / point.w,
       width: parseFloat(getComputedStyle(centre).width),
       x: box.left + box.width / 2,
       y: box.top + box.height / 2,
-      live: stage.getAttribute('aria-live'),
+      // While side cards are live (the flat row) the stage is silent and
+      // the section's own status line carries the region's politeness
+      // (sections/CardCarousel's THE FLAT ROW, the review fold); on the
+      // line there is no such line and the stage carries it, as before.
+      live: (
+        section.querySelector(':scope > [aria-live]') ?? stage
+      ).getAttribute('aria-live'),
     };
   });
 }

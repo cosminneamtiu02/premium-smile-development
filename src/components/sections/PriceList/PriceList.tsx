@@ -113,9 +113,9 @@ import { PriceMenu } from './PriceMenu';
 // NEVER draws SMALLER than the theme. Its design pixel is max(1rem / 16,
 // min(column, 96rem) / 1106): the band's own floor class (BAND_FLOOR, below)
 // sets the first term on the rhythm box, where ui/Container's pixel
-// declaration reads it (that file's THE FLOOR — this band its first wearer;
-// since 2026-10-17 the second is the Home page's articles band,
-// sections/BlogCarousel, on a box round its carousel alone).
+// declaration reads it (that file's THE FLOOR — this band its one wearer;
+// the Home page's articles band, sections/BlogCarousel, was the second from
+// 2026-10-17 until 2026-10-26).
 // WHY: the owner's own BACKLOG entry 5 asked for LARGER price text for older
 // patients, never smaller, and what he complained of was the wide screens —
 // "i do not want the cards jsut to wide". The plain scale would have answered
@@ -441,15 +441,15 @@ export type PriceListProps = PriceListOwnProps &
  *     computed. Anywhere above, it would reach every scaled box below it; on a
  *     box below, the declaration would never see it.
  *   · UNREGISTERED AND INHERITED, like ui/Container's zoom, so its name is
- *     fenced: tests/unit/design-scale.test.ts counts TWO setters in src/ — this
- *     constant and, since 2026-10-17, sections/BlogCarousel's CAROUSEL_FLOOR,
- *     comments stripped — and ui/Container's one read. Inert outside the
- *     regime: its one reader is the pixel declaration the same gates hold
- *     back.
+ *     fenced: tests/unit/design-scale.test.ts counts ONE setter in src/ — this
+ *     constant (sections/BlogCarousel wore the very same class round its
+ *     carousel from 2026-10-17 until 2026-10-26, when its flat row left it
+ *     nothing to hold), comments stripped — and ui/Container's one read.
+ *     Inert outside the regime: its one reader is the pixel declaration the
+ *     same gates hold back.
  * One whole static string, because Tailwind reads class names from source
- * text — spelled here and, byte for byte, as BlogCarousel's CAROUSEL_FLOOR
- * (one rule ships for both); PriceList's own tests assemble it from its
- * parts (BlogCarousel.test.tsx spells it whole — the same rule).
+ * text; PriceList's own tests assemble it from its parts (ui/Container's
+ * test wears it whole on its floored band — the same rule).
  */
 const BAND_FLOOR = '[--band-floor:0.0625rem]';
 

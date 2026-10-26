@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useDeferredValue,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -31,8 +32,11 @@ import {
 import {
   ARRANGEMENTS,
   FIVE_FALLBACK,
+  FLAT_STEP,
   PERSPECTIVE,
   STEP,
+  flatPoseAt,
+  flatReach,
   jumpedSince,
   poseAt,
   stackOrder,
@@ -158,7 +162,8 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 //     card: a 225.8px card under a 320px screen at 150 % zoom);
 //   · NOTHING SWITCHES: the window asked for (`visible`) stands at every
 //     width — THE FIVE-CARD FALLBACK is the share's, and a fixed card never
-//     changes size;
+//     changes size — unless the carousel asks to lie flat from a tablet up
+//     (`flatFrom`, THE FLAT ROW, below), which only a fixed card may;
 //   · the STAGE IS THE COLUMN, always (`100cqw`), the arrows at its edges —
 //     the column's — and the beads centred under it;
 //   · the room a side (`--inset`) is what the column leaves beside the
@@ -212,6 +217,238 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 // line is the cards' common centre, and with one height they share it
 // exactly; the arrows' overlay is the row whatever its height, the room under
 // the cards is the shadow's, and THE LIFT reads the card's width.
+//
+// ── THE FLAT ROW (2026-10-25 — the Home band's articles; the owner, verbatim:
+// "On phone it looks perfect, it must reamin like that, but on tablet and
+// above, i do not want it to be circular anymore. i just want it to be like
+// flat, a circular list as now but central, currrent card one is highlighted"
+// — "the list must be flat, not curved at is now. it must be wider and it must
+// fit a nr of article in function of screen width. on phone it is fine as it
+// is now … if screen wider that mean more cards to be displayed horizontally
+// … I also want this section to be as wide as the screen like the carrousell
+// for reviews" — "there also is a visual bug on hover. where it starts raising
+// and on max hover all. contents of card are all of a sudden going down." —
+// "you should also be able to hover on cards left and right of central one …
+// so you can hover on any card left or right excelt the ones that are not
+// completley displayed on s screen that might pobe covered by left right
+// buttons. on hover of non central they turn the size of central and on hover
+// of central they turn larger a bit as they do now". His "not circular
+// anymore" is the curved, turned LINE, never the loop: the list still wraps).
+// `flatFrom`, optional, has one value, 'tablet', and stands only beside THE
+// FIXED CARD — the types refuse it without `cardWidth`, and a JavaScript
+// caller that sends it alone meets a RangeError: a share of the column has no
+// meaning in a row as wide as the screen. Absent — every article gallery —
+// the carousel is what it was, to the byte: no class, no custom property and
+// no listener of the row's.
+//   · THE QUERY, ONE SPELLING (CARD_CAROUSEL_FLAT_QUERY — read by matchMedia,
+//     and in every class that draws the row as Tailwind's arbitrary media
+//     variant, its spaces Tailwind's underscores; CardCarousel.test.tsx holds
+//     every such class to the constant): a window at least 37.5rem wide AND
+//     either 32rem tall or driven by a FINE pointer — a mouse, a trackpad —
+//     two media queries in one list, the width clause in each. Under 600px of
+//     width stand the phones held upright; the height clause keeps a phone
+//     held SIDEWAYS (844 × 390, 932 × 430: a coarse pointer and a short
+//     window) on the phone's look, while every tablet held either way gets
+//     the row; and the pointer clause keeps the row on a laptop at ANY height
+//     (2026-10-26, the lane's a11y review, computed — SC 1.4.4): a browser
+//     zoom shrinks the window in CSS pixels, so a 1366 × 768 laptop's 633px
+//     of page fell under 32rem at 125 % (506px) and at 150 % (422px), where
+//     the band dropped to the phone's line and its card text SHRANK as the
+//     reader enlarged it — 17.8px to between 13 and 15.6. A coarse pointer is
+//     never emulated in this repository's browser runner
+//     (tests/unit/no-touch-emulation.test.ts): the geometry test holds the
+//     two clauses as the engine reads them. Under the query THE LINE is
+//     drawn exactly as without the option — every pose and every class of
+//     the line's — but for THE HOVER, below.
+//   · THE POSES are ./conveyor's THE FLAT ROW: the centre card at scale 1 and
+//     every other at 0.9 — THE LINE's own neighbour step — with CARD_GAP of
+//     air between two cards' drawn edges at rest, no turn and no
+//     perspective, so every card stands upright in the screen's plane and
+//     every centre on the stage's middle line by construction. Every card
+//     wears the row's pose BESIDE the line's — `--ftx` in card widths and
+//     `--fsc` — so the stylesheet chooses the presentation and the script
+//     never needs to know which one is drawn (but for the drag's step and THE
+//     REACH, below).
+//   · THE SLIDE, in the row: its `transform` is the scale alone and its shift
+//     the `translate` PROPERTY — not a translateX inside `transform`, because
+//     CSS composes the individual properties as translate · rotate · scale ·
+//     transform (CSS Transforms 2): THE HOVER's `scale` property then scales a
+//     card about its own centre — every card's layout box is the stage's one
+//     cell, centred — and the row's move stays outermost. In WebKit a card in
+//     the row is its own compositing layer (`will-change`), as the line's 3D
+//     cards are in every engine; in Chromium and Firefox it is none (THE
+//     LAYER, BY ENGINE, below).
+//   · THE STAGE IS THE SCREEN: the consumer bleeds the root to the screen's
+//     width through its className — the reviews deck's `calc(50% − 50vw)`
+//     idiom, "as wide as the screen like the carrousell for reviews" — and THE
+//     FIXED CARD's stage is already the root's `100cqw`, so as many cards show
+//     as fit: the count follows the width by construction. The card, the
+//     stage, the bars, the room, the lift and the beads stay THE FIXED CARD's;
+//     the row overrides two lengths on the root — `--inset` 0, a row having
+//     no window to keep room beside, and `--fade` the arrows' strip, so the
+//     mask is transparent at the stage's edge and opaque at the strip's inner
+//     edge: a card fades out only where it runs under an arrow.
+//   · THE REACH — LIVE CARDS: in the row every card within the REACH of the
+//     centre is LIVE — neither inert nor aria-hidden — hovered, pressed and
+//     tabbed to like the centre card; the rest stay previews. The reach is
+//     ./conveyor's flatReach: the side cards that stand WHOLLY between the
+//     two arrows' strips even grown to the centre card's size, so a pointer on
+//     a live card always lands on the card and never on an arrow — held under
+//     half the list, ⌊(N − 1) ÷ 2⌋, so that the card HALF A RING AWAY — an
+//     even list's tie, which lib/rotation's signedOffset puts on the right —
+//     is never live. THE CAP DOES NOT KEEP A CROSSING CARD OUT OF REACH
+//     (2026-10-26, the lane's TypeScript review — until then this paragraph
+//     said it did): the card that crosses the ring on a step is the one at
+//     the far end, and once the reach meets the cap that card is live — at
+//     the laptop's one card a side, with four posts or fewer — and it snaps
+//     across in plain view (THE NO-FLY RULE): of four, the left neighbour
+//     lands at +2 on a press of next, a preview after its jump; of three, at
+//     +1, live on both sides of it. It is measured AFTER MOUNT (§16's rule
+//     2): the server's HTML and the first client render keep the centre card
+//     alone live, so hydration never mismatches, and then the island reads
+//     the hand's box, a card's layout width and an arrow's strip — again on a
+//     ResizeObserver of the three and on a change of the query; it is 0
+//     wherever the row is not drawn. It FREES its cards a commit after it is
+//     measured (THE ANNOUNCEMENT, below). A press on a live side card is a
+//     TAP like one on the centre card (THE CONSUMPTION LAW): it reaches the
+//     card's link, and it stops the ring for good.
+//   · THE ANNOUNCEMENT IS THE CENTRE CARD'S (2026-10-26, the lane's a11y and
+//     React reviews — a regression of the reach, found by reading the
+//     live-region rules): the stage is the cards' live region, and with live
+//     side cards it would speak what a step EXPOSES — the new far neighbour,
+//     never the new centre, live already as the old neighbour — and a bead's
+//     press or a resize several whole cards at once. So while side cards are
+//     live the stage is `aria-live="off"`, and ONE visually hidden status
+//     line, the section's last child — outside the stage, after the hand's
+//     box — prints the centred card's own label (`slideLabels[index]`,
+//     „Articolul 4 din 12"), its `aria-live` the value the stage would have
+//     worn (THE CONSUMPTION LAW: off while the ring runs, polite once
+//     anything holds or stops it), `aria-atomic` so the whole label is said
+//     and never a changed digit alone, and no role of its own (a `status`
+//     role would say polite a second time): a hand's move says the card it
+//     landed on, a resize — the label unchanged — nothing. The stage falls
+//     silent a commit BEFORE the reach frees a card — in ONE commit React
+//     writes a parent's attributes after its children's, so the cards would
+//     be exposed while the stage still said polite: the order the
+//     handNavigation precedent (THE CONSUMPTION LAW) refuses — and it speaks
+//     again a commit after the reach has hidden them. With no live side card
+//     — the phone's line, a tablet whose row frees none, every article
+//     gallery — the stage is the live region it always was, its markup byte
+//     for byte: no status line. From reading the rules — NOT heard with a
+//     screen reader: a live region speaks its changes, not what it already
+//     holds when it appears, so the line's first label is silent; and a
+//     reader in browse mode meets the line too, at the region's end.
+//   · THE CURRENT CARD, SAID (2026-10-26, the a11y review): while side cards
+//     are live the centred card's group wears `aria-current="true"` — of
+//     several live cards, which one the ring stands on was the picture's
+//     alone. On the line, where it is the one live card, it wears none.
+//   · THE FOCUS KEPT (2026-10-26, the a11y and React reviews): a live side
+//     card holding focus turned inert when the reach shrank — a zoom, a
+//     resize, a tablet turned — and the browser threw its focus to <body>,
+//     letting go of the keyboard's hold. A carousel that can lie flat tracks
+//     the card holding the focus (the section's focusin and focusout — a
+//     focusout that leaves the active element inside is the WINDOW's, THE
+//     WINDOW LEFT, NOT THE FOCUS) and keeps that card live, whatever its
+//     offset, until focus leaves it. A carousel that never lies flat tracks
+//     nothing.
+//   · THE TAB ORDER FOLLOWS THE ROW — WHERE THE ENGINE CAN (2026-10-26, the
+//     a11y review): the DOM's order is the list's, so a loop standing on its
+//     first card with one live card a side tabbed centre („1 din 12") → right
+//     („2 din 12") → far LEFT („12 din 12"). While side cards are live the
+//     stage is a reading flow container (CSS Display 4, `reading-flow:
+//     source-order`) and every card wears a `reading-order` equal to its
+//     offset from the ring's card, so Tab goes left to right as the row is
+//     drawn — „12", „1", „2" — and, by Chromium's own account (not heard),
+//     the accessibility tree with it. Chromium from 137 (the runner's 151:
+//     the geometry test Tabs through the row); WebKit 26.5 and Firefox 153,
+//     as Playwright drives them, know neither property, and there the DOM's
+//     order stays — the wrap's jump above. Reordering the DOM by the ring
+//     would remount the cards; each card's name says which one it is.
+//   · THE DRAG in the row steps FLAT_STEP card widths a card — the row's own
+//     centre-to-neighbour distance — measured once per drag, as on the line.
+//   · THE HOVER IS THE CARD BOX'S — in BOTH presentations of a carousel that
+//     can lie flat: a card box under a mouse grows to `max(1.05, 1 ÷ --fsc)` —
+//     the centre card to 1.05, ui/Button's jump, and a live side card to
+//     1 ÷ 0.9, so 0.9 × 1 ÷ 0.9 = 1: the centre card's own size, the owner's
+//     two sentences — on the jump's clock (`--jump`, 200ms, the CSS keyword
+//     ease-out: sections/PostCard's CARD_JUMP, ui/Button's motion cell), held
+//     still under reduced motion, and only where a pointer can hover
+//     (Tailwind's `hover:` answers `(hover: hover)`). The card inside must not
+//     grow as well: the Home band passes sections/PostCard's `jump={false}`.
+//     So a card box of such a carousel transitions three properties —
+//     `transform` and `translate` on the move's 700ms and curve, `scale` on
+//     the jump's 200ms (FLAT_MOVE) — and under a hand or crossing the ring
+//     only `scale` keeps its glide (FLAT_SNAP): a hover still eases while the
+//     row snaps.
+//     THE BUG IT FIXES (MEASURED by the planner — Chromium and WebKit through
+//     Playwright, the built Home page at 1401 × 1063 and two device pixels a
+//     CSS pixel, the jump slowed twentyfold): until then the jump grew the
+//     CARD, sections/PostCard's <article>, inside its box. The card is no
+//     compositing layer at rest, so the engine promoted it for the 200ms and
+//     folded it back when the growth ended: Chromium drew a stretched copy
+//     during the growth and redrew the text crisp at its end, the ink 0.4px
+//     higher — and `will-change`, a `transform` scale in place of `scale`, GPU
+//     raster and a flat 2D card box all snapped the same way; WebKit, as
+//     Playwright drives it, showed no snap. The owner's "contents … all of a
+//     sudden going down" was NOT reproduced — his browser unknown; Safari's
+//     real compositor is known to re-align text by a device pixel when it
+//     folds a layer back. Growing the card BOX leaves no layer to fold back
+//     wherever the box is composited at rest: the line's boxes, 3D, in every
+//     engine, and the row's in WebKit (THE LAYER, BY ENGINE). Until
+//     2026-10-26 this paragraph said that all Chromium then did was sharpen
+//     the text when the growth ended — true at two device pixels a CSS pixel
+//     only (THE LAYER, BY ENGINE).
+//   · THE LAYER, BY ENGINE (2026-10-26, MEASURED by the lane's React review):
+//     in the row a card box is its own compositing layer — `will-change:
+//     transform` — in WebKit ALONE, under `@supports (font:
+//     -apple-system-body)`, a font keyword only WebKit knows (the runner's
+//     Chromium 151 and Playwright's Firefox 153 answer no, its WebKit 26.5
+//     yes). In Chromium the layer pinned the raster scale it was drawn at: at
+//     one and at 1.25 device pixels a CSS pixel a hovered card stayed a
+//     stretched copy for the whole hover — soft text, an edge sharpness of
+//     15.08 where crisp text read 16.76, at 1× — and only at two did it
+//     sharpen when the growth ended; WebKit kept it crisp. And WebKit is
+//     where the layer earns its place: the fold-back THE BUG IT FIXES
+//     hypothesises for Safari's own compositor (the owner's "contents …
+//     going down"). THE TRADE, in Chromium and Firefox: with no layer at
+//     rest a box is promoted for its glides alone — the hover's 200ms, a
+//     move's 700ms — and folded back when each ends, its text redrawn sharp
+//     at its new size, where it may settle by a fraction of a pixel (the
+//     0.4px of ink THE BUG IT FIXES measured on the card inside the box; NOT
+//     re-measured on the box).
+//   · THE HIGHLIGHT — "current card one is highlighted": in the row the centre
+//     card wears the house's aura — `--shadow-aura`, the top bar's glow, ui/
+//     Card's and the price list's current card — on a layer its box's own
+//     size (the box's `::before`, ui/Card's armed-glow recipe: drawn outside
+//     its box only, taking no pointer), shown on the centred card alone and
+//     faded on ui/Card's clock spelled as numbers, 400ms ease-in-out — never
+//     `--fade`, which on this root is the mask's LENGTH — at once under
+//     reduced motion. Its corner is the soft one, 1rem: a card whose own
+//     corner differs (a miniature's, redrawn in its own pixel) shows no seam,
+//     the glow's 22px of blur being far wider than the difference. On the
+//     line — the phone — no card glows. The centred class follows the index,
+//     so the server's HTML and the client agree.
+//   · RECORDED, the owner's and the planner's to weigh — none touches the
+//     line:
+//       · A LAYER PER CARD in the row, in WebKit (THE LAYER, BY ENGINE):
+//         twelve 347 × 463px cards at two device pixels a CSS pixel would be
+//         up to about 31 MB of layers, most of them clipped off the stage,
+//         where the compositor rasterises little (NOT measured);
+//       · the centre card's glow, 22px of blur, reaches across the 0.06 card
+//         widths of air onto its neighbours' near edges — 21px at a 347px
+//         card, 3.5px once a hovered neighbour has grown;
+//       · CROSSING THE QUERY GLIDES (the React review, cosmetic): a window
+//         resized or a tablet turned across the query, or a zoom step that
+//         takes it there, changes every card's `transform` between the line's
+//         perspective list and the row's scale, and its `translate` with it,
+//         on THE MOVE's 700ms — every card sweeps once between the two
+//         pictures;
+//       · THE ROW ASSUMES MORE POSTS THAN PLACES (the React review): as many
+//         cards show as the screen fits, so a list no longer than the places
+//         a screen shows leaves the loop's far end in plain view — an even
+//         list one card longer on its right, the tie — and the card that
+//         crosses the ring on a step snaps from one end to the other on the
+//         stage, where THE NO-FLY RULE's "off the stage" no longer holds.
 //
 // ── WHY ONE FILE AND FOUR PIECES. The two modes share every pixel, every
 // gesture, the clock and its holds (useCarouselClock), and differ only in the
@@ -447,7 +684,9 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 //     controls come FIRST — previous, next, the beads — then the cards;
 //   · every card a role="group" with the slide roledescription and its own
 //     label, and every card but the centre one `inert` — the side cards are
-//     previews — with aria-hidden as the belt for engines before `inert`
+//     previews; in THE FLAT ROW, every card outside its reach but the one
+//     holding the focus (THE FOCUS KEPT) — with aria-hidden as the belt for
+//     engines before `inert`
 //     (Safari < 15.5, the deck's G2 item D). RECORDED (2026-10-20, the lane's
 //     G2 review), not changed: the belt hides a side card from the
 //     accessibility tree, not from Tab — in an engine without `inert`
@@ -455,8 +694,10 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 //     browser targets) a side card's link on Home stays a Tab stop while
 //     aria-hidden, focus landing on something no screen reader names;
 //   · the cards' container is the live region, liveRegion(status) in both
-//     modes: 'off' while it moves by itself, 'polite' once anything holds or
-//     stops it (and under reduced motion, where it never moves by itself) —
+//     modes — but in THE FLAT ROW with live side cards, where one status line
+//     takes its part (THE ANNOUNCEMENT IS THE CENTRE CARD'S) — 'off' while it
+//     moves by itself, 'polite' once anything holds or stops it (and under
+//     reduced motion, where it never moves by itself) —
 //     and A PRESS'S OWN MOVE IS ANNOUNCED: the stop is committed on its own
 //     BEFORE the move (ui/use-rotation's handNavigation, since 2026-10-21, the
 //     round-3 review), so the region says 'polite' before any card turns
@@ -619,7 +860,10 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 //     test, which reads the shadow's reach off the engine); past the reference
 //     the steps are the larger and the room grows with the design.
 //   · THE LIFT (2026-10-17 — the Home band's hovered blog card, which jumps to
-//     105 %, was cut flat at the stage's top). A mask clips its element at the
+//     105 %, was cut flat at the stage's top; since THE FLAT ROW the card's
+//     BOX grows there instead, to the same 105 % at the centre and to the
+//     centre card's own size beside it, so the lift holds unchanged). A mask
+//     clips its element at the
 //     border box — `mask-clip`'s initial value — whatever `overflow-x: clip`
 //     leaves open, and `mask-clip: no-clip` is no way out: MEASURED on a card
 //     grown to 105 %, Chromium 151 and Firefox paint past the box under it,
@@ -660,7 +904,9 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 //     before the turn it exists to show. The perspective is the card's own,
 //     centred on its layout box — the stage's centre — so it is the stage's
 //     vanishing point, and it can never move a card's centre point up or down
-//     or lean its vertical edges (./conveyor's THE LINE).
+//     or lean its vertical edges (./conveyor's THE LINE). THE FLAT ROW has no
+//     perspective to keep first, and there the shift IS the separate
+//     `translate` property, on purpose (its THE SLIDE).
 //
 // ── THE MOVE: 700ms on easeOutQuad, cubic-bezier(0.25, 0.46, 0.45, 0.94) — a
 // gentle start (an automatic move must not lurch) and a long settle (a hand
@@ -717,7 +963,8 @@ import { handOnTrack, placeOnTrack, trackLength } from './track';
 // selection the first pixels started, and moves the ring under the hand —
 // every card at its continuous position,
 // the centre one under the finger (a step is ./conveyor's STEP, the line's
-// drawn centre-to-neighbour distance, in both windows).
+// drawn centre-to-neighbour distance, in both windows — and FLAT_STEP, the
+// row's, wherever THE FLAT ROW is drawn).
 //   · A FINGER IS CAPTURED AT ITS PRESS ALREADY — by the browser, to the
 //     element it landed on (a card's link or title, a gallery photograph): a
 //     touch's implicit capture. The drag's own capture takes the pointer from
@@ -829,6 +1076,23 @@ export const CARD_CAROUSEL_INTERVAL_MS = 5_500;
  *  at once. */
 export const CARD_CAROUSEL_FIRST_DWELL_MS = 1_500;
 
+/**
+ * THE FLAT ROW'S QUERY (the header): a window at least 37.5rem wide — wider
+ * than any phone held upright — AND either 32rem tall — taller than a phone
+ * held sideways — or driven by a fine pointer, a mouse or a trackpad, so a
+ * laptop window a zoom has made short keeps the row: two media queries in one
+ * list, the width clause in each. ONE SPELLING: the script asks it of
+ * matchMedia, and every class that draws the row wears it as Tailwind's
+ * arbitrary media variant, its spaces written as underscores — spelled here
+ * with no space after a colon or the comma, so the two read the same
+ * character for character, and CardCarousel.test.tsx reads this file and
+ * holds every such class to it. A value exported from a 'use client' module
+ * reaches a server component as a client reference, never as this string:
+ * read it in client code and in tests.
+ */
+export const CARD_CAROUSEL_FLAT_QUERY =
+  '(min-width:37.5rem) and (min-height:32rem),(min-width:37.5rem) and (pointer:fine)';
+
 export type CardCarouselMode = 'loop' | 'bounded';
 export type CardCarouselVisible = 3 | 5;
 
@@ -842,11 +1106,17 @@ export type CardCarouselCardCap = 'capped';
  *  the default — or every card the tallest one's. */
 export type CardCarouselCardHeight = 'own' | 'tallest';
 
+/** THE FLAT ROW (the header): where a carousel of fixed cards lies flat —
+ *  its one value, 'tablet': from CARD_CAROUSEL_FLAT_QUERY up, every tablet
+ *  and laptop; THE LINE below it, every phone. */
+export type CardCarouselFlatFrom = 'tablet';
+
 /**
  * HOW WIDE A CARD IS — ONE of two answers, never both (the header's THE CARD
  * CAP and THE FIXED CARD): the column's share under the cap, or one fixed
- * width, `cardWidth`. The types refuse the pair; a JavaScript caller that
- * sends both meets a RangeError.
+ * width, `cardWidth` — which alone may lie flat from a tablet up (THE FLAT
+ * ROW). The types refuse the pair, and a flat row without the fixed width; a
+ * JavaScript caller that sends either meets a RangeError.
  */
 export type CardCarouselCardSize =
   | Readonly<{
@@ -855,6 +1125,7 @@ export type CardCarouselCardSize =
        *  consumer whose picture hint is derived for exactly that card. */
       cardCap?: CardCarouselCardCap;
       cardWidth?: never;
+      flatFrom?: never;
     }>
   | Readonly<{
       /** THE FIXED CARD (the header): every card exactly this wide — a CSS
@@ -865,6 +1136,15 @@ export type CardCarouselCardSize =
        *  it cut from the faded sides. */
       cardWidth: string;
       cardCap?: never;
+      /** THE FLAT ROW (the header), optional: 'tablet' lays the fixed cards
+       *  FLAT from CARD_CAROUSEL_FLAT_QUERY up — the centre card straight at
+       *  its full size, the rest at 0.9 on one straight row as wide as the
+       *  root (bled to the screen by the consumer), as many showing as fit,
+       *  every card clear of the arrows LIVE, any card growing under a mouse,
+       *  the centre card in the house's aura — and keeps THE LINE below it,
+       *  the phone's look. Absent, the carousel is the line at every width,
+       *  byte for byte what it was. Any other value is a RangeError. */
+      flatFrom?: CardCarouselFlatFrom;
     }>;
 
 /** Every word the island says, finished by the page (§8.1). */
@@ -928,6 +1208,7 @@ type OwnKey =
   | keyof CardCarouselCommonProps
   | 'cardCap'
   | 'cardWidth'
+  | 'flatFrom'
   | keyof CardCarouselClockProps;
 
 /**
@@ -1044,11 +1325,13 @@ export type CardCarouselProps = CardCarouselCommonProps &
   CardCarouselClockProps &
   NativeSectionProps;
 
-/** The island's own props as the view reads them: the common ones and the
- *  card's size — a fixed width, or none: the cap's share (its one value). */
+/** The island's own props as the view reads them: the common ones, the
+ *  card's size — a fixed width, or none: the cap's share (its one value) —
+ *  and whether that fixed card lies flat from a tablet up (THE FLAT ROW). */
 type ViewCommonProps = CardCarouselCommonProps &
   Readonly<{
     cardWidth: string | undefined;
+    flatFrom: CardCarouselFlatFrom | undefined;
   }>;
 
 // ── THE CLASS STRINGS — literal, because Tailwind reads class names from the
@@ -1162,6 +1445,19 @@ const FIXED: Readonly<Record<CardCarouselVisible, string>> = {
     '[--card:min(var(--card-fixed),100cqw)] [--stage:100cqw] [--inset:max(0px,calc((100cqw_-_var(--card)*var(--r5))/2))] [--fade:min(calc(var(--card)*var(--f5)),max(0px,calc((100cqw_-_var(--card))/2_-_var(--inset))))]',
   ),
 };
+
+/**
+ * THE FLAT ROW's root (the header's THE STAGE IS THE SCREEN), from its query
+ * up — worn beside THE FIXED CARD's geometry, which it overrides in two
+ * lengths: no room beside a window, the row having none (`--inset` 0), and
+ * the fade the arrows' own strip, so the mask is transparent at the stage's
+ * edge and opaque at the strip's inner edge. Each is a later rule than THE
+ * FIXED CARD's spelling of its property, at the same weight — Tailwind writes
+ * its arbitrary media variants after every unconditioned utility, and the
+ * geometry test reads the order off the page's stylesheet.
+ */
+const FLAT_ROOT =
+  '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[--inset:0px] [@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[--fade:var(--bar)]';
 
 /** The geometry's numbers, from ./conveyor, as the root's inline style: the
  *  three-card window for three; for five, its own window and its fallback —
@@ -1359,6 +1655,77 @@ const SLIDE_MOVE =
  *  wins never depends on Tailwind's emission order (the deck's slideSnap). */
 const SLIDE_SNAP = 'transition-none motion-reduce:transition-none';
 
+/**
+ * A card's box in a carousel that can lie flat (the header's THE FLAT ROW).
+ * From the query up its pose is the ROW's — `--ftx` / `--fsc`: a `transform`
+ * of the scale alone in place of the line's perspective list (a later rule at
+ * the same weight) and the shift as the `translate` property (THE SLIDE) — on
+ * a compositing layer of its own in WebKit alone, `@supports (font:
+ * -apple-system-body)` (the header's THE LAYER, BY ENGINE). In BOTH
+ * presentations, THE HOVER: a box under a mouse grows to `max(1.05, 1 ÷
+ * --fsc)` — the centre card's to 1.05, a side card's to the centre card's
+ * size — held still under reduced motion. Its clock is FLAT_MOVE's or
+ * FLAT_SNAP's.
+ */
+const FLAT_SLIDE = cx(
+  '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[transform:scale(var(--fsc))]',
+  '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[translate:calc(var(--card)*var(--ftx))_0]',
+  '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:supports-[font:-apple-system-body]:will-change-transform',
+  'hover:scale-[max(1.05,calc(1/var(--fsc)))] motion-reduce:hover:scale-100',
+);
+
+/**
+ * A card that MOVES, in a carousel that can lie flat (the header's THE HOVER):
+ * three clocks on three properties — `transform` and `translate` on THE
+ * MOVE's 700ms and its curve, `scale` on the jump's 200ms ease-out (`--jump`,
+ * the CSS keyword: sections/PostCard's CARD_JUMP, ui/Button's motion cell) —
+ * spelled as the three transition longhands, one entry per property, so
+ * neither clock stretches the other; none under reduced motion, a later rule
+ * at the same weight.
+ */
+const FLAT_MOVE =
+  '[--jump:200ms] [transition-property:transform,translate,scale] [transition-duration:700ms,700ms,var(--jump)] [transition-timing-function:cubic-bezier(0.25,0.46,0.45,0.94),cubic-bezier(0.25,0.46,0.45,0.94),ease-out] motion-reduce:transition-none';
+
+/** A card under a dragging hand, or one crossing the ring, in a carousel that
+ *  can lie flat: its pose lands at once and only the HOVER's `scale` keeps its
+ *  glide — the chevron's own spelling of the jump's clock — so a hover still
+ *  eases while the row snaps. */
+const FLAT_SNAP =
+  '[--jump:200ms] transition-[scale] duration-(--jump) ease-[ease-out] motion-reduce:transition-none';
+
+/**
+ * THE HIGHLIGHT's layer (the header's THE FLAT ROW): the house's aura on the
+ * card box's `::before` — the box's own size, the soft corner, ui/Card's
+ * armed-glow recipe: a box-shadow drawn outside its box only, the layer taking
+ * no pointer — at rest invisible, on ui/Card's fade clock spelled as numbers,
+ * 400ms ease-in-out (on this root `--fade` is the mask's LENGTH, never a
+ * clock), none under reduced motion. Worn by every card of a carousel that can
+ * lie flat; shown by the centred card alone, and in the row alone (AURA_SHOWN).
+ */
+const AURA =
+  "before:pointer-events-none before:absolute before:inset-0 before:rounded-soft before:shadow-aura before:opacity-0 before:content-[''] before:transition-opacity before:duration-[400ms] before:ease-in-out motion-reduce:before:transition-none";
+
+/** The centred card's aura, shown from THE FLAT ROW's query up — a later rule
+ *  than the layer's resting opacity, at the same weight. */
+const AURA_SHOWN =
+  '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:before:opacity-100';
+
+/**
+ * THE TAB ORDER FOLLOWS THE ROW (the header): while side cards are live the
+ * stage is a reading flow container — CSS Display 4's `reading-flow`, its
+ * `source-order` value: the DOM's order but where a child's `reading-order`
+ * says otherwise — and each card wears that `reading-order` inline, its offset
+ * from the ring's card. An engine that knows neither keeps the DOM's order.
+ */
+const READING_FLOW = '[reading-flow:source-order]';
+
+/**
+ * THE ANNOUNCEMENT IS THE CENTRE CARD'S (the header): the status line that
+ * says the centred card's label while side cards are live — out of sight,
+ * read by assistive technology alone.
+ */
+const STATUS = 'sr-only';
+
 /** THE BEADS' row (the header's THE BEADS, THE ROW): the root's second row,
  *  under the stage's room — as wide as its beads, up to the column and a page
  *  gutter's floor a side and never wider than the screen, centred on the
@@ -1475,16 +1842,58 @@ type ViewProps = Readonly<{
  */
 const RESPOND_TO_CLICK = (): void => {};
 
+/** An element's LAYOUT width: its computed width, which ignores its
+ *  transforms and, unlike offsetWidth, is not rounded to a whole pixel — 0
+ *  for no element, or for one not laid out. */
+function layoutWidth(element: Element | null | undefined): number {
+  if (!(element instanceof HTMLElement)) return 0;
+  const width = parseFloat(getComputedStyle(element).width);
+  return Number.isFinite(width) ? width : 0;
+}
+
 /**
- * The stage's px per step: ./conveyor's STEP in card widths, a card being any
- * card box's LAYOUT width — its computed width, which ignores the transforms
- * and, unlike offsetWidth, is not rounded to a whole pixel. Read once per drag.
+ * The stage's px per step: `step` card widths — ./conveyor's STEP on the line,
+ * FLAT_STEP in THE FLAT ROW — a card being any card box's LAYOUT width. Read
+ * once per drag.
  */
-function measurePitch(stage: HTMLDivElement | null): number {
-  const card = stage?.firstElementChild;
-  const width =
-    card instanceof HTMLElement ? parseFloat(getComputedStyle(card).width) : 0;
-  return Math.max(1, (Number.isFinite(width) ? width : 0) * STEP);
+function measurePitch(stage: HTMLDivElement | null, step: number): number {
+  return Math.max(1, layoutWidth(stage?.firstElementChild) * step);
+}
+
+/** THE FLAT ROW's pose of the card at continuous `position`, as the two
+ *  custom properties its box wears beside the line's three (the header's THE
+ *  POSES): `--ftx` in card widths, `--fsc`. */
+function flatStyleAt(position: number): CSSProperties {
+  const { tx, sc } = flatPoseAt(position);
+  return { '--ftx': tx, '--fsc': sc } as CSSProperties;
+}
+
+/** Is THE FLAT ROW drawn right now — its query asked of the window? Never for
+ *  a carousel that does not lie flat, nor where there is no matchMedia. */
+function flatNow(flat: boolean): boolean {
+  return (
+    flat &&
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches
+  );
+}
+
+/**
+ * THE REACH, MEASURED (the header's THE FLAT ROW): ./conveyor's flatReach of
+ * the room a card may reach into — half the hand's box (the stage as it stood
+ * before THE LIFT, as wide as the stage) less one arrow's strip — in card
+ * widths, a card being any card box's LAYOUT width. 0 while no card is laid
+ * out.
+ */
+function measureReach(
+  hand: HTMLElement,
+  stage: HTMLElement | null,
+  arrow: HTMLElement | null,
+): number {
+  const card = layoutWidth(stage?.firstElementChild);
+  if (card <= 0) return 0;
+  return flatReach((layoutWidth(hand) / 2 - layoutWidth(arrow)) / card);
 }
 
 function CarouselView({
@@ -1512,6 +1921,7 @@ function CarouselView({
     labels,
     cardWidth,
     cardHeight = 'own',
+    flatFrom,
   } = common;
   const { className, style, ...rest } = native;
   // Every other native prop, less the attributes the island owns in ANY case
@@ -1520,6 +1930,11 @@ function CarouselView({
   const count = slides.length;
   // Derived from COUNT (the deck's G2 item E): one card is not a carousel.
   const isCarousel = count >= 2;
+  // THE FLAT ROW (the header): a carousel that may lie flat from a tablet up.
+  // Its classes and custom properties are written whatever is drawn — the
+  // stylesheet chooses — and only its reach and its drag's step ask the
+  // window which presentation stands.
+  const flat = flatFrom !== undefined;
 
   // THE HAND — the press in a ref (its bookkeeping changes on every pointer
   // event and renders nothing), the drag's travel in state (it moves the
@@ -1696,10 +2111,13 @@ function CarouselView({
     if (current.axis === 'pending') {
       current.axis = judgeAxis(dx, event.clientY - current.y);
       if (current.axis !== 'across') return;
-      // IT IS A DRAG: measure the step, take the pointer, and drop the
-      // selection the first pixels began. (The ring has been held since the
-      // press.)
-      current.pitch = measurePitch(stageRef.current);
+      // IT IS A DRAG: measure the step — the line's, or the row's where THE
+      // FLAT ROW is drawn — take the pointer, and drop the selection the
+      // first pixels began. (The ring has been held since the press.)
+      current.pitch = measurePitch(
+        stageRef.current,
+        flatNow(flat) ? FLAT_STEP : STEP,
+      );
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
@@ -1796,6 +2214,86 @@ function CarouselView({
     };
   }, [isCarousel]);
 
+  // THE REACH (the header's THE FLAT ROW) — how many cards each side of the
+  // centre are LIVE in the row. 0 in the server's HTML and the first client
+  // render (§16's rule 2: the two agree, the centre card alone live), then
+  // measured AFTER MOUNT and again whenever the hand's box, a card or an arrow
+  // changes size, or the query starts or stops matching — 0 wherever the row
+  // is not drawn. `measure` is the one state-writing path (ui/Modal's shape:
+  // what fits is read back from the layout, never derived from the props).
+  const [reach, setReach] = useState(0);
+  useEffect(() => {
+    const hand = handRef.current;
+    if (!flat || !isCarousel || hand === null) return;
+    if (typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia(CARD_CAROUSEL_FLAT_QUERY);
+    const measure = (): void => {
+      setReach(
+        query.matches
+          ? measureReach(hand, stageRef.current, previousRef.current)
+          : 0,
+      );
+    };
+    measure();
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(measure);
+    for (const box of [
+      hand,
+      stageRef.current?.firstElementChild,
+      previousRef.current,
+    ]) {
+      if (box instanceof Element) observer?.observe(box);
+    }
+    // Safari before 14 has only the deprecated listener pair on a media query
+    // list: there the row's reach follows the boxes' sizes alone.
+    const listens = typeof query.addEventListener === 'function';
+    if (listens) query.addEventListener('change', measure);
+    return () => {
+      observer?.disconnect();
+      if (listens) query.removeEventListener('change', measure);
+    };
+  }, [flat, isCarousel, stageRef]);
+  /**
+   * A reach held under half the list, ⌊(N − 1) ÷ 2⌋ — so the card half a ring
+   * away, an even list's tie, is never live — and none at all for a carousel
+   * that never lies flat, nor for one card. It does NOT keep the card that
+   * crosses the ring out of reach: once the reach meets the cap, that card is
+   * live (the header's THE REACH).
+   */
+  const capped = (value: number): number =>
+    flat && isCarousel
+      ? Math.max(0, Math.min(value, Math.floor((count - 1) / 2)))
+      : 0;
+  // THE REACH FREES ITS CARDS A COMMIT LATER (the header's THE ANNOUNCEMENT):
+  // the measured reach silences the stage at once (`sidesLive`), and the
+  // cards follow it through a deferred value — React's first render after a
+  // new reach keeps the old one for them, and a later render, in a commit of
+  // its own, frees or hides them. In one commit React would write the cards'
+  // attributes before the stage's: the cards exposed while the stage still
+  // spoke.
+  const freed = useDeferredValue(reach);
+  const liveReach = capped(freed);
+  // THE ANNOUNCEMENT, THE CURRENT CARD and THE TAB ORDER (the header) — while
+  // side cards are live, about to be, or just hidden: the stage silent and
+  // the status line speaking, the centred card said current, the stage read
+  // in the row's order.
+  const sidesLive = Math.max(capped(reach), liveReach) > 0;
+
+  // THE FOCUS KEPT (the header): the card holding the focus, by its index —
+  // tracked by a carousel that can lie flat alone, whose reach can shrink
+  // under a focused side card; null while the focus is on no card.
+  const [focusedCard, setFocusedCard] = useState<number | null>(null);
+  /** The index of the card box holding `node` — the stage's children are the
+   *  card boxes, in the list's order — or null for none. */
+  const cardOf = (node: EventTarget | null): number | null => {
+    const stage = stageRef.current;
+    if (stage === null || !(node instanceof Node)) return null;
+    const card = [...stage.children].findIndex((child) => child.contains(node));
+    return card < 0 ? null : card;
+  };
+
   const onClickCapture = (event: ReactMouseEvent<HTMLDivElement>): void => {
     const state = swallow.current;
     if (state.armed) {
@@ -1824,6 +2322,7 @@ function CarouselView({
       className={cx(
         ROOT,
         cardWidth === undefined ? cx(CAP, GEOMETRY[visible]) : FIXED[visible],
+        flat && FLAT_ROOT,
         className,
       )}
       style={{
@@ -1846,14 +2345,21 @@ function CarouselView({
       // The clock's focus hold (the header's THE CONSUMPTION LAW): a keyboard
       // entry holds the ring while focus stays inside, a click-focused
       // control holds nothing.
-      onFocus={focus.onFocus}
+      onFocus={(event) => {
+        // THE FOCUS KEPT (the header): the card the focus came to, if any.
+        if (flat) setFocusedCard(cardOf(event.target));
+        focus.onFocus(event);
+      }}
       onBlur={(event) => {
         // THE WINDOW LEFT, NOT THE FOCUS (the header's THE CONSUMPTION LAW):
         // a focusout with no new target is also what the WINDOW losing focus
         // sends, the page's focus staying where it was — so while the
         // document's active element is still inside the region, the
-        // keyboard's hold stays.
+        // keyboard's hold stays, and so does the card it holds.
         if (event.currentTarget.contains(document.activeElement)) return;
+        // THE FOCUS KEPT (the header): the card the focus goes to — none
+        // when it leaves the cards.
+        if (flat) setFocusedCard(cardOf(event.relatedTarget));
         focus.onBlur(event);
       }}
     >
@@ -1927,13 +2433,29 @@ function CarouselView({
       >
         <div
           ref={stageRef}
-          aria-live={isCarousel ? live : undefined}
-          className={STAGE}
+          // THE ANNOUNCEMENT IS THE CENTRE CARD'S (the header): silent while
+          // side cards are live — the status line speaks instead.
+          aria-live={isCarousel ? (sidesLive ? 'off' : live) : undefined}
+          className={cx(STAGE, sidesLive && READING_FLOW)}
         >
           {slides.map((slide, card) => {
             const position = positions[card];
             const pose = poseAt(position);
             const centred = card === index;
+            // The card's offset from the ring's own card — never from a
+            // drag's fractional place.
+            const offset = ring
+              ? signedOffset(card, index, count)
+              : card - index;
+            // THE REACH (the header's THE FLAT ROW): in the row, every card
+            // within it is live; everywhere else, the centre card alone — and,
+            // in a carousel that can lie flat, the card holding the focus,
+            // until the focus leaves it (THE FOCUS KEPT).
+            const live =
+              centred ||
+              Math.abs(offset) <= liveReach ||
+              (flat && card === focusedCard);
+            const snap = dragging || painted.jumped[card];
             return (
               <div
                 // The list is static and never reorders: the index IS the
@@ -1942,22 +2464,45 @@ function CarouselView({
                 role={isCarousel ? 'group' : undefined}
                 aria-roledescription={isCarousel ? labels.slideRole : undefined}
                 aria-label={isCarousel ? slideLabels[card] : undefined}
+                // THE CURRENT CARD, SAID (the header): of several live cards,
+                // the one the ring stands on.
+                aria-current={sidesLive && centred ? 'true' : undefined}
                 // The side cards are previews: out of the tree and the Tab
-                // order, aria-hidden the belt (the header's THE CONSUMPTION LAW).
-                inert={!centred || undefined}
-                aria-hidden={!centred || undefined}
+                // order, aria-hidden the belt (the header's THE CONSUMPTION
+                // LAW) — but for the ones THE FLAT ROW's reach holds live.
+                inert={!live || undefined}
+                aria-hidden={!live || undefined}
                 style={
                   {
                     '--tx': pose.tx,
                     '--ry': pose.ry,
                     '--sc': pose.sc,
+                    // The row's pose beside the line's (the header's THE
+                    // POSES) — for a carousel that may lie flat alone.
+                    ...(flat ? flatStyleAt(position) : undefined),
                     zIndex: stackOrder(position),
+                    // THE TAB ORDER FOLLOWS THE ROW (the header): the card's
+                    // place in the stage's reading flow, its offset — a
+                    // string, which React writes as it is (a number would
+                    // gain a `px`).
+                    ...(sidesLive
+                      ? { readingOrder: String(offset) }
+                      : undefined),
                   } as CSSProperties
                 }
                 className={cx(
                   SLIDE,
                   HEIGHT[cardHeight],
-                  dragging || painted.jumped[card] ? SLIDE_SNAP : SLIDE_MOVE,
+                  flat && FLAT_SLIDE,
+                  flat && AURA,
+                  flat && centred && AURA_SHOWN,
+                  flat
+                    ? snap
+                      ? FLAT_SNAP
+                      : FLAT_MOVE
+                    : snap
+                      ? SLIDE_SNAP
+                      : SLIDE_MOVE,
                 )}
               >
                 {slide}
@@ -1966,6 +2511,14 @@ function CarouselView({
           })}
         </div>
       </div>
+      {/* THE ANNOUNCEMENT IS THE CENTRE CARD'S (the header): while side cards
+          are live, the one line that says where the ring stands — out of
+          sight, outside the stage, on the stage's own politeness. */}
+      {sidesLive && (
+        <div aria-live={live} aria-atomic="true" className={STATUS}>
+          {slideLabels[index]}
+        </div>
+      )}
     </section>
   );
 }
@@ -2114,19 +2667,20 @@ function BoundedCarousel({ common, native, clock }: ModeProps): ReactElement {
 
 /**
  * The card carousel (the header). Splits the island's own props from the
- * native rest — so that neither `mode`, `cardCap` nor a clock option ever
- * lands on the <section> as an attribute — and dispatches to the mode's own
- * ring owner; renders nothing for an empty list.
+ * native rest — so that neither `mode`, `cardCap`, `flatFrom` nor a clock
+ * option ever lands on the <section> as an attribute — and dispatches to the
+ * mode's own ring owner; renders nothing for an empty list.
  *
  * @throws RangeError when `slideLabels` and `slides` differ in length — two
  * lists that must name the same cards in the same order — when `visible` is
- * neither 3 nor 5 (THE TWO AXES, held at run time), and when the card's size
+ * neither 3 nor 5 (THE TWO AXES, held at run time), when the card's size
  * is not one answer in the theme's step: a cap AND a fixed width, a cap other
  * than 'capped' (THE CARD CAP's one value, held at run time), a width that is
  * no string, an empty width, a width that never names `var(--spacing)` (THE
  * FIXED CARD: a px length would skip THE BAND SCALE without a word), or one
  * holding an underscore (a class's value pasted as it is: no CSS length
- * inline).
+ * inline) — and when `flatFrom` is any value but 'tablet', or comes without
+ * a fixed width (THE FLAT ROW).
  */
 export function CardCarousel({
   slides,
@@ -2136,6 +2690,7 @@ export function CardCarousel({
   cardHeight,
   cardCap,
   cardWidth,
+  flatFrom,
   mode,
   intervalMs,
   startDelayMs,
@@ -2194,6 +2749,21 @@ export function CardCarousel({
       `CardCarousel: \`cardWidth\` „${cardWidth}" holds an underscore — a class’s value pasted as it is, Tailwind’s underscores standing for its spaces. Inline it is no CSS length at all: the property would be dropped, and the card’s width with it, without a word. Write the spaces, e.g. calc(var(--spacing) * 56.45).`,
     );
   }
+  // THE FLAT ROW's one value (the header), held at run time: a JavaScript
+  // caller is held by no type, and any other value would draw the line at
+  // every width without a word.
+  const lies: unknown = flatFrom;
+  if (lies !== undefined && lies !== 'tablet') {
+    throw new RangeError(
+      `CardCarousel: \`flatFrom\` „${String(lies)}" is no step — its one value is 'tablet': the flat row from a tablet up, the line below it.`,
+    );
+  }
+  // …and only beside THE FIXED CARD: the types refuse it without one.
+  if (flatFrom !== undefined && cardWidth === undefined) {
+    throw new RangeError(
+      'CardCarousel: `flatFrom` without `cardWidth` — the flat row needs a fixed card: a share of the column has no meaning in a row as wide as the screen. Give the cards one width, e.g. calc(var(--spacing)*56.45).',
+    );
+  }
   if (slides.length === 0) return null;
   const common = {
     slides,
@@ -2202,6 +2772,7 @@ export function CardCarousel({
     labels,
     cardHeight,
     cardWidth,
+    flatFrom,
   };
   const clock = { intervalMs, startDelayMs, env };
   return mode === 'bounded' ? (

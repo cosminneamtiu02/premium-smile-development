@@ -4,6 +4,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { useLocale, useTranslations } from 'next-intl';
 import { ContactModalProvider } from '@/components/sections/ContactModal/ContactModalProvider';
 import { BlogCarousel } from '@/components/sections/BlogCarousel/BlogCarousel';
+import { CARD_CAROUSEL_FLAT_QUERY } from '@/components/sections/CardCarousel/CardCarousel';
 import { ClinicLocation } from '@/components/sections/ClinicLocation/ClinicLocation';
 import { DoctorShowcase } from '@/components/sections/DoctorShowcase/DoctorShowcase';
 import { DoctorStats } from '@/components/sections/DoctorStats/DoctorStats';
@@ -285,11 +286,19 @@ export const Romanian: Story = {
         .getAllByRole('heading', { level: 3 })
         .map((label) => label.textContent),
     ).toEqual(clinicStats.map((stat) => stat.words.ro.label));
-    // THE ARTICLES BAND, AS WIDE AS THE NUMBERS (owner, 2026-10-17: "make it
-    // the width of the: ÎN CIFRE … section"): its carousel on the numbers
-    // band's column — the rhythm box ui/Container gives both — one left edge
-    // and one width (sections/BlogCarousel's THE WIDTH; its scale test holds
-    // the same at fifteen windows).
+    // THE ARTICLES BAND'S WIDTH, by the screen (sections/BlogCarousel's THE
+    // WIDTH and THE FLAT ROW; its scale test holds both at every window it
+    // samples). On a phone — held either way — and in any window under 32rem
+    // tall, its carousel stands on the numbers band's column, the rhythm box
+    // ui/Container gives both: one left edge and one width (owner, 2026-10-17:
+    // "make it the width of the: ÎN CIFRE … section"). From a tablet's screen
+    // up it is the FLAT ROW across the screen (owner, 2026-10-25: "I also
+    // want this section to be as wide as the screen like the carrousell for
+    // reviews"): a box 100vw wide less half a rem a side, centred on the
+    // column — so a classic scrollbar, which 100vw counts and the page's
+    // visible width does not, shifts it by half the bar. The visible width is
+    // read off the BODY: with `scrollbar-gutter: stable` the root's own
+    // clientWidth can report the whole window.
     const articles = canvas.getByRole('region', {
       name: ro.home.articles.region,
     });
@@ -297,12 +306,29 @@ export const Romanian: Story = {
       stats.firstElementChild?.firstElementChild?.getBoundingClientRect();
     const articlesBox = articles.getBoundingClientRect();
     await expect(statsColumn).toBeDefined();
-    await expect(
-      Math.abs(articlesBox.left - (statsColumn?.left ?? NaN)),
-    ).toBeLessThanOrEqual(0.01);
-    await expect(
-      Math.abs(articlesBox.width - (statsColumn?.width ?? NaN)),
-    ).toBeLessThanOrEqual(0.01);
+    // The flat row's own query, imported — one spelling (the TypeScript
+    // review): a phone held either way keeps the column, a mouse or a
+    // trackpad keeps the row at any window height.
+    if (window.matchMedia(CARD_CAROUSEL_FLAT_QUERY).matches) {
+      const rem = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
+      const bar =
+        window.innerWidth - document.body.getBoundingClientRect().width;
+      await expect(
+        Math.abs(articlesBox.left - (rem / 2 - bar / 2)),
+      ).toBeLessThanOrEqual(0.01);
+      await expect(
+        Math.abs(articlesBox.width - (window.innerWidth - rem)),
+      ).toBeLessThanOrEqual(0.01);
+    } else {
+      await expect(
+        Math.abs(articlesBox.left - (statsColumn?.left ?? NaN)),
+      ).toBeLessThanOrEqual(0.01);
+      await expect(
+        Math.abs(articlesBox.width - (statsColumn?.width ?? NaN)),
+      ).toBeLessThanOrEqual(0.01);
+    }
     // The map, named by its own h2 — after the numbers and the doctors, as on
     // the page: hero → numbers → doctors → map (the owner's order since
     // 2026-10-01: "so first in cifre and then doctors").

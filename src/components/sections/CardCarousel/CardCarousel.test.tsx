@@ -27,16 +27,25 @@ import type { ClockEnv } from '@/lib/clock/clock';
 import ro from '@/messages/ro.json';
 import {
   CARD_CAROUSEL_FIRST_DWELL_MS,
+  CARD_CAROUSEL_FLAT_QUERY,
   CARD_CAROUSEL_INTERVAL_MS,
   CardCarousel,
   type CardCarouselCardCap,
   type CardCarouselCardHeight,
   type CardCarouselCardSize,
+  type CardCarouselFlatFrom,
   type CardCarouselLabels,
   type CardCarouselProps,
 } from './CardCarousel';
 import source from './CardCarousel.tsx?raw';
-import { ARRANGEMENTS, PERSPECTIVE, STEP, poseAt } from './conveyor';
+import {
+  ARRANGEMENTS,
+  FLAT_STEP,
+  PERSPECTIVE,
+  STEP,
+  flatPoseAt,
+  poseAt,
+} from './conveyor';
 
 // sections/CardCarousel — the island's interaction suite: the consumption
 // law's markup, the two arrows (always visible, first in the DOM, one tall
@@ -63,6 +72,15 @@ import { ARRANGEMENTS, PERSPECTIVE, STEP, poseAt } from './conveyor';
 // in the deck's suite: @testing-library/user-event DISPATCHES, and
 // vitest/browser's drives the real browser — only a trusted Tab sets the
 // keyboard modality the focus hold reads.
+//
+// ── THE FLAT ROW (2026-10-25) is checked here as the island WRITES it — the
+// prop's guards, its classes and custom properties (none of them without the
+// prop), its query spelled once, the reach held at 0 in the server's HTML and
+// measured after mount, the live cards it frees, and the drag's step in the
+// row. Its measurement is the suite's to drive: the query's MediaQueryList and
+// the ResizeObserver are stand-ins (FakeQuery, FakeResizer), and the widths
+// the island reads are set inline on its boxes, which no stylesheet sizes
+// here. What the engine DRAWS of the row is CardCarousel.geometry.test.tsx's.
 
 const FRAME = 600;
 const PITCH = STEP * FRAME;
@@ -92,12 +110,17 @@ const LABELS: CardCarouselLabels = {
 const labelsFor = (count: number): string[] =>
   Array.from({ length: count }, (_, index) => `${index + 1} din ${count}`);
 
-/** `count` placeholder cards; the first holds a link for the click tests. */
-const cardsFor = (count: number): ReactNode[] =>
+/** `count` placeholder cards; the first holds a link for the click tests —
+ *  and, `everyCard`, every other card one of its own (THE FLAT ROW's focus
+ *  tests, where a side card holds the focus). */
+const cardsFor = (count: number, everyCard = false): ReactNode[] =>
   TITLES.slice(0, count).map((title, index) => (
     <article key={title}>
       <h3>{title}</h3>
       {index === 0 && <a href="#prima">Deschide</a>}
+      {everyCard && index > 0 && (
+        <a href={`#card-${index + 1}`}>{`Deschide ${index + 1}`}</a>
+      )}
     </article>
   ));
 
@@ -150,6 +173,83 @@ class FakeObserver {
   }
 }
 
+/** A stand-in MediaQueryList for THE FLAT ROW's query, the suite's to flip —
+ *  every other query stays the browser's own (stubFlatQuery). */
+class FakeQuery {
+  matches: boolean;
+  readonly media = CARD_CAROUSEL_FLAT_QUERY;
+  readonly listeners = new Set<(event: MediaQueryListEvent) => void>();
+
+  constructor(matches: boolean) {
+    this.matches = matches;
+  }
+
+  addEventListener(
+    _type: 'change',
+    listener: (event: MediaQueryListEvent) => void,
+  ): void {
+    this.listeners.add(listener);
+  }
+
+  removeEventListener(
+    _type: 'change',
+    listener: (event: MediaQueryListEvent) => void,
+  ): void {
+    this.listeners.delete(listener);
+  }
+
+  /** The window crosses the query: `true` is the row. */
+  flip(matches: boolean): void {
+    this.matches = matches;
+    act(() => {
+      for (const listener of this.listeners) {
+        listener({ matches } as MediaQueryListEvent);
+      }
+    });
+  }
+}
+
+/** THE FLAT ROW's query answered by a FakeQuery until the test ends. */
+function stubFlatQuery(matches: boolean): FakeQuery {
+  const fake = new FakeQuery(matches);
+  const real = window.matchMedia.bind(window);
+  vi.stubGlobal('matchMedia', (query: string) =>
+    query === CARD_CAROUSEL_FLAT_QUERY ? fake : real(query),
+  );
+  return fake;
+}
+
+/** A stand-in ResizeObserver the suite fires by hand: what it observes, and
+ *  whether it was let go. */
+class FakeResizer {
+  static instances: FakeResizer[] = [];
+  readonly callback: ResizeObserverCallback;
+  readonly targets: Element[] = [];
+  disconnected = false;
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+    FakeResizer.instances.push(this);
+  }
+
+  observe(target: Element): void {
+    this.targets.push(target);
+  }
+
+  unobserve(): void {}
+
+  disconnect(): void {
+    this.disconnected = true;
+  }
+
+  /** A box changed size. */
+  fire(): void {
+    act(() => {
+      this.callback([], this as unknown as ResizeObserver);
+    });
+  }
+}
+
 type MountOptions = {
   count?: number;
   mode?: 'loop' | 'bounded';
@@ -157,6 +257,8 @@ type MountOptions = {
   cardCap?: CardCarouselCardCap;
   /** THE FIXED CARD: a card width — never beside `cardCap`. */
   cardWidth?: string;
+  /** THE FLAT ROW: beside a fixed card only. */
+  flatFrom?: CardCarouselFlatFrom;
   /** THE CARDS' HEIGHT: their own, or the tallest's. */
   cardHeight?: CardCarouselCardHeight;
   reduced?: boolean;
@@ -166,12 +268,14 @@ type MountOptions = {
   defaults?: boolean;
   /** Renders a focusable sibling on each side — the page around it. */
   neighbours?: boolean;
+  /** A link in every card, not only the first (cardsFor). */
+  linkEveryCard?: boolean;
 };
 
 function carouselFor(options: MountOptions = {}): ReactElement {
   const count = options.count ?? 7;
   const common = {
-    slides: cardsFor(count),
+    slides: cardsFor(count, options.linkEveryCard),
     slideLabels: labelsFor(count),
     labels: LABELS,
     visible: options.visible ?? 3,
@@ -181,10 +285,16 @@ function carouselFor(options: MountOptions = {}): ReactElement {
       ? {}
       : { cardHeight: options.cardHeight }),
   } as const;
-  // The card's size: ONE of its two answers, or neither (the default cap).
+  // The card's size: ONE of its two answers, or neither (the default cap) —
+  // and beside the fixed one, THE FLAT ROW when asked.
   const size: CardCarouselCardSize =
     options.cardWidth !== undefined
-      ? { cardWidth: options.cardWidth }
+      ? {
+          cardWidth: options.cardWidth,
+          ...(options.flatFrom === undefined
+            ? {}
+            : { flatFrom: options.flatFrom }),
+        }
       : options.cardCap !== undefined
         ? { cardCap: options.cardCap }
         : {};
@@ -2678,4 +2788,819 @@ describe('CardCarousel — the island contract', () => {
     expect(CODE).not.toMatch(/\.pause\(/);
     expect(CODE).toMatch(/\bhandNavigation\(/);
   });
+});
+
+// ── THE FLAT ROW (2026-10-25 — CardCarousel.tsx's header of that name) ──────
+
+/** The Home band's list card, in the theme's step — 347.33px at the default
+ *  root; here only a string, no stylesheet sizing anything. */
+const FLAT_WIDTH = 'calc(var(--spacing) / 4 * (1106 - 2 * 32) / 3)';
+
+/** One of the island's class constants, as the tokens it holds — every
+ *  quoted literal between `const NAME =` and the statement's end, so a
+ *  `cx(…)` of literals reads like one string. */
+function tokensOf(name: string): string[] {
+  const statement = new RegExp(`const ${name} =([\\s\\S]*?);\\n`).exec(CODE);
+  if (statement?.[1] === undefined) throw new Error(`no ${name}`);
+  return [...statement[1].matchAll(/'([^']*)'|"([^"]*)"/g)]
+    .flatMap((match) => (match[1] ?? match[2] ?? '').split(/\s+/))
+    .filter((token) => token !== '');
+}
+
+/** An element's class tokens. */
+const classesOf = (element: Element): string[] =>
+  (element.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+/** The names of the cards that are LIVE — neither inert nor aria-hidden. */
+const liveOf = (slides: HTMLElement[]): string[] =>
+  slides
+    .filter(
+      (slide) =>
+        !slide.hasAttribute('inert') && !slide.hasAttribute('aria-hidden'),
+    )
+    .map((slide) => slide.getAttribute('aria-label') ?? '');
+
+/**
+ * The widths the island reads for THE REACH, set inline on its own boxes —
+ * the hand's box (the stage), every card box, the previous arrow's strip —
+ * then the size change it hears, through every FakeResizer.
+ */
+function sizeRow(
+  carousel: ReturnType<typeof mount>,
+  widths: Readonly<{ stage: number; card: number; bar: number }>,
+): void {
+  const hand = carousel.stage().parentElement as HTMLElement;
+  hand.style.width = `${widths.stage}px`;
+  for (const slide of carousel.slides()) {
+    slide.style.width = `${widths.card}px`;
+  }
+  carousel.previous().style.width = `${widths.bar}px`;
+  for (const resizer of FakeResizer.instances) resizer.fire();
+}
+
+/** The BARE carousel's arithmetic at a 1280px stage — a 347.33px card and the
+ *  arrows' 36px strips, the stage the whole screen: one card live a side.
+ *  Not the Home band's own row, which draws 55.38px strips at a tablet on a
+ *  stage 1rem narrower than the screen (sections/BlogCarousel's THE CHROME
+ *  SCALES WITH THE ROW'S PIXEL and THE BLEED). */
+const ROW_1280 = { stage: 1280, card: (1106 - 2 * 32) / 3, bar: 36 } as const;
+
+/** THE ANNOUNCEMENT IS THE CENTRE CARD'S: the status line — a live region the
+ *  section holds itself, outside the stage — or null where there is none. */
+const statusOf = (carousel: ReturnType<typeof mount>): HTMLElement | null =>
+  carousel.region().querySelector<HTMLElement>(':scope > [aria-live]');
+
+describe('CardCarousel — THE FLAT ROW: the prop', () => {
+  it('has ONE value, beside a fixed card alone: any other value, and the row without a fixed width, is a RangeError — and the types refuse the row without `cardWidth`', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const common = {
+      slides: cardsFor(3),
+      slideLabels: labelsFor(3),
+      labels: LABELS,
+      visible: 5,
+      mode: 'loop',
+      env: quietEnv(),
+    } as const;
+    // The one answer: a fixed card that lies flat.
+    const { unmount } = render(
+      <CardCarousel {...common} cardWidth={FLAT_WIDTH} flatFrom="tablet" />,
+    );
+    unmount();
+    // No fixed width: the types refuse it, and a JavaScript caller meets the
+    // RangeError — the share's card, and the cap's, have no meaning in a row
+    // as wide as the screen.
+    expect(() =>
+      render(
+        // @ts-expect-error — THE FLAT ROW needs THE FIXED CARD
+        <CardCarousel {...common} flatFrom="tablet" />,
+      ),
+    ).toThrow(/`flatFrom` without `cardWidth`/);
+    expect(() =>
+      render(
+        // @ts-expect-error — never beside the cap
+        <CardCarousel {...common} cardCap="capped" flatFrom="tablet" />,
+      ),
+    ).toThrow(/`flatFrom` without `cardWidth`/);
+    // Any other value — a JavaScript caller's — is no step at all.
+    for (const flatFrom of ['Tablet', 'phone', '', true, 1, null]) {
+      const smuggled = { flatFrom } as object;
+      expect(
+        () =>
+          render(
+            <CardCarousel {...common} cardWidth={FLAT_WIDTH} {...smuggled} />,
+          ),
+        JSON.stringify(flatFrom),
+      ).toThrow(/`flatFrom`.*is no step.*'tablet'/);
+    }
+    // An explicit `undefined` is no value: the line at every width.
+    const absent = { flatFrom: undefined } as object;
+    expect(() =>
+      render(<CardCarousel {...common} cardWidth={FLAT_WIDTH} {...absent} />),
+    ).not.toThrow();
+  });
+
+  it('puts no `flatFrom` on the <section> as an attribute', () => {
+    stubFlatQuery(false);
+    const { region } = mount({
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+    });
+    expect(region()).not.toHaveAttribute('flatfrom');
+    expect(region()).not.toHaveAttribute('flatFrom');
+    expectTypeOf<CardCarouselProps['flatFrom']>().toEqualTypeOf<
+      'tablet' | undefined
+    >();
+  });
+
+  it('writes NOTHING of the row without the prop — no class, no custom property, no listener — in every geometry, window and mode: the line, byte for byte', () => {
+    const resizers = FakeResizer.instances.length;
+    vi.stubGlobal('ResizeObserver', FakeResizer);
+    for (const cardWidth of [undefined, FLAT_WIDTH]) {
+      for (const visible of [3, 5] as const) {
+        for (const mode of ['loop', 'bounded'] as const) {
+          const what = `${cardWidth ?? 'the cap'}, ${visible}, ${mode}`;
+          const html = renderToStaticMarkup(
+            carouselFor({ cardWidth, visible, mode }),
+          );
+          for (const trace of [
+            '@media',
+            '--ftx',
+            '--fsc',
+            'before:',
+            'will-change',
+            'hover:scale',
+          ]) {
+            expect(html, `${what}: ${trace}`).not.toContain(trace);
+          }
+          // And an explicit `undefined` writes the very same HTML.
+          expect(
+            renderToStaticMarkup(
+              carouselFor({ cardWidth, visible, mode, flatFrom: undefined }),
+            ),
+            what,
+          ).toBe(html);
+        }
+      }
+    }
+    // Every card box the line's own classes, exactly.
+    const { slides, unmount } = mount({ cardWidth: FLAT_WIDTH });
+    for (const slide of slides()) {
+      expect(classesOf(slide)).toEqual([
+        ...tokensOf('SLIDE'),
+        ...tokensOf('SLIDE_MOVE'),
+      ]);
+    }
+    unmount();
+    // No observer was made for a carousel that never lies flat.
+    expect(FakeResizer.instances.length).toBe(resizers);
+  });
+});
+
+describe('CardCarousel — THE FLAT ROW: its classes and custom properties', () => {
+  beforeEach(() => {
+    FakeResizer.instances = [];
+    vi.stubGlobal('ResizeObserver', FakeResizer);
+  });
+
+  it('spells its query ONCE: every class that draws the row wears CARD_CAROUSEL_FLAT_QUERY, its spaces as Tailwind’s underscores — and the engine reads the constant as a query', () => {
+    const spellings = [...CODE.matchAll(/\[@media([^\]]*)\]:/g)].map(
+      (match) => match[1],
+    );
+    // Two on the root, three on a card box, one for the centred card's aura.
+    expect(spellings).toHaveLength(6);
+    for (const spelling of spellings) {
+      expect(spelling.replaceAll('_', ' ')).toBe(CARD_CAROUSEL_FLAT_QUERY);
+    }
+    // A query the engine could not parse would read "not all".
+    expect(window.matchMedia(CARD_CAROUSEL_FLAT_QUERY).media).not.toMatch(
+      /not all/,
+    );
+    // THE QUERY (the header): TWO media queries in one list, the width clause
+    // in each — 32rem tall, or a fine pointer: a laptop a zoom made short
+    // keeps the row (the geometry test draws it there).
+    expect(
+      window.matchMedia(CARD_CAROUSEL_FLAT_QUERY).media.split(', '),
+    ).toEqual([
+      '(min-width: 37.5rem) and (min-height: 32rem)',
+      '(min-width: 37.5rem) and (pointer: fine)',
+    ]);
+  });
+
+  it('writes each card’s ROW pose beside its LINE pose — `--ftx` and `--fsc`, ./conveyor’s — and nothing more', () => {
+    stubFlatQuery(false);
+    const { slides } = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    const positions = [0, 1, 2, 3, -3, -2, -1];
+    for (const [card, slide] of slides().entries()) {
+      const flat = flatPoseAt(positions[card]);
+      const line = poseAt(positions[card]);
+      expect(Number(slide.style.getPropertyValue('--ftx'))).toBe(flat.tx);
+      expect(Number(slide.style.getPropertyValue('--fsc'))).toBe(flat.sc);
+      expect(shiftOf(slide)).toBe(line.tx);
+      expect([...slide.style].sort()).toEqual([
+        '--fsc',
+        '--ftx',
+        '--ry',
+        '--sc',
+        '--tx',
+        'z-index',
+      ]);
+    }
+  });
+
+  it('dresses every card box for the row and THE HOVER, and every one with the aura’s layer — the centred card’s alone shown, and the mark moving with the ring', () => {
+    stubFlatQuery(false);
+    const { slides, next } = mount({
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+    });
+    const shown = tokensOf('AURA_SHOWN');
+    expect(shown).toEqual([
+      '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:before:opacity-100',
+    ]);
+    const showing = (): string[] =>
+      slides()
+        .filter((slide) => classesOf(slide).includes(shown[0]))
+        .map((slide) => slide.getAttribute('aria-label') ?? '');
+    for (const slide of slides()) {
+      expect(classesOf(slide)).toEqual(
+        expect.arrayContaining([
+          ...tokensOf('SLIDE'),
+          ...tokensOf('FLAT_SLIDE'),
+          ...tokensOf('AURA'),
+          ...tokensOf('FLAT_MOVE'),
+        ]),
+      );
+    }
+    expect(showing()).toEqual(['1 din 7']);
+    fireEvent.click(next());
+    expect(showing()).toEqual(['2 din 7']);
+    // THE HOVER — the box, not the card in it: the centre card to 1.05, a side
+    // card to 1 ÷ 0.9, the centre card's own size; held still under reduced
+    // motion.
+    expect(tokensOf('FLAT_SLIDE')).toEqual(
+      expect.arrayContaining([
+        'hover:scale-[max(1.05,calc(1/var(--fsc)))]',
+        'motion-reduce:hover:scale-100',
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[transform:scale(var(--fsc))]',
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[translate:calc(var(--card)*var(--ftx))_0]',
+        '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:supports-[font:-apple-system-body]:will-change-transform',
+      ]),
+    );
+    // THE HIGHLIGHT's layer: the house's aura, the soft corner, no pointer,
+    // invisible at rest, on ui/Card's clock spelled as numbers — never the
+    // root's `--fade`, which here is the mask's length — and none under
+    // reduced motion.
+    const aura = tokensOf('AURA');
+    expect(aura).toEqual(
+      expect.arrayContaining([
+        'before:pointer-events-none',
+        'before:absolute',
+        'before:inset-0',
+        'before:rounded-soft',
+        'before:shadow-aura',
+        'before:opacity-0',
+        "before:content-['']",
+        'before:transition-opacity',
+        'before:duration-[400ms]',
+        'before:ease-in-out',
+        'motion-reduce:before:transition-none',
+      ]),
+    );
+    expect(aura.filter((token) => token.includes('(--fade)'))).toEqual([]);
+  });
+
+  it('moves on THREE clocks — the move’s 700ms for `transform` and `translate`, the jump’s 200ms for `scale` — and under a hand snaps all but the hover’s', () => {
+    stubFlatQuery(false);
+    const { slides, stage } = mount({
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+    });
+    const move = tokensOf('FLAT_MOVE');
+    const snap = tokensOf('FLAT_SNAP');
+    expect(move).toEqual([
+      '[--jump:200ms]',
+      '[transition-property:transform,translate,scale]',
+      '[transition-duration:700ms,700ms,var(--jump)]',
+      '[transition-timing-function:cubic-bezier(0.25,0.46,0.45,0.94),cubic-bezier(0.25,0.46,0.45,0.94),ease-out]',
+      'motion-reduce:transition-none',
+    ]);
+    // The move's curve is THE MOVE's own (the line's SLIDE_MOVE).
+    const curve = /ease-\[(cubic-bezier\([^\]]+\))\]/.exec(
+      tokensOf('SLIDE_MOVE').join(' '),
+    )?.[1];
+    expect(curve).toBe('cubic-bezier(0.25,0.46,0.45,0.94)');
+    expect(move[3]).toContain(`${curve},${curve},ease-out`);
+    // Under the hand: the pose lands at once, the hover's scale still glides.
+    expect(snap).toEqual([
+      '[--jump:200ms]',
+      'transition-[scale]',
+      'duration-(--jump)',
+      'ease-[ease-out]',
+      'motion-reduce:transition-none',
+    ]);
+    const has = (slide: HTMLElement, tokens: string[]): boolean =>
+      tokens.every((token) => classesOf(slide).includes(token));
+    expect(slides().every((slide) => has(slide, move))).toBe(true);
+    const hand = press(stage());
+    hand.move(-0.4 * FLAT_STEP * FRAME);
+    expect(slides().every((slide) => has(slide, snap))).toBe(true);
+    expect(slides().some((slide) => has(slide, move))).toBe(false);
+    // The line's own clocks never: a flat carousel's boxes wear the row's.
+    for (const slide of slides()) {
+      expect(classesOf(slide)).not.toContain('transition-transform');
+      expect(classesOf(slide)).not.toContain('transition-none');
+    }
+    hand.cancel();
+  });
+
+  it('wears the root’s two overrides — no room beside a window, the fade the arrows’ own strip — beside THE FIXED CARD’s geometry', () => {
+    stubFlatQuery(false);
+    const { region } = mount({
+      visible: 5,
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+    });
+    const root = classesOf(region());
+    expect(tokensOf('FLAT_ROOT')).toEqual([
+      '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[--inset:0px]',
+      '[@media(min-width:37.5rem)_and_(min-height:32rem),(min-width:37.5rem)_and_(pointer:fine)]:[--fade:var(--bar)]',
+    ]);
+    expect(root).toEqual(expect.arrayContaining(tokensOf('FLAT_ROOT')));
+    // THE FIXED CARD's own spellings stay, the row's a later rule beside them.
+    expect(root).toContain('[--stage:100cqw]');
+    expect(root.filter((name) => name.startsWith('[--inset:'))).toHaveLength(1);
+  });
+});
+
+describe('CardCarousel — THE FLAT ROW: the reach', () => {
+  beforeEach(() => {
+    FakeResizer.instances = [];
+    vi.stubGlobal('ResizeObserver', FakeResizer);
+  });
+
+  it('keeps the centre card alone live in the server’s HTML — the reach is measured only after mount — and hydrates it with no warning, then frees its neighbours', async () => {
+    stubFlatQuery(true);
+    const element = carouselFor({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    const html = renderToStaticMarkup(element);
+    expect(html.match(/inert=""/g)).toHaveLength(6);
+    expect(html.match(/aria-hidden="true"/g)?.length).toBeGreaterThanOrEqual(6);
+    const container = document.createElement('div');
+    container.style.width = `${FRAME}px`;
+    container.innerHTML = renderToString(element);
+    document.body.append(container);
+    const errors: string[] = [];
+    const spy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((...args: unknown[]) => {
+        errors.push(args.map(String).join(' '));
+      });
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, element);
+      });
+      expect(errors).toEqual([]);
+      const region = container.querySelector('section') as HTMLElement;
+      const slides = [
+        ...region.querySelectorAll<HTMLElement>('[aria-live] > [role="group"]'),
+      ];
+      // At the frame's natural widths nothing reaches past the arrows.
+      expect(liveOf(slides)).toEqual(['1 din 7']);
+      // Measured again on a size change: one card a side.
+      const hand = region.querySelector('[aria-live]')
+        ?.parentElement as HTMLElement;
+      hand.style.width = `${ROW_1280.stage}px`;
+      for (const slide of slides) slide.style.width = `${ROW_1280.card}px`;
+      const previous = region.querySelector(
+        `[aria-label="${LABELS.previous}"]`,
+      ) as HTMLElement;
+      previous.style.width = `${ROW_1280.bar}px`;
+      for (const resizer of FakeResizer.instances) resizer.fire();
+      expect(liveOf(slides)).toEqual(['1 din 7', '2 din 7', '7 din 7']);
+    } finally {
+      spy.mockRestore();
+      act(() => root?.unmount());
+      container.remove();
+    }
+  });
+
+  it('frees every card within the reach of the ring’s card and keeps the rest previews: one a side at a 1280 stage, two at 2000, none once the window leaves the query — and back', () => {
+    const query = stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    expect(liveOf(carousel.slides())).toEqual(['1 din 7']);
+    sizeRow(carousel, ROW_1280);
+    expect(liveOf(carousel.slides())).toEqual([
+      '1 din 7',
+      '2 din 7',
+      '7 din 7',
+    ]);
+    // The rest stay previews — both halves of the belt.
+    for (const slide of carousel.slides()) {
+      const live = liveOf([slide]).length === 1;
+      expect(slide.hasAttribute('inert')).toBe(!live);
+      expect(slide.getAttribute('aria-hidden')).toBe(live ? null : 'true');
+    }
+    sizeRow(carousel, { ...ROW_1280, stage: 2000 });
+    expect(liveOf(carousel.slides())).toEqual([
+      '1 din 7',
+      '2 din 7',
+      '3 din 7',
+      '6 din 7',
+      '7 din 7',
+    ]);
+    query.flip(false);
+    expect(liveOf(carousel.slides())).toEqual(['1 din 7']);
+    query.flip(true);
+    expect(liveOf(carousel.slides())).toEqual([
+      '1 din 7',
+      '2 din 7',
+      '3 din 7',
+      '6 din 7',
+      '7 din 7',
+    ]);
+  });
+
+  it('follows the ring: after a step the live cards are the new centre’s neighbours — never a drag’s fractional place', () => {
+    stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    sizeRow(carousel, ROW_1280);
+    fireEvent.click(carousel.next());
+    expect(liveOf(carousel.slides())).toEqual([
+      '1 din 7',
+      '2 din 7',
+      '3 din 7',
+    ]);
+    // A hand 0.8 of a step on: the ring's card has not changed.
+    const hand = press(carousel.stage());
+    hand.move(-0.8 * ROW_1280.card * FLAT_STEP);
+    expect(liveOf(carousel.slides())).toEqual([
+      '1 din 7',
+      '2 din 7',
+      '3 din 7',
+    ]);
+    hand.cancel();
+  });
+
+  it('holds the reach under half the list — the card half a ring away, an even list’s tie, is never live; two cards free no side — and the cap is NO crossing card’s guard: at the cap a live neighbour snaps across the ring', () => {
+    stubFlatQuery(true);
+    const snapped = (slide: HTMLElement): boolean =>
+      tokensOf('FLAT_SNAP').every((token) => classesOf(slide).includes(token));
+    const named = (
+      carousel: ReturnType<typeof mount>,
+      label: string,
+    ): HTMLElement => {
+      const found = carousel
+        .slides()
+        .find((slide) => slide.getAttribute('aria-label') === label);
+      if (found === undefined) throw new Error(`no card ${label}`);
+      return found;
+    };
+    const four = mount({ count: 4, cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    sizeRow(four, { ...ROW_1280, stage: 4000 });
+    // Offsets −1, 0, +1 and the tie, +2 — half a ring away, never live.
+    expect(liveOf(four.slides())).toEqual(['1 din 4', '2 din 4', '4 din 4']);
+    // The header's THE REACH, corrected 2026-10-26: the reach (1) meets the
+    // cap (⌊3 ÷ 2⌋), so the card that crosses the ring on next is the LIVE
+    // left neighbour — „4 din 4", −1 → +2 — snapping, a preview after it.
+    expect(snapped(named(four, '4 din 4'))).toBe(false);
+    fireEvent.click(four.next());
+    expect(snapped(named(four, '4 din 4'))).toBe(true);
+    expect(liveOf(four.slides())).toEqual(['1 din 4', '2 din 4', '3 din 4']);
+    four.unmount();
+    FakeResizer.instances = [];
+    // Of three, the crossing card is live on both sides of its jump: −1 → +1.
+    const three = mount({
+      count: 3,
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+    });
+    sizeRow(three, { ...ROW_1280, stage: 4000 });
+    expect(liveOf(three.slides())).toEqual(['1 din 3', '2 din 3', '3 din 3']);
+    fireEvent.click(three.next());
+    expect(snapped(named(three, '3 din 3'))).toBe(true);
+    expect(liveOf(three.slides())).toEqual(['1 din 3', '2 din 3', '3 din 3']);
+    three.unmount();
+    FakeResizer.instances = [];
+    const two = mount({ count: 2, cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    sizeRow(two, { ...ROW_1280, stage: 4000 });
+    expect(liveOf(two.slides())).toEqual(['1 din 2']);
+  });
+
+  it('frees the bounded list’s cards by their plain distance — none past its ends', () => {
+    stubFlatQuery(true);
+    const carousel = mount({
+      mode: 'bounded',
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+    });
+    sizeRow(carousel, ROW_1280);
+    expect(liveOf(carousel.slides())).toEqual(['1 din 7', '2 din 7']);
+    fireEvent.click(carousel.next());
+    expect(liveOf(carousel.slides())).toEqual([
+      '1 din 7',
+      '2 din 7',
+      '3 din 7',
+    ]);
+  });
+
+  it('is 0 wherever the row is not drawn: the query not matching at mount frees no side card, however wide the stage', () => {
+    stubFlatQuery(false);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    sizeRow(carousel, { ...ROW_1280, stage: 4000 });
+    expect(liveOf(carousel.slides())).toEqual(['1 din 7']);
+  });
+
+  it('listens to the query and to the three boxes it reads — the hand’s, a card’s, an arrow’s — and lets go of both when it unmounts', () => {
+    const query = stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    expect(FakeResizer.instances).toHaveLength(1);
+    const [resizer] = FakeResizer.instances;
+    expect(resizer.targets).toEqual([
+      carousel.stage().parentElement,
+      carousel.slides()[0],
+      carousel.previous(),
+    ]);
+    expect(query.listeners.size).toBe(1);
+    carousel.unmount();
+    expect(resizer.disconnected).toBe(true);
+    expect(query.listeners.size).toBe(0);
+  });
+
+  it('a press on a live SIDE card is a TAP — it stops the ring for good, like one on the centre card', () => {
+    vi.useFakeTimers();
+    stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    sizeRow(carousel, ROW_1280);
+    const side = carousel
+      .slides()
+      .find((slide) => slide.getAttribute('aria-label') === '2 din 7');
+    if (side === undefined) throw new Error('no side card');
+    expect(side).not.toHaveAttribute('inert');
+    fireEvent.click(side, { detail: 1 });
+    expect(vi.getTimerCount()).toBe(0);
+    // With live side cards the status line is the polite one, the stage
+    // silent (THE ANNOUNCEMENT IS THE CENTRE CARD'S).
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'off');
+    expect(statusOf(carousel)).toHaveAttribute('aria-live', 'polite');
+    act(() => vi.advanceTimersByTime(10 * INTERVAL));
+    expect(classesOf(carousel.slides()[0])).toContain(
+      tokensOf('AURA_SHOWN')[0],
+    );
+  });
+});
+
+describe('CardCarousel — THE FLAT ROW: what it says, and the focus it keeps', () => {
+  beforeEach(() => {
+    FakeResizer.instances = [];
+    vi.stubGlobal('ResizeObserver', FakeResizer);
+  });
+
+  /** The card box named `label`. */
+  const named = (
+    carousel: ReturnType<typeof mount>,
+    label: string,
+  ): HTMLElement => {
+    const found = carousel
+      .slides()
+      .find((slide) => slide.getAttribute('aria-label') === label);
+    if (found === undefined) throw new Error(`no card ${label}`);
+    return found;
+  };
+
+  it('silences the stage while side cards are live and says the CENTRED card’s label in ONE status line beside it — on the stage’s own politeness, the new centre’s after a step or a bead, unchanged by a resize — and gives the stage back its part once the row frees none', () => {
+    const query = stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    // At the frame's natural widths the row frees no side card: the stage is
+    // the live region it always was, and there is no status line.
+    expect(statusOf(carousel)).toBeNull();
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'off');
+    sizeRow(carousel, ROW_1280);
+    const status = statusOf(carousel);
+    if (status === null) throw new Error('no status line');
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'off');
+    // The ring runs: the line is off too — it speaks only once held.
+    expect(status).toHaveAttribute('aria-live', 'off');
+    expect(status).toHaveAttribute('aria-atomic', 'true');
+    expect(status).not.toHaveAttribute('role');
+    expect(classesOf(status)).toEqual(tokensOf('STATUS'));
+    expect(status.textContent).toBe('1 din 7');
+    // Outside the stage — the section's last child, after the hand's box.
+    expect(carousel.stage().contains(status)).toBe(false);
+    expect(carousel.region().lastElementChild).toBe(status);
+    // A press: the stop, then the step — the line polite, the stage silent,
+    // and what it says the card the ring landed on.
+    fireEvent.click(carousel.next());
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'off');
+    expect(statusOf(carousel)).toHaveAttribute('aria-live', 'polite');
+    expect(statusOf(carousel)?.textContent).toBe('2 din 7');
+    fireEvent.click(carousel.bead('5 din 7'));
+    expect(statusOf(carousel)?.textContent).toBe('5 din 7');
+    // A resize frees more cards and says nothing new.
+    sizeRow(carousel, { ...ROW_1280, stage: 2000 });
+    expect(liveOf(carousel.slides())).toHaveLength(5);
+    expect(statusOf(carousel)?.textContent).toBe('5 din 7');
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'off');
+    // The row left: the stage speaks again, the line gone.
+    query.flip(false);
+    expect(statusOf(carousel)).toBeNull();
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'polite');
+    expect(carousel.region().querySelectorAll('[aria-live]')).toHaveLength(1);
+  });
+
+  it('keeps the markup with NO live side card byte for byte — the server’s HTML one live region and nothing of the row’s speech, and a row whose side cards are hidden again the very HTML it had before they were freed', () => {
+    const html = renderToStaticMarkup(
+      carouselFor({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' }),
+    );
+    expect(html.match(/aria-live=/g)).toHaveLength(1);
+    // The current BEAD's aria-current alone — no card group's.
+    expect(html.match(/aria-current=/g)).toHaveLength(1);
+    for (const trace of ['aria-atomic', 'reading-']) {
+      expect(html, trace).not.toContain(trace);
+    }
+    /** The region's HTML with every element's attributes in one order — the
+     *  DOM puts an attribute taken off and set again at its element's end,
+     *  which is no change of the markup. */
+    const markupOf = (element: Element): string => {
+      const copy = element.cloneNode(true) as Element;
+      for (const node of [copy, ...copy.querySelectorAll('*')]) {
+        const attributes = [...node.attributes]
+          .map(({ name, value }) => [name, value] as const)
+          .sort(([a], [b]) => a.localeCompare(b));
+        for (const [name] of attributes) node.removeAttribute(name);
+        for (const [name, value] of attributes) node.setAttribute(name, value);
+      }
+      return copy.outerHTML;
+    };
+    const query = stubFlatQuery(false);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    // Sized as a laptop's row, but the window is not one: no side card.
+    sizeRow(carousel, ROW_1280);
+    const before = markupOf(carousel.region());
+    query.flip(true);
+    expect(statusOf(carousel)).not.toBeNull();
+    expect(markupOf(carousel.region())).not.toBe(before);
+    query.flip(false);
+    expect(markupOf(carousel.region())).toBe(before);
+  });
+
+  it('silences the stage a commit BEFORE the reach frees a card — in one commit React writes the cards’ attributes before the stage’s — and speaks again only after they are hidden', () => {
+    const query = stubFlatQuery(true);
+    // Reduced motion: the ring never runs, so the stage is polite from the
+    // start — the case where the order is heard.
+    const carousel = mount({
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+      reduced: true,
+    });
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'polite');
+    const watch = new MutationObserver(() => {});
+    watch.observe(carousel.stage(), {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['aria-live', 'inert'],
+    });
+    const order = (): string[] =>
+      watch
+        .takeRecords()
+        .map((record) =>
+          record.target === carousel.stage() ? 'stage' : 'card',
+        );
+    sizeRow(carousel, ROW_1280);
+    // Two cards freed, „2 din 7" and „7 din 7" — after the stage fell silent.
+    expect(order()).toEqual(['stage', 'card', 'card']);
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'off');
+    query.flip(false);
+    expect(order()).toEqual(['card', 'card', 'stage']);
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'polite');
+    watch.disconnect();
+  });
+
+  it('says which card is CURRENT while side cards are live — the centred card’s group, aria-current="true", moving with the ring — and none where it is the one live card', () => {
+    const query = stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    const current = (): string[] =>
+      carousel
+        .slides()
+        .filter((slide) => slide.getAttribute('aria-current') === 'true')
+        .map((slide) => slide.getAttribute('aria-label') ?? '');
+    expect(current()).toEqual([]);
+    sizeRow(carousel, ROW_1280);
+    expect(current()).toEqual(['1 din 7']);
+    fireEvent.click(carousel.next());
+    expect(current()).toEqual(['2 din 7']);
+    query.flip(false);
+    expect(current()).toEqual([]);
+  });
+
+  it('makes the stage a READING FLOW container while side cards are live — each card’s reading-order its offset from the ring’s card, following the ring — and writes neither where the row frees none', () => {
+    const query = stubFlatQuery(true);
+    const carousel = mount({ cardWidth: FLAT_WIDTH, flatFrom: 'tablet' });
+    const orders = (): string[] =>
+      carousel
+        .slides()
+        .map((slide) => slide.style.getPropertyValue('reading-order'));
+    const flows = (): boolean =>
+      classesOf(carousel.stage()).includes(tokensOf('READING_FLOW')[0]);
+    expect(flows()).toBe(false);
+    expect(orders()).toEqual(Array.from({ length: 7 }, () => ''));
+    sizeRow(carousel, ROW_1280);
+    expect(tokensOf('READING_FLOW')).toEqual(['[reading-flow:source-order]']);
+    expect(classesOf(carousel.stage())).toEqual([
+      ...tokensOf('STAGE'),
+      ...tokensOf('READING_FLOW'),
+    ]);
+    // A loop on its first card: 0, +1, +2, +3, then −3, −2, −1.
+    expect(orders()).toEqual(['0', '1', '2', '3', '-3', '-2', '-1']);
+    fireEvent.click(carousel.next());
+    expect(orders()).toEqual(['-1', '0', '1', '2', '3', '-3', '-2']);
+    query.flip(false);
+    expect(flows()).toBe(false);
+    expect(orders()).toEqual(Array.from({ length: 7 }, () => ''));
+  });
+
+  it('KEEPS a focused side card live when the reach shrinks — the window falling out of the query, as a zoom does — so the focus and the keyboard’s hold stay; the card turns a preview once the focus leaves it', async () => {
+    const query = stubFlatQuery(true);
+    const carousel = mount({
+      cardWidth: FLAT_WIDTH,
+      flatFrom: 'tablet',
+      neighbours: true,
+      linkEveryCard: true,
+    });
+    sizeRow(carousel, ROW_1280);
+    const side = named(carousel, '2 din 7');
+    expect(side).not.toHaveAttribute('inert');
+    const link = side.querySelector('a');
+    if (link === null) throw new Error('no link');
+    // A REAL Tab to it — the keyboard's modality, the hold's.
+    await realUser.click(carousel.before());
+    for (let i = 0; i < 20 && document.activeElement !== link; i++) {
+      await realUser.tab();
+    }
+    expect(document.activeElement).toBe(link);
+    // Held: the status line polite (the stage silent beside it).
+    expect(statusOf(carousel)).toHaveAttribute('aria-live', 'polite');
+    query.flip(false);
+    // The row gone, its reach 0 — and the focused card kept live.
+    expect(side).not.toHaveAttribute('inert');
+    expect(side).not.toHaveAttribute('aria-hidden');
+    expect(document.activeElement).toBe(link);
+    expect(carousel.stage()).toHaveAttribute('aria-live', 'polite');
+    // The focus leaves it — onward, past the inert cards, out of the region.
+    await realUser.tab();
+    expect(carousel.region().contains(document.activeElement)).toBe(false);
+    expect(side).toHaveAttribute('inert');
+    expect(side).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('tracks NO focus in a carousel that never lies flat — its markup the line’s whatever holds the focus', async () => {
+    const carousel = mount({ neighbours: true });
+    const link = carousel.centre().querySelector('a');
+    if (link === null) throw new Error('no link');
+    await realUser.click(carousel.before());
+    for (let i = 0; i < 20 && document.activeElement !== link; i++) {
+      await realUser.tab();
+    }
+    expect(document.activeElement).toBe(link);
+    // A hand's step while the link holds the focus: the card it left is a
+    // preview, as it always was.
+    fireEvent.click(carousel.next());
+    expect(named(carousel, '1 din 7')).toHaveAttribute('inert');
+  });
+});
+
+describe('CardCarousel — THE FLAT ROW: the hand', () => {
+  beforeEach(() => {
+    FakeResizer.instances = [];
+    vi.stubGlobal('ResizeObserver', FakeResizer);
+  });
+
+  it.each([
+    ['where the row is drawn: FLAT_STEP card widths a card', true],
+    ['where it is not: the line’s STEP', false],
+  ] as const)(
+    'drags on the step of what is drawn — %s — the centre card under the hand',
+    (_what, drawn) => {
+      stubFlatQuery(drawn);
+      const { stage, slides } = mount({
+        cardWidth: FLAT_WIDTH,
+        flatFrom: 'tablet',
+      });
+      const step = drawn ? FLAT_STEP : STEP;
+      const hand = press(stage());
+      hand.move(-0.3 * step * FRAME);
+      // A third of the drawn step: the centre card 0.3 of a card on, in both
+      // poses — and under the hand in the one the stylesheet draws.
+      const [centre] = slides();
+      expect(Number(centre.style.getPropertyValue('--ftx'))).toBeCloseTo(
+        flatPoseAt(-0.3).tx,
+        5,
+      );
+      expect(shiftOf(centre)).toBeCloseTo(poseAt(-0.3).tx, 5);
+      const drawnShift = drawn
+        ? Number(centre.style.getPropertyValue('--ftx'))
+        : shiftOf(centre);
+      expect(drawnShift * FRAME).toBeCloseTo(-0.3 * step * FRAME, 1);
+      hand.cancel();
+    },
+  );
 });

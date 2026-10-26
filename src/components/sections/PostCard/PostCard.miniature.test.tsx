@@ -42,6 +42,16 @@ import { unitsAcrossLines } from './PostCard.fixtures';
 // (896 / 1106 = 0.810px, its smallest) and its cap (1536 / 1106 = 1.389px).
 // The pixel rides an INLINE style, never an arbitrary class (Tailwind reads
 // tests too — tests/unit/design-scale.test.ts's D-LIT RULE).
+// THE CHIPS ARE COMPARED WITH THE MINIATURE ITSELF since 2026-10-25
+// (PostCard's THE CHIPS FOLLOW THE PIXEL): their floor is twelve of the
+// miniature's own pixel, so the label is 12/16 of the miniature's summary at
+// every pixel, and its full card's share only where the full card's own,
+// absolute floor gives the same number — the theme's pixel and a band's 1px
+// at this root. A FIFTH PIXEL, 2.5px, stands past the title's `@md` step — a
+// pixel no page drew until the Home band's flat row (PostCard's THE STEPS
+// THE MINIATURE CANNOT REDRAW) — in the cases that read the miniature alone:
+// there a full card in the same box takes `band`'s 36, so it is no copy to
+// compare with.
 //
 // ── WHAT IS ENGINE-PROOF, AND WHAT IS NOT. Computed sizes and the layout's
 // own arithmetic hold on any engine, so they are pinned exactly: every text
@@ -81,6 +91,16 @@ const PIXELS = [
   { name: 'in the band scale’s step, 0.810px', px: 896 / 1106 },
   { name: 'at the band scale’s cap, 1.389px', px: 1536 / 1106 },
 ] as const;
+
+/** THE FIFTH PIXEL (the header): past the title's `@md` step — a miniature's
+ *  content box over 28rem — and past the band scale's cap, as a page that
+ *  magnifies the miniature further draws it. */
+const PAST = { name: 'past the title’s step, 2.5px', px: 2.5 } as const;
+
+/** ui/Heading's `band` step's ONE container row — the class a full card's
+ *  title wears beside `section`'s and a miniature's does not (PostCard's
+ *  TITLE_STEP): put back on a miniature's title, it shows what the pin does. */
+const BAND_ROW = '@md:text-4xl';
 
 /** ui/Card's framed row, a side, in CSS px at the theme's step: the 3px frame
  *  and six steps less 2px of padding — the frame in px, the padding's px half
@@ -336,25 +356,17 @@ const everyday = (locale: Locale): PostCardProps => {
 
 describe('PostCard — the miniature draws every text at the share of its full card’s, in the pixel it inherits (THE MINIATURE, the real stylesheet)', () => {
   it.each(PIXELS)(
-    'sets the title, the author, the summary, the reading time, the read-more and the chips at 0.65 — $name',
+    'sets the five texts at 0.65 of its full card’s, the chips’ label at twelve of its own pixel — $name',
     async ({ px: pixel }) => {
+      // The pixel the pair inherits, in CSS px.
+      const design = pixel ?? rootPx() / 16;
       for (const locale of ['ro', 'de'] as const) {
         const [pair] = await renderPairs(locale, [everyday(locale)], pixel);
         if (!pair) throw new Error('no pair rendered');
         const full = textSizesOf(pair.full);
         const mini = textSizesOf(pair.mini);
-        // Each text the share of its full card's, to the planner's 0.01 —
-        // the chips' the one reading that may not be exact: where their cqw
-        // half binds, the content box is the share less a residual (the
-        // chips' own case below).
-        for (const name of Object.keys(full) as (keyof typeof full)[]) {
-          expect(
-            Math.abs(mini[name] / full[name] - SHARE),
-            `${locale}: the ${name}, ${mini[name]} against ${full[name]}`,
-          ).toBeLessThanOrEqual(0.01);
-        }
-        // …and the type, which the remap draws in one pixel, EXACTLY: the
-        // full card's 30 / 14 / 16 / 16 / 18 design px, × 0.65.
+        // The type the remap draws in one pixel, EXACTLY: the full card's
+        // 30 / 14 / 16 / 16 / 18 design px, × 0.65.
         for (const name of [
           'title',
           'author',
@@ -366,6 +378,26 @@ describe('PostCard — the miniature draws every text at the share of its full c
             SHARE * full[name],
             3,
           );
+        }
+        // The chips' label: twelve of the miniature's own pixel — the share
+        // of the one it inherits — so 12/16 of its summary at every pixel
+        // (PostCard's THE CHIPS FOLLOW THE PIXEL)…
+        expect(mini.chip, `${locale}: the chips’ label`).toBeCloseTo(
+          12 * SHARE * design,
+          3,
+        );
+        expect(mini.chip / mini.summary).toBeCloseTo(12 / 16, 4);
+        // …the share of its full card's exactly where the full card's own,
+        // absolute floor is the same number — the theme's pixel and a band's
+        // 1px at this root — and another wherever the full card keeps its
+        // own chip pixel (0.527 of it at the step, 0.747 at the cap).
+        if (design === rootPx() / 16) {
+          expect(mini.chip, `${locale}: the chips’ share`).toBeCloseTo(
+            SHARE * full.chip,
+            3,
+          );
+        } else {
+          expect(Math.abs(mini.chip / full.chip - SHARE)).toBeGreaterThan(0.05);
         }
         cleanup();
       }
@@ -387,7 +419,9 @@ describe('PostCard — the miniature draws every text at the share of its full c
       expect(full.title).toBeCloseTo(37.5, 3);
       expect(mini.title).toBeCloseTo(SHARE * 37.5, 3);
       expect(mini.summary).toBeCloseTo(SHARE * 20, 3);
-      // The chips' floor rides the root too: 0.75rem over 18, × the share.
+      // The chips' floor rides the root too: the full card's 0.75rem over
+      // 18, and the miniature's twelve of its captured pixel over 18 — in
+      // the theme's pixel that very floor × the share, at this root too.
       expect(full.chip).toBeCloseTo(15, 2);
       expect(mini.chip).toBeCloseTo(SHARE * 15, 2);
     } finally {
@@ -395,27 +429,29 @@ describe('PostCard — the miniature draws every text at the share of its full c
     }
   });
 
-  it.each(PIXELS)(
-    'draws the chips in their own pixel with the floor × the share — max(0.65 × 0.75rem / 18, content ÷ 513.40625) — $name',
+  it.each([...PIXELS, PAST])(
+    'draws the chips in their own pixel, the miniature’s floor twelve of its captured pixel over 18, binding — $name',
     async ({ px: pixel }) => {
       const [pair] = await renderPairs('ro', [everyday('ro')], pixel);
       if (!pair) throw new Error('no pair rendered');
-      const floor = (0.75 * rootPx()) / 18;
-      for (const [article, share] of [
-        [pair.full, 1],
-        [pair.mini, SHARE],
+      // The pixel the miniature draws in: THE MINIATURE'S WRAPPER's
+      // registered pixel, the share of the one the pair inherits.
+      const design = pixel ?? rootPx() / 16;
+      const wrapper = part(pair.mini.firstElementChild, 'wrapper');
+      const captured = px(getComputedStyle(wrapper).getPropertyValue(PIXEL));
+      expect(captured).toBeCloseTo(SHARE * design, 5);
+      for (const [article, floor] of [
+        [pair.full, (0.75 * rootPx()) / 18],
+        [pair.mini, (12 * captured) / 18],
       ] as const) {
         const { card, list, chips } = partsOf(article);
         if (!list) throw new Error('the everyday post lists two tags');
-        const expected = Math.max(
-          share * floor,
-          contentWidthOf(card) / 513.40625,
-        );
+        const expected = Math.max(floor, contentWidthOf(card) / 513.40625);
         const style = getComputedStyle(list);
-        expect(px(style.getPropertyValue(PIXEL)), `share ${share}`).toBeCloseTo(
-          expected,
-          4,
-        );
+        expect(
+          px(style.getPropertyValue(PIXEL)),
+          article === pair.mini ? 'the miniature' : 'the full card',
+        ).toBeCloseTo(expected, 4);
         for (const chip of chips) {
           const chipStyle = getComputedStyle(chip);
           expect(px(chipStyle.fontSize)).toBeCloseTo(18 * expected, 2);
@@ -429,6 +465,102 @@ describe('PostCard — the miniature draws every text at the share of its full c
         }
         // The list three of the chips' own steps in, and apart.
         expect(px(style.columnGap)).toBeCloseTo(12 * expected, 2);
+      }
+      // The miniature's floor ALWAYS binds: its content box over the
+      // reference — 0.379 × the pixel less 0.004px — stays under its floor's
+      // 0.433 × the pixel at every pixel (PostCard's THE CHIPS)…
+      const mini = partsOf(pair.mini);
+      expect(contentWidthOf(mini.card) / 513.40625).toBeLessThan(
+        (12 * captured) / 18,
+      );
+      // …and in the theme's own pixel that floor is the one it replaced,
+      // 0.75rem / 18 × the share, to the last digit.
+      if (pixel === undefined) {
+        expect((12 * captured) / 18).toBeCloseTo(
+          (SHARE * 0.75 * rootPx()) / 18,
+          6,
+        );
+      }
+    },
+  );
+});
+
+describe('PostCard — a miniature in any pixel is its theme-pixel self magnified (the real stylesheet)', () => {
+  /** Each text of a miniature as a share of its summary — the theme's own
+   *  steps: the title 30 / 16, the author 14 / 16, the reading time 1, the
+   *  read-more 18 / 16 and the chips' label 12 / 16. */
+  const RATIOS = {
+    title: 30 / 16,
+    author: 14 / 16,
+    readingTime: 1,
+    readMore: 18 / 16,
+    chip: 12 / 16,
+  } as const;
+
+  it.each([...PIXELS, PAST])(
+    'keeps every text, the chips’ label among them, in its theme ratio to the summary — $name',
+    async ({ px: pixel }) => {
+      const design = pixel ?? rootPx() / 16;
+      for (const locale of ['ro', 'de'] as const) {
+        const [pair] = await renderPairs(locale, [everyday(locale)], pixel);
+        if (!pair) throw new Error('no pair rendered');
+        const mini = textSizesOf(pair.mini);
+        expect(mini.summary, `${locale}: the summary`).toBeCloseTo(
+          16 * SHARE * design,
+          3,
+        );
+        for (const name of Object.keys(RATIOS) as (keyof typeof RATIOS)[]) {
+          expect(
+            mini[name] / mini.summary,
+            `${locale}: the ${name}, ${mini[name]} beside ${mini.summary}`,
+          ).toBeCloseTo(RATIOS[name], 4);
+        }
+        cleanup();
+      }
+    },
+  );
+
+  it('holds the title on 30 design pixels past `band`’s step, where a full card steps up — 2.5px', async () => {
+    const [pair] = await renderPairs('ro', [everyday('ro')], PAST.px);
+    if (!pair) throw new Error('no pair rendered');
+    const full = partsOf(pair.full);
+    const mini = partsOf(pair.mini);
+    // THE PREMISE: both content boxes past the title's `@md` step, 28rem.
+    expect(contentWidthOf(mini.card)).toBeGreaterThanOrEqual(28 * rootPx());
+    expect(contentWidthOf(full.card)).toBeGreaterThanOrEqual(28 * rootPx());
+    const size = (element: Element): number =>
+      px(getComputedStyle(element).fontSize);
+    // The full card steps up: `band`'s 36 of its design pixels.
+    expect(size(full.title)).toBeCloseTo(36 * PAST.px, 3);
+    // The miniature holds `section`'s 30 of its own — 48.75px at 2.5.
+    expect(size(mini.title)).toBeCloseTo(30 * SHARE * PAST.px, 3);
+    expect(size(mini.title) / size(mini.summary)).toBeCloseTo(30 / 16, 4);
+    // THE PIN IS LOAD-BEARING: `band`'s container row put back on the
+    // miniature's title takes it to 36 of its pixels — 58.5px at 2.5.
+    mini.title.classList.add(BAND_ROW);
+    try {
+      expect(size(mini.title)).toBeCloseTo(36 * SHARE * PAST.px, 3);
+    } finally {
+      mini.title.classList.remove(BAND_ROW);
+    }
+  });
+
+  it.each(PIXELS)(
+    'moved no title a page drew: under 28rem up to the cap, `band`’s row put back changes nothing — $name',
+    async ({ px: pixel }) => {
+      const [pair] = await renderPairs('ro', [everyday('ro')], pixel);
+      if (!pair) throw new Error('no pair rendered');
+      const mini = partsOf(pair.mini);
+      expect(contentWidthOf(mini.card)).toBeLessThan(28 * rootPx());
+      const before = getComputedStyle(mini.title);
+      const [size, line] = [before.fontSize, before.lineHeight];
+      mini.title.classList.add(BAND_ROW);
+      try {
+        const after = getComputedStyle(mini.title);
+        expect(after.fontSize).toBe(size);
+        expect(after.lineHeight).toBe(line);
+      } finally {
+        mini.title.classList.remove(BAND_ROW);
       }
     },
   );
@@ -665,16 +797,26 @@ describe('PostCard — THE MINIATURE’S WRAPPER moved nothing that leans on ui/
       expect(wrapperStyle.containerType).toBe('normal');
       expect(getComputedStyle(card).position).toBe('relative');
       expect(getComputedStyle(card).containerType).toBe('inline-size');
-      // The chips' pixel at the CAP is their cqw half — the Card's content
-      // width over the owner's reference — so a container other than the
-      // Card would show there; everywhere it is at least that.
+      // The chips' `cqw` half reads off the Card. A miniature's chips sit on
+      // their floor at every pixel since 2026-10-25 (PostCard's THE CHIPS),
+      // so the half is read ALONE: the list's pixel set to it for one
+      // reading — the Card's content width over the owner's reference, which
+      // only the Card as the list's nearest container gives — then put back.
+      const own = list.style.getPropertyValue(PIXEL);
+      list.style.setProperty(PIXEL, 'calc(100cqw / 513.40625)');
+      try {
+        expect(px(getComputedStyle(list).getPropertyValue(PIXEL))).toBeCloseTo(
+          contentWidthOf(card) / 513.40625,
+          4,
+        );
+      } finally {
+        list.style.setProperty(PIXEL, own);
+      }
+      // …and the pixel the chips draw in is at least that half, everywhere.
       const pixelOfChips = px(getComputedStyle(list).getPropertyValue(PIXEL));
       expect(pixelOfChips).toBeGreaterThanOrEqual(
         contentWidthOf(card) / 513.40625 - 1e-4,
       );
-      if (pixel === 1536 / 1106) {
-        expect(pixelOfChips).toBeCloseTo(contentWidthOf(card) / 513.40625, 4);
-      }
       // THE TAGS: three of the chips' own steps in from the picture's
       // top-right corner, the picture spanning the Card's padding box.
       const listBox = list.getBoundingClientRect();
@@ -761,6 +903,32 @@ describe('PostCard — THE MINIATURE’S WRAPPER moved nothing that leans on ui/
         px(getComputedStyle(pair.mini).width),
     ).toBeCloseTo(1.05, 3);
   });
+
+  it('holds a miniature with `jump={false}` still under a real hover, the underline drawn', async () => {
+    // THE PREMISE: a device that hovers, where the jump would answer.
+    expect(matchMedia('(hover: hover)').matches).toBe(true);
+    const [pair] = await renderPairs(
+      'ro',
+      [{ ...everyday('ro'), jump: false }],
+      undefined,
+    );
+    if (!pair) throw new Error('no pair rendered');
+    const p = partsOf(pair.mini);
+    const wrapper = part(pair.mini.firstElementChild, 'wrapper');
+    expect(pair.mini.matches(':hover')).toBe(false);
+    // FORCED, as above: the link's layer lies over the whole card.
+    await realUser.hover(p.title, { force: true });
+    expect(pair.mini.matches(':hover')).toBe(true);
+    for (const element of [pair.mini, wrapper, p.card]) {
+      expect(getComputedStyle(element).scale).toBe('none');
+    }
+    expect(getComputedStyle(p.label, '::after').scale.split(' ')[0]).toBe('1');
+    // The painted card is the laid-out one: nothing grew.
+    expect(
+      pair.mini.getBoundingClientRect().width /
+        px(getComputedStyle(pair.mini).width),
+    ).toBeCloseTo(1, 3);
+  });
 });
 
 describe('PostCard — the miniature as the DOM carries it', () => {
@@ -769,8 +937,15 @@ describe('PostCard — the miniature as the DOM carries it', () => {
     if (!pair) throw new Error('no pair rendered');
     expect(pair.mini.style.getPropertyValue('--miniature')).toBe(String(SHARE));
     expect(pair.full.getAttribute('style')).toBeNull();
+    // The chips' pixel reads the CAPTURED pixel, never the share itself
+    // (PostCard's THE CHIPS).
     const list = partsOf(pair.mini).list;
-    expect(list?.style.getPropertyValue(PIXEL)).toMatch(/var\(--miniature\)/);
+    expect(list?.style.getPropertyValue(PIXEL)).toMatch(
+      /var\(--miniature-px\)/,
+    );
+    expect(list?.style.getPropertyValue(PIXEL)).not.toMatch(
+      /var\(--miniature\)/,
+    );
     expect(partsOf(pair.full).list?.getAttribute('style')).toBeNull();
     // The tag list is still named, still a list — the chips' pixel moved,
     // nothing else.

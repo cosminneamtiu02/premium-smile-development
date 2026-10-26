@@ -5333,7 +5333,12 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     tree, never resolved by picking a side. *(The Blog item's half is moot since 2026-10-14: the list page landed on
     develop with #165, and the owner asked for the link — round 2; among the page twins only Pages/Home mounts the
     Header, so far fewer Pages/* cells moved than this rule feared.)* RECORDS: blog lanes record their decisions as ROUNDS of this item, never as
-    a new §15 number, so the two branches never claim the same one.
+    a new §15 number, so the two branches never claim the same one. *(THE BRANCH, DROPPED 2026-10-26 — the owner,
+    verbatim: "drop it". No lane ever merged into `blog`: the list page (#165), the card grid (#166) and the article page
+    (#172) all went straight to develop, so the branch still held develop as of 2026-10-11 (a5e9f3d), with no commit of
+    its own and 13 behind. Its ruleset, its branch protection and the branch were deleted, and ci.yml's `blog` triggers
+    with them; GITHUB_SETUP.md says the same. A parallel track, if one is ever wanted again, starts as a new branch from
+    develop. The ROUNDS rule stays: this item's later rounds keep its numbering.)*
     **(2) ROUND 1 — THE BLOG'S LIST PAGE (the owner, the same day, verbatim: "create a page very much alike this one:
     https://www.infiniswiss.com/blog with navigation of pages and cards with an image, title, a summary and date and
     creator. the pages should not be clickable yet. so just react on hover like a button and have described assets,
@@ -5586,7 +5591,7 @@ Marketing (Google Business Profile, reviews, directories) is the owner's job. Th
     above and do geenrally so so that it looks like a stairway downwards from title to text below"; the same lane):**
     (1) THE ZOOM TRADE ACCEPTED as on Home — the list keeps the band scale with no floor, its headings Home's; the floor
     stays the launch accessibility pass's, for every scaled page at once (BACKLOG entry 2). (2) THE PR goes straight into
-    `develop`, like #165 (the develop → blog sync stays owed, part 1). (3) CARD TITLES NEVER SPLIT A WORD: PostCard's
+    `develop`, like #165 (the develop → blog sync stayed owed, part 1, until the branch was dropped on 2026-10-26). (3) CARD TITLES NEVER SPLIT A WORD: PostCard's
     `<h2>` wears `hyphens-none` beside its `wrap-anywhere` belt (its THE TITLE NEVER SPLITS A WORD), so a title breaks
     between words or after a hyphen the word itself carries („week-end") — except a word too long for its line by
     itself (under SC 1.4.12's letter spacing, a text-only zoom or a forced wide reading font), which the belt cuts at any

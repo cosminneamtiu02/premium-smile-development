@@ -43,6 +43,12 @@ Also add at repo root: `.nvmrc` containing `24` (the workflows read it).
   merge allowed, no bypass: direct pushes are refused). CI's fast lane runs on
   it; the staging deploy stays develop-only; Dependabot targets `develop` only,
   and blog receives every bump through a sync.
+  *(DROPPED 2026-10-26, owner: "drop it". Never used: the blog's list page
+  (#165), its card grid (#166) and its article page (#172) all went straight
+  to `develop`, so the branch still held develop as of 2026-10-11 (a5e9f3d),
+  with no commit of its own. Its ruleset, its branch protection and the branch
+  were deleted, and ci.yml's `blog` triggers with them. A parallel track, if
+  one is ever wanted again, starts as a new branch from `develop`.)*
 
 **One-time settings (GitHub → Settings):**
 1. Create `develop` from `main`; set `develop` as the default branch.

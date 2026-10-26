@@ -1,21 +1,18 @@
 # .github/workflows/ci.yml
-# Fast lane: every PR into develop or blog, and pushes to either.
+# Fast lane: every PR into develop, and every push to it.
 # Pixel/visual tests deliberately NOT here — they run locally (native) in the
 # dev loop before commits and are re-verified by release.yml before main.
 #
-# `blog` is the long-lived branch the blog is built on (CLAUDE.md §15.39): its
-# lanes and its syncs from develop are PRs into it, so they get the same gate a
-# PR into develop gets. A PR's workflow file is read from the PR's merge
-# commit, so this list reaches blog the moment it is merged there — develop
-# learns it when the blog lands.
+# (`blog`, the long-lived branch of CLAUDE.md §15.39, shared this gate from
+# 2026-10-11 until the owner dropped it, unused, on 2026-10-26.)
 
 name: CI
 
 on:
   pull_request:
-    branches: [develop, blog]
+    branches: [develop]
   push:
-    branches: [develop, blog]
+    branches: [develop]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -153,8 +150,7 @@ jobs:
   deploy-staging:
     name: Deploy staging (placeholder until host confirmed)
     # develop only: the `development` environment's deployment rule allows
-    # develop alone, so a push to blog would fail here — and staging shows what
-    # the next release holds, which the blog does not until it lands.
+    # develop alone, and staging shows what the next release holds.
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     needs: quality
     runs-on: ubuntu-latest

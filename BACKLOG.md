@@ -9,7 +9,8 @@ on the owner's word. Decisions still go to CLAUDE.md §15.
 
 An entry keeps its number for good, because CLAUDE.md and code comments cite the numbers: one that
 leaves takes its number with it. Entry 5 — larger text on the Services page — left on 2026-10-10
-on the owner's word ("drop this one"), the day entries 7 and 8 joined.
+on the owner's word ("drop this one"), the day entries 7 and 8 joined. Entry 4 — new words for the
+doctors band's eyebrow — left on 2026-10-26 when the owner chose „Echipa Premium Smile".
 
 ## 1 · Cookies — consent for the Google Maps embed
 
@@ -479,31 +480,6 @@ on the owner's word ("drop this one"), the day entries 7 and 8 joined.
   `__cf_bm` cookie (entry 1). Any later change to the words moves `POLICY_UPDATED` too.
 - **If entry 1 ever ships a consent record:** the page lists that cookie as well (COOKIES.md §4)
   and says how to withdraw consent.
-
-## 4 · New words for the doctors band's eyebrow, „Familia Premium Smile"
-
-- **Why it waits:** the owner, 2026-10-02: "add to backlog changing familoia premium smile as that
-  sounds particularly toxic". The label came from his own direction of 2026-09-30 ("… in the
-  direction of specialistii cu care ne mandrim familia premium smile", CLAUDE.md §15.25); no
-  replacement is chosen yet, and the words are the owner's (§15.17).
-- **Today:** `team.showcase.eyebrow` — RO „Familia Premium Smile", EN "The Premium Smile family",
-  DE „Die Premium-Smile-Familie", FR « La famille Premium Smile », IT «La famiglia Premium Smile»
-  (the last four Claude's drafts) — the small mono label above „Specialiștii cu care ne mândrim"
-  in the doctors band (`sections/DoctorShowcase`), on Home ONLY since 2026-10-15: the Team page now
-  opens on the blog list's centred hero instead (CLAUDE.md §15.25 round 4), whose words —
-  `team.hero.*`, Claude's drafts — were written without „familia" on this entry's word. The title
-  stays unless the owner widens this entry.
-- **The work:** the five values in `src/messages/*.json` — the CMSR scan (CLAUDE.md §13) reads
-  every `team.*` value, so a new label passes it or fails CI; the band's own fixtures that quote
-  today's Romanian, `EYEBROW_RO` in DoctorShowcase.stories.tsx and `EYEBROW` in
-  DoctorShowcase.test.tsx (the page twins read the key and follow by themselves; the e2e spells
-  only the title); the records that quote it — CLAUDE.md §14's Home and Team rows and §15.25's
-  **Words**; and the screenshots that show it — Pages/Home, and Sections/DoctorShowcase if its
-  fixtures follow (Pages/Team no longer shows it, since 2026-10-15).
-- **Directions, if useful when the time comes (drafts, not decisions):** a plain name for the
-  people — „Echipa medicală", „Medicii noștri"; not „Echipa noastră", the words the Team page's
-  visible `<h1>` opens on since 2026-10-15 (until then that page's `sr-only` `<h1>`, read by
-  screen readers just before this band).
 
 ## 6 · Re-optimise the site for all its static content
 

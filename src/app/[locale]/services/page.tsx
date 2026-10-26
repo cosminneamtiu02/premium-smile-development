@@ -104,8 +104,9 @@ export default async function ServicesPage() {
         {t('title')}
       </h1>
       {/* `note` — what the prices include, one line under the last card
-          (CLAUDE.md §15.38; the wording TODO(owner) to confirm, BACKLOG.md
-          entry 3). */}
+          (CLAUDE.md §15.38). CONFIRMED by the owner on 2026-10-26 („confirm
+          asta", BACKLOG.md entry 3): every price on the list includes all
+          taxes, so the line stands as written. */}
       <PriceList
         menuTitle={t('prices.menu')}
         categories={categories}

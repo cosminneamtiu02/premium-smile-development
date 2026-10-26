@@ -40,6 +40,8 @@ project exists to eliminate. Copying markup for reference is fine; copying style
       lettering colours landed 2026-10-01 (`public/images/brand/mark.svg`, sections/Wordmark;
       CLAUDE.md §15.28). The purple hue is now a known number the owner may adopt for
       `accent-decorative` (his call); the favicon and the OG image are still open items of §15.6.
+      *(2026-10-26: the owner kept #7A6D9C for now, §15.1; the favicon landed 2026-10-01, §15.31;
+      the OG image is the logo mark, decided 2026-10-26, §15.6.)*
 - [ ] In parallel (owner track): start drafting Romanian content per page.
 
 **Phase gate:** repo settings, branches, protections, and environments exist. Note that
@@ -164,6 +166,8 @@ locale layout shell (real Header/Footer + skip-link — **the mount contract bel
 `/` redirect script → `seo.ts` **part 1**: JSON-LD builder + metadata helper → Home →
 Services → Team → Doctor pages (`/team/[slug]`, one per `lib/team` row — 2026-09-21, reshaped 2026-09-25) → Blog (ro-only MDX pipeline) → localized 404 → `seo.ts` **part 2**:
 sitemap + robots generation (needs every route to exist — stays last).
+*(2026-10-26, the owner: "pictures and site speed optimization and seo optimisation comes when i'll
+have all the content." — both `seo.ts` parts wait until all the content is in, BACKLOG.md entry 10.)*
 
 ### Shell mount contract (assembled 2026-09-02, org-review board)
 
@@ -219,6 +223,8 @@ boxes stay open BY DESIGN, annotated below — they are not lane debt:
       copyright/NAP lines).
 
 ### Per-page checklist
+*(2026-10-26, the owner's word above: items 3, 4 and 7 and item 8's sitemap wait until all the content
+is in, BACKLOG.md entries 6 and 10.)*
 1. **Route:** page under `app/[locale]/…`; `generateStaticParams` covers all five locales
    (blog: `ro` only, Blog nav item hidden elsewhere); home at `/{locale}`, never `/{locale}/home`.
 2. **Content:** the page is a thin stack of sections + page-level spacing; media queries allowed

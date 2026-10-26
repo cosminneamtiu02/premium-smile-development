@@ -259,6 +259,9 @@ import type { ImagePath } from '../image-path/image-path';
 // doctor's tiles are that doctor's own, and an edit to one row must never
 // reach another. Only the numbers differ, and a real number is a claim about
 // a real person that must be countable from the clinic's own records.
+// An ESTIMATE is enough for each (the owner, 2026-10-26: "in cases of dr
+// pages for the same category component elements also just estimations"),
+// rounded down where the tile prints „+", "at least".
 //
 // THE OTHER FOUR LANGUAGES ARE DRAFTS (§15.17). Every EN/DE/FR/IT string below
 // was written by Claude, translated faithfully from the Romanian, and is
@@ -274,6 +277,10 @@ import type { ImagePath } from '../image-path/image-path';
 // where it does not (Cluj-Napoca, Sibiu, Timișoara, Iași). A number INSIDE
 // an `about` paragraph is written five times, once per language, and
 // tests/unit/team-data.test.ts holds the five to the same numbers.
+// The honorific's sense is DECIDED (the owner, 2026-10-26: "foloseste
+// doctorul romanesc, nu chestia cu doctoratul"): in every language „Dr."
+// keeps its Romanian sense, a physician or a dentist, and implies no
+// doctorate.
 //
 // CMSR, the same rule lib/prices states: descriptive, never superlative, never
 // a promise, never a comparison. A `philosophy` says how a doctor works; an
@@ -2066,6 +2073,9 @@ export const doctors: readonly Doctor[] = [
  * tests/unit/team-data.test.ts holds a number in a description to its row's
  * `value`, in every language. The
  * EN/DE/FR/IT words are the doctors' tiles' drafts (§15.17), flagged with them.
+ * ESTIMATES ARE ENOUGH (the owner, 2026-10-26: "add at those that i want just
+ * some estimations: Years open / Total patients / Total procedures"): the
+ * clinic's own round figures, rounded down under their „+".
  */
 export const clinicStats: readonly [Stat, Stat, Stat] = [
   {

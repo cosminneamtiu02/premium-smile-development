@@ -108,6 +108,26 @@ to `maps.google.com`, which lands on Google's EU consent page, stored **four** (
 `SOCS`, `__Secure-ENID`, `OTZ`). Limit (2) stands: re-run the probe whenever that URL
 changes.
 
+**Re-probed on 2026-10-26, with every storage call counted.** Setup:
+- Playwright's Chromium, a clean profile, the frame as built, in Romanian and German.
+- The probe wraps the browser's storage methods. It is a research script, not a test in the repo.
+
+Unchanged:
+- still zero cookies;
+- no `Set-Cookie` on any of Google's 42–43 responses;
+- the frame's storage EMPTY once the map has loaded.
+
+New, seen on the way:
+- Google's script writes a test key (`__sak`) into the frame's `sessionStorage` and removes it
+  again, 8 times per load;
+- it looks up seven keys of its own that are not there;
+- it reads the device's user agent, pixel density, touch points and network type.
+
+The EDPB's guidelines on the cookie rule (2/2023, ¶33 and ¶37–38) count both a write that lasts an
+instant and a read of device data sent back to Google. So the cookie limb is quieter than "empty"
+said, not absent. `credentialless` (below) puts that write in a throwaway partition; it does not
+stop it. BACKLOG.md entry 1 weighs it.
+
 **What the empty-browser probes could not see, and its fix (2026-10-01 → 2026-10-10).** Every
 probe above started from an EMPTY browser, so it could only catch Google WRITING to the device —
 and the cookie rule also covers READING what the device already stores. Measured on 2026-10-01 in
@@ -120,8 +140,10 @@ drops an empty string as false): an anonymous frame with a fresh, empty cookie j
 thrown away when the page closes —
 19 → 0 on the same probe, the map, its dragging and its card buttons unchanged, no extra download.
 Chrome, Edge, Opera and Samsung Internet honour it; Safari and Firefox were already covered. With
-it, nothing the map does touches the device's storage: the cookie limb is closed in every current
-browser, and what remains is the GDPR limb below.
+it, nothing the map does LEAVES anything in the device's storage. Its own storage test, one key
+written and removed on every load (the re-probe of 2026-10-26 above), lives in the frame's
+throwaway partition. So the cookie limb is as small as an embed allows in every current browser,
+and what remains is the GDPR limb below.
 
 **What the measurement does NOT retire.** Cookies are the ePrivacy question (storage on the
 device). The GDPR question is different and still stands: on every load of a page that

@@ -1008,3 +1008,107 @@ describe('GlyphButton — type-level contract', () => {
     expect(nameless).toBeTruthy();
   });
 });
+
+describe('GlyphButton — THE FORCED-COLOURS BOUNDARY (2026-10-26)', () => {
+  // ui/Button's paragraph of the same name has the measurement: in forced
+  // colours a solid or ghost disc drew as a bare glyph (the corner discs, the
+  // burger, the dialog's ✕). The cure is the same ONE token in the base row,
+  // pinned here on every face — variant × tone × shape, as a <button> and as an
+  // asChild <a> — and MEASURED on the built pages in
+  // tests/e2e/forced-colors.spec.ts (never emulated in this shared tab).
+  const variants = Object.keys({
+    solid: true,
+    outline: true,
+    ghost: true,
+  } satisfies Record<GlyphButtonVariant, true>) as GlyphButtonVariant[];
+  const tones = Object.keys({
+    cta: true,
+    accent: true,
+  } satisfies Record<GlyphButtonTone, true>) as GlyphButtonTone[];
+  const shapes = Object.keys({
+    round: true,
+    square: true,
+  } satisfies Record<GlyphButtonShape, true>) as GlyphButtonShape[];
+  const faces = variants.flatMap((variant) =>
+    tones.flatMap((tone) =>
+      shapes.map(
+        (shape): [GlyphButtonVariant, GlyphButtonTone, GlyphButtonShape] => [
+          variant,
+          tone,
+          shape,
+        ],
+      ),
+    ),
+  );
+
+  /** The face's tokens as a <button> and as an asChild <a>. */
+  const both = (
+    variant: GlyphButtonVariant,
+    tone: GlyphButtonTone,
+    shape: GlyphButtonShape,
+  ): string[][] => {
+    const asButton = render(
+      <GlyphButton
+        variant={variant}
+        tone={tone}
+        shape={shape}
+        aria-label="Meniu"
+      >
+        {GLYPH}
+      </GlyphButton>,
+    );
+    const button = screen.getByRole('button').className.split(/\s+/);
+    asButton.unmount();
+    const asLink = render(
+      <GlyphButton
+        variant={variant}
+        tone={tone}
+        shape={shape}
+        aria-label="Sună acum"
+        asChild
+      >
+        <a href="tel:+40770162765">{GLYPH}</a>
+      </GlyphButton>,
+    );
+    const link = screen.getByRole('link').className.split(/\s+/);
+    asLink.unmount();
+    return [button, link];
+  };
+
+  it.each(faces)(
+    '%s · %s · %s keeps an edge in forced colours, as a <button> and as an <a>',
+    (variant, tone, shape) => {
+      for (const tokens of both(variant, tone, shape)) {
+        expect(tokens).toContain('forced-colors:border');
+      }
+    },
+  );
+
+  it.each(faces)(
+    '%s · %s · %s: the edge exists ONLY in forced colours — nothing changes outside them',
+    (variant, tone, shape) => {
+      for (const tokens of both(variant, tone, shape)) {
+        expect(tokens.filter((t) => t.includes('forced-colors:'))).toEqual([
+          'forced-colors:border',
+        ]);
+        expect(tokens.filter((t) => /^border(-|$)/.test(t))).toEqual(
+          variant === 'outline' ? ['border', `border-${tone}`] : [],
+        );
+      }
+    },
+  );
+
+  it('carries the SAME token as ui/Button — one edge, one reason (KEEP-IN-SYNC)', () => {
+    const glyph = classesOf(
+      <GlyphButton aria-label="Închide">{GLYPH}</GlyphButton>,
+    ).split(/\s+/);
+    const { unmount } = render(<Button>Contact</Button>);
+    const button = screen.getByRole('button').className.split(/\s+/);
+    unmount();
+    const forced = (tokens: string[]) =>
+      tokens.filter((t) => t.includes('forced-colors:'));
+    // Never vacuous: two atoms with no edge at all would also be "equal".
+    expect(forced(button)).toContain('forced-colors:border');
+    expect(forced(glyph)).toEqual(forced(button));
+  });
+});

@@ -279,6 +279,60 @@ import { navSectionLinks } from './navSectionLinks';
 //    behind the open panel. NavMenu ships a dev-only tripwire that says so out
 //    loud, and this is the sentence it points at.
 
+// ── THE BAR'S OWN CONTROLS CANCEL THE PAGE'S TOP CLEARANCE (fix lane
+// `fix/dialog-scroll-forced-colors`, 2026-10-26 — the report "opening the
+// contact dialog by keyboard scrolls the page"). globals.css's
+// `scroll-padding-top: 6rem` (THE TWO-SIDED FOCUS CLEARANCE; THE MOUNT
+// CONTRACT (a) above) tells every scroll-into-view to keep the pill's strip
+// clear: right for the page's content, and impossible for the pill's own
+// controls, which live INSIDE that strip and move with every scroll, the bar
+// being sticky. So whenever one of them takes focus from the keyboard — Tab
+// through the row, Shift+Tab back up from the page — or from a script's
+// focus() without `preventScroll`, the engine scrolls the page to bring the
+// control below a strip it can never leave, and the page jumps for nothing.
+// MEASURED on develop's built export, /ro/team/ at scrollY 1200, every stop
+// of the row: Chromium CENTRES the control in the clear area — the page up
+// 215.5px at 1366×633, 299 at 1280×800, 329 at 390×844 (the burger), so one
+// Tab walk across the row carried the page from 1200 to the top — WebKit
+// aligns it with the strip's edge, up 61px a stop (96 less the control's 35px
+// top), and Firefox does not move. The report's "~215px glide while the
+// dialog opens" was exactly the first figure: the Contact button's OWN focus
+// (its probe focused the button by script at 1366×633), not the dialog.
+// Opening the dialog moves nothing in any engine — showModal's focusing steps
+// and ui/Modal's initial focus land in the top layer, a fixed box, which no
+// engine scrolls the page for (measured: Chromium, WebKit).
+// THE CANCEL is a scroll-margin-top of MINUS 6rem — the clearance's own
+// number, negated — on every link and button of the bar. Each control is
+// shorter than 6rem and lies inside the strip, so its scroll area (its box
+// shrunk by its scroll margins) starts 6rem below its own top and is EMPTY: a
+// line at its top + 6rem, 113 to 131px down, which every engine counts as
+// already inside the clear area (that area starts at 96px, and the bottom
+// clearance's cap always leaves it at least 152px tall): no scroll. MEASURED on
+// the same export in Chromium, WebKit and Firefox, in windows 633, 400 and 300px
+// tall: zero movement at every stop. Two other shapes were tried and refused
+// (the lane's probe): a margin COVERING the window (100vh each way) stops
+// Chromium and WebKit but makes FIREFOX scroll where it never did, and the
+// strip moved down whole (−6rem at the top, +6rem at the bottom) still moves
+// the page under a ~360px-tall window.
+// EXCLUDED by the selector's :not(): the two surfaces that drop under the bar
+// — NavMenu's panel (#header-menu, its PANEL_ID) and each dropdown's card (the
+// <div> child of `[data-nav-dropdown]`, NavDropdown's hook). Their controls
+// sit BELOW the strip: the panel is a scroll container of its own, where a
+// cancelled entry would be revealed 6rem off, and a cancelled card entry near
+// the window's bottom would START moving the page. The panel's own case — its
+// entries in the page's BOTTOM clearance — is lib/scroll-lock's (THE BOTTOM
+// CLEARANCE GOES WITH THE FREEZE). RECORDED, NOT FIXED: a card is not modal,
+// so on a window wide enough for the row (≥ ~1261px) and too short for the
+// open Servicii card (under ~570px; measured at 1366), Tab still scrolls the page DOWN for its
+// lower entries, in all three engines, as on develop — the same short window
+// §15.40 recorded for the card, whose lever (a height cap with a scroll of its
+// own) is where this would be taken up too.
+// KEEP-IN-SYNC with globals.css's `scroll-padding-top` (the MOUNT CONTRACT's
+// (a) family): app/[locale]/shell.test.tsx's THE BAR NEVER MOVES THE PAGE
+// measures both ends, and Header.test.tsx pins this string.
+export const BAR_CLEARANCE_CANCEL =
+  '[&_:is(a,button):not(:is(#header-menu,[data-nav-dropdown]>div)_*)]:scroll-mt-[-6rem]';
+
 export function Header(): ReactElement {
   const t = useTranslations('common');
   const locale = useLocale();
@@ -378,6 +432,9 @@ export function Header(): ReactElement {
         'group/bar sticky top-4 z-50',
         containerClasses,
         'mt-4 rounded-soft border border-line-subtle shadow-aura bg-surface/95 backdrop-blur-md backdrop-saturate-150',
+        // THE BAR'S OWN CONTROLS CANCEL THE PAGE'S TOP CLEARANCE (above the
+        // function): a keyboard focus in the bar never moves the page.
+        BAR_CLEARANCE_CANCEL,
       )}
     >
       {/* ── THE ROW: h-20 (5rem) AT EVERY WIDTH (owner, 2026-09-04: "make top

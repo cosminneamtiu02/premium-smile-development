@@ -81,7 +81,9 @@
 > păstrează lângă formular o copie PDF a cardului din acea zi (dovada textului aprobat, §4.3's
 > Anexa 2 fără semnătura pacientului pe el). Pentru cele șapte recenzii deja publicate asta e
 > starea de fapt; pentru una nouă, clinica o publică și cere acordul în aceeași zi, sau o arată
-> tipărită. Și, pe cuvântul proprietarului, tot textul formularelor e aliniat „justify” în Word.
+> tipărită. Și, pe cuvântul proprietarului, tot textul formularelor e aliniat „justify” în Word, iar
+> fiecare formular încape pe O SINGURĂ PAGINĂ A4 (Calibri 10,5, margini 1,7 cm) — „câte DOUĂ PAGINI”
+> de la (2) e istoria acelei seri.
 > Secțiunile de mai jos descriu versiunea lungă din dimineața aceleiași zile și legea din spatele
 > fiecărui rând; ele rămân justificarea formularelor scurte.
 

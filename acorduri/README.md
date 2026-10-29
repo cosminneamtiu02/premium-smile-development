@@ -1,6 +1,6 @@
 # acorduri/ — formularele pentru semnături
 
-Două formulare scurte, în română, câte două pagini, PROIECT până la citirea de către un avocat. De
+Două formulare scurte, în română, câte o pagină, PROIECT până la citirea de către un avocat. De
 ce arată așa și ce spune legea pentru fiecare rând: [ACORDURI.md](../ACORDURI.md), în rădăcina
 depozitului. Versiunile Word trimise clinicii se generează din aceste fișiere.
 

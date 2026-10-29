@@ -1043,8 +1043,11 @@ backlog ce trebuie pus la politică cu cum vom folosi datele pacientului").*
   2. the basis: the author's written, EXPLICIT consent, because a name beside a dental review says
      the person was a patient — health data (RGPD art. 9 alin. (2) lit. a)); never legitimate
      interest, never „made public by the data subject" (CJEU C‑252/21 pct. 75–77);
-  3. who sees it: anyone who opens the site, from any country, and the hosting provider (named, with
-     the EU–US transfer basis if it is a US host);
+  3. who sees it: anyone who opens the site, from any country, and the host — the form no longer
+     names one (the owner, 2026-10-29: „site-ul e găzduit tot de clinică"), so the policy must: the
+     interim GitHub Pages and the planned Cloudflare Pages (§15.2) are processors, with the EU–US
+     transfer basis if the host is a US one; the policy's existing section on the host's logs
+     (§15.38) is where it belongs;
   4. how long: until the author withdraws or the clinic removes the review; removal from every
      language within 30 days (the clinic's own commitment — the law says „fără întârzieri
      nejustificate", art. 17, and a reply within a month, art. 12 alin. (3)); the signed form kept

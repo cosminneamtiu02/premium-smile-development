@@ -15,8 +15,9 @@ verbală, ca și a lui cu clinica); consecințele sunt în ACORDURI.md §6.
 Cum se folosesc:
 
 - datele clinicii și ale persoanei stau o singură dată, în textul de la punctul 1 („Părțile”), pe
-  liniile punctate: clinica le completează înainte de tipărire, persoana de mână; alegerea e „Sunt
-  de acord / Nu sunt de acord”, marcată cu X, iar ce nu dorește să apară scrie pe rândul „Excepții”;
+  liniile punctate: clinica le completează înainte de tipărire, persoana de mână; declarația e un
+  text de sine stătător, cu „Sunt de acord / Nu sunt de acord” marcat cu X la sfârșitul ei; data și
+  semnătura fiecărei părți stau jos, persoana în stânga, clinica în dreapta;
 - formularul 1: clinica pune la punctul 4 textul exact care va apărea pe site, înainte de semnare;
   nu se dă la semnat în timpul unui tratament și nu se leagă de nicio reducere; formularul trimite
   la Politica de confidențialitate a site-ului, secțiunea „Recenziile pacienților”, care trebuie să

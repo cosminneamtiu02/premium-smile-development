@@ -60,7 +60,17 @@
 > „Sunt de acord / Nu sunt de acord”, marcată cu X — legal, un consimțământ e o acțiune fără echivoc,
 > iar căsuța refuzului documentează și un „nu” (RGPD art. 4 pct. 11); echipa trece SERIA ȘI NUMĂRUL
 > actului de identitate (bulletul de mai jos despre CNP spune ce înseamnă); textul pentru Politica de
-> confidențialitate e BACKLOG.md intrarea 13; și aceste fișiere intră în depozit printr-un PR.
+> confidențialitate e BACKLOG.md intrarea 13; și aceste fișiere intră în depozit printr-un PR. (5) A
+> treia trecere, aceeași seară: declarația e un text de sine stătător, cu „Sunt de acord / Nu sunt de
+> acord” la sfârșitul ei; rândul „Excepții” a dispărut (cine nu vrea ceva anume o spune clinicii —
+> scopul e unul, EDPB §42–44 nu cere mai mult); capitolul „Semnături” a dispărut — data și semnătura
+> fiecărei părți stau jos, persoana în stânga, clinica în dreapta; „Două exemplare” a dispărut; un
+> pasaj despre o altă persoană din recenzie se OMITE întotdeauna (rândul de semnătură al acelei
+> persoane a dispărut cu el, deci nu mai e nevoie de acordul ei); și, pe cuvântul proprietarului,
+> „site-ul e găzduit tot de clinică și operatorul e tot clinica”: formularele nu mai numesc un
+> furnizor de găzduire — host-ul real (GitHub Pages azi, Cloudflare Pages la lansare, §15.2 din
+> CLAUDE.md) rămâne de numit în Politica de confidențialitate, unde secțiunea despre jurnalele
+> host-ului există deja (§15.38), nu în formular (informarea pe straturi).
 > Secțiunile de mai jos descriu versiunea lungă din dimineața aceleiași zile și legea din spatele
 > fiecărui rând; ele rămân justificarea formularelor scurte.
 

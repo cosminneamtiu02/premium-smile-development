@@ -18,8 +18,10 @@ Cum se folosesc:
   liniile punctate: clinica le completează înainte de tipărire, persoana de mână; declarația e un
   text de sine stătător, cu „Sunt de acord / Nu sunt de acord” marcat cu X la sfârșitul ei; data și
   semnătura fiecărei părți stau jos, persoana în stânga, clinica în dreapta;
-- formularul 1: clinica pune la punctul 4 textul exact care va apărea pe site, înainte de semnare;
-  nu se dă la semnat în timpul unui tratament și nu se leagă de nicio reducere; formularul trimite
+- formularul 1: nimic de anexat — acordul privește recenzia „în forma în care apare pe site la data
+  semnării”, deci recenzia stă pe site (sau pe o copie arătată pacientului) înainte de semnare, iar
+  clinica păstrează lângă formular o copie PDF a cardului din ziua semnării; nu se dă la semnat în
+  timpul unui tratament și nu se leagă de nicio reducere; formularul trimite
   la Politica de confidențialitate a site-ului, secțiunea „Recenziile pacienților”, care trebuie să
   spună tot ce e la ACORDURI.md §7.2 înainte de prima semnătură;
 - formularul 2: nimic de anexat — declarația privește site-ul „așa cum apare la data semnării”, iar

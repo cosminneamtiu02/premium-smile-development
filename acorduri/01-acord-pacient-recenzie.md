@@ -18,8 +18,8 @@ Am scris pe Google o recenzie despre clinică. Cu acordul meu, clinica o arată 
 a site-ului ei — textul (cu greșelile de scriere corectate și cu eventualele pasaje omise marcate
 „[…]”), nota în stele, data, numele meu așa cum apare pe Google, fotografia de profil din contul
 Google și un scurt titlu scris de clinică — în română și în traducerile clinicii în engleză,
-germană, franceză și italiană. Textul exact care va apărea este la punctul 4. Dacă recenzia
-pomenește o altă persoană, pasajul respectiv se omite.
+germană, franceză și italiană. Dacă recenzia pomenește o altă persoană, pasajul respectiv se
+omite.
 
 Pe site-ul unei clinici dentare, numele lângă o recenzie arată că am fost pacientul ei. Legea
 tratează această informație ca dată privind sănătatea, de aceea clinica îmi cere acordul în scris.
@@ -28,9 +28,9 @@ site-ului, secțiunea „Recenziile pacienților”.
 
 ## 3. Acordul meu
 
-Recenzia mea, în forma de la punctul 4, poate fi publicată pe site-ul clinicii, cu numele și
-fotografia mea, în română și în traduceri, în condițiile din Politica de confidențialitate a
-site-ului, pe care am citit-o. Știu că publicarea arată că am fost pacient al clinicii și că pot
+Recenzia mea poate fi publicată pe site-ul clinicii, în forma în care apare acolo la data semnării,
+cu numele și fotografia mea, în română și în traduceri, în condițiile din Politica de
+confidențialitate a site-ului, pe care am citit-o. Știu că publicarea arată că am fost pacient al clinicii și că pot
 retrage acordul oricând, fără niciun motiv și fără nicio consecință. Recenzia am scris-o eu, din
 contul meu Google, descrie experiența mea reală și nu am primit și nu mi s-a promis nimic pentru ea
 sau pentru acest acord. Clinica poate folosi textul recenziei și fotografia gratuit, pe site,
@@ -38,25 +38,7 @@ inclusiv traduse și decupate, cât timp durează acordul; drepturile mele de au
 
 ☐ **Sunt de acord** ☐ **Nu sunt de acord** (marcați cu X)
 
-## 4. Textul care va apărea pe site (completat de clinică)
-
-Titlul scris de clinică: ........................................................................
-
-Textul recenziei, așa cum va apărea:
-
-........................................................................................................
-
-........................................................................................................
-
-........................................................................................................
-
-........................................................................................................
-
-Nota (stele) și data recenziei pe Google: ........................................
-
-Adresa recenziei pe Google și data la care a fost copiată: ........................................
-
-## 5. Pe scurt, despre datele mele
+## 4. Pe scurt, despre datele mele
 
 Operatorul: clinica de la punctul 1. Scopul: prezentarea experienței pacienților pe site și
 păstrarea acestui formular ca dovadă. Temeiul: acordul meu (art. 6 alin. (1) lit. a) și art. 9

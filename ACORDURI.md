@@ -74,7 +74,14 @@
 > (paginile site-ului tipărite și semnate de persoană) a dispărut, pe cuvântul proprietarului:
 > declarația privește „informațiile despre mine de pe site-ul clinicii, așa cum apar la data
 > semnării”, iar dovada a CE a fost aprobat (EDPB §108) o ține clinica singură — o copie PDF a
-> paginilor persoanei din ziua semnării, lângă formular; persoana nu mai semnează nimic în plus.
+> paginilor persoanei din ziua semnării, lângă formular; persoana nu mai semnează nimic în plus. (7)
+> La fel formularul 1: punctul „Textul care va apărea pe site” a dispărut; acordul privește recenzia
+> „în forma în care apare pe site la data semnării” — deci recenzia (corectată, tăiată, cu titlul și
+> traducerile ei) e pe site, sau pe o copie arătată pacientului, ÎNAINTE de semnătură, și clinica
+> păstrează lângă formular o copie PDF a cardului din acea zi (dovada textului aprobat, §4.3's
+> Anexa 2 fără semnătura pacientului pe el). Pentru cele șapte recenzii deja publicate asta e
+> starea de fapt; pentru una nouă, clinica o publică și cere acordul în aceeași zi, sau o arată
+> tipărită. Și, pe cuvântul proprietarului, tot textul formularelor e aliniat „justify” în Word.
 > Secțiunile de mai jos descriu versiunea lungă din dimineața aceleiași zile și legea din spatele
 > fiecărui rând; ele rămân justificarea formularelor scurte.
 

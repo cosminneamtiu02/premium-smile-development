@@ -666,7 +666,26 @@ never merged).
   names, three with their photographs — a name beside a dental review is health data, art. 9
   (§15.19 round 4, `src/lib/reviews/reviews.ts`); and the same from every doctor and every member
   of staff the site names, pictures and describes (`lib/team`'s block). The staff's portraits are
-  still demo silhouettes (§15.23 round 4).
+  still demo silhouettes (§15.23 round 4). THE FORMS EXIST since 2026-10-29: `ACORDURI.md` at the
+  root is the record — the three acts, why each is needed (every article verified on the
+  consolidated text), what both parties fill in, the questions left for the lawyer — and
+  `acorduri/` holds the two models (the patient's review consent, the team member's
+  declaration-and-consent), in Romanian, drafts until a lawyer reads them — two pages each since
+  the evening of 2026-10-29, on the owner's word: data filled once, ONE tick, no notes or footers;
+  the photographer's contract was dropped the same evening, the arrangement being verbal like the
+  owner's own (ACORDURI.md §0's SIMPLIFICATE note and §6). Four adversarial verifiers re-read every
+  citation on the primary texts the same day and the corrections are folded (ACORDURI.md §10.1).
+  The patient form refers to the privacy policy's „Recenziile pacienților" section for the details:
+  ACORDURI.md §7.2 drafts that section's text, to be put into `src/messages/privacy/*.json` in five
+  languages before the first patient signs (a site lane; entry 3's page). Three findings there are the owner's to decide
+  before the first signature: the public repository's git history (ACORDURI.md §7.1); the „În
+  cifre" sentence „Peste N de zâmbete îngrijite cu dedicare și profesionalism." against the CMSR
+  guide's ban on result figures (§5.5); and three placeholder wordings on the doctor pages that
+  break the CMSR guide today — „ortodonție și ortopedie facială" (the nomenclature says
+  „dento-facială"), „specializat în endodonție microscopică" beside the „Cursuri și specializări"
+  heading and the „Drumul spre specializare" biographies, and „medic specialist în" for the legal
+  title „medic stomatolog specialist în" (§5.4, §7.5). The team form can only be signed once the
+  site can show a doctor card without a photograph and without a profile button (§7.3).
 - **Already public:** nothing in CI refuses a release while these placeholders remain — the
   release gate recorded in §15.23 round 3, a test that refuses a production build while `lib/team`
   is flagged placeholder, was never built — and the 2026-10-03 promotion published them on the
@@ -981,7 +1000,11 @@ page's heading and the placeholder posts.
   1. keep the cuts and their marks — honest and inside the guide; the cost is the look;
   2. settle it with the consents entry 7 already owes: show each patient the shortened text when
      asking, and a text the patient approved is theirs — the marks on that card can go (the
-     recommendation of 2026-10-15);
+     recommendation of 2026-10-15); `acorduri/01-acord-pacient-recenzie.md`'s Anexa 2 is built
+     for exactly that since 2026-10-29: the original, the final Romanian text with its cuts, the
+     clinic's title and the four translations, approved and signed line by line (the law behind
+     it, ACORDURI.md §2.3 and §4.3: the author's right to the work's integrity means the exact
+     final text is approved, never a blanket waiver);
   3. replace the reviews with ones that need no cut — every one on the site needs one today;
   4. no reviews on the site, a link to the clinic's Google listing instead: nothing is taken
      over. The same guide, pct. 2 lit. f (iii), bars links to pages whose content may be
@@ -995,3 +1018,50 @@ page's heading and the placeholder posts.
   data test (`tests/unit/reviews-data.test.ts`) and the CMSR scan; lib/reviews' header and
   CLAUDE.md §15.19 round 4 record the decision; the screenshots that show the deck — Pages/Home,
   Sections/ReviewsCarousel and Sections/ReviewCard.
+
+## 13 · The privacy policy's „Recenziile pacienților" section — what it must say before the first patient signs
+
+*Joined 2026-10-29 on the owner's word („poate cea mai bună idee … să se treacă în partea de politică
+a paginii web dispozițiile legale pentru prelucrarea datelor mele … și în acord să scrie că sunt de
+acord cu folosirea datelor mele conform cu politicile descrise" · „creezi un PR cu un nou item în
+backlog ce trebuie pus la politică cu cum vom folosi datele pacientului").*
+
+- **Why:** the patient's consent form (`acorduri/01-acord-pacient-recenzie.md`, the Word copy the
+  clinic signs) keeps only the essentials and refers to the privacy policy's „Recenziile
+  pacienților" section for the details — a layered notice, which WP260 rev.01 §35–38 allows only if
+  the second layer actually holds the information. Today that section (`src/messages/privacy/*.json`,
+  built 2026-10-10, §15.38) says that the clinic shows its patients' Google reviews on Home and how
+  to have one removed, and nothing of what follows. Until it does, the form's reference points at a
+  half-empty page; the form stays valid on its own essentials, but the promise „în condițiile din
+  Politica de confidențialitate" must be true before the first signature.
+- **What the section must say** (the Romanian draft, ready to paste, is in ACORDURI.md §7.2; the
+  legal reading behind each sentence in §2.1, §2.5, §2.6, §4.4):
+  1. what is published: the review's text with spelling corrected and the phrases the CMSR guide
+     bans omitted and marked „[…]", the star rating, the date as „acum N ani", the name as on
+     Google (or initials), sometimes the Google profile photo, a short title written by the clinic,
+     the clinic's own translations into EN/DE/FR/IT;
+  2. the basis: the author's written, EXPLICIT consent, because a name beside a dental review says
+     the person was a patient — health data (RGPD art. 9 alin. (2) lit. a)); never legitimate
+     interest, never „made public by the data subject" (CJEU C‑252/21 pct. 75–77);
+  3. who sees it: anyone who opens the site, from any country, and the hosting provider (named, with
+     the EU–US transfer basis if it is a US host);
+  4. how long: until the author withdraws or the clinic removes the review; removal from every
+     language within 30 days (the clinic's own commitment — the law says „fără întârzieri
+     nejustificate", art. 17, and a reply within a month, art. 12 alin. (3)); the signed form kept
+     3 years after removal as proof (art. 7 alin. (1), art. 17 alin. (3) lit. e));
+  5. withdrawal: any time, by e-mail or phone to the clinic's contact or at the reception, no reason,
+     no consequence for the treatment; what was published until then stays lawful (art. 7 alin. (3));
+  6. the rights: access, rectification (a translation that distorts the words included), erasure,
+     restriction, portability; complaint to ANSPDCP, or to the authority of the patient's EU state
+     of residence (art. 77);
+  7. the Legea 363/2007 art. 7 alin. (6) line: every review published on Google can be read on the
+     clinic's listing (link); the clinic verified that each author was a patient; the clinic shows
+     only reviews whose authors consented in writing; „Google nu verifică recenziile, dar caută și
+     elimină conținutul fals pe care îl identifică" (the full sentence of Google's own policy, never
+     the first half alone). The same line also belongs beside the reviews band on Home
+     (ACORDURI.md §7.2's first text) — the same lane can place both.
+- **The work:** the `reviews` part of `src/messages/privacy/{ro,en,de,fr,it}.json` rewritten in all
+  five languages (`tests/unit/privacy-parity.test.ts` holds the keys, the ICU arguments and D-DASH;
+  EN/DE/FR/IT are drafts for the owner, §15.17); the band's own line as a new `home.reviews.*` key ×5
+  if placed; one lane, before the first patient signs. The lawyer's read of entry 3 covers this text
+  too.

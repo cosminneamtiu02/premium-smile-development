@@ -21,13 +21,12 @@ Pe pagina „Echipa”, pe prima pagină și — pentru medici — pe pagina pro
 numele și titlul profesional sau funcția; fotografia; citatul la persoana întâi; biografia;
 cursurile urmate; cifrele din casetele „În cifre”; semnătura de autor pe articolele de blog aprobate
 în scris. Totul în română și în traducerile clinicii în engleză, germană, franceză și italiană, pe
-care le pot vedea și corecta oricând. Paginile care mă privesc, tipărite la data semnării, sunt
-anexate acestui acord și semnate de mine.
+care le pot vedea și corecta oricând.
 
 ## 3. Declarația și acordul meu
 
-Informațiile despre mine din paginile anexate au fost puse la dispoziție sau aprobate de mine, sunt
-reale și corespund documentelor mele (diploma, certificatul de medic specialist, atestatele,
+Informațiile despre mine de pe site-ul clinicii, așa cum apar la data semnării, au fost puse la
+dispoziție sau aprobate de mine, sunt reale și corespund documentelor mele (diploma, certificatul de medic specialist, atestatele,
 certificatele cursurilor), pe care le-am arătat clinicii. Voi anunța clinica despre orice schimbare,
 iar un text nou sau schimbat se publică numai după ce îl aprob în scris. Clinica poate publica
 aceste informații, împreună cu fotografia mea, pe site-ul ei, în română și în traduceri, cât timp
@@ -55,9 +54,6 @@ distruge. Drepturile mele: să aflu ce date are clinica, să le corecteze, să l
 folosească până lămurim o neînțelegere, să le primesc într-un fișier, să mă opun, să retrag acordul
 — la datele de la punctul 1; și să mă plâng la Autoritatea Națională de Supraveghere a Prelucrării
 Datelor cu Caracter Personal (www.dataprotection.ro). Clinica nu ia decizii automate.
-
-Anexă: paginile site-ului care mă privesc, tipărite la data semnării și semnate de mine pe fiecare
-pagină.
 
 <!-- borderless -->
 

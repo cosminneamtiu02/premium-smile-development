@@ -22,8 +22,10 @@ Cum se folosesc:
   nu se dă la semnat în timpul unui tratament și nu se leagă de nicio reducere; formularul trimite
   la Politica de confidențialitate a site-ului, secțiunea „Recenziile pacienților”, care trebuie să
   spună tot ce e la ACORDURI.md §7.2 înainte de prima semnătură;
-- formularul 2: se anexează paginile site-ului care privesc persoana, tipărite și semnate de ea; se
-  semnează separat de contractul de muncă sau de colaborare, nu la angajare; site-ul trebuie să
+- formularul 2: nimic de anexat — declarația privește site-ul „așa cum apare la data semnării”, iar
+  clinica păstrează singură, lângă formular, o copie PDF a paginilor persoanei din ziua semnării
+  (dovada a ce a fost aprobat); se semnează separat de contractul de muncă sau de colaborare, nu la
+  angajare; site-ul trebuie să
   poată afișa cardul fără fotografie și fără pagină proprie, altfel refuzul are o consecință
   (ACORDURI.md §7.3);
 - fără CNP, fără copie a actului de identitate, fără adresă; medicul sau angajatul trece seria și

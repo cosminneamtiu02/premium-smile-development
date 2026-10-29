@@ -70,7 +70,11 @@
 > „site-ul e găzduit tot de clinică și operatorul e tot clinica”: formularele nu mai numesc un
 > furnizor de găzduire — host-ul real (GitHub Pages azi, Cloudflare Pages la lansare, §15.2 din
 > CLAUDE.md) rămâne de numit în Politica de confidențialitate, unde secțiunea despre jurnalele
-> host-ului există deja (§15.38), nu în formular (informarea pe straturi).
+> host-ului există deja (§15.38), nu în formular (informarea pe straturi). (6) Anexa formularului 2
+> (paginile site-ului tipărite și semnate de persoană) a dispărut, pe cuvântul proprietarului:
+> declarația privește „informațiile despre mine de pe site-ul clinicii, așa cum apar la data
+> semnării”, iar dovada a CE a fost aprobat (EDPB §108) o ține clinica singură — o copie PDF a
+> paginilor persoanei din ziua semnării, lângă formular; persoana nu mai semnează nimic în plus.
 > Secțiunile de mai jos descriu versiunea lungă din dimineața aceleiași zile și legea din spatele
 > fiecărui rând; ele rămân justificarea formularelor scurte.
 

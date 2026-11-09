@@ -32,7 +32,7 @@
     "@storybook/addon-a11y": "~10.5.10",
     "@storybook/addon-vitest": "~10.5.10",
     "@storybook/nextjs-vite": "~10.5.10",
-    "@tailwindcss/postcss": "~4.3.3",
+    "@tailwindcss/postcss": "~4.3.4",
     "@testing-library/dom": "~10.4.2",
     "@testing-library/jest-dom": "~7.0.1",
     "@testing-library/react": "~16.3.3",
